@@ -74,6 +74,7 @@ class RenderProfileEligibility(_StrictModel):
     width_17_fields: tuple[RecordDesignIntermediateField, ...]
     smaller_fields: tuple[RecordDesignIntermediateField, ...]
     signed_composite_fields: tuple[RecordDesignIntermediateField, ...] = ()
+    fixed_fields: tuple[RecordDesignIntermediateField, ...] = ()
 
 
 def _is_source_reserved_field(field: RecordDesignIntermediateField) -> bool:
@@ -261,6 +262,7 @@ def project_render_profile_eligibility(
         width_17_fields=tuple(field for field in numeric if field.length == 17),
         smaller_fields=tuple(field for field in numeric if field.length != 17),
         signed_composite_fields=signed_composites,
+        fixed_fields=fields,
     )
 
 

@@ -44,6 +44,12 @@ returns it to what the calculation gives.
 The form is total: every casilla of the revision appears exactly once, on a
 page, among the working figures, or in the unplaced list with its reason. A
 layout that would drop or repeat a casilla is refused rather than rendered.
+
+See Also:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+        The stored calculation head carrying values, provenance and lifecycle facts.
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+        The pinned registry snapshot supplying the selected modelo revision.
 """
 
 from __future__ import annotations
@@ -59,6 +65,8 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, tr
+from ...domain.calculations.export_field_kind import CasillaFieldKind
+from ...domain.calculations.registry.binding_targets import binding_consumers
 from ...domain.calculations.registry.export_field_casilla import (
     export_field_casilla_id,
     layout_fields_in_emission_order,
@@ -309,12 +317,69 @@ class _FormContext:
                 self.fed_casillas.setdefault(ref, set()).add(str(row.casilla_id))
         self.placed_boxes: dict[str, str] = {}
         self.casillas_by_export_position: dict[tuple[str, int], set[str]] = {}
+        wire_owners: dict[tuple[str, int, int], set[tuple[str, str, str, str, str]]] = {}
         for export_layout in snapshot.revision.export_layouts:
             for record, field in layout_fields_in_emission_order(export_layout):
                 target = export_field_casilla_id(record, field, bindings=self.bindings)
                 if target is not None and field.offset is not None:
                     for coordinate in (str(record.id), record.record_type):
                         self.casillas_by_export_position.setdefault((coordinate, field.offset), set()).add(str(target))
+                        if (
+                            field.kind is CasillaFieldKind.CASILLA
+                            and field.length is not None
+                            and record.repeat is None
+                            and record.binding_record is None
+                        ):
+                            wire_owners.setdefault((coordinate, field.offset, field.length), set()).add(
+                                (
+                                    str(export_layout.id),
+                                    str(record.id),
+                                    str(field.id),
+                                    str(target),
+                                    str(field.data_type),
+                                )
+                            )
+        consumers = binding_consumers(snapshot.revision)
+        self.casilla_owned_bindings: frozenset[str] = frozenset(
+            str(binding.id)
+            for binding in snapshot.revision.bindings
+            if not consumers[binding.id] and _manual_binding_has_casilla_wire_owner(binding, self.casillas, wire_owners)
+        )
+
+
+def _manual_binding_has_casilla_wire_owner(
+    binding: BindingDefinition,
+    casillas: dict[str, CasillaDefinition],
+    wire_owners: dict[tuple[str, int, int], set[tuple[str, str, str, str, str]]],
+) -> bool:
+    """An exact unique scalar wire slot already takes its value from a manual casilla.
+
+    The casilla export endpoint owns both the visible value and the write
+    address. Matching labels, nearby offsets and provider-casilla conversions
+    establish no such identity, and retain their separate binding inputs.
+    Its caller also preserves inputs with independent typed consumers.
+    """
+    provider = binding.provider
+    if (
+        not isinstance(provider, ManualInputProvider)
+        or provider.record is None
+        or provider.offset is None
+        or provider.length is None
+    ):
+        return False
+    owners = wire_owners.get((provider.record, provider.offset, provider.length), set())
+    if len(owners) != 1:
+        return False
+    _, _, _, casilla_id, wire_type = next(iter(owners))
+    casilla = casillas.get(casilla_id)
+    return (
+        casilla is not None
+        and casilla.input_kind is InputKind.MANUAL
+        and casilla.binding is None
+        and not casilla.alternate_bindings
+        and str(casilla.data_type) == str(provider.data_type) == wire_type
+        and str(binding.value.data_type) == wire_type
+    )
 
 
 def _surface_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
@@ -930,7 +995,9 @@ class _LayoutWalk:
         }
         self.seen: set[str] = set()
 
-    def casilla(self, casilla_id: str, *, design_constant: str | None = None) -> ModeloFormField:
+    def casilla(
+        self, casilla_id: str, *, design_constant: str | None = None, literal_decimals: int | None = None
+    ) -> ModeloFormField:
         """Show one placed casilla; a box whose value the official design fixes is never editable.
 
         Its value is the design's literal read at the export field's declared
@@ -947,7 +1014,10 @@ class _LayoutWalk:
         field = _casilla_field(casilla_id, self.context, placement, self.aliases.get(casilla_id, ()))
         if design_constant is None:
             return field
-        fixed = _design_value(design_constant, self.context.export_decimals(casilla_id))
+        fixed = _design_value(
+            design_constant,
+            literal_decimals if literal_decimals is not None else self.context.export_decimals(casilla_id),
+        )
         return field.model_copy(
             update={
                 "editability": ModeloFormEditability.DESIGN_CONSTANT,
@@ -959,9 +1029,11 @@ class _LayoutWalk:
             }
         )
 
-    def page(self, page: FormPageDefinition) -> ModeloFormPage:
+    def page(self, page: FormPageDefinition) -> ModeloFormPage | None:
         language = self.context.language
-        sections = tuple(self.section(page.id, section) for section in page.sections)
+        sections = tuple(shown for section in page.sections if (shown := self.section(page.id, section)) is not None)
+        if not sections:
+            return None
         return ModeloFormPage(
             id=page.id,
             heading=_heading(page.heading_key, page.official_heading, page.official_ref or page.id, language),
@@ -974,8 +1046,10 @@ class _LayoutWalk:
             ),
         )
 
-    def section(self, page_id: str, section: FormSectionDefinition) -> ModeloFormSection:
-        blocks = tuple(self.block(block) for block in section.blocks)
+    def section(self, page_id: str, section: FormSectionDefinition) -> ModeloFormSection | None:
+        blocks = tuple(shown for block in section.blocks if (shown := self.block(block)) is not None)
+        if not blocks:
+            return None
         form_section = ModeloFormSection(
             id=f"{page_id}.{section.id}",
             heading=_heading(section.heading_key, section.official_heading, section.id, self.context.language),
@@ -989,11 +1063,17 @@ class _LayoutWalk:
 
     def block(
         self, block: FormFieldBlock | FormGridBlock | FormRepeatingGroupBlock | FormBindingInputsBlock
-    ) -> ModeloFormBlock:
+    ) -> ModeloFormBlock | None:
         language = self.context.language
         if isinstance(block, FormFieldBlock):
+            if block.binding_id is not None and str(block.binding_id) in self.context.casilla_owned_bindings:
+                return None
             field = (
-                self.casilla(str(block.casilla_id), design_constant=block.design_constant)
+                self.casilla(
+                    str(block.casilla_id),
+                    design_constant=block.design_constant,
+                    literal_decimals=block.literal_decimals,
+                )
                 if block.casilla_id is not None
                 else _binding_field(str(block.binding_id), self.context)
             )
@@ -1011,7 +1091,8 @@ class _LayoutWalk:
                     heading=_heading(row.heading_key, row.official_heading, row.key, language),
                     cells=_with_grounded_rate(
                         tuple(
-                            self.cell(cell.kind, cell.casilla_id, cell.binding_id, cell.literal) for cell in row.cells
+                            self.cell(cell.kind, cell.casilla_id, cell.binding_id, cell.literal, cell.literal_decimals)
+                            for cell in row.cells
                         ),
                         self.context,
                     ),
@@ -1021,20 +1102,32 @@ class _LayoutWalk:
             return ModeloFormGridBlock(id=block.id, columns=columns, rows=_with_printed_rates(rows))
         if isinstance(block, FormRepeatingGroupBlock):
             return self.repeating(block)
-        return ModeloFormBindingInputsBlock(
-            id=block.id, fields=tuple(_binding_field(str(binding_id), self.context) for binding_id in block.binding_ids)
+        fields = tuple(
+            _binding_field(str(binding_id), self.context)
+            for binding_id in block.binding_ids
+            if str(binding_id) not in self.context.casilla_owned_bindings
         )
+        return ModeloFormBindingInputsBlock(id=block.id, fields=fields) if fields else None
 
     def cell(
-        self, kind: FormCellKind, casilla_id: CasillaId | None, binding_id: BindingId | None, literal: str | None
+        self,
+        kind: FormCellKind,
+        casilla_id: CasillaId | None,
+        binding_id: BindingId | None,
+        literal: str | None,
+        literal_decimals: int | None = None,
     ) -> ModeloFormGridCell:
         if kind is FormCellKind.CASILLA and casilla_id is not None:
             return ModeloFormGridCell(kind=kind, field=self.casilla(str(casilla_id)))
         if kind is FormCellKind.BINDING_INPUT and binding_id is not None:
+            if str(binding_id) in self.context.casilla_owned_bindings:
+                return ModeloFormGridCell(kind=FormCellKind.BLANK)
             return ModeloFormGridCell(kind=kind, field=_binding_field(str(binding_id), self.context))
         if kind is FormCellKind.DESIGN_CONSTANT and casilla_id is not None:
             return ModeloFormGridCell(
-                kind=kind, field=self.casilla(str(casilla_id), design_constant=literal), literal=literal
+                kind=kind,
+                field=self.casilla(str(casilla_id), design_constant=literal, literal_decimals=literal_decimals),
+                literal=literal,
             )
         return ModeloFormGridCell(kind=kind, literal=literal)
 
@@ -1131,6 +1224,12 @@ def build_modelo_work_form(
     Raises:
         ModeloWorkFormLayoutError: the layout places a casilla the revision does
             not define, places one twice, or leaves one without a placement.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
+        :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+            The pinned registry snapshot supplying the selected modelo revision.
     """
     sources = _note_sources(revision, calculation_diagnostics)
     context = _FormContext(
@@ -1166,7 +1265,7 @@ def build_modelo_work_form(
         if placement.box_number is not None
     }
     walk = _LayoutWalk(layout, context)
-    pages = tuple(walk.page(page) for page in layout.pages)
+    pages = tuple(shown for page in layout.pages if (shown := walk.page(page)) is not None)
     working: list[ModeloFormField] = []
     unplaced: list[ModeloFormUnplacedField] = []
     for placement in layout.placements:

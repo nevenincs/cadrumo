@@ -1,7 +1,7 @@
 """The editor form reads an official grid's rate boxes and repeating columns as the published design states them.
 
 Every form here is built by the real read model from the published authority.
-The Modelo 303 accrued-VAT grid prints its rates in two ways: some rows' base
+The Modelo 303 accrued-IVA grid prints its rates in two ways: some rows' base
 bindings declare exactly one rate, and some rate boxes are literals of the
 official record design ("00400", "02100"). A literal is read as a rate only
 where it states a percentage outright or its export field declares its scale;
@@ -44,8 +44,15 @@ from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_wor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_LITERAL_RATES_303 = ("02", "05", "08", "157", "20", "23")
-"""Fixed rate boxes of the 2026 Modelo 303 whose literal ("00400", "02100") declares no scale."""
+_LITERAL_RATES_303 = {
+    "02": Decimal("0.04"),
+    "05": Decimal("0.10"),
+    "08": Decimal("0.21"),
+    "157": Decimal("0.0175"),
+    "20": Decimal("0.014"),
+    "23": Decimal("0.052"),
+}
+"""Printed rate percentages independently stated by the official Modelo 303 instructions."""
 _PLACEHOLDERS_303 = ("151", "17")
 """Fixed rate boxes whose literal is ``00000``: the design prints no rate there."""
 
@@ -133,13 +140,13 @@ def _form_303(operation: PinnedAuthorityOperation, literals: Mapping[str, str] |
     return _form(operation, "303", 2026, "1T", literals=literals)
 
 
-def test_a_literal_whose_scale_nothing_declares_prints_no_rate(operation: PinnedAuthorityOperation) -> None:
+def test_published_literal_scales_print_the_official_rates(operation: PinnedAuthorityOperation) -> None:
     boxes = _by_box(_form_303(operation))
 
-    for box in _LITERAL_RATES_303:
-        # "02100" could be 21 %, 2.1 % or 0.21 %: no export field declares its decimals, so none is read.
-        assert boxes[box].printed_rate is None, box
-        assert boxes[box].value is None, box
+    for box, ratio in _LITERAL_RATES_303.items():
+        printed = boxes[box].printed_rate
+        assert printed is not None and printed.ratio == ratio, box
+        assert boxes[box].value == ratio * 100, box
     # A rate the row's base binding declares is still shown, from the binding and never from the literal.
     for box, ratio in {"02": Decimal("0.04"), "05": Decimal("0.10")}.items():
         grounded = boxes[box].grounded_rate
@@ -151,14 +158,59 @@ def test_a_literal_whose_scale_nothing_declares_prints_no_rate(operation: Pinned
         assert boxes[box].grounded_rate is None, box
 
 
+def test_a_numeric_literal_without_declared_scale_claims_no_printed_rate(operation: PinnedAuthorityOperation) -> None:
+    revision = operation.revision_for_context("303", filing_year=2026, period="1T")
+    published = _layout(operation, "303", str(revision.id))
+    unscaled = published.model_copy(
+        update={
+            "pages": tuple(
+                page.model_copy(
+                    update={
+                        "sections": tuple(
+                            section.model_copy(
+                                update={
+                                    "blocks": tuple(
+                                        block.model_copy(
+                                            update={
+                                                "rows": tuple(
+                                                    row.model_copy(
+                                                        update={
+                                                            "cells": tuple(
+                                                                cell.model_copy(update={"literal_decimals": None})
+                                                                for cell in row.cells
+                                                            )
+                                                        }
+                                                    )
+                                                    for row in block.rows
+                                                )
+                                            }
+                                        )
+                                        if isinstance(block, FormGridBlock)
+                                        else block
+                                        for block in section.blocks
+                                    )
+                                }
+                            )
+                            for section in page.sections
+                        )
+                    }
+                )
+                for page in published.pages
+            )
+        }
+    )
+    boxes = _by_box(_form(operation, "303", 2026, "1T", layout_override=unscaled))
+    assert all(boxes[box].printed_rate is None for box in _LITERAL_RATES_303)
+
+
 def test_a_literal_that_states_its_percentage_is_printed_as_it_says(operation: PinnedAuthorityOperation) -> None:
     boxes = _by_box(_form_303(operation, {"23": "5,2 %", "08": "21%"}))
 
     for box, ratio in {"23": Decimal("0.052"), "08": Decimal("0.21")}.items():
         printed = boxes[box].printed_rate
         assert printed is not None and printed.ratio == ratio, box
-    # The literals beside them still state no scale.
-    assert boxes["20"].printed_rate is None
+    assert boxes["20"].printed_rate is not None
+    assert boxes["20"].printed_rate.ratio == Decimal("0.014")
     # Only a box the design fixes prints a rate.
     assert all(
         field.printed_rate is None

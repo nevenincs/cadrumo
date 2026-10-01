@@ -54,6 +54,8 @@ from ..record_design_intermediate import (
     load_record_design_intermediate,
 )
 from ..render_profile import (
+    RenderProfile,
+    RenderProfileDesignIdentity,
     load_render_profile,
     load_render_profile_source_evidence,
 )
@@ -274,6 +276,21 @@ class TestTheDeclarationMustBePinnedToTheParsedSource:
             _declaration(evidence="")
 
 
+def _literal_render_profile() -> RenderProfile:
+    return RenderProfile(
+        schema_version=1,
+        design_identity=RenderProfileDesignIdentity(
+            modelo="390",
+            design_epoch="2022",
+            source_ref="aeat-dr-390-2022",
+            source_sha256=_SHA,
+        ),
+        fragment_ids=(),
+        width_17_rules=(),
+        singleton_rules=(),
+    )
+
+
 class TestTheAdjudicationCannotLaunderGeometry:
     """The substitution runs BEFORE the byte and slot-width checks, not instead of them."""
 
@@ -282,6 +299,7 @@ class TestTheAdjudicationCannotLaunderGeometry:
             _joined_literal_field(),
             _profile(),
             export_record_id="modelo-390-page-07",
+            render_profile=_literal_render_profile(),
             source_defects=(_declaration(),),
         )
 
@@ -294,6 +312,7 @@ class TestTheAdjudicationCannotLaunderGeometry:
                 _joined_literal_field(),
                 _profile(),
                 export_record_id="modelo-390-page-07",
+                render_profile=_literal_render_profile(),
             )
 
     def test_an_adjudicated_literal_that_does_not_fill_the_slot_is_still_refused(self) -> None:
@@ -310,6 +329,7 @@ class TestTheAdjudicationCannotLaunderGeometry:
                 _joined_literal_field(literal=_PUBLISHED),
                 _profile(),
                 export_record_id="modelo-390-page-07",
+                render_profile=_literal_render_profile(),
                 source_defects=(_declaration(adjudicated_literal=_PUBLISHED),),
             )
 

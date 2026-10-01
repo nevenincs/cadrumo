@@ -618,6 +618,15 @@ class ExportFieldDefinition(RegistryModel):
         """
         if self.kind == CasillaFieldKind.FILLER:
             return
+        if self.kind == CasillaFieldKind.LITERAL and self.data_type == "text" and self.decimals is not None:
+            if (
+                self.literal is None
+                or not self.literal.isascii()
+                or not self.literal.isdigit()
+                or self.decimals >= len(self.literal)
+            ):
+                raise RegistryValidationError(f"literal export field {self.id!r} declares an invalid numeric scale")
+            return
         if self.data_type == "decimal":
             if self.decimals is None:
                 raise RegistryValidationError(f"decimal export field {self.id!r} must declare decimals")

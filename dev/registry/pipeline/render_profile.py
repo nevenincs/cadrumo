@@ -1,9 +1,10 @@
 """Fail-closed authority for absent record-design numeric wire facts.
 
-Render profiles are reviewed inputs, not inference recipes.  A profile may name
-only fixed-record numeric fields whose exact official ``Contenido`` cell is
-blank.  It must enumerate that eligible set exactly and is rejected before a
-renderer can observe it when any authority, anchor, or representation drifts.
+Render profiles are reviewed inputs, not inference recipes. Wire rules name
+fixed-record numeric fields whose exact official ``Contenido`` cell is blank
+and enumerate that eligible set exactly. Optional literal rules declare only
+the numeric presentation scale of an exact constant, preserving its bytes.
+Both refuse when their authority, anchor or representation drifts.
 
 A reviewed render profile is authored evidence read back by callers outside this
 package: the filing-export proof loads a profile and its source evidence to prove
@@ -52,6 +53,7 @@ from .render_profile_eligibility import (
 
 __all__ = [
     "RENDER_PROFILE_SCHEMA_VERSION",
+    "LiteralNumericRule",
     "OfficialSourceEvidence",
     "RenderProfile",
     "RenderProfileAnchor",
@@ -382,6 +384,24 @@ class SingletonNumericRule(_StrictModel):
         return self
 
 
+class LiteralNumericRule(_StrictModel):
+    """The reviewed numeric scale of one exact constant; its wire bytes stay literal."""
+
+    rule_kind: Literal["literal_numeric"]
+    literal: str = Field(pattern=r"^[0-9]+$")
+    decimal_digits: int = Field(ge=0)
+    anchor: RenderProfileAnchor
+    evidence: ReviewedEvidence
+
+    @model_validator(mode="after")
+    def _require_numeric_scale(self) -> LiteralNumericRule:
+        if self.decimal_digits >= len(self.literal):
+            raise ValueError("literal numeric scale must leave at least one integer digit")
+        if isinstance(self.evidence, ReviewedPolicyDecision) and self.evidence.governed_anchor != self.anchor:
+            raise ValueError("reviewed policy must name the exact governed anchor")
+        return self
+
+
 class SignedMonetaryCompositeRule(_StrictModel):
     """One reviewed unsplit PDF amount with a reserved blank-or-N leading sign."""
 
@@ -408,10 +428,13 @@ class RenderProfileFragment(_StrictModel):
     width_17_rules: tuple[Width17MembershipRule, ...]
     singleton_rules: tuple[SingletonNumericRule, ...]
     signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
+    literal_numeric_rules: tuple[LiteralNumericRule, ...] = ()
 
     @model_validator(mode="after")
     def _require_authored_rules(self) -> RenderProfileFragment:
-        if not self.width_17_rules and not self.singleton_rules and not self.signed_composite_rules:
+        if not (
+            self.width_17_rules or self.singleton_rules or self.signed_composite_rules or self.literal_numeric_rules
+        ):
             raise ValueError("render profile fragments must contain at least one authored rule")
         return self
 
@@ -425,6 +448,12 @@ class RenderProfile(_StrictModel):
     width_17_rules: tuple[Width17MembershipRule, ...]
     singleton_rules: tuple[SingletonNumericRule, ...]
     signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
+    literal_numeric_rules: tuple[LiteralNumericRule, ...] = ()
+
+    @cached_property
+    def literal_numeric_rule_by_anchor(self) -> Mapping[RenderProfileAnchor, LiteralNumericRule]:
+        """Exact constant anchors carrying an authored numeric scale."""
+        return {rule.anchor: rule for rule in self.literal_numeric_rules}
 
     @cached_property
     def width_17_rule_by_anchor(self) -> Mapping[RenderProfileAnchor, Width17MembershipRule]:
@@ -602,6 +631,7 @@ def load_render_profile_source_evidence(
         for evidence in (
             *(rule.evidence for rule in profile.width_17_rules),
             *(rule.evidence for rule in profile.singleton_rules),
+            *(rule.evidence for rule in profile.literal_numeric_rules),
         )
         if isinstance(evidence, OfficialSourceEvidence)
     )
@@ -654,6 +684,11 @@ def validate_render_profile(
         signed_composite_anchor_keys=composite_keys,
     )
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
+    literal_anchors = {
+        _field_anchor(design_view(field)) for field in joined.fields if field.semantic_entry.kind.value == "literal"
+    }
+    if any(rule.anchor not in literal_anchors for rule in profile.literal_numeric_rules):
+        raise RegistryValidationError("literal numeric rules must address literal semantic fields")
 
 
 def validate_render_profile_authority(
@@ -673,6 +708,15 @@ def validate_render_profile_authority(
             "render profile source evidence does not match the exact official design identity",
         )
     _validate_reviewed_evidence(profile, source_evidence)
+
+    fixed = {_field_anchor(field): field for field in eligibility.fixed_fields}
+    literal_anchors = tuple(rule.anchor for rule in profile.literal_numeric_rules)
+    if _duplicates(literal_anchors):
+        raise RegistryValidationError("literal numeric rules contain duplicate exact anchors")
+    for rule in profile.literal_numeric_rules:
+        field = fixed.get(rule.anchor)
+        if field is None or not _is_numeric_aeat_type(field.aeat_type) or field.length != len(rule.literal):
+            raise RegistryValidationError("literal numeric rule conflicts with its official numeric slot")
 
     eligible = {_field_anchor(field): field for field in eligibility.all_fields}
     governed = (
@@ -804,6 +848,11 @@ def render_profile_digest(
     # must not force unrelated source authorities through regeneration.
     if signed_composite_rules:
         digest_payload["signed_composite_rules"] = signed_composite_rules
+    if profile.literal_numeric_rules:
+        digest_payload["literal_numeric_rules"] = [
+            rule.model_dump(mode="json")
+            for rule in sorted(profile.literal_numeric_rules, key=lambda item: _anchor_key(item.anchor))
+        ]
     return content_hash_hex(digest_payload)
 
 
@@ -812,8 +861,10 @@ def _validate_reviewed_evidence(
     source_evidence: RenderProfileSourceEvidence,
 ) -> None:
     actual_by_locator = {(entry.sheet, entry.cell): entry.normalized_statement for entry in source_evidence.entries}
-    reviewed = tuple(rule.evidence for rule in profile.width_17_rules) + tuple(
-        rule.evidence for rule in profile.singleton_rules
+    reviewed = (
+        tuple(rule.evidence for rule in profile.width_17_rules)
+        + tuple(rule.evidence for rule in profile.singleton_rules)
+        + tuple(rule.evidence for rule in profile.literal_numeric_rules)
     )
     for evidence in reviewed:
         if isinstance(evidence, ReviewedPolicyDecision):
@@ -848,6 +899,7 @@ def _compile_fragments(fragments: Iterable[RenderProfileFragment]) -> RenderProf
         width_17_rules=width_rules,
         singleton_rules=tuple(rule for fragment in ordered for rule in fragment.singleton_rules),
         signed_composite_rules=tuple(rule for fragment in ordered for rule in fragment.signed_composite_rules),
+        literal_numeric_rules=tuple(rule for fragment in ordered for rule in fragment.literal_numeric_rules),
     )
 
 

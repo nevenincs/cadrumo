@@ -229,6 +229,7 @@ class FormCell(RegistryModel):
     casilla_id: CasillaId | None = None
     binding_id: BindingId | None = None
     literal: str | None = Field(default=None, min_length=1, max_length=64)
+    literal_decimals: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -246,7 +247,16 @@ class FormCell(RegistryModel):
             raise RegistryValidationError("a design-constant form cell must carry the design's literal")
         if self.kind is not FormCellKind.DESIGN_CONSTANT and self.literal is not None:
             raise RegistryValidationError(f"form cell of kind {self.kind.value!r} carries a literal")
+        _validate_literal_scale(self.literal, self.literal_decimals)
         return self
+
+
+def _validate_literal_scale(literal: str | None, decimals: int | None) -> None:
+    """A numeric scale belongs only to an ASCII digit constant of sufficient width."""
+    if decimals is not None and (
+        literal is None or not literal.isascii() or not literal.isdigit() or decimals >= len(literal)
+    ):
+        raise RegistryValidationError("literal decimals require a numeric constant with an integer digit")
 
 
 class FormGridColumn(RegistryModel):
@@ -278,6 +288,7 @@ class FormFieldBlock(RegistryModel):
     casilla_id: CasillaId | None = None
     binding_id: BindingId | None = None
     design_constant: str | None = Field(default=None, min_length=1, max_length=64)
+    literal_decimals: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -286,6 +297,7 @@ class FormFieldBlock(RegistryModel):
             raise RegistryValidationError(f"form field block {self.id!r} addresses exactly one casilla or binding")
         if self.design_constant is not None and self.casilla_id is None:
             raise RegistryValidationError(f"form field block {self.id!r} fixes a design constant on no casilla")
+        _validate_literal_scale(self.design_constant, self.literal_decimals)
         return self
 
 

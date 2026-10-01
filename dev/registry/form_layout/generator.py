@@ -131,6 +131,7 @@ class _Position:
     casilla_ids: list[str] = field(default_factory=list)
     binding_ids: list[str] = field(default_factory=list)
     literal: str | None = None
+    literal_decimals: int | None = None
     xml_container: tuple[str, ...] | None = None
 
 
@@ -142,6 +143,7 @@ class _Item:
     casilla_id: str | None = None
     binding_id: str | None = None
     literal: str | None = None
+    literal_decimals: int | None = None
 
 
 @dataclass(slots=True)
@@ -287,6 +289,7 @@ def _attach_export_field(
         position.binding_ids.append(export_field.binding)
     elif export_field.literal is not None and position.literal is None:
         position.literal = export_field.literal
+        position.literal_decimals = export_field.decimals
 
 
 def _dictionary_descriptions(payload: bytes) -> dict[str, tuple[str, str]]:
@@ -467,7 +470,9 @@ def _section_key(position: _Position) -> tuple[str, ...]:
 def _items_for(build: _Build, index: int, primary: Mapping[str, int]) -> list[_Item]:
     position = build.positions[index]
     items = [
-        _Item(position=index, casilla_id=casilla_id, literal=position.literal)
+        _Item(
+            position=index, casilla_id=casilla_id, literal=position.literal, literal_decimals=position.literal_decimals
+        )
         for casilla_id in position.casilla_ids
         if primary.get(casilla_id) == index
     ]
@@ -477,7 +482,7 @@ def _items_for(build: _Build, index: int, primary: Mapping[str, int]) -> list[_I
         if build.binding_primary.get(binding_id) == index
     )
     if not items and position.literal is not None and position.box is not None:
-        items.append(_Item(position=index, literal=position.literal))
+        items.append(_Item(position=index, literal=position.literal, literal_decimals=position.literal_decimals))
     return items
 
 
@@ -560,17 +565,29 @@ def _unique(base: str, used: set[str]) -> str:
 
 def _cell(item: _Item) -> FormCell:
     if item.casilla_id is not None and item.literal is not None:
-        return FormCell(kind=FormCellKind.DESIGN_CONSTANT, casilla_id=item.casilla_id, literal=item.literal)
+        return FormCell(
+            kind=FormCellKind.DESIGN_CONSTANT,
+            casilla_id=item.casilla_id,
+            literal=item.literal,
+            literal_decimals=item.literal_decimals,
+        )
     if item.casilla_id is not None:
         return FormCell(kind=FormCellKind.CASILLA, casilla_id=item.casilla_id)
     if item.binding_id is not None:
         return FormCell(kind=FormCellKind.BINDING_INPUT, binding_id=item.binding_id)
-    return FormCell(kind=FormCellKind.DESIGN_CONSTANT, literal=str(item.literal))
+    return FormCell(
+        kind=FormCellKind.DESIGN_CONSTANT, literal=str(item.literal), literal_decimals=item.literal_decimals
+    )
 
 
 def _field_block(block_id: str, item: _Item) -> FormFieldBlock | None:
     if item.casilla_id is not None:
-        return FormFieldBlock(id=block_id, casilla_id=item.casilla_id, design_constant=item.literal)
+        return FormFieldBlock(
+            id=block_id,
+            casilla_id=item.casilla_id,
+            design_constant=item.literal,
+            literal_decimals=item.literal_decimals,
+        )
     if item.binding_id is not None:
         return FormFieldBlock(id=block_id, binding_id=item.binding_id)
     return None

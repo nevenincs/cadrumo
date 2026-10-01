@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from .....core.export_layout_format import ExportLayoutFormat
 from ...export_field_kind import CasillaFieldKind
-from ..fixed_width_codec import ExportEncoding
+from ..fixed_width_codec import ExportEncoding, render_fixed_width_export_field
 from ..schema_base import CasillaDataType
 from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 from .registry_tree import bundled_registry_tree
@@ -47,6 +47,21 @@ def _record(*, record_id: str, encoding: str) -> ExportRecordDefinition:
             ),
         ),
     )
+
+
+def test_literal_presentation_scale_preserves_the_exact_wire_constant() -> None:
+    payload = _record(record_id="record.a", encoding="iso-8859-1").fields[0].model_dump()
+    payload.update(literal="00175", length=5, decimals=2)
+    field = ExportFieldDefinition.model_validate(payload)
+    assert render_fixed_width_export_field(field, None) == "00175"
+
+
+@pytest.mark.parametrize("literal,scale", [("21%", 2), ("٠٢١٠٠", 2), ("02100", 5)])
+def test_literal_presentation_scale_refuses_non_numeric_or_empty_integer_shapes(literal: str, scale: int) -> None:
+    payload = _record(record_id="record.a", encoding="iso-8859-1").fields[0].model_dump()
+    payload.update(literal=literal, length=len(literal), decimals=scale)
+    with pytest.raises(ValidationError, match="invalid numeric scale"):
+        ExportFieldDefinition.model_validate(payload)
 
 
 def test_layout_with_one_encoding_validates() -> None:

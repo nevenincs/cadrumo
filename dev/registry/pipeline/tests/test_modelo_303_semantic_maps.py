@@ -27,9 +27,10 @@ from typing import Final, Literal
 import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ...analysis.m303_semantic_census import (
@@ -61,6 +62,7 @@ from ..render_profile import (
     RenderProfileSourceEvidence,
     load_and_validate_render_profile,
     render_profile_digest,
+    validate_render_profile,
 )
 from ..semantic_map import (
     SemanticMap,
@@ -1415,6 +1417,79 @@ def test_each_epoch_carries_its_own_map_and_render_profile_identity() -> None:
 
     assert len(set(semantic_digests.values())) == len(_DESIGN_EPOCHS), semantic_digests
     assert len(set(profile_digests.values())) == len(_DESIGN_EPOCHS), profile_digests
+
+
+def test_reviewed_literal_scales_preserve_the_exact_official_wire_bytes(epoch: _EpochAuthorities) -> None:
+    records, _derivations = _render_records(epoch.joined.records, epoch.transport(), epoch.profile)
+    by_id = {field.id: field for record in records for field in record.fields}
+    joined_by_anchor = {
+        (field.parser_field.sheet, field.parser_field.source_row): field for field in epoch.joined.fields
+    }
+    assert len(epoch.profile.literal_numeric_rules) == (0 if epoch.design_epoch == "2022" else 6)
+    assert all(rule.literal != "00000" for rule in epoch.profile.literal_numeric_rules)
+    for rule in epoch.profile.literal_numeric_rules:
+        joined = joined_by_anchor[(rule.anchor.sheet, rule.anchor.source_row)]
+        field = by_id[joined.semantic_entry.export_field_id]
+        assert field.decimals == rule.decimal_digits
+        assert field.literal == rule.literal
+        assert render_fixed_width_export_field(field, None) == rule.literal
+
+
+@pytest.mark.parametrize("defect", ["anchor", "type", "width", "duplicate", "literal", "semantic"])
+def test_a_literal_scale_cannot_survive_a_drifted_official_anchor(defect: str) -> None:
+    epoch = next(_authorities(name) for name in _DESIGN_EPOCHS if _authorities(name).profile.literal_numeric_rules)
+    profile = epoch.profile
+    rule = profile.literal_numeric_rules[0]
+    joined = epoch.joined
+    if defect == "duplicate":
+        profile = profile.model_copy(update={"literal_numeric_rules": (*profile.literal_numeric_rules, rule)})
+    elif defect in {"anchor", "literal"}:
+        displaced = rule.anchor.model_copy(update={"source_row": 999999})
+        changed = (
+            rule.model_copy(
+                update={
+                    "anchor": displaced,
+                    "evidence": rule.evidence.model_copy(update={"governed_anchor": displaced}),
+                }
+            )
+            if defect == "anchor"
+            else rule.model_copy(update={"literal": "99999"})
+        )
+        profile = profile.model_copy(update={"literal_numeric_rules": (changed, *profile.literal_numeric_rules[1:])})
+    else:
+        records = []
+        for record in joined.records:
+            fields = []
+            for field in record.fields:
+                if (
+                    field.parser_field.sheet == rule.anchor.sheet
+                    and field.parser_field.source_row == rule.anchor.source_row
+                ):
+                    if defect == "semantic":
+                        field = field.model_copy(
+                            update={
+                                "semantic_entry": field.semantic_entry.model_copy(
+                                    update={"kind": CasillaFieldKind.CASILLA}
+                                )
+                            }
+                        )
+                    else:
+                        field = field.model_copy(
+                            update={
+                                "parser_field": field.parser_field.model_copy(
+                                    update={"aeat_type": "An"} if defect == "type" else {"length": 4}
+                                )
+                            }
+                        )
+                fields.append(field)
+            records.append(record.model_copy(update={"fields": tuple(fields)}))
+        joined = joined.model_copy(
+            update={"records": tuple(records), "fields": tuple(field for record in records for field in record.fields)}
+        )
+    profile = RenderProfile.model_validate(profile.model_dump())
+    with pytest.raises(RegistryValidationError):
+        validate_render_profile(profile, joined, epoch.source_evidence)
+        _render_records(joined.records, epoch.transport(), profile)
 
 
 def _homes_by_anchor(semantic_map: SemanticMap) -> dict[str, tuple[str, str | None]]:

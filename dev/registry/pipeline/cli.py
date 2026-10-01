@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ._export_tree import RenderedExportTree, render_complete_export_tree
+from ._form_layout_companion import prepare_generated_form_layout_companion
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -444,6 +445,7 @@ def _render_candidate(prepared: PreparedGeneratedTreeInvocation) -> RenderedExpo
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
         source_defects=source_defects_for(prepared.invocation.source_ref),
     )
+    prepare_generated_form_layout_companion(prepared.validation, temporary_root=prepared.candidate_root.parents[2])
     return rendered
 
 

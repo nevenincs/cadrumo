@@ -3,6 +3,7 @@ id = "23"
 number = "23"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
+constraints = {min_value = "0", max_value = "100", legal_refs = ["orden-eha-3786-2008:art-1"]}
 semantic_role = "dr303_23"
 continuidad_id = "dr303-23"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -2086,6 +2087,7 @@ id = "02"
 number = "02"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
+constraints = {min_value = "0", max_value = "100", legal_refs = ["orden-eha-3786-2008:art-1"]}
 semantic_role = "dr303_02"
 continuidad_id = "dr303-02"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -2113,6 +2115,7 @@ id = "05"
 number = "05"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
+constraints = {min_value = "0", max_value = "100", legal_refs = ["orden-eha-3786-2008:art-1"]}
 semantic_role = "dr303_05"
 continuidad_id = "dr303-05"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -2140,6 +2143,7 @@ id = "08"
 number = "08"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
+constraints = {min_value = "0", max_value = "100", legal_refs = ["orden-eha-3786-2008:art-1"]}
 semantic_role = "dr303_08"
 continuidad_id = "dr303-08"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -2255,6 +2259,7 @@ id = "20"
 number = "20"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
+constraints = {min_value = "0", max_value = "100", legal_refs = ["orden-eha-3786-2008:art-1"]}
 semantic_role = "dr303_20"
 continuidad_id = "dr303-20"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

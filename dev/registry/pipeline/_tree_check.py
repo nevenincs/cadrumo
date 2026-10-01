@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefi
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..compiler.loader import load_modelo_directory
 from ._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
+from ._form_layout_companion import prepare_generated_form_layout_companion
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -113,6 +114,7 @@ def check_generated_export_tree(
         render_profile_source_evidence=render_profile_source_evidence,
         source_defects=source_defects,
     )
+    prepare_generated_form_layout_companion(context.validation, temporary_root=context.temporary_root)
     candidate = validate_generated_export_tree(
         context=context.validation,
         joined=joined,

@@ -75,13 +75,13 @@ modelo:
           dr303-155:
             label: IVA devengado régimen general nuevo tipo tier 2 - Cuota
           dr303-156:
-            label: Recargo equivalencia tipo 0.5pct - Base imponible
+            label: Recargo de equivalencia al 1,75% - Base imponible
           dr303-157:
-            label: Recargo equivalencia tipo 0.5pct - Tipo porcentaje
+            label: Recargo de equivalencia al 1,75% - Tipo (%)
           dr303-158:
-            label: Recargo equivalencia tipo 0.5pct - Cuota
+            label: Recargo de equivalencia al 1,75% - Cuota
           dr303-16:
-            label: Recargo equivalencia tipo 1.0pct - Base imponible
+            label: Recargo de equivalencia - Base imponible
           dr303-165:
             label: IVA devengado régimen general tipo 2pct desde 2024 - Base imponible
           dr303-166:
@@ -93,11 +93,11 @@ modelo:
           dr303-169:
             label: Recargo equivalencia nuevo tipo desde 2024 - Tipo porcentaje
           dr303-17:
-            label: Recargo equivalencia tipo 1.0pct - Tipo porcentaje
+            label: Recargo de equivalencia - Tipo (%)
           dr303-170:
             label: Recargo equivalencia nuevo tipo desde 2024 - Cuota
           dr303-18:
-            label: Recargo equivalencia tipo 1.0pct - Cuota
+            label: Recargo de equivalencia - Cuota
           dr303-19:
             label: Recargo equivalencia tipo 1.4pct - Base imponible
           dr303-20:
@@ -934,14 +934,14 @@ modelo:
               help: 'Casilla 155: cuota de IVA devengado en el régimen general nuevo
                 tipo tramo 2.'
             '156':
-              help: 'Casilla 156: base imponible del recargo de equivalencia al 0,5%.'
+              help: 'Casilla 156: base imponible del recargo de equivalencia al 1,75%.'
             '157':
               help: 'Casilla 157: porcentaje del tipo del recargo de equivalencia
-                al 0,5%.'
+                al 1,75%.'
             '158':
-              help: 'Casilla 158: cuota del recargo de equivalencia al 0,5%.'
+              help: 'Casilla 158: cuota del recargo de equivalencia al 1,75%.'
             '16':
-              help: 'Casilla 16: base imponible del recargo de equivalencia al 1,0%.'
+              help: 'Casilla 16: base imponible del recargo de equivalencia.'
             '165':
               help: 'Casilla 165: base imponible del IVA devengado en el régimen general
                 al tipo del 2% desde 2024.'
@@ -958,12 +958,11 @@ modelo:
               help: 'Casilla 169: porcentaje del tipo del nuevo recargo de equivalencia
                 desde 2024.'
             '17':
-              help: 'Casilla 17: porcentaje del tipo del recargo de equivalencia al
-                1,0%.'
+              help: 'Casilla 17: porcentaje del tipo del recargo de equivalencia.'
             '170':
               help: 'Casilla 170: cuota del nuevo recargo de equivalencia desde 2024.'
             '18':
-              help: 'Casilla 18: cuota del recargo de equivalencia al 1,0%.'
+              help: 'Casilla 18: cuota del recargo de equivalencia.'
             '19':
               help: 'Casilla 19: base imponible del recargo de equivalencia al 1,4%.'
             '20':

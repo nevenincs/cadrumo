@@ -1,6 +1,10 @@
 modelo:
   schema:
     '100':
+      binding:
+        renta-modelo-100-estimacion-directa-es-normal:
+          help: 'Sí: modalidad normal (N). No: modalidad simplificada (S).'
+          label: ¿Aplicas la modalidad normal de estimación directa?
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:

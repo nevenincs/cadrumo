@@ -76,13 +76,13 @@ modelo:
           dr303-155:
             label: Accrued VAT, general regime new rate tier 2 - Tax amount
           dr303-156:
-            label: Equivalence surcharge at 0.5% - Taxable base
+            label: Equivalence surcharge at 1.75% - Taxable base
           dr303-157:
-            label: Equivalence surcharge at 0.5% - Rate percentage
+            label: Equivalence surcharge at 1.75% - Rate (%)
           dr303-158:
-            label: Equivalence surcharge at 0.5% - Tax amount
+            label: Equivalence surcharge at 1.75% - Tax amount
           dr303-16:
-            label: Equivalence surcharge at 1.0% - Taxable base
+            label: Equivalence surcharge - Taxable base
           dr303-165:
             label: Accrued VAT, general regime 2% rate from 2024 - Taxable base
           dr303-166:
@@ -94,11 +94,11 @@ modelo:
           dr303-169:
             label: New equivalence surcharge rate from 2024 - Rate percentage
           dr303-17:
-            label: Equivalence surcharge at 1.0% - Rate percentage
+            label: Equivalence surcharge - Rate (%)
           dr303-170:
             label: New equivalence surcharge rate from 2024 - Tax amount
           dr303-18:
-            label: Equivalence surcharge at 1.0% - Tax amount
+            label: Equivalence surcharge - Tax amount
           dr303-19:
             label: Equivalence surcharge at 1.4% - Taxable base
           dr303-20:
@@ -942,13 +942,13 @@ modelo:
               help: 'Box 155: amount of VAT accrued under the general regime at the
                 new rate, tier 2.'
             '156':
-              help: 'Box 156: taxable base of the equivalence surcharge at 0.5%.'
+              help: 'Box 156: taxable base for the equivalence surcharge at 1.75%.'
             '157':
-              help: 'Box 157: percentage rate of the equivalence surcharge at 0.5%.'
+              help: 'Box 157: rate percentage for the equivalence surcharge at 1.75%.'
             '158':
-              help: 'Box 158: amount of the equivalence surcharge at 0.5%.'
+              help: 'Box 158: tax amount for the equivalence surcharge at 1.75%.'
             '16':
-              help: 'Box 16: taxable base of the equivalence surcharge at 1.0%.'
+              help: 'Box 16: taxable base for the equivalence surcharge.'
             '165':
               help: 'Box 165: taxable base of VAT accrued under the general regime
                 at the rate of 2% from 2024.'
@@ -965,11 +965,11 @@ modelo:
               help: 'Box 169: percentage rate of the new equivalence surcharge from
                 2024.'
             '17':
-              help: 'Box 17: percentage rate of the equivalence surcharge at 1.0%.'
+              help: 'Box 17: rate percentage for the equivalence surcharge.'
             '170':
               help: 'Box 170: amount of the new equivalence surcharge from 2024.'
             '18':
-              help: 'Box 18: amount of the equivalence surcharge at 1.0%.'
+              help: 'Box 18: tax amount for the equivalence surcharge.'
             '19':
               help: 'Box 19: taxable base of the equivalence surcharge at 1.4%.'
             '20':

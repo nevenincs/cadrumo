@@ -15,10 +15,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.form_layout_integrity import form_layout_failures
+from cadrumo.domain.calculations.registry.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormFieldBlock,
+    FormGridBlock,
     FormLayoutDefinition,
     FormPlacementDefinition,
     FormPlacementKind,
@@ -29,7 +30,9 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 
 from ...compiler.loader import load_modelo_directory, load_registry_tree
 from ...compiler.validate_form_layouts import validate_form_layout_section
+from ...record_design_labels import DATA_ROOT
 from ..cli import REGISTRY_ROOT
+from ..generator import generate_revision_layout
 from ..serialization import form_layout_fragment_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -117,6 +120,49 @@ def test_a_stale_source_digest_is_refused() -> None:
         update={"casillas": (revision.casillas[0].model_copy(update={"number": "999"}), *revision.casillas[1:])}
     )
     assert any("form layout is stale" in item for item in form_layout_failures(renumbered))
+
+
+def test_a_changed_literal_scale_requires_regenerating_its_form_companion() -> None:
+    revision = _revision("303", "2025")
+    scaled = revision.model_copy(
+        update={
+            "export_layouts": tuple(
+                layout.model_copy(
+                    update={
+                        "records": tuple(
+                            record.model_copy(
+                                update={
+                                    "fields": tuple(
+                                        field.model_copy(update={"decimals": 3}) if field.literal == "02100" else field
+                                        for field in record.fields
+                                    )
+                                }
+                            )
+                            for record in layout.records
+                        )
+                    }
+                )
+                for layout in revision.export_layouts
+            )
+        }
+    )
+    assert form_layout_source_digest(scaled) != form_layout_source_digest(revision)
+    assert any("form layout is stale" in failure for failure in form_layout_failures(scaled))
+    _, catalogues = load_registry_tree(REGISTRY_ROOT)
+    generated = generate_revision_layout("303", scaled, sources=catalogues.sources, data_root=DATA_ROOT)
+    assert generated.layout is not None
+    assert form_layout_failures(_with_layout(scaled, generated.layout)) == ()
+    cells = (
+        cell
+        for page in generated.layout.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormGridBlock)
+        for row in block.rows
+        for cell in row.cells
+        if cell.literal == "02100"
+    )
+    assert {cell.literal_decimals for cell in cells} == {3}
 
 
 def test_a_repeating_group_over_a_scalar_binding_is_refused() -> None:

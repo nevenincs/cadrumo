@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b181ea79b5b472dbd059c56958ca256c38a2ea4631f6b940fda961295f68cfb6'
+body_hash: 'sha256:a8aff00a94e9e1f74766578288c0ac22ef0c6b69052b70878d8bb92021222c7e'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1403,6 +1403,53 @@ related:
 - `S54` `M` `src/cadrumo/entrypoints/tui/declarations/grouped.py`
 - `S54` `M` `src/cadrumo/entrypoints/tui/launcher.py`
 - `S54` `verify:` `pytest external filing details 16 geometry/theme/locale cases; installed source/calendar proofs and draft/correction urgency classification` -> `pass`
+- `S62` `M` `dev/registry/pipeline/render_profile_eligibility.py`
+- `S62` `M` `dev/registry/pipeline/render_profile.py`
+- `S62` `M` `dev/registry/pipeline/_export_tree.py`
+- `S62` `M` `dev/registry/pipeline/_tree_check.py`
+- `S62` `M` `dev/registry/pipeline/cli.py`
+- `S62` `A` `dev/registry/pipeline/_form_layout_companion.py`
+- `S62` `M` `dev/registry/form_layout/generator.py`
+- `S62` `M` `dev/registry/form_layout/tests/test_form_layout_integrity.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/form_layout_integrity.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/casillas/0001-declarations.toml`
+- `S62` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S62` `M` `dev/registry/pipeline/tests/test_modelo_303_semantic_maps.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_layout_encoding.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/tests/test_schema_form_layouts.py`
+- `S62` `M` `src/cadrumo/application/modelo/tests/test_work_form_grids.py`
+- `S62` `M` `src/cadrumo/application/modelo/tests/test_work_form_binding_labels.py`
+- `S62` `A` `src/cadrumo/entrypoints/tests/test_modelo_wire_input_alias.py`
+- `S62` `M` `src/cadrumo/entrypoints/tests/test_calendar_evidence_composition.py`
+- `S62` `A` `dev/registry/render_profiles/modelo_303/2023/0002-literal-rates.toml`
+- `S62` `A` `dev/registry/render_profiles/modelo_303/2024-early/0002-literal-rates.toml`
+- `S62` `A` `dev/registry/render_profiles/modelo_303/2024-late/0002-literal-rates.toml`
+- `S62` `A` `dev/registry/render_profiles/modelo_303/2025/0002-literal-rates.toml`
+- `S62` `A` `dev/registry/render_profiles/modelo_303/2026/0002-literal-rates.toml`
+- `S62` `M` `src/cadrumo/locales/ca/modelo/schema/303.yml`
+- `S62` `M` `src/cadrumo/locales/en/modelo/schema/303.yml`
+- `S62` `M` `src/cadrumo/locales/es/modelo/schema/303.yml`
+- `S62` `M` `src/cadrumo/locales/hu/modelo/schema/303.yml`
+- `S62` `M` `dev/registry/pipeline/tests/test_source_defect_declarations.py`
+- `S62` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S62` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S62` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S62` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S62` `verify:` `pytest literal profile/export/schema focused 209 cases` -> `pass`
+- `S62` `verify:` `pytest generated tree checker and existing publication recovery after new guard removal 42 cases` -> `pass`
+- `S62` `verify:` `dev.locales exact 48 rate corrections and unchanged unrelated catalogue values` -> `pass`
+- `S62` `by:` `vaultspec-high-executor`
+- `S64` `A` `src/cadrumo/entrypoints/tests/test_modelo_wire_input_alias.py`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S64` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S64` `verify:` `pytest real encrypted Modelo360 alias edit/reload/recalculation/codec wire proof` -> `pass`
+- `S64` `verify:` `pytest binding names/negative alias guards and actual published revision form totality` -> `pass`
+- `S64` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1490,3 +1537,5 @@ related:
 - `S54` Application source/evidence foundation checkpoint only. Installed route and truthful external details are owned by S55; final integrated captures still required.
 - `S55` The first expanded picker geometry detector found off-screen Cancel at 80 columns; initial-stage Create is now hidden and shared responsive modal tokens used. Broad TUI initially found five missing heading contracts; the meaningful filter/sort context now carries the common heading class and all twenty-four heading cases pass. Fresh integrated renders remain S56.
 - `S54` S54 wording reconciled through `plan_edit` to authorized truthful linkage/receipt availability. External filing details expose safe metadata and explain the unavailable handoff; no re-filing or fabricated linkage action is offered.
+- `S62` Prepared compiler and candidate companion checkpoint. Live export/layout installation, complete authority publication and runtime rate adoption remain outstanding, so S62 stays open. Existing export-only journal/recovery is unchanged; each installed export must be repaired with the canonical form generator before the next export invocation. Corrected HU names and Modelo100 binding questions share catalogue files with S59/S64.
+- `S64` A scalar input aliases a casilla only when exact record/offset/length, numeric type and independent consumer checks prove one write address. Ambiguous or independent consumers remain distinct. The Modelo100 boolean direct-binding question follows the established lookup priority; provider casilla names remain unchanged.

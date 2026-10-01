@@ -94,6 +94,20 @@ def test_a_design_constant_cell_must_carry_its_literal() -> None:
     assert FormCell(kind=FormCellKind.DESIGN_CONSTANT, literal="00400").literal == "00400"
 
 
+@pytest.mark.parametrize("literal,scale", [(None, 2), ("21%", 2), ("٠٢١٠٠", 2), ("02100", 5)])
+def test_a_literal_scale_requires_an_ascii_numeric_constant_with_integer_digits(
+    literal: str | None, scale: int
+) -> None:
+    for factory in (
+        lambda: FormCell(kind=FormCellKind.DESIGN_CONSTANT, literal=literal, literal_decimals=scale),
+        lambda: FormFieldBlock(id="rate", casilla_id="08", design_constant=literal, literal_decimals=scale),
+    ):
+        with pytest.raises(ValidationError):
+            factory()
+    assert FormCell(kind=FormCellKind.DESIGN_CONSTANT, literal="02100", literal_decimals=2).literal_decimals == 2
+    assert FormFieldBlock(id="rate", casilla_id="08", design_constant="02100", literal_decimals=2).literal_decimals == 2
+
+
 @pytest.mark.parametrize(
     "payload",
     [

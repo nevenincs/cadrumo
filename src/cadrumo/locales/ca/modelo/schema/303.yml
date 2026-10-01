@@ -78,13 +78,13 @@ modelo:
           dr303-155:
             label: IVA meritat, règim general nou tipus tram 2 - quota
           dr303-156:
-            label: Recàrrec d'equivalència al 0,5% - base imposable
+            label: Recàrrec d'equivalència a l'1,75% - Base imposable
           dr303-157:
-            label: Recàrrec d'equivalència al 0,5% - percentatge del tipus
+            label: Recàrrec d'equivalència a l'1,75% - Tipus (%)
           dr303-158:
-            label: Recàrrec d'equivalència al 0,5% - quota
+            label: Recàrrec d'equivalència a l'1,75% - Quota
           dr303-16:
-            label: Recàrrec d'equivalència al 1,0% - base imposable
+            label: Recàrrec d'equivalència - Base imposable
           dr303-165:
             label: IVA meritat, règim general tipus 2% des de 2024 - base imposable
           dr303-166:
@@ -98,11 +98,11 @@ modelo:
             label: Nou tipus de recàrrec d'equivalència des de 2024 - percentatge
               del tipus
           dr303-17:
-            label: Recàrrec d'equivalència al 1,0% - percentatge del tipus
+            label: Recàrrec d'equivalència - Tipus (%)
           dr303-170:
             label: Nou tipus de recàrrec d'equivalència des de 2024 - quota
           dr303-18:
-            label: Recàrrec d'equivalència al 1,0% - quota
+            label: Recàrrec d'equivalència - Quota
           dr303-19:
             label: Recàrrec d'equivalència al 1,4% - base imposable
           dr303-20:
@@ -937,14 +937,14 @@ modelo:
               help: 'Casella 155: quota de l''IVA meritat en el règim general del
                 nou tipus, tram 2.'
             '156':
-              help: 'Casella 156: base imposable del recàrrec d''equivalència al 0,5%.'
+              help: 'Casella 156: base imposable del recàrrec d''equivalència a l''1,75%.'
             '157':
               help: 'Casella 157: percentatge del tipus del recàrrec d''equivalència
-                al 0,5%.'
+                a l''1,75%.'
             '158':
-              help: 'Casella 158: quota del recàrrec d''equivalència al 0,5%.'
+              help: 'Casella 158: quota del recàrrec d''equivalència a l''1,75%.'
             '16':
-              help: 'Casella 16: base imposable del recàrrec d''equivalència a l''1,0%.'
+              help: 'Casella 16: base imposable del recàrrec d''equivalència.'
             '165':
               help: 'Casella 165: base imposable de l''IVA meritat en el règim general
                 al tipus del 2% des del 2024.'
@@ -961,12 +961,11 @@ modelo:
               help: 'Casella 169: percentatge del nou tipus del recàrrec d''equivalència
                 des del 2024.'
             '17':
-              help: 'Casella 17: percentatge del tipus del recàrrec d''equivalència
-                a l''1,0%.'
+              help: 'Casella 17: percentatge del tipus del recàrrec d''equivalència.'
             '170':
               help: 'Casella 170: quota del nou recàrrec d''equivalència des del 2024.'
             '18':
-              help: 'Casella 18: quota del recàrrec d''equivalència a l''1,0%.'
+              help: 'Casella 18: quota del recàrrec d''equivalència.'
             '19':
               help: 'Casella 19: base imposable del recàrrec d''equivalència a l''1,4%.'
             '20':

@@ -12,6 +12,10 @@ a layout depends on". The generator writes it and the validator recomputes it,
 so a revision whose casillas, bindings or export structure moved after
 generation is refused as stale instead of being served a form for a different
 revision.
+
+See Also:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+        The registry declaration supplying casillas, formulas, bindings and layout metadata.
 """
 
 from __future__ import annotations
@@ -46,6 +50,10 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
     the derived export records with their field coordinates. Labels, help and
     legal grounding are deliberately outside it, because a layout neither
     reads nor restates them.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
     casillas = sorted(
         (
@@ -78,7 +86,21 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
         for layout in derive_export_layouts_from_bindings(revision)
         for record in layout.records
     ]
-    payload = {"bindings": bindings, "casillas": casillas, "records": records, "revision": revision.id}
+    payload: dict[str, object] = {
+        "bindings": bindings,
+        "casillas": casillas,
+        "records": records,
+        "revision": revision.id,
+    }
+    literal_scales = [
+        (layout.id, record.id, field.id, field.decimals)
+        for layout in derive_export_layouts_from_bindings(revision)
+        for record in layout.records
+        for field in record.fields
+        if field.literal is not None and field.decimals is not None
+    ]
+    if literal_scales:
+        payload["literal_scales"] = literal_scales
     return sha256_hex(canonical_json_bytes(payload))
 
 
@@ -185,6 +207,10 @@ def form_layout_failures(revision: ModeloRevision) -> tuple[str, ...]:
 
     A revision without a layout returns no failure: absence is the declared
     inspection-only arm and is reported by coverage, not refused here.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
     match revision.form_layouts:
         case ():

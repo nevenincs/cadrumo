@@ -815,7 +815,11 @@ def _normalise_cell(
     _require_safe_identifier(str(semantic_entry.export_field_id), subject="export field id")
     if semantic_entry.kind is CasillaFieldKind.LITERAL:
         return _literal_derivation(
-            joined_field, transport_profile, export_record_id=export_record_id, source_defects=source_defects
+            joined_field,
+            transport_profile,
+            render_profile=render_profile,
+            export_record_id=export_record_id,
+            source_defects=source_defects,
         )
     if semantic_entry.kind is CasillaFieldKind.FILLER:
         return _schema_field(
@@ -976,6 +980,7 @@ def _literal_derivation(
     joined_field: JoinedRecordDesignField,
     profile: ExportTreeTransportProfile,
     *,
+    render_profile: RenderProfile,
     export_record_id: str,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
@@ -1045,6 +1050,9 @@ def _literal_derivation(
             f"literal field {joined_field.semantic_entry.export_field_id!r} has {literal_length} encoded bytes, "
             f"but the official slot is {parser_field.length} bytes",
         )
+    numeric_rule = render_profile.literal_numeric_rule_by_anchor.get(_render_profile_anchor(joined_field))
+    if numeric_rule is not None and numeric_rule.literal != literal:
+        raise RegistryValidationError("literal numeric rule disagrees with the exact official constant")
     return _schema_field(
         joined_field,
         data_type="text",
@@ -1052,6 +1060,7 @@ def _literal_derivation(
         padding=ExportPadding.NONE,
         justification=ExportJustification.NONE,
         signed=False,
+        decimals=None if numeric_rule is None else numeric_rule.decimal_digits,
         export_record_id=export_record_id,
         derivation_code="literal-exact-v1",
     )
