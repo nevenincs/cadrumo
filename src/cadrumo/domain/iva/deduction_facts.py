@@ -37,6 +37,7 @@ from .schema import IvaCategory, IvaRateKind
 #: rows bear a deduction, and the two answers reach the operator as opposite
 #: refusals on one row.
 _DEDUCTION_SOURCE_FAMILIES: Final = ("domestic", "import", "intra_eu", "reagp")
+_INTRA_EU_SOURCE_FAMILY: Final = "intra_eu"
 
 
 class IvaDeductionClassificationProvenance(BaseModel):
@@ -214,6 +215,26 @@ def admits_iva_deduction_classification(
     return bool(_source_families_admitting(category, flow_direction, declarations))
 
 
+def is_intra_eu_self_assessed_deduction(
+    *,
+    kind: IvaDeductionFactKind | None,
+    category: IvaCategory | None,
+) -> bool:
+    """Return whether this row's input deduction belongs to fact 0085's intra-EU family.
+
+    Every kind in that family requires the intra-EU self-assessment as its
+    evidence authority, and no ledger write can record one. A declared kind
+    answers by its own family; without one, the row's category answers, since
+    fact 0085 lets an intra-EU acquisition category bear only intra-EU kinds.
+    """
+    declarations = _registry_iva_deduction_declarations()
+    if kind is not None:
+        return _source_family_for_kind(kind, declarations) == _INTRA_EU_SOURCE_FAMILY
+    return category is not None and category.value in _declared_values(
+        declarations, f"category.{_INTRA_EU_SOURCE_FAMILY}"
+    )
+
+
 def _validate_non_rectification_category(
     *,
     kind: IvaDeductionFactKind,
@@ -286,6 +307,7 @@ def validate_iva_deduction_fact(
 __all__ = [
     "IvaDeductionClassificationProvenance",
     "admits_iva_deduction_classification",
+    "is_intra_eu_self_assessed_deduction",
     "required_deduction_evidence_authority",
     "validate_iva_deduction_fact",
 ]

@@ -1324,6 +1324,10 @@ application:
       iva_compensation_annual_source_evidence_failure: La evidencia de origen anual
         obligatoria del Modelo 303 para el Modelo 390 sigue sin resolverse (%{source_issue_count}
         incidencia(s)); la finalización está bloqueada.
+      iva_intra_eu_self_assessment_unrecordable: Cadrumo todavía no puede registrar
+        el justificante que necesita una adquisición intracomunitaria, por lo que
+        esta declaración no puede superar la comprobación (%{transaction_count} apuntes
+        afectados). Preséntela por otra vía.
       iva_selected_scope_evidence_failure: 'La evidencia de IVA del ámbito seleccionado
         está incompleta (%{source_ref_count} referencias de origen; %{unidentified_source_count}
         sin identificar), por lo que la verificación queda bloqueada. Identificadores

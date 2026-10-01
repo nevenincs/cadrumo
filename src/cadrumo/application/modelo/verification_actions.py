@@ -91,6 +91,7 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.components import registry_category_projection
+from ...domain.iva.deduction_facts import is_intra_eu_self_assessed_deduction
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
@@ -1399,13 +1400,70 @@ _IVA_AGGREGATION_SOURCE = BindingSourceKind.LEDGER_IVA_AGGREGATION
 _IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE = BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
 
 
-def _iva_selected_scope_evidence_finding(target: CalculationRevision) -> ModeloVerificationFinding | None:
-    """Return the blocking finding for persisted selected-scope IVA evidence failures."""
-    issues = tuple(
+#: The ``source_ref`` form a ledger IVA source issue names its row by.
+_LEDGER_TRANSACTION_SOURCE_REF_PREFIX: Final = "transaction:"
+
+
+def _iva_selected_scope_evidence_issues(target: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
+    return tuple(
         issue
         for issue in target.source_issues
         if issue.binding_source is _IVA_AGGREGATION_SOURCE and issue.reason == "iva_selected_scope_evidence_failure"
     )
+
+
+def _intra_eu_self_assessment_transaction_ids(
+    target: CalculationRevision,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+) -> tuple[str, ...]:
+    """Return the held-back rows whose deduction only an intra-EU self-assessment establishes.
+
+    The persisted issue says a row was held back, not why, so the row itself is
+    read to tell a gap the operator can close (an invoice to attach, a kind to
+    declare) from one no ledger write can close. A row the ledger no longer
+    holds stays with the general finding; the drift gate reports its removal.
+    """
+    issue_transaction_ids = tuple(
+        issue.source_ref.removeprefix(_LEDGER_TRANSACTION_SOURCE_REF_PREFIX)
+        for issue in _iva_selected_scope_evidence_issues(target)
+        if issue.source_ref is not None and issue.source_ref.startswith(_LEDGER_TRANSACTION_SOURCE_REF_PREFIX)
+    )
+    if not issue_transaction_ids:
+        return ()
+    catalogue = transaction_repository.load()
+    intra_eu_ids: list[str] = []
+    for transaction_id in sorted(set(issue_transaction_ids)):
+        transaction = catalogue.get(transaction_id)
+        if transaction is not None and is_intra_eu_self_assessed_deduction(
+            kind=transaction.deduction_fact_kind,
+            category=transaction.iva_category,
+        ):
+            intra_eu_ids.append(transaction_id)
+    return tuple(intra_eu_ids)
+
+
+def _general_selected_scope_evidence_issues(
+    target: CalculationRevision,
+    intra_eu_transaction_ids: tuple[str, ...],
+) -> tuple[CalculationSourceIssue, ...]:
+    intra_eu_source_refs = frozenset(
+        f"{_LEDGER_TRANSACTION_SOURCE_REF_PREFIX}{transaction_id}" for transaction_id in intra_eu_transaction_ids
+    )
+    return tuple(
+        issue for issue in _iva_selected_scope_evidence_issues(target) if issue.source_ref not in intra_eu_source_refs
+    )
+
+
+def _iva_selected_scope_evidence_finding(
+    target: CalculationRevision,
+    *,
+    intra_eu_transaction_ids: tuple[str, ...] = (),
+) -> ModeloVerificationFinding | None:
+    """Return the blocking finding for persisted selected-scope IVA evidence failures.
+
+    Rows named in ``intra_eu_transaction_ids`` are left to their own finding.
+    """
+    issues = _general_selected_scope_evidence_issues(target, intra_eu_transaction_ids)
     if not issues:
         return None
     source_refs = tuple(issue.source_ref for issue in issues if issue.source_ref is not None)
@@ -1422,14 +1480,45 @@ def _iva_selected_scope_evidence_finding(target: CalculationRevision) -> ModeloV
     )
 
 
+def _intra_eu_self_assessment_finding(intra_eu_transaction_ids: tuple[str, ...]) -> ModeloVerificationFinding:
+    """Return the blocking finding for intra-EU rows whose evidence cannot be recorded."""
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.iva_intra_eu_self_assessment_unrecordable",
+        message_facts={
+            "transaction_count": len(intra_eu_transaction_ids),
+            "transaction_ids": "|".join(intra_eu_transaction_ids),
+        },
+        legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+    )
+
+
 def _append_iva_selected_scope_evidence_finding(
     *,
     work_unit: WorkUnit,
     target: CalculationRevision,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    finding = _iva_selected_scope_evidence_finding(target)
+    intra_eu_transaction_ids = _intra_eu_self_assessment_transaction_ids(target, transaction_repository)
+    if intra_eu_transaction_ids:
+        intra_eu_finding = _intra_eu_self_assessment_finding(intra_eu_transaction_ids)
+        findings.append(intra_eu_finding)
+        failures_by_finding_id[id(intra_eu_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=work_unit.work_unit_id,
+            condition_id="modelo.work.verify.iva_selected_scope_evidence.complete",
+            scenario_id="modelo.work.verify.iva_selected_scope_evidence.intra_eu_self_assessment_unrecordable",
+            evidence_id="modelo.work.verify.iva_selected_scope_evidence",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "transaction_count": len(intra_eu_transaction_ids),
+            },
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
+    finding = _iva_selected_scope_evidence_finding(target, intra_eu_transaction_ids=intra_eu_transaction_ids)
     if finding is None:
         return
     findings.append(finding)
@@ -1441,14 +1530,7 @@ def _append_iva_selected_scope_evidence_finding(
         evidence_id="modelo.work.verify.iva_selected_scope_evidence",
         evidence_values={
             "modelo": str(work_unit.modelo),
-            "source_issue_count": len(
-                tuple(
-                    issue
-                    for issue in target.source_issues
-                    if issue.binding_source is _IVA_AGGREGATION_SOURCE
-                    and issue.reason == "iva_selected_scope_evidence_failure"
-                )
-            ),
+            "source_issue_count": len(_general_selected_scope_evidence_issues(target, intra_eu_transaction_ids)),
         },
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,
     )
@@ -1942,6 +2024,7 @@ def _collect_revision_verification_findings(
     _append_iva_selected_scope_evidence_finding(
         work_unit=work_unit,
         target=target,
+        transaction_repository=transaction_repository,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
     )
