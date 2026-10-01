@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:617a542cbffeaaad695e0854d80457450d5f82a8233c7502ee3bbea9e4c84cbd'
+body_hash: 'sha256:5b257adca6bd961cc91cefe57f3e4a900786a3b0dbf0d5660ec0b5e94a49e1f7'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1481,6 +1481,16 @@ related:
 - `S45` `verify:` `200 2022 (Orden HFP/523/2023) and 2023 (Orden HAC/495/2024) authored at applicability grade, 2022 root with 2023 and 2024 as deltas, boxes declared only where each design prints them with the same caption, type and sheet, every later row stating its absence origin; 2024 and 2025 hydration unchanged but for lineage claims; converter apply, no-op and drop-restatement; inspection 0 findings; published b50f34f6; 1955 passed; gated commit bed4a8ff44 212 passed` -> `pass`
 - `S50` `M` `dev/registry/conformance_vectors/modelo_200_2025_y_siguientes.toml`
 - `S50` `verify:` `conformance pin refreshed to the reviewed manifest digest of db50af829c (sha256 of the committed provenance manifest); pin tests 4 passed; commit 6ffafe355e` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_222_root_storage_reuse.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
+- `S11` `verify:` `registry-wide collapse verifier at 07:00: inputs stable, no live mutation, equivalence, facts, indexed (3477 coordinates), cache and publication readiness passed, 57 of 58 modelos minimal; 222's 2025 root then stored over 2024 (382 redundant overrides and 69 duplications to 0), hydration identical, apply and no-op with minimality passed, published 9fb6b44c, 248 passed; gated commit c31b57f8e4` -> `pass`
+- `S11` `M` `dev/registry/edition_delta_migration.py`
+- `S11` `M` `dev/registry/edition_family_delta.py`
+- `S11` `A` `dev/registry/tests/test_casilla_record_order.py`
+- `S11` `A` `dev/registry/tests/test_edition_delta_declared_order.py`
+- `S11` `M` `dev/registry/tests/test_edition_delta_migration_assessment.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S11` `verify:` `converter proves contract-defined member order with declared-order restorations and refusals, detector fails a misplaced stated row; 58-modelo converter sweep passed; 165 and 100/2025 order restored; converter suite 169 and modelo set 226 passed; published fcf7dc61; gated commit 969ecc57b6` -> `pass`
 
 ## Notes
 
@@ -1572,3 +1582,6 @@ related:
 - `S50` regressions of db50af829c, whose gate had not included the shared ambiguity tests
 - `S45` 200 2022 and 2023 now refuse calculation, as ruled; Modelo 202's prior-year read of those years refuses too, where it silently used the 2024 engine before; returned to the operator
 - `S45` undeclared 200 debt: 930 rows for 2022 and 665 for 2023, listed in the lane scratch debt2022.tsv and debt2023.tsv
+- `S11` the converter's equivalence proof does not compare sequence order, so rows stated over a baseline land at the edition's end; 222 declares positions; an order-aware proof and a registry-wide reorder sweep run before the closing verifier round
+- `S11` history sweep found order regressions from db50af829c (200/2025) and 3293259c99 (100 identity fields); their previously committed order is restored next
+- `S11` positions are absolute indexes, so a baseline edit can still shift later editions invisibly; anchored positions are a schema decision for the operator
