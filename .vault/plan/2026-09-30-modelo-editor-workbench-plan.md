@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:73411160d5d32dbe9649026b43c8c51c4d1a3b63b7a54ecf4ad310d9e0e39238'
+body_hash: 'sha256:1c54d6d1f475d2268ace792aa72a6e1572d95dcb7f0216569f636d224a9f49ea'
 ---
 
 # `modelo-editor-workbench` plan
@@ -133,6 +133,8 @@ Close what the combined render and the design verification found: nothing unconf
 - [ ] `P07.S50` - Render the phase in the review previews and close it with a review; `dev/tui`.
 - [x] `P07.S51` - Apply the design lane's terminology, area-name and conformance packs across every catalogue and regenerate the tests and references they move; `src/cadrumo/locales`.
 - [x] `P07.S52` - Keep calculation diagnostics from firing for sources that do not apply to the filer, then restore the deferred reasons to the filing block; `src/cadrumo/application/aggregation`.
+- [ ] `P07.S62` - Declare the scale of Modelo 303's rate literals so the general rate row prints its rate, grounded in the record design; `src/cadrumo/_data/registry/aeat/modelos/303`.
+- [ ] `P07.S63` - Show a calculated box's formula with its values in the editor, so a zero result says why; `src/cadrumo/application/modelo/casilla_help.py`.
 
 ### Phase `P08` - declarations list
 
@@ -142,6 +144,7 @@ Replace the declarations screens with one list grouped by what the filer must do
 - [ ] `P08.S54` - Show a period filed with AEAT but not linked to a declaration here as filed, not overdue, with a way to link it; `src/cadrumo/application/overview/calendar.py`.
 - [ ] `P08.S55` - Draw the grouped declarations list with the two-step new-declaration picker, surfacing advised and undetermined modelos; `src/cadrumo/entrypoints/tui/declarations`.
 - [ ] `P08.S56` - Render the declarations list in the review previews and close the phase with a review; `dev/tui`.
+- [ ] `P08.S61` - Give each deduction document Cadrumo cannot record its own blocking finding that sends the filer to file another way, once the intra-community refusal reaches this branch from main; `src/cadrumo/application/modelo/verification_actions.py`.
 
 ### Phase `P09` - documentation and naming
 
