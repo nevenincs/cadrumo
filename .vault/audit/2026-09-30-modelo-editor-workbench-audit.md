@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:8cdd00d52adc1ada17a3157a9b0639420ae7cd4f6f291743749118a04f838e1b'
+body_hash: 'sha256:e30706defea8f5e6d020ab0f409e4fbdeaa07285649fe5904859abe525a6a054'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -399,6 +399,34 @@ has accepted reads Overdue when no justificante matched, the chain identity diff
 reconciliation is unverifiable, or the row is not an active registration. The blocking findings
 send filers to file another way, which lands in exactly this case. Planned as a step of the
 declarations phase.
+
+### check-route-dead-end | high | the workbench withholds the check that alone clears a check-route note
+
+P07 phase review, 2026-10-01. Check-route reasons (`withholding_detail_absent` and the two IVA
+evidence failures) block in the workbench (`src/cadrumo/application/modelo/calculation_notes.py:57`)
+while the next step only offers to resolve them (`src/cadrumo/entrypoints/tui/modelo/workbench/progress.py:243`),
+so an attested empty Modelo 190 withholding detail stays withheld for good although the check
+would accept it. D4 leaves these reasons to the check. Being fixed: the check is offered while they
+are the only blockers, and a report for the calculation decides them.
+
+### printed-box-rule | medium | three definitions of a printed box disagree with the layout
+
+`calculation_notes.py:160`, `work_form.py:416` and `casilla_help.py:373` each decide what is printed;
+the gate's copy ignores the layout's box numbers, so 125 numbered boxes across 122 revisions,
+Modelo 390's bound [53], [600], [602] and [36] among them, would warn instead of block when
+unresolved. Being fixed with one resolver.
+
+### confirm-chip | medium | calculation notes asked for a confirmation nothing can give
+
+Notes at the confirm level counted in the header's confirm chip (`header.py:410`) with no confirm
+action and no effect on the gate. Being moved to worth checking.
+
+### p07-review-lows | low | stale verdict, a timing-dependent dock scroll, duplicate notes, stale docstrings
+
+A stale calculation plus a missing box read incomplete instead of blocked
+(`verification_actions.py:2131`); the docked panel's following-row scroll can run before the list
+scrolls (`screen.py:1567`); three producers emit box-less unresolved notes beside staging's boxed
+ones; and three docstrings or fields describe behaviour the code no longer has. Being fixed.
 
 ## Recommendations
 
