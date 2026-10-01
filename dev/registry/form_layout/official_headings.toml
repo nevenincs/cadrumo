@@ -10,8 +10,28 @@
 # revision-exact official titles held are the group headings each year's input dictionary (diccionario de toma
 # de datos) prints in braces over the data-entry fields of an XML container; a container is headed here only
 # when its first group heading names the whole container.
+#
+# Modelo 349: the record design of Orden HAC/174/2020 names its records and fields; its PDF extraction loses
+# the table the generator reads, so they are quoted here.
 
 quotes = [
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-declarante", source = "aeat-dr-349-2020-current", line = 10, text = "Registro del declarante" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-declarante", section = "general", source = "aeat-dr-349-2020-current", line = 10, text = "Datos identificativos y hoja resumen de la declaración" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-operador", source = "aeat-dr-349-2020-current", line = 13, text = "Registro de operador intracomunitario" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-operador", section = "general", source = "aeat-dr-349-2020-current", line = 17, text = "Operadores intracomunitarios" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-operador", section = "general", column = "sustituto-nif", source = "aeat-dr-349-2020-current", line = 410, text = "NIF empresario o profesional destinatario final sustituto" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-operador", section = "general", column = "sustituto-apellidos-razon-social", source = "aeat-dr-349-2020-current", line = 463, text = "Apellidos y nombre o razón social del sujeto pasivo sustituto" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-operador", section = "general", column = "op-codigo-pais", source = "aeat-dr-349-2020-current", line = 266, text = "Código país" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-operador", section = "general", column = "op-nif-comunitario", source = "aeat-dr-349-2020-current", line = 263, text = "NIF operador comunitario" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-operador", section = "general", column = "op-apellidos-razon-social", source = "aeat-dr-349-2020-current", line = 312, text = "Apellidos y nombre o razón social del operador intracomunitario" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-operador", section = "general", column = "op-clave-operacion", source = "aeat-dr-349-2020-current", line = 317, text = "Clave de operación" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-operador", section = "general", column = "op-base-imponible", source = "aeat-dr-349-2020-current", line = 361, text = "Base imponible o importe" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-rectificacion", source = "aeat-dr-349-2020-current", line = 13, text = "Registro de rectificaciones" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-rectificacion", section = "general", source = "aeat-dr-349-2020-current", line = 596, text = "Rectificaciones" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-rectificacion", section = "general", column = "rect-ejercicio-rectificado", source = "aeat-dr-349-2020-current", line = 610, text = "Ejercicio" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-rectificacion", section = "general", column = "rect-periodo-rectificado", source = "aeat-dr-349-2020-current", line = 614, text = "Periodo" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-rectificacion", section = "general", column = "rect-base-rectificada", source = "aeat-dr-349-2020-current", line = 639, text = "Base imponible o importes rectificados" },
+    { modelo = "349", revision = "2020-y-siguientes", page = "modelo-349-rectificacion", section = "general", column = "rect-base-anterior", source = "aeat-dr-349-2020-current", line = 680, text = "Base imponible declarada anteriormente" },
     { modelo = "100", revision = "2021", page = "datoseconomicos-tomadatosampliada", section = "rdtotrabajo", source = "aeat-dr-100-2021-input-dictionary", line = 137, text = "Rendimientos de trabajo" },
     { modelo = "100", revision = "2021", page = "datoseconomicos-tomadatosampliada", section = "gpfondos", source = "aeat-dr-100-2021-input-dictionary", line = 804, text = "Ganancias y pérdidas por la transmisión de sociedades y fondos de inversión y de SOCIMIS" },
     { modelo = "100", revision = "2021", page = "datoseconomicos-tomadatosampliada", section = "gpacciones", source = "aeat-dr-100-2021-input-dictionary", line = 816, text = "Transmisión de acciones negociadas" },

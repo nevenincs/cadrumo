@@ -37,7 +37,7 @@ from ..official_headings import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_COVERED = ("100",)
+_COVERED = ("100", "349")
 _LOCALES = ("es", "en", "ca", "hu")
 
 
@@ -237,3 +237,32 @@ def test_a_quote_for_a_part_the_design_already_names_is_refused() -> None:
     quote = QuotedHeading("130", "2019-y-siguientes", page.id, section.id, None, section.official_heading, source, line)
     with pytest.raises(OfficialHeadingRefusedError, match="already names"):
         _generate("130", "2019-y-siguientes", quote)
+
+
+def test_a_quote_for_a_column_the_block_does_not_have_is_refused() -> None:
+    quote = QuotedHeading(
+        "349",
+        "2020-y-siguientes",
+        "modelo-349-operador",
+        "general",
+        "no-such-column",
+        "Clave de operación",
+        "aeat-dr-349-2020-current",
+        317,
+    )
+    with pytest.raises(OfficialHeadingRefusedError, match="no column"):
+        _generate("349", "2020-y-siguientes", quote)
+
+
+def test_349_columns_carry_the_designs_field_names() -> None:
+    layout = _layout("349", "2020-y-siguientes")
+    columns = {
+        column.key: column.official_heading
+        for page in layout.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormRepeatingGroupBlock)
+        for column in block.columns
+    }
+    assert columns
+    assert [key for key, heading in columns.items() if heading is None] == []

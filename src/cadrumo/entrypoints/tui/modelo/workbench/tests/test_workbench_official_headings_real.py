@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from ......application.modelo.work_form_models import (
+    ModeloFormRepeatingBlock,
     ModeloFormSection,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
@@ -34,6 +35,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _ADDRESSES = [
     pytest.param({"modelo": "100", "filing_year": 2024, "period_code": "0A"}, id="renta"),
+    pytest.param({"modelo": "349", "filing_year": 2026, "period_code": "1T"}, id="intra-community"),
 ]
 _NAVIGATOR_WIDTH = 400
 
@@ -85,6 +87,25 @@ def test_every_headed_section_reads_in_the_filers_language_in_the_navigator_and_
     assert not [place for place, section in headed.items() if looks_like_identifier(section.heading.text)]
     assert not [place for place, section in headed.items() if not any(section.heading.text in row for row in navigator)]
     assert not [place for place, section in headed.items() if not any(section.heading.text in line for line in listed)]
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_every_headed_repeating_column_reads_in_the_filers_language(
+    language: OutputLanguage, workbench: InstalledModeloWorkbench
+) -> None:
+    with override_settings(cadrumo_output_language=language.value):
+        form = workbench.load(language).form
+    columns = [
+        column
+        for section in _headed(form).values()
+        for block in section.blocks
+        if isinstance(block, ModeloFormRepeatingBlock)
+        for column in block.columns
+    ]
+    if form.modelo == "349":
+        assert columns, "the 349 record tables lost their columns, so this check would pass on anything"
+    assert not [column.key for column in columns if column.heading.disclosure is not ModeloFormTextDisclosure.LOCALIZED]
+    assert not [column.key for column in columns if looks_like_identifier(column.heading.text)]
 
 
 @pytest.mark.asyncio

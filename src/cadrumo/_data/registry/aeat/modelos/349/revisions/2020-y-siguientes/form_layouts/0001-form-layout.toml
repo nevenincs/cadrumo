@@ -8,6 +8,9 @@ seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
 source_state_digest = "85ea4ba09f1886f73fb9a36d9322eebe7f718f9c137784282a68b3886e2a0645"
+design_sources = [
+    { source_ref = "aeat-dr-349-2020-current", sha256 = "7576b0099d9167cc756b6b99c67400fdef031165712f8f327f454d6ac4c6d015" },
+]
 placements = [
     { casilla_id = "decl.cambio-periodicidad", kind = "on_form", box_number = "186" },
     { casilla_id = "decl.complementaria-sustitutiva", kind = "on_form" },
@@ -35,10 +38,12 @@ placements = [
 id = "modelo-349-declarante"
 official_ref = "modelo-349-declarante"
 heading_key = "modelo.schema.349.form.page.modelo-349-declarante.heading"
+official_heading = "Registro del declarante"
 
 [[revisions.2020-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.349.form.section.general.heading"
+heading_key = "modelo.schema.349.form.section.datos-identificativos-y-hoja-resumen-de-l-26252f.heading"
+official_heading = "Datos identificativos y hoja resumen de la declaración"
 blocks = [
     { kind = "field", id = "field", casilla_id = "decl.numero-identificativo" },
     { kind = "field", id = "field-2", casilla_id = "decl.complementaria-sustitutiva" },
@@ -55,24 +60,28 @@ blocks = [
 id = "modelo-349-operador"
 official_ref = "modelo-349-operador"
 heading_key = "modelo.schema.349.form.page.modelo-349-operador.heading"
+official_heading = "Registro de operador intracomunitario"
 condition = "optional_record"
 
 [[revisions.2020-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.349.form.section.general.heading"
+heading_key = "modelo.schema.349.form.section.operadores-intracomunitarios.heading"
+official_heading = "Operadores intracomunitarios"
 blocks = [
-    { kind = "repeating", id = "modelo-349-operador", row_source = "export_record", export_record_id = "modelo-349-operador", columns = [{ key = "sustituto-nif", heading_key = "modelo.schema.349.form.column.sustituto-nif.heading", casilla_id = "sustituto.nif" }, { key = "sustituto-apellidos-razon-social", heading_key = "modelo.schema.349.form.column.sustituto-apellidos-razon-social.heading", casilla_id = "sustituto.apellidos-razon-social" }, { key = "op-codigo-pais", heading_key = "modelo.schema.349.form.column.op-codigo-pais.heading", casilla_id = "op.codigo-pais" }, { key = "op-nif-comunitario", heading_key = "modelo.schema.349.form.column.op-nif-comunitario.heading", casilla_id = "op.nif-comunitario" }, { key = "op-apellidos-razon-social", heading_key = "modelo.schema.349.form.column.op-apellidos-razon-social.heading", casilla_id = "op.apellidos-razon-social" }, { key = "op-clave-operacion", heading_key = "modelo.schema.349.form.column.op-clave-operacion.heading", casilla_id = "op.clave-operacion" }, { key = "op-base-imponible", heading_key = "modelo.schema.349.form.column.op-base-imponible.heading", casilla_id = "op.base-imponible" }] },
+    { kind = "repeating", id = "modelo-349-operador", row_source = "export_record", export_record_id = "modelo-349-operador", columns = [{ key = "sustituto-nif", heading_key = "modelo.schema.349.form.column.sustituto-nif.heading", official_heading = "NIF empresario o profesional destinatario final sustituto", casilla_id = "sustituto.nif" }, { key = "sustituto-apellidos-razon-social", heading_key = "modelo.schema.349.form.column.sustituto-apellidos-razon-social.heading", official_heading = "Apellidos y nombre o razón social del sujeto pasivo sustituto", casilla_id = "sustituto.apellidos-razon-social" }, { key = "op-codigo-pais", heading_key = "modelo.schema.349.form.column.op-codigo-pais.heading", official_heading = "Código país", casilla_id = "op.codigo-pais" }, { key = "op-nif-comunitario", heading_key = "modelo.schema.349.form.column.op-nif-comunitario.heading", official_heading = "NIF operador comunitario", casilla_id = "op.nif-comunitario" }, { key = "op-apellidos-razon-social", heading_key = "modelo.schema.349.form.column.op-apellidos-razon-social.heading", official_heading = "Apellidos y nombre o razón social del operador intracomunitario", casilla_id = "op.apellidos-razon-social" }, { key = "op-clave-operacion", heading_key = "modelo.schema.349.form.column.op-clave-operacion.heading", official_heading = "Clave de operación", casilla_id = "op.clave-operacion" }, { key = "op-base-imponible", heading_key = "modelo.schema.349.form.column.op-base-imponible.heading", official_heading = "Base imponible o importe", casilla_id = "op.base-imponible" }] },
 ]
 
 [[revisions.2020-y-siguientes.form_layouts.pages]]
 id = "modelo-349-rectificacion"
 official_ref = "modelo-349-rectificacion"
 heading_key = "modelo.schema.349.form.page.modelo-349-rectificacion.heading"
+official_heading = "Registro de rectificaciones"
 condition = "optional_record"
 
 [[revisions.2020-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.349.form.section.general.heading"
+heading_key = "modelo.schema.349.form.section.rectificaciones.heading"
+official_heading = "Rectificaciones"
 blocks = [
-    { kind = "repeating", id = "modelo-349-rectificacion", row_source = "export_record", export_record_id = "modelo-349-rectificacion", columns = [{ key = "rect-ejercicio-rectificado", heading_key = "modelo.schema.349.form.column.rect-ejercicio-rectificado.heading", casilla_id = "rect.ejercicio-rectificado" }, { key = "rect-periodo-rectificado", heading_key = "modelo.schema.349.form.column.rect-periodo-rectificado.heading", casilla_id = "rect.periodo-rectificado" }, { key = "rect-base-rectificada", heading_key = "modelo.schema.349.form.column.rect-base-rectificada.heading", casilla_id = "rect.base-rectificada" }, { key = "rect-base-anterior", heading_key = "modelo.schema.349.form.column.rect-base-anterior.heading", casilla_id = "rect.base-anterior" }] },
+    { kind = "repeating", id = "modelo-349-rectificacion", row_source = "export_record", export_record_id = "modelo-349-rectificacion", columns = [{ key = "rect-ejercicio-rectificado", heading_key = "modelo.schema.349.form.column.rect-ejercicio-rectificado.heading", official_heading = "Ejercicio", casilla_id = "rect.ejercicio-rectificado" }, { key = "rect-periodo-rectificado", heading_key = "modelo.schema.349.form.column.rect-periodo-rectificado.heading", official_heading = "Periodo", casilla_id = "rect.periodo-rectificado" }, { key = "rect-base-rectificada", heading_key = "modelo.schema.349.form.column.rect-base-rectificada.heading", official_heading = "Base imponible o importes rectificados", casilla_id = "rect.base-rectificada" }, { key = "rect-base-anterior", heading_key = "modelo.schema.349.form.column.rect-base-anterior.heading", official_heading = "Base imponible declarada anteriormente", casilla_id = "rect.base-anterior" }] },
 ]

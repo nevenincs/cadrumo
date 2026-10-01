@@ -434,9 +434,9 @@ def test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_lea
         lines = issue_lines(form)
 
     assert [line.where for line in lines] == [
-        "Country code of the Community operator",
-        "VAT number of the Community operator",
-        "Intra-Community transaction code",
+        "Country code",
+        "NIF of the intra-community trader",
+        "Transaction code",
     ]
     assert {line.level for line in lines} == {IssueLevel.MISSING}
     assert {line.message for line in lines} == {"This table has no records yet, and every record needs this value."}
