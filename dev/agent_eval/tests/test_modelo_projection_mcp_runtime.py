@@ -150,6 +150,7 @@ async def test_authorized_mcp_modelo_projection_results_and_history_disclosure_d
             ports=build_modelo_history_ports(bucket_id=str(profile_id), operation=authority_operation),
         )
         timeline = ModeloHistoryTimelineProjection(
+            authority_generation=authority_operation.generation.logical_generation,
             profile_id=profile_id,
             modelo=str(history.modelo),
             year=history.filing_year,
@@ -159,7 +160,9 @@ async def test_authorized_mcp_modelo_projection_results_and_history_disclosure_d
         )
         assert timeline.count >= 2
         return (
-            ModeloProjectOperationProjection.from_service(profile_id, projected),
+            ModeloProjectOperationProjection.from_service(
+                profile_id, projected, authority_generation=authority_operation.generation.logical_generation
+            ),
             compared.expected_projection,
             timeline,
         )
@@ -167,6 +170,7 @@ async def test_authorized_mcp_modelo_projection_results_and_history_disclosure_d
     with native_api_cli_session(tmp_path, scope_for_destination=scope, prepare_profile=prepare) as enrolled:
         monkeypatch.setattr(runtime_credentials, "installed_automation_secret_store", lambda: enrolled._client_native)
         adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
+        missing_provenance: list[str] = []
         try:
             async with connected_server_and_client_session(build_server(adapter)) as sdk:
                 authenticated = await sdk.call_tool(
@@ -277,5 +281,13 @@ async def test_authorized_mcp_modelo_projection_results_and_history_disclosure_d
                         released = timeline_result_type.model_validate_json(canonical_json_bytes(document))
                     assert released.definition_contract_digest == contract.definition_contract_digest
                     assert released.projection == expected
+                    disclosed = released.projection.model_dump(mode="json")
+                    if disclosed.get("authority_generation") != authority_operation.pin().logical_generation:
+                        missing_provenance.append(definition_id)
         finally:
             await adapter.close()
+    if missing_provenance:
+        pytest.fail(
+            "released modelo results omit pinned publication provenance: " + ", ".join(missing_provenance),
+            pytrace=False,
+        )

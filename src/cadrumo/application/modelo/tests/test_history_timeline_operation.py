@@ -130,6 +130,7 @@ def test_timeline_omits_export_path_and_free_text_even_if_source_event_contains_
         payload=payload,
     )
     projected = ModeloHistoryTimelineProjection(
+        authority_generation="c" * 64,
         profile_id=_PROFILE,
         modelo="130",
         year=2025,
@@ -145,8 +146,15 @@ def test_timeline_omits_export_path_and_free_text_even_if_source_event_contains_
     for forbidden in ("output_path", "private/tax-export", "source_header_locator", "private-actor", "reason"):
         assert forbidden not in public_json
     assert ModeloHistoryTimelineProjection.model_validate_json(public_json) == projected
+    for invalid in (None, "", "not-a-publication-digest"):
+        with pytest.raises(ValidationError):
+            ModeloHistoryTimelineProjection.model_validate(projected.model_dump() | {"authority_generation": invalid})
     with pytest.raises(ValidationError):
-        ModeloHistoryTimelineProjection(profile_id=_PROFILE, modelo="130", count=2, events=projected.events)
+        ModeloHistoryTimelineProjection.model_validate(projected.model_dump(exclude={"authority_generation"}))
+    with pytest.raises(ValidationError):
+        ModeloHistoryTimelineProjection(
+            authority_generation="c" * 64, profile_id=_PROFILE, modelo="130", count=2, events=projected.events
+        )
     with pytest.raises(ValidationError):
         ModeloTimelineEvent(
             event_id=event.event_id, event_type=BucketEventType.PROFILE_ACTIVATED, occurred_at=occurred_at

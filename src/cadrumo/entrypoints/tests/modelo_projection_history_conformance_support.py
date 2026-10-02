@@ -89,6 +89,7 @@ def prepare_modelo_projection_history_conformance_case(
             return ModeloProjectionHistoryConformanceCase(
                 request=ModeloHistoryTimelineRequest(profile_id=profile_id, modelo="130", year=2025, period="1T"),
                 expected_projection=ModeloHistoryTimelineProjection(
+                    authority_generation=operation.generation.logical_generation,
                     profile_id=profile_id,
                     modelo=str(history.modelo),
                     year=history.filing_year,
@@ -134,7 +135,9 @@ def prepare_modelo_projection_history_conformance_case(
         assert expected.quarters_filed == 1 and expected.quarters_available == ("1T",)
         return ModeloProjectionHistoryConformanceCase(
             request=ModeloProjectOperationRequest(profile_id=profile_id, year=2025, ccaa="madrid"),
-            expected_projection=ModeloProjectOperationProjection.from_service(profile_id, expected),
+            expected_projection=ModeloProjectOperationProjection.from_service(
+                profile_id, expected, authority_generation=operation.generation.logical_generation
+            ),
             expected_effect=OperationEffect.NONE,
             expected_phase_codes=("modelo.project.prepare", "modelo.project.result"),
         )
@@ -151,7 +154,9 @@ def prepare_modelo_projection_history_conformance_case(
     assert expected_compare.delta_rows and expected_compare.sections
     return ModeloProjectionHistoryConformanceCase(
         request=ModeloCompareOperationRequest(profile_id=profile_id, modelo="130", years=(2025, 2026)),
-        expected_projection=ModeloCompareOperationProjection.from_service(profile_id, expected_compare),
+        expected_projection=ModeloCompareOperationProjection.from_service(
+            profile_id, expected_compare, authority_generation=operation.generation.logical_generation
+        ),
         expected_effect=OperationEffect.NONE,
         expected_phase_codes=("modelo.compare.prepare", "modelo.compare.result"),
     )

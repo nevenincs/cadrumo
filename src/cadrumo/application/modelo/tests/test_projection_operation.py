@@ -171,6 +171,7 @@ def test_public_request_and_result_validators_reject_incomplete_values() -> None
     with pytest.raises(ValidationError):
         ModeloProjectOperationProjection.model_validate(
             {
+                "authority_generation": "c" * 64,
                 "profile_id": str(_PROFILE),
                 "year": 2025,
                 "ccaa": "Madrid",
@@ -221,6 +222,7 @@ def test_comparison_public_result_retains_order_and_every_provenance_reference()
         }
     )
     projection = ModeloCompareOperationProjection(
+        authority_generation="c" * 64,
         profile_id=_PROFILE,
         modelo="100",
         year_a=2024,
@@ -238,6 +240,11 @@ def test_comparison_public_result_retains_order_and_every_provenance_reference()
     assert ModeloCompareOperationProjection.model_validate_json(projection.model_dump_json()) == projection
     assert projection.delta_rows[0].legal_refs == ("legal-1", "legal-2")
     assert projection.delta_rows[1].delta == "0.01"
+    for invalid in (None, "", "not-a-publication-digest"):
+        with pytest.raises(ValidationError):
+            ModeloCompareOperationProjection.model_validate(projection.model_dump() | {"authority_generation": invalid})
+    with pytest.raises(ValidationError):
+        ModeloCompareOperationProjection.model_validate(projection.model_dump(exclude={"authority_generation"}))
     with pytest.raises(ValidationError):
         ModeloCompareOperationProjection.model_validate(
             projection.model_dump() | {"sections": (CompareSectionProjection(section="base", rows=(first,)),)}

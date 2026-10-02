@@ -15,6 +15,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -98,6 +99,7 @@ class ModeloHistoryTimelineProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     result_version: Literal[1] = 1
+    authority_generation: ContentDigest
     profile_id: UUID
     modelo: str = Field(min_length=1, max_length=16)
     year: int | None = Field(default=None, ge=1900, le=9999)
@@ -150,6 +152,7 @@ class ModeloHistoryTimelineExecutor:
                 payload.modelo, filing_year=payload.year, period=payload.period, ports=ports
             )
             return ModeloHistoryTimelineProjection(
+                authority_generation=context.authority_operation.generation.logical_generation,
                 profile_id=payload.profile_id,
                 modelo=str(history.modelo),
                 year=history.filing_year,

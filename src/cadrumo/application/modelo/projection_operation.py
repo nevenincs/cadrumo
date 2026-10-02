@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -151,6 +152,7 @@ class ModeloProjectOperationProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     result_version: Literal[1] = 1
+    authority_generation: ContentDigest
     profile_id: UUID
     year: int = Field(ge=1900, le=9999)
     ccaa: _Token
@@ -170,9 +172,12 @@ class ModeloProjectOperationProjection(BaseModel):
         return self
 
     @classmethod
-    def from_service(cls, profile_id: UUID, result: ModeloProjectServiceResult) -> Self:
+    def from_service(
+        cls, profile_id: UUID, result: ModeloProjectServiceResult, *, authority_generation: ContentDigest
+    ) -> Self:
         """Carry all canonical values and per-casilla provenance without rounding."""
         return cls(
+            authority_generation=authority_generation,
             profile_id=profile_id,
             year=result.year,
             ccaa=result.ccaa,
@@ -239,6 +244,7 @@ class ModeloCompareOperationProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     result_version: Literal[1] = 1
+    authority_generation: ContentDigest
     profile_id: UUID
     modelo: _Token
     year_a: int = Field(ge=1900, le=9999)
@@ -265,10 +271,13 @@ class ModeloCompareOperationProjection(BaseModel):
         return self
 
     @classmethod
-    def from_service(cls, profile_id: UUID, result: ModeloCompareServiceResult) -> Self:
+    def from_service(
+        cls, profile_id: UUID, result: ModeloCompareServiceResult, *, authority_generation: ContentDigest
+    ) -> Self:
         """Carry duplicate section/flat views with their complete provenance."""
         rows = tuple(_compare_row(row) for row in result.delta_rows)
         return cls(
+            authority_generation=authority_generation,
             profile_id=profile_id,
             modelo=result.modelo,
             year_a=result.year_a,
@@ -412,7 +421,11 @@ class ModeloProjectExecutor:
                 casilla_overrides={item.key: item.value for item in payload.casilla_overrides},
                 binding_overrides={item.key: item.value for item in payload.binding_overrides},
             )
-            public = ModeloProjectOperationProjection.from_service(payload.profile_id, result)
+            public = ModeloProjectOperationProjection.from_service(
+                payload.profile_id,
+                result,
+                authority_generation=context.authority_operation.generation.logical_generation,
+            )
             await context.events.phase("modelo.project.result")
             return await context.operands.put(public, written_at=now())
 
@@ -451,7 +464,11 @@ class ModeloCompareExecutor:
                 ports=guarded,
                 operation=context.authority_operation,
             )
-            public = ModeloCompareOperationProjection.from_service(payload.profile_id, result)
+            public = ModeloCompareOperationProjection.from_service(
+                payload.profile_id,
+                result,
+                authority_generation=context.authority_operation.generation.logical_generation,
+            )
             await context.events.phase("modelo.compare.result")
             return await context.operands.put(public, written_at=now())
 
