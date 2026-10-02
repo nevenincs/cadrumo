@@ -11,7 +11,7 @@ related:
   - '[[2026-09-07-tuimodelo-filing-lifecycle-adr]]'
 modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:d33945cc26baea2693bd15d3001bd16c17d30baab82e3378a4efb15e59293a5d'
+body_hash: 'sha256:6ee93451088a116431a31fc6e795c0df7fe20772d04f5fa08d942657fc09a31e'
 ---
 
 # `modelo-filing-ux-followup` plan
@@ -38,7 +38,7 @@ The final review also found a reachable direct Export path that could ignore pen
 - [x] `S05` - Preserve complete declaration identity and deadline context in the persistent header; `workbench header.py/screen.py, owning header and real formula-value consumer tests, and four existing locale catalogues limited to the two header name leaves (CA semantic correction and EN/ES/HU quote normalization)`.
 - [x] `S06` - Explain typed calculation prerequisites after a refused Apply and retain visible staged intent across recovery surfaces; `application/modelo edit executor and ephemeral refusal projection, operation composition and installed lifecycle/workbench doors, workbench screen/issues/session/page_items/casilla_list/editor/navigator, focused owning tests including list wrapping and truthful browsing ranges, four common.yml catalogues with nine new recovery/editor/verdict leaves and canonical import load-target metadata`.
 - [x] `S07` - Prevent pending edits from exporting or recording an older saved result; `workbench screen.py shared output guard and focused pending True/False/zero/clear boundary tests with actual Review/Issues key evidence`.
-- [ ] `S04` - Verify integrated installed filing UX and record the final cohesive review; `owning harness tests and modelo-filing-ux-followup audit`.
+- [x] `S04` - Verify integrated installed filing UX and record the final cohesive review; `owning harness and applicable consumer evidence, modelo-filing-ux-followup audit and generated feature index`.
 
 ## Parallelization
 

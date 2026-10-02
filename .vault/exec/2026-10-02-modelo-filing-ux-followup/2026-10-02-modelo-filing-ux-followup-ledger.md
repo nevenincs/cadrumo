@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:147b14cf3de7204bf3f852f08d52323de3e30610d6fa99452a4a8f4588494305'
+body_hash: 'sha256:16e27ee1ac162d5bbefacb78c5344084a9c5531ba8529a7c85c16000095fd14a'
 related:
   - "[[2026-10-02-modelo-filing-ux-followup-plan]]"
 ---
@@ -137,6 +137,25 @@ related:
 - `S06` `verify:` `independent actual S06 committed Hungarian nine-leaf coverage before repair` -> `fail`
 - `S06` `verify:` `current four observed Hungarian required cells placeholders character/cell caps` -> `pass`
 - `S06` `verify:` `s06-app-observer-corrected actual 11-case receipt` -> `pass`
+- `S04` `A` `.vault/audit/2026-10-02-modelo-filing-ux-followup-audit.md`
+- `S04` `M` `.vault/index/modelo-filing-ux-followup.index.md`
+- `S04` `verify:` `principal final recovery24 PNG text and72 artifact hash review` -> `pass`
+- `S04` `verify:` `principal current Hungarian temporal Issues single-frame supplement` -> `pass`
+- `S04` `verify:` `s04-current-hu-saved-check-supplement-final supported official scenario` -> `pass`
+- `S04` `verify:` `independent final source and actual parent-to-commit review S02 S03 S05 S06 S07 and corrective S06` -> `pass`
+- `S04` `verify:` `committed nine new leaves four locales parity placeholders and character/cell caps` -> `pass`
+- `S04` `verify:` `s04-import-gate-coherent-final 15 contracts 3001 modules` -> `pass`
+- `S04` `verify:` `s04-final-scoped-catalogue 38 keys 152 measured cells` -> `pass`
+- `S04` `verify:` `s06-existing-editor-consumers 141 tests` -> `pass`
+- `S04` `verify:` `s06-navigator-ranges-final 35 tests` -> `pass`
+- `S04` `verify:` `s06-scroll-breadcrumb-corrected 30 tests` -> `pass`
+- `S04` `verify:` `s06-s07-ui-final 81 tests` -> `pass`
+- `S04` `verify:` `s04-final format lint types 31 Python paths` -> `pass`
+- `S04` `verify:` `typed original external completion separate draft and correction calendar semantics` -> `pass`
+- `S04` `verify:` `scoped two-paragraph docs completeness10 and strict EN ES CA HU builds` -> `pass`
+- `S04` `verify:` `s04-locale-inventory-owned-final global census` -> `fail`
+- `S04` `verify:` `vault feature check zero errors and warnings` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -148,3 +167,4 @@ related:
 - `S06` Actual Modelo100 Apply remains an explained legacy-replay source refusal with unchanged saved1388 imported0 and retained0168 Yes; successful persistence, export wire and filing are unclaimed. The native40 source/24frames are immutable. Global census exit1 is classified in work/UX5-checks/s04-locale-inventory-final-disposition.json:25190 catalogue-only keys plus six inherited inventory/tool conditions and one missing frozen gettext source-manifest; required30040/30040, missing/repair/review/placeholder/discovery defects0. Earlier `NO_COLOR` and failed route/harness attempts remain evidence. Current shared register edits, including HU overlaps, are preserved and excluded from owned staged cells; native human HU review remains pending.
 - `S07` The direct e/export bypass is the reachable defect. Ordinary F8 already chose Apply while staged; the final filing callback guard is deliberate hardening. True, False, zero and clear plus late dialog changes retain drafts and call no export/record provider. Refusal copy is derived fresh from actual current count and `[R],` with active typed prerequisite taking Issues precedence. S06/S07 coexistence is verified by the final81-case and actual24-frame receipt; independent actual commit comparison is consolidated in S04.
 - `S06` P1 commit review found four required new HU cells omitted from75c462 because live-overlap skip was applied to absent parent leaves. S06 reopened. Corrective integration adds exactly current informal notice, next, action and `saved_with_changes` without modifying their words or any other foreign committed/index/live cells. The saved-check sentence alone changed after accepted native40 (75 to73cells) and has a separately reviewed current-copy boundary. The earlier observer verification label was descriptive; its exact durable receipt is work/UX5-checks/s06-app-observer-corrected-receipt.json.
+- `S04` Final cohesive audit PASS is scoped to owned filing UX. Actual supported100 remains an explained legacy-source refusal with retained answer and unchanged fresh encrypted saved head; no successful Apply, wire/export or AEAT filing claim. Native human Hungarian release review remains pending. Final census failure categories/counts and normalized baseline comparison are preserved in the audit/disposition receipt; required-cell and owned char/cell checks pass, while whole-doc snapshot extraction is unavailable. The import-only coherent snapshot addresses a foreign launcher-main/base-authority mismatch without changing accepted native/live source. Native24 and single current HU supplement are separate immutable copy versions, with earlier failures retained. Unrelated foreign parent/staged/live work is preserved.

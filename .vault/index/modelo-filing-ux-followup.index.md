@@ -6,8 +6,10 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d00ef125f6256f325876f9a307bb94b1dbaada8f683cead8141a6c27832d26b'
+body_hash: 'sha256:dd9315ac10d60898b8de767dc658bb8eb1965f951d180bf9ef98bc0c7e9b31e5'
 related:
+  - '[[2026-10-02-modelo-filing-ux-followup-audit]]'
+  - '[[2026-10-02-modelo-filing-ux-followup-ledger]]'
   - '[[2026-10-02-modelo-filing-ux-followup-plan]]'
 ---
 
@@ -16,6 +18,14 @@ related:
 Auto-generated index of all documents tagged with `#modelo-filing-ux-followup`.
 
 ## Documents
+
+### audit
+
+- `2026-10-02-modelo-filing-ux-followup-audit` - `modelo-filing-ux-followup` audit: `Integrated filing UX follow-up`
+
+### exec
+
+- `2026-10-02-modelo-filing-ux-followup-ledger` - `modelo-filing-ux-followup` ledger
 
 ### plan
 
