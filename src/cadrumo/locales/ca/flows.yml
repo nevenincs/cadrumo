@@ -86,13 +86,8 @@ flows:
     namespace_detail: detall {number}
     onboarding:
       continue: Continua
-      done: La configuració és completa. Continua a Inici o continua afegint detalls
-        opcionals a sota.
       finish: Acaba la configuració
       heading: Configura el teu perfil
-      intro: Aquí només es demanen les respostes necessàries per preparar les teves
-        declaracions. Prem Continua i respon cada pregunta; la resta és opcional i
-        pot esperar.
       progress: '{answered} de {total} respostes obligatòries'
       question: Pregunta {number} de {total} · {section}
       ready: Ja tens totes les respostes obligatòries. Acaba la configuració per començar
@@ -105,8 +100,6 @@ flows:
       sources_summary: Omple el perfil a partir dels registres de l'AEAT o dels teus
         documents en lloc d'escriure'l.
       sources_title: Importa dades (opcional)
-      step: 'Pas {step} de {steps}: {section}'
-      step_finish: 'Pas {step} de {steps}: acabar la configuració'
       to_workbench: Continua a Inici
     plantilla_media:
       average_workforce: Plantilla mitjana
@@ -128,6 +121,51 @@ flows:
       remove: Eliminar fila
       remove_confirm: Vols eliminar la fila %{row} de la secció %{section}?
     section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Perfil segur creat
+
+        ✓ Dades obligatòries desades
+
+        ✓ Configuració confirmada'
+      answer_required: Completar dades
+      edit_intro: Desplega una secció i selecciona un camp per editar-lo. * Obligatori
+        · Els altres són opcionals. Cada canvi es desa immediatament.
+      get_data_copy: Opcional. Importa les dades disponibles o salta aquest pas i
+        introdueix les dades obligatòries tu mateix. No cal accedir a l'AEAT per acabar
+        la configuració.
+      get_data_title: Obtenir dades
+      overview_checklist: '✓ Perfil segur creat
+
+        ○ Importar dades o saltar el pas
+
+        ○ Completar les dades obligatòries
+
+        ○ Revisar i acabar'
+      overview_copy: 'El teu perfil segur està creat. Et demanarem només les dades
+        necessàries per configurar-lo i les podràs revisar abans d''acabar. Pots sortir
+        i tornar: cada resposta es desa quan la introdueixes.'
+      overview_title: Resum
+      previous: Anterior
+      ready_copy: Ben fet! El teu perfil està configurat i les respostes estan desades.
+        Continua a Inici per començar a preparar una declaració. Pots editar el perfil
+        en qualsevol moment.
+      ready_title: A punt
+      required_complete: Dades obligatòries completes
+      required_copy: Queden {missing} respostes obligatòries. Continuar et guia per
+        aquestes preguntes. Els camps amb * són obligatoris; les dades opcionals poden
+        esperar.
+      required_title: Obligatoris
+      review_copy: Comprova les dades desades. Desplega una secció per editar-les.
+        Els camps opcionals poden quedar buits. Acabar confirma que el perfil està
+        configurat; cada declaració té les seves pròpies comprovacions.
+      review_missing: Queden {missing} respostes obligatòries per completar. Continuar
+        t'hi porta.
+      review_saved: ✓ Totes les respostes obligatòries estan desades. Les dades opcionals
+        no impedeixen acabar.
+      review_title: Revisar
+      skip_import: Saltar importació
+      start: Començar
+      step: Pas {step} de {steps} · En queden {remaining}
     title: 'Perfil: {profile}'
   modelo_review:
     filter:
@@ -252,6 +290,7 @@ flows:
       seguides són més fàcils de recordar i més difícils d'endevinar que una sola
       paraula curta i complicada.
     password_label: Contrasenya
+    progress: 1 · Crear el teu perfil segur    2 · Configurar les dades
     recovery:
       cancel_button: Cancel·la
       confirm_button: Ja l'he anotat
@@ -270,6 +309,8 @@ flows:
       profile_already_exists: Ja existeix un perfil anomenat '%{profile}'. Tria un
         altre nom, o surt d'aquesta pantalla i inicia la sessió en aquest perfil.
       username_required: Introdueix un nom per a aquest perfil.
+    requirements: El nom i tots dos camps de contrasenya són obligatoris. Pots canviar
+      l'idioma més endavant.
     section: Nom i contrasenya
     strength:
       fair: Raonable.

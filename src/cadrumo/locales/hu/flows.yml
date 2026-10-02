@@ -86,13 +86,8 @@ flows:
     namespace_detail: '{number}. részlet'
     onboarding:
       continue: Tovább
-      done: A beállítás kész. Lépjen tovább a Kezdőlapra, vagy adjon meg további opcionális
-        adatokat alább.
       finish: Beállítás befejezése
       heading: Profil beállítása
-      intro: Itt csak a bevallások elkészítéséhez szükséges válaszokat kérjük. Nyomja
-        meg a Tovább gombot, és válaszoljon minden kérdésre; minden más opcionális,
-        és ráér később.
       progress: '{answered} / {total} kötelező válasz'
       question: '{number}. kérdés / {total} · {section}'
       ready: Minden kötelező válasz megvan. Fejezze be a beállítást, és kezdje el
@@ -105,8 +100,6 @@ flows:
       sources_summary: Töltse ki a profilt az AEAT nyilvántartásaiból vagy saját dokumentumaiból
         gépelés helyett.
       sources_title: Adatok importálása (opcionális)
-      step: '{step}. lépés / {steps}: {section}'
-      step_finish: '{step}. lépés / {steps}: a beállítás befejezése'
       to_workbench: Tovább a Kezdőlapra
     plantilla_media:
       average_workforce: Átlagos állományi létszám
@@ -128,6 +121,49 @@ flows:
       remove: Sor eltávolítása
       remove_confirm: Eltávolítja a(z) %{row} sort a(z) %{section} szakaszból?
     section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Biztonságos profil létrehozva
+
+        ✓ Kötelező adatok mentve
+
+        ✓ Beállítás megerősítve'
+      answer_required: Adatok megadása
+      edit_intro: Nyiss ki egy szakaszt, majd válassz mezőt a szerkesztéshez. * Kötelező
+        · A többi opcionális. Minden módosítás azonnal mentésre kerül.
+      get_data_copy: Opcionális. Importáld az elérhető adatokat, vagy hagyd ki ezt
+        a lépést, és add meg a kötelező adatokat kézzel. A beállítás befejezéséhez
+        nincs szükség AEAT-hozzáférésre.
+      get_data_title: Adatok
+      overview_checklist: '✓ Biztonságos profil létrehozva
+
+        ○ Adatok importálása vagy a lépés kihagyása
+
+        ○ Kötelező adatok megadása
+
+        ○ Ellenőrzés és befejezés'
+      overview_copy: 'Biztonságos profilod létrejött. Csak a beállításhoz szükséges
+        adatokat kérjük, majd befejezés előtt ellenőrizheted őket. Kiléphetsz és visszatérhetsz:
+        minden válasz azonnal mentésre kerül.'
+      overview_title: Áttekintés
+      previous: Előző
+      ready_copy: Szép munka! Profilod beállítása kész, válaszaid el vannak mentve.
+        Folytasd a Kezdőlapon egy bevallás előkészítésével. Profilodat bármikor szerkesztheted.
+      ready_title: Kész
+      required_complete: Kötelező adatok kitöltve
+      required_copy: Még {missing} kötelező válasz hiányzik. A Folytatás végigvezet
+        rajtuk. A * jelű mezők kötelezők; az opcionális adatok később is megadhatók.
+      required_title: Kötelező
+      review_copy: Ellenőrizd a mentett adatokat. Nyiss ki egy szakaszt a szerkesztéshez.
+        Az opcionális mezők üresen maradhatnak. A befejezés a profil beállítását erősíti
+        meg; minden bevallás külön ellenőrzést igényel.
+      review_missing: Még {missing} kötelező válasz hiányzik. A Folytatás ezekhez
+        vezet.
+      review_saved: ✓ Minden kötelező válasz mentve. Az opcionális adatok nem akadályozzák
+        a befejezést.
+      review_title: Ellenőrzés
+      skip_import: Import kihagyása
+      start: Kezdés
+      step: '{step}/{steps}. lépés · Még {remaining} van hátra'
     title: 'Profil: {profile}'
   modelo_review:
     filter:
@@ -252,6 +288,7 @@ flows:
       után könnyebben megjegyezhető és nehezebben kitalálható, mint egy rövid, bonyolult
       szó.
     password_label: Jelszó
+    progress: 1 · Biztonságos profil létrehozása    2 · Adatok beállítása
     recovery:
       cancel_button: Mégse
       confirm_button: Felírtam
@@ -269,6 +306,7 @@ flows:
       profile_already_exists: Már létezik '%{profile}' nevű profil. Válassz másik
         nevet, vagy lépj ki erről a képernyőről, és jelentkezz be abba a profilba.
       username_required: Adj meg egy nevet ennek a profilnak.
+    requirements: A név és mindkét jelszómező kötelező. A nyelvet később is megváltoztathatod.
     section: Név és jelszó
     strength:
       fair: Megfelelő.

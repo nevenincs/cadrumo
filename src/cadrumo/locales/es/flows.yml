@@ -85,13 +85,8 @@ flows:
     namespace_detail: detalle {number}
     onboarding:
       continue: Continuar
-      done: La configuración está completa. Continúa a Inicio o sigue añadiendo detalles
-        opcionales abajo.
       finish: Terminar la configuración
       heading: Configura tu perfil
-      intro: Aquí solo se piden las respuestas necesarias para preparar tus declaraciones.
-        Pulsa Continuar y responde a cada pregunta; todo lo demás es opcional y puede
-        esperar.
       progress: '{answered} de {total} respuestas obligatorias'
       question: Pregunta {number} de {total} · {section}
       ready: Ya tienes todas las respuestas obligatorias. Termina la configuración
@@ -104,8 +99,6 @@ flows:
       sources_summary: Rellena el perfil a partir de los registros de la AEAT o de
         tus documentos en lugar de escribirlo.
       sources_title: Importar datos (opcional)
-      step: 'Paso {step} de {steps}: {section}'
-      step_finish: 'Paso {step} de {steps}: terminar la configuración'
       to_workbench: Continuar a Inicio
     plantilla_media:
       average_workforce: Plantilla media
@@ -129,6 +122,50 @@ flows:
       remove: Eliminar fila
       remove_confirm: ¿Eliminar la fila %{row} de la sección %{section}?
     section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Perfil seguro creado
+
+        ✓ Datos obligatorios guardados
+
+        ✓ Configuración confirmada'
+      answer_required: Completar datos
+      edit_intro: Despliega una sección y selecciona un campo para editarlo. * Obligatorio
+        · Los demás son opcionales. Cada cambio se guarda inmediatamente.
+      get_data_copy: Opcional. Importa los datos disponibles o salta este paso e introduce
+        los datos obligatorios tú mismo. No necesitas acceder a la AEAT para terminar
+        la configuración.
+      get_data_title: Obtener datos
+      overview_checklist: '✓ Perfil seguro creado
+
+        ○ Importar datos o saltar el paso
+
+        ○ Completar los datos obligatorios
+
+        ○ Revisar y terminar'
+      overview_copy: 'Tu perfil seguro está creado. Te pediremos solo los datos necesarios
+        para configurarlo y podrás revisarlos antes de terminar. Puedes salir y volver:
+        cada respuesta se guarda al introducirla.'
+      overview_title: Resumen
+      previous: Anterior
+      ready_copy: ¡Bien hecho! Tu perfil está configurado y tus respuestas están guardadas.
+        Continúa a Inicio para empezar a preparar una declaración. Puedes editar tu
+        perfil en cualquier momento.
+      ready_title: Listo
+      required_complete: Datos obligatorios completos
+      required_copy: Quedan {missing} respuestas obligatorias. Continuar te guía por
+        ellas. Los campos con * son obligatorios; los datos opcionales pueden esperar.
+      required_title: Obligatorios
+      review_copy: Comprueba los datos guardados. Despliega una sección para editarlos.
+        Los campos opcionales pueden quedar vacíos. Terminar confirma que el perfil
+        está configurado; cada declaración tiene sus propias comprobaciones.
+      review_missing: Quedan {missing} respuestas obligatorias por completar. Continuar
+        te lleva a ellas.
+      review_saved: ✓ Todas las respuestas obligatorias están guardadas. Los datos
+        opcionales no impiden terminar.
+      review_title: Revisar
+      skip_import: Saltar importación
+      start: Empezar
+      step: Paso {step} de {steps} · Quedan {remaining}
     title: 'Perfil: {profile}'
   modelo_review:
     filter:
@@ -253,6 +290,7 @@ flows:
       seguidas son más fáciles de recordar y más difíciles de adivinar que una sola
       palabra corta y complicada.
     password_label: Contraseña
+    progress: 1 · Crear tu perfil seguro    2 · Configurar tus datos
     recovery:
       cancel_button: Cancelar
       confirm_button: Ya lo he anotado
@@ -271,6 +309,8 @@ flows:
       profile_already_exists: Ya existe un perfil llamado '%{profile}'. Elige otro
         nombre, o sal de esta pantalla e inicia sesión en ese perfil.
       username_required: Introduce un nombre para este perfil.
+    requirements: El nombre y ambos campos de contraseña son obligatorios. Puedes
+      cambiar el idioma más adelante.
     section: Nombre y contraseña
     strength:
       fair: Razonable.

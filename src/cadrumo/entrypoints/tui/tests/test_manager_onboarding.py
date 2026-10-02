@@ -26,6 +26,7 @@ from ....domain.user_profile.values import ProfileSetupState
 from ..components.host import ScreenHostApp
 from ..components.widgets import DisclosureGroup
 from ..profile.overview import FieldEditScreen, ProfileManagerScreen, field_help_text
+from ..profile.setup_journey import ProfileSetupStage
 from .manager_pilot import wait_until_settled
 from .test_manager_screen import _CREDENTIAL_INPUT, _live_overview, _persist
 
@@ -98,6 +99,72 @@ async def _answer(app: ProfileManagerScreen, pilot) -> str:
     return field.path
 
 
+async def _reach_required(app: ProfileManagerScreen, pilot) -> None:
+    """Start setup and explicitly skip optional import through its visible action."""
+    await pilot.click("#onboarding-continue")
+    await pilot.pause()
+    assert app._setup_stage is ProfileSetupStage.GET_DATA
+    await pilot.click("#onboarding-continue")
+    await pilot.pause()
+    assert app._setup_stage is ProfileSetupStage.REQUIRED
+
+
+@pytest.mark.asyncio
+async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_required(tmp_path) -> None:
+    """Navigation never clears a saved fact or bypasses the required-answer gate."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _register()
+        app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
+        async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
+            await _reach_required(app, pilot)
+            await pilot.click("#onboarding-continue")
+            await pilot.pause()
+            path = await _answer(app, pilot)
+            await pilot.press("escape")
+            await pilot.pause()
+            value = app._field_by_key[path].value
+            assert value
+            await pilot.click("#onboarding-previous")
+            await pilot.pause()
+            assert app._setup_stage is ProfileSetupStage.GET_DATA
+            assert not app.query(DataTable)
+            await pilot.click("#setup-stage-review")
+            await pilot.pause()
+            assert app._setup_stage is ProfileSetupStage.REVIEW
+            assert app.overview.setup_state is ProfileSetupState.INCOMPLETE
+            assert app.query_one("#setup-stage-ready", Button).disabled
+            await pilot.click("#onboarding-continue")
+            await pilot.pause()
+            assert app._setup_stage is ProfileSetupStage.REQUIRED
+            assert app._field_by_key[path].value == value
+            assert _live_overview().missing_required == app.overview.missing_required
+            pilot.app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_blank_required_answer_can_be_corrected_without_losing_the_question(tmp_path) -> None:
+    """A refused blank stays in the editor and a subsequent valid answer is saved."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _register()
+        app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
+        async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
+            await _reach_required(app, pilot)
+            await pilot.click("#onboarding-continue")
+            await pilot.pause()
+            dialog = app.app.screen
+            assert isinstance(dialog, FieldEditScreen)
+            path = dialog._field.path
+            await pilot.click("#btn-edit-save")
+            await pilot.pause()
+            assert app.app.screen is dialog
+            assert path in _live_overview().missing_required
+            assert str(dialog.query_one("#edit-refusal", Static).content)
+            assert str(dialog.query_one("#edit-requirement", Static).content) == tr("flows.progress.required")
+            await _answer(app, pilot)
+            assert path not in _live_overview().missing_required
+            pilot.app.exit(None)
+
+
 @pytest.mark.asyncio
 async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path) -> None:
     """The walk asks for what setup requires and folds every other section away."""
@@ -110,6 +177,11 @@ async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path
         app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
+            assert app._setup_stage is ProfileSetupStage.OVERVIEW
+            assert not _visible_rows(app)
+            assert not app.query_one("#manager-tools").display
+            assert app.focused is app.query_one("#onboarding-continue", Button)
+            await _reach_required(app, pilot)
             assert _visible_rows(app) == set(overview.missing_required)
             owing = {path.split(".", 1)[0] for path in overview.missing_required}
             assert _shown_folds(app) == owing
@@ -122,21 +194,23 @@ async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path
             assert app.focused is app.query_one("#onboarding-continue", Button)
 
             app.query_one("#manager-required-only", Checkbox).value = False
-            await pilot.pause()
+            await app.workers.wait_for_complete()
             await pilot.pause()
             assert len(_visible_rows(app)) == overview.total_count
             pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
-async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path) -> None:
+@pytest.mark.parametrize("size", [(80, 24), (160, 60)])
+async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path, size) -> None:
     """Pressing Continue and answering each question is enough to finish setup."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _register()
         overview = _live_overview()
         app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
-        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=size) as pilot:
             await pilot.pause()
+            await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
             await pilot.pause()
             dialog = app.app.screen
@@ -164,6 +238,9 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
                 await pilot.pause()
             assert set(answered) >= set(overview.missing_required)
             assert not app.overview.missing_required
+            assert app._setup_stage is ProfileSetupStage.REVIEW
+            assert app.overview.setup_state is ProfileSetupState.INCOMPLETE
+            assert any(not field.present for section in app.overview.sections for field in section.fields)
             button = app.query_one("#onboarding-continue", Button)
             assert str(button.label) == tr("flows.manager.onboarding.finish")
             await pilot.pause()
@@ -177,6 +254,9 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
                 await pilot.pause()
             await pilot.pause()
             assert app.overview.setup_state is ProfileSetupState.COMPLETE
+            assert app._setup_stage is ProfileSetupStage.READY
+            assert "✓" in str(app.query_one("#onboarding-checklist", Static).content)
+            assert not _visible_rows(app), "the success stage must not mount unrelated profile tables"
             bar = app.query_one("#onboarding-progress", ProgressBar)
             assert bar.progress == bar.total
             assert str(button.label) == tr("flows.manager.onboarding.to_workbench")
@@ -199,6 +279,7 @@ async def test_cancelling_a_question_stops_the_walk(tmp_path) -> None:
         app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
+            await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
             await pilot.pause()
             assert isinstance(app.app.screen, FieldEditScreen)
@@ -219,8 +300,9 @@ async def test_search_narrows_the_page_and_says_when_nothing_matches(tmp_path) -
         app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
+            await _reach_required(app, pilot)
             app.query_one("#manager-required-only", Checkbox).value = False
-            await pilot.pause()
+            await app.workers.wait_for_complete()
 
             identity = next(section for section in overview.sections if section.key == "identity")
             app.query_one("#manager-search", Input).value = identity.title
@@ -264,6 +346,7 @@ async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path
         app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
+            await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
             await pilot.pause()
             # The first required question is typed; answer it to reach a choice.
@@ -302,6 +385,7 @@ async def test_every_setup_question_explains_itself_and_the_page_explains_the_cu
         app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
+            await _reach_required(app, pilot)
             table = app._table_by_section["identity"]
             table.focus()
             table.move_cursor(row=0)

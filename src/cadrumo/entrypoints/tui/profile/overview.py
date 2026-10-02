@@ -1,22 +1,15 @@
-"""The profile manager: your profile as data you can edit, not steps to finish.
+"""Profile editing and the guided setup of an unfinished profile.
 
-This is what the operator lands on after registering, and what
-``config profile edit`` opens directly. It replaces the wizard's review
-page, which enumerated the *questions of a setup flow* with a status
-glyph each — a progress meter for a process, telling the operator where
-they were in a walk but never what their profile actually held.
+Setup presents overview, optional acquisition, required answers, review and
+confirmed completion. These stages hold only navigation state. Answers save
+immediately through the same field door used by ongoing profile editing;
+only an explicit Finish action requests the application's completion check.
 
-The page here is the profile itself: every schema section, every declared
-field, and the value on record for it — including one row per instance of
-a fact the taxpayer holds several of, so three socios read as three rows
-rather than one. A field the operator has not filled in is a visible empty
-row, because "what is still blank" is the
-question this page exists to answer. Selecting any row edits it in place
-and writes immediately; there is no submit step, no final commit, and no
-ordering. Completeness names the schema-required information still missing
-— never arithmetic and never a gate on viewing or editing.
+The profile page displays schema sections and recorded values, including
+each instance of repeatable facts. Optional sections start collapsed and
+remain editable without affecting setup progress.
 
-The screen owns no profile logic. The page content is
+The screen owns no profile policy. The page content is
 :func:`~cadrumo.application.user_profile.overview.build_profile_overview`, and an
 edit is an authenticated revision-bound fact command.
 
@@ -77,6 +70,7 @@ from .plantilla_media import (
     PlantillaMediaScreen,
     PlantillaMediaSetRequest,
 )
+from .setup_journey import SETUP_STAGES, ProfileSetupStage
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -139,7 +133,10 @@ _EDIT_DIALOG_CSS = tokenised("""
     padding: $cadrumo-space-0 $cadrumo-space-1;
     width: 100%;
     height: auto;
+    max-height: 100%;
 }
+#edit-body { height: auto; max-height: 80vh; }
+#edit-requirement { color: $text-muted; }
 #edit-context { color: $text-muted; margin-bottom: $cadrumo-space-1; }
 #edit-label { text-style: bold; }
 #edit-hint { color: $text-muted; }
@@ -221,25 +218,30 @@ class FieldEditScreen(ModalScreen[str | None]):
     def compose(self) -> ComposeResult:
         """Lay out the choice or typed editor without exposing masked values."""
         with Vertical(id="edit-dialog"):
-            if self._question_context:
-                yield Static(self._question_context, id="edit-context", markup=False)
-            yield Label(self._prompt, id="edit-label")
-            help_text = field_help_text(self._field)
-            if help_text:
-                yield Static(help_text, id="edit-help", markup=False)
-            if self._field.choices:
-                yield OptionList(
-                    *[self._label_for(choice.value) for choice in self._field.choices],
-                    id="edit-options",
+            with ContentScroll(id="edit-body"):
+                if self._question_context:
+                    yield Static(self._question_context, id="edit-context", markup=False)
+                yield Label(self._prompt, id="edit-label")
+                yield Static(
+                    tr("flows.progress.required" if self._field.required else "flows.progress.optional"),
+                    id="edit-requirement",
                 )
-            else:
-                yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
-                hint = profile_field_shape_hint(self._field.field_type)
-                if hint:
-                    yield Static(hint, id="edit-hint")
-            yield Static(id="edit-refusal")
-            if self._box_hides_a_value:
-                yield Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note")
+                help_text = field_help_text(self._field)
+                if help_text:
+                    yield Static(help_text, id="edit-help", markup=False)
+                if self._field.choices:
+                    yield OptionList(
+                        *[self._label_for(choice.value) for choice in self._field.choices],
+                        id="edit-options",
+                    )
+                else:
+                    yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
+                    hint = profile_field_shape_hint(self._field.field_type)
+                    if hint:
+                        yield Static(hint, id="edit-hint")
+                yield Static(id="edit-refusal")
+                if self._box_hides_a_value:
+                    yield Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note")
             with Horizontal(id="edit-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
                 if self._offers_clear:
@@ -279,6 +281,12 @@ class FieldEditScreen(ModalScreen[str | None]):
         """Dismiss with a valid value while preserving an untouched mask."""
         if self._box_hides_a_value and not value.strip():
             self.dismiss(None)
+            return
+        if self._field.required and not value.strip():
+            self.query_one("#edit-refusal", Static).update(
+                tr("flows.manager.edit.required_blank", field=self._field.label)
+            )
+            self.query_one("#edit-refusal", Static).scroll_visible()
             return
         refusal = self._validate(value) if (self._validate is not None and value.strip()) else None
         if refusal is not None:
@@ -458,6 +466,21 @@ _PLANTILLA_MEDIA_BUTTON_ID = "manager-plantilla-media"
 
 _CONTINUE_BUTTON_ID = "onboarding-continue"
 
+_SETUP_TITLE_KEYS = {
+    ProfileSetupStage.OVERVIEW: "flows.manager.setup.overview_title",
+    ProfileSetupStage.GET_DATA: "flows.manager.setup.get_data_title",
+    ProfileSetupStage.REQUIRED: "flows.manager.setup.required_title",
+    ProfileSetupStage.REVIEW: "flows.manager.setup.review_title",
+    ProfileSetupStage.READY: "flows.manager.setup.ready_title",
+}
+_SETUP_COPY_KEYS = {
+    ProfileSetupStage.OVERVIEW: "flows.manager.setup.overview_copy",
+    ProfileSetupStage.GET_DATA: "flows.manager.setup.get_data_copy",
+    ProfileSetupStage.REQUIRED: "flows.manager.setup.required_copy",
+    ProfileSetupStage.REVIEW: "flows.manager.setup.review_copy",
+    ProfileSetupStage.READY: "flows.manager.setup.ready_copy",
+}
+
 _SEARCH_ID = "manager-search"
 
 _REQUIRED_ONLY_ID = "manager-required-only"
@@ -487,6 +510,7 @@ class ProfileManagerScreen(AccountChromeScreen):
     #onboarding-intro { color: $text-muted; margin-bottom: $cadrumo-space-1; }
     #onboarding-actions { height: auto; }
     #onboarding-continue { width: auto; }
+    #onboarding-previous { width: auto; margin-right: $cadrumo-control-gap; }
     #onboarding-step {
         width: 1fr;
         height: auto;
@@ -495,6 +519,13 @@ class ProfileManagerScreen(AccountChromeScreen):
     }
     #onboarding-progress { width: 100%; }
     #onboarding-progress Bar { width: 1fr; }
+    #onboarding-stages { height: auto; }
+    #onboarding-stages Button { width: 1fr; min-width: 0; }
+    #onboarding-stages .setup-current { text-style: bold; background: $primary; color: $background; }
+    #onboarding-stage-title { text-style: bold; height: auto; }
+    #onboarding-stage-copy { height: auto; margin-bottom: $cadrumo-space-1; }
+    #onboarding-checklist { height: auto; color: $text-muted; margin-bottom: $cadrumo-space-1; }
+    #onboarding-stage-title.setup-success { color: $success; }
     #manager-tools { height: auto; padding: $cadrumo-space-0 $cadrumo-gutter; }
     #manager-search { width: 1fr; }
     #manager-required-only { width: auto; }
@@ -658,6 +689,8 @@ class ProfileManagerScreen(AccountChromeScreen):
 
         Fixed at construction so the walk's header stays in place after the
         last step, where it hands the operator on to the workbench."""
+        self._setup_stage = ProfileSetupStage.OVERVIEW
+        self._sources_skipped = False
         self._required_only = self._onboarding
         """Whether sections show only the answers setup requires right now."""
         self._query = ""
@@ -686,8 +719,12 @@ class ProfileManagerScreen(AccountChromeScreen):
             # the page, so a short terminal still has room for the questions.
             with Vertical(id="manager-onboarding"):
                 yield Static(id="onboarding-heading", markup=False)
-                yield ProgressBar(id="onboarding-progress", show_eta=False)
+                with Horizontal(id="onboarding-stages"):
+                    for stage in SETUP_STAGES:
+                        yield Button("", id=f"setup-stage-{stage.value}", compact=True)
+                yield ProgressBar(id="onboarding-progress", show_eta=False, show_percentage=False)
                 with Horizontal(id="onboarding-actions"):
+                    yield Button("", id="onboarding-previous", compact=True)
                     yield Button("", id=_CONTINUE_BUTTON_ID, classes="-primary", compact=True)
                     yield Static(id="onboarding-step", markup=False)
         with Horizontal(id="manager-tools"):
@@ -695,7 +732,11 @@ class ProfileManagerScreen(AccountChromeScreen):
             yield Checkbox("", value=self._required_only, id=_REQUIRED_ONLY_ID, compact=True)
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             if self._onboarding:
-                yield Static(id="onboarding-intro", markup=False)
+                yield Static(id="onboarding-stage-title", markup=False)
+                yield Static(id="onboarding-stage-copy", markup=False)
+                yield Static(id="onboarding-checklist", markup=False)
+            else:
+                yield Static(tr("flows.manager.setup.edit_intro"), id="manager-edit-intro", markup=False)
             yield Vertical(id="manager-context")
             yield Static(id="manager-search-empty", classes="cadrumo-note", markup=False)
             # Filled by :meth:`_redraw`, not here: a card's text is fixed when
@@ -724,6 +765,11 @@ class ProfileManagerScreen(AccountChromeScreen):
         # The shared theme sizes every Input to the full row, which would push
         # the required-only switch beside the search box off the screen.
         self.query_one(f"#{_SEARCH_ID}", Input).styles.width = "1fr"
+        if self._onboarding:
+            for stage in SETUP_STAGES:
+                button = self.query_one(f"#setup-stage-{stage.value}", Button)
+                button.styles.width = f"{100 / len(SETUP_STAGES):g}%"
+                button.styles.min_width = 0
         await self._redraw()
         if self._onboarding:
             self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
@@ -774,6 +820,8 @@ class ProfileManagerScreen(AccountChromeScreen):
         something the operator can fix, and the card's badge says what.
         """
         door_ready = self._launch_source is not None
+        if self._onboarding and self._setup_stage is not ProfileSetupStage.GET_DATA:
+            return
         for source in known_profile_acquisition_sources():
             posture = self._credential_postures.get(source.key)
             credential_ready = posture is None or not posture.requires_aeat_authentication or posture.credential_held
@@ -801,6 +849,16 @@ class ProfileManagerScreen(AccountChromeScreen):
             await self.action_continue_setup()
             return
         button_id = event.button.id or ""
+        if button_id == "onboarding-previous":
+            index = SETUP_STAGES.index(self._setup_stage)
+            if index:
+                await self._show_setup_stage(SETUP_STAGES[index - 1])
+            return
+        if button_id.startswith("setup-stage-"):
+            stage = ProfileSetupStage(button_id.removeprefix("setup-stage-"))
+            if stage is not ProfileSetupStage.READY or self.overview.setup_state is ProfileSetupState.COMPLETE:
+                await self._show_setup_stage(stage)
+            return
         if button_id.startswith("manager-add-row-"):
             self._open_add_row(button_id.removeprefix("manager-add-row-"))
             return
@@ -978,8 +1036,10 @@ class ProfileManagerScreen(AccountChromeScreen):
         await self._render_profile_context()
         sources = self.query_one("#manager-sources", Vertical)
         await sources.remove_children()
-        await sources.mount_all(self._source_cards())
-        if self._open_document_reader is not None:
+        showing_sources = not self._onboarding or self._setup_stage is ProfileSetupStage.GET_DATA
+        if showing_sources:
+            await sources.mount_all(self._source_cards())
+        if showing_sources and self._open_document_reader is not None:
             await sources.mount(
                 SourceActionCard(
                     SourceActionDescriptor(
@@ -1021,6 +1081,10 @@ class ProfileManagerScreen(AccountChromeScreen):
             self.query_one(f"#summary-{section.key}", Static).update(section.summary)
             panel = self.query_one(f"#section-{section.key}", Static)
             await panel.remove_children()
+            for field in section.fields:
+                self._field_by_key[field.path] = field
+            if not visible:
+                continue
             table: DataTable[str] = ContentDataTable[str](cursor_type="row", zebra_stripes=True)
             await panel.mount(table)
             self._table_by_section[section.key] = table
@@ -1029,8 +1093,6 @@ class ProfileManagerScreen(AccountChromeScreen):
                 table.add_column(tr("flows.manager.column.field"), width=_FIELD_COLUMN_WIDTH),
                 table.add_column(tr("flows.manager.column.value")),
             ]
-            for field in section.fields:
-                self._field_by_key[field.path] = field
             for field in visible:
                 # ``height=None`` is what lets a field name past the capped
                 # column width wrap onto more lines instead of being clipped
@@ -1068,7 +1130,9 @@ class ProfileManagerScreen(AccountChromeScreen):
                 )
         searching = bool(self._query.strip())
         # Importing is an alternative to typing, not a match for a search.
-        self.query_one("#manager-sources-fold", DisclosureGroup).display = not searching
+        self.query_one("#manager-sources-fold", DisclosureGroup).display = not searching and (
+            not self._onboarding or self._setup_stage is ProfileSetupStage.GET_DATA
+        )
         empty = self.query_one("#manager-search-empty", Static)
         empty.display = searching and not any_visible
         if empty.display:
@@ -1091,6 +1155,8 @@ class ProfileManagerScreen(AccountChromeScreen):
         the rows whose own label happens to contain the word.
         """
         fields = section.fields
+        if self._onboarding and self._setup_stage not in {ProfileSetupStage.REQUIRED, ProfileSetupStage.REVIEW}:
+            return ()
         if self._required_only:
             fields = tuple(field for field in fields if self._required_now(overview, field))
         query = self._query.strip().casefold()
@@ -1109,6 +1175,8 @@ class ProfileManagerScreen(AccountChromeScreen):
         if missing:
             return tr("flows.manager.onboarding.section_pending", title=section.title, missing=missing)
         if any(self._required_now(overview, field) for field in section.fields):
+            if self._onboarding:
+                return f"✓ {section.title} · {tr('flows.manager.setup.required_complete')}"
             return tr(
                 "flows.manager.onboarding.section_done",
                 title=section.title,
@@ -1118,7 +1186,7 @@ class ProfileManagerScreen(AccountChromeScreen):
         return self._section_title(section)
 
     def _render_onboarding(self) -> None:
-        """Word the setup walk's header: progress, the current step, and what Continue does."""
+        """Render the current stage and saved progress from the application projection."""
         self.query_one("#manager-sources-summary", Static).update(tr("flows.manager.onboarding.sources_summary"))
         self.query_one("#manager-sources-fold", DisclosureGroup).title = tr("flows.manager.onboarding.sources_title")
         self.query_one(f"#{_SEARCH_ID}", Input).placeholder = tr("flows.manager.onboarding.search_placeholder")
@@ -1137,43 +1205,98 @@ class ProfileManagerScreen(AccountChromeScreen):
         # reads as finished while the store would refuse completion.
         total = len(required) + sum(1 for path in missing if path not in self._field_by_key)
         answered = sum(1 for _section, field in required if field.path not in missing)
-        done = overview.setup_state is not ProfileSetupState.INCOMPLETE
-        steps: list[ProfileSectionView] = []
-        for section, _field in required:
-            if section not in steps:
-                steps.append(section)
-        current = next((section for section, field in required if field.path in missing), None)
+        done = overview.setup_state is ProfileSetupState.COMPLETE
+        stage = self._setup_stage
+        index = SETUP_STAGES.index(stage)
         bar = self.query_one("#onboarding-progress", ProgressBar)
         bar.update(total=total + 1, progress=answered + (1 if done else 0))
         progress = tr("flows.manager.onboarding.progress", answered=answered, total=total)
-        if done:
-            step = tr("flows.manager.onboarding.done")
+        if stage is ProfileSetupStage.READY:
             action = tr("flows.manager.onboarding.to_workbench")
-        elif current is not None:
-            step = tr(
-                "flows.manager.onboarding.step",
-                step=steps.index(current) + 1,
-                steps=len(steps) + 1,
-                section=current.title,
-            )
+        elif stage is ProfileSetupStage.OVERVIEW:
+            action = tr("flows.manager.setup.start")
+        elif stage is ProfileSetupStage.GET_DATA:
+            action = tr("flows.manager.setup.skip_import")
+        elif stage is ProfileSetupStage.REQUIRED or done:
             action = tr("flows.manager.onboarding.continue")
+        elif missing:
+            action = tr("flows.manager.setup.answer_required")
         else:
-            step = "\n".join(
-                (
-                    tr("flows.manager.onboarding.step_finish", step=len(steps) + 1, steps=len(steps) + 1),
-                    tr("flows.manager.onboarding.ready"),
-                )
-            )
             action = tr("flows.manager.onboarding.finish")
+        step = tr(
+            "flows.manager.setup.step", step=index + 1, steps=len(SETUP_STAGES), remaining=len(SETUP_STAGES) - index - 1
+        )
         self.query_one("#onboarding-heading", Static).update(tr("flows.manager.onboarding.heading"))
-        self.query_one("#onboarding-intro", Static).update(tr("flows.manager.onboarding.intro"))
-        self.query_one("#onboarding-step", Static).update(f"{progress} · {step}")
+        self.query_one("#onboarding-step", Static).update(f"{step}\n{progress}")
+        title = self.query_one("#onboarding-stage-title", Static)
+        title.update(tr(_SETUP_TITLE_KEYS[stage]))
+        title.set_class(stage is ProfileSetupStage.READY, "setup-success")
+        self.query_one("#onboarding-stage-copy", Static).update(
+            tr(_SETUP_COPY_KEYS[stage], missing=len(missing), total=total)
+        )
+        checklist = self.query_one("#onboarding-checklist", Static)
+        checklist.display = stage in {ProfileSetupStage.OVERVIEW, ProfileSetupStage.REVIEW, ProfileSetupStage.READY}
+        if stage is ProfileSetupStage.READY:
+            checklist.update(tr("flows.manager.setup.achievement"))
+        elif stage is ProfileSetupStage.OVERVIEW:
+            checklist.update(tr("flows.manager.setup.overview_checklist"))
+        else:
+            checklist.update(
+                tr("flows.manager.setup.review_missing", missing=len(missing))
+                if missing
+                else tr("flows.manager.setup.review_saved")
+            )
+        busy = self._pending_write is not None or self._pending_completion is not None
+        previous = self.query_one("#onboarding-previous", Button)
+        previous.label = tr("flows.manager.setup.previous")
+        previous.disabled = index == 0 or busy
+        for position, candidate in enumerate(SETUP_STAGES):
+            stage_button = self.query_one(f"#setup-stage-{candidate.value}", Button)
+            passed = {
+                ProfileSetupStage.OVERVIEW: index > 0,
+                ProfileSetupStage.GET_DATA: self._sources_skipped,
+                ProfileSetupStage.REQUIRED: overview.complete,
+                ProfileSetupStage.REVIEW: done,
+                ProfileSetupStage.READY: done,
+            }[candidate]
+            marker = "✓" if passed else str(position + 1)
+            stage_button.label = f"{marker} {tr(_SETUP_TITLE_KEYS[candidate])}"
+            stage_button.variant = "primary" if candidate is stage else "default"
+            stage_button.set_class(candidate is stage, "setup-current")
+            stage_button.disabled = busy or (candidate is ProfileSetupStage.READY and not done)
+        self.query_one("#manager-tools", Horizontal).display = stage in {
+            ProfileSetupStage.REQUIRED,
+            ProfileSetupStage.REVIEW,
+        }
         button = self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button)
+        button.disabled = busy
         if str(button.label) != action:
             button.label = action
             # The label can change while a question covers the page; measure
             # the button again so its new label is not clipped to the old width.
             button.refresh(layout=True)
+
+    async def _show_setup_stage(self, stage: ProfileSetupStage) -> None:
+        """Move without acquiring data, discarding answers or completing the profile."""
+        if self._pending_write is not None or self._pending_completion is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        self._walking = False
+        self._setup_stage = stage
+        self._query = ""
+        self.query_one(f"#{_SEARCH_ID}", Input).value = ""
+        self.query_one("#manager-field-help", Static).display = False
+        for section in self.overview.sections:
+            self.query_one(f"#fold-{section.key}", DisclosureGroup).collapsed = (
+                stage is ProfileSetupStage.REVIEW
+                or not any(field.path in self.overview.missing_required for field in section.fields)
+            )
+        self.query_one("#manager-sources-fold", DisclosureGroup).collapsed = False
+        await self._redraw()
+        self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
+        self.call_after_refresh(
+            self.query_one("#manager-body", ContentScroll).scroll_home, animate=False, immediate=True
+        )
 
     async def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
@@ -1472,19 +1595,28 @@ class ProfileManagerScreen(AccountChromeScreen):
     # ── setup walk ──────────────────────────────────────────────────────
 
     async def action_continue_setup(self) -> None:
-        """Take the one next step of setup: the next required question, finishing, or leaving.
-
-        Only what setup requires is asked, in page order, one question at a
-        time; everything optional stays in its folded section. With nothing
-        left to answer, Continue asks the store to declare setup complete,
-        and once it is, Continue leaves for the workbench.
-        """
+        """Advance the journey; only the reviewed Finish action requests completion."""
         if self._pending_write is not None or self._pending_completion is not None:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
-        if self.overview.setup_state is not ProfileSetupState.INCOMPLETE:
+        if self._setup_stage is ProfileSetupStage.READY:
             self._walking = False
             await self.action_quit()
+            return
+        if self._setup_stage is ProfileSetupStage.OVERVIEW:
+            await self._show_setup_stage(ProfileSetupStage.GET_DATA)
+            return
+        if self._setup_stage is ProfileSetupStage.GET_DATA:
+            self._sources_skipped = True
+            await self._show_setup_stage(ProfileSetupStage.REQUIRED)
+            return
+        if self._setup_stage is ProfileSetupStage.REVIEW:
+            if self.overview.missing_required:
+                await self._show_setup_stage(ProfileSetupStage.REQUIRED)
+            elif self.overview.setup_state is ProfileSetupState.COMPLETE:
+                await self._show_setup_stage(ProfileSetupStage.READY)
+            else:
+                self.action_complete_setup()
             return
         field = next(iter(self.overview.missing_required_fields), None)
         if field is None:
@@ -1492,7 +1624,7 @@ class ProfileManagerScreen(AccountChromeScreen):
             if self.overview.missing_required:
                 self._refuse(tr("flows.manager.complete_setup.incomplete_unnamed"))
                 return
-            self.action_complete_setup()
+            await self._show_setup_stage(ProfileSetupStage.REVIEW)
             return
         section = self._section(field.path.split(".", 1)[0])
         if section is None:
@@ -1506,7 +1638,7 @@ class ProfileManagerScreen(AccountChromeScreen):
             for candidate in candidate_section.fields
             if self._required_now(self.overview, candidate)
         ]
-        number = 1 + sum(1 for candidate in required if candidate.present)
+        number = 1 + sum(1 for candidate in required if candidate.path not in self.overview.missing_required)
         context = "\n".join(
             (
                 tr(
@@ -1530,7 +1662,9 @@ class ProfileManagerScreen(AccountChromeScreen):
             return
         self._walking = False
         if self._onboarding:
-            self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
+            self.run_worker(
+                self._show_setup_stage(ProfileSetupStage.REVIEW), group="profile-setup-walk", exclusive=True
+            )
 
     # ── search and filters ──────────────────────────────────────────────
 
@@ -1766,12 +1900,24 @@ class ProfileManagerScreen(AccountChromeScreen):
             exit_on_error=False,
             thread=True,
         )
+        self._render_onboarding()
 
     async def _settle_completion(self, worker: Worker[ProfileOverview]) -> None:
         """Show the completed page, or why the store would not complete it."""
         self._pending_completion = None
         if worker.state is WorkerState.SUCCESS and worker.result is not None:
+            if (
+                worker.result.profile_id != self.overview.profile_id
+                or worker.result.record_revision < self.overview.record_revision
+                or worker.result.setup_state is not ProfileSetupState.COMPLETE
+                or worker.result.missing_required
+            ):
+                self._render_onboarding()
+                self._refuse(tr("flows.manager.complete_setup.failed"))
+                return
             self.overview = worker.result
+            if self._onboarding:
+                self._setup_stage = ProfileSetupStage.READY
             await self._redraw()
             self.refresh_bindings()
             self.query_one("#manager-status", PinnedStatusBar).show_success(
@@ -1780,6 +1926,7 @@ class ProfileManagerScreen(AccountChromeScreen):
             if self._onboarding:
                 self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
             return
+        self._render_onboarding()
         if isinstance(worker.error, ProfileSchemaValidationError):
             missing = [field.label for field in self.overview.missing_required_fields]
             self._refuse(
@@ -1843,6 +1990,7 @@ class ProfileManagerScreen(AccountChromeScreen):
                 self.query_one("#manager-status", PinnedStatusBar).show_success(
                     tr("flows.manager.edit.saved" if changed else "flows.manager.edit.no_change")
                 )
+                self._carry_walk_on()
                 return
             await self._apply_overview(worker.result)
             self.query_one("#manager-status", PinnedStatusBar).show_success(

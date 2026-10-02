@@ -253,8 +253,10 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         yield Static(id="registration-banner", classes="cadrumo-banner")
         yield PinnedStatusBar(id="credential-status")
         with self.credential_panel(panel_id="registration-body"):
+            yield Static(id="registration-progress")
             yield Static(id="registration-intro")
             yield Static(id="registration-why")
+            yield Static(id="registration-requirements", classes="field-hint")
 
             # Every translated string on this page is written by
             # :meth:`_render_localised_copy` rather than here, because the
@@ -348,6 +350,10 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         self.title = title
         self.sub_title = tr("flows.registration.section", locale=locale)
         self.query_one("#registration-banner", Static).update(title)
+        self.query_one("#registration-progress", Static).update(tr("flows.registration.progress", locale=locale))
+        self.query_one("#registration-requirements", Static).update(
+            tr("flows.registration.requirements", locale=locale)
+        )
         self.query_one("#registration-intro", Static).update(tr("flows.registration.intro", locale=locale))
         self.query_one("#registration-why", Static).update(tr("flows.registration.why_password", locale=locale))
         self.query_one("#registration-body", Vertical).border_title = tr("flows.registration.section", locale=locale)

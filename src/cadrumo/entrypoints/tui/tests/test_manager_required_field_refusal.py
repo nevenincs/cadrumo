@@ -15,7 +15,7 @@ different halves and neither is redundant.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import Input
+from textual.widgets import Input, Static
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -141,7 +141,8 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _submit(app, pilot, _REQUIRED_PATH, "")
-            assert _notice(app), "the operator must be told why nothing happened"
+            assert str(app.app.screen.query_one("#edit-refusal", Static).content)
+            assert app.app.screen is not app, "the question stays open for correction"
             pilot.app.exit(None)
 
         assert _stored().get(_REQUIRED_PATH) == "12345678Z"

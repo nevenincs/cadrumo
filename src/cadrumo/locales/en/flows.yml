@@ -85,12 +85,8 @@ flows:
     namespace_detail: detail {number}
     onboarding:
       continue: Continue
-      done: Setup is complete. Continue to Home, or keep adding optional detail below.
       finish: Finish setup
       heading: Set up your profile
-      intro: Only the answers needed to prepare your declarations are asked here.
-        Press Continue and answer each question; everything else is optional and can
-        wait.
       progress: '{answered} of {total} required answers'
       question: Question {number} of {total} · {section}
       ready: All required answers are in. Finish setup to start preparing your declarations.
@@ -102,8 +98,6 @@ flows:
       sources_summary: Fill the profile from AEAT records or your own documents instead
         of typing it.
       sources_title: Import data (optional)
-      step: 'Step {step} of {steps}: {section}'
-      step_finish: 'Step {step} of {steps}: finish setup'
       to_workbench: Continue to Home
     plantilla_media:
       average_workforce: Average workforce
@@ -125,6 +119,48 @@ flows:
       remove: Remove row
       remove_confirm: Remove row %{row} from section %{section}?
     section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Secure profile created
+
+        ✓ Required details saved
+
+        ✓ Setup confirmed'
+      answer_required: Complete required
+      edit_intro: Open a section, then select a field to edit it. * Required · Other
+        fields are optional. Each change is saved immediately.
+      get_data_copy: Optional. Import available records, or skip this step and enter
+        the required details yourself. You do not need AEAT access to finish setup.
+      get_data_title: Get data
+      overview_checklist: '✓ Secure profile created
+
+        ○ Import data, or skip it
+
+        ○ Complete required details
+
+        ○ Review and finish'
+      overview_copy: Your secure profile is created. We will ask only for the details
+        setup needs, then let you review them before finishing. You can leave and
+        return; each answer is saved as you go.
+      overview_title: Overview
+      previous: Previous
+      ready_copy: Well done! Your profile setup is complete and your answers are saved.
+        Continue to Home to start preparing a declaration. You can edit your profile
+        at any time.
+      ready_title: Ready
+      required_complete: Required details complete
+      required_copy: '{missing} required answers left. Continue guides you through
+        them. Fields marked * are required; optional details can wait.'
+      required_title: Required
+      review_copy: Check the details you saved. Expand a section to edit it. Optional
+        fields can stay blank. Finish setup confirms this profile is ready to use;
+        each declaration has its own checks.
+      review_missing: '{missing} required answers still need attention. Continue takes
+        you to them.'
+      review_saved: ✓ All required answers saved. Optional details do not block completion.
+      review_title: Review
+      skip_import: Skip import
+      start: Start setup
+      step: Step {step} of {steps} · {remaining} remaining
     title: 'Profile: {profile}'
   modelo_review:
     filter:
@@ -248,6 +284,7 @@ flows:
       together are easier to remember and harder to guess than one short complicated
       word.
     password_label: Password
+    progress: 1 · Create your secure profile    2 · Set up your details
     recovery:
       cancel_button: Cancel
       confirm_button: I have written it down
@@ -265,6 +302,8 @@ flows:
       profile_already_exists: A profile named '%{profile}' already exists. Choose
         a different name, or leave this screen and sign in to that profile instead.
       username_required: Enter a name for this profile.
+    requirements: Name and both password fields are required. You can change the language
+      later.
     section: Name and password
     strength:
       fair: Reasonable.
