@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c07ffb0b486561c00ef9fad9ceb4974f7c4c72ddd0377978aca8bdb94d7fd8f4'
+body_hash: 'sha256:652ac634408c2d408afe0ed83e33e399e65454b360ae602c213e825a5d9f05e3'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
 ---
@@ -6777,6 +6777,15 @@ related:
 - `S10` `verify:` `V7 native sdk-autonomous test_installed_windows_sdk_reconnects_with_exact_runtime_recovery[autonomous-crash]` -> `fail`
 - `S10` `verify:` `V7 native sdk-demand test_installed_windows_sdk_reconnects_with_exact_runtime_recovery[demand-after-stop]` -> `fail`
 - `S10` `verify:` `pytest test_windows_process.py -m integration and windows_only incl. 0xC0000005 crash-status case` -> `pass`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/tests/windows_managed_runtime_fixture.py`
+- `S10` `verify:` `.tmp/windows-s10-v8 gates, fresh noneditable build 306/306 and runner preparation` -> `pass`
+- `S10` `verify:` `V8 native task test_installed_task_supervisor_replaces_crashed_host_without_demand (autonomous crash replacement)` -> `pass`
+- `S10` `verify:` `V8 native latch` -> `pass`
+- `S10` `verify:` `V8 native peer` -> `pass`
+- `S10` `verify:` `V8 native idle-browser` -> `pass`
+- `S10` `verify:` `V8 native sdk-autonomous [autonomous-crash], stale-lease assertion after successful SDK reconnect` -> `fail`
+- `S10` `verify:` `V8 native sdk-demand [demand-after-stop], pytest-timeout in fixture tree retention` -> `fail`
+- `S10` `verify:` `pytest test_windows_task_process.py test_windows_managed_stop.py incl. native` -> `pass`
 
 ## Notes
 
@@ -7812,3 +7821,4 @@ related:
 - `S10` Root cause of V7 recovery failures: pywin32 GetExitCodeProcess returns the DWORD signed, so crash codes >= 0x80000000 read negative and the managed supervisor treated every real crash as terminal (no retry). Fixed by unsigned normalisation in `windows_process.py;` proven with a real child exiting 0xC0000005. SDK recovery test also closed MCP client stacks in a foreign task (anyio cancel-scope error), masking its outcome; corrected. V8 native rerun pending.
 - `S10` Cold-start latency finding, not fixed: fresh-install managed start measured `~95s` (supervisor main import 18s, host main import 18s, registry prepare 23s, plus launch) against the 75s readiness budget shared by the CLI start default; warm start `~52s.` Supervisor imports the full runtime main only to parse arguments.
 - `S10` V7 install and gate/build/runner tooling are scratch under .tmp/windows-s10-v7 and .tmp/windows-s10-v8; V6 runners were invalidated by the main merge (source hash binding). S10 stays open: login inventory with unreadable LSA rows and full descendant/handle-inheritance containment remain unproven.
+- `S10` V8 confirms the unsigned exit-code fix: the managed supervisor replaced a natively crashed host without demand. sdk-autonomous reconnected the MCP SDK through the recovered runtime; its stale-lease probe used the owner-control connection, which the server deliberately refuses for private session traffic `(peer_untrusted),` so the test now uses a fresh verified connection. sdk-demand timed out because fixture tree retention took a full process snapshot per live PID `(~1,100` processes, `~110` s per retention); one shared parent snapshot now serves all candidates (0.21 s). V9 rerun pending.
