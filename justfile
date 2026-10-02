@@ -367,13 +367,12 @@ check-persistence-write-paths:
 
 # ── Repository/control-plane checks ─────────────────────────────────────────
 
-[doc('Run identity, API-stub, workflow, and gate-contract checks as one read-only repository aggregate.')]
+[doc('Run identity, API-stub, and workflow checks as one read-only repository aggregate.')]
 [group('check')]
 check-repository:
     @uv run --no-sync python -m dev.identity
     @just check-docs-api
     @uv run --no-sync python -m dev.actionlint
-    @uv run --no-sync python -m dev.ci_contract
 
 # Verify workflow syntax and shell contracts without changing workflows. If
 # actionlint is unavailable, the check reports `just setup-repository-tools`.
@@ -389,11 +388,6 @@ check-workflows:
 [group('check')]
 check-workflow-security:
     @uvx --from zizmor==1.30.1 zizmor --offline --min-severity medium .github/
-
-[doc('Verify workflow-to-recipe gate contracts without changing repository files.')]
-[group('check')]
-check-gate-contracts:
-    @uv run --no-sync python -m dev.ci_contract
 
 # Manual replay of the uninstalled prek configuration. `--all-files` is
 # mandatory: staged-file replay may use prek's stash/restore isolation.

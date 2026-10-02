@@ -37,8 +37,6 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 125
-    env:
-      CI_EXEC_BUDGET_MINUTES: 5
     steps:
       - name: Require the prove ref to be the dispatched commit
         env:
@@ -68,8 +66,6 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 150
-    env:
-      CI_EXEC_BUDGET_MINUTES: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -97,8 +93,6 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 140
-    env:
-      CI_EXEC_BUDGET_MINUTES: 20
     outputs:
       next-python: ${{ steps.next.outputs.python }}
       smoke-matrix: ${{ steps.smoke.outputs.matrix }}
@@ -153,7 +147,6 @@ jobs:
       matrix:
         python: ["3.13", "3.14"]
     env:
-      CI_EXEC_BUDGET_MINUTES: 240
       CADRUMO_PYTEST_WORKERS: "8"
     steps:
       - name: Checkout repository
@@ -214,7 +207,6 @@ jobs:
     timeout-minutes: 360
     continue-on-error: true
     env:
-      CI_EXEC_BUDGET_MINUTES: 240
       CADRUMO_PYTEST_WORKERS: "8"
     steps:
       - name: Checkout repository
@@ -273,8 +265,6 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 180
-    env:
-      CI_EXEC_BUDGET_MINUTES: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -344,8 +334,6 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 180
-    env:
-      CI_EXEC_BUDGET_MINUTES: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -423,8 +411,6 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 210
-    env:
-      CI_EXEC_BUDGET_MINUTES: 90
     strategy:
       fail-fast: false
       matrix:
@@ -488,8 +474,6 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 240
-    env:
-      CI_EXEC_BUDGET_MINUTES: 120
     strategy:
       fail-fast: false
       matrix:
@@ -557,8 +541,6 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 210
-    env:
-      CI_EXEC_BUDGET_MINUTES: 90
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -879,8 +861,6 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: ${{ startsWith(toJSON(matrix.os), '[') && contains(matrix.os, 'self-hosted') && matrix.os || fromJSON('["self-hosted","unmapped-fleet-runner"]') }}
     timeout-minutes: 240
-    env:
-      CI_EXEC_BUDGET_MINUTES: 120
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.runtime-inventory.outputs.smoke-matrix) }}
@@ -966,8 +946,6 @@ jobs:
     if: ${{ !cancelled() && inputs.phase == 'prove' }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 66
-    env:
-      CI_RESOURCE_CLASS: verdict
     steps:
       - name: Require every prove job to succeed
         env:
@@ -988,8 +966,6 @@ jobs:
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 150
-    env:
-      CI_EXEC_BUDGET_MINUTES: 30
     permissions:
       actions: read
       contents: read
@@ -1094,8 +1070,6 @@ jobs:
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 150
-    env:
-      CI_EXEC_BUDGET_MINUTES: 30
     environment:
       name: pypi
     permissions:
@@ -1187,7 +1161,6 @@ jobs:
       actions: read
       contents: read
     env:
-      CI_EXEC_BUDGET_MINUTES: 20
       TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'nevenincs/homebrew-tap' }}
     steps:
       - name: Require the tap token
@@ -1288,7 +1261,6 @@ jobs:
       actions: read
       contents: read
     env:
-      CI_EXEC_BUDGET_MINUTES: 20
       BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY }}
     steps:
       - name: Require the bucket repository and token
@@ -1385,8 +1357,6 @@ jobs:
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 150
-    env:
-      CI_EXEC_BUDGET_MINUTES: 30
     permissions:
       actions: read
       contents: read
@@ -1431,8 +1401,6 @@ jobs:
     if: inputs.phase == 'publish'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
-    env:
-      CI_EXEC_BUDGET_MINUTES: 60
     permissions:
       actions: read
       contents: read
@@ -1543,8 +1511,6 @@ jobs:
     # Five strict site roots built serially, each running the full reference
     # and search-index passes, then an upload of every object.
     timeout-minutes: 420
-    env:
-      CI_EXEC_BUDGET_MINUTES: 300
     environment: docs
     permissions:
       contents: read

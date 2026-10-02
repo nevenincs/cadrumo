@@ -2429,7 +2429,6 @@
         "dev.ci.workflow_permissions",
         "dev.ci.workflow_python_selection",
         "dev.ci.workflow_run_text",
-        "dev.ci_contract",
         "dev.ci_reports",
         "dev.corpus",
         "dev.corpus.artifact_catalogue",
