@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ctypes
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from ctypes import wintypes
 from typing import cast
 
@@ -56,18 +56,20 @@ def _creation_time(kernel: ctypes.CDLL, pid: int) -> int | None:
         close_handle(handle)
 
 
-def task_engine_owns_process(engine_pid: int, process_pid: int) -> bool:
-    """Accept a short live ancestry chain with creation times ruling out reuse."""
-    if engine_pid <= 0 or process_pid <= 0:
-        return False
+def _kernel() -> ctypes.CDLL:
     loader = cast(Callable[..., ctypes.CDLL], getattr(ctypes, _WINDOWS_DLL_LOADER))
-    kernel = loader("kernel32", use_last_error=True)
+    return loader("kernel32", use_last_error=True)
+
+
+def windows_process_parents() -> dict[int, int] | None:
+    """One native snapshot of every live process and its parent, or None if unavailable."""
+    kernel = _kernel()
     snapshot = kernel.CreateToolhelp32Snapshot
     snapshot.argtypes = (wintypes.DWORD, wintypes.DWORD)
     snapshot.restype = wintypes.HANDLE
     handle = snapshot(0x00000002, 0)
     if not handle or handle == ctypes.c_void_p(-1).value:
-        return False
+        return None
     parents: dict[int, int] = {}
     try:
         first = kernel.Process32FirstW
@@ -86,6 +88,22 @@ def task_engine_owns_process(engine_pid: int, process_pid: int) -> bool:
         close_handle.argtypes = (wintypes.HANDLE,)
         close_handle.restype = wintypes.BOOL
         close_handle(handle)
+    return parents
+
+
+def task_engine_owns_process(engine_pid: int, process_pid: int, *, parents: Mapping[int, int] | None = None) -> bool:
+    """Accept a short live ancestry chain with creation times ruling out reuse.
+
+    ``parents`` lets a caller checking many processes share one snapshot; the
+    per-hop creation-time ordering is still read live for every candidate.
+    """
+    if engine_pid <= 0 or process_pid <= 0:
+        return False
+    if parents is None:
+        parents = windows_process_parents()
+        if parents is None:
+            return False
+    kernel = _kernel()
     pid = process_pid
     child_created = _creation_time(kernel, pid)
     # Installed console/venv redirectors can create a five-process chain from

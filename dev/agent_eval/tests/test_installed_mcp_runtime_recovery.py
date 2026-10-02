@@ -18,7 +18,7 @@ import pytest
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
+from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.tests import windows_managed_runtime_fixture as task_fixture
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
@@ -39,7 +39,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.test_windows_automation_
     require_selected_normal_desktop,
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.management import RuntimeManagerProcessState
 from cadrumo.application.runtime.profile_access import (
     PROFILE_ADMISSION_TIMEOUT_SECONDS,
@@ -382,15 +382,24 @@ async def test_installed_windows_sdk_reconnects_with_exact_runtime_recovery(tmp_
                     )
                     assert first_status.session_id is not None
                     first_session_id = first_status.session_id
-                    new_probe = task.control
-                    assert new_probe is not None
                     session_failures: list[BaseException] = []
                     session_values: list[RuntimeProfileStatus | RuntimeSessionsLocked | RuntimeAccessRefusal] = []
 
                     def read_stale_session() -> None:
+                        # The owner-control probe may not carry private session
+                        # traffic, so the stale lease travels on a fresh connection.
                         try:
+                            stale_probe = VerifiedRuntimeConnection(
+                                task.endpoint.connect(timeout=5),
+                                expected=RuntimeClientHello(
+                                    product_version=task.product_version,
+                                    storage_identity=task.endpoint.storage_identity,
+                                ),
+                                deadline=time.monotonic() + 5,
+                            )
+                            task.cleanup.transports.append(RuntimeTransportCleanup(stale_probe))
                             session_values.append(
-                                new_probe.session(
+                                stale_probe.session(
                                     RuntimeSessionRequest(
                                         action="session_status",
                                         request_id=uuid4(),

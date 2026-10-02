@@ -37,7 +37,7 @@ from cadrumo.adapters.local_runtime.windows_manager import (
     windows_task_binding_matches,
 )
 from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess
-from cadrumo.adapters.local_runtime.windows_task_process import task_engine_owns_process
+from cadrumo.adapters.local_runtime.windows_task_process import task_engine_owns_process, windows_process_parents
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.management import RuntimeServiceBinding
 from cadrumo.application.runtime.owner_control import (
@@ -1040,11 +1040,13 @@ def retain_windows_runtime_tree(
     used = wintypes.DWORD()
     assert enumerate_processes(buffer, ctypes.sizeof(buffer), ctypes.byref(used))
     assert used.value < ctypes.sizeof(buffer), "native process snapshot exceeded its fixed bound"
+    parents = windows_process_parents()
+    assert parents is not None, "native process parent snapshot unavailable"
     owned: list[WindowsRetainedProcess] = []
     for pid in buffer[: used.value // ctypes.sizeof(wintypes.DWORD)]:
         if pid > 0 and (
-            task_engine_owns_process(runtime_pid, pid)
-            or (engine_pid is not None and task_engine_owns_process(engine_pid, pid))
+            task_engine_owns_process(runtime_pid, pid, parents=parents)
+            or (engine_pid is not None and task_engine_owns_process(engine_pid, pid, parents=parents))
         ):
             process = WindowsRetainedProcess(pid, allow_terminate=pid == runtime_pid)
             owner.processes.append(process)
