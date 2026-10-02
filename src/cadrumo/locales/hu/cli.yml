@@ -743,7 +743,7 @@ cli:
         ledger_payment_withholding_wrong_modelo: A --ledger-payment-withholding csak
           a Modelo 111-hez munkajövedelmet és a Modelo 123-hoz ingó tőkejövedelmet
           rögzít; a Modelo %{modelo} nem elfogadott.
-        m123_ledger_payment_only: A Modelo 123 levonási adatot csak a nyilvántartásában
+        m123_ledger_payment_only: A Modelo 123 levonási adatot csak a nyilvántartásodban
           szereplő kifizető tételből fogad el a --ledger-payment-withholding kapcsolóval;
           a számlából származó levonásokat elutasítja, és semmi sem lett rögzítve.
         modelo_help: A háttéraggregálási szolgáltatás által támogatott nyomtatványkód
