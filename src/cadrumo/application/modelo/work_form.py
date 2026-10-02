@@ -94,7 +94,6 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormPlacementKind,
     FormRepeatingColumn,
     FormRepeatingGroupBlock,
-    FormRepeatingRowSource,
     FormSectionDefinition,
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
@@ -147,7 +146,6 @@ from .work_form_models import (
     ModeloFormPrintedRate,
     ModeloFormRate,
     ModeloFormRepeatingBlock,
-    ModeloFormRepeatingRow,
     ModeloFormResult,
     ModeloFormScalar,
     ModeloFormSection,
@@ -157,6 +155,7 @@ from .work_form_models import (
     ModeloWorkForm,
     section_fields,
 )
+from .work_form_records import saved_form_records
 from .work_form_result import settlement_result
 from .work_form_sources import FIXED_BY_THE_FORM, bound_value_source
 from .work_review import ModeloWorkOriginAnomaly, ModeloWorkReview, ModeloWorkReviewCasilla
@@ -851,7 +850,12 @@ def _page_applies(
         for section in sections
         for field in section_fields(section)
     )
-    return True if has_value else None
+    has_records = any(
+        isinstance(block, ModeloFormRepeatingBlock) and bool(block.rows)
+        for section in sections
+        for block in section.blocks
+    )
+    return True if has_value or has_records else None
 
 
 def _grounded_rate(field: ModeloFormField, context: _FormContext) -> ModeloFormRate | None:
@@ -1155,6 +1159,12 @@ class _LayoutWalk:
             else str(self.context.rows[casilla_id].data_type)
             for casilla_id in column_casillas
         )
+        rows_known, rows = saved_form_records(
+            snapshot=self.context.snapshot,
+            revision=self.context.revision,
+            block=block,
+            column_casillas=column_casillas,
+        )
         return ModeloFormRepeatingBlock(
             id=block.id,
             columns=columns,
@@ -1162,8 +1172,8 @@ class _LayoutWalk:
             column_data_types=data_types,
             min_rows=block.min_rows,
             max_rows=block.max_rows,
-            rows_known=block.row_source is FormRepeatingRowSource.EXPORT_RECORD and self.context.revision is not None,
-            rows=self.repeating_rows(block, column_casillas),
+            rows_known=rows_known,
+            rows=rows,
         )
 
     def repeating_heading(self, column: FormRepeatingColumn) -> ModeloFormText:
@@ -1175,24 +1185,6 @@ class _LayoutWalk:
         casilla = self.context.casillas.get(str(column.casilla_id))
         label = None if casilla is None else _localized(casilla.localization_keys, language)
         return heading if label is None else label
-
-    def repeating_rows(
-        self, block: FormRepeatingGroupBlock, column_casillas: tuple[str | None, ...]
-    ) -> tuple[ModeloFormRepeatingRow, ...]:
-        revision = self.context.revision
-        if revision is None or block.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
-            return ()
-        by_row: dict[int, dict[str, Decimal]] = {}
-        for (casilla_id, row_index), amount in revision.row_casilla_values.items():
-            if str(casilla_id) in column_casillas:
-                by_row.setdefault(row_index, {})[str(casilla_id)] = amount
-        return tuple(
-            ModeloFormRepeatingRow(
-                index=index,
-                values=tuple(None if casilla_id is None else values.get(casilla_id) for casilla_id in column_casillas),
-            )
-            for index, values in sorted(by_row.items())
-        )
 
 
 def build_modelo_work_form(

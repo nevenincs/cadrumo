@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:7633407af1b470058d1cd6706e28b46c9a49ec0a33649b468da12ae79e486272'
+body_hash: 'sha256:626f95e0fe4926f4d16ffb349e7006cf59d8a75a933be2a51c2570f561fa6dbe'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1800,6 +1800,24 @@ related:
 - `S62` `verify:` `S62 owning test Ruff check and format --check` -> `pass`
 - `S62` `verify:` `S62 owning test canonical ty` -> `pass`
 - `S62` `by:` `vaultspec-execute`
+- `S17` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S17` `A` `src/cadrumo/application/modelo/work_form_records.py`
+- `S17` `M` `src/cadrumo/application/modelo/revision_replay_inputs.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_m349_calculation_display_export.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_dormant_m349_invoice_resolver_live.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/grid.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_grid_tables_real.py`
+- `S17` `verify:` `20261002T023531.223646Z-pytest-44152-ecbb1f93 owning form 88 units` -> `pass`
+- `S17` `verify:` `20261002T024019.106613Z-pytest-73560-d3a95a25 owning form 32 integrations` -> `pass`
+- `S17` `verify:` `20261002T024348.660242Z-pytest-61508-3b79e8f6 record/encrypted persistence 17 cases` -> `pass`
+- `S17` `verify:` `20261002T023920.203103Z-pytest-50644-20a580d5 real grid 24 cases` -> `pass`
+- `S17` `verify:` `20261002T024213.868804Z-pytest-25020-36c3901f installed localized stacked records 16 cases` -> `pass`
+- `S17` `verify:` `20261002T023419.512797Z-pytest-60860-037ec123 structural docs within41 cases` -> `pass`
+- `S17` `verify:` `S17 nine-path Ruff check/format/canonical ty/diff check` -> `pass`
+- `S17` `verify:` `S17 two application owner strict Basedpyright` -> `pass`
+- `S17` `verify:` `S17 independent final source review` -> `pass`
 
 ## Notes
 
@@ -1915,3 +1933,4 @@ related:
 - `S30` Actual closingaggregateexit1preserved C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/code-closing-final.log:9of12gatespass. Three distinct unchangedbaselinefindings only: `invoice_retencion` projectionunused/unconsumed; Unicodeversionconstantunused/unconsumed; `form_layout_integrityruntime-unreachablebutactivelydevcompilerused.` No detector, ratchet or type scope weakened. Finalworkbenchcapture/reviewrequiredforS30closure.
 - `S17` Reopened S17 for confirmed generic `binding_rows` projection defect. Preserve the current frozen render as failing provenance; S50/S30 remain open until corrected integrated evidence.
 - `S62` Reconciled obsolete None assertion with already published typed rate scale; no new publication or production behavior change.
+- `S17` Source correction verified and closed; immutable before-fix 712 capture remains failure evidence. S50/S30 still require corrected frozen integrated capture and final broad gates.

@@ -81,7 +81,7 @@ from .grid import (
     cell_width,
     measure_records,
     measure_table,
-    record_summary_columns,
+    stacked_record_lines,
     wrap_label,
     wrap_text,
 )
@@ -1033,7 +1033,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         )
 
     def _record_lines(self, item: CasillaListRecords, width: int) -> tuple[tuple[str, str], ...]:
-        """A repeating group's records as lines: a table with an index column, or one line per record."""
+        """A repeating group's records: a table when it fits, otherwise every labelled value stacked."""
         indexes = tuple(str(row.index) for row in item.rows)
         values = tuple(
             tuple(
@@ -1045,10 +1045,11 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         geometry = measure_records(item.headings, indexes, values, width)
         lines: list[tuple[str, str]] = []
         if not geometry.table:
-            shown = record_summary_columns(item.data_types)
             for index, row in zip(indexes, values, strict=True):
-                summary = (" " * GRID_GAP).join(row[column] for column in shown)
-                lines.append((_fit(" " * GRID_LEAD + _right(index, geometry.index) + "  " + summary, width), "value"))
+                lines.extend(
+                    (line, "value")
+                    for line in stacked_record_lines(item.headings, index, row, index_width=geometry.index, width=width)
+                )
             return tuple(lines)
         height = geometry.header_height
         for line in range(height):

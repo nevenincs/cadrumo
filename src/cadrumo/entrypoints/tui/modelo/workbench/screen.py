@@ -92,6 +92,7 @@ from .casilla_list import (
     AddressKey,
     CasillaList,
     CasillaListEntry,
+    CasillaListNote,
     Density,
     description_text,
     grid_cell_title,
@@ -106,6 +107,7 @@ from .editor import (
     read_only_reason,
 )
 from .export import WorkbenchExportScreen
+from .grid import CasillaListRecords
 from .header import (
     ChipLevel,
     DeadlineTone,
@@ -1063,8 +1065,12 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         return notes
 
     def _empty_listing_note(self) -> str | None:
-        """Why the list is empty, naming the next page the filter leaves something on; ``None`` when it shows boxes."""
-        if any(isinstance(item, CasillaListEntry) for item in self.query_one(CasillaList).items):
+        """Explain an empty view; saved records and an unknown record source are content too."""
+        if any(
+            isinstance(item, CasillaListEntry | CasillaListRecords)
+            or (isinstance(item, CasillaListNote) and bool(item.column_casilla_ids))
+            for item in self.query_one(CasillaList).items
+        ):
             return None
         if self._sort is SortOrder.FORM:
             staged = self._session.display()
@@ -1162,7 +1168,13 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if expanded:
             lines.extend((on_screen_text(self.box_marks, self.other_marks), more_text()))
         if entry is None:
-            lines.append(tr("tui.modelo.workbench.help.empty"))
+            items = self.query_one(CasillaList).items
+            if any(isinstance(item, CasillaListRecords) for item in items):
+                lines.append(tr("tui.modelo.workbench.grid.records_read_only"))
+            elif any(isinstance(item, CasillaListNote) and item.column_casilla_ids for item in items):
+                lines.append(tr("tui.modelo.workbench.grid.records_unknown"))
+            else:
+                lines.append(tr("tui.modelo.workbench.help.empty"))
         else:
             lines.extend(self._box_help(entry))
         form = self.form

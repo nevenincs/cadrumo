@@ -16,6 +16,7 @@ from typing import Final, override
 import pytest
 from rich.style import Style
 from textual.app import App, ComposeResult
+from textual.widgets import Static
 
 from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
@@ -612,6 +613,27 @@ async def test_records_whose_number_is_not_known_are_never_counted_as_none(opera
 
 
 @pytest.mark.asyncio
+async def test_an_unknown_record_source_is_visible_content_in_the_screen_header_and_help(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    screen = ModeloWorkbenchScreen(FakeReader(form=_form(operation, "349", 2026, "1T")))
+    async with ScreenHostApp(screen).run_test(size=(80, 24)) as pilot:
+        for _ in range(3):
+            await pilot.pause()
+        await pilot.press("]")
+        await pilot.pause()
+        help_text = str(screen.query_one("#wb-help", Static).render())
+        heading = str(screen.query_one("#wb-page", Static).render())
+        unknown = lookup_translation("tui.modelo.workbench.grid.records_unknown", locale="en")
+        empty_help = lookup_translation("tui.modelo.workbench.help.empty", locale="en")
+        empty_page = lookup_translation("tui.modelo.workbench.filter.empty", locale="en")
+        assert unknown is not None and unknown in help_text
+        assert empty_help is not None and empty_help not in help_text
+        assert empty_page is not None and empty_page not in heading
+        assert screen.query_one(CasillaList).highlighted is None
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(("width", "table"), [(80, False), (200, True)])
 async def test_known_records_are_a_read_only_table_with_an_index_column(
     operation: PinnedAuthorityOperation, width: int, table: bool
@@ -635,6 +657,11 @@ async def test_known_records_are_a_read_only_table_with_an_index_column(
     if table:
         header = [line for line in lines if block.columns[-1].heading.text.split()[0] in line]
         assert header, "the columns carry the labels of their boxes"
+    else:
+        assert "Operador Uno" in text and "Operador Dos" in text
+        assert "FR" in text and "DE" in text
+        for column in block.columns:
+            assert column.heading.text in text, "stacked records retain every declared column label"
     # Records are read, never edited here: none is a box the cursor can rest on.
     assert not any(isinstance(item, CasillaListEntry) for item in items)
     assert not any(isinstance(item, CasillaListHeading) and item.row is not None for item in items)

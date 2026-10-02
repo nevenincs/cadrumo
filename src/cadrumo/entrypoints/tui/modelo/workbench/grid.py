@@ -226,7 +226,7 @@ def measure_table(
 
 @dataclass(frozen=True, slots=True)
 class RecordsGeometry:
-    """How a repeating group's records sit at one width: as a table, or one line per record."""
+    """How a repeating group's records sit at one width: as a table, or labelled stacked values."""
 
     table: bool
     index: int
@@ -235,14 +235,14 @@ class RecordsGeometry:
 
     @property
     def header_height(self) -> int:
-        """The lines the column headings take; none when records are one line each."""
+        """The lines a table's column headings take; stacked records carry their labels beside each value."""
         return max((len(lines) for lines in self.header), default=0) if self.table else 0
 
 
 def measure_records(
     headings: tuple[str, ...], indexes: tuple[str, ...], values: tuple[tuple[str, ...], ...], width: int
 ) -> RecordsGeometry:
-    """Measure records as a table when every column fits whole, else as one line per record."""
+    """Measure records as a table when every column fits whole, otherwise use labelled stacked records."""
     index = max((cell_len(text) for text in indexes), default=1)
     widths = tuple(
         max(
@@ -259,13 +259,22 @@ def measure_records(
     return RecordsGeometry(table=True, index=index, widths=widths, header=header)
 
 
-def record_summary_columns(data_types: tuple[str, ...]) -> tuple[int, ...]:
-    """The columns a one-line record shows: the first two and the last money column."""
-    shown = list(range(min(2, len(data_types))))
-    money = [column for column, data_type in enumerate(data_types) if data_type == "money"]
-    if money and money[-1] not in shown:
-        shown.append(money[-1])
-    return tuple(shown)
+def stacked_record_lines(
+    headings: tuple[str, ...], index: str, values: tuple[str, ...], *, index_width: int, width: int
+) -> tuple[str, ...]:
+    """Keep every declared column and value readable when a record table cannot fit.
+
+    Every column carries its saved row index; wrapped continuations stay under
+    that column's label. The scrollable list retains the whole record rather
+    than choosing summary columns that have no route to their omitted values.
+    """
+    prefix = " " * GRID_LEAD + index.rjust(index_width) + " " * GRID_GAP
+    continuation = " " * len(prefix)
+    lines: list[str] = []
+    for heading, value in zip(headings, values, strict=True):
+        wrapped = wrap_text(f"{heading}: {value}", max(width - len(prefix), 1))
+        lines.extend((prefix if number == 0 else continuation) + line for number, line in enumerate(wrapped))
+    return tuple(lines)
 
 
 __all__ = [
@@ -289,7 +298,7 @@ __all__ = [
     "longest_word",
     "measure_records",
     "measure_table",
-    "record_summary_columns",
+    "stacked_record_lines",
     "wrap_label",
     "wrap_text",
 ]

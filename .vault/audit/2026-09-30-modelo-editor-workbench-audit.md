@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:498a2571ce9ad585366e0851a105f5f0663e6e4950c34a9d681c50f6ac3271d1'
+body_hash: 'sha256:34fac255cdd5e708edfa792152e28ae362583c213a47de17afa23b67ed0e88a8'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -544,6 +544,16 @@ S17 is reopened. The correction belongs in the generic application read model, u
 ### printed-rate integration assertion | low | published scale contract retained
 
 The owning form integration suite exposed a stale assertion that fixed Modelo 303 box 02 had no figure. The current published export scale grounds its printed value at 4.00 percent and ratio 0.04; the test now checks that value while retaining the design-constant/informational classification. It separately proves unscaled placeholder 151 stays fixed without an invented printed rate. Five focused installed-authority scale, printed-value, unknown and placeholder cases pass (`20261002T023836.655110Z-pytest-83520-d96d9795`), as do Ruff check, format check and canonical ty for the owning test. No authority, production scale behavior or detector changed. The full owning form integration suite will be reconciled with S17's current record correction.
+
+### repeating-record correction | low | saved rows and compact values preserved through shared owners
+
+S17's high finding is resolved in the generic application join. The selected export record and the existing registry field-to-casilla mapping determine row ownership. Canonical persisted detail-row bindings are shared with filing replay, preserving its normalization and precedence; only CASILLA/numbered PROJECTION slots consume saved per-row casillas, so stale casilla indices cannot invent binding rows. Sparse saved binding/casilla indices, text, zero and precision survive. Explicit-empty versus omitted legacy detail channels are distinguished after real encrypted reload; unsupported projection owners remain unknown without source queries or recalculation. Numeric malformed/nonfinite tokens yield unknown cells rather than zero or a projection crash. Optional pages recognize saved records.
+
+The related header/help defect is resolved with existing four-locale read-only/unknown wording. A further rendered-content check exposed inaccessible operator identifiers in compact summaries: the generic narrow fallback now stacks every declared labelled column/value, retains row indices and measures its full wrapped scroll height. Wide tables retain their existing layout. No modelo-specific UI, schema, stored calculation identity, locale catalogue or authority generation changed.
+
+Applicable verification passes: 88 owning form units; 32 owning form integrations including every real registry revision; 17 record and encrypted-store cases including omitted/explicit-empty load and ghost-row exclusion; 24 real grid cases; 16 actual installed TUI cases in es/en/ca/hu at 80x24 and 120x40 in both themes, proving all saved operator identities/amounts remain reachable, no horizontal overflow and no scalar editing; six structural docstring gates within a 41-case bundle. Ruff, format, canonical ty across all nine paths and strict Basedpyright for both application owners pass. Exact native run.log/run.json paths and checker tool receipts are in `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/s17-final-verification-receipt.json`. Root inspected the actual native receipts. Independent final source review is PASS with no critical/high finding.
+
+The immutable cb04a1021c capture completed 712 frames, nine matching goldens, no capture failure, skip, glyph issue or fingerprint drift. Its 82 advisory geometry readings classify as 36 valid independent sibling-pane readings and 46 hidden-underlying-pane detections; no overflow or detector relaxation is involved. Twenty additional blocked/incomplete PNGs were independently reviewed with no new critical/high/medium finding; Sources counts scalar fields intentionally and row issues have a real table/source correction path. Before-fix capture is installed under `closing-cb04a1021c-before-record-fix`, with the review HTML unchanged. That capture remains REVISION REQUIRED evidence for the resolved defect; corrected frozen capture and broad gates remain S50/S30 closure work.
 
 ## Recommendations
 
