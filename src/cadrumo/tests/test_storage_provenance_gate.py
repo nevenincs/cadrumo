@@ -119,6 +119,10 @@ PERMITTED_PRODUCERS: Final[frozenset[tuple[str, str]]] = frozenset(
         # its own session journal and SQLite bucket. That is development-only
         # harness state, not an application-chosen member of the taxonomy.
         ("entrypoints/tui/tests/fixture.py", "<module>"),
+        # The native Windows worker test hands its browser directory to the
+        # spawned profile worker through the synthetic storage root, the only
+        # location that worker process receives. Test-only handoff state.
+        ("entrypoints/runtime/tests/windows_worker_parent_fixture.py", "_admitted_worker_composition"),
     },
 )
 """Functions that may join onto the storage root, because producing a location is their job."""
