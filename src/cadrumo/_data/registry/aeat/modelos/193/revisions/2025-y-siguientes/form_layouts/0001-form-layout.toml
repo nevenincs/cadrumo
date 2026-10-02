@@ -7,7 +7,7 @@ revision_id = "2025-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "7852c75b23510b7399852d78b1e1babc5f88e750ad3ef467a03971476191d829"
+source_state_digest = "dedcfb92117e3dd620c18da66a32284d93052a2c4ac0f04322ba558aa8afa2b8"
 placements = [
     { casilla_id = "decl.base-total", kind = "on_form" },
     { casilla_id = "decl.complementaria", kind = "on_form", box_number = "121" },

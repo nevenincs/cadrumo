@@ -555,6 +555,20 @@ def _sheet_constants(sheet: RecordDesignSheet) -> dict[tuple[int, int], str]:
     }
 
 
+def _identity_constants(sheet: RecordDesignSheet) -> dict[tuple[int, int], str]:
+    """Return the sheet constants that identify WHICH record it describes.
+
+    A constant on a row AEAT reserves for itself prescribes a value but names no
+    record: Modelo 360's ``@1897+5`` "Reservado AEAT." / "constante '00000'"
+    is the same on any record that carries it. Letting it vote in the join or
+    the scope test would turn one mistyped reserved literal into a contradiction
+    that drops the whole sheet out of scope -- a silent pass over every position
+    it declares. Its value is still enforced, by :func:`_reserved_write_failures`.
+    """
+    reserved = _administration_reserved_bytes(sheet)
+    return {coordinate: value for coordinate, value in _sheet_constants(sheet).items() if coordinate[0] not in reserved}
+
+
 def _field_constant(field: RecordDesignField) -> str | None:
     """Return one field's constant, keeping identifier rows on their own grammar."""
     cells = (field.content, field.description)
@@ -714,13 +728,23 @@ def _reserved_write_failures(
     so those bytes must still be emitted, as blanks. The rule is that a field
     carrying a value may not claim bytes the design says belong to AEAT -- never
     that fillers are suspect.
+
+    The one value a field may write there is the one AEAT itself prescribes: a
+    ``literal`` whose coordinates and value are exactly a constant the same
+    sheet declares. Modelo 360's ``@1897+5`` is "Reservado AEAT." with contenido
+    "constante '00000'"; a filler would emit blanks where the design states
+    zeros. Any other value, or the right value at shifted coordinates, is still
+    refused.
     """
     reserved = _administration_reserved_bytes(sheet)
     if not reserved:
         return []
+    prescribed = _sheet_constants(sheet)
     failures: list[str] = []
     for field in fields:
         if field.offset is None or field.length is None or field.kind is CasillaFieldKind.FILLER:
+            continue
+        if field.kind is CasillaFieldKind.LITERAL and prescribed.get((field.offset, field.length)) == field.literal:
             continue
         clash = sorted(byte for byte in range(field.offset, field.offset + field.length) if byte in reserved)
         if clash:
@@ -818,7 +842,7 @@ def _belongs_to_layout(
     fail in.
     """
     literals_by_record = [_record_literals(record, constants_by_binding) for record in records]
-    for coordinate, value in _sheet_constants(sheet).items():
+    for coordinate, value in _identity_constants(sheet).items():
         declaring = [literals[coordinate] for literals in literals_by_record if coordinate in literals]
         if declaring and all(declared != value for declared in declaring):
             return False
@@ -911,7 +935,7 @@ def _join_record(
     sheet; the page discriminator breaks the tie, and where nothing does, the
     sheet stays unjoined rather than taking an arbitrary winner.
     """
-    constants = _sheet_constants(sheet)
+    constants = _identity_constants(sheet)
     if not constants:
         return None
     scored = _score_records(constants, records, constants_by_binding)

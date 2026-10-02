@@ -3725,6 +3725,20 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 11 '1. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-43"
+offset = 43
+length = 17
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-solicitante-nif"
 offset = 60
@@ -5083,6 +5097,21 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 109 '4. Reservado AEAT. constante 00000'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-constante-1897"
+offset = 1897
+length = 5
+kind = "literal"
+literal = "00000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-devolucion-declaracion-no-entrega-bienes"
 offset = 1902
@@ -5209,12 +5238,40 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 119 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2002"
+offset = 2002
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-1"
 offset = 2004
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-1"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 121 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2044"
+offset = 2044
+length = 60
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5237,12 +5294,40 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 123 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2120"
+offset = 2120
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-2"
 offset = 2122
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-2"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 125 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2162"
+offset = 2162
+length = 60
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5265,12 +5350,40 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 127 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2238"
+offset = 2238
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-3"
 offset = 2240
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-3"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 129 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2280"
+offset = 2280
+length = 60
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5293,12 +5406,40 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 131 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2356"
+offset = 2356
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-4"
 offset = 2358
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-4"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 133 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2398"
+offset = 2398
+length = 60
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5321,12 +5462,40 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 135 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2474"
+offset = 2474
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-5"
 offset = 2476
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-5"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 137 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2516"
+offset = 2516
+length = 60
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5349,12 +5518,40 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 139 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2592"
+offset = 2592
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-6"
 offset = 2594
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-6"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 141 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2634"
+offset = 2634
+length = 60
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5377,12 +5574,40 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 143 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2710"
+offset = 2710
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-7"
 offset = 2712
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-7"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 145 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2752"
+offset = 2752
+length = 60
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5405,12 +5630,40 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 147 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2828"
+offset = 2828
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-8"
 offset = 2830
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-8"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 149 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2870"
+offset = 2870
+length = 60
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5433,12 +5686,40 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 151 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2946"
+offset = 2946
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-9"
 offset = 2948
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-9"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 153 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-2988"
+offset = 2988
+length = 60
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5461,12 +5742,68 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 155 '7. Reservado AEAT' (Num; the design states no contenido).
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-3064"
+offset = 3064
+length = 2
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-anexo-descripcion-10"
 offset = 3066
 length = 40
 kind = "casilla"
 casilla_id = "decl.anexo-descripcion-10"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 157 '7. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-3106"
+offset = 3106
+length = 60
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 158 'Reservado para el sello electronico de la AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-3166"
+offset = 3166
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 159 'Reservado para la Agencia Tributaria'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-01-reservado-3179"
+offset = 3179
+length = 212
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -5535,6 +5872,20 @@ data_type = "text"
 required = false
 padding = "none"
 justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 4 '1. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-02-reservado-16"
+offset = 16
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
@@ -6211,6 +6562,20 @@ signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]
 
+# Design row 53 '1. Reservado AEAT'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-02-reservado-3116"
+offset = 3116
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = "modelo-360-decl-op2-tipo"
 offset = 3117
@@ -6865,6 +7230,20 @@ data_type = "text"
 required = false
 padding = "none"
 justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+# Design row 101 'Reservado para la Agencia Tributaria'.
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = "modelo-360-page-02-reservado-6211"
+offset = 6211
+length = 180
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010"]

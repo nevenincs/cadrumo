@@ -223,6 +223,19 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13"]
+# Design row 5 'Reservado pagina complementaria' (blanco o C): the modelo has a single page-01 record, so there is no continuation page to indicate.
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-page-01-reservado-12"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
 id = "modelo-115-page-01-tipo-declaracion"
 offset = 13

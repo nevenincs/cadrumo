@@ -541,6 +541,45 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
+# Design row 50 'RESERVADO PARA LA A.E.A.T.', contenido '0' o blanco.
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-page-01-reservado-627"
+offset = 627
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+# Design row 51 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-page-01-reservado-628"
+offset = 628
+length = 99
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+# Design row 52 'SELLO ELECTRONICO RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-page-01-reservado-727"
+offset = 727
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-page-close"
 offset = 740

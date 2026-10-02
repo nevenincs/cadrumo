@@ -532,6 +532,34 @@ signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-page-01-reservado-706"
+offset = 706
+length = 101
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'SELLO ELECTRONICO RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-page-01-reservado-807"
+offset = 807
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
 [[revisions.2026.export_layouts.records.fields]]
 id = "modelo-131-page-close"
 offset = 820
@@ -625,6 +653,132 @@ signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-dpa-reservado-37"
+offset = 37
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-dpa-reservado-38"
+offset = 38
+length = 3
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-dpa-reservado-41"
+offset = 41
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-dpa-reservado-42"
+offset = 42
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-dpa-reservado-365"
+offset = 365
+length = 10
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-dpa-reservado-375"
+offset = 375
+length = 10
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-dpa-reservado-387"
+offset = 387
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-dpa-reservado-388"
+offset = 388
+length = 10
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-dpa-reservado-398"
+offset = 398
+length = 189
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
 [[revisions.2026.export_layouts.records.fields]]
 id = "modelo-131-dpa-close"
 offset = 587
@@ -701,6 +855,20 @@ data_type = "text"
 required = true
 padding = "none"
 justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+
+# Design row 'RESERVADO PARA LA A.E.A.T. (Dejar en blanco)'.
+[[revisions.2026.export_layouts.records.fields]]
+id = "modelo-131-did-reservado-46"
+offset = 46
+length = 200
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]

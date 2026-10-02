@@ -54,15 +54,16 @@ deliberately empty span is declared, not omitted, as a
 field carrying its own ``offset`` and ``length``, so a filler CLOSES a span
 rather than excusing one.
 
-What holds the promotion back is the authored corpus, not the argument: a live
-read reports 115 gaps and 0 late starts across the loaded layouts, concentrated
-in hand-authored envelope-header and page records. Many sit between spans AEAT
-marks for itself, and whether the design intends those positions to be authored
-or deliberately left to the administration is a question about the designs,
-which this check does not read. Refusing them now would refuse the shipped
-registry on a reading no source document has been checked against. So they are
-REPORTED under their own names by :func:`export_record_placement_advisories` and
-promoted once the designs have ruled -- not dropped, and not counted as clean.
+What holds the promotion back is one population the registry cannot yet
+declare. Every hole AEAT marks for itself ("Reservado para la Administración",
+"BLANCOS", the sello electrónico) is now an authored filler transcribed from its
+design row. What remains are the file-envelope "Versión del Programa" and "NIF
+Empresa Desarrollo" slots, which the designs delegate to the entidad
+desarrolladora: the coverage gate rules them absent rather than empty, so a
+filler would misdeclare them, and no field kind yet says "delegated". Refusing
+them now would refuse the shipped registry over that missing vocabulary. So they
+are REPORTED under their own names by :func:`export_record_placement_advisories`
+-- not dropped, and not counted as clean.
 
 One casilla split across two consecutive fields is coverage-complete and passes.
 Modelo 296's 2024 casilla 03 is the worked case: an integer part at 160 length 13

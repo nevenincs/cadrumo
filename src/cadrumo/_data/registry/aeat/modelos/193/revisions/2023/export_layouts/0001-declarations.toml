@@ -235,6 +235,20 @@ signed = false
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2023"]
 
+# Design span '------- BLANCOS'.
+[[revisions.2023.export_layouts.records.fields]]
+id = "modelo-193-declarante-reservado-190"
+offset = 190
+length = 30
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023"]
+
 [[revisions.2023.export_layouts.records.fields]]
 id = "modelo-193-decl-gastos-total"
 offset = 220
@@ -566,6 +580,20 @@ signed = false
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2023"]
 
+# Design span '------- BLANCOS'.
+[[revisions.2023.export_layouts.records.fields]]
+id = "modelo-193-perceptor-reservado-136"
+offset = 136
+length = 3
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023"]
+
 [[revisions.2023.export_layouts.records.fields]]
 id = "modelo-193-perc-reducciones"
 offset = 139
@@ -632,6 +660,20 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023"]
+
+# Design span '------- BLANCOS'.
+[[revisions.2023.export_layouts.records.fields]]
+id = "modelo-193-perceptor-reservado-193"
+offset = 193
+length = 15
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2023"]
@@ -944,6 +986,20 @@ kind = "binding"
 binding = "modelo-193-gasto-row-nombre"
 data_type = "text"
 required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023"]
+
+# Design span '------- BLANCOS'.
+[[revisions.2023.export_layouts.records.fields]]
+id = "modelo-193-gastos-reservado-76"
+offset = 76
+length = 119
+kind = "filler"
+data_type = "text"
+required = false
 padding = "right_space"
 justification = "left"
 signed = false
