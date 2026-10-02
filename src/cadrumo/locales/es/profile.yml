@@ -3,11 +3,11 @@ profile:
     foral_regime: 'Los residentes en {tax_region} tributan ante la Hacienda Foral
       correspondiente, no ante la AEAT: los territorios vascos en virtud del Concierto
       Económico (Ley 12/2002) y Navarra en virtud del Convenio Económico (Ley 28/1990).
-      Este CLI no modela declaraciones forales. Consulte sede.bizkaia.eus (Bizkaia),
+      Este CLI no modela declaraciones forales. Consulta sede.bizkaia.eus (Bizkaia),
       gipuzkoa.eus/ogasuna (Gipuzkoa), araba.eus/ogasun (Álava) o hacienda.navarra.es
-      (Navarra) según su territorio.'
+      (Navarra) según tu territorio.'
     not_configured: No hay ningún perfil de residencia fiscal configurado para RENTA.
-      Ejecute `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` para configurarlo.
+      Ejecuta `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` para configurarlo.
   journey:
     source:
       censal_review:
@@ -65,7 +65,7 @@ profile:
       does_intracomunitario: Realiza operaciones intracomunitarias
       group_dominant_entity_enrolled: Alta como entidad dominante de un grupo de IVA
       group_member_enrolled: Alta como entidad miembro de un grupo de IVA
-      hydrocarbon_deposit_advance_payment_deduction_entitled: ¿Tiene derecho a deducir
+      hydrocarbon_deposit_advance_payment_deduction_entitled: ¿Tienes derecho a deducir
         pagos anticipados del régimen de depósitos fiscales de hidrocarburos?
       intracommunity_operations_exceed_50000_eur: Operaciones intracomunitarias superan
         50.000 EUR

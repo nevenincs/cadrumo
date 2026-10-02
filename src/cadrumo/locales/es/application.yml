@@ -1631,48 +1631,48 @@ application:
       iva_import_document_unrecordable: El apunte del %{transaction_date} por %{transaction_amount}
         %{transaction_currency} necesita la declaración aduanera de la importación.
         Cadrumo todavía no puede registrarla, por lo que esta declaración no puede
-        superar la comprobación. Presente esta declaración por otra vía.
+        superar la comprobación. Presenta esta declaración por otra vía.
       iva_intra_eu_self_assessment_unrecordable: El apunte del %{transaction_date}
         por %{transaction_amount} %{transaction_currency} necesita el justificante
         de autoliquidación de la adquisición intracomunitaria. Cadrumo todavía no
         puede registrarlo, por lo que esta declaración no puede superar la comprobación.
-        Presente esta declaración por otra vía.
+        Presenta esta declaración por otra vía.
       iva_reagp_document_unrecordable: El apunte del %{transaction_date} por %{transaction_amount}
         %{transaction_currency} necesita el recibo del régimen especial de la agricultura,
         ganadería y pesca (REAGP). Cadrumo todavía no puede registrarlo, por lo que
-        esta declaración no puede superar la comprobación. Presente esta declaración
+        esta declaración no puede superar la comprobación. Presenta esta declaración
         por otra vía.
       iva_rectification_document_unrecordable: El apunte del %{transaction_date} por
         %{transaction_amount} %{transaction_currency} necesita el justificante de
         la rectificación de deducciones. Cadrumo todavía no puede registrarlo, por
-        lo que esta declaración no puede superar la comprobación. Presente esta declaración
+        lo que esta declaración no puede superar la comprobación. Presenta esta declaración
         por otra vía.
       iva_selected_scope_evidence_failure: Algunos apuntes de IVA de esta declaración
         tienen datos o justificantes ausentes o no válidos (%{source_ref_count} con
-        referencia y %{unidentified_source_count} sin ella). Corrija sus registros
-        y vuelva a calcular antes de comprobar esta declaración.
+        referencia y %{unidentified_source_count} sin ella). Corrige tus registros
+        y vuelve a calcular antes de comprobar esta declaración.
       iva_wallet_precondition_failed: No se cumple una condición para compensar IVA
         de periodos anteriores.
       ledger_snapshot_drift: 'Tus registros han cambiado desde que se calculó el modelo
         %{modelo} de %{filing_year}, periodo %{period}: %{changed_count} apuntes modificados
         y %{removed_count} eliminados. Vuelve a calcularlo.'
-      ledger_snapshot_drift_added: Sus registros contienen %{added_count} apuntes
+      ledger_snapshot_drift_added: Tus registros contienen %{added_count} apuntes
         que no se han tenido en cuenta en el cálculo del Modelo %{modelo} %{filing_year},
-        período %{period}. Vuelva a calcular esta declaración.
+        período %{period}. Vuelve a calcular esta declaración.
       ledger_snapshot_drift_changed: 'Tus registros han cambiado desde que se calculó
         el modelo %{modelo} de %{filing_year}, periodo %{period} (apuntes modificados:
         %{changed_count}). Vuelve a calcularlo.'
       ledger_snapshot_drift_removed: 'Tus registros han cambiado desde que se calculó
         el modelo %{modelo} de %{filing_year}, periodo %{period} (apuntes eliminados:
         %{removed_count}). Vuelve a calcularlo.'
-      ledger_snapshot_drift_with_added: 'Sus registros ya no coinciden con el cálculo
+      ledger_snapshot_drift_with_added: 'Tus registros ya no coinciden con el cálculo
         del Modelo %{modelo} %{filing_year}, período %{period}: %{added_count} apuntes
         no se han tenido en cuenta, %{changed_count} han cambiado y %{removed_count}
-        se han eliminado. Vuelva a calcular esta declaración.'
-      ledger_snapshot_membership_unavailable: Cadrumo no ha podido comparar sus registros
+        se han eliminado. Vuelve a calcular esta declaración.'
+      ledger_snapshot_membership_unavailable: Cadrumo no ha podido comparar tus registros
         actuales con el cálculo del Modelo %{modelo} %{filing_year}, período %{period}.
-        La presentación queda bloqueada hasta que esta comparación se complete. Inténtelo
-        de nuevo cuando sus registros estén disponibles y vuelva a calcular si han
+        La presentación queda bloqueada hasta que esta comparación se complete. Inténtalo
+        de nuevo cuando tus registros estén disponibles y vuelve a calcular si han
         cambiado.
       m193_settled_row_amount_authority_unresolved: El modelo 193 de %{filing_year}
         incluye %{settled_prior_accrual_rows} pago(s) de rendimientos devengados en

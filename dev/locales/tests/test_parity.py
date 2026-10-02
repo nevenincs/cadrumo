@@ -404,7 +404,7 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
 
     assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
         "A Google Drive vault mappa {vault_folder_name} az előző termékhez tartozik és nem használható; "
-        "használja a Cadrumo vault mappát."
+        "használd a Cadrumo vault mappát."
     )
     assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
         "A(z) '%{value}' besorolást a Cadrumo automatikusan állítja be, kézzel nem adható meg. "

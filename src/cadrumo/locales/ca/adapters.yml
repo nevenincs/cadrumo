@@ -136,7 +136,7 @@ adapters:
       sancion_does_not_reconcile: Els imports impresos al document de sanció no quadren,
         per la qual cosa s'ha rebutjat la lectura. Comprova el document a mà.
       sancion_incomplete: El document de sanció no s'ha pogut llegir completament.
-        Obriu-lo a la seu i comproveu-lo a mà.
+        Obre'l a la seu i comprova'l a mà.
   outbound:
     calculation_summary_pdf:
       errors:
@@ -211,7 +211,7 @@ adapters:
           namespace_create_path_too_long: 'L''emmagatzematge local no ha pogut crear
             l''espai de noms {namespace}: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
-            activa LongPathsEnabled (vegeu `aeat config check`).'
+            activa LongPathsEnabled (consulta `aeat config check`).'
           namespace_create_permission: L'emmagatzematge local no ha pogut crear l'espai
             de noms {namespace}.
           namespace_forbidden_characters: L'espai de noms local {namespace} conté
@@ -228,7 +228,7 @@ adapters:
           payload_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             la càrrega de l''objecte: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
-            activa LongPathsEnabled (vegeu `aeat config check`).'
+            activa LongPathsEnabled (consulta `aeat config check`).'
           payload_write_permission: L'emmagatzematge local no ha pogut escriure el
             payload de l'objecte.
           sidecar_malformed: El sidecar local {sidecar_path} no es pot llegir o està
@@ -240,7 +240,7 @@ adapters:
           sidecar_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             el sidecar de l''objecte: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
-            activa LongPathsEnabled (vegeu `aeat config check`).'
+            activa LongPathsEnabled (consulta `aeat config check`).'
           written_at_invalid: 'El camp written_at del sidecar local falta, no es pot
             interpretar o no indica zona horària: {actual_value}.'
   persistence:

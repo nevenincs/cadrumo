@@ -20,7 +20,7 @@ wizard:
     blank_path: Cal un camí per a %{prompt_key}.
     blank_secret: Cal un valor secret per a %{prompt_key}.
     blank_text: Cal un valor per a %{prompt_key}.
-    checkbox_required: Seleccioneu almenys una opció per a %{prompt_key}.
+    checkbox_required: Selecciona almenys una opció per a %{prompt_key}.
     checkbox_unknown: 'Valor no reconegut per a %{flag} (%{prompt_key}): %{raw}. Opcions
       vàlides: %{choices}.'
     checkbox_without_choices: La pregunta %{prompt_key} no declara opcions de casella.
@@ -67,16 +67,16 @@ wizard:
       title: Activitat econòmica i cens
     capabilities:
       cloud-evidence-upload:
-        prompt: Voleu permetre pujar evidència sensible a proveïdors LLM al núvol?
+        prompt: Vols permetre pujar evidència sensible a proveïdors LLM al núvol?
           (desactivat per defecte)
       google-export:
-        prompt: Voleu activar l'exportació a Google Sheets?
+        prompt: Vols activar l'exportació a Google Sheets?
       llm-vision:
-        prompt: Voleu activar la visió LLM local per llegir factures?
+        prompt: Vols activar la visió LLM local per llegir factures?
       title: Capacitats de serveis
     certificate:
       path:
-        prompt: Introduïu el camí del certificat digital (.p12, .pfx)
+        prompt: Introdueix el camí del certificat digital (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -117,13 +117,13 @@ wizard:
     descendientes:
       acogimiento-resolucion:
         help: 'Data de la primera resolució d''acolliment preadoptiu o permanent.
-          Indiqueu-la també si el menor va ser adoptat després: l''augment per menor
+          Indica-la també si el menor va ser adoptat després: l''augment per menor
           de tres anys es compta des del primer acolliment i dura tres períodes en
           total, i l''adopció no el torna a començar.'
         prompt: Data de la primera resolució d'acolliment
       alta-posterior-nacimiento-mes:
-        help: Indiqueu un mes de l’1 al 12. Ha de coincidir amb el primer mes declarat
-          als mesos de treball; deixeu-ho en blanc si la mare ja complia el requisit
+        help: Indica un mes de l’1 al 12. Ha de coincidir amb el primer mes declarat
+          als mesos de treball; deixa-ho en blanc si la mare ja complia el requisit
           quan va néixer el fill.
         invalid_range: El mes ha d’estar entre %{minimum} i %{maximum}.
         prompt: Mes en què la mare va completar els 30 dies de cotització després
@@ -131,11 +131,11 @@ wizard:
       birth-date:
         prompt: Data de naixement
       convivencia:
-        prompt: Aquest descendent conviu amb vostè?
+        prompt: Aquest descendent conviu amb tu?
       count:
-        help: 'Compti els fills que poden donar dret al mínim per descendents (art.
+        help: 'Compta els fills que poden donar dret al mínim per descendents (art.
           58 LIRPF): menors de 25 anys (o qualsevol edat amb discapacitat) que convisquin
-          amb vostè.'
+          amb tu.'
         prompt: Quants descendents (fills) vol declarar?
       custodia-compartida:
         prompt: La custòdia és compartida amb l'altre progenitor?
@@ -148,13 +148,13 @@ wizard:
             label: No, no hi contribueixo
           'true':
             label: Sí, hi contribueixo
-        help: Responeu només si el descendent no conviu amb vós. Un progenitor sense
+        help: Respon només si el descendent no conviu amb tu. Un progenitor sense
           guarda i custòdia, ni tan sols compartida, que no paga anualitats per aliments
           per decisió judicial però contribueix al manteniment del fill, té dret al
-          mínim per descendents. Si declareu anualitats per aliments, aquesta assimilació
+          mínim per descendents. Si declares anualitats per aliments, aquesta assimilació
           no s'aplica a cap descendent mentre l'aplicació no les pugui repartir per
           fill.
-        prompt: Contribuïu al manteniment econòmic d'aquest descendent?
+        prompt: Contribueixes al manteniment econòmic d'aquest descendent?
       discapacidad:
         choices:
           '0':
@@ -170,52 +170,52 @@ wizard:
         relacion_mismatch: Aquesta data no correspon a la relació indicada. La inscripció
           al Registre Civil només s'indica per a un descendent adoptat, i la resolució
           d'acolliment només per a un acolliment preadoptiu o permanent, o per a un
-          adoptat que abans va estar acollit. Corregiu la relació o esborreu la data.
+          adoptat que abans va estar acollit. Corregeix la relació o esborra la data.
       fallecimiento:
-        help: Deixeu-ho en blanc si aquest descendent no ha mort.
+        help: Deixa-ho en blanc si aquest descendent no ha mort.
         prompt: Data de defunció
       gastos-guarderia:
-        both_declared: Indiqueu el total anual de llar d'infants o els imports mes
-          a mes d'aquest fill, però no tots dos. El detall mensual és l'únic que pot
-          expressar l'any en què el fill compleix tres anys, així que esborreu el
-          total anual.
+        both_declared: Indica el total anual de llar d'infants o els imports mes a
+          mes d'aquest fill, però no tots dos. El detall mensual és l'únic que pot
+          expressar l'any en què el fill compleix tres anys, així que esborra el total
+          anual.
         help: Imports pagats a una llar d'infants o centre d'educació infantil autoritzat
           (art. 81.2 LIRPF) que incrementen la deducció per maternitat; euros sencers.
-        invalid_negative: Les despeses de llar d'infants no poden ser negatives; introduïu
+        invalid_negative: Les despeses de llar d'infants no poden ser negatives; introdueix
           0 o un import positiu en euros (art. 81 bis LIRPF).
         prompt: Despeses de llar d'infants pagades en l'any de declaració (euros)
       gastos-guarderia-mensuales:
-        help: 'Feu servir aquesta casella en lloc del total anual quan el fill compleixi
+        help: 'Fes servir aquesta casella en lloc del total anual quan el fill compleixi
           tres anys durant l''exercici: només compten els mesos posteriors a l''aniversari
-          i un import anual no es pot repartir entre ells. Escriviu cada mes i el
-          seu import com a MM:IMPORT separats per punt i coma, o un període com a
-          MM-MM:IMPORT, per exemple 9-12:210;1:180. Els mesos amb dret són els que
-          certifica la vostra llar d''infants.'
-        invalid_grammar: Escriviu cada mes i el seu import com a MM:IMPORT separats
+          i un import anual no es pot repartir entre ells. Escriu cada mes i el seu
+          import com a MM:IMPORT separats per punt i coma, o un període com a MM-MM:IMPORT,
+          per exemple 9-12:210;1:180. Els mesos amb dret són els que certifica la
+          teva llar d''infants.'
+        invalid_grammar: Escriu cada mes i el seu import com a MM:IMPORT separats
           per punt i coma; un període es pot escriure MM-MM:IMPORT. Per exemple 9-12:210;1:180.
           Els mesos van de l'1 al 12, els imports són euros sencers i cada mes pot
           aparèixer una sola vegada.
         prompt: Despeses de llar d'infants d'aquest fill, mes a mes (opcional)
       inscripcion-registro-civil:
         help: Data en què l'adopció es va inscriure al Registre Civil. Si la inscripció
-          no calia, indiqueu la data de la resolució judicial o administrativa. Des
+          no calia, indica la data de la resolució judicial o administrativa. Des
           d'aquesta data es compta l'augment per menor de tres anys.
         prompt: Data d'inscripció al Registre Civil
       meses-madre-trabajo:
         help: 'Per a la deducció per maternitat (art. 81 LIRPF): QUINS mesos va cotitzar
           la mare a la Seguretat Social mentre aquest fill donava dret -- menor de
           3 anys, o (amb independència de l''edat) dins la finestra de data d''entrada
-          d''adopció/acolliment registrada a INSCRIPCION/ACOGIMIENTO. Escriviu MM
-          o MM-MM, separats per '';'' (per exemple 5-8 o 1;2;11;12). Els mesos i no
+          d''adopció/acolliment registrada a INSCRIPCION/ACOGIMIENTO. Escriu MM o
+          MM-MM, separats per '';'' (per exemple 5-8 o 1;2;11;12). Els mesos i no
           el seu nombre, perquè l''increment per llar d''infants es prorrateja pels
           mesos que aquests i els de la llar d''infants comparteixen.'
-        invalid_range: Indiqueu els mesos com a MM o MM-MM, separats per ';' (per
-          exemple 5-8 o 1;2;11;12), cadascun entre %{minimum} i %{maximum}.
+        invalid_range: Indica els mesos com a MM o MM-MM, separats per ';' (per exemple
+          5-8 o 1;2;11;12), cadascun entre %{minimum} i %{maximum}.
         prompt: Quins mesos va treballar la mare amb dret a la deducció -- fill menor
           de 3 anys, o adopció/acolliment dins la seva finestra de data d'entrada
           (exercici)
       nif:
-        prompt: NIF/NIE del descendent (deixi en blanc si no en té)
+        prompt: NIF/NIE del descendent (deixa en blanc si no en té)
       prorrata-minimo:
         choices:
           'false':
@@ -239,7 +239,7 @@ wizard:
             label: Guarda i custòdia per resolució judicial
           tutela:
             label: Tutela o representació legal
-        help: Trieu la relació legal. Totes donen dret al mínim per descendents. Només
+        help: Tria la relació legal. Totes donen dret al mínim per descendents. Només
           l'adopció i l'acolliment preadoptiu o permanent donen a més dret a l'augment
           per menor de tres anys amb independència de l'edat; l'acolliment temporal
           i la tutela no.
@@ -296,8 +296,8 @@ wizard:
         help: Codi ISO 3166-1 alfa-2 del país de residència fiscal (p.ex. GB, DE,
           FR). Obligatori quan fiscal-residency és non_resident_irnr.
       declaration-roles:
-        help: Rol declarant del model 347; indiqueu --declaration-roles una vegada
-          per rol
+        help: Rol declarant del model 347; indica --declaration-roles una vegada per
+          rol
       descendiente:
         help: 'Format: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
@@ -326,7 +326,7 @@ wizard:
       irpf-estimation-regime:
         help: Règim d'estimació IRPF per a la renda d'activitat econòmica
       irpf-income-categories:
-        help: Categoria de renda IRPF; indiqueu --irpf-income-categories una vegada
+        help: Categoria de renda IRPF; indica --irpf-income-categories una vegada
           per categoria
       irpf-special-regime:
         help: Règim especial IRPF. "general" per a la majoria de contribuents. "impatriado"
@@ -382,8 +382,8 @@ wizard:
         help: Activar la visió LLM local per llegir factures.
       modelo-111-no-retenciones-periods:
         help: Períodes Model 111 sense obligació, separats per comes, format AAAA:Període
-          (per exemple 2025:2T,2025:3T). Useu-ho només quan no es van pagar rendes
-          subjectes.
+          (per exemple 2025:2T,2025:3T). Fes-ho servir només quan no es van pagar
+          rendes subjectes.
       modelo-115-no-relevant-payment-periods:
         help: Períodes Model 115 sense pagament rellevant de lloguer urbà, separats
           per comes, format AAAA:Període (per exemple 2025:3T,2025:4T). És evidència
@@ -423,7 +423,7 @@ wizard:
       pays-rent-with-retencion:
         help: Paga lloguer de local amb retenció
       premio-loteria-gravamen-especial-sin-retencion:
-        help: Va obtenir un premi de loteries o apostes subjecte al gravamen especial
+        help: Vas obtenir un premi de loteries o apostes subjecte al gravamen especial
           sense retenció ni ingrés a compte (Model 136)
       premio-loteria-gravamen-especial-trimestres:
         help: Trimestres en què es va cobrar el premi, com a tokens AAAA-nT separats
@@ -452,7 +452,7 @@ wizard:
             label: Solter/a
         help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
           optar per la declaració conjunta i quina unitat familiar aplica.'
-        prompt: Indiqueu la situació familiar
+        prompt: Indica la situació familiar
       spouse-birth-date:
         help: Data de naixement del cònjuge
       spouse-disability-grade:
@@ -642,7 +642,7 @@ wizard:
       pays-rent-with-retencion:
         prompt: Paga lloguer de local amb retenció
       premio-loteria-gravamen-especial-sin-retencion:
-        prompt: Va obtenir un premi de loteries o apostes subjecte al gravamen especial
+        prompt: Vas obtenir un premi de loteries o apostes subjecte al gravamen especial
           sense retenció ni ingrés a compte
       premio-loteria-gravamen-especial-trimestres:
         help: Un token AAAA-nT per trimestre natural, separats per | (per exemple
@@ -682,7 +682,7 @@ wizard:
             label: Règim especial de l'agricultura, ramaderia i pesca (REAGP)
           recargo-equivalencia:
             description: 'Per a comerç minorista: el proveïdor aplica un recàrrec
-              addicional i vostè no presenta declaracions d''IVA per aquesta activitat.'
+              addicional i no presentes declaracions d''IVA per aquesta activitat.'
             label: Recàrrec d'equivalència
           simplificado:
             description: Règim simplificat per mòduls per a activitats acollides (vinculat
@@ -707,7 +707,7 @@ wizard:
             label: Hongarès
         prompt: Idioma de sortida de la CLI per a aquest perfil
       regimes:
-        prompt: Seleccioneu els règims fiscals aplicables
+        prompt: Selecciona els règims fiscals aplicables
       surnames:
         prompt: Cognoms o raó social per a capçaleres d'exportació
       tax-id:
@@ -715,11 +715,12 @@ wizard:
       taxation-type:
         choices:
           individual:
-            description: Useu aquest valor quan presenteu només la declaració individual
+            description: Fes servir aquest valor quan presentis només la declaració
+              individual
             label: 1 - tributació individual
           joint:
-            description: Useu aquest valor només per a tributació conjunta de la unitat
-              familiar
+            description: Fes servir aquest valor només per a tributació conjunta de
+              la unitat familiar
             label: 2 - conjunta
         prompt: Codi del tipus de tributació
       title: Identitat del perfil
@@ -887,7 +888,7 @@ wizard:
           cobrament d''honoraris per compte de tercers (art. 31.3), comunitat de propietaris
           (Llei 49/1960), entitat de caràcter social (art. 20.tres LIVA), entitat
           sotmesa al deure general d''informar (art. 94 LGT) o entitat integrada en
-          una administració pública. Deixeu-ho en blanc si no correspon.'
+          una administració pública. Deixa-ho en blanc si no correspon.'
         prompt: L'entitat declarant exerceix algun d'aquests papers institucionals
           als efectes del Model 347 (operacions amb terceres persones)?
       entity-type:

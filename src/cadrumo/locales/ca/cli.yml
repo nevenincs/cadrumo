@@ -1591,7 +1591,7 @@ cli:
         m303_filing_evidence_help: Camí al document JSON complet d'evidències de presentació
           del model 303.
         m303_rectificativa_motive_help: 'Obligatori per a una rectificativa aplicable
-          del model 303: trieu rectificaciones o discrepancia_criterio_administrativo.
+          del model 303: tria rectificaciones o discrepancia_criterio_administrativo.
           Mai no s''infereix ni s''assigna per defecte.'
         missing_binding_guidance: '%{base} Aporta el valor amb --binding KEY=VALUE
           en aquesta ordre, o executa `%{discover}` per veure tots els valors que
@@ -1618,7 +1618,7 @@ cli:
           valors pendents.'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la declaració
-        name_required: Proporcioneu --name.
+        name_required: Proporciona --name.
         notes_help: Notes opcionals associades al filing record
         observations_help: Mostrar observacions de càlcul tipades per casella i l'origen
           de cada valor.
@@ -1631,7 +1631,7 @@ cli:
         override_help: Valor d'entrada d'una casella amb sintaxi KEY=VALUE (repetible);
           executa `aeat app modelo bindings list --missing` per veure els valors que
           necessita el càlcul.
-        payment_election_help: 'Trieu com es paga un resultat positiu del Model 303:
+        payment_election_help: 'Tria com es paga un resultat positiu del Model 303:
           ingras ordinari o domiciliació.'
         period_help: 'Codi de període de la declaració: 0A anual, 1T-4T trimestres,
           01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
@@ -1657,20 +1657,20 @@ cli:
           de maternitat o paternitat. NO l'incloguis a --casilla 0003 (Retribucions
           dineràries).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta ha de ser un
-          import decimal; s''ha rebut: {value}. Utilitzeu el punt com a separador
-          decimal i sense separador de milers, p. ex. 1234.56.'
+          import decimal; s''ha rebut: {value}. Utilitza el punt com a separador decimal
+          i sense separador de milers, p. ex. 1234.56.'
         preview_maritime_exemption_annual_salary_help: Salari anual brut en EUR (Decimal).
           Obligatori quan el perfil actiu compleix els requisits de l'Art. 7.p) (vessel_flag=foreign
           o waters_type=international).
         preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary ha
-          de ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com a
-          separador decimal i sense separador de milers, p. ex. 1234.56.'
+          de ser un import decimal; s''ha rebut: {value}. Utilitza el punt com a separador
+          decimal i sense separador de milers, p. ex. 1234.56.'
         preview_maritime_exemption_gross_navigation_income_help: Total d'ingressos
           bruts de treball procedents de la navegació en EUR (Decimal). Obligatori
           quan el perfil actiu compleix REBECA (vessel_registry a REBECA / rebeca_eu_eea
           / scheduled_canary_route).
         preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
-          ha de ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com
+          ha de ser un import decimal; s''ha rebut: {value}. Utilitza el punt com
           a separador decimal i sense separador de milers, p. ex. 1234.56.'
         preview_maritime_exemption_help: Previsualitza l'exempció IRPF del treballador
           del mar (Art. 7.p) LIRPF / REBECA 50%) a partir dels fets maritime_worker
@@ -1685,8 +1685,8 @@ cli:
           rectificativa sobre una presentació prèvia de tipus U avalada per evidència
           de l'AEAT importada.
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
-        refund_election_help: Trieu si un resultat negatiu elegible del Model 303
-          es compensa o se sollicita com a devolució.
+        refund_election_help: Tria si un resultat negatiu elegible del Model 303 es
+          compensa o se sollicita com a devolució.
         relation_help: Valor d'una relació de les definicions dels models amb sintaxi
           KEY=VALUE (repetible). KEY és un id de relació, no una clau de --binding;
           fes-lo servir per a entrades que venen d'un altre període o d'un altre model.
@@ -1737,7 +1737,7 @@ cli:
           i --rescate-plan-pensiones-aportaciones-totales perquè l'assistent calculi
           la reducció del 40% i l'injecti a la casella 0011.
         rescate_plan_pensiones_not_decimal: 'Els valors --rescate-plan-pensiones-*
-          han de ser imports decimals; s''ha rebut: {value}. Utilitzeu el punt com
+          han de ser imports decimals; s''ha rebut: {value}. Utilitza el punt com
           a separador decimal i sense separador de milers, p. ex. 1234.56.'
         rescate_type_help: 'Tipus de rescat del pla de pensions (DT 12a LIRPF): total
           (tot el capital de cop) o parcial (cobraments esglaonats). Classifica el
@@ -1810,8 +1810,8 @@ cli:
           al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto
           i --sal-capital-social.
         sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals;
-          s''ha rebut: {value}. Utilitzeu el punt com a separador decimal i sense
-          separador de milers, p. ex. 1234.56.'
+          s''ha rebut: {value}. Utilitza el punt com a separador decimal i sense separador
+          de milers, p. ex. 1234.56.'
         select_help: Llista les declaracions desades.
         selector_ambiguous: 'Més d''una declaració activa coincideix amb aquest model,
           exercici i període.
@@ -1835,7 +1835,7 @@ cli:
           el càlcul no està disponible.
         status_help: Mostrar les metadades d'una declaració
         trusted_key_help: Clau pública Ed25519 (64 caràcters hexadecimals) en què
-          confieu, rebuda per un altre canal; el resum ha d'estar signat amb aquesta
+          confies, rebuda per un altre canal; el resum ha d'estar signat amb aquesta
           clau.
         verify_help: Comprovar un càlcul desat en esborrany respecte als requisits
           per quedar comprovat i complet
@@ -1858,7 +1858,7 @@ cli:
           %{state}). Està persistit i es pot reprendre més tard.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la declaració
         year_help: Exercici fiscal de la declaració (p. ex. 2026)
-        year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
+        year_out_of_range: L'exercici fiscal %{year} està fora de rang; indica un
           any entre %{minimum} i %{maximum}.
     quickfile:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
@@ -1876,9 +1876,9 @@ cli:
       parse_unknown_option: Opció desconeguda '{option}'.
       period_empty: El període fiscal no pot estar buit
       period_missing_year: El testimoni de període '{token}' necessita un any en aquesta
-        ordre. Afegiu --year (p. ex. --period {token} --year 2024).
-      period_unrecognised: 'Període ''{raw}'' no reconegut. Useu un testimoni AEAT:
-        1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indiqueu l''any amb --year
+        ordre. Afegeix --year (p. ex. --period {token} --year 2024).
+      period_unrecognised: 'Període ''{raw}'' no reconegut. Fes servir un testimoni
+        AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indica l''any amb --year
         (p. ex. --period 1T --year 2024).'
   config:
     app_help: Configurar i reparar el perfil local, les credencials, l'emmagatzematge
@@ -1890,11 +1890,11 @@ cli:
         clear_help: Retirar la configuració d'apoderat
         configure:
           no_console_hint: 'La configuració interactiva de l''apoderament requereix
-            una consola. Configureu-lo de manera no interactiva amb: aeat config auth
+            una consola. Configura''l de manera no interactiva amb: aeat config auth
             apoderado configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF de la part representada
           scope_help: Tokens d'abast (es poden repetir)
-          scope_required: 'No s''ha indicat cap àmbit. Afegiu --scope amb un o més
+          scope_required: 'No s''ha indicat cap àmbit. Afegeix --scope amb un o més
             de: %{codes}.'
         configure_help: Establir la configuració d'apoderat activa
         help: Gestionar la configuració d'apoderat
@@ -2018,14 +2018,14 @@ cli:
       current_passphrase_prompt: 'Contrasenya actual del perfil: '
       errors:
         echo_suppression_unavailable: Aquest terminal no pot ocultar el que s'escriu,
-          de manera que el secret quedaria visible a la pantalla; utilitzeu --secrets-stdin
+          de manera que el secret quedaria visible a la pantalla; utilitza --secrets-stdin
           o --secrets-fd.
         new_passphrase_mismatch: La nova contrasenya i la confirmació no coincideixen.
         no_controlling_terminal_for_secret: Aquest secret només es pot mostrar en
           un terminal i no n'hi ha cap de connectat. Torna a executar l'ordre des
           d'una sessió interactiva.
         non_interactive_secret_required: Cal un secret però no hi ha cap terminal
-          interactiu; utilitzeu --secrets-stdin o --secrets-fd.
+          interactiu; utilitza --secrets-stdin o --secrets-fd.
         profile_secrets_channel_conflict: 'Tria exactament un canal d''autenticació
           del perfil: --profile-secrets-stdin o --profile-secrets-fd.'
         profile_secrets_fd_collision: L'autenticació del perfil i el secret de l'ordre
@@ -2058,19 +2058,20 @@ cli:
         secrets_channel_conflict: No es pot especificar --secrets-stdin i --secrets-fd
           alhora.
         secrets_fd_invalid_json: 'El contingut de secrets de màquina no és un objecte
-          JSON vàlid. Envieu un objecte amb aquestes claus: {expected_fields}.'
+          JSON vàlid. Envia un objecte amb aquestes claus: {expected_fields}.'
         secrets_fd_missing_fields: 'A l''objecte de secrets de màquina li falten camps
-          obligatoris o en té d''inesperats. Envieu exactament aquestes claus: {expected_fields}.'
+          obligatoris o en té d''inesperats. Envia exactament aquestes claus: {expected_fields}.'
         secrets_fd_reserved_stream: Els descriptors 1 (sortida estàndard) i 2 (error
-          estàndard) estan reservats; useu el descriptor 0 o un altre descriptor llegible.
+          estàndard) estan reservats; fes servir el descriptor 0 o un altre descriptor
+          llegible.
         secrets_fd_too_large: El contingut de secrets de màquina supera la mida màxima
           permesa.
         secrets_fd_unreadable: Error en llegir secrets de màquina des del descriptor
           de fitxer.
         secrets_stdin_invalid_json: 'El contingut de secrets de màquina no és un objecte
-          JSON vàlid. Envieu un objecte amb aquestes claus: {expected_fields}.'
+          JSON vàlid. Envia un objecte amb aquestes claus: {expected_fields}.'
         secrets_stdin_missing_fields: 'A l''objecte de secrets de màquina li falten
-          camps obligatoris o en té d''inesperats. Envieu exactament aquestes claus:
+          camps obligatoris o en té d''inesperats. Envia exactament aquestes claus:
           {expected_fields}.'
         secrets_stdin_too_large: El contingut de secrets de màquina supera la mida
           màxima permesa.
@@ -2207,8 +2208,8 @@ cli:
         session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
           així que aquesta ordre només ha autenticat el seu propi procés; torna a
           proporcionar l'autenticació del perfil al procés següent.
-      passphrase_channel_absent: No hi ha cap canal de contrasenya disponible. Executeu
-        aquest verb en un terminal o useu --secrets-stdin o --secrets-fd.
+      passphrase_channel_absent: No hi ha cap canal de contrasenya disponible. Executa
+        aquest verb en un terminal o fes servir --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contrasenya del perfil: '
     logout:
       help: Tanca la sessió del perfil i esborra el seu punter local
@@ -2234,13 +2235,14 @@ cli:
       add_row:
         duplicate_field: El camp %{field} s'ha indicat més d'una vegada; no s'ha escrit
           res.
-        help: Afegiu una fila a una secció repetible declarada per l'esquema del perfil.
+        help: Afegeix una fila a una secció repetible declarada per l'esquema del
+          perfil.
         invalid_value: Cada --value ha d'usar la sintaxi CAMP=VALOR; no s'ha escrit
           res.
         section_help: Clau de la secció repetible del perfil.
         unknown_section: '''{section}'' no és una secció repetible del perfil. Seccions
           disponibles: {sections}.'
-        value_help: Camp de la fila com CAMP=VALOR; repetiu-lo per cada camp informat.
+        value_help: Camp de la fila com CAMP=VALOR; repeteix-lo per cada camp informat.
       archive:
         export_help: Escriu la càpsula del perfil indicat en un fitxer segellat a
           --output; el fitxer es xifra amb la contrasenya del perfil i no inclou l'etiqueta.
@@ -2356,7 +2358,7 @@ cli:
       create_name_required: Cal un nom de perfil. Executa 'aeat config profile create
         NOM'.
       create_passphrase_channel_absent: No hi ha cap canal de contrasenya disponible.
-        Executeu aquest verb en un terminal o useu --secrets-stdin o --secrets-fd.
+        Executa aquest verb en un terminal o fes servir --secrets-stdin o --secrets-fd.
       create_passphrase_mismatch: La contrasenya i la seva confirmació no coincideixen;
         no s'ha creat cap perfil.
       create_passphrase_prompt: 'Contrasenya del nou perfil: '
@@ -2380,23 +2382,23 @@ cli:
         yes_help: Confirma explícitament l'eliminació
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
-          Repetible. Executeu `aeat config profile descendiente` sense subcomandament
+          Repetible. Executa `aeat config profile descendiente` sense subcomandament
           per introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
         ambiguous_relacion_advisory: descendent %{indices} declara meses_madre_trabajo
           sota la relació no indicada. El manual concedeix el minim pero exclou la
           deducció per maternitat de l'art. 81.1 per a un net o altre descendent per
           consanguinitat diferent d'un fill, o un menor sota guarda i custodia judicial
-          -- la dada emmagatzemada no permet distingir-lo d'un fill real. Confirmeu
-          que aquest descendent es un fill, o indiqueu la relació real amb RELACION=.
-        guarderia_spend_shapes_conflict: Per a un descendent, declareu GASTOS_GUARDERIA
+          -- la dada emmagatzemada no permet distingir-lo d'un fill real. Confirma
+          que aquest descendent es un fill, o indica la relació real amb RELACION=.
+        guarderia_spend_shapes_conflict: Per a un descendent, declara GASTOS_GUARDERIA
           o GASTOS_GUARDERIA_MENSUAL, però no tots dos.
         help: Declara descendents per al mínim per descendents de l'art. 58/61 LIRPF.
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} descendent(s).
         invalid_flag: El valor de --descendiente no és vàlid. Cada fila ha de declarar
           NACIMIENTO=YYYY-MM-DD; altres claus com RELACION, DISCAPACIDAD o CONVIVENCIA
           són opcionals.
-        invalid_row: No s'ha pogut llegir la fila de --descendiente. Comproveu cada
+        invalid_row: No s'ha pogut llegir la fila de --descendiente. Comprova cada
           parell CLAU=VALOR amb les claus que admet aquesta ordre; el context de l'error
           indica la clau quan es pot identificar.
         list_help: Llista els descendents declarats al perfil actiu.
@@ -2404,9 +2406,9 @@ cli:
         remove_index_help: Índex (base 0) del descendent a eliminar.
       edit_help: Torna a executar l'assistent sobre un perfil existent
       edit_row:
-        clear_help: Camp declarat que es buida explícitament; repetiu-lo si cal.
+        clear_help: Camp declarat que es buida explícitament; repeteix-lo si cal.
         help: Modifica una fila identificada d'una secció repetible del perfil.
-        value_help: Camp de fila com CAMP=VALOR; repetiu-lo per cada camp que canvieu.
+        value_help: Camp de fila com CAMP=VALOR; repeteix-lo per cada camp que canvies.
       help: Gestionar valors de configuració del perfil actiu
       history:
         invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
@@ -2429,8 +2431,8 @@ cli:
         marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
       list:
         incoherent_observation_advisory: 'No s''ha pogut obtenir un llistat fiable
-          de perfils (estat: {outcome}). Torneu a executar l''ordre; si persisteix,
-          reviseu l''emmagatzematge de perfils.'
+          de perfils (estat: {outcome}). Torna a executar l''ordre; si persisteix,
+          revisa l''emmagatzematge de perfils.'
       manager_closed_created: Perfil '{profile}' creat. Declara que la configuració
         està completa amb `aeat config profile complete-setup` abans de treballar
         amb models. Torna a obrir-lo quan vulguis amb 'aeat config profile edit'.
@@ -2500,10 +2502,10 @@ cli:
       remove_row:
         help: Elimina una fila identificada d'una secció repetible del perfil.
       row:
-        invalid_row: '''%{row}'' no és una clau de fila vàlida; useu un enter no negatiu
-          o base.'
-        row_help: Clau estable de la fila mostrada per profile view; useu base per
-          a la fila sense índex.
+        invalid_row: '''%{row}'' no és una clau de fila vàlida; fes servir un enter
+          no negatiu o base.'
+        row_help: Clau estable de la fila mostrada per profile view; fes servir base
+          per a la fila sense índex.
         section_help: Clau de la secció repetible del perfil.
       sandbox:
         active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
@@ -2605,7 +2607,8 @@ cli:
         sense moure res
       quarantine_help: Mou les files d'objectes segurs no desxifrables a l'arxiu de
         quarantena auditable; requereix --yes. La càrrega xifrada es conserva, mai
-        no s'elimina. Useu --dry-run per previsualitzar les files sense moure res.
+        no s'elimina. Fes servir --dry-run per previsualitzar les files sense moure
+        res.
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
         --yes per confirmar.
       quarantine_yes_help: Confirmar explícitament l'operació de quarantena
@@ -2675,10 +2678,10 @@ cli:
           protected_descendant: una destinació seleccionada conté dades declarades
             protegides
         reclaim_area_refused: 'Es rebutja alliberar %{area}: %{reason}. %{entries}
-          entrades queden intactes. Executeu `aeat config storage list` per inspeccionar
+          entrades queden intactes. Executa `aeat config storage list` per inspeccionar
           les àrees emmagatzemades.'
         reclaim_area_unconfirmed: Alliberar %{area} elimina %{entries} entrades i
-          requereix confirmació explícita. Torneu a executar l'ordre amb `--yes` per
+          requereix confirmació explícita. Torna a executar l'ordre amb `--yes` per
           confirmar.
       help: Inspecciona i manté l'arbre d'emmagatzematge local
       init:
@@ -2918,7 +2921,7 @@ cli:
       error: Error
       options: Opcions
     path_not_found: la ruta '{path}' no existeix o no és un fitxer llegible.
-    try_for_help: Proveu [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
+    try_for_help: Prova [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
     usage_prefix: 'Ús: '
   ledger:
     add:
@@ -2943,7 +2946,7 @@ cli:
       help: Afegeix un moviment manual als teus registres del perfil actiu
       idempotency_key_help: 'Clau estable per a aquesta anotació lògica: repetir la
         mateixa clau és una operació sense efecte, de manera que els reintents no
-        dupliquen la fila. Ometeu-la per afegir un duplicat deliberat.'
+        dupliquen la fila. Omet-la per afegir un duplicat deliberat.'
       idempotent_noop: 'Operació idempotent sense efecte: ja existeix una transacció
         amb aquesta clau d''idempotència (%{transaction_id}); no s''ha afegit res.'
       input_classification_help: 'Classificació d''ús per input que declares tu (LIVA
@@ -3068,7 +3071,7 @@ cli:
       classification_required: --classification és obligatori quan no s'usa --file.
       counterparty_country_help: País d'establiment de la contrapart (ISO 3166-1 alfa-2,
         p. ex. US, DE). Només establiment; per a la identificació a efectes d'IVA
-        feu servir --counterparty-identification-state.
+        fes servir --counterparty-identification-state.
       counterparty_identification_state_help: Estat membre el NIF-IVA del qual utilitza
         la contrapart (la Llei 37/1992 art. 25 exempta per aquesta dada, no per on
         estigui establerta)
@@ -3076,10 +3079,10 @@ cli:
         domestic_current). Obligatori perquè la quota suportada es dedueixi; la taxonomia
         no s'infereix.
       derive_non_derivable: '{category} no té un tipus espanyol simple que es pugui
-        derivar: {note} Indiqueu --taxable-base, --iva-rate i --iva-amount a mà per
+        derivar: {note} Indica --taxable-base, --iva-rate i --iva-amount a mà per
         a aquesta categoria.'
       derive_substrate_incomplete: '{category} es va declarar derivable però no ha
-        produït cap base d''IVA. Indiqueu --taxable-base, --iva-rate i --iva-amount
+        produït cap base d''IVA. Indica --taxable-base, --iva-rate i --iva-amount
         a mà per a aquesta categoria.'
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
@@ -3157,8 +3160,8 @@ cli:
       saturate_help: 'Satura amb IA: selecciona també la categoria d''IVA i deriva
         el tipus, la base i la quota.'
       saturate_non_derivable: Tipus no derivable
-      saturate_requires_llm: L'opció --saturate només s'aplica amb --llm; indiqueu
-        --llm amb un proveïdor.
+      saturate_requires_llm: L'opció --saturate només s'aplica amb --llm; indica --llm
+        amb un proveïdor.
       split_recommended_label: divisió recomanada
       split_recommended_message: La factura adjunta sembla contenir diverses línies
         de tipus o categoria.
@@ -3204,7 +3207,7 @@ cli:
       command_input_invalid_fallback: un o més camps no han superat la validació
       confirm_required: Passa --yes per confirmar aquesta operació destructiva als
         teus registres.
-      invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}. Utilitzeu el
+      invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}. Utilitza el
         punt com a separador decimal i sense separador de milers, p. ex. 1234.56.'
       irpf_category_unknown: 'Categoria IRPF desconeguda ''%{value}''. Identificadors
         acceptats: %{accepted}.'
@@ -3228,7 +3231,7 @@ cli:
       include_inactive_help: Incloure moviments arxivats i apartats
       output_help: Camí on escriure el fitxer exportat dels teus registres
       period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
-        0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+        0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
     history:
       help: Mostra la cadena cronològica d'esdeveniments d'un moviment
       id_help: Id del moviment (o prefix no ambigu)
@@ -3337,12 +3340,12 @@ cli:
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
       column_header: "id\tid_complet\tdata\timport\tdescripció\testat_revisió"
-      filter_help: Filtreu les files per estat, període (un testimoni AEAT simple,
+      filter_help: Filtra les files per estat, període (un testimoni AEAT simple,
         p. ex. period=1T) amb l'any (p. ex. year=2026), classificació, incidència,
         importació, direcció (ingrés/despesa) o text. Per filtrar per etiqueta de
-        grup useu l'opció --group.
+        grup fes servir l'opció --group.
       footer_truncated: Mostrant files {start}-{end} de {total} (desplaçament {offset}).
-        Feu servir --offset/--límit per paginar.
+        Fes servir --offset/--límit per paginar.
       group_filter_help: Mostra només les files d'aquesta etiqueta de grup.
       header: MOVIMENTS DELS TEUS REGISTRES
       help: Llistar moviments dels teus registres al perfil actiu
@@ -3481,7 +3484,7 @@ cli:
         font disponibles: %{options}.'
     help:
       app:
-        footer: Executeu 'aeat app <ordre> --help' per obtenir més informació sobre
+        footer: Executa 'aeat app <ordre> --help' per obtenir més informació sobre
           cada ordre.
         heading: Operacions de declaració fiscal de l'AEAT.
         ledger_add: Afegir un moviment a mà.
@@ -3520,8 +3523,8 @@ cli:
         modelo_verification_report: Llistar i veure informes de comprovació de models.
         modelo_work: 'Treballar amb un model fiscal: introduir dades, calcular i exportar.'
         overview_status: Mostrar l'estat general de la declaració activa.
-        paragraph_operational_workflow: 'Flux operatiu: configureu el perfil -> importeu
-          transaccions -> treballeu el model -> reviseu -> exporteu.'
+        paragraph_operational_workflow: 'Flux operatiu: configura el perfil -> importa
+          transaccions -> treballa el model -> revisa -> exporta.'
         review_queue: Mostrar la cua de revisió pendent.
         review_view: Veure el detall d'un element de la cua de revisió.
         section_ledger: Registres
@@ -3546,13 +3549,13 @@ cli:
         diagnostics_reset_progress: Esborrar progrés encallat d'ordres interrompudes.
         first_run_bootstrap: Inicialitzar la configuració en el primer ús.
         first_run_edit: Editar la configuració inicial.
-        footer: Executeu 'aeat config <ordre> --help' per obtenir més informació sobre
+        footer: Executa 'aeat config <ordre> --help' per obtenir més informació sobre
           cada ordre.
         heading: Configuració i diagnòstic del contribuent.
         paragraph_durable_state: L'estat durador (perfil, autenticació, registres)
           persisteix entre sessions.
-        paragraph_storage_isolation: Per aïllar l'estat, definiu CADRUMO_LOCAL_STORAGE_ROOT
-          i CADRUMO_SECRET_STORE_DIR. Passeu secrets de perfil amb --profile-secrets-stdin
+        paragraph_storage_isolation: Per aïllar l'estat, defineix CADRUMO_LOCAL_STORAGE_ROOT
+          i CADRUMO_SECRET_STORE_DIR. Passa secrets de perfil amb --profile-secrets-stdin
           o --profile-secrets-fd, i secrets de l'ordre amb --secrets-stdin o --secrets-fd.
         profile_archive: Fes una còpia del perfil en un fitxer segellat, o restaura'n
           una.
@@ -3678,7 +3681,7 @@ cli:
       model no està disponible per a aquesta fila del calendari.
     coverage:
       investigate: No s'ha pogut determinar amb certesa l'obligació de presentació
-        %{modelo} per a aquest perfil i podria quedar sense declarar. Reviseu la seva
+        %{modelo} per a aquest perfil i podria quedar sense declarar. Revisa la seva
         explicació de presentació.
     drafts: Esborranys
     explain:
@@ -3698,7 +3701,7 @@ cli:
         terminis ja estan corrent.'
     period: Període
     period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
-      0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+      0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
     pipeline:
       help: 'Mostra la salut del flux de treball entre dominis per a un període de
         declaració en una sola taula: estat de classificació i revisió dels teus registres,
@@ -3748,7 +3751,7 @@ cli:
         0, així que aquest perfil/base de dades ja conté estat local d''esborranys.'
       filing_obligation_multiple_pagadores: Percebre rendiments del treball de més
         d'un pagador, amb més de 1.500 € dels pagadors secundaris, redueix el límit
-        de l'obligació de declarar (art. 96.3 LIRPF); podeu estar obligat a presentar
+        de l'obligació de declarar (art. 96.3 LIRPF); pots estar obligat a presentar
         el Model 100 si el total de rendiments del treball el supera.
       invoices_empty: No hi ha factures emeses ni rebudes al registre de factures.
         És un magatzem diferent dels teus registres bancaris i no compta els moviments
@@ -3772,7 +3775,7 @@ cli:
         start_another_work_unit: Inicia una altra declaració per a un model diferent.
         start_work_unit_from_ledger: Inicia una declaració de model a partir de les
           dades dels teus registres.
-      profile_active: Esteu treballant al perfil `%{profile}`.
+      profile_active: Estàs treballant al perfil `%{profile}`.
       profile_missing: No hi ha cap perfil actiu configurat. Crea'n un abans d'importar
         dades.
       storage_ok: L'emmagatzematge local xifrat es pot llegir amb la clau mestra actual.
@@ -3796,7 +3799,7 @@ cli:
     verbose_help: Mostrar detalls i la següent acció quan existeixi
     warning:
       m303_simplificado_forfait_unavailable: El Model 303 aplica, però el motor de
-        càlcul forfait del règim simplificat encara no està disponible; reviseu les
+        càlcul forfait del règim simplificat encara no està disponible; revisa les
         caselles del règim simplificat abans de presentar.
     year_help: Any de declaració per a --period (p. ex. 2024).
   review:
@@ -3842,7 +3845,7 @@ cli:
     debug_help: Habilita la sortida detallada de depuració.
     detail_help: Habilita la sortida detallada.
     errors:
-      did_you_mean_command: Volíeu dir '%{command}'?
+      did_you_mean_command: Volies dir '%{command}'?
     format_help: 'Format de sortida: text, json.'
     help_help: Mostra l'ajuda.
     landing:

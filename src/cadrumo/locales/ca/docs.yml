@@ -50,7 +50,7 @@ docs:
       casilla_count: '{casillas} caselles en {sections} seccions'
       casilla_id: Identificador de casella
       casilla_index: Totes les caselles
-      casilla_index_hint: Trieu una casella per anar-hi.
+      casilla_index_hint: Tria una casella per anar-hi.
       derived_from: a partir de
       established_by: Establert per
       formula: Fórmula
@@ -129,7 +129,7 @@ docs:
       exit_unavailable: Servei extern no disponible.
       exit_usage: Ús incorrecte de la CLI (indicador erroni, argument absent).
       exit_validation: Error de validació en les dades proporcionades per l'usuari.
-      intro: 'Feu servir aquesta pàgina quan programeu invocacions d''``aeat``: documenta
+      intro: 'Fes servir aquesta pàgina quan programis invocacions d''``aeat``: documenta
         els codis de sortida del procés i el comportament de sortida TTY/JSON que
         comparteixen totes les ordres.'
       output_contract_body: Quan la sortida va a un TTY, la CLI emet text enriquit
@@ -152,7 +152,7 @@ docs:
         es calculen en temps d'execució a partir de l'arrel d'emmagatzematge o de
         la ubicació del projecte.
     family:
-      choose_group_heading: Trieu un grup d'ordres
+      choose_group_heading: Tria un grup d'ordres
       direct_commands_heading: Ordres directes
       direct_commands_intro: Aquestes ordres estan muntades directament a ``aeat {family}``,
         sense cap grup de verbs intermedi.
@@ -167,7 +167,7 @@ docs:
       app_card: 'Ordres del flux de treball operatiu: llibre de moviments, models,
         calendaris de presentació, comprovacions del registre, captures en directe
         i cues de revisió.'
-      choose_family_heading: Trieu una família d'ordres
+      choose_family_heading: Tria una família d'ordres
       config_card: 'Ordres locals de configuració i manteniment: perfils, autenticació,
         integració amb Google, comprovacions de reparació i superfícies de reinici.'
       english_help_note: Les cadenes d'ajuda es mostren en anglès. En temps d'execució
@@ -196,9 +196,9 @@ docs:
         tasques.
       next_schemas: Obrir :doc:`schemas` per al registre d'esquemes de sortida JSON.
       open_family_link: Obrir la referència d'``aeat {family}``
-      start_here: Comenceu pels enllaços de família de sota. Feu servir les pàgines
+      start_here: Comença pels enllaços de família de sota. Fes servir les pàgines
         generades de cada família d'ordres per conèixer els indicadors, arguments,
-        claus de registre i esquemes de sortida exactes; feu servir aquesta pàgina
+        claus de registre i esquemes de sortida exactes; fes servir aquesta pàgina
         per al comportament de nivell arrel que s'aplica a totes les ordres.
       title: Referència de la CLI
       where_next_heading: Per on continuar
@@ -213,7 +213,7 @@ docs:
         Les superfícies de crida de retorn de grup ({groups}) es llisten a part.
       title: Registre d'esquemes de sortida
       tooling_note: Aquesta pàgina està pensada sobretot per a qui crea eines. Si
-        executeu les ordres a mà, les :doc:`pàgines de família <index>` acostumen
+        executes les ordres a mà, les :doc:`pàgines de família <index>` acostumen
         a ser un punt d'entrada millor.
   glossary:
     entry:
@@ -223,7 +223,7 @@ docs:
       related: Relacionat
       undefined: Encara no hi ha cap definició disponible en aquesta llengua.
     intro: Termes fiscals espanyols utilitzats a la documentació. Cada terme enllaça
-      amb la seva base legal quan n'hi ha. Cerqueu un terme; la definició és la mateixa
+      amb la seva base legal quan n'hi ha. Cerca un terme; la definició és la mateixa
       allà on s'hi faci referència.
     title: Glossari
   legal:

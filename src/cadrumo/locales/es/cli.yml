@@ -204,7 +204,7 @@ cli:
           entre ({candidates}). Elige una en lugar de aceptar el borrador tal cual.'
         field_anchor_not_found: '{field}: el lector señala ''{anchor}'', que no aparece
           en la transcripción del documento. Un valor normalizado puede fallar esta
-          búsqueda legítimamente, así que revise el campo en lugar de suponer que
+          búsqueda legítimamente, así que revisa el campo en lugar de suponer que
           fue corroborado. {detail}'
         field_anchor_self_reported: '{field}: el lector afirma haberlo leído de ''{anchor}'',
           pero esa afirmación proviene del mismo lector que produjo el valor, así
@@ -830,7 +830,7 @@ cli:
           retencion: retención
           withholding296_perceptor: perceptor de la declaración de retenciones
         relation_input_channel: "%{binding_id}\talimentada por la relación %{relation_id}\t\
-          use --relation %{relation_id}=VALUE"
+          usa --relation %{relation_id}=VALUE"
         relation_input_guidance: Algunos orígenes siguientes se alimentan de relaciones
           de las definiciones de los modelos (agregaciones entre modelos o entre periodos),
           no de valores --binding directos. Indica cada uno con --relation RELATION_ID=VALUE
@@ -1064,8 +1064,8 @@ cli:
         override_reason_required: Indica --reason explicando por que se sobrescribe
           el arrastre de compensación previa; no puede estar vacío.
         seed_amount_help: Importe inicial de la compensación de IVA en decimal.
-        seed_confirm_help: Confirme la operación de importe inicial.
-        seed_confirm_required: Proporcione el modificador --confirm para confirmar
+        seed_confirm_help: Confirma la operación de importe inicial.
+        seed_confirm_required: Proporciona el modificador --confirm para confirmar
           la operación de importe inicial.
         seed_conflict: Ya existe un estado de compensación IVA para %{filing_year}/%{period};
           no se puede sembrar otro.
@@ -1121,7 +1121,7 @@ cli:
         create_help: Crea un registro local de comunicación al pagador del Modelo
           145.
         errors:
-          casilla_required: Proporcione al menos una entrada --casilla ID=VALOR.
+          casilla_required: Proporciona al menos una entrada --casilla ID=VALOR.
         export_help: Exporta un registro local de comunicación al pagador del Modelo
           145.
         group_help: Gestiona los registros locales de comunicación al pagador del
@@ -1242,7 +1242,7 @@ cli:
           feedback_envelope_not_found: No se encontró el sobre de comentarios en {envelope_path}.
           invalid_valid_for_days: --valid-for-days debe ser un entero estrictamente
             positivo.
-          output_required: Indique --output RUTA para el ZIP del paquete de revisión.
+          output_required: Indica --output RUTA para el ZIP del paquete de revisión.
           package_not_found: No se encontró el paquete de revisión en {package_path}.
           receipt_not_found: No se encontró el recibo en {receipt_path}.
           signature_not_found: No se encontró el sobre de firma en {signature_path}.
@@ -1344,7 +1344,7 @@ cli:
           prefill_relations_help: Prerrellenar valores de relaciones entre revisiones
             desde el almacén local de observaciones antes de exportar (resúmenes anuales,
             arrastre de trimestres anteriores, etc.)
-          root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
+          root_folder_required: No hay carpeta raíz de Drive configurada; ejecuta
             `aeat config google folder set <id>` primero
           snapshot_failure: No se puede construir la instantánea de las definiciones
             de los modelos para el modelo {modelo} ({period} {year}).
@@ -1439,7 +1439,7 @@ cli:
           automáticamente el 21% (Art. 90 LISIVA) para calcular la cuota devengada.
           Sólo aplicable a Modelo 303.'
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base debe ser
-          un importe decimal; se recibió: {value}. Use el punto como separador decimal
+          un importe decimal; se recibió: {value}. Usa el punto como separador decimal
           y sin separador de miles, p. ej. 1234.56.'
         borrador_help: Id del snapshot del borrador del Modelo 100 (completo o prefijo
           no ambiguo). Sus valores solo rellenan las casillas cuyo origen está marcado
@@ -1511,7 +1511,7 @@ cli:
         dependencies_period_requires_modelo: La opción --period requiere --modelo.
         discard_help: Marcar una declaración como descartada (el cambio de estado
           queda en el registro de auditoría)
-        discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
+        discard_requires_yes: El descarte es una transición de estado auditable. Vuelve
           a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
         document_format_help: 'Formato de documento del informe de cálculo: csv, o
@@ -1568,8 +1568,8 @@ cli:
           en minúsculas de 64 caracteres; se recibió {value}.
         invalid_work_unit_lookup_id: work_unit_id debe ser un identificador SHA-256
           hexadecimal en minúsculas o un prefijo inequívoco
-        joint_return_elected_help: 'Modelo 303: indique expresamente si es una autoliquidación
-          conjunta; use --no-joint-return-elected para «no». Obligatorio para el modelo
+        joint_return_elected_help: 'Modelo 303: indica expresamente si es una autoliquidación
+          conjunta; usa --no-joint-return-elected para «no». Obligatorio para el modelo
           303 y nunca se presupone.'
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
         kv_format_error: '{flag} debe escribirse como {key_label}={value_label}. Es
@@ -1628,12 +1628,12 @@ cli:
           valores pendientes.'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la declaración
-        name_required: Proporcione --name.
+        name_required: Proporciona --name.
         notes_help: Notas opcionales asociadas al filing record
         observations_help: Mostrar observaciones de cálculo tipadas por casilla y
           el origen de cada valor.
-        observed_at_help: Cuándo confirmó la atestación, como instante ISO 8601 con
-          desfase UTC (por ejemplo 2025-03-31T12:00:00+00:00); no antes del cierre
+        observed_at_help: Cuándo confirmaste la atestación, como instante ISO 8601
+          con desfase UTC (por ejemplo 2025-03-31T12:00:00+00:00); no antes del cierre
           del trimestre ni en el futuro.
         output_help: Ruta donde escribir el informe de cálculo; su directorio padre
           debe existir.
@@ -1641,7 +1641,7 @@ cli:
         override_help: Valor de entrada de una casilla con sintaxis KEY=VALUE (repetible);
           ejecuta `aeat app modelo bindings list --missing` para ver los valores que
           requiere el cálculo.
-        payment_election_help: 'Elija como se paga un resultado positivo del Modelo
+        payment_election_help: 'Elige como se paga un resultado positivo del Modelo
           303: ingreso ordinario o domiciliacion.'
         period_help: 'Código de periodo de la declaración: 0A anual, 1T-4T trimestres,
           01-12 meses; para modelos censales (036) usa alta, modificacion o baja.'
@@ -1665,20 +1665,20 @@ cli:
           el importe bruto recibido de la Seguridad Social por baja de maternidad
           o paternidad. NO lo incluyas en --casilla 0003 (Retribuciones dinerarias).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta debe ser un
-          importe decimal; se recibió: {value}. Use el punto como separador decimal
+          importe decimal; se recibió: {value}. Usa el punto como separador decimal
           y sin separador de miles, p. ej. 1234.56.'
         preview_maritime_exemption_annual_salary_help: Salario anual bruto en EUR
           (Decimal). Obligatorio cuando el perfil activo cumple los requisitos del
           Art. 7.p) (vessel_flag=foreign o waters_type=international).
         preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary debe
-          ser un importe decimal; se recibió: {value}. Use el punto como separador
+          ser un importe decimal; se recibió: {value}. Usa el punto como separador
           decimal y sin separador de miles, p. ej. 1234.56.'
         preview_maritime_exemption_gross_navigation_income_help: Total de ingresos
           brutos de trabajo procedentes de la navegación en EUR (Decimal). Obligatorio
           cuando el perfil activo cumple REBECA (vessel_registry en REBECA / rebeca_eu_eea
           / scheduled_canary_route).
         preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
-          debe ser un importe decimal; se recibió: {value}. Use el punto como separador
+          debe ser un importe decimal; se recibió: {value}. Usa el punto como separador
           decimal y sin separador de miles, p. ej. 1234.56.'
         preview_maritime_exemption_help: Previsualiza la exención IRPF del trabajador
           del mar (Art. 7.p) LIRPF / REBECA 50%) a partir de los hechos maritime_worker
@@ -1693,7 +1693,7 @@ cli:
           rectificativa sobre una presentación previa de tipo U respaldada por evidencia
           de la AEAT importada.
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
-        refund_election_help: Elija si un resultado negativo elegible del Modelo 303
+        refund_election_help: Elige si un resultado negativo elegible del Modelo 303
           se compensa o se solicita como devolución.
         relation_help: Valor de una relación de las definiciones de los modelos con
           sintaxis KEY=VALUE (repetible). KEY es un id de relación, no una clave de
@@ -1746,7 +1746,7 @@ cli:
           y --rescate-plan-pensiones-aportaciones-totales para que el asistente calcule
           automáticamente la reducción del 40% y la inyecte en casilla 0011.
         rescate_plan_pensiones_not_decimal: 'Los valores --rescate-plan-pensiones-*
-          deben ser importes decimales; se recibió: {value}. Use el punto como separador
+          deben ser importes decimales; se recibió: {value}. Usa el punto como separador
           decimal y sin separador de miles, p. ej. 1234.56.'
         rescate_type_help: 'Tipo de rescate del plan de pensiones (DT 12a LIRPF):
           total (todo el capital de una vez) o parcial (cobros escalonados). Clasifica
@@ -1821,7 +1821,7 @@ cli:
           primer céntimo por encima del doble del capital social. Necesario junto
           con --sal-beneficio-neto y --sal-capital-social.
         sal_reserva_not_decimal: 'Los valores --sal-* deben ser importes decimales;
-          se recibió: {value}. Use el punto como separador decimal y sin separador
+          se recibió: {value}. Usa el punto como separador decimal y sin separador
           de miles, p. ej. 1234.56.'
         select_help: Lista las declaraciones guardadas.
         selector_ambiguous: 'Más de una declaración activa coincide con este modelo,
@@ -1846,7 +1846,8 @@ cli:
           cálculo no está disponible.
         status_help: Mostrar los metadatos de una declaración
         trusted_key_help: Clave pública Ed25519 (64 caracteres hexadecimales) en la
-          que confía, recibida por otro canal; el resumen debe estar firmado con ella.
+          que confías, recibida por otro canal; el resumen debe estar firmado con
+          ella.
         verify_help: Comprobar un cálculo guardado en borrador frente a los requisitos
           para quedar comprobado y completo
         verify_idempotent_noop: 'Operación idempotente sin efecto: el cálculo guardado
@@ -1869,7 +1870,7 @@ cli:
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           declaración
         year_help: Ejercicio fiscal de la declaración (p. ej. 2026)
-        year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
+        year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indica
           un año entre %{minimum} y %{maximum}.
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
@@ -1887,9 +1888,9 @@ cli:
       parse_unknown_option: Opción desconocida '{option}'.
       period_empty: El periodo fiscal no puede estar vacío
       period_missing_year: El token de periodo '{token}' necesita un año en este comando.
-        Añada --year (p. ej. --period {token} --year 2024).
-      period_unrecognised: 'Periodo ''{raw}'' no reconocido. Use un token AEAT: 1T-4T
-        (trimestres), 0A (anual), 01-12 (meses), e indique el año con --year (p. ej.
+        Añade --year (p. ej. --period {token} --year 2024).
+      period_unrecognised: 'Periodo ''{raw}'' no reconocido. Usa un token AEAT: 1T-4T
+        (trimestres), 0A (anual), 01-12 (meses), e indica el año con --year (p. ej.
         --period 1T --year 2024).'
   config:
     app_help: Configurar y reparar el perfil local, las credenciales, el almacenamiento
@@ -1901,11 +1902,11 @@ cli:
         clear_help: Retirar la configuración de apoderado
         configure:
           no_console_hint: 'La configuración interactiva del apoderamiento requiere
-            una consola. Configúrelo de forma no interactiva con: aeat config auth
+            una consola. Configúralo de forma no interactiva con: aeat config auth
             apoderado configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF de la parte representada
           scope_help: Tokens de ámbito (se pueden repetir)
-          scope_required: 'No se ha indicado ningún ámbito. Añada --scope con uno
+          scope_required: 'No se ha indicado ningún ámbito. Añade --scope con uno
             o varios de: %{codes}.'
         configure_help: Establecer la configuración de apoderado activa
         help: Gestionar la configuración de apoderado
@@ -2031,14 +2032,14 @@ cli:
       current_passphrase_prompt: 'Contraseña actual del perfil: '
       errors:
         echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
-          por lo que el secreto quedaría visible en pantalla; use --secrets-stdin
+          por lo que el secreto quedaría visible en pantalla; usa --secrets-stdin
           o --secrets-fd.
         new_passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
         no_controlling_terminal_for_secret: Este secreto solo puede mostrarse en un
           terminal y no hay ninguno conectado. Vuelve a ejecutar el comando desde
           una sesión interactiva.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
-          interactiva; use --secrets-stdin o --secrets-fd.
+          interactiva; usa --secrets-stdin o --secrets-fd.
         profile_secrets_channel_conflict: 'Elige exactamente un canal de autenticación
           del perfil: --profile-secrets-stdin o --profile-secrets-fd.'
         profile_secrets_fd_collision: La autenticación del perfil y el secreto del
@@ -2071,20 +2072,20 @@ cli:
         secrets_channel_conflict: No se puede especificar --secrets-stdin y --secrets-fd
           a la vez.
         secrets_fd_invalid_json: 'El contenido de secretos de máquina no es un objeto
-          JSON válido. Envíe un objeto con estas claves: {expected_fields}.'
+          JSON válido. Envía un objeto con estas claves: {expected_fields}.'
         secrets_fd_missing_fields: 'Al objeto de secretos de máquina le faltan campos
-          obligatorios o tiene campos inesperados. Envíe exactamente estas claves:
+          obligatorios o tiene campos inesperados. Envía exactamente estas claves:
           {expected_fields}.'
         secrets_fd_reserved_stream: Los descriptores 1 (salida estándar) y 2 (error
-          estándar) están reservados; use el descriptor 0 u otro descriptor legible.
+          estándar) están reservados; usa el descriptor 0 u otro descriptor legible.
         secrets_fd_too_large: El contenido de secretos de máquina supera el tamaño
           máximo permitido.
         secrets_fd_unreadable: Error al leer secretos de máquina desde el descriptor
           de archivo.
         secrets_stdin_invalid_json: 'El contenido de secretos de máquina no es un
-          objeto JSON válido. Envíe un objeto con estas claves: {expected_fields}.'
+          objeto JSON válido. Envía un objeto con estas claves: {expected_fields}.'
         secrets_stdin_missing_fields: 'Al objeto de secretos de máquina le faltan
-          campos obligatorios o tiene campos inesperados. Envíe exactamente estas
+          campos obligatorios o tiene campos inesperados. Envía exactamente estas
           claves: {expected_fields}.'
         secrets_stdin_too_large: El contenido de secretos de máquina supera el tamaño
           máximo permitido.
@@ -2222,8 +2223,8 @@ cli:
         session_not_persisted: No hay un almacén de claves del sistema utilizable,
           así que este comando solo autenticó su propio proceso; vuelve a proporcionar
           la autenticación del perfil al proceso siguiente.
-      passphrase_channel_absent: No hay ningún canal de contraseña disponible. Ejecute
-        este verbo en un terminal o use --secrets-stdin o --secrets-fd.
+      passphrase_channel_absent: No hay ningún canal de contraseña disponible. Ejecuta
+        este verbo en un terminal o usa --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '
     logout:
       help: Cierra la sesión del perfil y borra su puntero local
@@ -2376,7 +2377,7 @@ cli:
       create_name_required: Se requiere un nombre de perfil. Ejecuta 'aeat config
         profile create NOMBRE'.
       create_passphrase_channel_absent: No hay ningún canal de contraseña disponible.
-        Ejecute este verbo en un terminal o use --secrets-stdin o --secrets-fd.
+        Ejecuta este verbo en un terminal o usa --secrets-stdin o --secrets-fd.
       create_passphrase_mismatch: La contraseña y su confirmación no coinciden; no
         se creó ningún perfil.
       create_passphrase_prompt: 'Contraseña del nuevo perfil: '
@@ -2401,7 +2402,7 @@ cli:
         yes_help: Confirma explícitamente la eliminación
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
-          Repetible. Ejecute `aeat config profile descendiente` sin subcomando para
+          Repetible. Ejecuta `aeat config profile descendiente` sin subcomando para
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
         ambiguous_relacion_advisory: descendiente %{indices} declara meses_madre_trabajo
@@ -2409,7 +2410,7 @@ cli:
           deducción por maternidad del art. 81.1 para un nieto u otro descendiente
           por consanguinidad distinto de un hijo, o un menor bajo guarda y custodia
           judicial -- el dato almacenado no permite distinguirlo de un hijo real.
-          Confirme que este descendiente es un hijo, o indique la relación real con
+          Confirma que este descendiente es un hijo, o indica la relación real con
           RELACION=.
         guarderia_spend_shapes_conflict: Para un descendiente, declare GASTOS_GUARDERIA
           o GASTOS_GUARDERIA_MENSUAL, pero no ambos.
@@ -2420,7 +2421,7 @@ cli:
         invalid_flag: El valor de --descendiente no es válido. Cada fila debe declarar
           NACIMIENTO=YYYY-MM-DD; otras claves como RELACION, DISCAPACIDAD o CONVIVENCIA
           son opcionales.
-        invalid_row: No se ha podido leer la fila de --descendiente. Compruebe cada
+        invalid_row: No se ha podido leer la fila de --descendiente. Comprueba cada
           par CLAVE=VALOR con las claves que admite este comando; el contexto del
           error indica la clave cuando se puede identificar.
         list_help: Listar los descendientes declarados en el perfil activo.
@@ -2431,7 +2432,7 @@ cli:
         clear_help: Campo declarado que se vacía de forma explícita; repítalo si es
           necesario.
         help: Modifica una fila identificada de una sección repetible del perfil.
-        value_help: Campo de fila como CAMPO=VALOR; repítalo para cada campo que cambie.
+        value_help: Campo de fila como CAMPO=VALOR; repítelo para cada campo que cambies.
       help: Gestionar valores de configuración del perfil activo
       history:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
@@ -2453,8 +2454,8 @@ cli:
         ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
       list:
         incoherent_observation_advisory: 'No se pudo obtener un listado fiable de
-          perfiles (estado: {outcome}). Vuelva a ejecutar el comando; si persiste,
-          revise el almacenamiento de perfiles.'
+          perfiles (estado: {outcome}). Vuelve a ejecutar el comando; si persiste,
+          revisa el almacenamiento de perfiles.'
       manager_closed_created: Perfil '{profile}' creado. Declara que la configuración
         está completa con `aeat config profile complete-setup` antes de trabajar con
         modelos. Vuelve a abrirlo cuando quieras con 'aeat config profile edit'.
@@ -2524,9 +2525,9 @@ cli:
       remove_row:
         help: Elimina una fila identificada de una sección repetible del perfil.
       row:
-        invalid_row: '''%{row}'' no es una clave de fila válida; use un entero no
+        invalid_row: '''%{row}'' no es una clave de fila válida; usa un entero no
           negativo o base.'
-        row_help: Clave estable de la fila mostrada por profile view; use base para
+        row_help: Clave estable de la fila mostrada por profile view; usa base para
           la fila sin índice.
         section_help: Clave de la sección repetible del perfil.
       sandbox:
@@ -2630,7 +2631,7 @@ cli:
         sin mover nada
       quarantine_help: Mueve las filas de objetos seguros no descifrables al archivo
         de cuarentena auditable; requiere --yes. La carga cifrada se conserva, nunca
-        se elimina. Use --dry-run para previsualizar las filas sin mover nada.
+        se elimina. Usa --dry-run para previsualizar las filas sin mover nada.
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
@@ -2700,10 +2701,10 @@ cli:
           protected_descendant: un destino seleccionado contiene datos declarados
             protegidos
         reclaim_area_refused: 'Se rechaza liberar %{area}: %{reason}. %{entries} entradas
-          permanecen intactas. Ejecute `aeat config storage list` para inspeccionar
+          permanecen intactas. Ejecuta `aeat config storage list` para inspeccionar
           las áreas almacenadas.'
         reclaim_area_unconfirmed: Liberar %{area} elimina %{entries} entradas y requiere
-          confirmación explícita. Vuelva a ejecutar el comando con `--yes` para confirmar.
+          confirmación explícita. Vuelve a ejecutar el comando con `--yes` para confirmar.
       help: Inspecciona y mantiene el árbol de almacenamiento local
       init:
         already_materialised: Todos los directorios declarados ya existían; no se
@@ -2942,7 +2943,7 @@ cli:
       error: Error
       options: Opciones
     path_not_found: la ruta '{path}' no existe o no es un archivo legible.
-    try_for_help: Pruebe [blue]'{command_path} {help_option}'[/] para obtener ayuda.
+    try_for_help: Prueba [blue]'{command_path} {help_option}'[/] para obtener ayuda.
     usage_prefix: 'Uso: '
   ledger:
     add:
@@ -3004,7 +3005,7 @@ cli:
         extranjera en la base del IRPF (art. 93.5 segregación).
       source_jurisdiction_required_irnr: Los perfiles no residentes (IRNR) deben declarar
         --source-jurisdiction explícitamente (TRLIRNR RDLeg 5/2004 art. 2 / art. 10).
-        Use un código ISO 3166-1 alfa-2 de dos letras; sólo las filas con ES entran
+        Usa un código ISO 3166-1 alfa-2 de dos letras; sólo las filas con ES entran
         en la base del IRNR.
       system_state_not_assignable: 'La clasificación ''%{value}'' la asigna Cadrumo
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
@@ -3093,7 +3094,7 @@ cli:
       classification_required: --classification es obligatorio cuando no se usa --file.
       counterparty_country_help: País de establecimiento de la contraparte (ISO 3166-1
         alfa-2, p. ej. US, DE). Solo establecimiento; para la identificación a efectos
-        de IVA use --counterparty-identification-state.
+        de IVA usa --counterparty-identification-state.
       counterparty_identification_state_help: Estado miembro cuyo NIF-IVA utiliza
         la contraparte (la Ley 37/1992 art. 25 exime por este dato, no por dónde esté
         establecida)
@@ -3101,10 +3102,9 @@ cli:
         ej. domestic_current). Obligatorio para que la cuota soportada se deduzca;
         la taxonomía no se infiere.
       derive_non_derivable: '{category} no tiene un tipo español simple que derivar:
-        {note} Indique --taxable-base, --iva-rate e --iva-amount a mano para esta
-        categoría.'
+        {note} Indica --taxable-base, --iva-rate e --iva-amount a mano para esta categoría.'
       derive_substrate_incomplete: '{category} se declaró derivable pero no produjo
-        ninguna base de IVA. Indique --taxable-base, --iva-rate e --iva-amount a mano
+        ninguna base de IVA. Indica --taxable-base, --iva-rate e --iva-amount a mano
         para esta categoría.'
       file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
       file_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
@@ -3182,7 +3182,7 @@ cli:
       saturate_help: 'Satura con IA: selecciona también la categoría de IVA y deriva
         el tipo, la base y la cuota.'
       saturate_non_derivable: Tipo no derivable
-      saturate_requires_llm: La opción --saturate solo se aplica con --llm; indique
+      saturate_requires_llm: La opción --saturate solo se aplica con --llm; indica
         --llm con un proveedor.
       split_recommended_label: división recomendada
       split_recommended_message: La factura adjunta parece contener varias líneas
@@ -3228,7 +3228,7 @@ cli:
       command_input_invalid_fallback: uno o más campos no superaron la validación
       confirm_required: Pasa --yes para confirmar esta operación destructiva en tus
         registros.
-      invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto
+      invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Usa el punto
         como separador decimal y sin separador de miles, p. ej. 1234.56.'
       irpf_category_unknown: 'Categoría IRPF desconocida ''%{value}''. Identificadores
         aceptados: %{accepted}.'
@@ -3362,12 +3362,12 @@ cli:
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
       column_header: "id\tid_completo\tfecha\timporte\tdescripción\testado_revisión"
-      filter_help: Filtre las filas por estado, periodo (un token AEAT simple, p.
+      filter_help: Filtra las filas por estado, periodo (un token AEAT simple, p.
         ej. period=1T) junto con el año (p. ej. year=2026), clasificación, incidencia,
         importación, dirección (ingreso/gasto) o texto. Para filtrar por etiqueta
-        de grupo use la opción --group.
+        de grupo usa la opción --group.
       footer_truncated: Mostrando filas {start}-{end} de {total} (desplazamiento {offset}).
-        Use --offset/--limit para paginar.
+        Usa --offset/--limit para paginar.
       group_filter_help: Mostrar solo las filas de esta etiqueta de grupo.
       header: MOVIMIENTOS DE TUS REGISTROS
       help: Listar movimientos de tus registros en el perfil activo
@@ -3506,7 +3506,7 @@ cli:
         de fuente disponibles: %{options}.'
     help:
       app:
-        footer: Ejecute 'aeat app <comando> --help' para obtener más información sobre
+        footer: Ejecuta 'aeat app <comando> --help' para obtener más información sobre
           cada comando.
         heading: Operaciones de declaración fiscal AEAT.
         ledger_add: Añadir un movimiento a mano.
@@ -3548,8 +3548,8 @@ cli:
         modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
           exportar.'
         overview_status: Mostrar el estado general de la declaración activa.
-        paragraph_operational_workflow: 'Flujo operativo: configure el perfil -> importe
-          transacciones -> trabaje el modelo -> revise -> exporte.'
+        paragraph_operational_workflow: 'Flujo operativo: configura el perfil -> importa
+          transacciones -> trabaja el modelo -> revisa -> exporta.'
         review_queue: Mostrar la cola de revisión pendiente.
         review_view: Ver el detalle de un elemento de la cola de revisión.
         section_ledger: Registros
@@ -3575,7 +3575,7 @@ cli:
         diagnostics_reset_progress: Borrar progreso atascado de comandos interrumpidos.
         first_run_bootstrap: Inicializar la configuración en el primer uso.
         first_run_edit: Editar la configuración inicial.
-        footer: Ejecute 'aeat config <comando> --help' para obtener más información
+        footer: Ejecuta 'aeat config <comando> --help' para obtener más información
           sobre cada comando.
         heading: Configuración y diagnóstico del contribuyente.
         paragraph_durable_state: El estado duradero (perfil, autenticación, registros)
@@ -3709,7 +3709,7 @@ cli:
       no está disponible para esta fila del calendario.
     coverage:
       investigate: No se ha podido determinar con certeza la obligación de presentación
-        %{modelo} para este perfil y podría quedar sin declarar. Revise su explicación
+        %{modelo} para este perfil y podría quedar sin declarar. Revisa su explicación
         de presentación.
     drafts: Borradores
     explain:
@@ -3831,7 +3831,7 @@ cli:
     verbose_help: Mostrar detalles y siguiente acción cuando existan
     warning:
       m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
-        cálculo forfait del régimen simplificado aún no está disponible; revise las
+        cálculo forfait del régimen simplificado aún no está disponible; revisa las
         casillas del régimen simplificado antes de presentar.
     year_help: Año de declaración para --period (p. ej. 2024).
   review:

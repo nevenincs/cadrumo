@@ -53,8 +53,8 @@ aggregation:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
       deduction_authority_on_non_deducible_row: Az olyan IVA-sor, amely nem hordoz
         levonható adóösszeget, nem viselhet levonási osztályozást; a %{category} IVA-kategória
-        %{flow_direction} irányban számol el. Törölje a megadott levonási típust,
-        vagy javítsa a kategóriát.
+        %{flow_direction} irányban számol el. Töröld a megadott levonási típust, vagy
+        javítsd a kategóriát.
       differentiated_sector_inactive_for_filing_year: Egy elkülönített szektor inaktív
         a bevallási évre.
       differentiated_sector_without_filing_year_entry: Egy elkülönített szektorhoz
@@ -67,13 +67,13 @@ aggregation:
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
       inadmissible_deduction_classification: 'A megadott %{deduction_fact_kind} IVA-levonási
         típus nem fogadható el a %{iva_category} IVA-kategóriába tartozó sornál: %{refusal}.
-        Javítsa a megadott levonási típust, az IVA-kategóriát vagy a hozzárendelt
+        Javítsd a megadott levonási típust, az IVA-kategóriát vagy a hozzárendelt
         bizonyítékot.'
       investment_observations_missing_bienes_inversion_authority: A beruházási áfa-megfigyelésekhez
         kifejezett tárgyi eszköz nyilvántartás és egyező profiljogosultság szükséges.
       missing_counterparty_establishment_on_export: Az export azért mentes, mert az
         ügylet elhagyja az Uniót, ezért az számít, hol van az ügyfél LETELEPEDVE.
-        Rögzítse az ügyfél országát; a hiányzó vagy ki nem osztott kód semmit sem
+        Rögzítsd az ügyfél országát; a hiányzó vagy ki nem osztott kód semmit sem
         állapít meg, és az IVA-azonosítás erre nem ad választ.
       missing_counterparty_identification_state: A Közösségen belüli ügylethez meg
         kell adni azt a tagállamot, amelyben a partner héa-azonosítóval rendelkezik.
@@ -113,7 +113,7 @@ aggregation:
       prorrata_transition_not_applicable_for_period: A különleges arányosítási átmenet
         bizonyítéka csak az év utolsó Modelo 303 időszakában alkalmazható.
       recipient_fact_disagrees_with_ledger_evidence: A pénzforgalmi elszámolású ügyletek
-        címzettjére vonatkozó adat nem egyezik az Ön nyilvántartásában szereplő, szállítói
+        címzettjére vonatkozó adat nem egyezik a nyilvántartásodban szereplő, szállítói
         rendszerű tételekkel.
       supplier_regime_aggregation_period_mismatch: Az áfa-összesítés időszaka nem
         egyezik a kért bevallási időszakkal.
@@ -127,7 +127,7 @@ aggregation:
     errors:
       invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
         és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen a nyomtatványon.
-      unsupported_period: Nem támogatott nyomtatvány-időszak az Ön nyilvántartásaiból
+      unsupported_period: Nem támogatott nyomtatvány-időszak a nyilvántartásaidból
         számított összesítésekhez.
   oss_ioss:
     errors:
@@ -150,8 +150,8 @@ aggregation:
       unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.
   renta_ledger:
     errors:
-      annual_period_required: A Renta összesítéséhez az Ön nyilvántartásaiból éves
-        időszak szükséges.
+      annual_period_required: A Renta összesítéséhez a nyilvántartásaidból éves időszak
+        szükséges.
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért Renta-vödörrel.
       invoice_bucket_mismatch: A számlatár vödre nem egyezik a kért Renta-vödörrel.
       modelo_mismatch: A nyomtatvány nem egyezik a várt Renta-nyomtatvánnyal.
@@ -175,7 +175,7 @@ aggregation:
         bérszámfejtéshez a --ledger-payment-withholding kapcsolóval.'
       m193_phase_allocation_collision: 'Modelo %{modelo}, %{filing_year}: a(z) %{source_allocations}
         felosztás(ok) kézzel is rögzítve vannak, és a rögzített tőkejövedelem-visszatartásból
-        is származnak. Törölje a kézi sort.'
+        is származnak. Töröld a kézi sort.'
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
       perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
         a Modelo %{modelo} (%{filing_year}, %{period}) bevalláshoz; a(z) %{source_kind}
@@ -184,9 +184,9 @@ aggregation:
         a bevalló benyújtási ütemezése nem rendeli az időszakos forrásadó-levonási
         nyomtatványt az év minden negyedévéhez (havonta nyújtja be), és csak a negyedéves
         időszakok összegzése hónapoknyi forrásadó-levonást hagyna ki.'
-      withholding_filer_profile_absent: Az Ön profilja nem tölthető be erre az adóévre,
-        így nem állapítható meg, hogy a levonásokat negyedévente vagy havonta vallja-e
-        be. Töltse ki a profilt, majd próbálja újra.
+      withholding_filer_profile_absent: A profilod nem tölthető be erre az adóévre,
+        így nem állapítható meg, hogy negyedévente vagy havonta vallod-e be a levonásokat.
+        Töltsd ki a profilt, majd próbáld újra.
       withholding_quarterly_window_not_scheduled: A bevalló benyújtási ütemezése nem
         rendeli ezt a negyedévet a forrásadó-levonási nyomtatványhoz (nagyvállalatként
         havonta nyújtja be), a havi forrásadó-levonási időszakok pedig még nem támogatottak.
@@ -649,8 +649,8 @@ filing:
     incomplete_no_rule: 'Ennek a modellnek az alkalmazhatósága nem határozható meg:
       még nem készült rá alkalmazhatósági szabály. A szabályok lefedettsége szándékosan
       szűk (a természetes személyek kezdeti köre), a szervezet és adózási rend szerinti
-      bővítés még hátravan. Ez nem az Ön profiljáról szóló megállapítás: az adózói
-      típusa akár helyesen is lehet bejelentve.'
+      bővítés még hátravan. Ez nem a profilodról szóló megállapítás: az adózói típusod
+      akár helyesen is lehet bejelentve.'
     incomplete_undeclared_taxpayer: 'Az alkalmazhatóság nem határozható meg: az adózó
       típusa nincs bejelentve. Hiányzik a szervezeti típus, és adott esetben az IRPF
       jövedelemkategóriái is.'
@@ -703,7 +703,7 @@ live:
         mér.'
       expected_but_not_found: 'A bevallott profil {count} nyomtatvány/év párra vár
         benyújtást, amelyekre az AEAT nyilvántartása egyet sem adott vissza: {pairs}.
-        Ellenőrizze, benyújtották-e ezeket.'
+        Ellenőrizd, benyújtották-e ezeket.'
       recapture_divergence: 'A Modelo {modelo} {period} {ejercicio} ismételt lekérése
         {count} korábban megfigyelt rovat-értéket változtatott meg: {casillas}. Az
         AEAT helyesbített bevallást tarthat nyilván.'
@@ -812,22 +812,22 @@ overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
     Az automatikus lekérés nem tudja lekérni a társasági adó (Modelo 200/202) benyújtási
-    előzményeit; ellenőrizze közvetlenül az AEAT elektronikus ügyfélkapuján.
+    előzményeit; ellenőrizd közvetlenül az AEAT elektronikus ügyfélkapuján.
 provisioning:
   condition:
     role_model_fit_for_role: A(z) %{model} válaszolt a tesztdokumentumra, de a válasza
-      nem használható számla beolvasására. Válasszon másik szövegmodellt.
+      nem használható számla beolvasására. Válassz másik szövegmodellt.
     role_model_fitness_verified: 'A(z) %{model} jelenlegi súlyaihoz nincs rögzített
       alkalmassági ellenőrzés. Ez nem jelenti azt, hogy a modell alkalmatlan: az ellenőrzéshez
-      futtassa az `aeat config provision verify` parancsot.'
+      futtasd az `aeat config provision verify` parancsot.'
     role_model_fitness_within_timeout: A(z) %{model} nem fejezte be a tesztválaszt
-      az időkorlát lejárta előtt. Lehet, hogy túl lassú ehhez a géphez; válasszon
-      kisebb modellt, vagy növelje az LLM időkorlátját, majd futtassa újra az `aeat
-      config provision verify` parancsot.
+      az időkorlát lejárta előtt. Lehet, hogy túl lassú ehhez a géphez; válassz kisebb
+      modellt, vagy növeld az LLM időkorlátját, majd futtasd újra az `aeat config
+      provision verify` parancsot.
   model:
     licence:
       non_commercial_advisory: A(z) %{model} modellre a(z) %{licence} vonatkozik,
-        amely nem engedélyezi a kereskedelmi felhasználást. Ön kifejezetten ezt adta
+        amely nem engedélyezi a kereskedelmi felhasználást. Ezt kifejezetten te adtad
         meg, ezért a Cadrumo használni fogja, de kereskedelmi könyvelői tevékenységhez
         külön licencet kell kérni a kiadótól.
 review:
@@ -1035,8 +1035,8 @@ sheets:
 topic:
   authentication:
     body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális
-      tanúsítvány (FNMT / azzal egyenértékű) segítségével működik. Konfiguráljon egy
-      szolgáltatót: `aeat config auth configure --provider certificate`, majd ellenőrizze:
+      tanúsítvány (FNMT / azzal egyenértékű) segítségével működik. Konfigurálj egy
+      szolgáltatót: `aeat config auth configure --provider certificate`, majd ellenőrizd:
       `aeat config auth test`.'
     title: Hitelesítés az AEAT-nál
   calendar:
@@ -1077,7 +1077,7 @@ topic:
   profile:
     body: 'A helyi profil tartalmazza az adóazonosítót (NIF/CIF/DNI/NIE), a fő tevékenységet,
       az IVA/IRPF-rezsimet és az opcionális regisztrációkat (SII, Verifactu, intrakomunitáris).
-      Szerkessze: `aeat config profile edit NÉV`.'
+      Szerkeszd: `aeat config profile edit NÉV`.'
     title: Adóalany profilja
   providers:
     body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő előfeltételei
@@ -1335,8 +1335,8 @@ tui:
         confirm: Megerősítés
         failure: A helyreállítási kérelem nem fejezhető be.
         progress: A bevallás létrehozása…
-        setup_incomplete: 'Előbb fejezze be a profil beállítását: nyissa meg a Profilt
-          (F4), és nyomja meg az F8-at.'
+        setup_incomplete: 'Előbb fejezd be a profil beállítását: nyisd meg a Profilt
+          (F4), és nyomd meg az F8-at.'
         success: '{address} létrejött. A Bevallások között jelenik meg, amikor visszatér
           oda.'
       scope:
@@ -1420,14 +1420,14 @@ tui:
       verified: Ellenőrzés elkészült
     list:
       advice:
-        applicability_undetermined: A profilja alapján nem állapítható meg, hogy be
-          kell-e nyújtania ezt a bevallást. Ellenőrizze az adókötelezettségeit.
-        applicable_window_missing: Ez az adókötelezettség érintheti Önt, de a Cadrumo
-          nem ismeri a benyújtási határidőt. Ellenőrizze a hivatalos naptárat.
+        applicability_undetermined: A profilod alapján nem állapítható meg, hogy be
+          kell-e nyújtanod ezt a bevallást. Ellenőrizd az adókötelezettségeidet.
+        applicable_window_missing: Ez az adókötelezettség érinthet téged, de a Cadrumo
+          nem ismeri a benyújtási határidőt. Ellenőrizd a hivatalos naptárat.
         registry_unmodeled: A Cadrumo még nem támogatja ezt az adókötelezettséget.
-          Ellenőrizze, és szükség esetén nyújtsa be más módon.
+          Ellenőrizd, és szükség esetén nyújtsd be más módon.
       aeat_needs_check:
-        help: Ellenőrizze az AEAT adatait, hogy kiderüljön, benyújtották-e a bevallást.
+        help: Ellenőrizd az AEAT adatait, hogy kiderüljön, benyújtották-e a bevallást.
       aeat_unlinked:
         help:
           confirmed: Az AEAT hivatalos megerősítése szerint az időszak bevallását
@@ -1441,7 +1441,7 @@ tui:
         declaration: Bevallás
         period: Időszak
         state: Állapot
-      empty: Még nincs bevallása. Új kezdéséhez nyomja meg a + billentyűt.
+      empty: Még nincs bevallásod. Új bevallás indításához nyomd meg a + billentyűt.
       filter:
         all: Mind
         attention: Figyelmet igényel
@@ -1451,32 +1451,31 @@ tui:
       group:
         attention: Figyelmet igényel
         in_progress: Folyamatban
-        maybe: Ellenőrizze, vonatkoznak-e Önre
+        maybe: Ellenőrizd, vonatkoznak-e rád
         not_started: Esedékes, még nincs elkezdve
         ready: Ellenőrizve, rögzíthető
         recorded: Benyújtottként rögzítve
       key:
         new: Új bevallás
-        toggle_group: Nyissa meg/zárja be a csoportot
-      keys: + Új bevallás · / Keresés · f Szűrés · s Rendezés · t Technikai részletek
+        toggle_group: Nyisd meg/zárd be a csoportot
       maybe:
-        help: A Cadrumo a profilja alapján nem tudta eldönteni, kell-e ezt benyújtania.
-          A határidő előtt ellenőrizze.
+        help: A Cadrumo a profilod alapján nem tudta eldönteni, kell-e ezt benyújtanod.
+          A határidő előtt ellenőrizd.
       new:
         choose_modelo: Melyik nyomtatvány?
         choose_period: Melyik időszak?
         create: Létrehozás és megnyitás
         exists: Ez a bevallás már létezik. Megnyitja?
-        period_selection_hint: Az Enterrel válasszon időszakot, majd hozza létre és
-          nyissa meg a bevallást.
-        show_all: Minden nyomtatvány mutatása, nem csak az Önéi
+        period_selection_hint: Az Enterrel válassz időszakot, majd hozd létre és nyisd
+          meg a bevallást.
+        show_all: Az összes nyomtatvány megjelenítése, nem csak a rád vonatkozók
         start_confirm: 'Elkezdi a(z) {modelo} bevallást erre az időszakra: {period}?'
       next:
-        check_aeat: Ellenőrizze az AEAT-benyújtást
+        check_aeat: Ellenőrizd az AEAT-benyújtást
         continue: Kitöltés folytatása
         create_file: A fájl létrehozása
         fix: 'Akadályok megoldása: {count}'
-        link_aeat: Kapcsolja össze az AEAT-benyújtást
+        link_aeat: Kapcsold össze az AEAT-benyújtást
         none: Nincs teendő
         open_local_draft: Helyi piszkozat megnyitása
         start: Elkezdés
@@ -1502,7 +1501,7 @@ tui:
         not_started: Nincs elkezdve
         superseded: Egy későbbi benyújtás felváltotta
         unreadable: Nem olvasható
-      title: Az Ön bevallásai
+      title: A bevallásaid
       unreadable:
         help: A Cadrumo nem tudta beolvasni ezt a bevallást. A lista többi részét
           ez nem érinti.
@@ -1516,13 +1515,13 @@ tui:
           calendar:
             taxpayer_model_undeclared: A bevallási naptárhoz tudni kell, milyen típusú
               adózó ez a profil, és magánszemély esetén az IRPF szerinti jövedelemkategóriáit.
-              Adja meg őket a profilban (F4).
+              Add meg őket a profilban (F4).
           declarations:
             lifecycle_reader_unavailable: A benyújtási előzmények ebben a munkamenetben
               nem olvashatók.
           home:
             taxpayer_profile_incomplete: A bevallási naptár nem számítható ki, amíg
-              a profil kötelező válaszai hiányoznak. Töltse ki őket a Profil részben.
+              a profil kötelező válaszai hiányoznak. Töltsd ki őket a Profil részben.
       source: Ez a forrás jelenleg nem érhető el.
     revision_state:
       borrador: Piszkozat
@@ -1541,15 +1540,15 @@ tui:
       result_unknown: Nem érhető el
       'yes': Igen
     work_create:
-      created: '{address} létrehozva. A munkához nyissa meg újra a Bevallások részt.'
+      created: '{address} létrehozva. A munkához nyisd meg újra a Bevallások részt.'
       progress: A kiválasztott bevallás létrehozása vagy folytatása…
       refusal:
         not_applicable: 'A Modelo %{modelo} nem vonatkozik erre a profilra: %{reason}
-          Ha vonatkoznia kellene, javítsa a profilt a Profil (F4) nézetben, és próbálja
+          Ha vonatkoznia kellene, javítsd a profilt a Profil (F4) nézetben, és próbáld
           újra.'
-        period: Adjon meg az évhez tartozó érvényes időszakot.
-        year: Adjon meg egy támogatott, négyjegyű adóévet.
-      reused: '{address} folytatva. A munkához nyissa meg újra a Bevallások részt.'
+        period: Adj meg az évhez tartozó érvényes időszakot.
+        year: Adj meg egy támogatott, négyjegyű adóévet.
+      reused: '{address} folytatva. A munkához nyisd meg újra a Bevallások részt.'
     work_state:
       borrador: Piszkozat
       descartado: Elvetve
@@ -1561,9 +1560,9 @@ tui:
     profile: Profil
     withholding: Levonások
   filing_year_route:
-    invalid: Adjon meg érvényes négyjegyű adóévet.
+    invalid: Adj meg érvényes négyjegyű adóévet.
     open: Levonások megnyitása
-    prompt: Válasszon adóévet (ÉÉÉÉ)
+    prompt: Válassz adóévet (ÉÉÉÉ)
     unavailable: A Levonások nem érhetők el ehhez a profilhoz és adóévhez.
   home:
     account_fallback: Fiók
@@ -1582,7 +1581,7 @@ tui:
     availability:
       available: Elérhető
       available_empty: '%{label} - %{detail}'
-      locked: Zárolva - oldja fel a kiválasztott profilt az adatok megtekintéséhez
+      locked: Zárolva - oldd fel a kiválasztott profilt az adatok megtekintéséhez
       never_captured: Még nincs beolvasva
       reason:
         workbench:
@@ -1593,7 +1592,7 @@ tui:
               milyen típusú adózóról van szó
           home:
             actions_projector_unavailable: Nem elérhető - a következő teendők akkor
-              jelennek meg, ha az Ön nyilvántartásait mind ellenőrizték
+              jelennek meg, ha a nyilvántartásaidat mind ellenőrizték
             agenda_projector_unavailable: Nem elérhető - a bevallási naptárt nem sikerült
               kiszámítani
             declarations_resume_projector_unavailable: Nem elérhető - a folytatandó
@@ -1601,10 +1600,10 @@ tui:
             messages_never_pulled: Még nincs beolvasva - az AEAT-üzenetek az első
               AEAT-szinkron után jelennek meg
             taxpayer_profile_incomplete: Nem érhető el - a profilból hiányoznak kötelező
-              válaszok; töltse ki őket a Profil részben
+              válaszok; töltsd ki őket a Profil részben
           ledger:
-            snapshot_projector_unavailable: Nem elérhető - akkor jelenik meg, ha az
-              Ön nyilvántartásait mind ellenőrizték
+            snapshot_projector_unavailable: Nem elérhető - akkor jelenik meg, ha a
+              nyilvántartásaidat mind ellenőrizték
       stale: Elavult - a legutóbbi helyi másolat frissítést igényel
       stale_observed: '%{label}; utolsó megfigyelés: %{observed_at}'
       unavailable: Nem elérhető - ez az információ most nem jeleníthető meg
@@ -1661,7 +1660,7 @@ tui:
       review: Felülvizsgálat
     availability:
       available: Elérhető
-      choose_entry: Válasszon tételt
+      choose_entry: Válassz tételt
       locked: Zárolva
       never_captured: Még nincs beolvasva
       stale: Elavult
@@ -1672,7 +1671,7 @@ tui:
       business: Üzleti
       cancel: Mégse
       confirm: Megerősítés
-      confirming: Erősítse meg a kiválasztott besorolást.
+      confirming: Erősítsd meg a kiválasztott besorolást.
       excluded: Ellenőrizve és kizárva
       failure: A besorolás mentése nem sikerült.
       field:
@@ -1688,7 +1687,7 @@ tui:
       mixed: Vegyes (üzleti hányad)
       personal: Személyes
       progress: Besorolás mentése…
-      prompt: Válasszon besorolást a kijelölt tételhez.
+      prompt: Válassz besorolást a kijelölt tételhez.
       success: Besorolás mentve.
       target: '{position}/{total}. tétel · hivatkozás: {short_id}'
       title: Tétel besorolása
@@ -1750,20 +1749,20 @@ tui:
       empty: Nincs ellenőrzésre váró bizonylat.
       extract: Dokumentum beolvasása
       loading: A dokumentumok beolvasása…
-      path_placeholder: Írja be a fájl elérési útját
+      path_placeholder: Írd be a fájl elérési útját
       pending: Függőben
       printed_total_disagrees: A dokumentumon szereplő végösszeg eltér a rögzítettől.
-        Ellenőrizze a számlát.
+        Ellenőrizd a számlát.
       queue_heading: Ellenőrzésre váró mellékletek
-      read_done: Beolvasva. Ellenőrizze az értékeket, majd erősítse meg a számlát.
+      read_done: Beolvasva. Ellenőrizd az értékeket, majd erősítsd meg a számlát.
       read_failed: A dokumentumot nem sikerült beolvasni.
-      reader_not_ready: 'A dokumentumolvasó nem áll készen ({condition}). Ellenőrizze
+      reader_not_ready: 'A dokumentumolvasó nem áll készen ({condition}). Ellenőrizd
         ezzel: `aeat config provision status`.'
       reader_ready: A dokumentumolvasó készen áll ezen a gépen.
       reading: A dokumentum beolvasása ezen a gépen…
       reading_refused:
-        reader: 'Ezen a gépen még nem olvashatók dokumentumok ({condition}). Indítsa
-          el vagy telepítse az olvasót ezzel: `aeat config provision`, majd próbálja
+        reader: 'Ezen a gépen még nem olvashatók dokumentumok ({condition}). Indítsd
+          el vagy telepítsd az olvasót ezzel: `aeat config provision`, majd próbáld
           újra.'
       record_detail: '{kind} · szállító: {supplier} · hozzáadva: {added} · {status}'
       record_status:
@@ -1780,7 +1779,7 @@ tui:
       in_flight_refusal: A képernyő elhagyása előtt várja meg a jelenlegi művelet
         befejezését.
       refresh_failed: A módosítás mentésre került, de ezt a nézetet nem sikerült újraolvasni.
-        Térjen vissza a Kezdőlapra a frissítéshez.
+        Térj vissza a Kezdőlapra a frissítéshez.
       refreshing: Frissítés…
     import:
       again: Másik fájl importálása
@@ -1788,10 +1787,10 @@ tui:
       cancel: Mégse
       cancelled: Az importálás megszakítva. Semmi sem került mentésre.
       confirm: Importálás megerősítése
-      confirming: Ellenőrizze az előnézetet, majd erősítse meg a mentéshez.
+      confirming: Ellenőrizd az előnézetet, majd erősítsd meg a mentéshez.
       country_label: Partner országa, két betűvel (akkor használjuk, ha a fájlban
         nincs ország oszlop)
-      country_required: Adja meg a partner országát két betűvel, például ES.
+      country_required: Add meg a partner országát két betűvel, például ES.
       failure: Az importálás nem fejezhető be.
       kind:
         bank_statement: Bankszámlakivonat
@@ -1803,8 +1802,8 @@ tui:
         did_import: 'Importálva: {count}'
         did_skip: 'Kihagyva, mert már rögzítve volt: {count}'
         files: 'Beolvasott fájlok: {count}'
-        likely_duplicates: 'Lehetséges ismétlődések: {count} (már az Ön nyilvántartásában
-          vagy korábban ebben a fájlban). Importálásra kerülnek; ellenőrizze őket.'
+        likely_duplicates: 'Lehetséges ismétlődések: {count} (már a nyilvántartásodban
+          vagy korábban ebben a fájlban). Importálásra kerülnek; ellenőrizd őket.'
         not_measured: Az új és a már rögzített számlák csak az importálás végrehajtásakor
           kerülnek megszámlálásra.
         refused_file: 'Nem beolvasva: {file}: {reason}'
@@ -1815,12 +1814,12 @@ tui:
         would_skip: 'Kihagyásra kerülne, mert már rögzítve van: {count}'
       path_label: Fájl vagy mappa
       path_missing: 'Itt nincs semmi: {path}.'
-      path_placeholder: Írjon be egy elérési utat, vagy használja a Tallózást
-      path_required: Adjon meg egy fájl vagy mappa elérési útját.
+      path_placeholder: Írj be egy elérési utat, vagy használd a Tallózást
+      path_required: Adj meg egy fájl vagy mappa elérési útját.
       preview: Előnézet
       previewing: A fájl olvasása…
       progress: Importálás folyamatban…
-      prompt: Válassza ki, mit tartalmaz a fájl és hol van, majd nézze meg az előnézetet.
+      prompt: Válaszd ki, mit tartalmaz a fájl és hol van, majd nézd meg az előnézetet.
         Megerősítésig semmi sem kerül mentésre.
       provider:
         auto: Automatikus felismerés
@@ -1840,7 +1839,7 @@ tui:
         rectificativa: Helyesbítő számla (rectificativa)
         simplificada: Egyszerűsített számla (simplificada)
       confirm: Számla rögzítése
-      confirming: Ellenőrizze a számlát, majd rögzítse.
+      confirming: Ellenőrizd a számlát, majd rögzítsd.
       euro_rate_unavailable: Nem található euró árfolyam {currency} pénznemre erre
         a napra. A számla megmarad, de kimarad az eurós összesítésekből, amíg árfolyam
         nem kerül hozzá.
@@ -1879,9 +1878,8 @@ tui:
           spending_category_id: Költségkategória
           subtotal: A tétel adóalapja
           unit_price: Egységár
-        heading: Számlatételek. Ha a számlán több IVA-kulcs szerepel, itt adja meg
-          egyenként a nyomtatott tételeket, és hagyja üresen a fenti adóalapot és
-          IVA-kulcsot.
+        heading: Számlatételek. Ha a számlán több IVA-kulcs szerepel, itt add meg
+          egyenként a nyomtatott tételeket, és hagyd üresen a fenti adóalapot és IVA-kulcsot.
         none: 'Nincs megadott tétel: a fenti adóalap és IVA-kulcs kerül felhasználásra.'
         remove: Utolsó tétel törlése
         row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
@@ -1891,13 +1889,13 @@ tui:
       optional: '{label} (nem kötelező)'
       problem:
         amount: '{field} csak szám lehet, például 1200.00.'
-        base_or_lines: Adjon meg adóalapot, vagy adjon hozzá legalább egy számlatételt.
+        base_or_lines: Adj meg adóalapot, vagy adj hozzá legalább egy számlatételt.
         date: '{field} év-hó-nap formátumú dátum kell legyen.'
         lines_and_base: A számlát vagy tételenként, vagy egyetlen adóalappal és IVA-kulccsal
-          adja meg, a kettőt együtt nem.
+          add meg, a kettőt együtt nem.
         required: '{field} megadása kötelező.'
       progress: A számla rögzítése…
-      prompt: Adja meg a számlát úgy, ahogy nyomtatva szerepel. Csak az áttekintés
+      prompt: Add meg a számlát úgy, ahogy nyomtatva szerepel. Csak az áttekintés
         után kerül ellenőrzésre és rögzítésre.
       review: Áttekintés
       success: 'A(z) {number} számla rögzítve: alap {base}, IVA {iva}, összesen {total}
@@ -1922,7 +1920,7 @@ tui:
       cancel: Mégse
       changes: Módosított / eltávolított
       confirm: Kapcsolat megerősítése
-      confirming: Erősítse meg ezt a helyi kapcsolatot.
+      confirming: Erősítsd meg ezt a helyi kapcsolatot.
       counterparty_match: Partner egyezik
       direction: Irány
       direction_state:
@@ -1953,10 +1951,10 @@ tui:
       lines: Tételek
       links: Kapcsolt rekordok
       loading: Rekord olvasása…
-      no_change: Ellenőrzés előtt adjon meg eltérő értéket.
+      no_change: Ellenőrzés előtt adj meg eltérő értéket.
       open_invoices: Számlák megtekintése
       open_transaction: Kijelölt tétel megtekintése vagy szerkesztése
-      reviewed: Ellenőrizze az értéket, majd mentse.
+      reviewed: Ellenőrizd az értéket, majd mentsd.
       save: Módosítás mentése
       saved: Módosítás mentve.
       saving: Módosítás mentése…
@@ -1967,7 +1965,7 @@ tui:
         el.
       destination_pending: Ez a terület ebben a verzióban még nem érhető el.
       no_entries: Még nincsenek besorolandó tételek.
-      selection_required: Előbb válasszon ki egy tételt, majd nyissa meg rá ezt a
+      selection_required: Előbb válassz ki egy tételt, majd nyisd meg hozzá ezt a
         feladatot.
       submission_unavailable: Ez a feladat ebben a munkamenetben erről a képernyőről
         nem végezhető el.
@@ -1976,8 +1974,8 @@ tui:
       exclude_cancel: Tétel megtartása
       exclude_confirm: Tétel kizárása
       exclude_failed: A tétel nem került kizárásra.
-      exclude_hint: Nyomja meg az x billentyűt a kijelölt tétel bevallásból való kizárásához.
-      exclude_question: 'Kizárja a bevallásból ezt: {entry}? Az Ön nyilvántartásában
+      exclude_hint: Nyomd meg az x billentyűt a kijelölt tétel bevallásból való kizárásához.
+      exclude_question: 'Kizárja a bevallásból ezt: {entry}? A nyilvántartásodban
         marad, és később újra besorolható.'
       excluded: '{entry} kizárva a bevallásból.'
       excluding: A tétel kizárása…
@@ -2003,8 +2001,8 @@ tui:
       'yes': igen
     card:
       action: Dokumentumolvasó megnyitása
-      description: Nézze meg, beolvashatók-e a számladokumentumok ezen a gépen, és
-        állítsa be az olvasót, a futtatókörnyezetét és a modelljeit.
+      description: Nézd meg, beolvashatók-e a számladokumentumok ezen a gépen, és
+        állítsd be az olvasót, a futtatókörnyezetét és a modelljeit.
       title: Dokumentumolvasó
     checklist:
       models_loaded: Modellek betöltve
@@ -2013,7 +2011,7 @@ tui:
       text_model_pulled: Szövegmodell letöltve
       verified: Olvasó ellenőrizve
       vision_model_pulled: Szkennelési modell letöltve
-    choose_role: Válasszon egy feladatot a táblázatban a modell letöltéséhez, betöltéséhez,
+    choose_role: Válassz egy feladatot a táblázatban a modell letöltéséhez, betöltéséhez,
       ellenőrzéséhez vagy eltávolításához.
     column:
       fitness: Modellpróba
@@ -2028,7 +2026,7 @@ tui:
       cancel: Mégse
       install_accept: Telepítés
       install_message: A telepítés a(z) {installer} programot futtatja, hogy letöltse
-        és telepítse a helyi modell-futtatókörnyezetet erre a gépre. Folytatja?
+        és telepítse a helyi modell-futtatókörnyezetet erre a gépre. Folytatod?
       install_title: Telepíti a helyi futtatókörnyezetet?
       remove_accept: Eltávolítás
       remove_message: Eltávolítja a(z) {model} modellt erről a gépről? Használat előtt
@@ -2051,8 +2049,8 @@ tui:
       · {size} bájt'
     load: Modell betöltése
     measuring: Az olvasó ellenőrzése…
-    no_installer: Ezen a rendszeren nincs elérhető telepítő. Telepítse saját maga
-      a modell-futtatókörnyezetet, majd ellenőrizze újra.
+    no_installer: Ezen a rendszeren nincs elérhető telepítő. Telepítsd saját magad
+      a modell-futtatókörnyezetet, majd ellenőrizd újra.
     no_model: nincs kiválasztva
     pull: Modell letöltése
     refresh: Újraellenőrzés
@@ -2134,13 +2132,13 @@ tui:
         title: Az exportálás eredménye
         unavailable: Az exportálás befejeződött, de az eredménye nem olvasható, ezért
           nem ismert a bizonyíték-státusza, a teljessége és a szoftverazonosítója.
-          Mielőtt a fájlra hagyatkozna, ellenőrizze.
+          Mielőtt a fájlra hagyatkoznál, ellenőrizd.
         warning:
           completeness_unverified: 'Ennek a benyújtási fájlnak a teljességét nem ellenőriztük:
             a Cadrumo nem rendelkezik teljességi listával a nyomtatvány ehhez a változatához,
             ezért nem tudta megerősíteni, hogy minden kötelező rovat bekerült a fájlba.
-            Benyújtás előtt vesse össze az exportált rovatokat a hivatalos Diseño
-            de Registros rekordleírással.'
+            Benyújtás előtt vesd össze az exportált rovatokat a hivatalos Diseño de
+            Registros rekordleírással.'
           development_software_identity: A fájl fejléce a csupa nullából álló fejlesztői
             szoftverazonosítót hordozza; az AEAT ezt a fájlt nem fogadja el benyújtásra.
           development_software_identity_of_filing_file: A Modelo benyújtási fájlja
@@ -2156,21 +2154,21 @@ tui:
       attestation_sha256: A meglévő nyilatkozat SHA-256 értéke
       cancel: Mégse
       cancelled: A számítás megszakítva; nem került rögzítésre bevallási adat.
-      existing_attestation_hint: Válaszoljon a kérdésre. Ezután adjon meg egy meglévő
+      existing_attestation_hint: Válaszolj a kérdésre. Ezután adj meg egy meglévő
         nyilatkozatot arról, hogy a Modelo 390 alóli mentesség szakasza nem alkalmazandó
-        (azonosítóját és SHA-256 értékét), vagy hagyja ezeket üresen, és adja meg,
-        mikor erősítette meg, hogy új nyilatkozat jöjjön létre.
+        (azonosítóját és SHA-256 értékét), vagy hagyd ezeket üresen, és add meg, mikor
+        erősítetted meg, hogy új nyilatkozat jöjjön létre.
       joint_return_elected: Közös önbevallás (autoliquidación conjunta)?
-      no_modelo_390_question_hint: Válaszoljon a kérdésre. Ennek az időszaknak a bevallása
+      no_modelo_390_question_hint: Válaszolj a kérdésre. Ennek az időszaknak a bevallása
         nem kérdez rá a Modelo 390 alóli mentességre; ezt csak az év utolsó időszakáé
         teszi (december vagy a negyedik negyedév).
       observed_at: Megerősítés időpontja új nyilatkozathoz (dátum és idő UTC-eltolással,
         például 2025-04-01T12:00:00Z)
-      required: Válaszoljon a közös önbevallásra vonatkozó kérdésre. Az év utolsó
-        időszakában adjon meg emellett vagy egy teljes meglévő nyilatkozatot, vagy
-        egy megerősítési időpontot UTC-eltolással, de ne mindkettőt.
+      required: Válaszolj a közös önbevallásra vonatkozó kérdésre. Az év utolsó időszakában
+        adj meg emellett vagy egy teljes meglévő nyilatkozatot, vagy egy megerősítési
+        időpontot UTC-eltolással, de ne mindkettőt.
       stale_context: A kiválasztott bevallás megváltozott, miközben az űrlap nyitva
-        volt. Semmi sem lett kiszámítva; válassza újra a Számítást.
+        volt. Semmi sem lett kiszámítva; válaszd újra a Számítást.
       title: A Modelo 303 bevallási adatai
     workbench:
       applicability:
@@ -2188,10 +2186,10 @@ tui:
         confirm: Megerősítés és megtartás átnézésre
         count: 'Megerősítendő rovatok: {count}'
         intro: A Cadrumo tárolja ezeket az értékeket, de senki nem adta meg őket.
-          Csak akkor erősítse meg őket, ha Önre nézve helyesek.
+          Csak akkor erősítsd meg őket, ha számodra helyesek.
         left_out:
-          not_changeable: 'Nem szerepelnek, itt nem módosíthatók: {count}. Nyisson
-            meg egyet, hogy lássa, miért.'
+          not_changeable: 'Nem szerepelnek, itt nem módosíthatók: {count}. Nyiss meg
+            egyet, hogy lásd, miért.'
           sourced: 'Nem szerepelnek, forrásból töltődnek ki: {count}. A forrásukból
             frissülnek.'
         none_in_section: Ebben a szakaszban nincs megerősítendő feltételezett érték.
@@ -2199,22 +2197,22 @@ tui:
         tick: Átnéztem ezeket az értékeket, és helyesek
         title: Feltételezett értékek megerősítése
       calculate:
-        apply_first: Az újraszámítás előtt alkalmazza vagy vesse el a módosításait
+        apply_first: Az újraszámítás előtt alkalmazd vagy vesd el a módosításaidat
           [R].
         at_risk_cancel: A jelenlegi értékek megtartása
         at_risk_proceed: Újraszámítás
         at_risk_title: Újraszámítja a forrásai alapján?
-        kept: Semmi sem lett újraszámítva. Adja meg a megtartandó értékeket, majd
-          számoljon újra.
+        kept: Semmi sem lett újraszámítva. Add meg a megtartandó értékeket, majd számolj
+          újra.
         operator_entries_at_risk: 'Néhány rovat olyan értéket tartalmaz, amelyet nem
           ezen a képernyőn adtak meg ({count}): {boxes}. Ezt a bevallást legutóbb
           ezen a képernyőn kívül számították ki, ezért a Cadrumo nem tudja, hogy ezeket
-          Ön írta-e be. Újraszámításkor ezek a rovatok a forrásuk vagy a hivatalos
-          nyomtatvány által adott értéket kapják, vagy üresen maradnak, hogy kitölthesse
-          őket. Ha meg szeretne tartani egy értéket, előbb adja meg itt.'
+          te írtad-e be. Újraszámításkor ezek a rovatok a forrásuk vagy a hivatalos
+          nyomtatvány által adott értéket kapják, vagy üresen maradnak, hogy kitölthesd
+          őket. Ha meg szeretnél tartani egy értéket, előbb add meg itt.'
         operator_entries_unknown: Ezt a bevallást legutóbb ezen a képernyőn kívül
-          számították ki, ezért a Cadrumo nem tudja, mely értékeket írta be Ön. Az
-          újraszámítás csak az itt megadott értékeket tartja meg.
+          számították ki, ezért a Cadrumo nem tudja, mely értékeket írtad be. Az újraszámítás
+          csak az itt megadott értékeket tartja meg.
       details_page: A számítás részletei
       disclosure:
         official_spanish: hivatalos spanyol szöveg
@@ -2224,18 +2222,18 @@ tui:
       editability:
         calculated: A Cadrumo más rovatokból számítja ki.
         design_constant: Ezt az értéket a hivatalos terv rögzíti.
-        edit_at_profile: A profiljából származik; ott javítsa egyszer.
-        editable_override: Ezt az adatot Ön adja meg; írja be ide.
-        editable_value: Adja meg a rovat összegét vagy adatát.
+        edit_at_profile: A profilodból származik; ott javítsd egyszer.
+        editable_override: Ezt az adatot te adod meg; írd be ide.
+        editable_value: Add meg a rovat összegét vagy adatát.
         informational: Tájékoztatásul jelenik meg; itt nem kell megadni.
-        locked_source: Az Ön nyilvántartásából származik; ott javítsa, majd számoljon
+        locked_source: A nyilvántartásaidból származik; ott javítsd, majd számolj
           újra.
         no_admission: Ennél a bevallásnál a szerkesztés most nem érhető el.
         not_writable: Ez a rovat itt nem szerkeszthető.
         overridable_source: Korábbi bevallásból származik; felülírhatja, és felülírtként
           jelenik meg, amíg vissza nem állítja a forrást.
-        source_policy_undecided: Ezt az értéket itt még nem írhatja felül. Javítsa
-          ott, ahonnan származik, majd számoljon újra.
+        source_policy_undecided: Ezt az értéket itt még nem írhatod felül. Javítsd
+          ott, ahonnan származik, majd számolj újra.
       editor:
         affects:
           is_result: Ez a rovat a bevallás eredménye.
@@ -2254,30 +2252,30 @@ tui:
           where_from: Honnan származik
         can_change:
           calculated: Nem. A Cadrumo más rovatokból számítja ki. Inkább azokat a rovatokat
-            módosítsa.
+            módosítsd.
           fixed: Nem. A hivatalos nyomtatvány rögzíti ezt az értéket.
-          here: Igen. Írja be lent az új értéket.
-          not_here: 'Itt nem. Módosítsa itt: {area}, majd számoljon újra.'
-          not_yet: 'Itt még nem. Módosítsa itt: {area}.'
+          here: Igen. Írd be lent az új értéket.
+          not_here: 'Itt nem. Módosítsd itt: {area}, majd számolj újra.'
+          not_yet: 'Itt még nem. Módosítsd itt: {area}.'
           recorded: Nem. Benyújtottként van rögzítve. A módosításhoz indítson helyesbítést
             ehhez a bevalláshoz.
-          replace: Igen. Az Ön értéke felülírja a forrás értékét ({value}), csak ebben
-            a bevallásban. A nyilvántartásai nem változnak, és bármikor visszatérhet
+          replace: Igen. Az értéked felülírja a forrás értékét ({value}), csak ebben
+            a bevallásban. A nyilvántartásaid nem változnak, és bármikor visszatérhetsz
             a forrás értékéhez.
-          replace_unknown: Igen. Az Ön értéke felülírja a forrás értékét, csak ebben
-            a bevallásban. A nyilvántartásai nem változnak, és bármikor visszatérhet
+          replace_unknown: Igen. Az értéked felülírja a forrás értékét, csak ebben
+            a bevallásban. A nyilvántartásaid nem változnak, és bármikor visszatérhetsz
             a forrás értékéhez.
         cancel: Mégse
         clear: Törlés
-        confirm_hint: Nyomja meg a ⏎ billentyűt a(z) {value} megerősítéséhez, vagy
-          írja be a helyes értéket.
+        confirm_hint: Nyomd meg a ⏎ billentyűt a(z) {value} megerősítéséhez, vagy
+          írd be a helyes értéket.
         format:
-          boolean: Válaszoljon igennel vagy nemmel.
+          boolean: Válaszolj igennel vagy nemmel.
           date: Naptári dátum.
           decimal: Tizedes szám; nincs kerekítés.
           integer: Egész szám.
           money: Összeg euróban; nincs kerekítés.
-          ratio: Az értéket úgy adja meg, ahogy a nyomtatványon szerepel.
+          ratio: Az értéket úgy add meg, ahogy a nyomtatványon szerepel.
           text: Szabad szöveg.
           year: Négyjegyű évszám.
         keys: 'Billentyűk: ⏎ {save_next} · Ctrl+⏎ {save}'
@@ -2298,15 +2296,15 @@ tui:
         save_next: Megtartás és tovább
         unreadable: Ez az érték nem olvasható.
       export:
-        confirm_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt erősítse
+        confirm_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt erősítsd
           meg a feltételezett értékeket (megerősítendő: {count}) [n].'
-        resolve_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt oldja
-          meg, ami akadályozza a benyújtást (akadályozó: {count}) [i].'
+        resolve_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg,
+          ami akadályozza a benyújtást (akadályozó: {count}) [i].'
         title: A bevallás exportálása
-        verify_first: Exportálás előtt ellenőrizze a bevallást [F8].
+        verify_first: Exportálás előtt ellenőrizd a bevallást [F8].
       filed:
         read_only: 'Benyújtottként rögzítve: megtekinthető, de nem módosítható. A
-          módosításhoz indítsa el a bevallás helyesbítését.'
+          módosításhoz indítsd el a bevallás helyesbítését.'
       filter:
         all: minden rovat
         amount: csak az összeget tartalmazó rovatok
@@ -2315,15 +2313,15 @@ tui:
         empty: Ezen az oldalon nincs semmi ehhez a szűrőhöz.
         empty_next: 'Ezen az oldalon nincs semmi ehhez a szűrőhöz. A következő oldal,
           ahol van: {page}'
-        mine: csak az Ön értékei
-        records: csak az Ön nyilvántartásaiból származó értékek
+        mine: csak az értékeid
+        records: csak a nyilvántartásaidból származó értékek
       go_to:
         missing: Ezen a nyomtatványon nincs [{box}] rovat.
-        prompt: 'Ugrás rovatra: írja be a számát, majd nyomjon Entert.'
+        prompt: 'Ugrás rovatra: írd be a számát, majd nyomj Entert.'
       grid:
         column_unnamed: '{number}. oszlop'
-        records_read_only: Ez a táblázat az Ön nyilvántartásaiból töltődik ki. Ott
-          módosítsa azokat.
+        records_read_only: Ez a táblázat a nyilvántartásaidból töltődik ki. Ott módosítsd
+          őket.
         records_unknown: A Cadrumo nem tudja, hány tétel van.
         row_boxes: '{heading} · [{first}] és [{last}] között'
       header:
@@ -2338,7 +2336,7 @@ tui:
           miatt {date} lett.
         deadline_today: 'A határidő ma jár le: {date}'
         file_created: 'A fájl létrehozva: {date}'
-        file_out_of_date: A(z) {date} napi fájl elavult. Hozza létre újra [{key}]
+        file_out_of_date: A(z) {date} napi fájl elavult. Hozd létre újra [{key}]
         no_deadline: Ehhez az időszakhoz nincs nyilvántartott határidő
         no_deadline_short: Nincs nyilvántartott határidő
         own_calculation: A Cadrumo számítása; az AEAT még nem látta.
@@ -2346,7 +2344,7 @@ tui:
           choice_pending: 'Beszámítás vagy visszatérítés: a fájl létrehozásakor választ'
           choice_pending_short: Beszámítás vagy visszatérítés
           direction_unknown_help: A Cadrumo még nem jelzi, hogy ez az összeg fizetendő
-            vagy visszatérítendő. Benyújtás előtt ellenőrizze a hivatalos nyomtatványon.
+            vagy visszatérítendő. Benyújtás előtt ellenőrizd a hivatalos nyomtatványon.
           failed: 'Eredmény: nem számítható ki [{key}]'
           negative: 'Negatív eredmény: nincs fizetendő'
           negative_carried: 'Negatív eredmény: {amount} a következő negyedévekben
@@ -2363,7 +2361,7 @@ tui:
           zero: Nulla eredmény
         stale:
           changes: 'elavult: még nem alkalmazott módosítások: {count} [{key}]'
-          recalculate: 'elavult: számolja újra [{key}]'
+          recalculate: 'elavult: számold újra [{key}]'
       help:
         box_opening: '{box}. mező:'
         empty: Ebben a nézetben nincs rovat.
@@ -2379,16 +2377,16 @@ tui:
       in_spanish: (spanyolul)
       issues:
         action:
-          confirm: Nyissa meg a rovatokat egyenként, és erősítse meg az értéküket,
-            vagy írja be a helyeset.
-          confirm_by_section: Nyissa meg a szakaszokat egyenként, és erősítse meg
-            az értékeiket, vagy írja be a helyeseket.
-          fill: Nyissa meg a rovatokat egyenként, és írja be az értéküket. Ha a helyes
-            érték nulla, írjon be 0-t.
-          fill_by_section: Nyissa meg a szakaszokat egyenként, és írja be a szükséges
+          confirm: Nyisd meg a rovatokat egyenként, és erősítsd meg az értéküket,
+            vagy írd be a helyeset.
+          confirm_by_section: Nyisd meg a szakaszokat egyenként, és erősítsd meg az
+            értékeiket, vagy írd be a helyeseket.
+          fill: Nyisd meg a rovatokat egyenként, és írd be az értéküket. Ha a helyes
+            érték nulla, írj be 0-t.
+          fill_by_section: Nyisd meg a szakaszokat egyenként, és írd be a szükséges
             értékeket.
-          records_at_source: Nyissa meg a táblázatot, vegye fel vagy javítsa a tételt
-            a forrásánál, majd számoljon újra.
+          records_at_source: Nyisd meg a táblázatot, vedd fel vagy javítsd ki a tételt
+            a forrásánál, majd számolj újra.
         assumed: Ezeknek a rovatoknak az értékét senki sem adta meg.
         box_not_on_form: A(z) {box} rovat nem szerepel a bevallás oldalain.
         confirm_all: Feltételezett értékek megerősítése ebben a szakaszban
@@ -2398,14 +2396,14 @@ tui:
             nem rögzíthető.
           cross_period_dependency_unclean: Ez a bevallás egy még le nem zárt korábbi
             időszak számait használja, ezért az eredménye még változhat.
-          missing_required_casilla: A bevallás nem nyújtható be ez az érték nélkül.
-            Ha a helyes érték nulla, írjon be 0-t, hogy az Ön értékeként szerepeljen.
+          missing_required_casilla: A benyújtáshoz kell ez az érték. Ha nulla, írj
+            be 0-t; így azt is megadod.
           reconciliation_mismatch: 'Két számnak egyeznie kellene, de nem egyezik.
-            Egyiket sem választjuk ki Ön helyett: nézze át mindkettőt, és javítsa
-            ki a hibásat.'
-          stale_calculation: A nyilvántartása megváltozott a bevallás kiszámítása
-            óta, ezért a számai már eltérhetnek tőle. A benyújtás addig nem rögzíthető,
-            amíg újra ki nem számítja.
+            Egyiket sem választjuk ki helyetted: nézd át mindkettőt, és javítsd ki
+            a hibásat.'
+          stale_calculation: A nyilvántartásaid megváltoztak a bevallás kiszámítása
+            óta, ezért a számai már eltérhetnek tőlük. A benyújtás addig nem rögzíthető,
+            amíg újra ki nem számítod.
         empty: Nincs átnézendő probléma.
         go_to_box: Ugrás a rovathoz
         key:
@@ -2433,7 +2431,7 @@ tui:
           declaration: A teljes bevallás
           not_on_form: Egy rovat, amely nem szerepel a bevallás oldalain
           record_value: Olyan adat, amelyet a táblázat minden tételéhez meg kell adni
-          records: Az Ön nyilvántartásában
+          records: A nyilvántartásaidban
           unnumbered: 'Rovatszám nélküli értékek: {count}'
       key:
         back: Vissza
@@ -2466,12 +2464,12 @@ tui:
         stay: Szerkesztés folytatása
         title: Nem alkalmazott módosítások
       legend:
-        first_open: Először jár itt? Nyomja meg a ? billentyűt, és megtudja, mit jelentenek
-          a jelek.
+        first_open: Először jársz itt? Nyomd meg a ? billentyűt, és megtudod, mit
+          jelentenek a jelek.
         group:
           empty: Szándékosan üres, vagy még hiányzik
           keys: Billentyűk
-          needs_you: Önre vár
+          needs_you: Rád vár
           origin: Honnan származik az érték
           progress: Módosítások és előrehaladás
         intro: Minden jel mindenhol ugyanazt jelenti.
@@ -2483,41 +2481,41 @@ tui:
             check: Érdemes átnézni. Nem akadályozza a benyújtást.
             info: Magyarázat, például arról, miért nem használtak fel egy forrást.
           mark:
-            collapsed: Nyomja meg a → billentyűt a megnyitásához.
+            collapsed: Nyomd meg a → billentyűt a megnyitásához.
             done: 'Kész: itt nincs több teendő.'
             earlier: Egy korábbi, benyújtottként rögzített bevallásából átvéve.
-            expanded: Nyomja meg a ← billentyűt a bezárásához.
+            expanded: Nyomd meg a ← billentyűt a bezárásához.
             here: A kijelölt rovat, vagy az a lépés, ahol tart.
-            staged: Ön módosította ezt a rovatot. A módosítás még nincs alkalmazva.
-            stale: Az eredmény még nem tartalmazza a legutóbbi módosításait.
+            staged: Te módosítottad ezt a rovatot. A módosítás még nincs alkalmazva.
+            stale: Az eredmény még nem tartalmazza a legutóbbi módosításaidat.
           origin:
             calculated: Más rovatokból számítva.
             calculation_failed: A Cadrumo nem tudta kiszámítani. A problémák listája
               megmutatja, miért.
-            cleared: Ön ürítette ki ezt a rovatot.
+            cleared: Te ürítetted ki ezt a rovatot.
             default_to_confirm: A Cadrumo itt olyan értéket tárol, amelyet senki nem
-              adott meg. Erősítse meg, vagy írja be a helyeset.
-            entered: Ezt az értéket Ön írta be.
-            imported: 'Az Ön Cadrumóban tárolt adataiból: nyilvántartásaiból, profiljából
-              vagy az importált AEAT-adatokból.'
+              adott meg. Erősítsd meg, vagy írd be a helyeset.
+            entered: Ezt az értéket te írtad be.
+            imported: 'A Cadrumóban tárolt adataidból: a nyilvántartásaidból, a profilodból
+              vagy az általad importált AEAT-adatokból.'
             informational: A hivatalos nyomtatvány rögzíti, vagy csak viszonyításként
               látható. Nem kell kitöltenie.
             needs_input: A bevallásnak szüksége van erre az adatra, de még senki nem
               adta meg.
             not_applicable: Szabály szerint üres marad, vagy nem vonatkozik erre a
               bevallásra.
-            not_calculated_yet: Számítsa ki a bevallást a kitöltéséhez.
+            not_calculated_yet: Számítsd ki a bevallást a kitöltéséhez.
             not_imported_yet: Az adatai még nem kerültek be.
-            optional_empty: Nem kötelező. Hagyja üresen, ha Önre nem vonatkozik.
-            overrides_source: Az Ön értéke felülírja a forrásból származót, csak ebben
+            optional_empty: Nem kötelező. Hagyd üresen, ha rád nem vonatkozik.
+            overrides_source: Az értéked felülírja a forrásból származót, csak ebben
               a bevallásban.
-        more: Nyomja meg újra a ? billentyűt az összes jelhez és billentyűhöz.
+        more: Nyomd meg újra a ? billentyűt az összes jelhez és billentyűhöz.
         name:
           collapsed: Bezárt szakasz
           done: Kész
           earlier: Korábbi bevallásból
           expanded: Nyitott szakasz
-          from_your_data: Az Ön adataiból
+          from_your_data: Az adataidból
           here: Itt tart
           stale: Elavult
         on_screen: Ezen a képernyőn
@@ -2527,58 +2525,58 @@ tui:
         check: Érdemes átnézni
         info: Tájékoztatásul
       loading: A bevallás betöltése…
-      modelo_number: "Modelo {modelo}"
-      modelo_title: "Modelo {modelo} · {title}"
+      modelo_number: Modelo {modelo}
+      modelo_title: Modelo {modelo} · {title}
       next:
-        apply: 'Nézze át és alkalmazza a módosításait (még nem alkalmazva: {count})'
-        calculate: Számítsa ki a bevallást
-        confirm: 'Erősítse meg a feltételezett értékeket (megerősítendő: {count})'
-        export: Hozza létre a fájlt az AEAT-nál történő benyújtáshoz
-        export_again: 'Hozza létre újra a fájlt: a bevallás {date} után módosult'
-        fill: 'Töltse ki a megjelölt rovatokat (teendő: {count})'
-        recalculate: 'Számolja újra: a nyilvántartása megváltozott'
-        record_after_file: 'A fájl létrehozva: {date}. Miután benyújtotta az AEAT-nál,
-          rögzítse itt a benyújtást'
+        apply: 'Nézd át és alkalmazd a módosításaidat (még nem alkalmazva: {count})'
+        calculate: Számítsd ki a bevallást
+        confirm: 'Erősítsd meg a feltételezett értékeket (megerősítendő: {count})'
+        export: Hozd létre a fájlt az AEAT-nál történő benyújtáshoz
+        export_again: 'Hozd létre újra a fájlt: a bevallás {date} után módosult'
+        fill: 'Töltsd ki a megjelölt rovatokat (teendő: {count})'
+        recalculate: 'Számold újra: a nyilvántartásaid megváltoztak'
+        record_after_file: 'A fájl létrehozva: {date}. Miután benyújtottad az AEAT-nál,
+          rögzítsd itt a benyújtást'
         recorded: 'Benyújtottként rögzítve: {date}'
-        resolve: 'Oldja meg, ami akadályozza a benyújtást (teendő: {count})'
-        verify: Ellenőrizze a bevallást
+        resolve: 'Oldd meg, ami akadályozza a benyújtást (teendő: {count})'
+        verify: Ellenőrizd a bevallást
       next_line: 'Következő: {action} [{key}]'
       not_writable:
         absent_from_admission: Ez a rovat itt nem szerkeszthető.
         capability_unavailable: Ennek a rovatnak a szerkesztése ebben a verzióban
           még nem érhető el.
         computed_by_formula: A Cadrumo más rovatokból számítja ki.
-        override_policy_undecided: Ezt az értéket itt még nem írhatja felül. Javítsa
-          ott, ahonnan származik, majd számoljon újra.
+        override_policy_undecided: Ezt az értéket itt még nem írhatod felül. Javítsd
+          ott, ahonnan származik, majd számolj újra.
         row_field_template: Ez a rovat ismétlődő sorok egy oszlopát jelöli; a sorokat
-          ott adja meg, ahol vezeti őket.
+          ott add meg, ahol vezeted őket.
         schema_declared_read_only: A hivatalos minta nem engedi, hogy ebbe a rovatba
           írjanak.
-        source_locked: Az Ön nyilvántartását követi; ott javítsa, majd számoljon újra.
+        source_locked: A nyilvántartásaidat követi; ott javítsd, majd számolj újra.
         value_channel_unavailable: Ilyen típusú értéket itt még nem lehet megadni.
       operation:
         calculated: 'Kiszámítva. {direction}: {value}.'
         checked:
-          blocked: 'Ellenőrizve: valami akadályozza a benyújtást. A részletekért nyissa
+          blocked: 'Ellenőrizve: valami akadályozza a benyújtást. A részletekért nyisd
             meg a problémákat [{key}].'
           complete: 'Ellenőrizve: semmi sem akadályozza a benyújtást.'
           incomplete: 'Ellenőrizve: hiányoznak a bevalláshoz szükséges adatok [{key}].'
         done: Kész. A bevallás frissült.
-        not_done: Nem fejeződött be; a módosításai megmaradtak.
+        not_done: Nem fejeződött be; a módosításaid megmaradtak.
       origin:
         calculated: Számított
         calculation_failed: Nem számítható ki
-        cleared: Ön törölte
-        default_to_confirm: Feltételezett, kérjük erősítse meg
-        entered: Ön adta meg
+        cleared: Te törölted
+        default_to_confirm: Feltételezett, kérjük erősítsd meg
+        entered: Te adtad meg
         imported: Importált
         informational: Referenciaérték
-        needs_input: Adat szükséges Öntől
+        needs_input: Adatra van szükség tőled
         not_applicable: Nem alkalmazandó
         not_calculated_yet: Még nincs kiszámítva
         not_imported_yet: Még nincs importálva
         optional_empty: Nem kötelező, üres
-        overrides_source: Az Ön értéke felülírja a forrást
+        overrides_source: Az értéked felülírja a forrást
       origin_filed:
         default_to_confirm: Feltételezett, senki nem adta meg
         needs_input: Üres, senki nem töltötte ki
@@ -2592,28 +2590,28 @@ tui:
           earlier_filings_none: Idén nincs korábbi bevallás
           fixed_by_design: A nyomtatvány rögzíti
           named_filing: A Modelo {modelo} bevallásból ({period})
-          profile: Az Ön profiljából
-          records: Az Ön nyilvántartásaiból
-          registers: Az Ön által vezetett nyilvántartásból
-          your_entries: Az Ön bejegyzéseiből
+          profile: A profilodból
+          records: A nyilvántartásaidból
+          registers: Az általad vezetett nyilvántartásból
+          your_entries: A bejegyzéseidből
         not_imported_yet:
           aeat_draft: Még nincs az AEAT-adatokban
           earlier_filings: Még nincs korábbi bevallás
           fixed_by_design: A nyomtatvány még nem rögzíti
           named_filing: Még nincs a Modelo {modelo} bevallásban ({period})
-          profile: Még nincs az Ön profiljában
-          records: Még nincs az Ön nyilvántartásaiban
-          registers: Még nincs az Ön által vezetett nyilvántartásban
+          profile: Még nincs a profilodban
+          records: Még nincs a nyilvántartásaidban
+          registers: Még nincs az általad vezetett nyilvántartásban
           your_entries: Még nincs megadva
         overrides_source:
-          aeat_draft: Az Öné, felülírja az AEAT-adatokat
-          earlier_filings: Az Öné, felülírja a korábbi bevallást
-          fixed_by_design: Az Öné, felülírja a nyomtatvány értékét
-          named_filing: Az Öné, felülírja a Modelo {modelo} bevallást ({period})
-          profile: Az Öné, felülírja a profilját
-          records: Az Öné, felülírja a nyilvántartásait
-          registers: Az Öné, felülírja a vezetett nyilvántartást
-          your_entries: Az Öné, felülírja a bejegyzését
+          aeat_draft: A tiéd, felülírja az AEAT-adatokat
+          earlier_filings: A tiéd, felülírja a korábbi bevallást
+          fixed_by_design: A tiéd, felülírja a nyomtatvány értékét
+          named_filing: A tiéd, felülírja a Modelo {modelo} bevallást ({period})
+          profile: A tiéd, felülírja a profilodat
+          records: A tiéd, felülírja a nyilvántartásaidat
+          registers: A tiéd, felülírja a vezetett nyilvántartásodat
+          your_entries: A tiéd, felülírja a bejegyzésedet
       page_number: '{page}. oldal'
       page_position: '{current}/{total}. oldal'
       period:
@@ -2636,24 +2634,23 @@ tui:
         quarter_4: '{year}. IV. negyedév'
       rate:
         not_grounded: A Cadrumo ehhez a sorhoz nem rögzít adókulcsot, ezért itt nem
-          jelenik meg. Az Önre vonatkozó kulcsot a hivatalos kitöltési útmutatóban
-          ellenőrizze.
+          jelenik meg. A rád vonatkozó kulcsot a hivatalos kitöltési útmutatóban ellenőrizd.
         of_row: 'Ennek a sornak a kulcsa: {rate}.'
         of_row_printed: 'A hivatalos nyomtatvány ennél a sornál ezt a kulcsot tünteti
           fel: {rate}.'
         printed_by_form: A hivatalos nyomtatvány ennél a sornál ezt a kulcsot tünteti
           fel.
-      read_failed: A bevallás nem olvasható. Lépjen vissza, és nyissa meg újra.
+      read_failed: A bevallás nem olvasható. Lépj vissza, és nyisd meg újra.
       rebase:
         changed: 'Most más értéket mutató rovatok: {count}.'
         dropped: 'Már nem alkalmazható, ezért eltávolított módosítások: {count}.'
         moved: A bevallás megváltozott, mióta olyan módosításokat adott meg, amelyeket
           még nem alkalmazott.
-        still_moving: A bevallás még változik. Várjon egy kicsit, és nézze át újra
-          a módosításait [R].
+        still_moving: A bevallás még változik. Várj egy kicsit, és nézd át újra a
+          módosításaidat [R].
       record:
-        refused_file_out_of_date: A(z) {date} napi fájl elavult. Hozza létre újra.
-          Ha a régebbi fájlt már benyújtotta az AEAT-nál, indítsa el a helyesbítést.
+        refused_file_out_of_date: A(z) {date} napi fájl elavult. Hozd létre újra.
+          Ha a régebbi fájlt már benyújtottad az AEAT-nál, indítsd el a helyesbítést.
       repeating: 'Részletező sorok: {count}'
       result_diff:
         close: Bezárás
@@ -2663,12 +2660,12 @@ tui:
           calculated: 'újraszámítva: {count}'
           other: 'egyéb változások: {count}'
           sourced: 'a forrásaiból: {count}'
-          yours: 'az Ön módosításai: {count}'
+          yours: 'a módosításaid: {count}'
         group:
           calculated: Újraszámítva
           other: Egyéb változás
           sourced: A forrásaiból
-          yours: Az Ön módosítása
+          yours: A módosításod
         not_shown: nem látható
         nothing_changed: Kész. Egyetlen rovat sem változott.
         title: 'Megváltozott rovatok: {count}'
@@ -2678,9 +2675,9 @@ tui:
         apply: Alkalmazás és újraszámítás
         back: Vissza a szerkesztéshez
         before_changed: a rovat megváltozott, mióta ezt megadta
-        blocked: Az alkalmazás előtt oldja meg a ▲ jellel jelölteket.
+        blocked: Az alkalmazás előtt oldd meg a ▲ jellel jelölteket.
         change_line: '{box}{concept}: {before} helyett {after} ({effect})'
-        check_failed: A módosításait nem sikerült ellenőrizni. Megmaradtak; próbálja
+        check_failed: A módosításaidat nem sikerült ellenőrizni. Megmaradtak; próbáld
           újra.
         column:
           after: Utána
@@ -2688,9 +2685,9 @@ tui:
           box: Rovat
           concept: Megnevezés
         discard: Összes elvetése
-        discarded: A módosításai elvetve.
+        discarded: A módosításaid elvetve.
         displacing: 'Importált vagy számított értéket felülíró módosítások: {count}.
-          Az Ön értéke marad érvényben, amíg vissza nem állítja a forrást.'
+          Az értéked marad érvényben, amíg vissza nem állítod a forrást.'
         effect:
           clear: érték nélkül marad
           replaces_aeat_draft: felülírja az AEAT-adatokból származó értéket
@@ -2698,39 +2695,39 @@ tui:
           replaces_fixed_by_design: felülírja a nyomtatvány által rögzített értéket
           replaces_named_filing: felülírja a Modelo {modelo} bevallásból ({period})
             származó értéket
-          replaces_profile: felülírja az Ön profiljából származó értéket
-          replaces_records: felülírja az Ön nyilvántartásaiból származó értéket
-          replaces_registers: felülírja az Ön által vezetett nyilvántartásból származó
+          replaces_profile: felülírja a profilodból származó értéket
+          replaces_records: felülírja a nyilvántartásaidból származó értéket
+          replaces_registers: felülírja az általad vezetett nyilvántartásból származó
             értéket
-          replaces_your_entries: felülírja az Ön bejegyzéseiből származó értéket
+          replaces_your_entries: felülírja a bejegyzéseidből származó értéket
           restore: visszaáll a forrás értékére
           set_calculation: felülírja a számított értéket
-          set_filer: módosítja az Ön értékét
+          set_filer: módosítja az értékedet
           set_nothing: új érték
           set_source: felülírja a forrásból származó értéket
         finding:
           clear_of_source_fed_casilla: Ezt a rovatot egy forrás tölti ki, ezért nem
-            üríthető ki. Állítsa inkább vissza a forrására.
+            üríthető ki. Állítsd inkább vissza a forrására.
           intent_not_admitted: Ez a rovat így nem módosítható.
           nothing_to_restore: Ez a rovat már a forrása értékét mutatja.
           required_empty: A bevallásnak szüksége van erre a rovatra, és üres marad.
         findings_heading: 'Amit az ellenőrzés talált:'
         none: Nincs alkalmazandó módosítás.
-        nothing_saved: Semmi sem mentődik, amíg meg nem nyomja az „Alkalmazás és újraszámítás”
+        nothing_saved: Semmi sem mentődik, amíg meg nem nyomod az „Alkalmazás és újraszámítás”
           gombot.
         operator_entries_at_risk: 'Néhány rovat olyan értéket tartalmaz, amelyet nem
           ezen a képernyőn adtak meg ({count}): {boxes}. Ezt a bevallást legutóbb
           ezen a képernyőn kívül számították ki, ezért a Cadrumo nem tudja, hogy ezeket
-          Ön írta-e be. Alkalmazáskor ezek a rovatok a forrásuk vagy a hivatalos nyomtatvány
-          által adott értéket kapják, vagy üresen maradnak, hogy kitölthesse őket.
-          Ha meg szeretne tartani egy értéket, előbb adja meg itt.'
+          te írtad-e be. Alkalmazáskor ezek a rovatok a forrásuk vagy a hivatalos
+          nyomtatvány által adott értéket kapják, vagy üresen maradnak, hogy kitölthesd
+          őket. Ha meg szeretnél tartani egy értéket, előbb add meg itt.'
         operator_entries_unknown: Ezt a bevallást legutóbb ezen a képernyőn kívül
-          számították ki, ezért a Cadrumo nem tudja, mely értékeket írta be Ön. Alkalmazáskor
+          számították ki, ezért a Cadrumo nem tudja, mely értékeket írtad be. Alkalmazáskor
           csak az itt felsorolt módosítások maradnak meg. Minden más, a képernyőn
           kívül beírt érték a forrása vagy a hivatalos nyomtatvány által adott értéket
           kapja, vagy üresen marad.
-        rebased: 'A bevallás megváltozott, miután megadta ezeket a módosításokat,
-          amelyeket még nem alkalmaztak. Nézze át újra a megjelölt sorokat (megváltozott:
+        rebased: 'A bevallás megváltozott, miután megadtad ezeket a módosításokat,
+          amelyeket még nem alkalmaztak. Nézd át újra a megjelölt sorokat (megváltozott:
           {count}).'
         title: 'Alkalmazandó módosítások: {count}'
       search:
@@ -2755,20 +2752,20 @@ tui:
         group:
           aeat_data: AEAT-adatok
           aeat_data_imported_on: 'AEAT-adatok, importálva: {date}'
-          assumed: Feltételezett, kérjük erősítse meg
+          assumed: Feltételezett, kérjük erősítsd meg
           blank: Üresen hagyott vagy nem alkalmazandó
           calculated: Számított
           earlier_declarations: Korábbi bevallások
           earlier_declarations_none: Idén nincs korábbi bevallás
           information: Csak tájékoztatásul
-          needs_you: Adat szükséges Öntől
-          profile: Az Ön profilja
-          records: Az Ön nyilvántartásai
-          registers: Az Ön által vezetett nyilvántartó könyvek
-          replaced: Az Ön értékei másokat váltanak fel
+          needs_you: Adatra van szükség tőled
+          profile: A profilod
+          records: A nyilvántartásaid
+          registers: Az általad vezetett nyilvántartó könyvek
+          replaced: Az értékeid másokat váltanak fel
           set_by_form: A nyomtatvány rögzíti
           unnamed: Meg nem nevezett forrásból
-          yours: Ön által megadott vagy megerősített
+          yours: Általad megadott vagy megerősített
         group_filed:
           assumed: Feltételezett, senki nem adta meg
           needs_you: Üres, senki nem töltötte ki
@@ -2782,7 +2779,7 @@ tui:
         no_surface: A(z) „{source}” forrásnak nincs megnyitható saját területe.
         none: Ennek a bevallásnak nincs megjeleníthető rovata.
         none_found: '{source}: nincs találat'
-        not_here: Ez a terület innen nem nyitható meg; nyissa meg a főmenüből.
+        not_here: Ez a terület innen nem nyitható meg; nyisd meg a főmenüből.
         not_yet: '{source}: még nincs lekérdezve'
         title: Honnan származnak az értékek
       stage_refused:
@@ -2817,7 +2814,7 @@ tui:
     account_help:
       appearance: Váltás a világos és a sötét megjelenés között
       change_user: Bejelentkezés egy másik profilba ezen a számítógépen
-      language: Válassza ki, milyen nyelven jelenjenek meg a profil oldalai
+      language: Válaszd ki, milyen nyelven jelenjenek meg a profil oldalai
       password: A profilt védő jelszó módosítása
       profile: A profil adatainak áttekintése és szerkesztése
       sign_out: A profil munkamenetének lezárása és adatainak zárolása

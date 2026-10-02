@@ -1427,7 +1427,6 @@ tui:
       key:
         new: New declaration
         toggle_group: Open/close group
-      keys: + New declaration · / Search · f Filter · s Sort · t Technical details
       maybe:
         help: Cadrumo could not tell from your profile whether you must file this.
           Check it before the deadline.
@@ -2477,8 +2476,8 @@ tui:
         check: Worth checking
         info: For your information
       loading: Loading the declaration…
-      modelo_number: "Modelo {modelo}"
-      modelo_title: "Modelo {modelo} · {title}"
+      modelo_number: Modelo {modelo}
+      modelo_title: Modelo {modelo} · {title}
       next:
         apply: 'Review and apply your changes (not applied yet: {count})'
         calculate: Calculate the declaration

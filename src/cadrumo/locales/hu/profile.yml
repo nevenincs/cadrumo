@@ -4,16 +4,15 @@ profile:
       benyújtani, nem az AEAT-nél: a baszk területek a Concierto Económico (Ley 12/2002),
       Navarra pedig a Convenio Económico (Ley 28/1990) alapján. Ez a CLI nem kezeli
       a forális adóbevallásokat. Lásd: sede.bizkaia.eus (Vizcaya), gipuzkoa.eus/ogasuna
-      (Guipúzcoa), araba.eus/ogasun (Álava) vagy hacienda.navarra.es (Navarra) az
-      Ön területének megfelelően.'
-    not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil. Futtassa
-      a(z) `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` parancsot a
-      beállításához.
+      (Guipúzcoa), araba.eus/ogasun (Álava) vagy hacienda.navarra.es (Navarra), attól
+      függően, melyik területen élsz.'
+    not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil. Futtasd a(z)
+      `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` parancsot a beállításához.
   journey:
     source:
       censal_review:
         action: Nyilvántartás áttekintése
-        description: Olvassa be az adózó saját nyilvántartási adatait, és tekintse
+        description: Olvasd be az adózó saját nyilvántartási adatait, és tekintsd
           át a javasolt módosításokat elfogadás előtt.
         title: AEAT nyilvántartás
       credential_requirement:
@@ -21,13 +20,13 @@ profile:
         missing: AEAT hitelesítés szükséges (nincs beállítva)
       filed_history:
         action: Előzmények lekérése
-        description: Kérje le az adózó korábbi bevallási előzményeit az AEAT-tól a
+        description: Kérd le az adózó korábbi bevallási előzményeit az AEAT-tól a
           már bevallott adatok átviteléhez.
         title: Korábbi bevallások
   keys:
     activities:
-      description: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használja
-        az IAE fejezetet, ha ismeri)
+      description: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használd az
+        IAE fejezetet, ha ismered)
     capabilities:
       google_export: Engedélyezi a Google Sheets exportálást?
       llm_vision: Engedélyezi a helyi LLM-látást a számlák beolvasásához?
@@ -304,7 +303,7 @@ profile:
             where: A DNI- vagy NIE-kártyáján, illetve az AEAT által kiadott NIF-kártyán.
               Bármely korábbi bevalláson vagy AEAT-levélen is szerepel.
             why: Minden bevallást ezzel a számmal nyújtanak be; az AEAT ez alapján
-              azonosítja önt.
+              azonosít téged.
           label: Adóazonosító (NIF/NIE/CIF)
       irpf:
         activity_kind:
@@ -366,10 +365,9 @@ profile:
           label: Ingatlanfejlesztői önadóztatás adóalapja
         cash_accounting_regime_enrolled:
           help:
-            what: Választotta-e a pénzforgalmi áfa különleges rendszerét (criterio
-              de caja).
-            where: A Modelo 036-on kell választani, és az adózói adatai között látható.
-              Ha nem választotta, a válasz Nem.
+            what: A pénzforgalmi áfa különleges rendszerét (criterio de caja) választottad?
+            where: A Modelo 036-on kell választani, és az adózói adataid között látható.
+              Ha nem választottad, a válasz Nem.
             why: Ebben a rendszerben az áfa a számlák kifizetésekor és nem kiállításukkor
               esedékes, ami megváltoztatja az egyes időszakok számait.
           label: Pénzforgalmi rendszerbeli tagság
@@ -396,7 +394,7 @@ profile:
             mixed: Általános és egyszerűsített rendszer együtt
             simplified: Csak egyszerűsített rendszer
           help:
-            what: 'Mely áfarendszereket kombinálja a 303-as bevallása: csak az általánost,
+            what: 'Mely áfarendszereket kombinálja a 303-as bevallásod: csak az általánost,
               csak az egyszerűsítettet, vagy mindkettőt.'
             where: Az adózói bejelentkezésén szereplő egyes tevékenységek áfarendszeréből
               következik.
@@ -408,8 +406,8 @@ profile:
         redeme_enrolled:
           help:
             what: Szerepel-e a REDEME-ben, a havi áfa-visszatérítési nyilvántartásban.
-            where: A Modelo 036-on kell kérelmezni, és az adózói adatai között látható.
-              Ha soha nem kérte, a válasz Nem.
+            where: A Modelo 036-on kell kérelmezni, és az adózói adataid között látható.
+              Ha soha nem kérted, a válasz Nem.
             why: A nyilvántartásba vétel miatt az áfabevallás negyedéves helyett havi
               lesz, és az SII kötelezővé válik.
           label: REDEME-regisztráció
@@ -438,7 +436,7 @@ profile:
             what: Önként csatlakozott-e az SII-hez, az áfa-nyilvántartások azonnali
               elektronikus továbbításához az AEAT felé.
             where: Az önkéntes csatlakozást a Modelo 036-on kell kérelmezni, és az
-              adózói adatai között látható. Ha soha nem kérte, a válasz Nem.
+              adózói adataid között látható. Ha soha nem kérted, a válasz Nem.
             why: Az SII-tagok online vezetik áfa-nyilvántartásaikat az AEAT-nál, ami
               egyes kötelezettségeket és határidőket megváltoztat.
           label: Önkéntes SII-tagság
@@ -507,7 +505,7 @@ profile:
         source:
           choices:
             aeat_censo_read: Az AEAT nyilvántartásából olvasva
-            censo_artefact_g313: Az ön által benyújtott adózói igazolásból olvasva
+            censo_artefact_g313: Az általad benyújtott adózói igazolásból olvasva
             manual_cli: Kézzel megadva
             modelo_036_import: Modelo 036-ból importálva
             registry_inference: Nyilvántartási szabályokból levezetve
@@ -630,7 +628,7 @@ profile:
               vagy Navarra) szabályait követi-e.
             where: 'Az adózási lakcíméből következik: Álava, Bizkaia, Gipuzkoa vagy
               Navarra területén forális, Spanyolország többi részén közös terület.'
-            why: Ez dönti el, melyik adóhatóság és milyen szabályok vonatkoznak önre.
+            why: Ez dönti el, melyik adóhatóság és milyen szabályok vonatkoznak rád.
               A forális területek a saját adóhivatalukhoz nyújtanak be, ez még nem
               támogatott.
           label: Területi adórendszer
@@ -714,22 +712,22 @@ profile:
           label: Bérleti díjat forrásadóval fizet
     section:
       activities:
-        summary: Az ön által végzett gazdasági tevékenységek, tevékenységenként egy
+        summary: Az általad végzett gazdasági tevékenységek, tevékenységenként egy
           sorral.
         title: Gazdasági tevékenységek
       attribution_entity:
-        summary: Az ön által működtetett jövedelem-hozzárendelési jogalany (comunidad
+        summary: Az általad működtetett jövedelem-hozzárendelési jogalany (comunidad
           de bienes, sociedad civil) jogi formája.
         title: Jövedelem-hozzárendelő entitás jogi formája
       attribution_entity_socios:
         summary: A jogalany tagjai és az egyes tagoknak hozzárendelt jövedelemrész.
         title: A hozzárendelő entitás tagjai
       attribution_received:
-        summary: Azok a jövedelmek, amelyeket olyan jogalanyok rendelnek önhöz, amelyeknek
-          tagja.
+        summary: Azok a jövedelmek, amelyeket olyan jogalanyok rendelnek hozzád, amelyeknek
+          tagja vagy.
         title: Kapott hozzárendelt jövedelem
       auth:
-        summary: 'Hogyan azonosítja magát az AEAT felé: tanúsítvánnyal, Cl@ve Móvil
+        summary: 'Hogyan azonosítod magad az AEAT felé: tanúsítvánnyal, Cl@ve Móvil
           vagy Cl@ve PIN használatával.'
         title: AEAT-hitelesítés
       capabilities:
@@ -741,10 +739,10 @@ profile:
           és annak dátumai.
         title: Censo és bejelentkezés
       contact:
-        summary: Hol érheti el önt az AEAT, és mi az adózási lakcíme.
+        summary: Hol érhet el téged az AEAT, és mi az adózási lakcímed.
         title: Kapcsolat és adóügyi cím
       identity:
-        summary: 'A neve és NIF-száma: kinek a nevében készülnek a bevallások.'
+        summary: 'A neved és NIF-számod: kinek a nevében készülnek a bevallások.'
         title: Azonosítás
       irpf:
         summary: Hogyan számítják a személyi jövedelemadóját (IRPF), és milyen levonások
@@ -761,11 +759,11 @@ profile:
           benyújtania.
         title: Bevallási kötelezettség küszöbértékei
       preferences:
-        summary: Hogyan kommunikál önnel az alkalmazás, például az egyes képernyők
+        summary: Hogyan kommunikál veled az alkalmazás, például az egyes képernyők
           nyelve.
         title: Kezelői beállítások
       properties:
-        summary: Az ön tulajdonában lévő vagy bérbe adott ingatlanok, ingatlanonként
+        summary: A tulajdonodban lévő vagy általad bérbe adott ingatlanok, ingatlanonként
           egy sorral.
         title: Ingatlanok és bérbeadás
       provenance:
@@ -782,7 +780,7 @@ profile:
         summary: A bérbeadásból származó jövedelem háttéradatai az éves bevallásban.
         title: Bérbeadási környezet (Renta)
       renta_spouse:
-        summary: A házastársa adatai, amelyekre a közös bevalláshoz van szükség.
+        summary: A házastársad adatai, amelyekre a közös bevalláshoz van szükség.
         title: Házastárs (Renta)
       renta_taxpayer:
         summary: Az adózó személyes körülményei, amelyeket az éves bevallás felhasznál.
@@ -792,18 +790,18 @@ profile:
           területet.
         title: Adóügyi illetőség és joghatóság
       taxpayer_type:
-        summary: Milyen típusú adózó ön, és milyen jövedelemfajtákból van bevétele.
+        summary: Milyen típusú adózó vagy, és milyen jövedelemfajtákból van bevételed.
         title: Adózó típusa és jövedelemkategóriák
       usage_ratios:
         summary: A közösen használt eszközök, például autó vagy telefon üzleti használatának
           aránya.
         title: Használati arányok és levonhatóság
       vivienda_office:
-        summary: Használja-e a fő lakóhelye egy részét irodaként a tevékenységéhez.
+        summary: Használod-e a fő lakóhelyed egy részét irodaként a tevékenységedhez.
         title: Állandó lakás irodai hasznosítása
       withholding:
-        summary: Azok a levonások, amelyeket önnek kell alkalmaznia, amikor másoknak
-          fizet, például alkalmazottaknak vagy bérbeadóknak.
+        summary: Azok a levonások, amelyeket alkalmaznod kell, amikor másoknak fizetsz,
+          például alkalmazottaknak vagy bérbeadóknak.
         title: Forrásadó-fizetői kötelezettségek
   validation:
     boolean_field_invalid: Érvénytelen logikai mező

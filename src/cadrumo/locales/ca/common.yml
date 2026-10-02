@@ -534,7 +534,7 @@ entries:
     label: Modelo 037 - Declaració censal simplificada (retirat)
     notes:
       '0': Suprimit per l'Ordre HAC/1526/2024, amb efecte des de 2025-02-03.
-      '1': Utilitzeu el Model 036 per a qualsevol tràmit censal posterior.
+      '1': Utilitza el Model 036 per a qualsevol tràmit censal posterior.
     purpose: Declaració censal simplificada per a autònoms, suprimida el 2025.
   portal_m100_renta:
     label: Modelo 100 - Declaració de la Renda (IRPF)
@@ -651,8 +651,8 @@ filing:
     incomplete_no_rule: 'No es pot determinar l''aplicabilitat d''aquest model: encara
       no se n''ha derivat cap regla d''aplicabilitat. La cobertura de regles és deliberadament
       reduïda (el conjunt inicial de persones) i l''ampliació per entitat i règim
-      està pendent. No és una afirmació sobre el vostre perfil: el vostre tipus de
-      contribuent pot estar correctament declarat.'
+      està pendent. No és una afirmació sobre el teu perfil: el teu tipus de contribuent
+      pot estar correctament declarat.'
     incomplete_undeclared_taxpayer: 'No es pot determinar l''aplicabilitat: el tipus
       de contribuent no està declarat. Falten el tipus d''entitat i, si escau, les
       categories de renda de l''IRPF.'
@@ -702,9 +702,9 @@ live:
         {offered_only} parells recorreguts provenen de la llista d''opcions que ofereix
         l''AEAT, la vinculació de la qual a aquest NIF no està confirmada. Aquesta
         execució no mesura res.'
-      expected_but_not_found: 'El vostre perfil declarat espera una declaració en
-        {count} parell(s) model/exercici per als quals el registre de l''AEAT no en
-        va retornar cap: {pairs}. Comproveu si es van arribar a presentar.'
+      expected_but_not_found: 'El teu perfil declarat espera una declaració en {count}
+        parell(s) model/exercici per als quals el registre de l''AEAT no en va retornar
+        cap: {pairs}. Comprova si es van arribar a presentar.'
       recapture_divergence: 'Tornar a capturar el model {modelo} {period} {ejercicio}
         ha canviat {count} valor(s) de casella observats anteriorment: {casillas}.
         L''AEAT pot tenir una declaració rectificada.'
@@ -816,7 +816,7 @@ overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.
     La recuperació automàtica no pot obtenir l'historial de presentacions de l'Impost
-    sobre Societats (model 200/202); consulti'l directament a la seu electrònica de
+    sobre Societats (model 200/202); consulta'l directament a la seu electrònica de
     l'AEAT.
 provisioning:
   condition:
@@ -1461,7 +1461,6 @@ tui:
       key:
         new: Nova declaració
         toggle_group: Obre/tanca el grup
-      keys: + Nova declaració · / Cercar · f Filtrar · s Ordenar · t Detalls tècnics
       maybe:
         help: Cadrumo no ha pogut saber pel teu perfil si l'has de presentar. Comprova-ho
           abans del termini.
@@ -1961,10 +1960,10 @@ tui:
       lines: Línies
       links: Registres vinculats
       loading: Llegint el registre…
-      no_change: Introduïu un valor diferent abans de revisar.
+      no_change: Introdueix un valor diferent abans de revisar.
       open_invoices: Veure factures
       open_transaction: Veure o editar l'apunt seleccionat
-      reviewed: Reviseu el valor i després deseu-lo.
+      reviewed: Revisa el valor i després desa'l.
       save: Desar el canvi
       saved: Canvi desat.
       saving: Desant el canvi…
@@ -2531,8 +2530,8 @@ tui:
         check: Convé revisar-ho
         info: Per a la teva informació
       loading: Carregant la declaració…
-      modelo_number: "Modelo {modelo}"
-      modelo_title: "Modelo {modelo} · {title}"
+      modelo_number: Modelo {modelo}
+      modelo_title: Modelo {modelo} · {title}
       next:
         apply: 'Revisa i aplica els teus canvis (sense aplicar: {count})'
         calculate: Calcula la declaració

@@ -540,7 +540,7 @@ entries:
     label: Modelo 037 - Declaración censal simplificada (retirado)
     notes:
       '0': Suprimido por la Orden HAC/1526/2024, con efecto desde 2025-02-03.
-      '1': Use el Modelo 036 para cualquier trámite censal posterior.
+      '1': Usa el Modelo 036 para cualquier trámite censal posterior.
     purpose: Declaración censal simplificada para autónomos, suprimida en 2025.
   portal_m100_renta:
     label: Modelo 100 - Declaración de la Renta (IRPF)
@@ -660,8 +660,8 @@ filing:
     incomplete_no_rule: 'No se puede determinar la aplicabilidad de este modelo: todavía
       no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas
       es deliberadamente reducida (el conjunto inicial de personas) y la expansión
-      por entidad y régimen está pendiente. No es una afirmación sobre su perfil:
-      su tipo de contribuyente puede estar correctamente declarado.'
+      por entidad y régimen está pendiente. No es una afirmación sobre tu perfil:
+      tu tipo de contribuyente puede estar correctamente declarado.'
     incomplete_undeclared_taxpayer: 'No se puede determinar la aplicabilidad: el tipo
       de contribuyente no está declarado. Faltan el tipo de entidad y, en su caso,
       las categorías de renta del IRPF.'
@@ -713,9 +713,9 @@ live:
         {offered_only} pares recorridos proceden de la lista de opciones que ofrece
         la AEAT, cuya vinculación a este NIF no está confirmada. Esta ejecución no
         mide nada.'
-      expected_but_not_found: 'Su perfil declarado espera una declaración en {count}
+      expected_but_not_found: 'Tu perfil declarado espera una declaración en {count}
         par(es) modelo/ejercicio para los que el registro de la AEAT no devolvió ninguna:
-        {pairs}. Compruebe si llegaron a presentarse.'
+        {pairs}. Comprueba si llegaron a presentarse.'
       recapture_divergence: 'Volver a capturar el modelo {modelo} {period} {ejercicio}
         cambió {count} valor(es) de casilla observados anteriormente: {casillas}.
         La AEAT puede tener una declaración rectificada.'
@@ -1475,7 +1475,6 @@ tui:
       key:
         new: Nueva declaración
         toggle_group: Abrir/cerrar grupo
-      keys: + Nueva declaración · / Buscar · f Filtrar · s Ordenar · t Detalles técnicos
       maybe:
         help: Cadrumo no ha podido saber por tu perfil si debes presentarla. Compruébalo
           antes del plazo.
@@ -1974,10 +1973,10 @@ tui:
       lines: Líneas
       links: Registros vinculados
       loading: Leyendo el registro…
-      no_change: Introduzca un valor diferente antes de revisar.
+      no_change: Introduce un valor diferente antes de revisar.
       open_invoices: Ver facturas
       open_transaction: Ver o editar el apunte seleccionado
-      reviewed: Revise el valor y después guárdelo.
+      reviewed: Revisa el valor y después guárdalo.
       save: Guardar cambio
       saved: Cambio guardado.
       saving: Guardando cambio…
@@ -2536,8 +2535,8 @@ tui:
         check: Conviene revisarlo
         info: Para tu información
       loading: Cargando la declaración…
-      modelo_number: "Modelo {modelo}"
-      modelo_title: "Modelo {modelo} · {title}"
+      modelo_number: Modelo {modelo}
+      modelo_title: Modelo {modelo} · {title}
       next:
         apply: 'Revisa y aplica tus cambios (sin aplicar: {count})'
         calculate: Calcula la declaración

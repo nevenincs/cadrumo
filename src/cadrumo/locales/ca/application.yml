@@ -347,7 +347,7 @@ application:
     row_set:
       errors:
         grouping_dispatch_fell_through: 'L''agrupació de conjunt de files {grouping}
-          s''ha resolt a un assemblador que no s''ha executat. Comuniqueu-ho: la taula
+          s''ha resolt a un assemblador que no s''ha executat. Comunica-ho: la taula
           de despatx és inconsistent.'
         grouping_has_no_assembler: L'agrupació de conjunt de files {grouping} no té
           assemblador en aquesta aplicació; les agrupacions sense un són {unassemblable_groupings}.
@@ -773,7 +773,7 @@ application:
           aquest certificat. Descarrega abans la llista de notificacions.
         document_conflict: 'Ja hi ha desat un document diferent per a aquesta notificació;
           no s''ha sobreescrit res. Discrepen: {diverging_fields}.'
-        document_not_found: Cap document desat correspon a aquesta notificació. Descarregueu-lo
+        document_not_found: Cap document desat correspon a aquesta notificació. Descarrega'l
           primer.
         document_prefix_ambiguous: Aquest prefix de certificat correspon a diversos
           documents desats. Indica l'identificador complet.
@@ -1628,48 +1628,48 @@ application:
       iva_import_document_unrecordable: L'apunt del %{transaction_date} per %{transaction_amount}
         %{transaction_currency} necessita la declaració duanera de la importació.
         Cadrumo encara no pot registrar-la, de manera que aquesta declaració no pot
-        superar la comprovació. Presenteu aquesta declaració per una altra via.
+        superar la comprovació. Presenta aquesta declaració per una altra via.
       iva_intra_eu_self_assessment_unrecordable: L'apunt del %{transaction_date} per
         %{transaction_amount} %{transaction_currency} necessita el justificant d'autoliquidació
         de l'adquisició intracomunitària. Cadrumo encara no pot registrar-lo, de manera
-        que aquesta declaració no pot superar la comprovació. Presenteu aquesta declaració
+        que aquesta declaració no pot superar la comprovació. Presenta aquesta declaració
         per una altra via.
       iva_reagp_document_unrecordable: L'apunt del %{transaction_date} per %{transaction_amount}
         %{transaction_currency} necessita el rebut del règim especial de l'agricultura,
         la ramaderia i la pesca (REAGP). Cadrumo encara no pot registrar-lo, de manera
-        que aquesta declaració no pot superar la comprovació. Presenteu aquesta declaració
+        que aquesta declaració no pot superar la comprovació. Presenta aquesta declaració
         per una altra via.
       iva_rectification_document_unrecordable: L'apunt del %{transaction_date} per
         %{transaction_amount} %{transaction_currency} necessita el justificant de
         la rectificació de deduccions. Cadrumo encara no pot registrar-lo, de manera
-        que aquesta declaració no pot superar la comprovació. Presenteu aquesta declaració
+        que aquesta declaració no pot superar la comprovació. Presenta aquesta declaració
         per una altra via.
       iva_selected_scope_evidence_failure: Alguns apunts d'IVA d'aquesta declaració
         tenen dades o justificants absents o no vàlids (%{source_ref_count} amb referència
-        i %{unidentified_source_count} sense). Corregiu els vostres registres i torneu
+        i %{unidentified_source_count} sense). Corregeix els teus registres i torna
         a calcular abans de comprovar aquesta declaració.
       iva_wallet_precondition_failed: No es compleix una condició per compensar IVA
         de períodes anteriors.
       ledger_snapshot_drift: 'Els teus registres han canviat des que es va calcular
         el model %{modelo} de %{filing_year}, període %{period}: %{changed_count}
         apunts modificats i %{removed_count} eliminats. Torna a calcular-lo.'
-      ledger_snapshot_drift_added: Els vostres registres contenen %{added_count} apunts
+      ledger_snapshot_drift_added: Els teus registres contenen %{added_count} apunts
         que no s'han tingut en compte en el càlcul del Modelo %{modelo} %{filing_year},
-        període %{period}. Torneu a calcular aquesta declaració.
+        període %{period}. Torna a calcular aquesta declaració.
       ledger_snapshot_drift_changed: 'Els teus registres han canviat des que es va
         calcular el model %{modelo} de %{filing_year}, període %{period} (apunts modificats:
         %{changed_count}). Torna a calcular-lo.'
       ledger_snapshot_drift_removed: 'Els teus registres han canviat des que es va
         calcular el model %{modelo} de %{filing_year}, període %{period} (apunts eliminats:
         %{removed_count}). Torna a calcular-lo.'
-      ledger_snapshot_drift_with_added: 'Els vostres registres ja no coincideixen
-        amb el càlcul del Modelo %{modelo} %{filing_year}, període %{period}: %{added_count}
+      ledger_snapshot_drift_with_added: 'Els teus registres ja no coincideixen amb
+        el càlcul del Modelo %{modelo} %{filing_year}, període %{period}: %{added_count}
         apunts no s''han tingut en compte, %{changed_count} han canviat i %{removed_count}
-        s''han eliminat. Torneu a calcular aquesta declaració.'
-      ledger_snapshot_membership_unavailable: Cadrumo no ha pogut comparar els vostres
+        s''han eliminat. Torna a calcular aquesta declaració.'
+      ledger_snapshot_membership_unavailable: Cadrumo no ha pogut comparar els teus
         registres actuals amb el càlcul del Modelo %{modelo} %{filing_year}, període
         %{period}. La presentació queda bloquejada fins que aquesta comparació es
-        completi. Torneu-ho a provar quan els registres estiguin disponibles i torneu
+        completi. Torna-ho a provar quan els registres estiguin disponibles i torna
         a calcular si han canviat.
       m193_settled_row_amount_authority_unresolved: El model 193 de %{filing_year}
         inclou %{settled_prior_accrual_rows} pagament(s) de rendiments meritats en
@@ -1793,7 +1793,7 @@ application:
         compensació d''aquest període. Registrar una anul·lació alteraria una declaració
         registrada com a presentada.'
       seed_negative_amount: L'import inicial no pot ser negatiu.
-      seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associeu-lo
+      seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associa'l
         al perfil actiu.
     lifecycle:
       calculate: Calcula
@@ -1868,7 +1868,7 @@ application:
         enter_withholding_certificate: Introdueix la retenció que figura al certificat
           de retencions i ingressos a compte del teu pagador i torna a calcular.
         file_another_way: Cadrumo encara no pot preparar aquesta declaració per presentar-la.
-          Presenteu-la per una altra via, per exemple al web de l'AEAT.
+          Presenta-la per una altra via, per exemple al web de l'AEAT.
         nothing_to_do: No has de fer res. Explica el que va fer el càlcul.
         read_and_decide: Llegeix-ho i decideix si t'afecta. No t'impedeix presentar.
         regroup_income_lines: Corregeix com estan agrupades les línies de renda i

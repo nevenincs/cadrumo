@@ -54,7 +54,7 @@ flows:
       running: A profil ellenőrzése és a beállítás befejezése…
     edit:
       cancel: Mégse
-      choose_one: Válasszon egy lehetőséget, vagy a mégse gombbal hagyja változatlanul
+      choose_one: Válassz egy lehetőséget, vagy a mégse gombbal hagyd változatlanul
         az értéket.
       clear: Törlés
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
@@ -79,7 +79,7 @@ flows:
     help:
       about: 'Erről a beállításról:'
       what: 'Mi ez:'
-      where: 'Hol találja:'
+      where: 'Hol találod:'
       why: 'Miért kell:'
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
@@ -95,7 +95,7 @@ flows:
       search_placeholder: Beállítások keresése
       section_done: ✓ {title} - {present}/{total}
       section_pending: '! {title} - hiányzó kötelező adatok: {missing}'
-      sources_summary: Töltse ki a profilt az AEAT nyilvántartásaiból vagy saját dokumentumaiból
+      sources_summary: Töltsd ki a profilt az AEAT nyilvántartásaiból vagy saját dokumentumaidból
         gépelés helyett.
       sources_title: Adatok importálása (opcionális)
       to_workbench: Tovább a Kezdőlapra
@@ -262,14 +262,14 @@ flows:
     change_button: Jelszó módosítása
     confirm_label: Új jelszó megerősítése
     current_label: Jelenlegi jelszó
-    intro: Ez lecseréli a profilját védő jelszót. Az általa védett adatok nem kerülnek
+    intro: Ez lecseréli a profilodat védő jelszót. Az általa védett adatok nem kerülnek
       újratitkosításra, csak újracsomagolásra.
     new_hint: Legalább 12 karakter, betűk, számok vagy szimbólumok keverékével.
     new_label: Új jelszó
     refusal:
       change_failed: A jelszót nem sikerült módosítani.
       confirmation_mismatch: A megerősítés nem egyezik az új jelszóval.
-      current_required: Adja meg a jelenlegi jelszavát.
+      current_required: Add meg a jelenlegi jelszavadat.
     section: Jelszó
     title: Jelszó módosítása
   progress:

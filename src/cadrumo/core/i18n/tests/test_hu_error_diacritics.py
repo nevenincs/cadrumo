@@ -59,14 +59,14 @@ _CASES: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = 
     (
         "errors.refused.refused_storage_session_expired",
         {},
-        ("Az aktív munkamenet", "Aktiválja újra"),
-        ("aktiv munkamenet", "Aktivalja ujra"),
+        ("Az aktív munkamenet", "Aktiváld újra"),
+        ("aktiv munkamenet", "Aktivald ujra"),
     ),
     (
         "errors.refused.modelo_work_selector_no_active_bucket",
         {},
-        ("Válasszon aktív profilt", "bevallás feloldása előtt"),
-        ("Valasszon aktiv profilt", "munkaegyseg feloldasa elott"),
+        ("Válassz aktív profilt", "bevallás feloldása előtt"),
+        ("Valassz aktiv profilt", "munkaegyseg feloldasa elott"),
     ),
 ]
 

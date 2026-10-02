@@ -51,7 +51,7 @@ docs:
       casilla_count: '{casillas} casillas en {sections} secciones'
       casilla_id: Identificador de casilla
       casilla_index: Todas las casillas
-      casilla_index_hint: Seleccione una casilla para ir a ella.
+      casilla_index_hint: Selecciona una casilla para ir a ella.
       derived_from: a partir de
       established_by: Establecido por
       formula: Fórmula
@@ -130,7 +130,7 @@ docs:
       exit_unavailable: Servicio externo no disponible.
       exit_usage: Uso incorrecto de la CLI (indicador erróneo, argumento ausente).
       exit_validation: Error de validación en los datos proporcionados por el usuario.
-      intro: 'Use esta página cuando programe invocaciones de ``aeat``: documenta
+      intro: 'Usa esta página cuando programes invocaciones de ``aeat``: documenta
         los códigos de salida del proceso y el comportamiento de salida TTY/JSON que
         comparten todos los comandos.'
       output_contract_body: Cuando la salida va a un TTY, la CLI emite texto enriquecido
@@ -153,7 +153,7 @@ docs:
         se calculan en tiempo de ejecución a partir de la raíz de almacenamiento o
         de la ubicación del proyecto.
     family:
-      choose_group_heading: Elija un grupo de comandos
+      choose_group_heading: Elige un grupo de comandos
       direct_commands_heading: Comandos directos
       direct_commands_intro: Estos comandos están montados directamente en ``aeat
         {family}``, sin grupo de verbos intermedio.
@@ -168,7 +168,7 @@ docs:
       app_card: 'Comandos del flujo de trabajo operativo: libro de movimientos, modelos,
         calendarios de presentación, comprobaciones del registro, capturas en vivo
         y colas de revisión.'
-      choose_family_heading: Elija una familia de comandos
+      choose_family_heading: Elige una familia de comandos
       config_card: 'Comandos locales de configuración y mantenimiento: perfiles, autenticación,
         integración con Google, comprobaciones de reparación y superficies de reinicio.'
       english_help_note: Las cadenas de ayuda se muestran en inglés. En tiempo de
@@ -199,9 +199,9 @@ docs:
         de tareas.
       next_schemas: Abrir :doc:`schemas` para el registro de esquemas de salida JSON.
       open_family_link: Abrir la referencia de ``aeat {family}``
-      start_here: Empiece por los enlaces de familia que aparecen abajo. Use las páginas
+      start_here: Empieza por los enlaces de familia que aparecen abajo. Usa las páginas
         generadas de cada familia de comandos para conocer los indicadores, argumentos,
-        claves de registro y esquemas de salida exactos; use esta página para el comportamiento
+        claves de registro y esquemas de salida exactos; usa esta página para el comportamiento
         de nivel raíz que se aplica a todos los comandos.
       title: Referencia de la CLI
       where_next_heading: Por dónde seguir
@@ -227,8 +227,8 @@ docs:
       related: Relacionado
       undefined: Todavía no hay definición disponible en este idioma.
     intro: Términos fiscales españoles utilizados en la documentación. Cada término
-      enlaza con su base legal cuando existe. Busque un término; la definición es
-      la misma allí donde se le haga referencia.
+      enlaza con su base legal cuando existe. Busca un término; la definición es la
+      misma allí donde se le haga referencia.
     title: Glosario
   legal:
     index:
