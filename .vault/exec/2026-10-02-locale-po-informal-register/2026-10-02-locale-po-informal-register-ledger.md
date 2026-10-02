@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:fefa0a03feee290aba83487cfa0f8ccd7125d3d308d54abc7604849dc6fffa70'
+body_hash: 'sha256:52b6c5e41c624f87b5d981047d62b3a454f23a16d77e3eb50ed58450e08c536a'
 related:
   - "[[2026-10-02-locale-po-informal-register-plan]]"
 ---
@@ -55,6 +55,10 @@ related:
 - `S02` `by:` `root; Luna Max discovery; independent contextual adjudication`
 - `S02` `verify:` `uv run --no-sync python -m scratch_locale_tone.po_review seal parent_ca_adj_01.json --adjudications` -> `pass`
 - `S02` `verify:` `uv run --no-sync pytest -q -n 0 -m integration dev/docs/tests/test_docs_catalogue_drift.py` -> `pass`
+- `S03` `M` `docs/locales/es/LC_MESSAGES/how-to/review-calculation-values.po`
+- `S03` `verify:` `uv run --no-sync pytest -q -n 0 -p no:randomly -m unit dev/docs/tests/test_docs_build_localized_ca.py dev/docs/tests/test_docs_build_localized_es.py` -> `pass`
+- `S03` `verify:` `uv run --no-sync pytest -q -n 0 -m integration dev/docs/tests/test_docs_catalogue_drift.py` -> `pass`
+- `S03` `by:` `root; Luna Max discovery; independent contextual adjudication`
 
 ## Notes
 
