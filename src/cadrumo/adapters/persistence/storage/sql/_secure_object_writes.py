@@ -247,7 +247,7 @@ class SecureObjectWriteOperations:
                 )
                 if removal.expected_revision_id is not None:
                     statement = statement.where(SecureObjectRow.revision_id == removal.expected_revision_id)
-                result = cast("CursorResult[Any]", session.execute(statement))
+                result = cast(CursorResult[Any], session.execute(statement))
                 if removal.expected_revision_id is not None and result.rowcount != 1:
                     raise self._revision_conflict(
                         namespace=removal.namespace,
