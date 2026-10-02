@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:968750713a62999685b0d49b14a73855eab351ac4bcba97459d95703eaeb9c07'
+body_hash: 'sha256:147b14cf3de7204bf3f852f08d52323de3e30610d6fa99452a4a8f4588494305'
 related:
   - "[[2026-10-02-modelo-filing-ux-followup-plan]]"
 ---
@@ -134,6 +134,9 @@ related:
 - `S07` `verify:` `s04-final configured format lint types 31 explicit Python paths` -> `pass`
 - `S07` `verify:` `principal final native pending-output four contexts with actual Review R cue` -> `pass`
 - `S07` `by:` `vaultspec-high-executor`
+- `S06` `verify:` `independent actual S06 committed Hungarian nine-leaf coverage before repair` -> `fail`
+- `S06` `verify:` `current four observed Hungarian required cells placeholders character/cell caps` -> `pass`
+- `S06` `verify:` `s06-app-observer-corrected actual 11-case receipt` -> `pass`
 
 ## Notes
 
@@ -144,3 +147,4 @@ related:
 - `S05` Private-index header composition also normalized quotation of the same two owned proper-name leaves in ES/EN/HU without changing their values; actual touched paths are now explicit. Subsequent composition skips already matching values to avoid such syntax-only normalization.
 - `S06` Actual Modelo100 Apply remains an explained legacy-replay source refusal with unchanged saved1388 imported0 and retained0168 Yes; successful persistence, export wire and filing are unclaimed. The native40 source/24frames are immutable. Global census exit1 is classified in work/UX5-checks/s04-locale-inventory-final-disposition.json:25190 catalogue-only keys plus six inherited inventory/tool conditions and one missing frozen gettext source-manifest; required30040/30040, missing/repair/review/placeholder/discovery defects0. Earlier `NO_COLOR` and failed route/harness attempts remain evidence. Current shared register edits, including HU overlaps, are preserved and excluded from owned staged cells; native human HU review remains pending.
 - `S07` The direct e/export bypass is the reachable defect. Ordinary F8 already chose Apply while staged; the final filing callback guard is deliberate hardening. True, False, zero and clear plus late dialog changes retain drafts and call no export/record provider. Refusal copy is derived fresh from actual current count and `[R],` with active typed prerequisite taking Issues precedence. S06/S07 coexistence is verified by the final81-case and actual24-frame receipt; independent actual commit comparison is consolidated in S04.
+- `S06` P1 commit review found four required new HU cells omitted from75c462 because live-overlap skip was applied to absent parent leaves. S06 reopened. Corrective integration adds exactly current informal notice, next, action and `saved_with_changes` without modifying their words or any other foreign committed/index/live cells. The saved-check sentence alone changed after accepted native40 (75 to73cells) and has a separately reviewed current-copy boundary. The earlier observer verification label was descriptive; its exact durable receipt is work/UX5-checks/s06-app-observer-corrected-receipt.json.
