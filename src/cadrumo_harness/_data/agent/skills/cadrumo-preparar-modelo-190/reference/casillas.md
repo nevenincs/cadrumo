@@ -11,8 +11,11 @@ page — report the value the CLI computes, with its `legal_refs`/
 
 ## The declarante summary block
 
-Modelo 190's declarante section carries three summary casillas, all folded
-from the year's four Modelo 111 quarters:
+Modelo 190's declarante section carries three summary casillas. From
+ejercicio 2025 the two amounts fold the year's four Modelo 111 quarters as
+below; up to 2024 they are the sums over the perceptor records' percepciones
+and retenciones fields that the record design states, and no Modelo 111
+quarter is read:
 
 - **Número total de percepciones** — the count of distinct
   perceptor/clave/subclave records for the year. Computed directly from the
@@ -41,8 +44,8 @@ totals are computed from; they are not a separate manual entry surface.
 
 ## How to read it safely
 
-- Every quarter's fold-in depends on that Modelo 111 quarter being
-  calculated and stable. A quarter recalculated after Modelo 190 was
+- From 2025, every quarter's fold-in depends on that Modelo 111 quarter
+  being calculated and stable. A quarter recalculated after Modelo 190 was
   prepared invalidates the annual figures — re-check each quarter's
   revision, then recalculate Modelo 190, never edit its casillas by hand
   (see `cadrumo-preparar-modelo-390` for the parallel IVA case with Modelo 303/390).

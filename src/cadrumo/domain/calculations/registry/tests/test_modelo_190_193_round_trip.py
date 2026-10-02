@@ -19,10 +19,9 @@ relations; the percepciones count is bound to the withholding detail source:
 
 Modelo 193 (annual summary of 123 capital-mobiliario withholdings)
 declares two monetary output casillas as single-relation copies, while
-``decl.total-perceptores`` is bound to the dedicated retenciones aggregation
-source:
+``decl.total-perceptores`` is bound to the type-2 records its design counts:
 
-- ``decl.total-perceptores`` = bound distinct perceptor-NIF count
+- ``decl.total-perceptores`` = bound count of the type-2 perceptor records
 - ``decl.base-total`` = copy of base-anual
 - ``decl.retenciones-total`` = copy of retenciones-anual
 """
@@ -45,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> None:
-    """The 2024 M193 copies the modelo 123 money relations; its perceptor count is a bound distinct-NIF fact.
+    """The 2024 M193 copies the modelo 123 money relations; its perceptor count counts the type-2 records.
 
     The 2025 design sums and counts the type-2 records instead, keeping modelo
     123 as a reconciliation check; that edition is proven by the registry's
@@ -53,8 +52,8 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
     """
 
     modelo, catalogues = bundled_modelo_components("193")
-    # The bound perceptor count arrives with the 2024 design, the last edition
-    # whose totals are the modelo 123 relations.
+    # 2024 is the last edition whose money totals are the modelo 123 relations;
+    # its design still counts the type-2 records for positions 136-144.
     revision = modelo.revisions["2024"]
 
     # Graph-wiring assertions — each monetary output casilla must declare an
@@ -68,9 +67,9 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
     assert "decl.total-perceptores" not in formulas_by_target
     perceptor_casilla = next(c for c in revision.casillas if c.id == "decl.total-perceptores")
     assert perceptor_casilla.input_kind is InputKind.BOUND
-    assert perceptor_casilla.binding == "modelo-193-123-perceptores-anual"
-    perceptor_binding = next(b for b in revision.bindings if b.id == "modelo-193-123-perceptores-anual")
-    assert perceptor_binding.source == "retenciones_aggregation"
+    assert perceptor_casilla.binding == "modelo-193-perceptores-anual"
+    perceptor_binding = next(b for b in revision.bindings if b.id == "modelo-193-perceptores-anual")
+    assert perceptor_binding.source == "withholding"
 
     for target, expected_source in expected_relation_wiring.items():
         formula = formulas_by_target[target]
@@ -92,7 +91,7 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
         "modelo-193-123-base-anual": Decimal("7000.50"),
         "modelo-193-123-retenciones-anual": Decimal("1330.10"),
     }
-    binding_values = {"modelo-193-123-perceptores-anual": Decimal("2")}
+    binding_values = {"modelo-193-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
@@ -101,7 +100,7 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
         relation_values=relation_values,
     )
 
-    assert result.values["decl.total-perceptores"] == binding_values["modelo-193-123-perceptores-anual"]
+    assert result.values["decl.total-perceptores"] == binding_values["modelo-193-perceptores-anual"]
     for target, source in expected_relation_wiring.items():
         assert result.values[target] == relation_values[source], (
             f"op=copy thread broke: {target} should equal {source}={relation_values[source]}"

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/baleares-dl-1-2014-art-2.html",
+  "source_sha256": "c9718cc0db92cf55c12a488686bc65cf74623ed97382c08d168b2b735963dc11",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se incrementan en un 10 % los importes correspondientes a los mínimos del contribuyente, por descendientes y por discapacidad, que forman parte del mínimo personal y familiar, siguientes:\na) El mínimo del contribuyente mayor de sesenta y cinco años y mayor de setenta y cinco años.\nb) El mínimo por el segundo, el mínimo por el tercero y el mínimo por el cuarto y siguientes descendientes.\nc) El mínimo por ascendientes.\nd) El mínimo por discapacidad.\nSe modifica por el art. 1 de la Ley 11/2023, de 23 de noviembre. Ref. BOE-A-2023-24913\nSe modifica por la disposición final 2.3 de la Ley 13/2014, de 29 de diciembre. Ref. BOE-A-2015-1059.",
+      "title": "Artículo 2. Incremento del mínimo personal y familiar.",
+      "section": "Artículo 2. Incremento del mínimo personal y familiar.",
+      "anchor": "#a2"
+    }
+  ]
+}

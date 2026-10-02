@@ -37,6 +37,8 @@ from .....application.ledger.invoice_draft_records import (
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
+    LabelReadingFallback,
+    LabelReadingFallbackCause,
 )
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
@@ -379,3 +381,102 @@ def test_deleting_a_persisted_provenance_field_makes_the_load_refuse() -> None:
     # path reaches the field this test is about.
     with pytest.raises(ValidationError, match="grounding"):
         ExtractionDraftDocument.model_validate_json(json.dumps(corrupted))
+
+
+def _busy_fallback() -> LabelReadingFallback:
+    """A degraded reading populated off every default, so a dropped field cannot pass as a default."""
+    return LabelReadingFallback(
+        cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+        unread_fields=("currency", "supplier_name"),
+        reader_error_type="LLMBusyError",
+        failed_condition_id="llm.local_inference.slot_available",
+    )
+
+
+def test_a_degraded_reading_is_stored_with_its_draft_across_the_encrypted_boundary(profile: TestRuntimeProfile) -> None:
+    """The draft's own payload does not carry the fact, so the stored record must, or a batch loses it.
+
+    Written through the one writer from a draft that carries the fact as its
+    reading-path record, and read back from the real encrypted namespace: the
+    writer is what must lift the fact onto the stored record, and the store is
+    what must keep it.
+    """
+    written = write_extraction_draft(
+        bucket_id=profile.bucket_id,
+        evidence_reference=_REFERENCE,
+        draft=_two_rate_draft().with_label_reading_fallback(_busy_fallback()),
+        extractor="extract_invoice_draft_from_evidence",
+        settings=profile.settings,
+    )
+
+    reloaded = load_extraction_drafts(profile.bucket_id, profile.settings)
+
+    assert reloaded == written, "the boundary must return exactly what crossed it"
+    assert reloaded.drafts[0].label_reading_fallback == _busy_fallback()
+    # One home once stored: the record, not a second copy on the draft.
+    assert reloaded.drafts[0].draft.label_reading_fallback is None
+
+
+def test_a_draft_read_in_full_records_no_degradation(profile: TestRuntimeProfile) -> None:
+    """The positive control: a draft with no fallback is not stored as degraded."""
+    write_extraction_draft(
+        bucket_id=profile.bucket_id,
+        evidence_reference=_REFERENCE,
+        draft=_two_rate_draft(),
+        extractor="en16931-ubl",
+        settings=profile.settings,
+    )
+
+    stored = read_extraction_draft(
+        bucket_id=profile.bucket_id, evidence_reference=_REFERENCE, settings=profile.settings
+    )
+
+    assert stored is not None
+    assert stored.label_reading_fallback is None
+
+
+def test_a_draft_stored_before_the_degradation_was_kept_reads_as_none_recorded(profile: TestRuntimeProfile) -> None:
+    """A stored row of the earlier shape loads, and says nothing rather than inventing a degradation.
+
+    The earlier shape is this namespace's one schema version without the
+    ``label_reading_fallback`` key, written through the real encrypted store
+    under the version its rows carry. It must load unchanged in every other
+    field, with the degradation absent -- ``None``, which claims no reading
+    was degraded or complete, only that none was recorded.
+    """
+    import json
+
+    from ...profile.extraction_drafts import ExtractionDraftRepository
+
+    repository = ExtractionDraftRepository(bucket_id=profile.bucket_id, settings=profile.settings)
+    current = ExtractionDraftDocument(
+        bucket_id=profile.bucket_id,
+        drafts=(
+            StoredExtractionDraft(
+                evidence_reference=_REFERENCE,
+                draft=_two_rate_draft(),
+                extractor="extract_invoice_draft_from_evidence",
+                drafted_at=datetime(2026, 9, 1, 9, 0, tzinfo=UTC),
+                label_reading_fallback=_busy_fallback(),
+            ),
+        ),
+    )
+    prepared = repository.to_secure_object_write(current)
+    envelope = json.loads(prepared.payload)
+    # Positive control: the key is really there to remove, so the load below
+    # reads the earlier shape rather than an unchanged one.
+    assert envelope["payload"]["drafts"][0].pop("label_reading_fallback") is not None
+    repository.secure_object_repository.save(
+        namespace=prepared.namespace,
+        object_key=prepared.object_key,
+        classification=prepared.classification,
+        schema_version=prepared.schema_version,
+        written_at=prepared.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
+
+    loaded = load_extraction_drafts(profile.bucket_id, profile.settings)
+
+    (stored,) = loaded.drafts
+    assert stored.label_reading_fallback is None
+    assert stored == current.drafts[0].model_copy(update={"label_reading_fallback": None})

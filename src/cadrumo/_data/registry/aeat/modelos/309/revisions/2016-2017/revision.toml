@@ -1,7 +1,11 @@
 [revisions."2016-2017"]
 binding_source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 formula_source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
-predecessor = { none = { cause = "official_structure_differs", reason = "Stated in full: the official record structure is reordered against the edition before it, so supersede-in-place would not reproduce it. Measured against '2004-2015': casillas differ from index 1 ('decl.tipo-trigger' -> 'decl.periodo'), application_links from index 0 ('modelo-309-portal' -> 'modelo-309-historical-filing'), constructs from index 0 ('modelo-309-iva-no-periodica' -> 'modelo-309-historical-no-periodica'). Inheriting would also ADD three members this edition never declares: application_links 'modelo-309-historical-filing' and 'modelo-309-historical-export', and construct 'modelo-309-historical-no-periodica' -- a capability change, not a refactor. Migrating this edge later requires restated_families on application_links and constructs.", legal_refs = ["orden-hac-3625-2003:apartado-1"], source_refs = ["aeat-dr-309-2016"] } }
+predecessor = { none = { cause = "official_structure_differs", reason = "aeat-dr-309-2016 replaces the aeat-dr-309-2004 record: it reorders the declaration fields, adds 13 and withdraws 16, so supersede-in-place would not reproduce it and no predecessor is declared. The payload is stored against the 2004-2015 edition through casilla_storage_baseline and family_storage_baseline: what both designs share is inherited, this edition's differences are overrides, the 16 fields the 2016 design withdraws are removed, positions restate this design's field order, and its export layout and parity anchor stay stated per edition. Storage reuse makes no continuity claim.", legal_refs = ["orden-hac-3625-2003:apartado-1"], source_refs = ["aeat-dr-309-2016"] } }
+# Storage reuse only, not legal continuity: casillas and keyed families are
+# stored as differences from the 2004-2015 edition's effective members.
+casilla_storage_baseline = "2004-2015"
+family_storage_baseline = "2004-2015"
 casilla_source_refs = ["aeat-dr-309-2016"]
 live_cross_reference_source_refs = ["aeat-modelo-309-procedure"]
 application_link_source_refs = ["aeat-modelo-309-procedure"]
@@ -81,3 +85,365 @@ source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure"]
 reason = "Modelo 309's record design declares two fixed pages with no repeated projection record and no field of kind 'projection'. The family has no repeated endpoint to admit; authoring a projection row into the layout is what would make it apply."
 legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure"]
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "wire.letras-etiqueta" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "wire.transmitente-apellidos-nombre-razon-social" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "wire.transmitente-pais-texto" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.situacion-tributaria-agricola" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.situacion-tributaria-recargo-equivalencia" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.situacion-tributaria-sin-derecho-deduccion" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.situacion-tributaria-persona-juridica-no-empresario" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.situacion-tributaria-persona-fisica-no-empresario" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.situacion-tributaria-otras" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.hecho-imponible-adquisicion-intracomunitaria" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.hecho-imponible-medios-transporte-nuevos" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.hecho-imponible-inversion-sujeto-pasivo" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.hecho-imponible-entrega-inversion-inmobiliaria" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.hecho-imponible-procedimiento-administrativo-judicial" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "decl.hecho-imponible-otros" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "wire.observaciones" }
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.tipo-trigger"
+position = 1
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.tipo-declaracion"
+position = 3
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.nombre"
+position = 4
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.transmitente-apellidos"
+position = 6
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.transmitente-nombre"
+position = 7
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.transmitente-pais"
+position = 8
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.situacion-tributaria"
+position = 9
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.hecho-imponible"
+position = 10
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.complementaria"
+position = 25
+
+[[revisions."2016-2017".casilla_positions]]
+id = "decl.iban"
+position = 27
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.ejercicio" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2004 and aeat-dr-309-2016 identify the declaration's tax year in its header, separately from the aircraft manufacture year. Ejercicio / Ejercicio devengo continues to identify the same non-periodic IVA return's tax year under Orden HAC/3625/2003 apartado 1.", continuidad_origin = "grounded", legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.periodo" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 7 'Periodo 1T, 2T, 3T, 4T' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 11 'Devengo - Periodo'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "107-108" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.transmitente-nif" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 8 'Transmitente - N.I.F. N.I.F. Valido P.F. o P.J.' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 12 'Transmitente - NIF'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "109-117" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.vehiculo-marca" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 23 'Vehiculos - Marca' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 18 'Vehiculos - Marca'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "202-241" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.vehiculo-tipo" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 24 'Vehiculos - Tipo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 19 'Vehiculos - Tipo'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "242-281" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.vehiculo-modelo" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 25 'Vehiculos - Modelo (denominacion comercial):' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 20 'Vehiculos - Modelo (denominacion comercial):'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "282-321" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.vehiculo-bastidor" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 26 'Vehiculos - No identificacion (bastidor)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 21 'Vehiculos - No identificacion (bastidor)'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "322-343" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.vehiculo-clasificacion" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 27 'Vehiculos - Clasificacion' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 22 'Vehiculos - Clasificacion'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "344-349" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.embarcacion-fabricante" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 28 'Embarcaciones - Fabricante' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 23 'Embarcaciones - Fabricante'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "350-389" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.embarcacion-tipo" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 29 'Embarcaciones - Tipo-Modelo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 24 'Embarcaciones - Tipo-Modelo'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "390-469" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.embarcacion-identificacion" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 30 'Embarcaciones - Identificacion (No construccion)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 25 'Embarcaciones - Identificacion (No construccion)'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "470-491" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.embarcacion-eslora" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 31 'Embarcaciones - Eslora maxima' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 26 'Embarcaciones - Eslora maxima'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "492-496" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.aeronave-fabricante" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 32 'Aeronaves - Fabricante' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 27 'Aeronaves - Fabricante'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "497-536" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.aeronave-marca" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 33 'Aeronaves - Marca - Tipo - Modelo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 28 'Aeronaves - Marca - Tipo - Modelo'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "537-616" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.aeronave-serie" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 34 'Aeronaves - No Serie' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 29 'Aeronaves - No Serie'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "617-638" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.aeronave-ano" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 35 'Aeronaves - Ano fabricacion' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 30 'Aeronaves - Ano fabricacion'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "639-642" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.aeronave-peso" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 36 'Aeronaves - Peso maximo despegue (en Kg.)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 31 'Aeronaves - Peso maximo despegue (en Kg.)'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "643-652" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.justificante-anterior" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 61 'Declaracion complementaria - No de justificante' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 57 'Numero de justificante de la declaracion anterior'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "978-990" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.rg-base-01" }
+fields = { continuidad_evidence = "Same printed box [01]: 2004-2015 number 01 equals 2016-2017 form_number 01; same semantic_role and data_type. Designs print [01] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 37 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 32.", continuidad_origin = "grounded", form_number = "01", number = "653-669" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.rg-tipo-02" }
+fields = { continuidad_evidence = "Same printed box [02]: 2004-2015 number 02 equals 2016-2017 form_number 02; same semantic_role and data_type. Designs print [02] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 38 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 33.", continuidad_origin = "grounded", form_number = "02", number = "670-674" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.rg-cuota-03" }
+fields = { continuidad_evidence = "Same printed box [03]: 2004-2015 number 03 equals 2016-2017 form_number 03; same semantic_role and data_type. Designs print [03] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 39 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 34.", continuidad_origin = "grounded", form_number = "03", number = "675-691" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.rg-base-04" }
+fields = { continuidad_evidence = "Same printed box [04]: 2004-2015 number 04 equals 2016-2017 form_number 04; same semantic_role and data_type. Designs print [04] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 40 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 35.", continuidad_origin = "grounded", form_number = "04", number = "692-708" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.rg-tipo-05" }
+fields = { continuidad_evidence = "Same printed box [05]: 2004-2015 number 05 equals 2016-2017 form_number 05; same semantic_role and data_type. Designs print [05] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 41 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 36.", continuidad_origin = "grounded", form_number = "05", number = "709-713" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.rg-cuota-06" }
+fields = { continuidad_evidence = "Same printed box [06]: 2004-2015 number 06 equals 2016-2017 form_number 06; same semantic_role and data_type. Designs print [06] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 42 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 37.", continuidad_origin = "grounded", form_number = "06", number = "714-730" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.rg-base-07" }
+fields = { continuidad_evidence = "Same printed box [07]: 2004-2015 number 07 equals 2016-2017 form_number 07; same semantic_role and data_type. Designs print [07] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 43 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 38.", continuidad_origin = "grounded", form_number = "07", number = "731-747" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.rg-tipo-08" }
+fields = { continuidad_evidence = "Same printed box [08]: 2004-2015 number 08 equals 2016-2017 form_number 08; same semantic_role and data_type. Designs print [08] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 44 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 39.", continuidad_origin = "grounded", form_number = "08", number = "748-752" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.rg-cuota-09" }
+fields = { continuidad_evidence = "Same printed box [09]: 2004-2015 number 09 equals 2016-2017 form_number 09; same semantic_role and data_type. Designs print [09] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 45 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 40.", continuidad_origin = "grounded", form_number = "09", number = "753-769" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-base-10" }
+fields = { continuidad_evidence = "Same printed box [10]: 2004-2015 number 10 equals 2016-2017 form_number 10; same semantic_role and data_type. Designs print [10] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 46 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 41.", continuidad_origin = "grounded", form_number = "10", number = "770-786" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-tipo-11" }
+fields = { continuidad_evidence = "Same printed box [11]: 2004-2015 number 11 equals 2016-2017 form_number 11; same semantic_role and data_type. Designs print [11] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 47 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 42.", continuidad_origin = "grounded", form_number = "11", number = "787-791" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-cuota-12" }
+fields = { continuidad_evidence = "Same printed box [12]: 2004-2015 number 12 equals 2016-2017 form_number 12; same semantic_role and data_type. Designs print [12] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 48 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 43.", continuidad_origin = "grounded", form_number = "12", number = "792-808" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-base-13" }
+fields = { continuidad_evidence = "Same printed box [13]: 2004-2015 number 13 equals 2016-2017 form_number 13; same semantic_role and data_type. Designs print [13] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 49 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 44.", continuidad_origin = "grounded", form_number = "13", number = "809-825" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-tipo-14" }
+fields = { continuidad_evidence = "Same printed box [14]: 2004-2015 number 14 equals 2016-2017 form_number 14; same semantic_role and data_type. Designs print [14] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 50 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 45.", continuidad_origin = "grounded", form_number = "14", number = "826-830" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-cuota-15" }
+fields = { continuidad_evidence = "Same printed box [15]: 2004-2015 number 15 equals 2016-2017 form_number 15; same semantic_role and data_type. Designs print [15] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 51 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 46.", continuidad_origin = "grounded", form_number = "15", number = "831-847" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-base-16" }
+fields = { continuidad_evidence = "Same printed box [16]: 2004-2015 number 16 equals 2016-2017 form_number 16; same semantic_role and data_type. Designs print [16] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 52 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 47.", continuidad_origin = "grounded", form_number = "16", number = "848-864" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-tipo-17" }
+fields = { continuidad_evidence = "Same printed box [17]: 2004-2015 number 17 equals 2016-2017 form_number 17; same semantic_role and data_type. Designs print [17] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 53 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 48.", continuidad_origin = "grounded", form_number = "17", number = "865-869" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-cuota-18" }
+fields = { continuidad_evidence = "Same printed box [18]: 2004-2015 number 18 equals 2016-2017 form_number 18; same semantic_role and data_type. Designs print [18] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 54 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 49.", continuidad_origin = "grounded", form_number = "18", number = "870-886" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-base-19" }
+fields = { continuidad_evidence = "Same printed box [19]: 2004-2015 number 19 equals 2016-2017 form_number 19; same semantic_role and data_type. Designs print [19] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 55 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 50.", continuidad_origin = "grounded", form_number = "19", number = "887-903" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-tipo-20" }
+fields = { continuidad_evidence = "Same printed box [20]: 2004-2015 number 20 equals 2016-2017 form_number 20; same semantic_role and data_type. Designs print [20] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 56 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 51.", continuidad_origin = "grounded", form_number = "20", number = "904-908" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.re-cuota-21" }
+fields = { continuidad_evidence = "Same printed box [21]: 2004-2015 number 21 equals 2016-2017 form_number 21; same semantic_role and data_type. Designs print [21] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 57 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 52.", continuidad_origin = "grounded", form_number = "21", number = "909-925" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.cuota-devengada-22" }
+fields = { continuidad_evidence = "Same printed box [22]: 2004-2015 number 22 equals 2016-2017 form_number 22; same semantic_role and data_type. Designs print [22] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 58 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 53.", continuidad_origin = "grounded", form_number = "22", formula = "modelo-309-cuota-devengada-total", input_kind = "computed", number = "926-942", required = true }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.a-deducir-23" }
+fields = { continuidad_evidence = "Same printed box [23]: 2004-2015 number 23 equals 2016-2017 form_number 23; same semantic_role and data_type. Designs print [23] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 59 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 54.", continuidad_origin = "grounded", form_number = "23", number = "943-959" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "decl.resultado-24" }
+fields = { continuidad_evidence = "Same printed box [24]: 2004-2015 number 24 equals 2016-2017 form_number 24; same semantic_role and data_type. Designs print [24] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 60 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 55.", continuidad_origin = "grounded", form_number = "24", formula = "modelo-309-resultado", input_kind = "computed", number = "960-976", required = true }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2016-2017".family_overrides]]
+family = "constructs"
+selector = {revision = "2004-2015", id = "modelo-309-iva-no-periodica"}
+fields = {bindings = ["modelo-309-iva-autorepercutido-intracomunitaria-cuota", "modelo-309-iva-soportado-recargo-equivalencia-cuota"], deadline_windows = [], filing_schedules = ["modelo-309-ad-hoc"], formulas = ["modelo-309-cuota-devengada-total", "modelo-309-iva-cuota-no-periodica-total", "modelo-309-resultado"], live_cross_references = ["modelo-309-static-documentation", "modelo-309-filed-declarations-read"]}
+removed_fields = ["export_layouts"]
+sequence_additions = {application_links = ["modelo-309-portal", "modelo-309-review", "modelo-309-approval", "modelo-309-reconciliation", "modelo-309-workflow", "modelo-309-deadline", "modelo-309-calculation"], casilla_ids = ["iva.autorepercutido.intracomunitaria", "iva.soportado.recargo-equivalencia", "iva.cuota-no-periodica-total", "decl.tipo-trigger"], legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "boe-modelo-309-2003-form"], workbook_parity_refs = ["modelo-309-dr"]}
+sequence_removals = {application_links = [1], casilla_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57], source_refs = [0], workbook_parity_refs = [0]}
+sequence_order = {application_links = [1, 0, 2, 3, 4, 5, 6, 7], casilla_ids = [1, 2, 3, 0, 4], legal_refs = [1, 0, 2, 3, 4, 5], source_refs = [1, 2, 0, 3]}
+
+[[revisions."2016-2017".family_overrides]]
+family = "application_links"
+selector = {revision = "2004-2015", id = "modelo-309-export"}
+sequence_additions = {source_refs = ["aeat-dr-309-2016"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2016-2017".family_overrides]]
+family = "application_links"
+selector = {revision = "2004-2015", id = "modelo-309-filing"}
+sequence_additions = {legal_refs = ["rd-1624-1992:art-71"]}
+sequence_removals = {legal_refs = [1]}
+sequence_order = {legal_refs = [1, 0]}

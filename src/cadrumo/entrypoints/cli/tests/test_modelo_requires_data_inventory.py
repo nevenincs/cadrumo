@@ -6,7 +6,7 @@ casillas must be hand-entered, which are optional, which the bucket ledger
 populates automatically, and which come from the active taxpayer profile
 (warning when a profile-derivable coefficient is still unset). This module
 proves the classification against committed, non-trivial bindings in the REAL
-bundled registry for Modelos 100, 130, and 390, plus the profile-coefficient
+bundled registry for Modelos 100, 130, 202 and 390, plus the profile-coefficient
 warning against a REAL partial taxpayer profile. Expected rows are anchored to
 those registry declarations rather than produced by a second implementation
 of the classifier under test.
@@ -41,6 +41,10 @@ _M130_PERIOD = "2T"
 _M100_MODELO = "100"
 _M100_YEAR = 2025
 _M100_PERIOD = "0A"
+
+_M202_MODELO = "202"
+_M202_YEAR = 2025
+_M202_PERIOD = "1P"
 
 _M390_MODELO = "390"
 _M390_YEAR = 2025
@@ -102,16 +106,33 @@ def test_requires_classifies_real_m130_sources_without_an_active_profile() -> No
     assert no_profile_notice["action"] is None
 
 
-def test_requires_buckets_relation_prefill_bindings_and_advises_on_unbucketed_sources() -> None:
-    """Real M100 relation-prefilled casillas surface in their own bucket.
+def test_requires_lists_relation_prefill_rows_with_their_bindings() -> None:
+    """M202's instalments read the prior year's Modelo 200 through relation prefills."""
+    invocation = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "requires",
+            _M202_MODELO,
+            "--year",
+            str(_M202_YEAR),
+            "--period",
+            _M202_PERIOD,
+        ],
+    )
+    assert invocation.exit_code == 0, invocation.output
+    result = unwrap_schema_envelope(invocation.output)
+    relation_rows = {(row["number"], row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
+    assert {
+        ("01", "modelo-202-cuota-base-ejercicio-anterior", "relation_prefill"),
+        ("30", "modelo-202-pagos-fraccionados-anteriores", "relation_prefill"),
+    } <= relation_rows
 
-    ``requires`` inventories bound casillas, reading each one's primary binding and
-    any reviewed alternates. On the 2025 edition the bound casilla 1577 is prefilled
-    by relation from the Modelo 184 attribution of income from an entidad en
-    regimen de atribucion. The Modelo 130 and 131 pagos fraccionados bindings feed
-    casilla 0604 through a formula rather than a bound casilla, so this inventory
-    does not list them.
-    """
+
+def test_requires_advises_on_unbucketed_sources() -> None:
+    """A manual-input binding has no checklist bucket, so it is named in an advisory rather than dropped."""
     invocation = invoke_cached_cli(
         [
             "--format",
@@ -128,10 +149,6 @@ def test_requires_buckets_relation_prefill_bindings_and_advises_on_unbucketed_so
     )
     assert invocation.exit_code == 0, invocation.output
     result = unwrap_schema_envelope(invocation.output)
-    relation_rows = {(row["number"], row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
-    assert relation_rows == {
-        ("1577", "renta-modelo-184-atribucion-actividades-economicas", "relation_prefill"),
-    }
     unbucketed_pairs = {(row["binding_id"], row["binding_source"]) for row in result["unbucketed_sources"]}
     assert ("renta-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs
 

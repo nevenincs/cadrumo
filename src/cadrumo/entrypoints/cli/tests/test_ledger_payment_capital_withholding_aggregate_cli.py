@@ -30,7 +30,13 @@ from ....adapters.persistence.profile.tests.ledger_capital_support import (
 )
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ....application.aggregation.retenciones import RetencionObservation
+from ....application.aggregation.withholding_recognition import (
+    WithholdingIncomeKind,
+    WithholdingRecipientTaxRegime,
+    WithholdingRecipientTaxStatus,
+)
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....core.storage_taxonomy import StorageCategory
@@ -184,30 +190,40 @@ def test_ledger_capital_payment_is_stored_in_m123_and_calculation_stays_refused(
 
 
 def test_ledger_capital_capture_refuses_the_wrong_modelo_and_other_123_transports(tmp_path: Path) -> None:
-    """A coupon cannot settle through Modelo 111, and 123 takes no invoice or hand-typed retención."""
+    """A coupon cannot settle through Modelo 111, and 123 takes no invoice evidence, alone or beside the payment."""
     _prepare_cli_directories(tmp_path)
     with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M123 ledger capital") as profile:
         _seed_ready_profile(profile.storage_root)
         transaction = _seed_coupon_payment(profile)
         payload = capital_request(transaction).model_dump_json()
-        manual_row = json.dumps(
-            {
-                "source_kind": "ledger_transaction",
-                "source_object_id": transaction.transaction_id,
-                "perceptor_nif": CAPITAL_HOLDER_NIF,
-                "scheme": "intereses",
-                "taxable_base": str(CAPITAL_GROSS),
-                "retencion_amount": str(CAPITAL_IRPF),
-                "accrued_on": CAPITAL_EXIGIBLE_ON.isoformat(),
-            }
-        )
+        invoice_payload = InvoiceWithholdingEvidenceRequest(
+            invoice_id="a" * 64,
+            income_kind=WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL,
+            scheme="intereses",
+            recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+            recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+            exigibility_event_id="coupon-exigible",
+            exigibility_occurred_on=CAPITAL_EXIGIBLE_ON,
+            allocation_id="invoice-allocation",
+            allocated_base=CAPITAL_GROSS,
+            allocated_withholding=CAPITAL_IRPF,
+            allocated_settlement=CAPITAL_GROSS - CAPITAL_IRPF,
+            idempotency_key="invoice-capture",
+        ).model_dump_json()
 
         refusals = (
             _aggregate("111", _Q2, "--ledger-payment-withholding", payload),
-            _aggregate("123", _Q2, "--retencion-observation", manual_row),
+            _aggregate("123", _Q2, "--received-invoice-retencion", invoice_payload),
+            _aggregate(
+                "123", _Q2, "--ledger-payment-withholding", payload, "--received-invoice-retencion", invoice_payload
+            ),
         )
 
-        assert [code for code, _output in refusals] == [2, 2], refusals
+        assert [code for code, _output in refusals] == [2, 2, 2], refusals
         assert {json.loads(output)["error"]["code"] for _code, output in refusals} == {"REFUSED_CLI_BOUNDARY"}
+        invoice_only_message = json.loads(refusals[1][1])["error"]["message"]
+        assert "--ledger-payment-withholding" in invoice_only_message, invoice_only_message
+        exclusive_message = json.loads(refusals[2][1])["error"]["message"]
+        assert "--received-invoice-retencion" in exclusive_message, exclusive_message
         assert _stored("111", _Q2) == ()
         assert _stored("123", _Q2) == ()

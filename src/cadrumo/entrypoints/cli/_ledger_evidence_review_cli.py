@@ -38,6 +38,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from ...domain.iva.regime_legend import resolve_regime_legends
+from ._evidence_field_notices import label_reading_fallback_notices
 from .common import bad, current_workflow_state, emit_envelope, resolve_notice_action, transaction_catalogue_repo
 from .ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
@@ -555,13 +556,20 @@ def _review_view_lines(
 
 
 def _review_view_notices(
-    draft: InvoiceDraft,
+    stored: StoredExtractionDraft,
     blockers: tuple[ConfirmationBlocker, ...],
     *,
     operation: PinnedAuthorityOperation,
 ) -> tuple[list[Notice], list[str]]:
-    """Return advisory notices/lines followed by the blocking notice, if any."""
-    notices, lines = _review_view_advisories(draft, operation=operation)
+    """Return advisory notices/lines, the stored label-reading degradation, then the blocking notice.
+
+    The degradation is read off the stored record, not the draft: the draft
+    store moves it there when it writes, so the draft a review loads never
+    carries it. Without it an empty field on this surface reads as a field the
+    document does not print, when the reader never looked for it.
+    """
+    notices, lines = _review_view_advisories(stored.draft, operation=operation)
+    notices.extend(label_reading_fallback_notices(stored.label_reading_fallback))
     if blockers:
         notices.append(
             Notice(
@@ -585,7 +593,7 @@ def review_view(ctx: typer.Context, reference: str) -> None:
     fields = _field_payloads(draft)
     payload = _review_view_payload(bucket_id, stored, draft, fields, blockers)
     lines = _review_view_lines(bucket_id, stored, draft, fields, blockers)
-    notices, advisory_lines = _review_view_notices(draft, blockers, operation=operation)
+    notices, advisory_lines = _review_view_notices(stored, blockers, operation=operation)
     lines.extend(advisory_lines)
     emit_envelope(
         ctx,

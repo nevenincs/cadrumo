@@ -19,6 +19,13 @@ exact boundary two rows match and the lower one wins. Where continuity holds bot
 return the identical value and the tie cannot matter; where it breaks, the
 boundary becomes a step.
 
+The gate reads every table the resolver can read: the rows in force on each day
+a table changes, whichever edition states them. An edition that inherits a
+scale's unchanged lower rungs and keys only its changed upper rungs stores one
+table under two first days, so grouping rows by validity window would split it
+into halves that are each consistent and never compare the seam between an
+inherited rung and a re-keyed one.
+
 The comparison allows a two-cent band. Official scales publish the accumulated
 column rounded to cents, and rounding each tranche differs from rounding the
 total by up to a cent, so exact equality would flag correct tables. The observed
@@ -28,7 +35,8 @@ distribution sits far from the band edge: 570 rows exact, 106 within half a cent
 
 from __future__ import annotations
 
-from datetime import date
+from collections.abc import Iterator
+from datetime import date, timedelta
 from decimal import Decimal
 from itertools import pairwise
 
@@ -59,8 +67,8 @@ _TOLERANCE = Decimal("0.02")
 #: SILENCES this gate and trips the staleness check instead, whose message then
 #: reads as an instruction to delete the entry. Do not follow it. Establish the
 #: figure against the cited authority before touching any row listed here.
-_KNOWN_BREAKS: dict[tuple[str, str], str] = {
-    ("renta-escala-autonomica-murcia-base-general", "2022"): (
+_KNOWN_BREAKS: dict[tuple[str, int], str] = {
+    ("renta-escala-autonomica-murcia-base-general", 2022): (
         "FAITHFUL TO SOURCE -- do not repair. The discontinuity is in the norm, not "
         "in this table. Decreto-ley 4/2022 de la Region de Murcia, de 22 de "
         "septiembre (BORM 29-09-2022, art. unico, amending DA quinta.4 del Decreto "
@@ -81,59 +89,87 @@ _KNOWN_BREAKS: dict[tuple[str, str], str] = {
 }
 
 
-def _accumulated_cuota_breaks(parameter: ParameterDefinition) -> list[str]:
-    """Report every row whose accumulated cuota disagrees with the rows beneath it.
+def _in_force(parameter: ParameterDefinition, on: date) -> tuple[BracketEntry, ...]:
+    """The rows the resolver reads on ``on``, ordered by lower bound."""
+    rows = (row for row in parameter.brackets if row.valid_from <= on and (row.valid_to is None or on <= row.valid_to))
+    return tuple(sorted(rows, key=lambda row: row.lower_bound))
 
-    Rows are grouped by validity window before comparison: a table carrying one
-    tranche set per filing year holds several independent scales, and comparing
-    across them would manufacture breaks no taxpayer can reach.
+
+def _in_force_tables(parameter: ParameterDefinition) -> Iterator[tuple[date, date | None, tuple[BracketEntry, ...]]]:
+    """Every distinct table in force, with the first and last day it is in force.
+
+    The in-force rows change only on a row's first day or the day after its last
+    day, so reading the table on each such day reads every table any date sees.
     """
-    breaks: list[str] = []
-    windows: dict[tuple[object, object], list[BracketEntry]] = {}
-    for entry in parameter.brackets or ():
-        windows.setdefault((entry.valid_from, entry.valid_to), []).append(entry)
+    changes = sorted(
+        {row.valid_from for row in parameter.brackets}
+        | {row.valid_to + timedelta(days=1) for row in parameter.brackets if row.valid_to is not None}
+    )
+    if not changes:
+        return
+    last_days: tuple[date | None, ...] = (*(change - timedelta(days=1) for change in changes[1:]), None)
+    for first_day, last_day in zip(changes, last_days, strict=True):
+        if rows := _in_force(parameter, first_day):
+            yield first_day, last_day, rows
 
-    for entries in windows.values():
-        ordered = sorted(entries, key=lambda entry: entry.lower_bound)
-        for previous, current in pairwise(ordered):
+
+def _accumulated_cuota_breaks(parameter: ParameterDefinition) -> dict[date, list[str]]:
+    """Report, by the first day of the table, every rung whose accumulated cuota disagrees with the rungs beneath.
+
+    Each in-force table is read whole, so rungs keyed from different first days
+    are compared across their seam exactly as the resolver reads them together.
+    """
+    breaks: dict[date, list[str]] = {}
+    for first_day, _, rows in _in_force_tables(parameter):
+        for previous, current in pairwise(rows):
             expected = previous.fixed_addition + previous.marginal_rate * (current.lower_bound - previous.lower_bound)
             if abs(expected - current.fixed_addition) > _TOLERANCE:
-                breaks.append(
+                breaks.setdefault(first_day, []).append(
                     f"lower_bound={current.lower_bound}: "
                     f"fixed_addition={current.fixed_addition} but the rows beneath produce {expected}"
                 )
     return breaks
 
 
-def _registry_breaks() -> tuple[dict[tuple[str, str], list[str]], int]:
-    """Walk every compiled revision's bracket tables, returning breaks and the scan size."""
-    found: dict[tuple[str, str], list[str]] = {}
-    scanned = 0
+def _registry_breaks() -> tuple[dict[tuple[str, int], list[str]], set[tuple[date, date | None]]]:
+    """Walk every in-force table of every compiled edition, returning breaks and the spans the tables are in force.
+
+    A break is keyed by parameter and the year its table enters force; an inherited
+    table is read in every edition that carries it but reported once.
+    """
+    found: dict[tuple[str, int], set[str]] = {}
+    spans: set[tuple[date, date | None]] = set()
     for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
-            for parameter in getattr(revision, "parameters", ()) or ():
-                if not parameter.brackets:
-                    continue
-                scanned += 1
-                breaks = _accumulated_cuota_breaks(parameter)
-                if breaks:
-                    found[parameter.id, str(revision_id)] = breaks
-    return found, scanned
+            for parameter in revision.parameters:
+                spans.update((first_day, last_day) for first_day, last_day, _ in _in_force_tables(parameter))
+                for first_day, detail in _accumulated_cuota_breaks(parameter).items():
+                    found.setdefault((parameter.id, first_day.year), set()).update(
+                        f"[{modelo.id} {revision_id} from {first_day}] {line}" for line in detail
+                    )
+    return {key: sorted(lines) for key, lines in found.items()}, spans
 
 
 def test_every_bracket_table_accumulated_cuota_is_consistent() -> None:
-    """No bracket table may over- or under-state the cuota accumulated beneath a row."""
-    breaks, scanned = _registry_breaks()
+    """No bracket table in force on any day may over- or under-state the cuota accumulated beneath a rung."""
+    breaks, spans = _registry_breaks()
 
-    # Anti-vacuity: a walk reaching no bracket table would pass while proving
-    # nothing. A floor, deliberately not a pinned tally, so new tables never
-    # require editing a constant.
-    assert scanned >= 100, f"walk reached only {scanned} bracket tables; the gate is not seeing the registry"
+    # Anti-vacuity: every supported filing year must read at least one in-force
+    # table, derived from the support declaration rather than a pinned tally.
+    unread = [
+        year
+        for year in compiled_bundled_authority().supported_filing_years().years
+        if not any(
+            first_day <= date(year, 12, 31) and (last_day is None or last_day >= date(year, 1, 1))
+            for first_day, last_day in spans
+        )
+    ]
+    assert not unread, f"no in-force bracket table read for supported years {unread}"
 
     unexpected = {key: value for key, value in breaks.items() if key not in _KNOWN_BREAKS}
     assert not unexpected, "bracket tables whose accumulated cuota contradicts their own rows:\n" + "\n".join(
-        f"  {parameter_id} [{revision_id}]\n    " + "\n    ".join(detail)
-        for (parameter_id, revision_id), detail in sorted(unexpected.items())
+        f"  {parameter_id} [{year}]\n    " + "\n    ".join(detail)
+        for (parameter_id, year), detail in sorted(unexpected.items())
     )
 
 
@@ -147,7 +183,7 @@ def test_no_stale_accumulated_cuota_exemptions() -> None:
         "Read the entry before deleting it: for a DEBT that is the right move, but a row marked\n"
         "FAITHFUL TO SOURCE became consistent only because someone changed a value the published\n"
         "norm states, and the fix is to restore the value, not to remove the record of why:\n"
-        + "\n".join(f"  {parameter_id} [{revision_id}]" for parameter_id, revision_id in stale)
+        + "\n".join(f"  {parameter_id} [{year}]" for parameter_id, year in stale)
     )
 
 
@@ -179,16 +215,15 @@ _MURCIA_DECRETO_LEY_TOP_RUNG_RATE = Decimal("0.227")
 
 
 def _murcia_decreto_ley_top_rung() -> BracketEntry:
-    """Return the open top bracket of the Region de Murcia Decreto-ley autonomic scale."""
+    """Return the top rung of the Region de Murcia autonomic scale in force in the Decreto-ley's exercise."""
     for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
             if str(revision_id) != str(_MURCIA_DECRETO_LEY_EXERCISE):
                 continue
-            for parameter in getattr(revision, "parameters", ()) or ():
+            for parameter in revision.parameters:
                 if parameter.id != "renta-escala-autonomica-murcia-base-general":
                     continue
-                top = max(parameter.brackets or (), key=lambda entry: entry.lower_bound)
-                return top
+                return _in_force(parameter, date(_MURCIA_DECRETO_LEY_EXERCISE, 12, 31))[-1]
     raise AssertionError(
         f"renta-escala-autonomica-murcia-base-general [{_MURCIA_DECRETO_LEY_EXERCISE}] is not in the registry"
     )
@@ -221,8 +256,20 @@ def test_murcia_decreto_ley_top_rung_cuota_is_printed_in_the_bundled_aeat_manual
     assert "22,70" in body
 
 
-def _scale(top_fixed_addition: str) -> ParameterDefinition:
-    """A two-tranche scale whose upper row carries the caller's accumulated cuota."""
+def _rung(
+    lower: str, upper: str | None, fixed: str, rate: str, valid_from: date, valid_to: date | None = None
+) -> BracketEntry:
+    return BracketEntry(
+        lower_bound=Decimal(lower),
+        upper_bound=None if upper is None else Decimal(upper),
+        fixed_addition=Decimal(fixed),
+        marginal_rate=Decimal(rate),
+        valid_from=valid_from,
+        valid_to=valid_to,
+    )
+
+
+def _table(*rungs: BracketEntry) -> ParameterDefinition:
     return ParameterDefinition(
         id="test-accumulated-cuota-continuity",
         data_type="bracket_table",
@@ -230,24 +277,19 @@ def _scale(top_fixed_addition: str) -> ParameterDefinition:
         bracket_axis="devengo_date",
         legal_refs=("ley-35-2006:art-63",),
         source_refs=("aeat-renta-2024-manual-parte1",),
-        brackets=(
-            BracketEntry(
-                lower_bound=Decimal("0"),
-                upper_bound=Decimal("10000"),
-                fixed_addition=Decimal("0"),
-                marginal_rate=Decimal("0.10"),
-                valid_from=date(2024, 1, 1),
-                valid_to=date(2024, 12, 31),
-            ),
-            BracketEntry(
-                lower_bound=Decimal("10000"),
-                upper_bound=None,
-                fixed_addition=Decimal(top_fixed_addition),
-                marginal_rate=Decimal("0.20"),
-                valid_from=date(2024, 1, 1),
-                valid_to=date(2024, 12, 31),
-            ),
-        ),
+        brackets=rungs,
+    )
+
+
+_YEAR_START = date(2024, 1, 1)
+_YEAR_END = date(2024, 12, 31)
+
+
+def _scale(top_fixed_addition: str) -> ParameterDefinition:
+    """A two-tranche scale whose upper row carries the caller's accumulated cuota."""
+    return _table(
+        _rung("0", "10000", "0", "0.10", _YEAR_START, _YEAR_END),
+        _rung("10000", None, top_fixed_addition, "0.20", _YEAR_START, _YEAR_END),
     )
 
 
@@ -255,15 +297,55 @@ def test_the_gate_detects_a_broken_accumulated_column() -> None:
     """Anti-tautology: 10.000 at 10 % accumulates 1.000, so 1.090 must be reported."""
     breaks = _accumulated_cuota_breaks(_scale("1090"))
 
-    assert len(breaks) == 1
-    assert "1000" in breaks[0]
+    assert list(breaks) == [_YEAR_START]
+    assert len(breaks[_YEAR_START]) == 1
+    assert "1000" in breaks[_YEAR_START][0]
 
 
 def test_a_consistent_scale_reports_no_break() -> None:
     """Positive control: the check reads arithmetic, not merely the presence of a second row."""
-    assert _accumulated_cuota_breaks(_scale("1000")) == []
+    assert _accumulated_cuota_breaks(_scale("1000")) == {}
 
 
 def test_cent_rounding_is_not_reported_as_a_break() -> None:
     """The band exists because official scales round; it must actually absorb that."""
-    assert _accumulated_cuota_breaks(_scale("1000.01")) == []
+    assert _accumulated_cuota_breaks(_scale("1000.01")) == {}
+
+
+def _inherited_lower_rung_scale(rekeyed_fixed_addition: str) -> ParameterDefinition:
+    """A scale whose lower rung stays open from one year and whose upper rung is re-keyed the next.
+
+    The lower rung is stated once and inherited; the upper rung closes at the first
+    year's end and a later edition keys its replacement from the next day, carrying
+    the caller's accumulated cuota. No two rungs share a validity window.
+    """
+    next_year = _YEAR_END + timedelta(days=1)
+    return _table(
+        _rung("0", "10000", "0", "0.10", _YEAR_START),
+        _rung("10000", None, "1000", "0.20", _YEAR_START, _YEAR_END),
+        _rung("10000", None, rekeyed_fixed_addition, "0.25", next_year),
+    )
+
+
+def test_a_broken_seam_between_an_inherited_and_a_rekeyed_rung_is_detected() -> None:
+    """The seam is read in the table in force from the re-key, not only within one validity window."""
+    next_year = _YEAR_END + timedelta(days=1)
+    breaks = _accumulated_cuota_breaks(_inherited_lower_rung_scale("1100"))
+
+    assert list(breaks) == [next_year]
+    assert "1000" in breaks[next_year][0]
+    assert _accumulated_cuota_breaks(_inherited_lower_rung_scale("1000")) == {}
+
+
+def test_each_in_force_table_is_read_once_with_its_span() -> None:
+    """The first year's table and the re-keyed table are both read, each with the days it is in force."""
+    next_year = _YEAR_END + timedelta(days=1)
+    tables = [
+        (first_day, last_day, tuple(rung.fixed_addition for rung in rows))
+        for first_day, last_day, rows in _in_force_tables(_inherited_lower_rung_scale("1000"))
+    ]
+
+    assert tables == [
+        (_YEAR_START, _YEAR_END, (Decimal("0"), Decimal("1000"))),
+        (next_year, None, (Decimal("0"), Decimal("1000"))),
+    ]

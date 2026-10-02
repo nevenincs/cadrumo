@@ -21,6 +21,10 @@ read as breakage.
 working: the run produced a draft a person must adjudicate. It reports as an
 info notice pointing at the review queue and never touches the exit status.
 
+A draft that stands on its label reading because the model fill did not run
+keeps its status -- the document was read and stored -- and is reported beside
+it: the row carries the reason, and the run warns once with the count.
+
 See Also:
     :func:`~cadrumo.application.ledger.batch_ingest.run_evidence_batch`
         The run under this surface.
@@ -62,6 +66,7 @@ from .state_projection_support import ledger_evidence_ports_factory
 
 if TYPE_CHECKING:
     from ...application.ledger.batch_ingest import BatchItemResult, BatchRunResult, UnresolvedBatchSource
+    from ...application.ledger.invoice_draft_records import LabelReadingFallback
     from ...application.operator_actions.models import PreconditionVerdict
 
 __all__ = ["evidence_batch"]
@@ -285,7 +290,37 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                 context={"pending_review": str(held)},
             ),
         )
+    degraded = _label_reading_degraded(run)
+    if degraded:
+        # A warning, as the single-document extract gives it: the draft is
+        # stored and the status is right, but it is thinner than its reader
+        # would have made it, and a clean-looking row would hide that.
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.evidence.batch.label_reading_degraded",
+                message=tr(
+                    "cli.app.ledger.evidence.batch_label_reading_degraded_message",
+                    count=len(degraded),
+                ),
+                context={
+                    "label_reading_degraded": str(len(degraded)),
+                    "reasons": ", ".join(sorted({fallback.cause.value for _item, fallback in degraded})),
+                },
+            ),
+        )
     return notices
+
+
+def _label_reading_degraded(run: BatchRunResult) -> list[tuple[BatchItemResult, LabelReadingFallback]]:
+    """Return each row whose stored draft stands on its label reading, beside that record.
+
+    Kept out of the status tally on purpose: the status is right -- the
+    document was read and its draft stored -- and what these rows add is that
+    the draft is thinner than its reader would have made it, for a reason the
+    document is not responsible for.
+    """
+    return [(item, fallback) for item in run.items if (fallback := item.label_reading_fallback) is not None]
 
 
 def _notice_line(notice: Notice) -> str:
@@ -352,6 +387,13 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
             # machine record (source, code, condition).
             lines.append(f"refused\t{item.source_name}\t{item.refusal_code}\t{_condition_of(item.refusal_verdict)}")
             lines.extend(_refusal_lines(item.refusal_verdict))
+    for item, fallback in _label_reading_degraded(run):
+        # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-LABEL-READING: tab-separated
+        # machine record (source, cause, failed condition, unread fields).
+        lines.append(
+            f"label_reading\t{item.source_name}\t{fallback.cause.value}\t"
+            f"{fallback.failed_condition_id or '-'}\t{','.join(fallback.unread_fields)}",
+        )
     for source in run.unresolved:
         # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-UNRESOLVED: tab-separated
         # machine record (source, code, condition).

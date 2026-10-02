@@ -12,6 +12,7 @@ exclusion the parameter's legal references ground.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -26,6 +27,7 @@ from ...renta.actividad_asset.election import (
     SmallEnterpriseEvidence,
 )
 from ...renta.actividad_asset.errors import (
+    ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetIncompleteError,
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
@@ -40,6 +42,7 @@ from .formula_runtime_ops import resolve_dated_value, resolve_keyed_bracket
 from .schema import ModeloRevision
 from .schema_base import DateAxis, ThresholdComparison
 from .schema_formula import ParameterDefinition
+from .schema_references import LegalReference, governed_period_span
 
 _PREFIX = "renta-actividad-inmovilizado-amortizacion"
 _COEFFICIENT_IDS: dict[DirectEstimationRegime, str] = {
@@ -153,6 +156,11 @@ _UNDETERMINED_ADMISSIONS: dict[tuple[DirectEstimationRegime, AssetKind, Amortiza
         _SIMPLIFIED_INTANGIBLE_TABLE_METHOD_REFUSAL
     ),
 }
+_ELECTRIC_MOBILITY_PROVISION_ID = "ley-27-2014:da-18"
+_ELECTRIC_MOBILITY_METHODS: frozenset[AmortizationMethod] = frozenset(
+    {AmortizationMethod.ELECTRIC_VEHICLE_FREE, AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE},
+)
+"""The free-depreciation methods LIS DA 18 grants new electric vehicles and charging points."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -224,12 +232,17 @@ def resolve_activity_asset_schedule_authority(
     asset_revision: ActivityAssetRevision,
     authority_generation: str,
     workforce: tuple[PlantillaMediaYear, ...],
+    legal_reference: Callable[[str], LegalReference],
 ) -> ScheduleAuthority:
     """Validate one revision's election and resolve its tax-year authority.
 
     ``workforce`` is the taxpayer profile's declared average workforce per
     calendar year; only the workforce-conditioned incentives read it, and an
     undeclared year they need refuses rather than counting as zero.
+
+    ``legal_reference`` reads one published legal-catalogue declaration.  Only
+    an electric-mobility election the edition does not enrol reads it, to tell
+    a tax period LIS DA 18 governs from one it does not.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
@@ -247,7 +260,7 @@ def resolve_activity_asset_schedule_authority(
         revision_id=modelo_revision.id,
         tax_year=tax_year,
     )
-    admission_reference = _require_method_admitted(parameters, asset_revision)
+    admission_reference = _require_method_admitted(parameters, asset_revision, legal_reference)
     vehicle_references = _require_vehicle_affectation(parameters, asset_revision)
     resolution = _resolve_method(parameters, asset_revision, workforce)
     return ScheduleAuthority.model_validate(
@@ -263,7 +276,11 @@ def resolve_activity_asset_schedule_authority(
     )
 
 
-def _require_method_admitted(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> str:
+def _require_method_admitted(
+    parameters: _Parameters,
+    asset_revision: ActivityAssetRevision,
+    legal_reference: Callable[[str], LegalReference],
+) -> str:
     election = asset_revision.amortization
     parameter_id = _METHOD_ADMISSION_IDS[election.regime]
     key = f"{asset_revision.asset_kind.value}:{election.method.value}"
@@ -272,6 +289,7 @@ def _require_method_admitted(parameters: _Parameters, asset_revision: ActivityAs
     if admitted is None and undetermined is not None:
         raise ActividadAssetUnsupportedError(f"{election.method.value} {undetermined}")
     if admitted is None:
+        _refuse_accelerated_electric_mobility_period(parameters, asset_revision, legal_reference)
         raise ActividadAssetUnsupportedError(
             f"{election.method.value} is not enrolled for {asset_revision.asset_kind.value} assets in the "
             f"{election.regime.value} modality",
@@ -285,6 +303,53 @@ def _require_method_admitted(parameters: _Parameters, asset_revision: ActivityAs
     if admitted != Decimal("1"):
         raise ActividadAssetValidationError(f"method admission {key!r} is neither admitted nor excluded")
     return parameters.reference(parameter_id, key)
+
+
+def _refuse_accelerated_electric_mobility_period(
+    parameters: _Parameters,
+    asset_revision: ActivityAssetRevision,
+    legal_reference: Callable[[str], LegalReference],
+) -> None:
+    """Refuse an unenrolled electric-mobility election in a period LIS DA 18 governs.
+
+    LIS DA 18 granted new electric vehicles and charging points accelerated
+    depreciation, at twice the maximum linear coefficient, before it granted
+    free depreciation.  An edition that enrols no free method for a period
+    the provision governs therefore leaves that period under the accelerated
+    regime, which stays outside the method set.  A period before the
+    provision governs keeps the generic refusal, because no DA 18 regime
+    reaches it; vehicles and charging installations are material assets, so
+    an intangible election keeps it too.
+    """
+    election = asset_revision.amortization
+    if election.method not in _ELECTRIC_MOBILITY_METHODS or asset_revision.asset_kind is not AssetKind.MATERIAL:
+        return
+    provision = legal_reference(_ELECTRIC_MOBILITY_PROVISION_ID)
+    governs_from, governs_to = governed_period_span(provision)
+    period_end = date(parameters.tax_year, 12, 31)
+    if governs_from <= period_end and (governs_to is None or period_end <= governs_to):
+        raise _accelerated_da18_refusal(asset_revision, tax_year=parameters.tax_year, provision_id=provision.id)
+
+
+def _accelerated_da18_refusal(
+    asset_revision: ActivityAssetRevision,
+    *,
+    tax_year: int,
+    provision_id: str,
+) -> ActividadAssetAcceleratedDa18DepreciationError:
+    """Name the LIS DA 18 accelerated regime a claim falls under, which the product does not compute."""
+    method = asset_revision.amortization.method.value
+    return ActividadAssetAcceleratedDa18DepreciationError(
+        f"LIS DA 18 grants tax year {tax_year} accelerated depreciation of new electric vehicles and charging "
+        f"points at twice the maximum linear coefficient rather than free depreciation, and that regime is not "
+        f"computed, so the {method} election has no charge",
+        context={
+            "asset_id": asset_revision.asset_id,
+            "method": method,
+            "tax_year": tax_year,
+            "legal_reference": provision_id,
+        },
+    )
 
 
 def _resolve_method(

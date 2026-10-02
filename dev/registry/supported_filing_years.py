@@ -10,6 +10,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.ids import ModeloId
+from cadrumo.domain.calculations.registry.modelo_inception import DeclaredInception
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
@@ -45,6 +46,10 @@ def audit_supported_filing_years(
             )
         )
         for filing_year in catalogue.years:
+            # Nothing is owed for a year in which the modelo did not exist, so a
+            # year before its declared inception is scope, not a gap.
+            if isinstance(modelo.inception, DeclaredInception) and not modelo.inception.admits_filing_year(filing_year):
+                continue
             for period in expected_periods:
                 gaps.extend(_cell_gaps(modelo, filing_year=filing_year, period=period, sources=sources))
     return tuple(gaps)

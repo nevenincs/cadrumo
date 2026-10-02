@@ -24,7 +24,11 @@ from cadrumo.domain.calculations.registry.revision_context import (
     RevisionValidationContext,
     build_revision_validation_context,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    ModeloRevision,
+    SupportedFilingYearsCatalogue,
+)
 from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.validate_revision_identity import (
@@ -306,6 +310,7 @@ def validate_revision_definition(
     evidence: EvidenceValidator,
     source_root: Path | None,
     justificante_corpus_root: Path | None,
+    support: SupportedFilingYearsCatalogue | None,
 ) -> list[str]:
     """Return all registry validation failures for one modelo revision.
 
@@ -365,6 +370,7 @@ def validate_revision_definition(
         legal_refs=legal_refs,
         source_refs=source_refs,
         evidence=evidence,
+        support=support,
     )
     failures.extend(validate_authority_grade_section(prefix, modelo_id=modelo.id, revision=revision))
     return failures

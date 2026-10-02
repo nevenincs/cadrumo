@@ -7,7 +7,7 @@ revision_id = "2024"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "51cfc8e44ccb3ff10927e446352ee9f174a232247afaad89b1c6c567cf329e01"
+source_state_digest = "24085549e97e99b2566dca510c1f80d23a6262e6ab37958c0067f46299ef511b"
 placements = [
     { casilla_id = "decl.complementaria", kind = "on_form", box_number = "121" },
     { casilla_id = "decl.correo-electronico", kind = "on_form" },

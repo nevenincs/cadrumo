@@ -19,18 +19,6 @@ source_refs = [
     "boe-modelo-189-2025-values",
 ]
 
-# ACQUIRABLE DEBT -- edition 189/2022. Not missing paper: a real epoch boundary.
-# NUMERO DE VALORES occupied 130-145 and NOMINAL 146-163 for that ejercicio, versus
-# 130-146 and 147-164 today; Orden HFP/1284/2023 states the fields "pasaran a ocupar
-# las posiciones 130-146". Two prerequisites, one now met:
-#   - orden-hfp-1351-2021:art-sexto  REGISTERED 2026-09-12 in this catalogue. It is
-#     the article amending Orden EHA/3481/2008, and its text was already bundled.
-#   - Orden HFP/115/2022  NOT ACQUIRED. It set the 146-163 positions and is neither
-#     bundled in the corpus nor registered as a source.
-# Also unrecoverable today: the pre-2023 wording of CLAVE DE VALOR (81) and
-# VALORACION (108-123). Orden HFP/1180/2023 quotes only its replacement text, so the
-# superseded wording is not derivable from anything in the corpus.
-#
 # SETTLED -- 189/2023 and 189/2024 are at filing grade. The debt recorded here
 # was that aeat-modelo-189-procedure opens 2025-01-01 and so left both editions
 # without the official_source_guidance evidence the filing rung requires. That
@@ -45,7 +33,13 @@ source_refs = [
 # STILL NOT CLAIMED for either edition: no binding and no formula. The
 # application holds no source for the declarado rows, so the filer supplies both
 # declarante totals; each affected family says so in its own disposition.
+#
+# Filing years below the support floor existed in law under Orden EHA/3481/2008
+# and are not authored. Ejercicio 2022 is authored from aeat-dr-189-2021-2022, the
+# design as Orden HFP/115/2022 left it, and 2023 onward from aeat-dr-189-2023,
+# the epoch Orden HFP/1180/2023 and Orden HFP/1284/2023 opened.
 [modelo.inception.unauthored]
-earliest_authored = 2023
-reason = "Approved by Orden EHA/3481/2008 art. 1, which carries no year bound; filing years below 2023 existed in law and are not yet authored. Editions 2023 and 2024 were authored 2026-09-12 at applicability grade on aeat-dr-189-2023, the epoch opened by Orden HFP/1180/2023 whose DF unica applies it por primera vez al ejercicio 2023. 2022 is a genuine epoch boundary rather than missing paper: NUMERO DE VALORES then occupied 130-145 and NOMINAL 146-163, and Orden HFP/1284/2023 states the fields pasaran a ocupar 130-146. Authoring it needs Orden HFP/115/2022 registered as a source and orden-hfp-1351-2021:art-6 as a legal id."
+earliest_authored = 2022
+reason = "Approved by Orden EHA/3481/2008 art. 1, which carries no year bound; filing years before 2022 existed in law and lie below the supported floor, so they are not authored. Ejercicio 2022 is authored from aeat-dr-189-2021-2022, the design as Orden HFP/115/2022 left it, and 2023 onward from aeat-dr-189-2023, the epoch Orden HFP/1180/2023 applies por primera vez al ejercicio 2023."
 legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["aeat-dr-189-2021-2022"]

@@ -9,9 +9,15 @@ outlive its run belongs in durable evidence, not in a path under ``.logs``.
 from __future__ import annotations
 
 import os
+import re
+import shutil
+import stat
 import tempfile
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 from uuid import uuid4
 
 LOGS_STEM = ".logs"
@@ -107,6 +113,11 @@ An underscore is a word character, which leaves the name no boundary for the
 pattern to start at.
 """
 
+SCRATCH_NAME: Final = re.compile(
+    rf"{re.escape(SCRATCH_PREFIX)}{SCRATCH_SEPARATOR}(?P<pid>\d+){SCRATCH_SEPARATOR}[0-9a-f]+"
+)
+"""A run scratch name: prefix, owning PID, random token."""
+
 SCRATCH_PATH_BUDGET = 64
 """The longest scratch path a run may hand its processes as ``TEMP``.
 
@@ -156,6 +167,93 @@ def scratch_environment(scratch: Path) -> dict[str, str]:
         "TMP": str(scratch),
         "TMPDIR": str(scratch),
     }
+
+
+class ScratchOwnershipError(RuntimeError):
+    """A scratch removal was asked for a path that is not the caller's own allocation."""
+
+
+@dataclass(frozen=True)
+class ScratchAllocation:
+    """One run scratch as it was minted: its path, its owner, and the directory's identity.
+
+    The identity is what lets removal prove it is deleting the directory this
+    process created rather than whatever now answers to the same name.
+    """
+
+    path: Path
+    owner_pid: int
+    identity: tuple[int, int]
+
+    @classmethod
+    def record(cls, scratch: Path) -> ScratchAllocation:
+        """Record ``scratch``, just allocated by this process, for a later verified removal.
+
+        Raises:
+            ScratchOwnershipError: When ``scratch`` is not named as this process's scratch.
+        """
+        match = SCRATCH_NAME.fullmatch(scratch.name)
+        if match is None or int(match.group("pid")) != os.getpid():
+            raise ScratchOwnershipError(f"{scratch} is not a scratch directory named for process {os.getpid()}")
+        status = os.stat(scratch, follow_symlinks=False)
+        return cls(path=scratch, owner_pid=os.getpid(), identity=(status.st_dev, status.st_ino))
+
+
+def remove_scratch_directory(allocation: ScratchAllocation) -> None:
+    """Remove this process's own run scratch, refusing any path that is not that allocation.
+
+    Every check runs before anything is deleted. The allocation must belong to
+    this process, and its name must still carry that owner, so a process that
+    inherited another run's scratch through the environment -- an xdist worker,
+    a nested pytest -- can never remove it. The path itself must not be a link
+    or junction, must resolve to exactly where it is written, and must still be
+    the directory recorded at allocation rather than a replacement of the same
+    name.
+
+    Removal never follows a link out of the tree: ``shutil.rmtree`` unlinks a
+    symlink or junction it meets inside the scratch instead of descending into
+    it. A read-only member has the attribute cleared and is retried once, since
+    Windows refuses to unlink one. Whatever still cannot be removed -- a file
+    this process holds open, on Windows -- is left for the run reaper, and
+    everything else is removed regardless.
+
+    Raises:
+        ScratchOwnershipError: When the path is not this process's recorded allocation.
+        OSError: When the scratch cannot be inspected, or entries in it could not be removed.
+    """
+    # Imported here for the reason ``run_log_bases`` gives: this module loads
+    # before the root conftest has prepared the process environment.
+    from cadrumo.core.link_safety import is_link_like
+
+    scratch = allocation.path
+    if allocation.owner_pid != os.getpid():
+        raise ScratchOwnershipError(f"{scratch} belongs to process {allocation.owner_pid}, not {os.getpid()}")
+    match = SCRATCH_NAME.fullmatch(scratch.name)
+    if match is None or int(match.group("pid")) != allocation.owner_pid:
+        raise ScratchOwnershipError(f"{scratch} is not named as the scratch of process {allocation.owner_pid}")
+    if is_link_like(scratch):
+        raise ScratchOwnershipError(f"{scratch} is a link, not the scratch directory it names")
+    status = os.stat(scratch, follow_symlinks=False)
+    if not stat.S_ISDIR(status.st_mode) or (status.st_dev, status.st_ino) != allocation.identity:
+        raise ScratchOwnershipError(f"{scratch} is no longer the directory this run allocated")
+    if scratch.resolve(strict=True) != scratch.parent.resolve(strict=True) / scratch.name:
+        raise ScratchOwnershipError(f"{scratch} resolves to {scratch.resolve(strict=True)}, outside its allocation")
+
+    failures: list[OSError] = []
+
+    def _clear_read_only_and_retry(action: Callable[..., object], path: str, error: BaseException) -> None:
+        if action in (os.unlink, os.rmdir):
+            try:
+                os.chmod(path, stat.S_IWRITE)
+                action(path)
+            except OSError as retry_error:
+                failures.append(retry_error)
+            return
+        failures.append(error if isinstance(error, OSError) else OSError(str(error)))
+
+    shutil.rmtree(scratch, onexc=_clear_read_only_and_retry)
+    if failures:
+        raise OSError(f"{len(failures)} entries under {scratch} could not be removed; first: {failures[0]}")
 
 
 def allocate_run_directory(

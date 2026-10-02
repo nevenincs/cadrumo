@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry, build_support_matrix
 
@@ -51,14 +52,35 @@ def test_matrix_covers_every_bundled_modelo() -> None:
 
 
 def test_modelo_130_303_390_have_fichero_boe_export() -> None:
-    """Ground truth: 130 / 303 / 390 are the periodic-return modelos with a fixed-width export layout."""
+    """Ground truth: 130 / 303 / 390 are the periodic-return modelos with a fixed-width export layout.
+
+    The row probes the latest edition. When that edition is authored below filing
+    grade because AEAT has not published its record design, it carries no layout
+    and the row says so; the fixed-width export stays on the newest filing-grade
+    edition.
+    """
+    authority = compiled_bundled_authority()
     entries = _entries()
 
     for modelo_id in ("130", "303", "390"):
         entry = entries[modelo_id]
         assert entry.calc_grade, f"modelo {modelo_id} should be calc-grade"
         assert entry.has_completeness_manifest, f"modelo {modelo_id} should declare a completeness manifest"
-        assert entry.has_fixed_width_export, f"modelo {modelo_id} should register a fixed_width export layout"
+        revisions = authority.modelo(modelo_id).revisions
+        newest_filing = max(
+            (revision for revision in revisions.values() if revision.authority_grade is RegistryAuthorityGrade.FILING),
+            key=lambda revision: revision.valid_from,
+        )
+        assert ExportLayoutFormat.FIXED_WIDTH in {layout.format for layout in newest_filing.export_layouts}, (
+            f"modelo {modelo_id} should register a fixed_width export layout on its newest filing-grade edition"
+        )
+        if entry.latest_revision_id == newest_filing.id:
+            assert entry.has_fixed_width_export, f"modelo {modelo_id} should register a fixed_width export layout"
+            continue
+        latest = revisions[entry.latest_revision_id]
+        assert latest.authority_grade is not RegistryAuthorityGrade.FILING, modelo_id
+        assert not latest.export_layouts, modelo_id
+        assert not entry.has_fixed_width_export, modelo_id
 
 
 def test_modelo_100_uses_xml_dictionary_export_not_fixed_width() -> None:

@@ -3,7 +3,7 @@
 # One binding per type-2 row field the export layout emits, grounded on the
 # bundled aeat-dr-190-2020 record design for the position and on the AEAT
 # modelo 190 procedure for the filing route. The modelo 111 relation prefills
-# and the declarante-total formulas the 2024 edition carries are deliberately
+# and the declarante-total formulas the 2025 edition carries are deliberately
 # NOT here: their corpus grounding opens in 2025 and cannot be cited by this
 # exercise, and the export layout does not depend on them.
 [[revisions."2022".bindings]]

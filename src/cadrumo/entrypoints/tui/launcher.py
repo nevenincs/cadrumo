@@ -892,6 +892,7 @@ def _ledger_generation_factory(
                 covered_until=covered_until,
                 history=history,
                 taxpayer_workforce=taxpayer_workforce,
+                legal_reference=operation.legal_reference,
                 requested_free_amount=requested_free_amount,
             )
 
@@ -1742,8 +1743,12 @@ def main(
     existing credential journey that observation names, and the authenticated
     generation the root shell consumes. A caller that injects a provider has
     already made those choices, so its session is run exactly as given.
+
+    Once the sessions end in order, the process-shared registry authority is
+    released, closing its database before the process exits.
     """
     from ...core.logging import configure_logging
+    from ...domain.calculations.registry.authority import release_bundled_indexed_authority
     from ..exchange_rate_composition import live_exchange_rate_composition
 
     # Importing a module no longer configures logging, so the host does it
@@ -1752,18 +1757,24 @@ def main(
     if workbench_root_inputs_provider is None:
         from .installed_session import run_installed_workbench_session
 
-        return run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
-    # Bound before the loop starts, because asyncio.run copies the current context.
-    with live_exchange_rate_composition():
-        asyncio.run(
-            run_authenticated_workbench_sessions(
-                headless=headless,
-                auto_pilot=auto_pilot,
-                workbench_root_inputs_provider=workbench_root_inputs_provider,
-                recompose_authenticated_session=recompose_authenticated_session,
+        status = run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
+    else:
+        # Bound before the loop starts, because asyncio.run copies the current context.
+        with live_exchange_rate_composition():
+            asyncio.run(
+                run_authenticated_workbench_sessions(
+                    headless=headless,
+                    auto_pilot=auto_pilot,
+                    workbench_root_inputs_provider=workbench_root_inputs_provider,
+                    recompose_authenticated_session=recompose_authenticated_session,
+                )
             )
-        )
-    return 0
+        status = 0
+    # Reached only when the sessions ended in order: a failure propagates past
+    # this line, so releasing the shared registry authority can never stand in
+    # for the error that ended the process.
+    release_bundled_indexed_authority()
+    return status
 
 
 __all__ = [

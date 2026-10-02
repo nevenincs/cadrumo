@@ -1,0 +1,63 @@
+[[revisions.2022.application_links]]
+id = "modelo-222-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["aeat-modelo-222-instructions"]
+
+[[revisions.2022.application_links]]
+id = "modelo-222-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-modelo-222-instructions"]
+
+[[revisions.2022.application_links]]
+id = "modelo-222-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-modelo-222-instructions"]
+
+[[revisions.2022.application_links]]
+id = "modelo-222-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-222-instructions", "aeat-dr-222-2019-2022"]
+
+[[revisions.2022.application_links]]
+id = "modelo-222-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-dr-222-2019-2022"]
+
+[[revisions.2022.application_links]]
+id = "modelo-222-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-222-instructions-2019-2022"]
+
+[[revisions.2022.application_links]]
+id = "modelo-222-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-222-instructions-2019-2022"]
+
+[[revisions.2022.application_links]]
+id = "modelo-222-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-222-instructions-2019-2022"]

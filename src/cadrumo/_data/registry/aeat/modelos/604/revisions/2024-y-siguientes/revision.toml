@@ -1,7 +1,11 @@
 [revisions."2024-y-siguientes"]
-predecessor = { none = { cause = "official_structure_differs", reason = "Stated in full: the official record structure is reordered against the edition before it, so supersede-in-place would not reproduce it. Measured against '2021-2023': casillas differ from index 34 ('liq.03-signo-base-rectificaciones' -> 'liq.03-base-rectificaciones'); every other family is byte-identical.", legal_refs = ["orden-hac-510-2021:art-1"], source_refs = ["enrolled-modelo-604-procedure"] } }
+predecessor = { none = { cause = "official_structure_differs", reason = "aeat-dr-604-2024 restructures the aeat-dr-604-2021 record: it adds Pag. 2 (tributacion por razon de territorio, boxes 13 to 37) and Pag. 1 boxes 08 to 12, and reassigns Pag. 1 positions: @701+18 is A deducir [06] in the 2021 design and Diferencia [08] in 2024, @719+18 is Resultado [07] there and the Estado cuota [09] here, [06] and [07] moving to @781 and @799. Supersede-in-place would not reproduce it, so no predecessor is declared. The payload is stored against the 2021-2023 edition through casilla_storage_baseline and family_storage_baseline: what both designs share is inherited with overrides for this edition's design citations, lineage evidence and export references, while the export layout, the parity anchor, the monthly windows of this edition's own years and the boxes new in 2024 are stated here. Storage reuse makes no continuity claim.", legal_refs = ["orden-hac-510-2021:art-1"], source_refs = ["enrolled-modelo-604-procedure"] } }
 casilla_source_refs = ["aeat-dr-604-2024"]
 application_link_source_refs = ["enrolled-modelo-604-procedure"]
+# Storage reuse only, not legal continuity: casillas and keyed families are
+# stored as differences from the 2021-2023 edition's effective members.
+casilla_storage_baseline = "2021-2023"
+family_storage_baseline = "2021-2023"
 authority_grade = "applicability"
 # Modelo 604 autoliquidacion del Impuesto sobre las Transacciones Financieras,
 # approved by orden-hac-510-2021 art 1, plazo grounded verbatim in
@@ -59,3 +63,305 @@ contrary-evidence class it reports for m220 and m763. NOT CLAIMED -- \
 independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- all 3 locales are \
 complete, but the strings were not audited for accuracy."""
 reviewed_at = 2026-08-21
+
+[[revisions."2024-y-siguientes".casilla_removals]]
+selector = { revision = "2021-2023", id = "liq.03-signo-base-sujetas" }
+
+[[revisions."2024-y-siguientes".casilla_positions]]
+id = "liq.03-signo-base-rectificaciones"
+position = 34
+
+[[revisions."2024-y-siguientes".casilla_positions]]
+id = "liq.08-diferencia"
+position = 39
+
+[[revisions."2024-y-siguientes".casilla_positions]]
+id = "liq.09-cuota-estado"
+position = 40
+
+[[revisions."2024-y-siguientes".casilla_positions]]
+id = "liq.10-signo-cuota-rectificaciones-estado"
+position = 41
+
+[[revisions."2024-y-siguientes".casilla_positions]]
+id = "liq.10-cuota-rectificaciones-estado"
+position = 42
+
+[[revisions."2024-y-siguientes".casilla_positions]]
+id = "liq.11-porcentaje-atribuible-estado"
+position = 43
+
+[[revisions."2024-y-siguientes".casilla_positions]]
+id = "liq.12-resultado-estado"
+position = 44
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "decl.ejercicio" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "decl.periodo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "decl.idioma" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 0, campo 9, Idioma de la declaracion; ambos conservan E/C/G/V y su nota de idiomas. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "decl.tipo-autoliquidacion" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 6, Tipo de autoliquidacion; ambos remiten a Nota 1: I a ingresar y N negativa con resultado cero. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "sp.codigo-lei" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 11, Codigo LEI del sujeto pasivo, sujeto al estandar ISO 17442. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "sp.codigo-bic" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 12, Codigo BIC del sujeto pasivo. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.tipo-via" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 13, tipo via del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.nombre-via" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 14, nombre via del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.tipo-numeracion" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 15, tipo numeracion del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.numero-casa" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 16, numero casa del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.calificador-numero" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 17, calificador numero del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.bloque" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 18, bloque del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.portal" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 19, portal del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.escalera" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 20, escalera del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.planta" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 21, planta del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.puerta" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 22, puerta del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.complemento" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 23, complemento del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.localidad" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 24, localidad del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.codigo-postal" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 25, codigo postal del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.municipio" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 26, municipio del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.codigo-provincia" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 27, codigo provincia del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-es.provincia" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 28, provincia del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-ex.domicilio" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 29, domicilio del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-ex.complemento" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 30, complemento del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-ex.poblacion" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 31, poblacion del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-ex.codigo-postal" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 32, codigo postal del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-ex.provincia-region-estado" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 33, provincia region estado del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-ex.pais" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 34, pais del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "dom-ex.codigo-pais" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 35, codigo pais del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "sp.persona-contacto" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 36, Persona de contacto del sujeto pasivo, obligatoria. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "sp.telefono-contacto" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 37, Telefono de contacto del sujeto pasivo, obligatorio. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "anexo.numero-justificante" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 38, Numero de justificante del anexo informativo, obligatorio. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "liq.01-base-imponible" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 39: BI [01] de operaciones sujetas no exentas realizadas en el periodo; la base conserva su poblacion aunque el diseno de 2024 explicite su obligatoriedad. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "liq.02-cuota" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 40: Cuota [02] de operaciones sujetas no exentas realizadas en el periodo; misma cuota anterior al reparto territorial. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "liq.03-base-rectificaciones" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 42: Rectificaciones - BI [03]; misma base de rectificaciones. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "liq.04-signo-cuota-rectificaciones" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 43: Rectificaciones - Signo Cuota [04]; Nota 4 en ambos exige N salvo que la cuota sea cero. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "liq.04-cuota-rectificaciones" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 44: Rectificaciones - Cuota [04]; misma cuota de rectificaciones anterior al reparto territorial. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "liq.05-operaciones-exentas" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, Operaciones exentas realizadas en el periodo [05], campo 41 en el diseno anterior y 45 en 2024; misma poblacion de operaciones exentas. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "liq.06-a-deducir" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 campo 43 y aeat-dr-604-2024 campo 52, pagina 1: Liquidacion (3) - A deducir [06], 18 posiciones Num en ambos disenos. La casilla impresa [06] y la descripcion oficial del campo son identicas en los dos disenos; solo cambia el ordinal del campo, porque 2024 intercala las casillas de atribucion territorial [08] a [12] por delante de la cola del registro.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "liq.07-resultado" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 campo 44 y aeat-dr-604-2024 campo 53, pagina 1: Liquidacion (3) - Resultado de la autoliquidacion [07], 18 posiciones Num en ambos disenos. La casilla impresa [07] y la descripcion oficial del campo son identicas en los dos disenos; solo cambia el ordinal del campo, porque 2024 intercala las casillas de atribucion territorial [08] a [12] por delante de la cola del registro.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "compl.declaracion-complementaria" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, Declaracion complementaria, campo 45 anterior y 54 en 2024; misma marca blanco o X. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2021-2023", id = "compl.numero-justificante-anterior" }
+fields = { continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, Numero justificante declaracion anterior, campo 46 anterior y 55 en 2024; mismo antecedente de la complementaria. La descripcion oficial prueba la misma funcion en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2021-2023", id = "modelo-604-autoliquidacion"}
+fields = {deadline_windows = ["modelo-604-2024-01", "modelo-604-2024-02", "modelo-604-2024-03", "modelo-604-2024-04", "modelo-604-2024-05", "modelo-604-2024-06", "modelo-604-2024-07", "modelo-604-2024-08", "modelo-604-2024-09", "modelo-604-2024-10", "modelo-604-2024-11", "modelo-604-2024-12", "modelo-604-2025-01", "modelo-604-2025-02", "modelo-604-2025-03", "modelo-604-2025-04", "modelo-604-2025-05", "modelo-604-2025-06", "modelo-604-2025-07", "modelo-604-2025-08", "modelo-604-2025-09", "modelo-604-2025-10", "modelo-604-2025-11", "modelo-604-2025-12", "modelo-604-2026-01", "modelo-604-2026-02", "modelo-604-2026-03", "modelo-604-2026-04", "modelo-604-2026-05", "modelo-604-2026-06", "modelo-604-2026-07", "modelo-604-2026-08", "modelo-604-2026-09", "modelo-604-2026-10", "modelo-604-2026-11", "modelo-604-2026-12"], export_layouts = ["modelo-604-fichero-boe"]}
+sequence_additions = {application_links = ["modelo-604-deadline"], casilla_ids = ["liq.03-signo-base-rectificaciones", "liq.08-diferencia", "liq.09-cuota-estado", "liq.10-cuota-rectificaciones-estado", "liq.10-signo-cuota-rectificaciones-estado", "liq.11-porcentaje-atribuible-estado", "liq.12-resultado-estado", "terr.alava.cuota-rectificaciones", "terr.alava.cuota-sujetas-no-exentas", "terr.alava.cuota-total-atribuible", "terr.alava.importe-operaciones-exentas", "terr.alava.porcentaje-atribuible", "terr.alava.signo-cuota-rectificaciones", "terr.estado.cuota-rectificaciones", "terr.estado.cuota-sujetas-no-exentas", "terr.estado.cuota-total-atribuible", "terr.estado.importe-operaciones-exentas", "terr.estado.porcentaje-atribuible", "terr.estado.signo-cuota-rectificaciones", "terr.guipuzcoa.cuota-rectificaciones", "terr.guipuzcoa.cuota-sujetas-no-exentas", "terr.guipuzcoa.cuota-total-atribuible", "terr.guipuzcoa.importe-operaciones-exentas", "terr.guipuzcoa.porcentaje-atribuible", "terr.guipuzcoa.signo-cuota-rectificaciones", "terr.navarra.cuota-rectificaciones", "terr.navarra.cuota-sujetas-no-exentas", "terr.navarra.cuota-total-atribuible", "terr.navarra.importe-operaciones-exentas", "terr.navarra.porcentaje-atribuible", "terr.navarra.signo-cuota-rectificaciones", "terr.vizcaya.cuota-rectificaciones", "terr.vizcaya.cuota-sujetas-no-exentas", "terr.vizcaya.cuota-total-atribuible", "terr.vizcaya.importe-operaciones-exentas", "terr.vizcaya.porcentaje-atribuible", "terr.vizcaya.signo-cuota-rectificaciones"], source_refs = ["aeat-dr-604-2024"], workbook_parity_refs = ["modelo-604-orden-static-layout"]}
+sequence_removals = {casilla_ids = [33], source_refs = [1], workbook_parity_refs = [0]}
+sequence_order = {application_links = [0, 2, 1], casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 42, 33, 34, 35, 36, 37, 43, 44, 45, 46, 47, 48, 38, 39, 40, 41, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2021-2023", id = "modelo-604-deadline"}
+sequence_removals = {legal_refs = [1]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2021-2023", id = "modelo-604-export"}
+sequence_additions = {source_refs = ["aeat-dr-604-2024"]}
+sequence_removals = {source_refs = [0]}

@@ -132,13 +132,13 @@ def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
         raise SpellingToolError(
             kind="spelling_tool_unavailable",
             detail=f"spylls=={SPYLLS_VERSION} is not installed in the active Python environment",
-            next_action="run just setup-python to install the pinned spell-check engine",
+            next_action="run just init to install the pinned spell-check engine",
         ) from None
     if installed_version != SPYLLS_VERSION:
         raise SpellingToolError(
             kind="spelling_tool_unavailable",
             detail=f"active spylls is {installed_version}, but the project requires {SPYLLS_VERSION}",
-            next_action="run just setup-python to synchronize uv.lock",
+            next_action="run just init to synchronize uv.lock",
         )
 
     roots = dictionary_roots(repository)

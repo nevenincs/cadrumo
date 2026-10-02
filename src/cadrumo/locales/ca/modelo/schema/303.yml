@@ -228,11 +228,21 @@ modelo:
           filing-year:
             label: Exercici fiscal de l'autoliquidació
           iva-autoconsumo-promotor-base:
-            label: Base imposable de l'autoconsum del promotor immobiliari (cost de
-              construcció, Art. 9.1.c + Art. 79.4 LISIVA)
-          iva-autoconsumo-promotor-cuota:
-            label: Quota d'IVA de l'autoconsum del promotor immobiliari (21% sobre
-              la base imposable, Art. 9.1.c + Art. 90 LISIVA)
+            label: Base imposable total de l'autoconsum del promotor immobiliari segons
+              el perfil, sense desglossament per tipus (cost de construcció, Art.
+              9 + Art. 79 LIVA)
+          iva-autoconsumo-promotor-base-por-tipo:
+            label: Suma de les bases de l'autoconsum del promotor immobiliari declarades
+              per tipus
+          iva-autoconsumo-promotor-general-base:
+            label: Base imposable de l'autoconsum del promotor immobiliari al tipus
+              general (21%) (part de la casella oficial 07)
+          iva-autoconsumo-promotor-reducido-base:
+            label: Base imposable de l'autoconsum del promotor immobiliari al tipus
+              reduït (10%) (part de la casella oficial 04)
+          iva-autoconsumo-promotor-super-reducido-base:
+            label: Base imposable de l'autoconsum del promotor immobiliari al tipus
+              superreduït (4%) (part de la casella oficial 01)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Suma la base imposable autorepercutida meritada en adquisicions
               intracomunitàries.
@@ -252,6 +262,15 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Base imposable IVA suportat en operacions interiors amb béns d'inversió
               (part de la casella oficial 30)
+          iva-base-repercutida-general:
+            label: Base imposable de l'IVA repercutit al tipus general (21%) (part
+              de la casella oficial 07)
+          iva-base-repercutida-reducido:
+            label: Base imposable de l'IVA repercutit al tipus reduït (10%) (part
+              de la casella oficial 04)
+          iva-base-repercutida-super-reducido:
+            label: Base imposable de l'IVA repercutit al tipus superreduït (4%) (part
+              de la casella oficial 01)
           iva-compensacion-aplicada-periodo:
             label: Compensacions de períodes anteriors aplicades en aquest període
           iva-compensacion-disponible-fin-periodo:
@@ -284,6 +303,15 @@ modelo:
               art. 13 + art. 15 + art. 84.Uno.2; caselles oficials 10/11)
           iva-cuota-deducible-total:
             label: Total quota d'IVA deduïble
+          iva-cuota-devengada-general:
+            label: Quota d'IVA meritada al tipus general (21%), inclòs l'autoconsum
+              del promotor (casella oficial 09)
+          iva-cuota-devengada-reducido:
+            label: Quota d'IVA meritada al tipus reduït (10%), inclòs l'autoconsum
+              del promotor (casella oficial 06)
+          iva-cuota-devengada-super-reducido:
+            label: Quota d'IVA meritada al tipus superreduït (4%), inclòs l'autoconsum
+              del promotor (casella oficial 03)
           iva-cuota-devengada-total:
             label: Total quota d'IVA meritada
           iva-cuota-repercutida-general:

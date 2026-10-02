@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/galicia-dl-1-2011-art-4-bis.html",
+  "source_sha256": "746f7edb09b41080319f67480af89a0aeb95c312d593a8eaa8231767dbde218e",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Las cuantías correspondientes a los mínimos del contribuyente, por descendientes, por ascendientes y por discapacidad establecidos en los artículos 57, 58, 59 y 60 de la Ley 35/2006, de 28 de noviembre, del impuesto sobre la renta de las personas físicas, y de modificación parcial de las leyes de los impuestos sobre sociedades, sobre la renta de no residentes y sobre el patrimonio, quedan fijadas en los siguientes importes:\n1. El mínimo del contribuyente regulado por el artículo 57 de la Ley 35/2006, de 28 de noviembre, será:\na) Con carácter general, 5.789 euros anuales.\nb) Cuando el contribuyente tenga una edad superior a 65 años, el mínimo se aumentará en 1.199 euros anuales. Si la edad es superior a 75 años, el mínimo se aumentará adicionalmente en 1.460 euros anuales.\n2. El mínimo por descendientes regulado por el artículo 58 de la Ley 35/2006, de 28 de noviembre, será:\na) En los supuestos previstos en el apartado 1 del artículo 58 de la Ley 35/2006, de 28 de noviembre:\n1.º 2.503 euros anuales por el primer descendiente.\n2.º 2.816 euros anuales por el segundo descendiente.\n3.º 4.172 euros anuales por el tercer descendiente.\n4.º 4.694 euros anuales por el cuarto descendiente y siguientes.\nb) Cuando el descendiente sea menor de tres años, el mínimo a que se refiere el apartado a) anterior se aumentará en 2.920 euros anuales.\n3. El mínimo por ascendientes regulado en el artículo 59 de la Ley 35/2006, de 28 de noviembre, será:\na) En el supuesto previsto en el apartado 1 del artículo 59 de la Ley 35/2006, de 28 de noviembre, 1.199 euros anuales.\nb) Cuando el ascendiente sea mayor de 75 años, el mínimo a que se refiere el apartado a) anterior se aumentará en 1.460 euros anuales.\n4. El mínimo por discapacidad regulado en el artículo 60 de la Ley 35/2006, de 28 de noviembre, será:\na) En los supuestos previstos en el apartado 1 del artículo 60 de la Ley 35/2006, de 28 de noviembre:\n1.º 3.129 euros anuales cuando el contribuyente sea una persona con discapacidad y 9.387 euros anuales cuando el contribuyente acredite un grado de discapacidad igual o superior al 65 %.\n2.º En el supuesto previsto en el párrafo segundo del apartado 1 del artículo 60 de la Ley 35/2006, de 28 de noviembre, los mínimos regulados en este apartado se aumentarán en 3.129 euros anuales.\nb) En los supuestos previstos en el apartado 2 del artículo 60 de la Ley 35/2006, de 28 de noviembre:\n1.º 3.129 euros anuales por cada uno de los ascendientes o descendientes con discapacidad.\n2.º 9.387 euros anuales por cada uno de los ascendientes o descendientes cuando acrediten un grado de discapacidad igual o superior al 65 %.\n3.º En el supuesto previsto en el párrafo segundo del apartado 2 del artículo 60 de la Ley 35/2006, de 28 de noviembre, los mínimos regulados en este apartado se aumentarán en 3.129 euros anuales.\nSe añade, con efectos desde el 1 de enero de 2022, por el art. 2 de la Ley 7/2022, de 27 de diciembre. Ref. BOE-A-2023-6382\nTexto añadido, publicado el 30/12/2022, en vigor a partir del 01/01/2023.",
+      "title": "Artículo 4 bis. Mínimo personal y familiar.",
+      "section": "Artículo 4 bis. Mínimo personal y familiar.",
+      "anchor": "#a4-2"
+    }
+  ]
+}

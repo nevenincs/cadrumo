@@ -56,6 +56,10 @@ Where it stops
 - One quarterly period per edition. A period whose facts would change which
   records emit (a fourth quarter's final-period prorrata coverage, a monthly
   filer) is not rendered.
+- Only supported periods render. A period a table declares below the support
+  floor is moved to the earliest supported period its edition serves, and an
+  edition serving no supported period has no scenario, because nothing below
+  the floor selects and so nothing there can render.
 - Modelo 347 has no scenario: its layout declares a required repeated record,
   so an empty draft leaves a required occurrence unemitted and the export path
   refuses it. Supplying that occurrence needs source-shaped arrivals this module
@@ -73,6 +77,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 from functools import cache, partial
+from pathlib import Path
 from typing import Final
 
 from cadrumo.application.aggregation.iva_ledger import (
@@ -127,6 +132,7 @@ from cadrumo.core.prorrata_register import (
     ProrrataActivityRowType,
 )
 from cadrumo.core.refund_election import RefundElection
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import resolve_bienes_inversion_regularizacion_parameters
@@ -135,6 +141,7 @@ from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
@@ -145,7 +152,12 @@ from cadrumo.domain.calculations.registry.prorrata_register_catalogue import (
     general_prorrata_register_regime,
     prorrata_sector_letters,
 )
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    RegistrySnapshot,
+    SupportedFilingYearsCatalogue,
+)
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.deadlines.models import ChargeAccount, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
@@ -171,6 +183,7 @@ from cadrumo.domain.prorrata_register.register import (
 )
 
 from .compiler.authority import compiled_bundled_authority
+from .compiler.loader import load_modelo_directory, load_shared_catalogues
 from .edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 
 __all__ = [
@@ -203,6 +216,7 @@ __all__ = [
     "M576_SCENARIO_PERIODS",
     "M604_SCENARIO_PERIODS",
     "M714_SCENARIO_PERIODS",
+    "declared_row_total_inputs",
     "edition_export_scenarios",
     "general_export_scenario",
     "m131_export_scenario",
@@ -215,6 +229,7 @@ __all__ = [
     "m308_export_scenario",
     "m322_export_scenario",
     "m390_export_scenario",
+    "supported_scenario_periods",
 ]
 
 #: The quarter each Modelo 303 edition is rendered for; each selects exactly that edition.
@@ -354,7 +369,7 @@ M222_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 }
 #: The annual period of Modelo 296's five-record successor design.
 M296_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2024-y-siguientes": Period.from_year_and_code(2024, "0A"),
+    "2024-2025": Period.from_year_and_code(2024, "0A"),
 }
 #: The annual period each Modelo 180 edition is rendered for.
 M180_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
@@ -382,7 +397,7 @@ M341_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 }
 #: The month each Modelo 353 edition is rendered for; the 2026 edition starts at ``02``.
 M353_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021-2025": Period.from_year_and_code(2021, "01"),
+    "2021-hasta-2026-01": Period.from_year_and_code(2021, "01"),
     "2026-desde-02": Period.from_year_and_code(2026, "02"),
 }
 #: The annual period Modelo 576's one export-bearing edition is rendered for.
@@ -463,13 +478,86 @@ def _m303_differentiated_sectors() -> tuple[SectorDefinition, ...]:
 _M303_NON_AGRICULTURAL: Final = "no_agricola"
 
 
-def edition_export_scenarios(modelo_id: str) -> Mapping[str, EditionExportScenario]:
-    """Every declared export scenario for ``modelo_id``, keyed by the edition it selects; empty when none is."""
+def edition_export_scenarios(
+    modelo_id: str,
+    *,
+    registry_root: Path | None = None,
+) -> Mapping[str, EditionExportScenario]:
+    """Every declared export scenario for ``modelo_id``, keyed by the edition it selects; empty when none is.
+
+    Each edition renders at the period its table declares when the support
+    envelope admits it, and otherwise at the earliest supported period it
+    serves, as :func:`supported_scenario_periods` decides against
+    ``registry_root`` (the bundled registry when omitted).
+    """
     declared = _DECLARED_SCENARIOS.get(modelo_id)
     if declared is None:
         return dict[str, EditionExportScenario]()
     builder, periods = declared
-    return {revision_id: builder(period) for revision_id, period in periods.items()}
+    rendered = supported_scenario_periods(
+        modelo_id,
+        periods,
+        registry_root=bundled_path("registry", "aeat") if registry_root is None else registry_root,
+    )
+    return {revision_id: builder(period) for revision_id, period in rendered.items()}
+
+
+def supported_scenario_periods(
+    modelo_id: str,
+    periods: Mapping[str, Period],
+    *,
+    registry_root: Path,
+) -> dict[str, Period]:
+    """Return the period each edition renders at: its declared one, or the earliest supported one it serves.
+
+    Nothing selects below the support floor, so a scenario declared there is
+    refused before a byte renders and proves nothing about the edition. An
+    edition whose span straddles the floor still files the supported years it
+    covers, so it renders at the first of them, keeping its declared period
+    code where that year serves it. The year and period are confirmed by the
+    canonical revision selection rather than read off the edition's name. An
+    edition that serves no supported year has no renderable export and gets no
+    scenario.
+    """
+    support = load_shared_catalogues(registry_root).require_supported_filing_years()
+    rendered: dict[str, Period] = {}
+    modelo: ModeloDefinition | None = None
+    for revision_id, period in periods.items():
+        if support.admits_filing_year(period.filing_year):
+            rendered[revision_id] = period
+            continue
+        if modelo is None:
+            modelo = load_modelo_directory(registry_root / "modelos" / modelo_id)
+        supported = _earliest_supported_period(modelo, revision_id, period, support)
+        if supported is not None:
+            rendered[revision_id] = supported
+    return rendered
+
+
+def _earliest_supported_period(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    declared: Period,
+    support: SupportedFilingYearsCatalogue,
+) -> Period | None:
+    """The first supported ``(year, period)`` that canonically selects ``revision_id``, or ``None``."""
+    revision = modelo.revisions.get(revision_id)
+    if revision is None:
+        return None
+    for year in support.years:
+        if year < declared.filing_year or not revision.period_selector.includes_year(year):
+            continue
+        served = tuple(str(token) for token in revision.period_selector.periods_for_year(year))
+        preferred = declared.registry_token
+        for token in dict.fromkeys((*(item for item in served if item == preferred), *served)):
+            try:
+                selected = select_revision(modelo, filing_year=year, period=token, support=support)
+                candidate = Period.from_year_and_code(year, token)
+            except (RegistryError, ValueError):
+                continue
+            if str(selected.id) == revision_id:
+                return candidate
+    return None
 
 
 # ── modelo 303 ──────────────────────────────────────────────────────────────
@@ -791,12 +879,11 @@ def _m131_producer_snapshot() -> FilingProducerSnapshot:
 
 # ── modelo 190 ──────────────────────────────────────────────────────────────
 
-#: The eight ``provider.kind = "withholding"`` grouped-row-sum bindings the 2022
-#: and 2023 editions' declarante summary formulas (percepciones-total,
-#: retenciones-total) add over. The 2024 edition replaces that formula with
-#: modelo 111 relation prefills instead, and every edition after it inherits
-#: that replacement, so from 2024 onward these bindings are no longer declared
-#: and must not be supplied.
+#: The eight ``provider.kind = "withholding"`` grouped-row-sum bindings an
+#: edition's declarante summary formulas (percepciones-total, retenciones-total)
+#: add over where they total the type-2 records. An edition that routes those
+#: totals through the modelo 111 relation prefills does not declare them, and a
+#: binding an edition does not declare must not be supplied.
 _M190_PERCEPTOR_ROW_TOTAL_BINDINGS: Final = (
     "modelo-190-perceptor-rows-percepcion-dineraria-total",
     "modelo-190-perceptor-rows-percepcion-especie-total",
@@ -809,16 +896,46 @@ _M190_PERCEPTOR_ROW_TOTAL_BINDINGS: Final = (
 )
 
 
-def m190_export_scenario(period: Period) -> EditionExportScenario:
-    """A Modelo 190 annual scenario supplying the withholding row totals the 2022 and 2023 editions sum.
+@cache
+def _bundled_modelo(modelo_id: str) -> ModeloDefinition:
+    return load_modelo_directory(bundled_path("registry", "aeat") / "modelos" / modelo_id)
 
-    Those two editions bind their declarante summary casillas to formulas over
-    eight withholding grouped-row-sum bindings -- the annual total each type-2
-    perceptor row family sums to -- so an empty draft leaves them unresolved.
+
+@cache
+def _bundled_support() -> SupportedFilingYearsCatalogue:
+    return load_shared_catalogues(bundled_path("registry", "aeat")).require_supported_filing_years()
+
+
+def declared_row_total_inputs(
+    modelo_id: str,
+    period: Period,
+    binding_ids: tuple[str, ...],
+) -> dict[str, Decimal]:
+    """Synthetic inputs for those of ``binding_ids`` the edition ``period`` selects declares.
+
+    Which edition sums its own type-2 records and which routes its totals
+    through a relation is the edition's declaration, so it is read from the
+    selected revision rather than inferred from the filing year.
     """
-    inputs: dict[str, Decimal] = {}
-    if period.filing_year <= 2023:
-        inputs = {binding_id: Decimal("1000.00") for binding_id in _M190_PERCEPTOR_ROW_TOTAL_BINDINGS}
+    revision = select_revision(
+        _bundled_modelo(modelo_id),
+        filing_year=period.filing_year,
+        period=period.registry_token,
+        support=_bundled_support(),
+    )
+    declared = {str(binding.id) for binding in revision.bindings}
+    return {binding_id: Decimal("1000.00") for binding_id in binding_ids if binding_id in declared}
+
+
+def m190_export_scenario(period: Period) -> EditionExportScenario:
+    """A Modelo 190 annual scenario supplying the withholding row totals its edition sums.
+
+    An edition that totals its type-2 records binds its declarante summary
+    casillas to formulas over eight withholding grouped-row-sum bindings -- the
+    annual total each type-2 perceptor row family sums to -- so an empty draft
+    leaves them unresolved.
+    """
+    inputs = declared_row_total_inputs("190", period, _M190_PERCEPTOR_ROW_TOTAL_BINDINGS)
     return EditionExportScenario(
         period=period,
         inputs=inputs,
@@ -828,10 +945,10 @@ def m190_export_scenario(period: Period) -> EditionExportScenario:
 
 # ── modelo 193 ──────────────────────────────────────────────────────────────
 
-#: The two ``provider.kind = "withholding"`` grouped-row-sum bindings the 2022,
-#: 2023 and 2025-y-siguientes editions' declarante summary formulas add over.
-#: The 2024 edition replaces that formula with modelo 123 relation prefills
-#: instead, so it does not declare them.
+#: The two ``provider.kind = "withholding"`` grouped-row-sum bindings an
+#: edition's declarante summary formulas add over where they total the type-2
+#: records. An edition that routes those totals through the modelo 123 relation
+#: prefills does not declare them.
 _M193_PERCEPTOR_ROW_TOTAL_BINDINGS: Final = (
     "modelo-193-perceptor-rows-base-total",
     "modelo-193-perceptor-rows-retenciones-total",
@@ -842,15 +959,13 @@ def m193_export_scenario(period: Period) -> EditionExportScenario:
     """A Modelo 193 annual scenario supplying its manual gastos total and the withholding row totals it sums.
 
     ``decl.gastos-total`` is a manual declarante casilla every edition declares
-    required, so every edition needs it supplied directly. The 2022, 2023 and
-    2025-y-siguientes editions additionally bind their base-total and
+    required, so every edition needs it supplied directly. An edition that
+    totals its type-2 records additionally binds its base-total and
     retenciones-total casillas to formulas over two withholding grouped-row-sum
-    bindings; the 2024 edition replaces that formula with modelo 123 relation
-    prefills instead.
+    bindings; one that routes them through modelo 123 relation prefills does not.
     """
     inputs: dict[str, Decimal] = {"decl.gastos-total": Decimal("500.00")}
-    if period.filing_year != 2024:
-        inputs.update({binding_id: Decimal("1000.00") for binding_id in _M193_PERCEPTOR_ROW_TOTAL_BINDINGS})
+    inputs.update(declared_row_total_inputs("193", period, _M193_PERCEPTOR_ROW_TOTAL_BINDINGS))
     return EditionExportScenario(
         period=period,
         inputs=inputs,
@@ -896,7 +1011,7 @@ def m200_export_scenario(period: Period) -> EditionExportScenario:
             # DP200012 casilla 00501, "Resultado de la cuenta de pérdidas y
             # ganancias": the edition declares it required, and the base
             # determination starts from it, so no draft can omit it.
-            "00501": Decimal("0.00"),
+            "DP200012:00501": Decimal("0.00"),
         },
         producer_snapshot=_m200_producer_snapshot,
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,

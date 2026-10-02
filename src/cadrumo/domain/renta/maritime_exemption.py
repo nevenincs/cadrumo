@@ -50,9 +50,11 @@ from ..calculations.registry.ids import LegalRefId
 from ..calculations.registry.schema_base import DateAxis
 from .errors import RentaError, RentaValidationError
 
-# Modelo 100 renta exenta casilla both active pathways flow into; the registry
-# formula ``renta-maritime-exempt-income-0525`` declares the same target.
-RENTA_EXENTA_CASILLA: CasillaId = validated_casilla_id("0525", surface="RENTA_EXENTA_CASILLA")
+# Internal Modelo 100 casilla both active pathways flow into; the registry
+# formula ``renta-maritime-exempt-income`` declares the same target. Both are
+# plain exemptions, so the amount files in no box: casilla 0525 carries only the
+# exempt income that still sets the tax rate (LIRPF DA 20.ª).
+RENTA_EXENTA_CASILLA: CasillaId = validated_casilla_id("trabajo-mar-renta-exenta", surface="RENTA_EXENTA_CASILLA")
 
 _MARITIME_WORKER_CLASS: Final = "trabajador_del_mar"
 _ELIGIBLE_VESSEL_REGISTRIES: Final = frozenset({"REBECA", "rebeca_eu_eea", "scheduled_canary_route"})

@@ -141,27 +141,33 @@ def test_a_year_below_the_support_floor_is_refused_before_any_side_effect(
     assert list(tmp_path.iterdir()) == []
 
 
-def test_the_annual_journey_refuses_a_year_whose_modelo_390_is_only_projected(
+def test_the_annual_journey_refuses_a_year_whose_modelo_390_is_not_authored_at_filing_grade(
     authority_root: Path, operation: PinnedAuthorityOperation, tmp_path: Path
 ) -> None:
-    """Every 303 quarter is authored for the year, but 390 resolves only from another year's edition."""
+    """Every 303 quarter is authored for the year, but 390 has no filing-grade edition authored for it.
+
+    Either 390 resolves only from another year's edition, or its own edition is
+    authored below filing grade, as when the Orden replacing the form precedes
+    AEAT's record design. The refusal names whichever of the two it met.
+    """
     year = next(
         (
             candidate
             for candidate in _candidate_years(operation)
             if all(_authored(operation, "303", candidate, quarter) for quarter in _QUARTERS)
-            and (resolved := _direction(operation, "390", candidate, "0A")) is not None
-            and resolved[0] is not TemporalProjectionDirection.AUTHORED
+            and _authored(operation, "390", candidate, "0A") is None
         ),
         None,
     )
-    assert year is not None, "the published authority projects no Modelo 390 year beside authored 303 quarters"
+    assert year is not None, "the published authority answers Modelo 390 at filing grade beside every authored 303 year"
+    projected = _direction(operation, "390", year, "0A") is not None
 
     with pytest.raises(IvaFilingYearUnsupportedError) as refused:
         _JOURNEYS["annual_m390"](authority_root, tmp_path, year)
 
-    assert f"modelo 390 filing year {year}" in str(refused.value)
-    assert "projection" in str(refused.value)
+    assert "modelo 390" in str(refused.value)
+    assert str(year) in str(refused.value)
+    assert ("projection" if projected else "no filing-grade revision") in str(refused.value)
     assert list(tmp_path.iterdir()) == []
 
 

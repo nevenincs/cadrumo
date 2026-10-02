@@ -1,22 +1,3 @@
-[[revisions."2024".parameters]]
-id = "renta-guarderia-incremento-cap-anual"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
-additional_source_refs = ["aeat-dr-100-2024-dictionary"]
-
-[[revisions."2024".parameters.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = [
-    "puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses",
-    "1.000 euros ÷ 12 meses x 2 meses) = 166,67",
-]
-
-[[revisions."2024".parameters.values]]
-value = "1000"
-date_axis = "filing_period"
-valid_from = 2024-01-01
-valid_to = 2024-12-31
 # Modelo 100 Art. 81.1 LIRPF deduccion por maternidad figures.
 #
 # Authored because these existed ONLY as Python literals in
@@ -31,11 +12,24 @@ valid_to = 2024-12-31
 # cap and the increment, and storing a derived total as an independent value is
 # how the two inputs drift apart from it.
 
+# LIS DA 18, as redacted by RDL 4/2024 art. 4.Uno, grants free depreciation of
+# electric vehicles and charging points only for tax periods that began on or
+# after 2024-01-01 and had not concluded when that real decreto-ley entered into
+# force on 2024-06-28; LIRPF DA 59 extends it to IRPF activity income. An IRPF
+# period ends before 31 December only on the taxpayer's death (LIRPF art. 13),
+# and the 2024 Renta manual keeps the accelerated regime for a taxpayer who died
+# before 2024-06-28. These rows cannot express that condition, and the product
+# cannot represent such a period today: the declarant's death date is carried
+# only as the identification datum DECFAL, every calculation fixes the IRPF
+# devengo at 31 December of the filing year, and the activity-asset schedule
+# prorates over the whole calendar year. A 2024 period that ended before
+# 2024-06-28 is therefore outside what these rows ground.
+
 [[revisions."2024".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-infraestructura-recarga-primer-ejercicio"
 data_type = "integer"
 unit = "year"
-legal_refs = ["ley-27-2014:da-18"]
+legal_refs = ["ley-27-2014:da-18", "real-decreto-ley-4-2024:art-4", "ley-35-2006:da-59"]
 
 [[revisions."2024".parameters.values]]
 value = "2024"
@@ -49,7 +43,7 @@ required_text = ["Con efectos desde el 1 de enero de 2024, se permite amortizar 
 id = "renta-actividad-inmovilizado-amortizacion-infraestructura-recarga-ultimo-ejercicio"
 data_type = "integer"
 unit = "year"
-legal_refs = ["ley-27-2014:da-18"]
+legal_refs = ["ley-27-2014:da-18", "real-decreto-ley-4-2024:art-4", "ley-35-2006:da-59"]
 
 [[revisions."2024".parameters.values]]
 value = "2025"
@@ -63,7 +57,7 @@ required_text = ["Con efectos desde el 1 de enero de 2024, se permite amortizar 
 id = "renta-actividad-inmovilizado-amortizacion-vehiculo-electrico-primer-ejercicio"
 data_type = "integer"
 unit = "year"
-legal_refs = ["ley-27-2014:da-18"]
+legal_refs = ["ley-27-2014:da-18", "real-decreto-ley-4-2024:art-4", "ley-35-2006:da-59"]
 
 [[revisions."2024".parameters.values]]
 value = "2024"
@@ -77,7 +71,7 @@ required_text = ["Inversiones en vehículos nuevos FCV, FCHV, BEV, REEV o PHEV",
 id = "renta-actividad-inmovilizado-amortizacion-vehiculo-electrico-ultimo-ejercicio"
 data_type = "integer"
 unit = "year"
-legal_refs = ["ley-27-2014:da-18"]
+legal_refs = ["ley-27-2014:da-18", "real-decreto-ley-4-2024:art-4", "ley-35-2006:da-59"]
 
 [[revisions."2024".parameters.values]]
 value = "2025"
@@ -87,3 +81,48 @@ valid_from = 2024-01-01
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-renta-2024-manual-parte1"
 required_text = ["Inversiones en vehículos nuevos FCV, FCHV, BEV, REEV o PHEV", "Con efectos desde el 1 de enero de 2024, se permite amortizar libremente en dos supuestos:", "Que entren en funcionamiento en los períodos impositivos que se inicien en 2024 y 2025."]
+# Minimo del contribuyente for the gravamen autonomico in Canarias, which Ley 5/2024 (disp.
+# final 10.a, apartado 24) sets with effect from 1 January 2024 (Ley 22/2009 art. 46.1.a); the
+# 2024 manual lists it in its chapter on the minimo personal y familiar.
+[[revisions."2024".parameters]]
+id = "renta-minimo-contribuyente-base-canarias"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["canarias-dl-1-2009:art-18-quater"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["5.606 euros anuales con carácter general"]
+
+[[revisions."2024".parameters.values]]
+value = "5606"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+[[revisions."2024".parameters]]
+id = "renta-minimo-contribuyente-edad-65-74-canarias"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["canarias-dl-1-2009:art-18-quater"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["1.162 euros anuales por contribuyente mayor de 65 años"]
+
+[[revisions."2024".parameters.values]]
+value = "1162"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+[[revisions."2024".parameters]]
+id = "renta-minimo-contribuyente-edad-75-canarias"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["canarias-dl-1-2009:art-18-quater"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["1.414 euros anuales por contribuyente mayor de 75 años"]
+
+[[revisions."2024".parameters.values]]
+value = "1414"
+date_axis = "filing_period"
+valid_from = 2024-01-01

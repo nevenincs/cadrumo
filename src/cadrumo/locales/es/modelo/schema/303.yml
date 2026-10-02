@@ -216,11 +216,21 @@ modelo:
           filing-year:
             label: Ejercicio al que se refiere la autoliquidación
           iva-autoconsumo-promotor-base:
-            label: Base imponible del autoconsumo del promotor inmobiliario (coste
-              de construcción, Art. 9.1.c + Art. 79.4 LISIVA)
-          iva-autoconsumo-promotor-cuota:
-            label: Cuota IVA del autoconsumo del promotor inmobiliario (21% sobre
-              base imponible, Art. 9.1.c + Art. 90 LISIVA)
+            label: Base imponible total del autoconsumo del promotor inmobiliario
+              según el perfil, sin desglose por tipo (coste de construcción, Art.
+              9 + Art. 79 LIVA)
+          iva-autoconsumo-promotor-base-por-tipo:
+            label: Suma de las bases del autoconsumo del promotor inmobiliario declaradas
+              por tipo
+          iva-autoconsumo-promotor-general-base:
+            label: Base imponible del autoconsumo del promotor inmobiliario al tipo
+              general (21%) (parte de la casilla oficial 07)
+          iva-autoconsumo-promotor-reducido-base:
+            label: Base imponible del autoconsumo del promotor inmobiliario al tipo
+              reducido (10%) (parte de la casilla oficial 04)
+          iva-autoconsumo-promotor-super-reducido-base:
+            label: Base imponible del autoconsumo del promotor inmobiliario al tipo
+              super-reducido (4%) (parte de la casilla oficial 01)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Suma la base imponible autorrepercutida devengada en adquisiciones
               intracomunitarias.
@@ -240,6 +250,15 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Base imponible IVA soportado en operaciones interiores con bienes
               de inversión (parte de la casilla oficial 30)
+          iva-base-repercutida-general:
+            label: Base imponible IVA repercutido al tipo general (21%) (parte de
+              la casilla oficial 07)
+          iva-base-repercutida-reducido:
+            label: Base imponible IVA repercutido al tipo reducido (10%) (parte de
+              la casilla oficial 04)
+          iva-base-repercutida-super-reducido:
+            label: Base imponible IVA repercutido al tipo super-reducido (4%) (parte
+              de la casilla oficial 01)
           iva-compensacion-aplicada-periodo:
             label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
           iva-compensacion-disponible-fin-periodo:
@@ -274,6 +293,15 @@ modelo:
           iva-cuota-deducible-total:
             label: Total cuota IVA deducible (soportado en operaciones interiores
               + autorepercutido deducible)
+          iva-cuota-devengada-general:
+            label: Cuota IVA devengada al tipo general (21%), incluido el autoconsumo
+              del promotor (casilla oficial 09)
+          iva-cuota-devengada-reducido:
+            label: Cuota IVA devengada al tipo reducido (10%), incluido el autoconsumo
+              del promotor (casilla oficial 06)
+          iva-cuota-devengada-super-reducido:
+            label: Cuota IVA devengada al tipo super-reducido (4%), incluido el autoconsumo
+              del promotor (casilla oficial 03)
           iva-cuota-devengada-total:
             label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
               en adquisiciones intracomunitarias)

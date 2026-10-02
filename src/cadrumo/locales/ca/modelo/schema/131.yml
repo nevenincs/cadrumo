@@ -153,7 +153,7 @@ modelo:
             label: 'Mòdul 1 (Personal assalariat): nombre d''unitats'
           irpf-pf-modulos-1-unidades-anterior:
             label: 'Mòdul 1 (Personal assalariat): nombre d''unitats de l''exercici
-              anterior (2023), a efectes de la minoració per incentius a l''ocupació'
+              anterior, a efectes de la minoració per incentius a l''ocupació'
           irpf-pf-modulos-2-unidades:
             label: 'Mòdul 2 (Personal no assalariat): nombre d''unitats'
           irpf-pf-modulos-3-unidades:
@@ -179,34 +179,9 @@ modelo:
               un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
               segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes
               per a l'assignació exacta.
-          irpf-pf-modulos-indice-inicio-actividad:
-            label: 'Índex corrector per inici de noves activitats (lletra b.4, activitat
-              iniciada des de l''1-1-2025 en local exclusiu). Índex declarat per l''operador
-              (0,80/0,90; 0,60/0,70 amb discapacitat ≥33%, Ordre HAC/1425/2025 Annex
-              II, instrucció 2.3.b.4); el motor no modela l''exercici d''inici ni
-              la discapacitat. Incompatible amb l''índex de temporada (b.2): si tots
-              dos es declaren, preval la temporada.'
-          irpf-pf-modulos-indice-pequena-dimension:
-            label: Índex corrector per a empreses de petita dimensió (lletra b.1 -
-              municipi, local únic, sense personal o fins a 2 treballadors). Índex
-              declarat per l'operador (0,70/0,75/0,80/0,90, Ordre HAC/1425/2025 Annex
-              II, instrucció 2.3.b.1); el motor no modela fets del contribuent. Mai
-              s'aplica a les activitats amb índex especial (721.2, 722).
-          irpf-pf-modulos-indice-temporada:
-            label: 'Índex corrector de temporada (lletra b.2 - activitat de temporada,
-              fins a 180 dies/any). Índex declarat per l''operador (1,50/1,35/1,25
-              segons durada, Ordre HAC/1425/2025 Annex II, instrucció 2.3.b.2); el
-              motor no modela la durada com a fet del contribuent. Incompatible amb
-              l''índex d''inici de noves activitats (b.4): si tots dos es declaren,
-              preval aquest.'
-          irpf-pf-modulos-pequena-dimension-ignorado-flag:
-            label: 'Indicador intern (1/0): l''índex corrector per a empreses de petita
-              dimensió (b.1) declarat va ser ignorat per incompatibilitat amb l''índex
-              corrector especial de l''activitat (Ordre HAC/1425/2025 Annex II, instrucció
-              2.3.a/b.1).'
           irpf-pf-modulos-rendimiento-neto-actividad:
             label: 'Rendiment net de l''activitat (Fase 4a: mòduls − reducció general
-              5 per 100)'
+              que l''ordre de mòduls fixa per a l''exercici)'
           irpf-pf-modulos-rendimiento-neto-minorado:
             label: 'Rendiment net minorat (Fase 2a: previ − minoració per incentius
               a l''ocupació − minoració per incentius a l''inversió)'
@@ -219,11 +194,6 @@ modelo:
             label: Resultats negatius de trimestres anteriors
           irpf-pf-modulos-suma-rendimientos:
             label: Suma de rendiments nets
-          irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag:
-            label: 'Indicador intern (1/0): es van declarar simultàniament l''índex
-              corrector de temporada (b.2) i l''índex corrector per inici de noves
-              activitats (b.4), incompatibles entre si (Ordre HAC/1425/2025 Annex
-              II, instrucció 2.3).'
           irpf-pf-modulos-volumen-agrario:
             label: Volum d'ingressos agraris del trimestre
           irpf-pf-modulos-volumen-sin-datos-base:
@@ -253,6 +223,55 @@ modelo:
         title: IRPF pagament fraccionat estimació objectiva
       revision:
         2019-2023:
+          casilla:
+            modulos-indice-inicio-actividad:
+              label: 'Índex corrector per inici de noves activitats (lletra b.4, activitat
+                iniciada des de l''1-1-2021 per a l''exercici 2022 o des de l''1-1-2022
+                per a l''exercici 2023, en local exclusiu). Índex declarat per l''operador
+                (0,80/0,90; 0,60/0,70 amb discapacitat ≥33%, Annex II, instrucció
+                2.3.b.4 de l''Ordre HFP/1335/2021 per a 2022 i de l''Ordre HFP/1172/2022
+                per a 2023); el motor no modela l''exercici d''inici ni la discapacitat.
+                Incompatible amb l''índex de temporada (b.2): si tots dos es declaren,
+                preval la temporada.'
+            modulos-indice-pequena-dimension:
+              label: Índex corrector per a empreses de petita dimensió (lletra b.1
+                - municipi, local únic, sense personal o fins a 2 treballadors). Índex
+                declarat per l'operador (0,70/0,75/0,80/0,90, Annex II, instrucció
+                2.3.b.1 de l'Ordre HFP/1335/2021 per a 2022 i de l'Ordre HFP/1172/2022
+                per a 2023); el motor no modela fets del contribuent. Mai s'aplica
+                a les activitats amb índex especial (721.2, 722).
+            modulos-indice-temporada:
+              label: 'Índex corrector de temporada (lletra b.2 - activitat de temporada,
+                fins a 180 dies/any). Índex declarat per l''operador (1,50/1,35/1,25
+                segons durada, Annex II, instrucció 2.3.b.2 de l''Ordre HFP/1335/2021
+                per a 2022 i de l''Ordre HFP/1172/2022 per a 2023); el motor no modela
+                la durada com a fet del contribuent. Incompatible amb l''índex d''inici
+                de noves activitats (b.4): si tots dos es declaren, preval aquest.'
+            modulos-minoracion-inversion:
+              label: Minoració per incentius a l'inversió (amortització de l'immobilitzat
+                material o intangible afecte, segons el seu llibre registre de béns
+                d'inversió). Import declarat per l'operador; el motor no modela un
+                registre de béns per element - consulteu l'Annex II, instrucció 2.2.b)
+                de l'Ordre HFP/1335/2021 per a 2022 o de l'Ordre HFP/1172/2022 per
+                a 2023, i la vostra pròpia taula d'amortització.
+            modulos-pequena-dimension-ignorado-flag:
+              label: 'Indicador intern (1/0): l''índex corrector per a empreses de
+                petita dimensió (b.1) declarat va ser ignorat per incompatibilitat
+                amb l''índex corrector especial de l''activitat (Annex II, instrucció
+                2.3.a/b.1 de l''Ordre HFP/1335/2021 per a 2022 i de l''Ordre HFP/1172/2022
+                per a 2023).'
+            modulos-rendimiento-neto-modulos:
+              label: 'Rendiment net de mòduls (Fase 3a: minorat ajustat pels índexs
+                correctors generals - petita dimensió, temporada/inici de noves activitats,
+                excés - en l''ordre i amb les incompatibilitats de l''Annex II, instrucció
+                2.3 de l''Ordre HFP/1335/2021 per a 2022 i de l''Ordre HFP/1172/2022
+                per a 2023)'
+            modulos-temporada-inicio-actividad-conflicto-flag:
+              label: 'Indicador intern (1/0): es van declarar simultàniament l''índex
+                corrector de temporada (b.2) i l''índex corrector per inici de noves
+                activitats (b.4), incompatibles entre si (Annex II, instrucció 2.3
+                de l''Ordre HFP/1335/2021 per a 2022 i de l''Ordre HFP/1172/2022 per
+                a 2023).'
           construct:
             modelo-131-objective-estimation-instalment:
               field:
@@ -262,6 +281,9 @@ modelo:
             label: Exercicis 2019 a 2023
         '2024':
           casilla:
+            modulos-1-unidades-anterior:
+              label: 'Mòdul 1 (Personal assalariat): nombre d''unitats de l''exercici
+                anterior (2023), a efectes de la minoració per incentius a l''ocupació'
             modulos-indice-inicio-actividad:
               label: 'Índex corrector per inici de noves activitats (lletra b.4, activitat
                 iniciada des de l''1-1-2023 en local exclusiu). Índex declarat per
@@ -372,15 +394,45 @@ modelo:
                 anterior (2023), a efectes de la minoració per incentius a l''ocupació'
               label: 'Mòdul 1 (Personal assalariat): nombre d''unitats de l''exercici
                 anterior (2025), a efectes de la minoració per incentius a l''ocupació'
+            modulos-indice-inicio-actividad:
+              label: 'Índex corrector per inici de noves activitats (lletra b.4, activitat
+                iniciada des de l''1-1-2025 en local exclusiu). Índex declarat per
+                l''operador (0,80/0,90; 0,60/0,70 amb discapacitat ≥33%, Ordre HAC/1425/2025
+                Annex II, instrucció 2.3.b.4); el motor no modela l''exercici d''inici
+                ni la discapacitat. Incompatible amb l''índex de temporada (b.2):
+                si tots dos es declaren, preval la temporada.'
+            modulos-indice-pequena-dimension:
+              label: Índex corrector per a empreses de petita dimensió (lletra b.1
+                - municipi, local únic, sense personal o fins a 2 treballadors). Índex
+                declarat per l'operador (0,70/0,75/0,80/0,90, Ordre HAC/1425/2025
+                Annex II, instrucció 2.3.b.1); el motor no modela fets del contribuent.
+                Mai s'aplica a les activitats amb índex especial (721.2, 722).
+            modulos-indice-temporada:
+              label: 'Índex corrector de temporada (lletra b.2 - activitat de temporada,
+                fins a 180 dies/any). Índex declarat per l''operador (1,50/1,35/1,25
+                segons durada, Ordre HAC/1425/2025 Annex II, instrucció 2.3.b.2);
+                el motor no modela la durada com a fet del contribuent. Incompatible
+                amb l''índex d''inici de noves activitats (b.4): si tots dos es declaren,
+                preval aquest.'
             modulos-minoracion-inversion:
               label: Minoració per incentius a l'inversió (amortització de l'immobilitzat
                 material o intangible afecte, segons el seu llibre registre de béns
                 d'inversió). Import declarat per l'operador; el motor no modela un
                 registre de béns per element - consulteu l'Ordre HAC/1425/2025 Annex
                 II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
+            modulos-pequena-dimension-ignorado-flag:
+              label: 'Indicador intern (1/0): l''índex corrector per a empreses de
+                petita dimensió (b.1) declarat va ser ignorat per incompatibilitat
+                amb l''índex corrector especial de l''activitat (Ordre HAC/1425/2025
+                Annex II, instrucció 2.3.a/b.1).'
             modulos-rendimiento-neto-modulos:
               label: 'Rendiment net de mòduls (Fase 3a: minorat ajustat per l''índex
                 corrector d''excés)'
+            modulos-temporada-inicio-actividad-conflicto-flag:
+              label: 'Indicador intern (1/0): es van declarar simultàniament l''índex
+                corrector de temporada (b.2) i l''índex corrector per inici de noves
+                activitats (b.4), incompatibles entre si (Ordre HAC/1425/2025 Annex
+                II, instrucció 2.3).'
           construct:
             modelo-131-objective-estimation-instalment:
               field:

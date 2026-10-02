@@ -509,7 +509,8 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
     # following the Modelo 180 precedent, because the wizard setup command
     # projects no inputs for the typed action channel to bind against.
     message = envelope["error"]["message"]
-    assert "--retencion-observation" in message
+    assert "--received-invoice-retencion" in message
+    assert "--ledger-payment-withholding" in message
     assert "all-blank Modelo 111" in message
     assert "--modelo-111-no-retenciones-periods 2025:2T" in message
 

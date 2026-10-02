@@ -178,7 +178,8 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
         ("130", {_M130_RESULT_CASILLA: Decimal("-50.00")}, Period.from_year_and_code(2024, "4T"), "N"),
         ("130", {_M130_RESULT_CASILLA: Decimal("0.00")}, Period.from_year_and_code(2024, "4T"), "N"),
         ("200", {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, Period.from_year_and_code(2025, "0A"), "D"),
-        ("390", {}, Period.from_year_and_code(2026, "0A"), "I"),
+        # A filing-grade Modelo 390 year: the 2026 edition claims applicability only.
+        ("390", {}, Period.from_year_and_code(2025, "0A"), "I"),
     ),
     ids=(
         "m303-positive-ingreso",

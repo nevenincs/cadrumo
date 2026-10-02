@@ -64,6 +64,9 @@ modelo:
         title: Éves adatszolgáltatási bevallás értékpapírokról, biztosításokról és
           járadékokról
       revision:
+        '2022':
+          field:
+            label: 189-es modelo, 2022. adóév
         '2023':
           field:
             label: 189-es modelo, 2023. adóév

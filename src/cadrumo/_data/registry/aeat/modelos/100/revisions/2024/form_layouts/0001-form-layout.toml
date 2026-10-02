@@ -7,7 +7,7 @@ revision_id = "2024"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "077f39ed269619e60c0df2fb28dd9f15e914882d9980feeb878a9d9db0735eaa"
+source_state_digest = "fae4e5c24d44740ac6109544cde9571ad0ac2aee2a4aa00e5c7ba937b6cc4f43"
 design_sources = [
     { source_ref = "aeat-dr-100-2024-dictionary", sha256 = "0e190a5b1fe95047785832797ff15d5070441e37d49e4062d20ca95b65e37884" },
     { source_ref = "aeat-dr-100-2024-input-dictionary", sha256 = "9c9e64543f26ef2b21e13de41ed9c6f8f591264ea39962a3ec974cde79411be6" },
@@ -2076,6 +2076,7 @@ placements = [
     { casilla_id = "2147", kind = "on_form", box_number = "2147" },
     { casilla_id = "2148", kind = "on_form", box_number = "2148" },
     { casilla_id = "A", kind = "on_form" },
+    { casilla_id = "AJ", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "ANOASDLG", kind = "working_figure" },
     { casilla_id = "APENOMDLG", kind = "working_figure" },
     { casilla_id = "APENOMDLG_ASC", kind = "working_figure" },
@@ -2115,6 +2116,7 @@ placements = [
     { casilla_id = "TIPOTRIBUTACION", kind = "working_figure" },
     { casilla_id = "ZCCAD", kind = "working_figure" },
     { casilla_id = "ZRUE2", kind = "working_figure" },
+    { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "prestacion-inss-maternidad-paternidad-exenta", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
 

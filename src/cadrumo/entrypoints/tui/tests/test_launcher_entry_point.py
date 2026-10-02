@@ -26,6 +26,9 @@ from ....application.search.workbench import (
     WorkbenchSearchService,
 )
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.authority_store import AuthorityStoreError
+from ....domain.calculations.registry.tests.shared_authority_isolation import isolated_shared_authority
 from ..account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp
 from ..launcher import (
@@ -257,6 +260,54 @@ def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> Non
 
     assert main(headless=True, auto_pilot=inspect_search, workbench_root_inputs_provider=provider) == 0
     assert len(calls) == 1
+
+
+async def _leave(pilot: Pilot[object]) -> None:
+    await pilot.pause()
+    pilot.app.exit()
+
+
+def test_an_orderly_exit_releases_the_shared_registry_authority(tmp_path: Path) -> None:
+    """The shared owner holds its database open; the host lets go of it once the session ends in order."""
+    with isolated_shared_authority(tmp_path) as database:
+        opened = bundled_indexed_authority()
+        with opened.operation():
+            pass
+
+        assert main(headless=True, auto_pilot=_leave, workbench_root_inputs_provider=_root_inputs_provider()) == 0
+
+        with pytest.raises(AuthorityStoreError, match="closed"), opened.operation():
+            pass
+        # Windows refuses to delete a file a live connection holds.
+        database.unlink()
+
+
+def test_a_session_that_fails_leaves_the_shared_registry_authority_to_its_error(tmp_path: Path) -> None:
+    """A failure that escapes the sessions reaches the caller untouched and releases nothing.
+
+    A failure inside the app is reported by Textual and the session still ends;
+    the recompose owner runs outside it, so its failure is one that escapes.
+    """
+
+    async def request_recomposition(pilot: Pilot[object]) -> None:
+        await pilot.pause()
+        pilot.app.exit(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED))
+
+    def failing_recompose(_outcome: AccountRecomposeRequiredV1) -> None:
+        raise RuntimeError("recomposition unavailable")
+
+    with isolated_shared_authority(tmp_path):
+        opened = bundled_indexed_authority()
+        with pytest.raises(RuntimeError, match="recomposition unavailable"):
+            main(
+                headless=True,
+                auto_pilot=request_recomposition,
+                workbench_root_inputs_provider=_root_inputs_provider(),
+                recompose_authenticated_session=failing_recompose,
+            )
+
+        with opened.operation() as operation:
+            assert operation.pin().logical_generation
 
 
 def test_module_entry_composes_the_production_session_rather_than_refusing(

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#semantic-consolidation'
 date: '2026-08-28'
-modified: '2026-09-17'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:5955f0568873cc14a0adfad65472745f6ee48fcef79d97fe61047a781f90fb8f'
+body_hash: 'sha256:268366aa9f2e20f14eecb4f9a1e315b68dec00871872068eaafe3550475bcd02'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
@@ -708,6 +708,14 @@ related:
 - `S174` `M` `src/cadrumo/core/errors/registry/__init__.py`
 - `S174` `verify:` `pytest core/errors -n 0 -m ""` -> `application.modelo`
 - `S174` `verify:`
+- `S64` `M` `src/cadrumo/domain/portals/__init__.py`
+- `S65` `M` `src/cadrumo/entrypoints/__init__.py`
+- `S68` `M` `src/cadrumo/application/operator_surface/__init__.py`
+- `S70` `M` `src/cadrumo/application/overview/__init__.py`
+- `S73` `M` `src/cadrumo/llm/__init__.py`
+- `S75` `M` `src/cadrumo/domain/contribuyente/__init__.py`
+- `S77` `M` `src/cadrumo/domain/transactions/__init__.py`
+- `S76` `verify:` `uv run --no-sync pytest -q -n 0 -m unit src/cadrumo/tests/test_namespace_attribute_reachability.py` -> `pass`
 
 ## Notes
 
@@ -2743,3 +2751,11 @@ related:
 - `S174` Worth naming because the relocation touched the error registry and the failure
 - `S174` is about error classes: adjacent subject, unrelated cause. Reading the assertion
 - `S174` rather than the file it lives in is what separated them.
+- `S64` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Retained Git commit f35caf1dfb75c0420766f347557a3c66690ea5a6 records this operation. The namespace transition was checked against its parent and the retained source diff; packages later removed are historical operations, not assertions that their old paths still exist.
+- `S65` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Retained Git commit f35caf1dfb75c0420766f347557a3c66690ea5a6 records this operation. The namespace transition was checked against its parent and the retained source diff; packages later removed are historical operations, not assertions that their old paths still exist.
+- `S68` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Retained Git commit f35caf1dfb75c0420766f347557a3c66690ea5a6 records this operation. The namespace transition was checked against its parent and the retained source diff; packages later removed are historical operations, not assertions that their old paths still exist.
+- `S70` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Retained Git commit f35caf1dfb75c0420766f347557a3c66690ea5a6 records this operation. The namespace transition was checked against its parent and the retained source diff; packages later removed are historical operations, not assertions that their old paths still exist.
+- `S73` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Retained Git commit 82f5f152e9c76ccbe87ae2fe54a5087e2356ae6f records this operation. The namespace transition was checked against its parent and the retained source diff; packages later removed are historical operations, not assertions that their old paths still exist.
+- `S75` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Retained Git commit 82f5f152e9c76ccbe87ae2fe54a5087e2356ae6f records this operation. The namespace transition was checked against its parent and the retained source diff; packages later removed are historical operations, not assertions that their old paths still exist.
+- `S77` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Retained Git commit 82f5f152e9c76ccbe87ae2fe54a5087e2356ae6f records this operation. The namespace transition was checked against its parent and the retained source diff; packages later removed are historical operations, not assertions that their old paths still exist.
+- `S76` 2026-10-01 live verification: 3 passed. The namespace gate exercises dynamic string-import reachability and an isolated planted-defect control. Run receipt: C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-01/20261001T000053.498855Z-pytest-43160-f1e289d1/run.log. No other historical test run is claimed.

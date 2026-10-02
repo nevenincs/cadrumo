@@ -73,6 +73,12 @@ cli:
         batch_items_refused_message: A rendszer néhány dokumentumot elutasított. A
           futtatás többi dokumentuma ettől függetlenül elkészült; az elutasított sorok
           megnevezik a tapasztaltakat.
+        batch_label_reading_degraded_message: '{count} tárolt piszkozat csak a címkék
+          szerinti olvasaton alapul, mert a modell általi kitöltés nem futott le;
+          az általa olvasandó mezők ezekben a piszkozatokban üresek, nem a dokumentumokból
+          hiányoznak, és minden sor megnevezi az okot. A dokumentum megerősítése újra
+          beolvassa azt, így ezek a mezők akkor kitöltődnek, ha az ok már megszűnt,
+          vagy megadhatja őket saját maga.'
         batch_pending_review_message: Néhány piszkozat olyan problémát hordoz, amelyet
           Önnek kell rendeznie a számla létrehozása előtt. Ezek visszatartva vannak,
           nem hiúsultak meg.
@@ -219,6 +225,20 @@ cli:
         invoice_number_help: Szállítói számlaszám.
         iva_amount_help: Számla IVA-összege.
         iva_rate_help: Alkalmazott IVA-kulcs százalékban, például 21.
+        label_reading_busy_refused: 'Egy másik helyi olvasás már használta a gép következtetési
+          kapacitását, ezért az olvasómodell nem futott. A címkeszabályok által olvasatlanul
+          hagyott {count} mező üres marad: {fields}. A címkék szerinti olvasat érvényben
+          marad; futtassa újra a kinyerést, amikor a másik olvasás befejeződött, vagy
+          adja meg ezeket a mezőket saját maga.'
+        label_reading_headroom_refused: 'A helyi olvasómodell nem töltődött be: ezen
+          a gépen nem mérhető elegendő szabad memória hozzá. A címkeszabályok által
+          olvasatlanul hagyott {count} mező üres marad: {fields}. A címkék szerinti
+          olvasat érvényben marad; szabadítson fel memóriát, és futtassa újra a kinyerést,
+          vagy adja meg ezeket a mezőket saját maga.'
+        label_reading_reader_unavailable: 'A helyi szemantikus olvasó nem futtatható
+          ({error_type}), ezért a címkeszabályok által olvasatlanul hagyott {count}
+          mező üres marad: {fields}. A címkék szerinti olvasat érvényben marad, ezeket
+          a mezőket Önnek kell megadnia.'
         list_help: Regisztrált vásárlásiszámla-bizonyítékok listázása.
         notes_help: Belső megjegyzések a bizonyítékról.
         pull_actor_help: Az Ön neve vagy címkéje.
@@ -694,22 +714,25 @@ cli:
       year_help: Benyújtási év.
     modelo:
       aggregate:
+        calculation_rows_absent: A(z) {modelo} nyomtatvány ({filing_year} {period})
+          számítása által olvasott {source_family} forráshoz nincs tárolt sor, ezért
+          ez a jelentés hiányzó adatok miatt üres, nem nulla érték miatt.
         counterpart_observation_help: JSON CounterpartObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
           collectible_invoice lehet. Több megfigyeléshez ismételje meg.
         foreign_asset_observation_help: JSON ForeignAssetObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
           collectible_invoice lehet. Több megfigyeléshez ismételje meg.
-        invoice_retencion_wrong_modelo: A --received-invoice-retencion a perceptoronkénti
-          levonás-tárolóba irányít; a Modelo %{modelo} nem a 111, 115, 123, 180, 190,
-          193 egyike.
+        invoice_retencion_wrong_modelo: A --received-invoice-retencion a befogadott
+          számlák levonásait csak a Modelo %{accepted_modelos} nyomtatványokhoz rögzíti;
+          a Modelo %{modelo} nem fogad el számlából származó levonást.
         json_not_object: A(z) {flag} értékének JSON-objektumnak kell lennie.
         json_parse_error: A(z) {flag} értékének JSON-objektumnak kell lennie; érvénytelen
           JSON a(z) {pos}. bájtnál.
         json_validation_error: 'A(z) {flag} értéke nem érvényes megfigyelési objektum:
           {details}.'
         ledger_payment_withholding_exclusive: A --ledger-payment-withholding nem kombinálható
-          a --received-invoice-retencion vagy a --retencion-observation kapcsolóval.
+          a --received-invoice-retencion kapcsolóval.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest
           (egy kifizetést leíró JSON-kérés): a nyilvántartásában szereplő tranzakcióval
           kifizetett bér- (Modelo 111) vagy ingó tőkejövedelem-felosztás (Modelo 123).'
@@ -720,10 +743,9 @@ cli:
         ledger_payment_withholding_wrong_modelo: A --ledger-payment-withholding csak
           a Modelo 111-hez munkajövedelmet és a Modelo 123-hoz ingó tőkejövedelmet
           rögzít; a Modelo %{modelo} nem elfogadott.
-        m123_ledger_payment_only: A Modelo 123 levonási adatot csak a nyilvántartásában
+        m123_ledger_payment_only: A Modelo 123 levonási adatot csak a nyilvántartásodban
           szereplő kifizető tételből fogad el a --ledger-payment-withholding kapcsolóval;
-          a számlából vagy kézzel megadott levonásokat elutasítja, és semmi sem lett
-          rögzítve.
+          a számlából származó levonásokat elutasítja, és semmi sem lett rögzítve.
         modelo_help: A háttéraggregálási szolgáltatás által támogatott nyomtatványkód
           (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).
         period_help: 'Aggregációs időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok.'
@@ -731,18 +753,11 @@ cli:
           egy beérkezett számla egy levonás-felosztása, a fizetési vagy esedékességi
           bizonyítékával. Parancsonként egy felosztás; a scheme a perceptor tevékenységére
           vonatkozó jogi tény, amelyet a rendszer sosem következtet ki a számlából.'
-        retencion_observation_help: 'JSON RetencionObservation objektum. A source_kind
-          értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
-          collectible_invoice lehet. A Modelo 111 munka esetén a rendimientos_trabajo
-          scheme az alkalmazotti progresszív kulcs (LIRPF 101.1. cikk), a rendimientos_trabajo_administrador
-          pedig a rögzített igazgatói/tanácstagi kulcs (LIRPF 101.2. cikk: 35 százalék,
-          vagy 19 százalék, ha a szervezet nettó árbevétele 100.000 EUR alatt van).
-          Több megfigyeléshez ismételje meg.'
-        withholding_observation_help: Kifizetőnkénti-kulcsonkénti visszatartási megfigyelés
-          (JSON) a Modelo 190 juttatásszámlálásához; ismételhető.
-      aggregate_help: 'A háttér nyomtatványonkénti aggregálási szolgáltatás futtatása
-        explicit kanonikus megfigyelésekből. Elfogadott source_kind értékek: ledger_transaction,
-        purchase_invoice_evidence, payable_invoice és collectible_invoice.'
+      aggregate_help: A nyomtatványonkénti aggregálási szolgáltatás futtatása egy
+        nyomtatványra és időszakra. A partner- és külföldieszköz-megfigyeléseket JSON-opciókként
+        kell átadni. A forrásadó-nyomtatványok az időszakra már tárolt sorokat olvassák,
+        miután rögzítették a parancsonként legfeljebb egy befogadott számla vagy főkönyvi
+        kifizetés szerinti levonás-felosztást.
       app_help: 'A nyomtatványdefiníciók vizsgálata: az AEAT adónyomtatványainak katalógusa.'
       audit:
         bundle_id_help: Bizonyítékcsomag azonosítója (teljes SHA-256 vagy egyértelmű

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-09-15'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd515d94a68a5264c5e584f70ee7deceac58a297fd6d8ea05d0c5dc816b6cb6b'
+body_hash: 'sha256:7af430d49d52f22e0e45fa3cb8c556f83c1582918ef2a7fd367355a655733dba'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -1944,6 +1944,9 @@ related:
 - `S490` `T`
 - `S491` `T`
 - `S492` `T`
+- `S363` `A` `.vault/audit/2026-08-31-tui-interface-audit.md`
+- `S364` `A` `.vault/audit/2026-08-31-tui-interface-audit.md`
+- `S399` `A` `.vault/audit/2026-09-03-tui-architecture-w08-p27-s379-full-audit.md`
 
 ## Notes
 
@@ -9188,3 +9191,6 @@ related:
 - `S492` rests on the probe's `None` branch rather than an end-to-end pass. A desktop
 - `S492` logon should run `just test-os-keychain` once and confirm the 31 execute.
 - `S492` NOT COMMITTED by me.
+- `S363` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/audit/2026-08-31-tui-interface-audit.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.
+- `S364` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/audit/2026-08-31-tui-interface-audit.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.
+- `S399` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/audit/2026-09-03-tui-architecture-w08-p27-s379-full-audit.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.

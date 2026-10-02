@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..action_errors import ModeloLocalObservationError
 from ..local_observation_actions import _canonical_casilla_values
@@ -27,6 +28,11 @@ _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_i
 )
 
 
+def _casillas_printing(revision: ModeloRevision, number: str) -> tuple[CasillaId, ...]:
+    """Return, in id order, every casilla of the revision that carries the printed number."""
+    return tuple(sorted(casilla.id for casilla in revision.casillas if casilla.number == number))
+
+
 def test_local_observation_refuses_ambiguous_printed_number_with_canonical_candidates() -> None:
     snapshot = published_snapshot("200", filing_year=2025, period="0A")
 
@@ -36,11 +42,14 @@ def test_local_observation_refuses_ambiguous_printed_number_with_canonical_candi
             casilla_values={_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")},
         )
 
+    candidates = _casillas_printing(snapshot.revision, _M200_AMBIGUOUS_PRINTED_NUMBER)
+    assert {_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA, _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA} <= set(
+        candidates
+    )
     assert exc_info.value.context == {
         "casillas": _M200_AMBIGUOUS_PRINTED_NUMBER,
         "revision_id": snapshot.revision.id,
         "noncanonical_reference_targets": (
-            f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
-            f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
+            f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: {', '.join(candidates)}"
         ),
     }

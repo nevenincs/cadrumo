@@ -1,7 +1,7 @@
 # Worktree initialization
 
-`just init` completely provisions a new worktree. It runs the minimal checkout
-setup, installs the default Vaultspec resources, provisions and verifies
+`just init` is the canonical repository initialization command. It runs the
+minimal checkout setup, installs the default Vaultspec resources, provisions and verifies
 Playwright's bundled Chromium (and the configured browser channel when an
 operator selects another one), provisions Vaultspec RAG and its managed external
 dependencies, compiles and publishes the runtime authority under `.authority/`,
@@ -9,7 +9,10 @@ then reports the resulting configuration.
 
 `just setup` remains the minimal convergence command for callers that need only
 the locked Python environment, repository tooling, and local configuration.
-Both commands take no arguments, are non-interactive, and are safe to run again.
+`just init` delegates its Python and tooling phases to `just setup`, then adds
+the browser, RAG, authority, and product configuration steps through their
+existing owners. Both commands take no arguments, are non-interactive, and are
+safe to run again.
 
 The recipes:
 
@@ -17,7 +20,6 @@ The recipes:
 | ----------------------------- | ------------------------------------------------------------- |
 | `just init`                   | Complete provisioning, including browsers, RAG and authority. |
 | `just setup`                  | Locked Python, repository tooling and local configuration.     |
-| `just setup-python`           | The Python environment and its locked dependencies.           |
 | `just setup-repository-tools` | Framework enrollment and pinned repository tooling; no Git hooks. |
 | `just setup-check`            | Reports whether the worktree is initialized. Mutates nothing. |
 | `just setup-workstation-tools` | Optional workstation CLI provisioning.                       |
@@ -39,15 +41,16 @@ that still matches the source data and supported artifact format.
 
 **Fail-fast, and complete in what it reports.** Unlike the fleet's `-all`
 aggregates, which run every step because they chain independent inspectors,
-`setup`'s phases are a dependency chain building one artifact —
-`setup-repository-tools` runs executables out of the environment
-`setup-python` created. So it stops at
+the shared bootstrap phases form a dependency chain. The tooling phase runs
+executables out of the environment the Python phase created. Initialization stops at
 the first failing phase, and records the phases it did not attempt as `skipped`
 with the upstream cause named. A non-zero `setup` names exactly one cause.
 
-**Machine-readable.** Every run writes `.venv/init-report.json` (or
+**Machine-readable bootstrap.** The shared phase runner writes `.venv/init-report.json` (or
 `.init-report.json` when the environment does not exist yet — the path is
-always printed). `VAULTSPEC_INIT_JSON=1`, or `--json`, additionally streams
+always printed). The report covers Python and repository tooling. Browser,
+RAG, authority, and product configuration steps report through their own commands.
+`VAULTSPEC_INIT_JSON=1`, or `--json`, additionally streams
 NDJSON events on stdout while human prose stays on stderr. Exit codes come from
 `dev/exit_codes.py` and are identical fleet-wide:
 
@@ -66,14 +69,14 @@ server, or another agent's session holding a console-script `.exe` under
 build error and is not one. The remedy is to close the process, never to debug
 the repository.
 
-**Multiplatform without shell branching.** Each recipe body is a single
-command. There are no `[windows]`/`[unix]` recipe pairs and no shell logic,
-which is what lets one implementation serve `cmd.exe`, `pwsh` and `sh` alike.
+**Multiplatform without shell branching.** The bootstrap phases run explicit
+argument vectors through one Python runner. Full initialization composes the
+same provisioning commands on each platform.
 
 **It provisions the worktree, not the workstation.** `uv`, `just`, and the
 required repository tools are the operator's responsibility; `setup` converges
-the managed Python environment and repository tooling, while `doctor-dev`
-probes readiness without mutation. Optional workstation tools are installed
+the managed Python environment and repository tooling. The initializer probes
+its host requirements before provisioning. Optional workstation tools are installed
 only by `setup-workstation-tools`.
 
 **It does not install commit hooks or change Git configuration.** `prek.toml`

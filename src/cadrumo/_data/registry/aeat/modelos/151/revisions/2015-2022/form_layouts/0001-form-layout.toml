@@ -7,7 +7,7 @@ revision_id = "2015-2022"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "a180f7ece00963fb2f2ec5110fd9b22477a1ec4e143ff541e254143b20ae3a81"
+source_state_digest = "d8d0c0db763cf4315399ca0c5771d20749fd517fa97277eea60a5b684366c6c8"
 design_sources = [
     { source_ref = "aeat-dr-151-2015", sha256 = "2c8ae7b607aa3d17e21df41bf53fb6a8b3736f7d3887a8812b5282ff0872374e" },
 ]
@@ -19,8 +19,10 @@ placements = [
     { casilla_id = "did.numero-de-cuenta-iban", kind = "on_form" },
     { casilla_id = "did.renuncia-a-la-devoluci-avor-del-tesoro-publico", kind = "on_form", box_number = "58" },
     { casilla_id = "did.solicita-la-devolucion-por-transferencia", kind = "on_form", box_number = "59" },
+    { casilla_id = "impatriado.base-liquidable-ahorro", kind = "on_form" },
     { casilla_id = "impatriado.base-liquidable-general", kind = "on_form" },
     { casilla_id = "impatriado.cuota-diferencial", kind = "working_figure" },
+    { casilla_id = "impatriado.cuota-integra-ahorro", kind = "on_form" },
     { casilla_id = "impatriado.cuota-integra-general", kind = "on_form" },
     { casilla_id = "impatriado.retenciones", kind = "on_form" },
     { casilla_id = "p01.asignacion-de-cantidades-a-fines-sociales", kind = "on_form", box_number = "925" },
@@ -489,8 +491,8 @@ placements = [
     { casilla_id = "p07.valor-de-transmision-2-03", kind = "on_form" },
     { casilla_id = "p07.valor-de-transmision-2-04", kind = "on_form" },
     { casilla_id = "p07.valor-de-transmision-2-05", kind = "on_form" },
-    { casilla_id = "p08.base-liquidable-del-ahorro-18", kind = "on_form" },
-    { casilla_id = "p08.cuota-correspondiente-e-general-del-ahorro-20", kind = "on_form" },
+    { casilla_id = "p08.base-liquidable-del-ahorro-18", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "p08.cuota-correspondiente-e-general-del-ahorro-20", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "p08.cuota-integra-total-21", kind = "on_form" },
     { casilla_id = "p08.cuota-integra-total-parte-autonomica-23", kind = "on_form" },
     { casilla_id = "p08.cuota-integra-total-parte-estatal-22", kind = "on_form" },
@@ -1499,9 +1501,9 @@ blocks = [
     { kind = "field", id = "field-33", casilla_id = "p08.resto-ganancia-patrimonial-5" },
     { kind = "field", id = "field-34", casilla_id = "p08.total-ganancias-patrimoniales-6" },
     { kind = "field", id = "field-35", casilla_id = "impatriado.base-liquidable-general" },
-    { kind = "field", id = "field-36", casilla_id = "p08.base-liquidable-del-ahorro-18" },
+    { kind = "field", id = "field-36", casilla_id = "impatriado.base-liquidable-ahorro" },
     { kind = "field", id = "field-37", casilla_id = "impatriado.cuota-integra-general" },
-    { kind = "field", id = "field-38", casilla_id = "p08.cuota-correspondiente-e-general-del-ahorro-20" },
+    { kind = "field", id = "field-38", casilla_id = "impatriado.cuota-integra-ahorro" },
     { kind = "field", id = "field-39", casilla_id = "p08.cuota-integra-total-21" },
     { kind = "field", id = "field-40", casilla_id = "p08.cuota-integra-total-parte-estatal-22" },
     { kind = "field", id = "field-41", casilla_id = "p08.cuota-integra-total-parte-autonomica-23" },

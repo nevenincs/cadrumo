@@ -481,6 +481,7 @@ def _draft_row(evidence_id: str, draft: InvoiceDraft) -> LedgerEvidenceDraftV1:
         currency=_text(draft.currency),
         suggested_kind=draft.suggested_kind,
         discrepancies=len(draft.discrepancies),
+        label_reading_fallback=draft.label_reading_fallback,
     )
 
 

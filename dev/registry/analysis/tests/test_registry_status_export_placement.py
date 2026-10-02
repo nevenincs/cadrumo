@@ -29,7 +29,7 @@ from ..registry_status import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION = "2024-y-siguientes"
+_REVISION = "2024-2025"
 _PERCEPTOR_RECORD = Path("revisions") / _REVISION / "export" / "0002-record-m296-perceptor.toml"
 _SHIPPED_SECOND_FIELD = "id = 'm296-2024.perceptor.f002'\noffset = 2\nlength = 3\n"
 

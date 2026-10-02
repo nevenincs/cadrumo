@@ -1,6 +1,6 @@
 [revisions."2025"]
 casilla_storage_baseline = "2024"
-predecessor = { none = { reason = "Stated in full: this edition authors its casillas from its own hash-pinned 2025 record design and inherits nothing from 2024. Its 328 casillas -- two declaration headers and 326 money-closure slots read from aeat-dr-220-2025 -- are declared with no continuity chain, because the 2024 rows carry no grounded continuity_id to chain to. Naming 2024 as predecessor would switch this edition into delta-authoring and inherit 1,985 rows, among them four T22007000 tramo ids whose id IS a position range that the 2025 layout moves. The 2025 official form and AEAT record-design evidence identify this edition's own scope, while Orden HAC/529/2026 art. 6.3 authorises the Modelo 220 declaration for periods begun in 2025.", cause = "predecessor_row_without_lineage", legal_refs = ["orden-hac-529-2026:art-6-3"], source_refs = ["boe-modelo-220-2025-form", "aeat-dr-220-2025"] } }
+predecessor = { none = { reason = "No legal predecessor is declared: 1,699 rows of the 2024 edition carry no continuity_id (predecessor row without lineage), and naming 2024 as predecessor would inherit every one of them. The payload is stored against the 2024 edition through casilla_storage_baseline and family_storage_baseline instead: removals drop those 2024 rows, which lie outside this edition's six records, overrides carry each kept row's continuity claim and Orden HAC/529/2026 references, three of them under the moved T22007000 tramo ids, and only the boxes the 2024 edition does not declare are stated. The 2025 official form and AEAT record design identify this edition's scope, and Orden HAC/529/2026 art. 6.3 authorises the Modelo 220 declaration for periods begun in 2025. Storage reuse makes no continuity claim.", cause = "predecessor_row_without_lineage", legal_refs = ["orden-hac-529-2026:art-6-3"], source_refs = ["boe-modelo-220-2025-form", "aeat-dr-220-2025"] } }
 casilla_source_refs = ["boe-modelo-220-2025-form", "aeat-dr-220-2025"]
 application_link_source_refs = ["aeat-modelo-200-manual-2025", "boe-modelo-220-2025-form"]
 authority_grade = "applicability"
@@ -57,39 +57,33 @@ source_refs = [
     "aeat-dr-220-2025",
     "aeat-modelo-200-manual-2025",
 ]
-review_status = "agent_reviewed"
-reviewed_by = """\
-agent: review of the modelo 220 (IS, regimen de consolidacion fiscal) 2025 \
-era. DISCLOSURE -- self-review: the same agent acquired and bundled Orden HAC/529/2026, \
-split this revision out of the former open-ended '2024-y-siguientes', and swept the \
-split's fallout, all in the immediately preceding commits. VERIFIED -- APPLICABILITY, and \
-it is firmer than the 2024 era's: orden-hac-529-2026 art 6.3 speaks of 'el Modelo 220 de \
-declaracion aprobado en el articulo 1 de la presente orden', an operative clause naming \
-this modelo, where the 2024 era has only art 3's domiciliacion-bancaria heading -- \
-distribution evidence rather than an approving clause. Both provisions were fetched from \
-two BOE surfaces that reproduce them identically. VERIFIED -- WHEN DUE: art 6.3 grounds \
-the group declaration in LIS art 75.2, 'dentro del plazo correspondiente a la declaracion \
-en regimen de tributacion individual de la entidad representante del grupo fiscal', which \
-routes to the representante's own art 124.1 plazo: a calendar-year group closing 31 Dec \
-2025 files 1-25 July 2026. NOMINAL dates stored. The payment_cutoff_on 2026-07-22 is now \
-grounded in art 3.2, 'desde el dia 1 de julio hasta el 22 de julio de 2026, ambos \
-inclusive' -- that date had been carried across the split from the 2024 orden's clause by \
-pattern and was verified only in this sweep; it was right, but nothing in the tree said \
-so. VERIFIED -- SPAN BOUNDARY: the disposicion final segunda makes the orden applicable to \
-periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025, which is \
-the boundary the split was cut at. NOT CLAIMED -- ARTICULO 1 IS NOT BUNDLED. No fetch \
-returned its enumerated list without elision, and bundling an abridged provision as \
-verbatim is the exact defect corrected in orden-hac-510-2021 the same day. Art 6.3 attests \
-art 1's approval of this modelo; the approving text itself remains to be acquired whole. \
-VERIFIED -- RECORD DESIGN: 326 money-closure casillas over SIX of the 2025 diseno's 141 \nrecord sheets are modelled, alongside the two declaration headers, for 328 in total. Every \nposition, length, type and caption was read from aeat-dr-220-2025's own field descriptions by \ngenerator rather than transcribed by hand, and every record was asserted to tile its declared \ntotal exactly once with no gap and no overlap -- 1062, 1248, 789, 2927, 687 and 720. All 328 \nids are distinct, proven by loading the modelo rather than by the absence of a refusal. \nT22007000 is the ONE closure record the 2024/2025 boundary moves: it grows 991 -> 1062 inside \nits tramo run, three 2024 ids are arithmetically wrong for 2025 and were recomputed rather \nthan copied, six slots are new, and .786-802 holds its position while its meaning changes from \n'Tramo base imponible 1' to a cooperatives-specific tramo -- carried deliberately, not by \ndefault. No casilla number fabricated. NOT CLAIMED -- the other 135 record sheets are not \nmodelled, nor are T22016000's 60 unnumbered volumen-de-operaciones rows, which 2024 declined \nand which this edition declines on the same ground. NOT CLAIMED -- FORMULAS: the formulas \nfamily is empty and undeclared, so the grade stays at applicability; promoting it needs the 220 \nchapter of aeat-modelo-200-manual-2025, bundled as PDF with no extraction sidecar and NOT read. \nREVERSED -- 02796/02797: the 2024 edition withheld all of T22009001 because these two boxes \ncarry BYTE-IDENTICAL descriptions, both ending "Estado.", where the pair above them splits \nEstado / D. Forales. The 2025 design was checked and repeats the defect unchanged. The evidence \nis unresolved; the DISPOSITION is reversed. Both are declared with captions exactly as printed \nand NO jurisdiction asserted between them, because withholding the record instead left 00621 \nand 00622 -- the liquido a ingresar o a devolver, the terminal numbers of the whole return -- \nwith no home on the record that computes them. Declaring what AEAT printed without guessing \nwhat AEAT meant preserves the ambiguity where suppressing the record hid it. NOT CLAIMED -- SUCCESSOR: the 2025 source and \
-approving orden both stop at calendar 2025; no 2026 design or approving authority is \
-registered, so no successor is selected. NOT CLAIMED -- FILING: no export \
-layout; on the filing-capability worklist, which its gate states is a backlog and not a \
-defect to suppress. Scope stays inspection_only. NOT CLAIMED -- independent_check_coverage \
-is n/a: NO CLAIM, not zero. NOT CLAIMED -- locales complete but not audited for accuracy."""
-reviewed_at = 2026-09-12
 family_storage_baseline = "2024"
 scoped_families = ["workbook_parity_refs"]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: re-review on 2026-09-30 of the ejercicio 2025 edition after the withdrawal of boxes \
+[02796] and [02797]. VERIFIED -- APPLICABILITY AND DEADLINE: Orden HAC/529/2026 art. 6.3 \
+names 'el Modelo 220 de declaracion aprobado en el articulo 1 de la presente orden' and \
+routes its plazo through LIS art. 75.2 (orden-hac-529-2026.html.extracted.md:7); art. 3.2 \
+sets domiciliacion 'desde el dia 1 de julio hasta el 22 de julio de 2026', the window's \
+payment cutoff (same file:3); the disposicion final segunda bounds the orden to the \
+ejercicio 2025 models (same file:11). NOT CLAIMED -- article 1 itself is not bundled. \
+VERIFIED -- RECORD DESIGN: 326 casillas hydrate, the two declaration headers and 324 on \
+six of the 141 record sheets of aeat-dr-220-2025: T22007000 56, T22009000 63, T22009001 \
+34, T22016000 110, T22016001 30 and T220DID00 31. Each sheet's field rows tile its printed \
+total from position 1 with no gap or overlap (1062, 1248, 789, 2927, 687 and 720), every \
+declared five-digit box is printed on its sheet, and every printed box is declared except \
+[02796] and [02797]. WITHDRAWN -- [02796] and [02797] are declared in neither edition: \
+both designs print the identical description ending 'Estado.' at offsets 220 and 237, and \
+no official source held states which is the foral column. T22009001's other 34 boxes are \
+inherited from the 2024 edition, whose design lays them out identically, and this edition \
+keys only their continuity and orden references. NOT CLAIMED -- the other 135 record \
+sheets are not modelled. NOT CLAIMED -- FORMULAS: none, so the grade stays applicability; \
+no export layout, scope stays inspection_only. NOT CLAIMED -- no 2026 successor is \
+selected: no 2026 design or approving orden is registered. NOT CLAIMED -- \
+independent_check_coverage is n/a, no claim; locales not audited for accuracy. No human \
+operator has countersigned this."""
+reviewed_at = 2026-09-30
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "T22007000:00043" }
@@ -1805,6 +1799,210 @@ restate_provenance = true
 selector = { revision = "2024", id = "decl.tipo-declaracion" }
 fields = { continuidad_origin = "seeded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
 removed_fields = ["source_refs"]
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02540" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 9, [02540], en la posicion 16 con longitud 17 y tipo N, con la misma descripcion, seleccion territorial y funcion salvo el periodo impositivo que nombra (2024 frente a 2025): corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8226 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8518 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02541" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 10, [02541], en la posicion 33 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion salvo el periodo impositivo que nombra (2024 frente a 2025): corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8227 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8519 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02788" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 11, [02788], en la posicion 50 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion salvo el periodo impositivo que nombra (2024 frente a 2025): corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8228 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8520 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02789" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 12, [02789], en la posicion 67 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion salvo el periodo impositivo que nombra (2024 frente a 2025): corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8229 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8521 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:00621" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 13, [00621], en la posicion 84 con longitud 17 y tipo N, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8230 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8522 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:00622" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 14, [00622], en la posicion 101 con longitud 17 y tipo N, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8231 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8523 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02790" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 15, [02790], en la posicion 118 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8232 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8524 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02791" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 16, [02791], en la posicion 135 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8233 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8525 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02792" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 17, [02792], en la posicion 152 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8234 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8526 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02793" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 18, [02793], en la posicion 169 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8235 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8527 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02794" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 19, [02794], en la posicion 186 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8236 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8528 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02795" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 20, [02795], en la posicion 203 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8237 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8529 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02798" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 23, [02798], en la posicion 254 con longitud 17 y tipo N, con la misma descripcion, seleccion territorial y funcion salvo el periodo impositivo que nombra (2024 frente a 2025): corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8240 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8532 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02799" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 24, [02799], en la posicion 271 con longitud 17 y tipo N, con la misma descripcion, seleccion territorial y funcion salvo el periodo impositivo que nombra (2024 frente a 2025): corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8241 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8533 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02800" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 25, [02800], en la posicion 288 con longitud 17 y tipo N, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8242 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8534 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02801" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 26, [02801], en la posicion 305 con longitud 17 y tipo N, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8243 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8535 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:01953" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 27, [01953], en la posicion 322 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8244 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8536 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:03361" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 28, [03361], en la posicion 339 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8245 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8537 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:03362" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 29, [03362], en la posicion 356 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8246 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8538 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:01954" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 30, [01954], en la posicion 373 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8247 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8539 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:03363" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 31, [03363], en la posicion 390 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8248 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8540 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:03364" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 32, [03364], en la posicion 407 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8249 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8541 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02802" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 33, [02802], en la posicion 424 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8250 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8542 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02803" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 34, [02803], en la posicion 441 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8251 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8543 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02804" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 35, [02804], en la posicion 458 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8252 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8544 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02805" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 36, [02805], en la posicion 475 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8253 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8545 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02806" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 37, [02806], en la posicion 492 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8254 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8546 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02807" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 38, [02807], en la posicion 509 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8255 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8547 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02808" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 39, [02808], en la posicion 526 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8256 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8548 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02809" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 40, [02809], en la posicion 543 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8257 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8549 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02810" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 41, [02810], en la posicion 560 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8258 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8550 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02811" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 42, [02811], en la posicion 577 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8259 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8551 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02812" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 43, [02812], en la posicion 594 con longitud 17 y tipo Num, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8260 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8552 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "T22009001:02813" }
+fields = { continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 imprimen en T22009001 Liquidacion III el campo 44, [02813], en la posicion 611 con longitud 17 y tipo N, con la misma descripcion, seleccion territorial y funcion: corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8261 (sha256 a8f398dd42db) y 01-220-ejercicio-2025.xlsx.extracted.md:8553 (sha256 69c3a234e96e). La fila 2024 continua en 2025.", continuidad_origin = "grounded", legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"] }
+removed_fields = []
 restate_provenance = true
 
 [[revisions."2025".casilla_removals]]
@@ -6927,150 +7125,6 @@ position = 54
 [[revisions."2025".casilla_positions]]
 id = "T22007000:t22007000.895-900"
 position = 55
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02540"
-position = 119
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02541"
-position = 120
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02788"
-position = 121
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02789"
-position = 122
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:00621"
-position = 123
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:00622"
-position = 124
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02790"
-position = 125
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02791"
-position = 126
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02792"
-position = 127
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02793"
-position = 128
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02794"
-position = 129
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02795"
-position = 130
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02796"
-position = 131
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02797"
-position = 132
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02798"
-position = 133
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02799"
-position = 134
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02800"
-position = 135
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02801"
-position = 136
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:01953"
-position = 137
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:03361"
-position = 138
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:03362"
-position = 139
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:01954"
-position = 140
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:03363"
-position = 141
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:03364"
-position = 142
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02802"
-position = 143
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02803"
-position = 144
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02804"
-position = 145
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02805"
-position = 146
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02806"
-position = 147
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02807"
-position = 148
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02808"
-position = 149
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02809"
-position = 150
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02810"
-position = 151
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02811"
-position = 152
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02812"
-position = 153
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02813"
-position = 154
 
 [[revisions."2025".family_overrides]]
 family = "constructs"

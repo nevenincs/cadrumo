@@ -1,0 +1,45 @@
+[revisions."2022"]
+formula_source_refs = ["aeat-modelo-222-instructions-2019-2022"]
+casilla_source_refs = ["aeat-dr-222-2019-2022"]
+# Calculation-grade edition for modelo 222, filing year 2022, and the modelo's
+# storage baseline: it sits at the support floor, so its payload is stated here
+# in full and the 2023 edition stores only its differences against it (storage
+# baselines select payload only; they claim no legal succession).
+#
+# WHICH DESIGN AND WHICH INSTRUCTIONS. aeat-dr-222-2019-2022 is AEAT's design
+# "Orden HAC/941/2018 (Ejercicios 2019 a 2022)", and
+# aeat-modelo-222-instructions-2019-2022 is the PDF AEAT's instructions index
+# lists as "Instrucciones para periodos impositivos 2019 a 2022". Both declare a
+# window ending 2022-12-31, so both govern this filing year. Every formula,
+# the modalidad 40.2 rate, the reconciled claves and the review, approval and
+# reconciliation links cite that era's instructions.
+#
+# WHAT 2023 CHANGES, measured field by field against aeat-dr-222-2023-2024:
+#   - boxes [59] and [60] are not on this design. The 2023 design adds them as
+#     "Ajustes para la determinacion de la base imponible del grupo (DA 19a LIS)"
+#     and adds them into [10]. The 2019-2022 instructions name [59] and [60] only
+#     as closed claves ("en estas claves no se debera de consignar ningun dato y
+#     permaneceran cerradas"), so they are not declared here, [10] is
+#     "clave [04] + clave [38] - clave [39]", and [13] keeps
+#     "clave [10] + clave [11] - clave [12]";
+#   - page 1 lacks the flag the 2023 design inserts at position 226 (grupo
+#     fiscal with importe neto de la cifra de negocios below one million euros),
+#     so every later page-1 field sits one position earlier, and after [39]
+#     thirty-five; page 2 is identical. These positions live in the generated
+#     export layout of this edition, rendered from this design;
+#   - every other formula reads term for term as the 2023 edition's, and the
+#     18% of modalidad 40.2 is the same; the rate opens with this filing year.
+authority_grade = "calculation"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+period_selector = { year_from = 2022, year_to = 2022, periods = ["1P", "2P", "3P"] }
+orden_aplicabilidad = ["orden-hfp-227-2017:art-2"]
+legal_refs = [
+    "orden-hfp-227-2017:art-2",
+    "orden-hfp-227-2017:art-5",
+    "ley-27-2014:art-40",
+]
+source_refs = ["aeat-dr-222-2019-2022", "boe-modelo-202-base-order"]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-09-30

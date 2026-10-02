@@ -88,18 +88,18 @@ def test_inherited_member_keeps_predecessor_source_default(tmp_path: Path) -> No
 
 
 @pytest.mark.parametrize(
-    ("selector", "storage_only", "expected"),
+    ("selector", "expected"),
     [
-        ({"years": [2024], "periods": ["0A"]}, False, 1),
-        ({"year_from": 2023, "year_to": 2025, "periods": ["0A"]}, False, 1),
-        ({"years": [2025], "periods": ["0A"]}, False, 0),
-        ({"years": [2025], "periods": ["0A"]}, True, 1),
+        ({"years": [2024], "periods": ["0A"]}, 1),
+        ({"year_from": 2023, "year_to": 2025, "periods": ["0A"]}, 1),
+        ({"years": [2025], "periods": ["0A"]}, 0),
     ],
-    ids=("matching", "overlapping", "nonmatching", "storage-reconstruction"),
+    ids=("matching", "overlapping", "nonmatching"),
 )
-def test_deadline_storage_reconstruction_is_separate_from_period_eligibility(
-    selector: dict[str, object], storage_only: bool, expected: int
+def test_a_deadline_is_inherited_only_into_an_edition_filing_its_period(
+    selector: dict[str, object], expected: int
 ) -> None:
+    """One rule on every edge: a storage baseline reuses payload, never another period's deadline."""
     spec = family_spec("deadline_windows")
     assert spec is not None
     assert spec.identity is not None
@@ -110,7 +110,6 @@ def test_deadline_storage_reconstruction_is_separate_from_period_eligibility(
         revision_id="2025",
         predecessor_id="2024",
         predecessor={"deadline_windows": (member,)},
-        storage_only=storage_only,
         section=spec.section,
         identity=spec.identity,
         identity_fields=spec.identity_fields,

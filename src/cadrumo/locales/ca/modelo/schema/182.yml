@@ -34,6 +34,9 @@ modelo:
         title: Donatius, donacions i aportacions rebudes i disposicions realitzades
           (informativa anual)
       revision:
+        2022-2023:
+          field:
+            label: Model 182, exercicis 2022 i 2023
         '2024':
           field:
             label: Model 182, exercici 2024

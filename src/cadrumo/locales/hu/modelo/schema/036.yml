@@ -1245,7 +1245,7 @@ modelo:
           adatmódosításról és kijelentkezésről.
         title: Vállalkozók, szakemberek és adólevonásra kötelezettek nyilvántartása
       revision:
-        2023-hasta-2025-02-02:
+        2022-hasta-2023-04-24:
           casilla:
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
               label: Azonosítás. Internetes domain vagy cím (második)
@@ -1311,7 +1311,10 @@ modelo:
               label: A jogutód vagy kedvezményezett felszámolási, részesedési vagy
                 öröklési százaléka (13f jogutód)
           field:
-            label: 036-os modelo, 2023-tól 2025. február 2-ig
+            label: 036-os modelo, 2022-től 2023. április 24-ig
+        2023-hasta-2025-02-02:
+          field:
+            label: 036-os modelo, 2023. április 25-től 2025. február 2-ig
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:

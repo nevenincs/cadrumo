@@ -28,9 +28,9 @@ Grounded authority:
     Orden EHA/3786/2008 art. 1 (box 27 = total cuota devengada,
     box 45 = total a deducir, box 46 = box 27 - box 45).
     post-2022 Modelo 303 ``modelo-303-iva-cuota-devengada-total`` formula:
-    add(iva.repercutido.general, iva.repercutido.reducido,
-    iva.repercutido.super-reducido, iva.autorepercutido.intracomunitaria,
-    iva.autoconsumo.promotor.cuota).
+    add(iva.cuota-devengada.general, iva.cuota-devengada.reducido,
+    iva.cuota-devengada.super-reducido, iva.autorepercutido.intracomunitaria,
+    ...), each rate row's cuota carrying the promotor's autoconsumo at its rate.
 """
 
 from __future__ import annotations

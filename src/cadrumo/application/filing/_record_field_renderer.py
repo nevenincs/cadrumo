@@ -341,7 +341,7 @@ def _draft_period_end_date(draft: ModeloDraft) -> str:
 def _sepa_marca(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
     del draft
     selected = snapshot.selected_account
-    if isinstance(selected, ChargeAccountSelection):
+    if selected is None or isinstance(selected, ChargeAccountSelection):
         return None
     if not isinstance(selected, RefundAccountSelection):
         raise FilingExportValidationError("SEPA marker requires a selected refund account")

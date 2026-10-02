@@ -14,11 +14,12 @@ Two properties matter, and they pull in opposite directions:
   never a modelo list written into the resolver. A hardcoded pair silently
   outlives a revision that changes which sources are conditional.
 * It must stay NARROWER than the clean-state gate's non-filer set, which also
-  carries the ``taxpayer_files_source = false`` arm - on Modelo 100, the Modelo
-  184 attribution. It is absent because the entidad en regimen de atribucion
-  files it, not because no obligation exists: the income it attributes is a real
-  figure the taxpayer must declare. Folding that leg in as zero would strip the
-  figure from the declaration, so it must stay unresolved and operator-supplied.
+  carries the ``taxpayer_files_source = false`` arm - sources the PAYER files,
+  such as the Modelo 184 informative return an entidad en régimen de atribución
+  de rentas files about its members. Those are absent because someone else
+  files them, not because no obligation exists: what they report is the
+  taxpayer's to declare. Folding those legs in as zero would strip the credit
+  from the declaration, so they must stay unresolved and operator-supplied.
 
 Real registry authority is paired with a deterministic application-owned
 profile projection fake. The test keeps the derivation itself pure and does
@@ -40,6 +41,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_supported_filing_years,
 )
 from ....domain.user_profile.values import UserProfileFact
+from ..cross_period_clean_state import _non_filer_modelos
 from ..relation_prefill import (
     _economic_activity_conditional_source_modelos,
     _not_applicable_source_modelos_for_bucket,
@@ -121,10 +123,10 @@ class TestCandidateSetIsRegistryGrounded:
     def test_candidate_set_excludes_every_source_the_taxpayer_never_files(self, filing_year: int) -> None:
         """A ``taxpayer_files_source = false`` source is never eligible for the zero-resolution.
 
-        This is the load-bearing exclusion. Such a source is filed by someone
-        else, on Modelo 100 the entidad filing the Modelo 184 attribution; its
-        value is a real figure the taxpayer must declare, so the leg must stay
-        unresolved rather than fold in as zero.
+        This is the load-bearing exclusion. Those sources are the suffered
+        retenciones the payer files; their value is a real credit the taxpayer
+        must declare, so the leg must stay unresolved rather than fold in as
+        zero.
         """
         snapshot = _m100_snapshot(filing_year)
         payer_filed = frozenset(
@@ -135,33 +137,62 @@ class TestCandidateSetIsRegistryGrounded:
         candidates = _economic_activity_conditional_source_modelos(snapshot)
 
         assert not (candidates & payer_filed), (
-            f"Modelo 100 {filing_year}: sources {sorted(candidates & payer_filed)} are not filed by the "
-            "taxpayer, so folding their relation in as zero would strip a figure the taxpayer must "
-            "declare"
+            f"Modelo 100 {filing_year}: sources {sorted(candidates & payer_filed)} are filed by the "
+            "PAYER, so folding their relation in as zero would strip the taxpayer's retención "
+            "credit from the declaration"
         )
 
     def test_the_exclusion_is_not_vacuous_for_modelo_100(self) -> None:
-        """Modelo 100 really does declare a source the taxpayer never files, so the exclusion above bites.
+        """Some supported Modelo 100 year declares a payer-filed source, and the exclusion bites on it.
 
-        Withholding credits are sourced from the perceptor's side, so the payer-side
-        withholding returns are no longer Modelo 100 dependencies at all. The Modelo
-        184 attribution remains: the entidad files it, and both it and the
-        economic-activity candidates are declared on the same revision, so the
-        disjointness check compares two real sets.
+        How many payer-filed sources a year declares follows the relations the
+        revision grounds, and withdrawing a relation withdraws its
+        classification, so no count is pinned here. The invariant is that the
+        guard has a real subject, and that for a filer with no economic
+        activity - where the zero-resolution does fire - that subject is kept
+        out of it while the clean-state gate still counts it as a source the
+        taxpayer does not file.
         """
-        snapshot = _m100_snapshot(2025)
-        not_taxpayer_filed = frozenset(
-            classification.source_modelo
-            for classification in snapshot.revision.dependency_classifications
-            if not classification.taxpayer_files_source
+        no_economic_activity = _profile_reader(
+            (
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+            ),
         )
+        subjects = 0
+        for filing_year in _M100_YEARS:
+            snapshot = _m100_snapshot(filing_year)
+            payer_filed = frozenset(
+                classification.source_modelo
+                for classification in snapshot.revision.dependency_classifications
+                if not classification.taxpayer_files_source
+            )
+            if not payer_filed:
+                continue
+            subjects += 1
+            suppressed = _not_applicable_source_modelos_for_bucket(
+                snapshot,
+                _PROFILE_ID,
+                profile_path_values_reader=no_economic_activity,
+            )
 
-        assert Modelo("184").value in not_taxpayer_filed, (
-            "Modelo 100 2025 must declare the Modelo 184 attribution as a source the taxpayer "
-            f"does not file for the never-suppressed guard to be a real constraint; found {sorted(not_taxpayer_filed)}"
-        )
-        assert _economic_activity_conditional_source_modelos(snapshot), (
-            "Modelo 100 2025 must declare economic-activity-conditional sources, or the exclusion compares nothing"
+            assert suppressed, (
+                f"Modelo 100 {filing_year}: the zero-resolution suppresses nothing for a filer with no "
+                "economic activity, so its silence on the payer-filed sources proves no exclusion"
+            )
+            assert not (suppressed & payer_filed), (
+                f"Modelo 100 {filing_year}: payer-filed sources {sorted(suppressed & payer_filed)} were "
+                "folded in as zero, stripping the taxpayer's retención credit"
+            )
+            assert payer_filed <= _non_filer_modelos(
+                snapshot,
+                taxpayer_files_economic_activity=False,
+                not_applicable_source_modelos=suppressed,
+            ), f"Modelo 100 {filing_year}: the clean-state gate must still count payer-filed sources as non-filed"
+
+        assert subjects, (
+            "no supported Modelo 100 year declares a payer-filed source, so the never-suppressed "
+            "guard constrains nothing"
         )
 
 

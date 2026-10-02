@@ -13,16 +13,18 @@ quarterly source filings (1T-4T) through the enrolled
   ``decl.retenciones-total`` via ``copy``-from-relation formulas.
   ``decl.total-perceptores`` comes from the dedicated per-perceptor retención
   store, because quarterly perceptor counts double-count recurring perceptors.
-* **Modelo 190** (revision ``2024-y-siguientes``) folds **Modelo 111** quarterly
+* **Modelo 190** (revision ``2025-y-siguientes``) folds **Modelo 111** quarterly
   retención-rendimientos-del-trabajo monetary filings. Nine importe casilla ids
   sum into ``decl.percepciones-total``, output ``28`` copies into
   ``decl.retenciones-total``, and ``decl.total-percepciones`` comes from the
   withholding detalle source because quarterly perceptor counts double-count
-  recurring percepciones.
-* **Modelo 193** (revision ``2024-y-siguientes``) folds **Modelo 123** quarterly
+  recurring percepciones. The 2024 edition totals its own type-2 records, so
+  the Modelo 111 fold is proven on the first exercise that routes through it.
+* **Modelo 193** (revision ``2024``) folds **Modelo 123** quarterly
   retención-capital-mobiliario monetary filings. Source casilla ids ``06``
   (base), ``09`` (retenciones) feed the monetary declarante casillas; the
-  perceptor count comes from the dedicated per-perceptor retención store.
+  perceptor count is the number of type-2 records the withholding detalle
+  store produces, as the record design states.
 
 Each source quarter is seeded as a filed observation through the production
 observation-persistence API
@@ -135,6 +137,8 @@ _PROFILE_LABEL = "Renta annual reconciliation profile"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2024
+# The first exercise whose Modelo 190 totals fold the Modelo 111 quarters.
+_M190_YEAR = 2025
 _ANNUAL_PERIOD = "0A"
 _QUARTERS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 _RELATION_PREFILL_SOURCE = "relation_prefill"
@@ -211,6 +215,7 @@ def _seed_quarterly_filing(
     source_modelo: str,
     period: str,
     casilla_values: dict[CasillaId, Decimal],
+    year: int = _YEAR,
 ) -> None:
     """Persist one filed source-modelo quarter carrying every needed source casilla id.
 
@@ -226,11 +231,11 @@ def _seed_quarterly_filing(
         obs_repo.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo=source_modelo,
-                filing_year=_YEAR,
+                filing_year=year,
                 period=period,
                 observations=registry_grounded_observations(
                     modelo=source_modelo,
-                    filing_year=_YEAR,
+                    filing_year=year,
                     period=period,
                     casilla_values=casilla_values,
                 ),
@@ -240,11 +245,11 @@ def _seed_quarterly_filing(
             stamped_revision_id=revision_id_for_observation(
                 RegistryModeloObservation(
                     modelo=source_modelo,
-                    filing_year=_YEAR,
+                    filing_year=year,
                     period=period,
                     observations=registry_grounded_observations(
                         modelo=source_modelo,
-                        filing_year=_YEAR,
+                        filing_year=year,
                         period=period,
                         casilla_values=casilla_values,
                     ),
@@ -259,6 +264,7 @@ def _calculate_annual(
     *,
     modelo: str,
     operation: PinnedAuthorityOperation,
+    year: int = _YEAR,
 ) -> BucketAggregationCalculationResult:
     """Run the live annual calculate for ``modelo`` / ``_YEAR`` / ``0A``.
 
@@ -274,12 +280,12 @@ def _calculate_annual(
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
-    snapshot = published_authority_operation().snapshot(modelo, filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = published_authority_operation().snapshot(modelo, filing_year=year, period=_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
+        filing_year=year,
+        period=Period.from_year_and_code(year, _ANNUAL_PERIOD),
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
@@ -306,6 +312,7 @@ def _calculate_periodic(
     modelo: str,
     period: str,
     operation: PinnedAuthorityOperation,
+    year: int = _YEAR,
 ) -> BucketAggregationCalculationResult:
     """Run the live periodic calculate for ``modelo`` / ``_YEAR`` / ``period``."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -313,12 +320,12 @@ def _calculate_periodic(
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
-    snapshot = published_authority_operation().snapshot(modelo, filing_year=_YEAR, period=period)
+    snapshot = published_authority_operation().snapshot(modelo, filing_year=year, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, period),
+        filing_year=year,
+        period=Period.from_year_and_code(year, period),
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
@@ -541,7 +548,7 @@ _M190_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("28", surface="_M190_
 # the seeded row is filed under the quarter its transaction date falls in.
 _M190_DETAIL_SOURCE_MODELO = "111"
 _M190_DETAIL_QUARTER = "1T"
-_M190_DETAIL_TRANSACTION_DATE = date(_YEAR, 3, 15)
+_M190_DETAIL_TRANSACTION_DATE = date(_M190_YEAR, 3, 15)
 
 
 def _m190_seed_value(output: CasillaId, period: str) -> Decimal:
@@ -565,11 +572,11 @@ def _seed_m190_withholding_detail(
     subclave: str = "01",
 ) -> None:
     """Persist one per-perceptor-clave row as quarterly M111 detail, the M190 count's source."""
-    period = Period.from_year_and_code(_YEAR, _M190_DETAIL_QUARTER)
+    period = Period.from_year_and_code(_M190_YEAR, _M190_DETAIL_QUARTER)
     assert period.contains(_M190_DETAIL_TRANSACTION_DATE), (_M190_DETAIL_QUARTER, _M190_DETAIL_TRANSACTION_DATE)
     PercepcionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
         modelo=_M190_DETAIL_SOURCE_MODELO,
-        filing_year=_YEAR,
+        filing_year=_M190_YEAR,
         period=period,
         observations=[
             WithholdingObservation(
@@ -609,6 +616,7 @@ def _seed_m111_quarterly_m190_evidence() -> None:
             source_modelo="111",
             period=period,
             casilla_values={output: _m190_seed_value(output, period) for output in all_outputs},
+            year=_M190_YEAR,
         )
 
 
@@ -625,7 +633,7 @@ def _attest_m111_no_retenciones_periods(
                     *record.facts,
                     UserProfileFact(
                         path="withholding.modelo_111_no_retenciones_periods",
-                        value=",".join(f"{_YEAR}:{period}" for period in periods),
+                        value=",".join(f"{_M190_YEAR}:{period}" for period in periods),
                     ),
                 ),
                 "updated_at": _T1,
@@ -639,8 +647,8 @@ def _seed_and_file_m111_1t(
 ) -> BucketAggregationCalculationResult:
     RetencionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
         modelo="111",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=_M190_YEAR,
+        period=Period.from_year_and_code(_M190_YEAR, "1T"),
         observations=[
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -650,12 +658,12 @@ def _seed_and_file_m111_1t(
                 scheme=RetencionScheme("rendimientos_trabajo"),
                 taxable_base=Decimal("1000.00"),
                 retencion_amount=Decimal("150.00"),
-                accrued_on=f"{_YEAR}-03-15",
+                accrued_on=f"{_M190_YEAR}-03-15",
             ),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
-    result = _calculate_periodic(secure_objects, modelo="111", period="1T", operation=operation)
+    result = _calculate_periodic(secure_objects, modelo="111", period="1T", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision(
             result.revision.calculation_revision_id,
@@ -723,6 +731,7 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
             source_modelo="111",
             period=period,
             casilla_values={output: _m190_seed_value(output, period) for output in all_outputs},
+            year=_M190_YEAR,
         )
 
     expected_percepciones_amount = sum(
@@ -739,7 +748,7 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
     assert expected_retenciones > Decimal("0")
     assert expected_percepciones_amount != expected_retenciones
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation)
+    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
 
     values = result.revision.casilla_values
     assert Decimal(values[_DECL_PERCEPCIONES_COUNT]) == Decimal("0"), (
@@ -767,7 +776,7 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
     _seed_m111_quarterly_m190_evidence()
     _seed_m190_withholding_detail(secure_objects)
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation)
+    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision(
             result.revision.calculation_revision_id,
@@ -793,7 +802,7 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
         finding
         for finding in cross_period_findings
         if finding.message_facts.get("source_modelo") == "111"
-        and finding.message_facts.get("source_filing_year") == 2024
+        and finding.message_facts.get("source_filing_year") == _M190_YEAR
     )
     assert m111_findings, cross_period_findings
     assert all(
@@ -817,7 +826,7 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
     _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
     _seed_m190_withholding_detail(secure_objects)
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation)
+    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
     expected_percepciones_amount = sum(
         (Decimal(m111_result.revision.casilla_values[output]) for output in _M190_IMPORTE_OUTPUTS),
         Decimal("0"),
@@ -872,7 +881,7 @@ def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
     _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
     _seed_m190_withholding_detail(secure_objects, clave="A", subclave="")
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation)
+    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision(
             result.revision.calculation_revision_id,
@@ -902,8 +911,8 @@ def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
 # ---------------------------------------------------------------------------
 
 # Four DISTINCT non-equal quarterly values per M123 monetary output. M123 c03 is
-# still seeded as source evidence, but M193 no longer consumes it for the annual
-# perceptor count.
+# still seeded as source evidence, but M193 does not consume it for the annual
+# perceptor count, which counts the type-2 records.
 _M123_C03_PERCEPTORES = {"1T": Decimal("5"), "2T": Decimal("7"), "3T": Decimal("11"), "4T": Decimal("13")}
 _M123_C06_BASE = {
     "1T": Decimal("4000.00"),
@@ -927,15 +936,16 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
 
     M193 monetary declarante casillas are ``copy`` formulas over annual_summary
     relations whose ``sum`` aggregation folds the four seeded M123 quarters
-    (outputs ``06`` base and ``09`` retenciones). The perceptor count is resolved
-    through ``retenciones_aggregation``. Because M193 also declares
-    ``withholding`` tipo-2 detalle bindings, the enrolled withholding resolver
-    emits a ``source_issue`` advisory when the detail store is empty.
+    (outputs ``06`` base and ``09`` retenciones). The perceptor count is the
+    number of type-2 records (design positions 136-144), resolved through the
+    same ``withholding`` detalle store that emits them, so a distinct-NIF count
+    from the retención store does not reach it: with that store seeded and the
+    detalle store empty the count is an explicit zero, and the enrolled
+    withholding resolver emits a ``source_issue`` advisory.
     """
     obs_repo = CalculationObservationRepository()
     expected_base = _assert_distinct_positive(_M123_C06_BASE)
     expected_retenciones = _assert_distinct_positive(_M123_C09_RETENCIONES)
-    expected_perceptores = Decimal(len(set(_M193_RETENCION_PERCEPTOR_NIFS)))
     _seed_retencion_perceptors(
         secure_objects,
         modelo="193",
@@ -960,9 +970,9 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
     result = _calculate_annual(secure_objects, modelo="193", operation=operation)
 
     values = result.revision.casilla_values
-    assert Decimal(values[_DECL_PERCEPTORES]) == expected_perceptores, (
-        f"M193 {_DECL_PERCEPTORES} must use the persisted distinct perceptor count "
-        f"({expected_perceptores}); got {values[_DECL_PERCEPTORES]}"
+    assert Decimal(values[_DECL_PERCEPTORES]) == Decimal("0"), (
+        f"M193 {_DECL_PERCEPTORES} must count the type-2 records of the empty detalle store, not the "
+        f"{len(_M193_RETENCION_PERCEPTOR_NIFS)} distinct retención perceptors; got {values[_DECL_PERCEPTORES]}"
     )
     assert Decimal(values[_DECL_BASE]) == expected_base, (
         f"M193 {_DECL_BASE} must fold the four M123 c06 quarters (sum {expected_base}); got {values[_DECL_BASE]}"

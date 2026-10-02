@@ -35,7 +35,7 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
-from .invoice_draft_records import InvoiceDraft
+from .invoice_draft_records import InvoiceDraft, LabelReadingFallback
 
 __all__ = [
     "ExtractionDraftDocument",
@@ -75,6 +75,17 @@ class StoredExtractionDraft(BaseModel):
             answer, and the consent withdrawal survey surfaces the uncertainty
             instead of resolving it optimistically.
         drafted_at: When the draft was written.
+        label_reading_fallback: Why the draft's label reading stood without the
+            model fill it asked for, when it did. Kept on the record because the
+            draft's own payload describes only what the document says, so the
+            reading-path fact would otherwise be lost the moment the draft is
+            stored -- and a stored draft with empty fields would look exactly
+            like a document that does not print them. Once stored, this field
+            is the fact's only home; ``draft`` itself carries none.
+
+            ``None`` means no degradation is recorded: the fill ran, was never
+            needed, or the draft was stored before this fact was kept. It never
+            claims the read was complete.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -84,6 +95,7 @@ class StoredExtractionDraft(BaseModel):
     extractor: str = Field(min_length=1)
     read_transports: tuple[str, ...] = ()
     drafted_at: UtcInstant
+    label_reading_fallback: LabelReadingFallback | None = None
 
 
 class ExtractionDraftDocument(BaseModel):
@@ -177,7 +189,14 @@ def write_extraction_draft(
     one document are a re-read or a correction, not two proposals, and leaving
     both would give the confirm boundary two answers with nothing saying which
     the operator meant.
+
+    The draft's record of a label reading that stood without its model fill is
+    moved onto the stored record here, at the one writer, so no caller has to
+    remember to carry it. The record is then its only home: the stored draft
+    keeps describing only what the document says, and a reload returns exactly
+    what was written.
     """
+    fallback = draft.label_reading_fallback
     document = load_extraction_drafts(bucket_id, settings)
     retained = tuple(row for row in document.drafts if row.evidence_reference != evidence_reference)
     updated = ExtractionDraftDocument(
@@ -186,10 +205,11 @@ def write_extraction_draft(
             *retained,
             StoredExtractionDraft(
                 evidence_reference=evidence_reference,
-                draft=draft,
+                draft=draft if fallback is None else draft.with_label_reading_fallback(None),
                 extractor=extractor,
                 read_transports=read_transports,
                 drafted_at=now(),
+                label_reading_fallback=fallback,
             ),
         ),
     )

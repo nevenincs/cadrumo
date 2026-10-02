@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
 from ...core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
 from ...domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_references import LegalReference
 from ...domain.renta.actividad_asset.election import WORKFORCE_CONDITIONED_METHODS
 from ...domain.renta.actividad_asset.errors import ActividadAssetIncompleteError, VehicleAffectationRecovery
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
@@ -59,12 +61,14 @@ def forecast_activity_asset_charge(
     covered_until: date,
     history: AssetScheduleHistory,
     taxpayer_workforce: TaxpayerWorkforceReader,
+    legal_reference: Callable[[str], LegalReference],
     requested_free_amount: Decimal | None = None,
 ) -> ScheduledAmortizationCharge:
     """Forecast through published authority without creating a claim.
 
     The profile's average workforce is read only for the incentives it
     conditions, so no other method depends on that field being readable.
+    ``legal_reference`` reads the same generation's legal catalogue.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
@@ -77,6 +81,7 @@ def forecast_activity_asset_charge(
             asset_revision=asset_revision,
             authority_generation=authority_generation,
             workforce=workforce,
+            legal_reference=legal_reference,
         )
     except ActividadAssetIncompleteError as exc:
         recovery = exc.vehicle_affectation_recovery

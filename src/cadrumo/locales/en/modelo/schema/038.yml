@@ -17,6 +17,9 @@ modelo:
         title: Transactions of entities registered in public registers (monthly informative
           return)
       revision:
+        2022-hasta-2024-05:
+          field:
+            label: Modelo 038, 2022 to May 2024
         2024-desde-06:
           field:
             label: Modelo 038, from June 2024

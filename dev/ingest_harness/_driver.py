@@ -38,7 +38,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from ._field_mapping import expand_document_slots, project_emission
-from ._key import CORPUS_ROOT, IngestCorpusDocument
+from ._key import IngestCorpusDocument, corpus_root
 from ._result import EngineRoute, HarnessModelTier, PipelineStage, ResultRow, Scored, build_result_row
 from ._scoring import score_emission
 
@@ -54,7 +54,7 @@ class DriverError(RuntimeError):
 
 def _document_path(document: IngestCorpusDocument) -> Path:
     """Return the corpus document's path on disk, refusing an absent one."""
-    path = CORPUS_ROOT / document.path
+    path = corpus_root() / document.path
     if not path.is_file():
         raise DriverError(
             f"{document.doc_id}: the key names {document.path!r} but no such file is present under "

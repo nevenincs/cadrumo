@@ -74,3 +74,55 @@ legal_refs = ["ley-35-2006:dt-18"]
 # The remedy is an income-certificate value, NOT a filing to capture: the taxpayer
 # never filed Modelo 111 and the pull cannot fetch a return somebody else filed
 # about them. Any surface rendering this must not tell them to pull anything.
+
+# Anexo I instruccion 2.3 incompatibilities: the personal asalariado index is
+# not applied with the medios de produccion ajenos index, and forestal
+# activities take only the letter h) index. Advisory, never blocking.
+[[revisions."2022".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-medios-ajenos-personal-asalariado-incompatibles"
+predicate_id = "modelo-100-2022-eo-agraria-indice-medios-ajenos-personal-asalariado-incompatibles"
+expression = 'at_most_one_positive(["1540", "1541"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-i-instruccion-2-3"]
+
+[[revisions."2022".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-medios-ajenos"
+predicate_id = "modelo-100-2022-eo-agraria-indice-forestal-excluye-medios-ajenos"
+expression = 'at_most_one_positive(["1547", "1540"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-i-instruccion-2-3"]
+
+[[revisions."2022".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-personal-asalariado"
+predicate_id = "modelo-100-2022-eo-agraria-indice-forestal-excluye-personal-asalariado"
+expression = 'at_most_one_positive(["1547", "1541"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-i-instruccion-2-3"]
+
+[[revisions."2022".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-tierras-arrendadas"
+predicate_id = "modelo-100-2022-eo-agraria-indice-forestal-excluye-tierras-arrendadas"
+expression = 'at_most_one_positive(["1547", "1542"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-i-instruccion-2-3"]
+
+[[revisions."2022".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-agricultura-ecologica"
+predicate_id = "modelo-100-2022-eo-agraria-indice-forestal-excluye-agricultura-ecologica"
+expression = 'at_most_one_positive(["1547", "1544"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-i-instruccion-2-3"]
+
+[[revisions."2022".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-regadio-electrico"
+predicate_id = "modelo-100-2022-eo-agraria-indice-forestal-excluye-regadio-electrico"
+expression = 'at_most_one_positive(["1547", "1545"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-i-instruccion-2-3"]
+
+[[revisions."2022".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-pequena-empresa"
+predicate_id = "modelo-100-2022-eo-agraria-indice-forestal-excluye-pequena-empresa"
+expression = 'at_most_one_positive(["1547", "1546"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-i-instruccion-2-3"]

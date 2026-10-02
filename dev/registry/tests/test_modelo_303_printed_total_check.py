@@ -2,11 +2,14 @@
 
 Every Modelo 303 record design defines "Total cuota devengada" [27] as a sum of
 other printed boxes, and the list grew across the years. The registry computes
-[27] by projecting the semantic ``iva.cuota-devengada-total``, which may also
-carry an amount no printed box shows: the autoconsumo del promotor cuota is
-one. A fichero built from such a revision prints a [27] that its own boxes do
-not add up to. The ``equals(["27", "iva.cuota-devengada-total"])`` predicate
-cannot notice, because [27] is that total's projection.
+[27] by projecting the semantic ``iva.cuota-devengada-total``, so any amount
+that total carries beyond the printed boxes yields a fichero whose [27] its own
+boxes do not add up to. The ``equals(["27", "iva.cuota-devengada-total"])``
+predicate cannot notice, because [27] is that total's projection.
+
+The promotor's autoconsumo is the amount that once reached [27] that way. The
+registry now states that base per rate row, so its cuota lands in the printed
+rate boxes, and a base not stated per rate is refused rather than left out.
 
 These gates run the compiled registry, the real formula engine and the real
 predicate evaluator. The expected addends are read from each revision's own
@@ -33,6 +36,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationPredicateDefinition,
     VerificationPredicateOperator,
@@ -50,16 +54,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _TOTAL_BOX: CasillaId = validated_casilla_id("27")
 _GENERAL_CUOTA_BOX: CasillaId = validated_casilla_id("09")
 _AUTOCONSUMO_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
+_AUTOCONSUMO_GENERAL_BASE: CasillaId = validated_casilla_id("iva.autoconsumo.promotor.general.base")
 _GENERAL_CUOTA_BINDING = "modelo-303-iva-repercutido-general-cuota"
 _ATTRIBUTION_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
 _PRINTED_TOTAL_MISMATCH = "application.modelo.findings.printed_total_mismatch"
+_RATE_SPLIT_PREDICATE = "modelo-303-iva-autoconsumo-promotor-base-equals-por-tipo"
+_TOTAL_FORMULA = 'id = "modelo-303-iva-cuota-devengada-total"'
 
 #: The [27] row of a Modelo 303 record design: "Total cuota devengada ( [152] + ... ) [27]".
 _DESIGN_TOTAL_ROW = re.compile(r"Total cuota devengada\s*\((?P<addends>[^)]*)\)\s*\[27\]")
 _DESIGN_BOX = re.compile(r"\[(\d+)\]")
 
-#: One filing context per revision whose devengado total carries the autoconsumo cuota.
+#: One filing context per revision that carries the promotor's autoconsumo base.
 _AUTOCONSUMO_CONTEXTS: tuple[tuple[int, str], ...] = (
+    (2022, "1T"),
     (2023, "1T"),
     (2024, "1T"),
     (2024, "3T"),
@@ -74,6 +82,9 @@ _GENERAL_CUOTA = Decimal("2100.00")
 _AUTOCONSUMO_BASE = Decimal("1000.00")
 #: LIVA art. 90.Uno: the general rate applies to the autoconsumo base (art. 79.Cuatro).
 _STATUTORY_GENERAL_RATE = Decimal("0.21")
+_AUTOCONSUMO_CUOTA = _AUTOCONSUMO_BASE * _STATUTORY_GENERAL_RATE
+#: An amount the mutated total adds outside every printed box.
+_UNPRINTED_AMOUNT = Decimal("210.00")
 
 
 def _design_addends(revision: ModeloRevision, catalogues: RegistryCatalogues) -> tuple[str, ...]:
@@ -170,6 +181,51 @@ def _blocking(findings: list[ModeloVerificationFinding]) -> list[ModeloVerificat
     return [finding for finding in findings if finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
 
 
+def _transcribed_general_box(
+    modelo: ModeloDefinition, catalogues: RegistryCatalogues, *, filing_year: int, period: str, amount: Decimal
+) -> dict[CasillaId, Decimal]:
+    """The filer's transcription of [09] in an edition that prints it as a manual box."""
+    revision = build_snapshot(
+        modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period=period
+    ).revision
+    (box,) = (casilla for casilla in revision.casillas if casilla.id == _GENERAL_CUOTA_BOX)
+    return {_GENERAL_CUOTA_BOX: amount} if box.input_kind is InputKind.MANUAL else {}
+
+
+def _add_unprinted_amount_to_total(modelo_directory: Path) -> None:
+    """Make the devengado total add an amount no printed box shows.
+
+    The amount is folded into the total's first addend, so every successor's
+    sequence override of the addend list still applies and every edition
+    inherits the defect.
+    """
+    mutate_declaration(
+        modelo_directory,
+        revision_id="2022",
+        section="formulas",
+        member=_TOTAL_FORMULA,
+        find='[[revisions.2022.formulas.expression.args]]\ncasilla_id = "iva.cuota-devengada.general"\n',
+        replace=(
+            "[[revisions.2022.formulas.expression.args]]\n"
+            'op = "add"\n'
+            f'args = [{{ casilla_id = "iva.cuota-devengada.general" }}, {{ literal = "{_UNPRINTED_AMOUNT}" }}]\n'
+        ),
+    )
+
+
+@pytest.fixture(scope="module")
+def unprinted_amount_tree(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A scratch registry whose devengado total adds an amount no printed box shows."""
+    scratch_root = scratch_registry_tree(tmp_path_factory.mktemp("unprinted"), "303")
+    _add_unprinted_amount_to_total(scratch_root / "modelos" / "303")
+    return scratch_root
+
+
+def _loaded_303(registry_root: Path) -> tuple[ModeloDefinition, RegistryCatalogues]:
+    modelos, catalogues = load_registry_tree(registry_root)
+    return next(modelo for modelo in modelos if modelo.id == "303"), catalogues
+
+
 def test_every_revision_checks_its_own_design_addends_at_blocking_severity() -> None:
     modelo, catalogues = load_modelo_303()
 
@@ -177,7 +233,7 @@ def test_every_revision_checks_its_own_design_addends_at_blocking_severity() -> 
     assert _design_parity_failures(modelo, catalogues) == []
 
 
-def test_the_autoconsumo_contexts_cover_every_revision_that_adds_the_autoconsumo_cuota() -> None:
+def test_the_autoconsumo_contexts_cover_every_revision_that_carries_the_autoconsumo_base() -> None:
     modelo, catalogues = load_modelo_303()
     carrying = {
         revision.id
@@ -194,7 +250,33 @@ def test_the_autoconsumo_contexts_cover_every_revision_that_adds_the_autoconsumo
 
 
 @pytest.mark.parametrize(("filing_year", "period"), _AUTOCONSUMO_CONTEXTS)
-def test_an_autoconsumo_cuota_in_27_refuses_with_the_printed_sum(filing_year: int, period: str) -> None:
+def test_an_autoconsumo_base_stated_at_the_general_rate_lands_in_the_printed_boxes(
+    filing_year: int, period: str
+) -> None:
+    modelo, catalogues = load_modelo_303()
+    printed_general = _GENERAL_CUOTA + _AUTOCONSUMO_CUOTA
+    revision_id, values, findings = _calculated_findings(
+        modelo,
+        catalogues,
+        filing_year=filing_year,
+        period=period,
+        general_cuota=_GENERAL_CUOTA,
+        autoconsumo_base=_AUTOCONSUMO_BASE,
+        casilla_inputs={
+            _AUTOCONSUMO_GENERAL_BASE: _AUTOCONSUMO_BASE,
+            **_transcribed_general_box(
+                modelo, catalogues, filing_year=filing_year, period=period, amount=printed_general
+            ),
+        },
+    )
+
+    assert values[_GENERAL_CUOTA_BOX] == printed_general, revision_id
+    assert values[_TOTAL_BOX] == printed_general, revision_id
+    assert _blocking(findings) == [], revision_id
+
+
+@pytest.mark.parametrize(("filing_year", "period"), _AUTOCONSUMO_CONTEXTS)
+def test_an_autoconsumo_base_not_stated_per_rate_is_refused_not_left_out(filing_year: int, period: str) -> None:
     modelo, catalogues = load_modelo_303()
     revision_id, values, findings = _calculated_findings(
         modelo,
@@ -203,11 +285,38 @@ def test_an_autoconsumo_cuota_in_27_refuses_with_the_printed_sum(filing_year: in
         period=period,
         general_cuota=_GENERAL_CUOTA,
         autoconsumo_base=_AUTOCONSUMO_BASE,
+        casilla_inputs=_transcribed_general_box(
+            modelo, catalogues, filing_year=filing_year, period=period, amount=_GENERAL_CUOTA
+        ),
     )
 
-    autoconsumo_cuota = _AUTOCONSUMO_BASE * _STATUTORY_GENERAL_RATE
+    # The rate-less base reaches no rate row, so [27] still adds up to its printed boxes ...
+    assert values[_TOTAL_BOX] == _GENERAL_CUOTA, revision_id
+    # ... and the declaration is refused rather than filed without the autoconsumo cuota.
+    assert [finding.message_facts["predicate_id"] for finding in _blocking(findings)] == [_RATE_SPLIT_PREDICATE], (
+        revision_id
+    )
+
+
+@pytest.mark.parametrize(("filing_year", "period"), _AUTOCONSUMO_CONTEXTS)
+def test_an_amount_the_total_adds_outside_the_printed_boxes_refuses_with_the_printed_sum(
+    unprinted_amount_tree: Path, filing_year: int, period: str
+) -> None:
+    mutant, catalogues = _loaded_303(unprinted_amount_tree)
+    revision_id, values, findings = _calculated_findings(
+        mutant,
+        catalogues,
+        filing_year=filing_year,
+        period=period,
+        general_cuota=_GENERAL_CUOTA,
+        autoconsumo_base=Decimal("0"),
+        casilla_inputs=_transcribed_general_box(
+            mutant, catalogues, filing_year=filing_year, period=period, amount=_GENERAL_CUOTA
+        ),
+    )
+
     assert values[_GENERAL_CUOTA_BOX] == _GENERAL_CUOTA, revision_id
-    assert values[_TOTAL_BOX] == _GENERAL_CUOTA + autoconsumo_cuota, revision_id
+    assert values[_TOTAL_BOX] == _GENERAL_CUOTA + _UNPRINTED_AMOUNT, revision_id
 
     blocking = _blocking(findings)
     assert len(blocking) == 1, (revision_id, findings)
@@ -229,6 +338,9 @@ def test_the_same_declaration_without_autoconsumo_raises_no_blocking_finding(fil
         period=period,
         general_cuota=_GENERAL_CUOTA,
         autoconsumo_base=Decimal("0"),
+        casilla_inputs=_transcribed_general_box(
+            modelo, catalogues, filing_year=filing_year, period=period, amount=_GENERAL_CUOTA
+        ),
     )
 
     assert values[_TOTAL_BOX] == _GENERAL_CUOTA, revision_id
@@ -284,16 +396,16 @@ def _remove_declaration(modelo_directory: Path, edition: str, predicate: Verific
             fragment.path.parent.rmdir()
 
 
-def test_mutation_removing_the_predicate_lets_the_autoconsumo_total_through(tmp_path: Path) -> None:
+def test_mutation_removing_the_predicate_lets_the_unprinted_total_through(tmp_path: Path) -> None:
     bundled, _ = load_modelo_303()
     scratch_root = scratch_registry_tree(tmp_path, "303")
+    _add_unprinted_amount_to_total(scratch_root / "modelos" / "303")
     for edition in _DECLARING_EDITIONS:
         predicate = _printed_total_predicate(bundled.revisions[edition])
         assert predicate is not None
         _remove_declaration(scratch_root / "modelos" / "303", edition, predicate)
 
-    modelos, catalogues = load_registry_tree(scratch_root)
-    mutant = next(modelo for modelo in modelos if modelo.id == "303")
+    mutant, catalogues = _loaded_303(scratch_root)
     assert all(_printed_total_predicate(revision) is None for revision in mutant.revisions.values())
 
     revision_id, values, findings = _calculated_findings(
@@ -302,12 +414,12 @@ def test_mutation_removing_the_predicate_lets_the_autoconsumo_total_through(tmp_
         filing_year=2025,
         period="1T",
         general_cuota=_GENERAL_CUOTA,
-        autoconsumo_base=_AUTOCONSUMO_BASE,
+        autoconsumo_base=Decimal("0"),
     )
     # The defect is still there, and with the predicate gone nothing refuses it:
     # the binary [27] == iva.cuota-devengada-total predicate holds by construction.
     assert revision_id == "2025"
-    assert values[_TOTAL_BOX] == _GENERAL_CUOTA + _AUTOCONSUMO_BASE * _STATUTORY_GENERAL_RATE
+    assert values[_TOTAL_BOX] == _GENERAL_CUOTA + _UNPRINTED_AMOUNT
     assert values[_GENERAL_CUOTA_BOX] == _GENERAL_CUOTA
     assert _blocking(findings) == []
 

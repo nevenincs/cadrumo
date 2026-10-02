@@ -71,7 +71,7 @@ PROFILE_CREATION_NOTICE_CODES: Final[frozenset[str]] = frozenset({"PROFILE_LOGIN
 _REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
 
 CASILLAS = (
-    "00501=100000.00",
+    "DP200012:00501=100000.00",
     "DP200013:00417=0.00",
     "DP200013:00418=0.00",
     "01032=0.00",
