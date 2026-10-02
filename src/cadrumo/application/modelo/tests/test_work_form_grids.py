@@ -7,7 +7,8 @@ official record design ("00400", "02100"). A literal is read as a rate only
 where it states a percentage outright or its export field declares its scale;
 nothing is inferred from neighbouring rows, and a literal of zeros is the
 design's placeholder and never a rate. The fixtures that change a literal are
-the published layout with that one literal replaced.
+the published layout with that one literal replaced, or with that one box fixed
+by the literal.
 """
 
 from __future__ import annotations
@@ -104,7 +105,11 @@ def _form(
 
 
 def _with_literals(layout: FormLayoutDefinition, literals: Mapping[str, str]) -> FormLayoutDefinition:
-    """The published layout with the literal of some fixed boxes replaced, everything else untouched."""
+    """The published layout with some boxes fixed by the given literal, everything else untouched.
+
+    A box the design already fixes has its literal replaced; a box it does not
+    is fixed as the design fixes one.
+    """
     pages = []
     for page in layout.pages:
         sections = []
@@ -116,8 +121,14 @@ def _with_literals(layout: FormLayoutDefinition, literals: Mapping[str, str]) ->
                         row.model_copy(
                             update={
                                 "cells": tuple(
-                                    cell.model_copy(update={"literal": literals[str(cell.casilla_id)]})
-                                    if cell.kind is FormCellKind.DESIGN_CONSTANT and str(cell.casilla_id) in literals
+                                    cell.model_copy(
+                                        update={
+                                            "kind": FormCellKind.DESIGN_CONSTANT,
+                                            "literal": literals[str(cell.casilla_id)],
+                                        }
+                                    )
+                                    if cell.kind in {FormCellKind.DESIGN_CONSTANT, FormCellKind.CASILLA}
+                                    and str(cell.casilla_id) in literals
                                     else cell
                                     for cell in row.cells
                                 )
@@ -147,11 +158,13 @@ def test_published_literal_scales_print_the_official_rates(operation: PinnedAuth
         printed = boxes[box].printed_rate
         assert printed is not None and printed.ratio == ratio, box
         assert boxes[box].value == ratio * 100, box
-    # A rate the row's base binding declares is still shown, from the binding and never from the literal.
-    for box, ratio in {"02": Decimal("0.04"), "05": Decimal("0.10")}.items():
-        grounded = boxes[box].grounded_rate
-        assert grounded is not None and grounded.ratio == ratio, box
-    for box in ("08", "157", "20", "23"):
+    # A rate the row's base binding declares is still shown, from the binding and never from the literal: the 2 %
+    # row prints no literal and is grounded on its base binding, while no box the design fixes is grounded, the
+    # 4 % and 10 % rows' bases adding the promoter's autoconsumo to the ledger's base by formula.
+    grounded = boxes["166"].grounded_rate
+    assert grounded is not None and grounded.ratio == Decimal("0.02")
+    assert boxes["166"].printed_rate is None
+    for box in _LITERAL_RATES_303:
         assert boxes[box].grounded_rate is None, box
     for box in _PLACEHOLDERS_303:
         assert boxes[box].printed_rate is None, box
@@ -222,10 +235,12 @@ def test_a_literal_that_states_its_percentage_is_printed_as_it_says(operation: P
 def test_a_placeholder_rate_box_claims_no_rate_even_where_its_base_declares_one(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    published = _by_box(_form_303(operation))["02"]
-    zeroed = _by_box(_form_303(operation, {"02": "00000"}))["02"]
+    # The 2 % row's base binding declares one rate; were the design to print zeros in its rate box, none is claimed.
+    published = _by_box(_form_303(operation))["166"]
+    zeroed = _by_box(_form_303(operation, {"166": "00000"}))["166"]
 
     assert published.grounded_rate is not None
+    assert zeroed.editability is ModeloFormEditability.DESIGN_CONSTANT
     assert zeroed.grounded_rate is None
     assert zeroed.printed_rate is None
 
