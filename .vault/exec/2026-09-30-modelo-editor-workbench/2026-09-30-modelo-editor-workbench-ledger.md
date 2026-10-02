@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c96e27ac0089734512eeaccee8d0fd008266ea5f27e86f3eec28fdbf450bb195'
+body_hash: 'sha256:cc5602a906bc447ebbeda8e77e93c2c0af2ee124bdd2bbffea11cfab337c3ad7'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1849,6 +1849,11 @@ related:
 - `S50` `verify:` `dev.tui staged artifact installation and snapshot modelo-workbench-final-known-empty` -> `pass`
 - `S50` `verify:` `review HTTP API 200 and original review_page.html SHA256 unchanged` -> `pass`
 - `S50` `by:` `vaultspec-execute`
+- `S30` `M` `.vault/plan/2026-09-30-modelo-editor-workbench-plan.md`
+- `S30` `verify:` `final integrated plan-close review against both accepted decisions and all corrective findings` -> `pass`
+- `S30` `verify:` `final independent corrected workbench visual review (712 corpus plus 80 affected frames with scoped reuse)` -> `pass`
+- `S30` `verify:` `Vaultspec feature check (pre-close 0 errors 0 warnings)` -> `pass`
+- `S30` `verify:` `applicable documentation sequence HTML links and rendered output review` -> `pass`
 
 ## Notes
 
@@ -1969,3 +1974,4 @@ related:
 - `S30` S30 remains open pending final S50 capture/review. Actual broad TUI, static aggregate and locale baseline failures retained; focused passes do not rewrite aggregate exits. Concurrent profile UX work is outside the frozen candidate and preserved. Late approval of the already withdrawn publication proposal acknowledged; existing accepted publication completed without it.
 - `S17` Only known-empty `_record_items` behavior changes. Final source/input hashes and full actual native receipts are in s17-known-empty-verification-receipt.json and known-empty-{render,imports}-execution.json under C temp root. S50 owns current affected-scenario visual review/installation; unrelated profile UX work preserved.
 - `S50` Initial complete 712-frame visual review retained its medium known-empty finding; final80corrected affected frames resolve it. Reuse632unchanged journey frames explicitly scoped, not uniformly rerendered. Full source/authority hashes and exact commands in Ctemp known-empty execution receipts. Eight changed next-page frames confirmed by owning diff; difference exit1 indicates actual expected changes, not a failed check. Concurrent profile UX work preserved; no HTML overwrite, push or new PR.
+- `S30` Final review PASS with actual unrelated baseline aggregate failures preserved and all introduced feature failures resolved. All64 approved steps closed; deferred registry/D6 questions remain outside scope. Concurrent profile UX/capture/locales work preserved and excluded from frozen feature gate claims. Current review snapshot modelo-workbench-final-known-empty; fullbefore-fix712 and four P08locale snapshots retained. No push/newPR/remote merge.

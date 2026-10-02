@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:d11e5f1a6fed71d2e85735007f0f2d65a12b9b6c2bc7fe5a81fffe4652bf9772'
+body_hash: 'sha256:be98b120b3b252ca6c391157e4412db1ad439eec25c4aa4672305df96bdf0623'
 ---
 
 # `modelo-editor-workbench` plan
@@ -100,7 +100,7 @@ Prove the workbench across locales, geometries and themes through the production
 - [x] `P05.S27` - Prove the workbench through the production composition in four locales, three geometries and two themes, with token-leak, focus-return and sensitive non-retention assertions; `src/cadrumo/entrypoints/tui/modelo/workbench/tests`.
 - [x] `P05.S28` - Render the sequence-backed visual review of the workbench and record before and after captures; `dev/tui`.
 - [x] `P05.S29` - Update the user documentation for filing a modelo in the TUI; `docs`.
-- [ ] `P05.S30` - Run the plan-close review of the integrated workbench against both decisions and resolve its findings; `.vault/audit`.
+- [x] `P05.S30` - Run the plan-close review of the integrated workbench against both decisions and resolve its findings; `.vault/audit`.
 
 ### Phase `P06` - filer experience convergence
 
