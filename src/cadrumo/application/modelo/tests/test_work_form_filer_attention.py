@@ -12,11 +12,13 @@ from the builder:
 * each finding carries the catalogue key of one sentence saying what to do,
   chosen by its message and then by its kind;
 * a Modelo 303 rate box carries the one rate its row's base binding declares,
-  and agrees with the literal the official design prints for it.
+  and the rate the ledger bindings filling a row's base declare agrees with
+  the literal the official design prints for its rate box.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -32,6 +34,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvid
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_form_layouts import FormCellKind
+from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_revision import CalculationRevisionState
@@ -381,50 +384,103 @@ def _rate_cells(form: ModeloWorkForm) -> dict[str, ModeloFormGridCell]:
 
 
 def test_a_303_rate_box_prints_the_one_rate_its_base_binding_declares(operation: PinnedAuthorityOperation) -> None:
-    """Rows [01]-[02], [04]-[05] and [165]-[166] each fill their base from a binding that admits one rate.
+    """Row [165]-[166] fills its base from a binding that admits one rate, and its rate box claims that rate.
 
-    Row [153]-[154] admits two transitional rates, row [07]-[08] is rate-blind
-    and row [150]-[151] has no binding, so none of their rate boxes claims one.
+    Rows [01]-[02], [04]-[05] and [07]-[08] fill their base by a formula that
+    adds the promoter's autoconsumo to the ledger's base, row [153]-[154] admits
+    two transitional rates and row [150]-[151] has no binding, so none of their
+    rate boxes claims one.
     """
     snapshot = _snapshot(operation, "303", 2026, "1T")
     bindings = {str(item.id): item for item in snapshot.revision.bindings}
     casillas = {str(item.id): item for item in snapshot.revision.casillas}
     cells = _rate_cells(_form(operation, "303", 2026, "1T"))
 
-    for rate_box, base_box, expected in (("02", "01", "0.04"), ("05", "04", "0.10"), ("166", "165", "0.02")):
-        field = cells[rate_box].field
-        assert field is not None
-        rate = field.grounded_rate
-        assert rate is not None, rate_box
-        assert rate.ratio == Decimal(expected)
-        assert rate.percent() == Decimal(expected) * 100
-        assert rate.unit is ModeloFormRateUnit.FRACTION
-        base_binding = casillas[base_box].binding
-        assert str(rate.binding_id) == str(base_binding)
-        provider = bindings[str(base_binding)].provider
-        assert isinstance(provider, LedgerIvaProvider)
-        assert provider.applied_rates == (Decimal(expected),)
-    for rate_box in ("154", "08", "151"):
+    field = cells["166"].field
+    assert field is not None
+    rate = field.grounded_rate
+    assert rate is not None
+    assert rate.ratio == Decimal("0.02")
+    assert rate.percent() == Decimal(2)
+    assert rate.unit is ModeloFormRateUnit.FRACTION
+    base_binding = casillas["165"].binding
+    assert str(rate.binding_id) == str(base_binding)
+    provider = bindings[str(base_binding)].provider
+    assert isinstance(provider, LedgerIvaProvider)
+    assert provider.applied_rates == (Decimal("0.02"),)
+    for base_box in ("01", "04", "07"):
+        assert casillas[base_box].input_kind is InputKind.COMPUTED, base_box
+        assert casillas[base_box].binding is None, base_box
+    for rate_box in ("02", "05", "08", "154", "151"):
         field = cells[rate_box].field
         assert field is not None
         assert field.grounded_rate is None, rate_box
 
 
-def test_a_grounded_rate_agrees_with_the_rate_the_official_design_prints(operation: PinnedAuthorityOperation) -> None:
-    """The design prints [02] as 00400 and [05] as 01000, hundredths of a per cent: the same rates, found apart."""
-    form = _form(operation, "303", 2026, "1T")
-    printed = {
-        casilla_id: cell for casilla_id, cell in _rate_cells(form).items() if cell.kind is FormCellKind.DESIGN_CONSTANT
-    }
+def _grid_rows(form: ModeloWorkForm) -> list[tuple[ModeloFormGridCell, ...]]:
+    """Every official grid row's cells, in the form's order."""
+    return [
+        row.cells
+        for page in form.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, ModeloFormGridBlock)
+        for row in block.rows
+    ]
 
-    compared = 0
-    for casilla_id, cell in printed.items():
-        rate = None if cell.field is None else cell.field.grounded_rate
-        if rate is None or cell.literal is None:
-            continue
-        assert Decimal(int(cell.literal)) / 10000 == rate.ratio, casilla_id
-        compared += 1
-    assert compared == 2
+
+def test_a_grounded_rate_agrees_with_the_rate_the_official_design_prints(operation: PinnedAuthorityOperation) -> None:
+    """The design prints [02] as 00400 and [05] as 01000, hundredths of a per cent: the same rates, found apart.
+
+    Their rows' base boxes [01] and [04] add the promoter's autoconsumo to the
+    ledger's base by formula. The rate compared is the one declared by the
+    rate-specific ledger binding that fills the ledger's base each formula adds;
+    the filer's autoconsumo base, which no binding fills, declares none.
+    """
+    snapshot = _snapshot(operation, "303", 2026, "1T")
+    bindings = {str(item.id): item for item in snapshot.revision.bindings}
+    casillas = {str(item.id): item for item in snapshot.revision.casillas}
+    formulas = {str(item.id): item for item in snapshot.revision.formulas}
+
+    def added(expression: FormulaExpression) -> Iterator[str]:
+        """The casillas a formula adds up."""
+        if expression.casilla_id is not None:
+            yield str(expression.casilla_id)
+        elif expression.op == "add":
+            for arg in expression.args:
+                yield from added(arg)
+
+    def declared_rates(base: str) -> set[Decimal]:
+        """Every rate the rate-specific ledger bindings that fill a base box declare, bound or added by formula."""
+        casilla = casillas[base]
+        sources = (base,) if casilla.formula is None else tuple(added(formulas[str(casilla.formula)].expression))
+        rates: set[Decimal] = set()
+        for source in sources:
+            filling = casillas[source]
+            for binding_id in (filling.binding, *filling.alternate_bindings):
+                provider = None if binding_id is None else bindings[str(binding_id)].provider
+                if isinstance(provider, LedgerIvaProvider) and provider.applied_rates is not None:
+                    rates.update(provider.applied_rates)
+        return rates
+
+    compared: set[str] = set()
+    for cells in _grid_rows(_form(operation, "303", 2026, "1T")):
+        base = cells[0].field
+        for cell in cells:
+            if cell.kind is not FormCellKind.DESIGN_CONSTANT or cell.field is None or cell.literal is None:
+                continue
+            if (
+                cell.field.data_type != "ratio"
+                or base is None
+                or not isinstance(base.address, ModeloFormCasillaAddressV1)
+            ):
+                continue
+            rates = declared_rates(str(base.address.casilla_id))
+            if not rates:
+                continue
+            assert rates == {Decimal(int(cell.literal)) / 10000}, cell.field.box
+            compared.add(str(cell.field.box))
+    assert compared == {"02", "05"}
 
 
 def test_no_field_but_a_rate_box_carries_a_rate(operation: PinnedAuthorityOperation) -> None:
