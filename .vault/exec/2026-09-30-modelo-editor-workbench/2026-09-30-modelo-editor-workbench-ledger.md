@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5318c64abca6ac91ddfd093100db1eae3354e97ca2767c9ef65d9f64eb66e17a'
+body_hash: 'sha256:77d66f022589c4629020e68fde4f4420f66d4585fd92c8fc69058a7982aa6f25'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -13,6 +13,7 @@ related:
 # `modelo-editor-workbench` ledger
 
 ## Changes
+
 
 - `S15` `A` `src/cadrumo/application/modelo/value_presentation.py`
 - `S15` `A` `src/cadrumo/application/modelo/tests/test_value_presentation.py`
@@ -1560,6 +1561,54 @@ related:
 - `S56` `by:` `vaultspec-high-executor`
 - `S60` `verify:` `integrated code review current Modelo export/summaries/pickers and generic operation host reachability` -> `pass`
 - `S60` `by:` `vaultspec-code-reviewer`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/export/0001-record-m303-declaration.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/export/_generation.provenance.json`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0001-record-m303-declaration.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0002-record-m303-regimen-simplificado.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0003-record-m303-regimen-simplificado.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0004-record-m303-regimen-simplificado.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0005-record-m303-resultados.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0006-record-m303-exonerado-390.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0007-record-m303-prorrata-deducciones.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0008-record-m303-prorrata-deducciones.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0009-record-m303-domiciliacion.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/_generation.provenance.json`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/form_layouts/0001-form-layout.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/export/0001-record-m303-declaration.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/export/_generation.provenance.json`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/form_layouts/0001-form-layout.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0001-record-m303-declaration.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0002-record-m303-regimen-simplificado.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0003-record-m303-regimen-simplificado.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0004-record-m303-regimen-simplificado.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0005-record-m303-resultados.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0006-record-m303-exonerado-390.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0007-record-m303-prorrata-deducciones.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0008-record-m303-prorrata-deducciones.toml`
+- `S62` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0009-record-m303-domiciliacion.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/_generation.provenance.json`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/export/0001-record-m303-declaration.toml`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/export/_generation.provenance.json`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0002-record-m303-declaration.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0005-record-m303-regimen-simplificado.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0006-record-m303-resultados.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0007-record-m303-exonerado-390.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0009-record-m303-prorrata-deducciones.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/0010-record-m303-domiciliacion.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0002-record-m303-declaration.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0005-record-m303-regimen-simplificado.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0006-record-m303-resultados.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0007-record-m303-exonerado-390.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0009-record-m303-prorrata-deducciones.toml`
+- `S62` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/0010-record-m303-domiciliacion.toml`
+- `S62` `verify:` `five-target registry-republish-target/form_layout generate/form_layout --check/pipeline check/check-registry-target-current installation sequence` -> `pass`
+- `S62` `verify:` `just registry-publish-authority` -> `pass`
+- `S62` `verify:` `just check-registry-gate (valid/runtime-load/integrity)` -> `pass`
+- `S62` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/application/modelo/tests/test_work_form_grids.py` -> `pass`
+
 
 ## Notes
 
@@ -1655,3 +1704,4 @@ related:
 - `S30` Corrective checkpoint before final integrated review; S30 remains open. Expanded broad source gate classification and rejected source/publication amendment are in the rolling audit. Fresh frozen captures and canonical broad gates will determine final completion.
 - `S56` Four clearly synthetic typed portfolio/picker/period/external-details render surfaces are prepared. The required frozen current-tree four-language, two-size, two-theme render/review has not run yet; S56 remains open.
 - `S60` Current Modelo operations declare no REVIEW interaction; edit declares INPUT only. Shared review JSON is unreachable for these paths. Diagnostic/receipt references exist only at terminal settlement and the modal synchronously dismisses before the next paint. S60's current default Modelo surfaces satisfy the accepted operation/public-result contracts.
+- `S62` Final installation receipts and exact command exits are in C:/Users/hello/AppData/Local/Temp/modelo-s62-installation-sequence. Temporary reviewed disposition rows retired through their owner with other ledger content unchanged. Published generation bbea0e6a55b9de2ae3f4b5f00df110ac956bb604a0b8953aeac6463623595e3b; six real published-layout adoption cases pass. An initial default-unit selector deselected all six integration cases and is not passing evidence.

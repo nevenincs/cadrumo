@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-09-30-modelo-editor-workbench-adr]]'
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
-modified: '2026-10-01'
+modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:0b564c77f25ed69840727063fd84d64c64e98a150fc8cd8528f57d987c8023ea'
+body_hash: 'sha256:e8c9cef94de3bfcf75ba40988e750391a987e1e5f5ce221a1bbabca10ceca14d'
 ---
 
 # `modelo-editor-workbench` plan
@@ -133,7 +133,7 @@ Close what the combined render and the design verification found: nothing unconf
 - [ ] `P07.S50` - Render the phase in the review previews and close it with a review; `dev/tui`.
 - [x] `P07.S51` - Apply the design lane's terminology, area-name and conformance packs across every catalogue and regenerate the tests and references they move; `src/cadrumo/locales`.
 - [x] `P07.S52` - Keep calculation diagnostics from firing for sources that do not apply to the filer, then restore the deferred reasons to the filing block; `src/cadrumo/application/aggregation`.
-- [ ] `P07.S62` - Declare the scale of Modelo 303's rate literals so the general rate row prints its rate, grounded in the record design; `src/cadrumo/_data/registry/aeat/modelos/303`.
+- [x] `P07.S62` - Declare the scale of Modelo 303's rate literals so the general rate row prints its rate, grounded in the record design; `src/cadrumo/_data/registry/aeat/modelos/303`.
 - [x] `P07.S63` - Show a calculated box's formula with its values in the editor, so a zero result says why; `src/cadrumo/application/modelo/casilla_help.py`.
 
 ### Phase `P08` - declarations list
