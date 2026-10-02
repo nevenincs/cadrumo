@@ -10,28 +10,6 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm200-2025.dp200012.f0064'
-offset = 999
-length = 17
-kind = 'casilla'
-casilla_id = '00336'
-data_type = 'decimal'
-required = false
-padding = 'left_zero'
-justification = 'right'
-decimals = 2
-signed = false
-design_type = 'Num'
-legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
-]
-source_refs = ['aeat-dr-200-2025']
-
-[[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = 'm200-2025.dp200012.f0065'
 offset = 1016
 length = 17

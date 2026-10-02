@@ -6553,6 +6553,23 @@ modelo:
             label: 'Arrendament financer: règim especial (art. 106 LIS) - Disminució
               - Correccions de l''exercici - Temporànies (amb origen en l''exercici)
               [03217]'
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Aplicació de correccions de valor per deteriorament
+              de l’immobilitzat material i les inversions [00302]
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones-inmovilizado-inmobiliarias:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Aplicació de correccions de valor per deteriorament
+              de l’immobilitzat material i les inversions - Immobilitzat material
+              i inversions immobiliàries [00303]
+          is-aseguradoras-vida-deterioro-inversiones-financieras:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Aplicació de correccions de valor per deteriorament
+              de l’immobilitzat material i les inversions - Inversions financeres
+              [00304]
+          is-aseguradoras-vida-ingresos-inversiones-financieras:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Ingressos d’inversions financeres [00301]
           is-atribucion-rentas-hibridos-aumento:
             label: 'Entitat en règim d''atribució de rendes: asimetries híbrides (art.
               15 bis.12 LIS) - Augment - Correccions de l''exercici - Permanents [01842]'
@@ -8781,6 +8798,22 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estat de canvis en el patrimoni net (II) - Ajustos per errors d'exercicis
               anteriors - Capital - Escripturat [00408]
+          is-ecpn-bde-saldo-apertura-dividendos-cuenta:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo d’obertura [abans de la reexpressió]
+              - (-) Dividends a compte [00302]
+          is-ecpn-bde-saldo-apertura-otro-resultado-global-acumulado:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo d’obertura [abans de la reexpressió]
+              - Altre resultat global acumulat [00303]
+          is-ecpn-bde-saldo-apertura-resultado-ejercicio:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo d’obertura [abans de la reexpressió]
+              - Resultat de l'exercici [00301]
+          is-ecpn-bde-saldo-apertura-total:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo d’obertura [abans de la reexpressió]
+              - Total [00304]
           is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Conversió de deute en patrimoni net
@@ -9360,6 +9393,16 @@ modelo:
             label: 'Estats de comptes d''institucions d''inversió col·lectiva: entitats
               que utilitzen els estats de comptes aplicables a les IIC (excepte claus
               00003, 00004 i 00008) [00061]'
+          is-iic-patrimonio-final:
+            label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
+              (II) - PATRIMONI FINAL [00303]
+          is-iic-revalorizacion-inmuebles-resultados-enajenacion:
+            label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
+              (II) - Revaloració d’immobles d’ús propi i resultats per alienació d’immobilitzat
+              [00302]
+          is-iic-variacion-patrimonial-otros:
+            label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
+              (II) - Altres [00301]
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
             help: Indicador d'imputació en la base imposable de rendes positives segons
               l'article 100 de la LIS [00007].
@@ -9377,6 +9420,20 @@ modelo:
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
             label: Inversions anticipades - reserva per a inversions a les Illes Balears
               (DA 70a.Quatre.10 Llei 31/2022) [00087]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-aumentos:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Diferències entre amortització comptable i fiscal (arts. 12.1 LIS)
+              - Augments [00303]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-disminuciones:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Diferències entre amortització comptable i fiscal (arts. 12.1 LIS)
+              - Disminucions [00304]
+          is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
+            label: Liquidació I - Resultat del compte de pèrdues i guanys - Correccions
+              per l’impost sobre societats - Augments [00301]
+          is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
+            label: Liquidació I - Resultat del compte de pèrdues i guanys - Correccions
+              per l’impost sobre societats - Disminucions [00302]
           is-liquidacion-i-importe:
             label: Liquidació I - Resultat del compte de pèrdues i guanys - Resultat
               compte pèrdues i guanys abans de l'Impost sobre Societats i l'Impost
@@ -9946,6 +10003,20 @@ modelo:
           is-sal-reserva-especial-dotacion:
             label: Liquidació III - Base imposable - Societats Laborals - Reserva
               especial de dotació Llei 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
+          is-sgr-otras-variaciones-ajustes-cambio-valor:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Altres variacions del patrimoni net - Ajustos per canvis de valor
+              [00304]
+          is-sgr-otras-variaciones-reservas:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Altres variacions del patrimoni net - Reserves [00301]
+          is-sgr-otras-variaciones-resultado-ejercicio:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Altres variacions del patrimoni net - Resultat de l’exercici [00303]
+          is-sgr-otras-variaciones-resultados-ejercicios-anteriores:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Altres variacions del patrimoni net - Resultats exercicis anteriors
+              [00302]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Indicador de societat de garantia recíproca o de refiançament [00036].
             label: Societat de garantia recíproca o de refiançament [00036]

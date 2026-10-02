@@ -1193,3 +1193,193 @@ id = "DP200014B:00083"
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-200-2022 DP200014B row 46, field 41: Liquidación IV - Resultado de la autoliquidación - Abono deducciones I+D+i por insuficiencia de cuota - Estado [00083]. aeat-dr-200-2023 DP200014B row 62, field 57: Liquidación IV - Resultado de la autoliquidación - Abono deducciones I+D+i por insuficiencia de cuota - Estado [00083]. The same monetary Estado concept continues; it is independent of the DP200001 entity character sharing the printed number."
 source_refs = ["aeat-dr-200-2023"]
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200012:00301"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["ley-27-2014:art-15", "orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200012 row 12 field 7 at offset 30 and aeat-dr-200-2023 DP200012 row 12 field 7 at offset 30 print [00301] with the same caption 'Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Correcciones por Impuesto Sociedades - Aumentos [00301]', wire type Num, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200012:00302"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["ley-27-2014:art-15", "orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200012 row 13 field 8 at offset 47 and aeat-dr-200-2023 DP200012 row 13 field 8 at offset 47 print [00302] with the same caption 'Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Correcciones por Impuesto Sociedades - Disminuciones [00302]', wire type Num, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200012:00303"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["ley-27-2014:art-12", "orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200012 row 29 field 24 at offset 319 and aeat-dr-200-2023 DP200012 row 31 field 26 at offset 353 print [00303] with the same caption 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Diferencias entre amortización contable y fiscal (arts. 12.1 LIS) - Aumentos [00303]', wire type Num, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200012:00304"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["ley-27-2014:art-12", "orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200012 row 30 field 25 at offset 336 and aeat-dr-200-2023 DP200012 row 32 field 27 at offset 370 print [00304] with the same caption 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Diferencias entre amortización contable y fiscal (arts. 12.1 LIS) - Disminuciones [00304]', wire type Num, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200033:00301"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200033 row 13 field 8 at offset 47 and aeat-dr-200-2023 DP200033 row 13 field 8 at offset 47 print [00301] with the same caption 'Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de apertura  [antes de la reexpresión] - Resultado del ejercicio [00301]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200033:00302"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200033 row 14 field 9 at offset 64 and aeat-dr-200-2023 DP200033 row 14 field 9 at offset 64 print [00302] with the same caption 'Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de apertura  [antes de la reexpresión] - (-) Dividendos a cuenta [00302]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200033:00303"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200033 row 15 field 10 at offset 81 and aeat-dr-200-2023 DP200033 row 15 field 10 at offset 81 print [00303] with the same caption 'Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de apertura  [antes de la reexpresión] - Otro resultado global acumulado [00303]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200033:00304"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200033 row 16 field 11 at offset 98 and aeat-dr-200-2023 DP200033 row 16 field 11 at offset 98 print [00304] with the same caption 'Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de apertura  [antes de la reexpresión] - Total [00304]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200039:00301"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200039 row 23 field 18 at offset 217 and aeat-dr-200-2023 DP200039 row 23 field 18 at offset 217 print [00301] with the same caption 'Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica seguro de vida - Ingresos inversiones financieras [00301]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200039:00302"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200039 row 24 field 19 at offset 234 and aeat-dr-200-2023 DP200039 row 24 field 19 at offset 234 print [00302] with the same caption 'Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica seguro de vida - Aplic. correc. de valor por deterioro inmov. material e inversiones [00302]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200039:00303"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200039 row 25 field 20 at offset 251 and aeat-dr-200-2023 DP200039 row 25 field 20 at offset 251 print [00303] with the same caption 'Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica seguro de vida - Aplic. correc. de valor por deterioro inmov. material e inversiones - Inmovilizado material e inv. inmobiliarias [00303]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200039:00304"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200039 row 26 field 21 at offset 268 and aeat-dr-200-2023 DP200039 row 26 field 21 at offset 268 print [00304] with the same caption 'Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica seguro de vida - Aplic. correc. de valor por deterioro inmov. material e inversiones - Inversiones financieras [00304]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200048:00301"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200048 row 18 field 13 at offset 132 and aeat-dr-200-2023 DP200048 row 18 field 13 at offset 132 print [00301] with the same caption 'Inst. inversión colectiva - Estado variación patrimonial (II) - Otros [00301]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200048:00302"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200048 row 19 field 14 at offset 149 and aeat-dr-200-2023 DP200048 row 19 field 14 at offset 149 print [00302] with the same caption 'Inst. inversión colectiva - Estado variación patrimonial (II) - Revalorización inmuebles uso propio y resultados por enajenación inmobilizado [00302]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200048:00303"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200048 row 20 field 15 at offset 166 and aeat-dr-200-2023 DP200048 row 20 field 15 at offset 166 print [00303] with the same caption 'Inst. inversión colectiva - Estado variación patrimonial (II) - PATRIMONIO FINAL [00303]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200053:00301"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200053 row 64 field 59 at offset 914 and aeat-dr-200-2023 DP200053 row 64 field 59 at offset 914 print [00301] with the same caption 'Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Otras variaciones patrimonio neto - Reservas [00301]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200053:00302"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200053 row 65 field 60 at offset 931 and aeat-dr-200-2023 DP200053 row 65 field 60 at offset 931 print [00302] with the same caption 'Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Otras variaciones patrimonio neto - Resultados ejercicios anteriores [00302]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200054:00303"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200054 row 51 field 46 at offset 693 and aeat-dr-200-2023 DP200054 row 51 field 46 at offset 693 print [00303] with the same caption 'Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Otras variaciones patrimonio neto - Resultado ejercicio [00303]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200054:00304"
+
+[revisions."2023".casilla_overrides.fields]
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2023"]
+continuidad_evidence = "Grounded only within observed legal support: aeat-dr-200-2022 DP200054 row 52 field 47 at offset 710 and aeat-dr-200-2023 DP200054 row 52 field 47 at offset 710 print [00304] with the same caption 'Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Otras variaciones patrimonio neto - Ajustes cambio valor [00304]', wire type N, and width 17. This supports continuity across this observed edge only; no claim is made about introduction before the earliest supported 2022 design."
+continuidad_origin = "grounded"

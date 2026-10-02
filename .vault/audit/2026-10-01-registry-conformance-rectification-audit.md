@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-conformance-rectification'
 date: '2026-10-01'
-modified: '2026-10-01'
+modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:f4d44859e8c0237bdd677e875c9e739dfdd39ade59abec7c451eec1d8323abcc'
+body_hash: 'sha256:44f38207452bf45b8f53ea900757cd2d81024f6cbdc617b8c92a2609b6db75c8'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
   - "[[2026-10-01-registry-conformance-rectification-remaining-issues-research]]"
@@ -105,6 +105,16 @@ The canonical catalogue author compares proposed composed-segment renderings wit
 ### treaty-literal-anchors | low | Three canonical fragments preserve the resolved legal text
 
 The Spain–Portugal treaty articles 10, 11 and 12 now name the canonical a10, a11 and a12 fragments already held by their sidecars. The canonical resolver returns byte-identical text before and after each notation correction. Legal IDs, dates, required text, review claims, source bodies and ratchet ceilings are unchanged. The actual legal-anchor suite passes; the catalogue scan reports 79 literal mismatches, zero resolver refusals and zero required-text mismatches. The remaining 79 are not adjudicated by this repair. Evidence: `C:/Users/hello/AppData/Local/Temp/registry-anchor-repair-20261002/application_receipt.md` and literal_mismatches.json, plus the combined pytest log linked by verification-results.json.
+
+### boxes-00301-00304 | low | Distinct financial-statement and tax-correction cells export their own inputs
+
+The four retained ordinary profit-and-loss casillas are qualified as DP200008 identities with their original continuity and other content preserved. Nineteen independent homes are authored once at the legal-supported 2022 floor: four Liquidación I corrections, four Banco de España opening-equity components, four insurer life-account amounts, three IIC net-asset movements and two pairs of SGR equity variations. The four held official designs have identical captions for each observed home, captured with per-source hashes and exact field geometry. Successor overrides change only the annual legal/source references and paired grounded edge claims; they do not assert introduction before the floor. The LIS Article 15(b) income-tax accounting corrections remain distinct from Article 12.1 depreciation corrections. The 2024 foundation construct gains the four tax-correction inputs, and the 2025 sequence preserves every retained member's order. Existing formulas continue using their declared stored correction subtotals; no automatic sum of the new leaves is introduced.
+
+The initial isolated target validation rejected missing approving-order references in the constructs. Each applicable construct now carries its own annual order through baseline and sequence deltas, preserving retained references. Source review also removed cloned comments citing the wrong P&G sheet and replaced them with each home’s actual official geometry. Both complete targets were generated and published through the canonical owners into one combined isolated candidate. The source-pinned replacement dispositions were checked against the exact accepted live manifests; the canonical source-tree installer adopted the complete model with concurrent-input guards and map rollback. Both targets reproduce CURRENT. No pytest consumed an intermediate source or authority generation.
+
+Verification coverage: canonical retained-content and order review passes across all four revisions, including exact construct membership/legal scope and unchanged capability. The independent converter removed 19 repeated source defaults and 15 repeated approving-order defaults after typed and filing-byte equivalence; its apply and no-op cycle passes with zero eligible duplication, redundant overrides or blocked work. The supported filing range drives the expanded concept-presence test, and the existing independent wire test exercises each new same-number amount and zero fill. The 218 focused modelo, continuity, catalogue, authoring, admission and development runtime tests pass. Registry health, bindings, integrity, style, format, data format and types pass; all 33 binding warning keys and severities are identical to the previous measured baseline. Registry health retains three partial coverage lanes and 119 owner-excluded targets. The scoped collapse completes on stable inputs with no live mutation, indexed/temporal/capability parity and publication readiness passing. Review verdict PASS for this bounded correction. S50 remains open for the remaining mapping and declaration inventory.
+
+Candidate validation PASS; source installation PASS; published authority PASS at `3c9c5348c3f6b6058202e79cb75f27ab958c606f22153bcd568c88d1f1e76db9`; development runtime PASS against that generation, published before pytest. Installed-package adoption remains unverified after the previously recorded wheelhouse setup failure. Evidence: `C:/Users/hello/AppData/Local/Temp/modelo200-0301-0304-candidate-20261002`, including source/map receipts, captured official geometry, converter reports, isolated target validation/publication, construct corrections, locale preflight, guarded installation intent/receipt, live-review.json, binding-baseline-comparison.json, verification-results.json and final-collapse/summary.json. Overall rollout remains PENDING.
 
 ## Recommendations
 

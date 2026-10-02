@@ -6609,6 +6609,21 @@ modelo:
             label: 'Arrendamiento financiero: régimen especial (art. 106 LIS) - Disminución
               - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
               [03217]'
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Aplic. correc. de valor por deterioro inmov. material
+              e inversiones [00302]
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones-inmovilizado-inmobiliarias:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Aplic. correc. de valor por deterioro inmov. material
+              e inversiones - Inmovilizado material e inv. inmobiliarias [00303]
+          is-aseguradoras-vida-deterioro-inversiones-financieras:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Aplic. correc. de valor por deterioro inmov. material
+              e inversiones - Inversiones financieras [00304]
+          is-aseguradoras-vida-ingresos-inversiones-financieras:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Ingresos inversiones financieras [00301]
           is-atribucion-rentas-hibridos-aumento:
             label: 'Entidad en régimen de atribución de rentas: asimetrías híbridas
               (art. 15 bis.12 LIS) - Aumento - Correcciones del ejercicio - Permanentes
@@ -8878,6 +8893,22 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estado de cambios patrimonio neto (II) - Ajustes por errores de
               ejercicios anteriores - Capital - Escriturado [00408]
+          is-ecpn-bde-saldo-apertura-dividendos-cuenta:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de apertura [antes de la reexpresión]
+              - (-) Dividendos a cuenta [00302]
+          is-ecpn-bde-saldo-apertura-otro-resultado-global-acumulado:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de apertura [antes de la reexpresión]
+              - Otro resultado global acumulado [00303]
+          is-ecpn-bde-saldo-apertura-resultado-ejercicio:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de apertura [antes de la reexpresión]
+              - Resultado del ejercicio [00301]
+          is-ecpn-bde-saldo-apertura-total:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de apertura [antes de la reexpresión]
+              - Total [00304]
           is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Conversión de deuda en patrimonio neto - Ganancias
@@ -9462,6 +9493,16 @@ modelo:
             label: 'Estados de cuentas de Instituciones de Inversión Colectiva: Entidades
               que utilicen los estados de cuentas aplicables a las IIC (excepto claves
               00003, 00004 y 00008) [00061]'
+          is-iic-patrimonio-final:
+            label: Inst. inversión colectiva - Estado variación patrimonial (II) -
+              PATRIMONIO FINAL [00303]
+          is-iic-revalorizacion-inmuebles-resultados-enajenacion:
+            label: Inst. inversión colectiva - Estado variación patrimonial (II) -
+              Revalorización inmuebles uso propio y resultados por enajenación inmobilizado
+              [00302]
+          is-iic-variacion-patrimonial-otros:
+            label: Inst. inversión colectiva - Estado variación patrimonial (II) -
+              Otros [00301]
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
             help: Indicador de imputación en la base imponible de rentas positivas
               conforme al artículo 100 de la LIS [00007].
@@ -9479,6 +9520,20 @@ modelo:
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
             label: Inversiones anticipadas-reserva inversiones en Illes Balears (DA
               70ª.Cuatro.10 Ley 31/2022) [00087]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-aumentos:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Diferencias entre amortización contable y fiscal (arts.
+              12.1 LIS) - Aumentos [00303]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-disminuciones:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Diferencias entre amortización contable y fiscal (arts.
+              12.1 LIS) - Disminuciones [00304]
+          is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
+            label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
+              - Correcciones por Impuesto Sociedades - Aumentos [00301]
+          is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
+            label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
+              - Correcciones por Impuesto Sociedades - Disminuciones [00302]
           is-liquidacion-i-importe:
             label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
               - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades
@@ -10057,6 +10112,19 @@ modelo:
           is-sal-reserva-especial-dotacion:
             label: Liquidación III - Base Imponible - Sociedades Laborales - Reserva
               especial dotación Ley 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
+          is-sgr-otras-variaciones-ajustes-cambio-valor:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Otras variaciones patrimonio neto - Ajustes cambio valor [00304]
+          is-sgr-otras-variaciones-reservas:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Otras variaciones patrimonio neto - Reservas [00301]
+          is-sgr-otras-variaciones-resultado-ejercicio:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Otras variaciones patrimonio neto - Resultado ejercicio [00303]
+          is-sgr-otras-variaciones-resultados-ejercicios-anteriores:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Otras variaciones patrimonio neto - Resultados ejercicios anteriores
+              [00302]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Indicador de sociedad de garantía recíproca o de reafianzamiento
               [00036].

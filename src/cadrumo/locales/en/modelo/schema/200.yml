@@ -6641,6 +6641,22 @@ modelo:
           is-arrendamiento-financiero-ajuste-disminucion:
             label: 'Finance lease: special regime (art. 106 LIS) - Decrease - Adjustments
               for the tax year - Temporary (originating in this tax year) [03217]'
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Application of impairment adjustments to tangible
+              fixed assets and investments [00302]
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones-inmovilizado-inmobiliarias:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Application of impairment adjustments to tangible
+              fixed assets and investments - Tangible fixed assets and investment
+              property [00303]
+          is-aseguradoras-vida-deterioro-inversiones-financieras:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Application of impairment adjustments to tangible
+              fixed assets and investments - Financial investments [00304]
+          is-aseguradoras-vida-ingresos-inversiones-financieras:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Income from financial investments [00301]
           is-atribucion-rentas-hibridos-aumento:
             label: 'Entity under the income-attribution regime: hybrid mismatches
               (art. 15 bis.12 LIS) - Increase - Adjustments for the tax year - Permanent
@@ -8911,6 +8927,22 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Statement of changes in equity (II) - Adjustments for errors from
               previous periods - Capital - Subscribed [00408]
+          is-ecpn-bde-saldo-apertura-dividendos-cuenta:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Opening balance [before restatement]
+              - (-) Interim dividends [00302]
+          is-ecpn-bde-saldo-apertura-otro-resultado-global-acumulado:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Opening balance [before restatement]
+              - Accumulated other comprehensive income [00303]
+          is-ecpn-bde-saldo-apertura-resultado-ejercicio:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Opening balance [before restatement]
+              - Profit or loss for the year [00301]
+          is-ecpn-bde-saldo-apertura-total:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Opening balance [before restatement]
+              - Total [00304]
           is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Conversion of debt into equity - Retained
@@ -9477,6 +9509,16 @@ modelo:
             label: 'Account statements of collective investment institutions: entities
               using account statements applicable to CIIs (except codes 00003, 00004
               and 00008) [00061]'
+          is-iic-patrimonio-final:
+            label: Collective investment institutions - Statement of changes in net
+              assets (II) - CLOSING NET ASSETS [00303]
+          is-iic-revalorizacion-inmuebles-resultados-enajenacion:
+            label: Collective investment institutions - Statement of changes in net
+              assets (II) - Revaluation of owner-occupied property and gains or losses
+              on disposal of fixed assets [00302]
+          is-iic-variacion-patrimonial-otros:
+            label: Collective investment institutions - Statement of changes in net
+              assets (II) - Other [00301]
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
             help: Flag indicating inclusion of positive income in the tax base under
               article 100 of the Corporate Income Tax Law [00007].
@@ -9494,6 +9536,20 @@ modelo:
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
             label: Early investments - reserve for investments in the Balearic Islands
               (DA 70.Four.10 Law 31/2022) [00087]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Differences between accounting and tax depreciation (arts.
+              12.1 LIS) - Increases [00303]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Differences between accounting and tax depreciation (arts.
+              12.1 LIS) - Decreases [00304]
+          is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
+            label: Settlement I - Profit and loss account result - Adjustments for
+              corporate income tax - Increases [00301]
+          is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
+            label: Settlement I - Profit and loss account result - Adjustments for
+              corporate income tax - Decreases [00302]
           is-liquidacion-i-importe:
             label: Settlement I - Profit and loss account result - Profit and loss
               account result before Corporate Income Tax and Complementary Tax [00501]
@@ -10052,6 +10108,18 @@ modelo:
           is-sal-reserva-especial-dotacion:
             label: Settlement III - Taxable base - Employee-owned companies - Special
               reserve allocation, Law 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
+          is-sgr-otras-variaciones-ajustes-cambio-valor:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Adjustments for changes in value [00304]
+          is-sgr-otras-variaciones-reservas:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Reserves [00301]
+          is-sgr-otras-variaciones-resultado-ejercicio:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Profit or loss for the period [00303]
+          is-sgr-otras-variaciones-resultados-ejercicios-anteriores:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Results from previous periods [00302]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Flag indicating a mutual guarantee or re-guarantee company [00036].
             label: Mutual guarantee or re-guarantee company [00036]

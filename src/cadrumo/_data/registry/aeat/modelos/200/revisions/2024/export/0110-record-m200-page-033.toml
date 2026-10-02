@@ -10,27 +10,6 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2024.export_layouts.records.fields]]
-id = 'm200-2024.dp200033.f0067'
-offset = 1050
-length = 17
-kind = 'casilla'
-casilla_id = '00503'
-data_type = 'money'
-required = false
-padding = 'left_zero'
-justification = 'right'
-signed = true
-design_type = 'N'
-legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
-]
-source_refs = ['aeat-dr-200-2024']
-
-[[revisions.2024.export_layouts.records.fields]]
 id = 'm200-2024.dp200033.f0068'
 offset = 1067
 length = 17

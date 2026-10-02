@@ -6654,6 +6654,21 @@ modelo:
           is-arrendamiento-financiero-ajuste-disminucion:
             label: 'Pénzügyi lízing: különleges szabályozás (LIS 106. cikk) - Csökkenés
               - Évi korrekciók - Időleges (az évben keletkezett) [03217]'
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Tárgyi eszközök és befektetések értékvesztési korrekcióinak
+              alkalmazása [00302]
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones-inmovilizado-inmobiliarias:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Tárgyi eszközök és befektetések értékvesztési korrekcióinak
+              alkalmazása - Tárgyi eszközök és befektetési célú ingatlanok [00303]
+          is-aseguradoras-vida-deterioro-inversiones-financieras:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Tárgyi eszközök és befektetések értékvesztési korrekcióinak
+              alkalmazása - Pénzügyi befektetések [00304]
+          is-aseguradoras-vida-ingresos-inversiones-financieras:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Pénzügyi befektetések bevételei [00301]
           is-atribucion-rentas-hibridos-aumento:
             label: 'Jövedelemattribúciós rendszer alá tartozó jogalany: hibrid eltérések
               (LIS 15 bis.12. cikk) - Növekedés - Évi korrekciók - Végleges [01842]'
@@ -8877,6 +8892,22 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Saját tőke változásainak kimutatása (II) - Előző időszakok hibái
               miatti kiigazítások - Tőke - Jegyzett [00408]
+          is-ecpn-bde-saldo-apertura-dividendos-cuenta:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Nyitó egyenleg [az újramegállapítás
+              előtt] - (-) Osztalékelőleg [00302]
+          is-ecpn-bde-saldo-apertura-otro-resultado-global-acumulado:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Nyitó egyenleg [az újramegállapítás
+              előtt] - Halmozott egyéb átfogó jövedelem [00303]
+          is-ecpn-bde-saldo-apertura-resultado-ejercicio:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Nyitó egyenleg [az újramegállapítás
+              előtt] - Tárgyévi eredmény [00301]
+          is-ecpn-bde-saldo-apertura-total:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Nyitó egyenleg [az újramegállapítás
+              előtt] - Összesen [00304]
           is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Adósság átalakítása saját
@@ -9446,6 +9477,16 @@ modelo:
             label: 'Kollektív befektetési intézmények beszámolói: a KBI-kre alkalmazandó
               beszámolókat használó szervezetek (kivéve 00003, 00004 és 00008 kódok)
               [00061]'
+          is-iic-patrimonio-final:
+            label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
+              (II) - ZÁRÓ NETTÓ VAGYON [00303]
+          is-iic-revalorizacion-inmuebles-resultados-enajenacion:
+            label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
+              (II) - Saját használatú ingatlanok átértékelése és befektetett eszközök
+              elidegenítésének eredménye [00302]
+          is-iic-variacion-patrimonial-otros:
+            label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
+              (II) - Egyéb [00301]
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
             help: Jelölő pozitív jövedelmek adóalapba történő beszámításához a társasági
               adóról szóló törvény 100. cikke szerint [00007].
@@ -9463,6 +9504,20 @@ modelo:
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
             label: Előzetes beruházások - Baleár-szigeteki beruházási tartalék (31/2022.
               törvény 70. kiegészítő rendelkezés, negyedik.10) [00087]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-aumentos:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - Számviteli és adó szerinti értékcsökkenés eltérései (LIS
+              12.1. cikk) - Növelések [00303]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-disminuciones:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - Számviteli és adó szerinti értékcsökkenés eltérései (LIS
+              12.1. cikk) - Csökkentések [00304]
+          is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
+            label: Elszámolás I - Eredménykimutatás eredménye - Társasági adó miatti
+              korrekciók - Növelések [00301]
+          is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
+            label: Elszámolás I - Eredménykimutatás eredménye - Társasági adó miatti
+              korrekciók - Csökkentések [00302]
           is-liquidacion-i-importe:
             label: Elszámolás I - Eredménykimutatás eredménye - Az eredménykimutatás
               eredménye a társasági adó és a kiegészítő adó előtt [00501]
@@ -10027,6 +10082,21 @@ modelo:
           is-sal-reserva-especial-dotacion:
             label: Elszámolás III - Adóalap - Munkavállalói társaságok - Különleges
               tartalék képzése (44/2015. törvény 14. cikk) [SAL_RESERVA_DOTACION]
+          is-sgr-otras-variaciones-ajustes-cambio-valor:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Saját tőke egyéb változásai - Értékváltozások miatti
+              korrekciók [00304]
+          is-sgr-otras-variaciones-reservas:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Saját tőke egyéb változásai - Tartalékok [00301]
+          is-sgr-otras-variaciones-resultado-ejercicio:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Saját tőke egyéb változásai - Időszak eredménye
+              [00303]
+          is-sgr-otras-variaciones-resultados-ejercicios-anteriores:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Saját tőke egyéb változásai - Előző időszakok eredményei
+              [00302]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Jelölő kölcsönös garanciavállaló vagy viszontgarancia-társaság esetén
               [00036].
