@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:80831ad57d0e83f4cd61825680cdc359aec2b8764b910cfac18ac2cea2e56d7c'
+body_hash: 'sha256:43e17778fd37061b86b0aa163ea81a491cbc40de975fcde90adbb157088e332b'
 related:
   - "[[2026-10-02-locale-po-informal-register-plan]]"
 ---
@@ -88,8 +88,27 @@ related:
 - `S04` `by:` `root; independent source-meaning and informal-register review`
 - `S04` `verify:` `uv run --no-sync pytest -q -n 0 -p no:randomly -m unit dev/docs/tests/test_docs_build_localized_hu.py` -> `pass`
 - `S04` `by:` `root`
+- `S05` `M` `.vault/audit/2026-10-02-locale-po-informal-register-audit.md`
+- `S05` `M` `.vault/plan/2026-10-02-locale-po-informal-register-plan.md`
+- `S05` `M` `.vault/exec/2026-10-02-locale-po-informal-register/2026-10-02-locale-po-informal-register-ledger.md`
+- `S05` `M` `docs/locales/ca/LC_MESSAGES/how-to/review-calculation-values.po`
+- `S05` `M` `docs/locales/es/LC_MESSAGES/how-to/review-calculation-values.po`
+- `S05` `M` `docs/locales/hu/LC_MESSAGES/how-to/review-calculation-values.po`
+- `S05` `A` `scratch_locale_tone/po.py`
+- `S05` `A` `scratch_locale_tone/po_review.py`
+- `S05` `A` `scratch_locale_tone/po_independent.py`
+- `S05` `A` `scratch_locale_tone/test_po_gate.py`
+- `S05` `verify:` `uv run --no-sync python -m scratch_locale_tone.convergence gate` -> `pass`
+- `S05` `verify:` `uv run --no-sync python -m scratch_locale_tone.po gate` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -q -n 0 -p no:randomly -m unit dev/docs/tests/test_locale_mutations.py dev/docs/tests/test_i18n.py dev/docs/tests/test_docs_localization.py dev/docs/tests/test_docs_build_localized_hu.py scratch_locale_tone/test_po_gate.py` -> `fail`
+- `S05` `verify:` `uv run --no-sync pytest -q -n 0 -p no:randomly -m unit dev/docs/tests/test_docs_build_localized_hu.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -q -n 0 -p no:randomly -m unit dev/docs/tests/test_docs_build_localized_ca.py dev/docs/tests/test_docs_build_localized_es.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -q -n 0 -m integration dev/docs/tests/test_docs_catalogue_drift.py` -> `pass`
+- `S05` `by:` `root; final independent source, register, numerical convergence and rendering review`
 
 ## Notes
 
 - `S01` Four corrected Hungarian strings use keys absent from HEAD and remain with concurrent uncommitted TUI caller work; they are excluded from the isolated runtime commit. The original 18-pilot/1371-fleet immutable baselines and accepted official-corpus update receipts remain intact.
 - `S02` Correction to the earlier S02 verification label: `parent_ca_adjudications.json` was a misrecorded filename. The actual independently reviewed exact-span packet is `parent_ca_adj_01.json,` and its owning seal command with --adjudications passes.
+- `S05` The initial combined run passed 42 unit cases but failed the Hungarian build on incomplete concurrent Modelo 360 binding/layout inputs. After that workstream repaired its layout, fresh real compilation and the unchanged owning Hungarian build passed; no localization requirement was weakened.
+- `S05` The four Hungarian runtime values previously deferred in S01 now match committed caller work; no localization correction remains deferred.

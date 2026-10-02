@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d86a11bc1565e8bb086783d4e51d339569ea4e8217345f4236a9ded125c3253'
+body_hash: 'sha256:99997ec7c83f38ad14c5fefea26bb10e4e67275944af6112809619033fc83c52'
 related:
   - "[[2026-10-02-locale-po-informal-register-plan]]"
   - "[[2026-07-18-user-docs-localization-adr]]"
@@ -93,6 +93,12 @@ The Hungarian nitpicky documentation build stopped while compiling Modelo 360 re
 ### live-build-resolution | low | Hungarian nitpicky rendering passes on the corrected shared inputs
 
 A fresh call through the actual compiled_bundled_authority path passed after the concurrent Modelo 360 layout was corrected. The owning Hungarian localized nitpicky test then passed in 453.96 seconds, with no test or production validation weakened. The prior failure remains recorded as an incomplete concurrent input state. Together with the earlier Catalan/Spanish localized builds, all three required language builds are verified. The 42 passing unit cases, three fresh-gettext integration cases, source/control receipts and zero runtime/PO gates complete the localization evidence.
+
+### final-review | low | PASS: owned localization work is verified and committed
+
+Commit 34d0e8754977070d1cbc2a302e2af4ee8a4d9bb0 records 1400 changed or new Hungarian active translations across 51 catalogues and the S04 evidence. Runtime commit 32d2115c44 and the scoped Catalan/Spanish commits 9999d4e797 and dd72924f694 remain in history. The runtime and PO numerical gates are zero; every changed value has current independent review and all exact-span exceptions have contextual evidence. Official excerpts, quantities, code, placeholders, role/link targets and non-reconciled catalogue controls remain protected. Three scoped paragraph identities and seven obsolete Hungarian entries have exact owning-service reconciliation records.
+
+Verification covers 188 runtime tests, 42 documentation-service/catalogue/scratch unit cases, three fresh-gettext integration cases and all three localized nitpicky language builds. The earlier concurrent registry failure and its successful Hungarian retry are both retained. Scratch lint and formatting pass. The four runtime keys previously deferred with caller changes now match committed HEAD; no localization correction remains deferred. Only owned paths entered the isolated commits, with the shared index preserved. No push was performed. No required localization work remains.
 
 ## Recommendations
 
