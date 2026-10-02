@@ -541,12 +541,12 @@ def test_first_difference_still_detects_a_reordered_sequence() -> None:
     assert difference["location"] == "$.formulas[0].id"
 
 
-def test_indexed_temporal_selection_composes_the_export_layouts_the_source_revision_carries() -> None:
+def test_indexed_temporal_selection_composes_the_layouts_the_source_revision_carries() -> None:
     """Selection loads the base revision, so the verifier must compose its layouts before comparing.
 
-    The source side's selected revision carries its export layouts; comparing
-    it with the layout-free base revision reported every layout-bearing
-    coordinate as a changed revision.
+    The source side's selected revision carries its export layouts and its
+    form layout; comparing it with the layout-free base revision reported every
+    layout-bearing coordinate as a changed revision.
     """
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -556,6 +556,7 @@ def test_indexed_temporal_selection_composes_the_export_layouts_the_source_revis
             (modelo_id, revision_id)
             for modelo_id, revision_id in sorted(operation.revision_ids())
             if operation.revision_with_export_layouts(modelo_id, revision_id).export_layouts
+            and operation.form_layout(modelo_id, revision_id) is not None
             and support.admits_filing_year(operation.revision(modelo_id, revision_id).valid_from.year)
             and operation.revision(modelo_id, revision_id).period_selector.declared_periods
         )
@@ -570,12 +571,38 @@ def test_indexed_temporal_selection_composes_the_export_layouts_the_source_revis
         )
 
         result = verification._indexed_selection_result(operation, modelo_id, coordinate)
+        composed = operation.revision_with_export_layouts(modelo_id, revision_id).model_copy(
+            update={"form_layouts": (operation.form_layout(modelo_id, revision_id),)}
+        )
 
         assert result["outcome"] == "selected", result
-        assert result["value"] == verification._typed_projection(
+        assert result["value"] == verification._typed_projection(composed)
+        assert result["value"] != verification._typed_projection(
             operation.revision_with_export_layouts(modelo_id, revision_id)
         )
         assert result["value"] != verification._typed_projection(base)
+
+
+def test_indexed_snapshot_composes_the_form_layout_the_source_snapshot_carries() -> None:
+    """An indexed snapshot leaves the form layout to its own component; the verifier restores it.
+
+    Without the composition every layout-bearing coordinate's capability
+    snapshot read as changed between the in-memory and the indexed authority.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        bare = operation.snapshot("100", filing_year=support.floor, period="0A")
+        revision_id = str(bare.revision.id)
+        layout = operation.form_layout("100", revision_id)
+        composed = verification._indexed_snapshot(operation)("100", filing_year=support.floor, period="0A")
+
+    assert layout is not None
+    assert bare.revision.form_layouts == ()
+    assert composed.revision.form_layouts == (layout,)
+    assert composed.modelo.revisions[bare.revision.id].form_layouts == (layout,)
+    assert composed.model_copy(update={"revision": bare.revision, "modelo": bare.modelo}) == bare
 
 
 def test_snapshot_comparison_ignores_unselected_editions_but_not_the_selected_one() -> None:

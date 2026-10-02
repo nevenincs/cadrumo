@@ -931,6 +931,49 @@ def _scoped_to_selected_edition(snapshot: object) -> object:
     return snapshot.model_copy(update={"modelo": snapshot.modelo.model_copy(update={"revisions": revisions})})
 
 
+def _indexed_revision(operation: PinnedAuthorityOperation, modelo_id: str, revision_id: str) -> ModeloRevision:
+    """Compose one indexed revision with the components it is published apart from.
+
+    The indexed runtime stores a revision's export layouts and its form layout
+    as their own components and loads the base revision without them, while
+    the source side's revision carries both; the indexed value is composed the
+    same way before the two are compared.
+    """
+    layout = operation.form_layout(modelo_id, revision_id)
+    return operation.revision_with_export_layouts(modelo_id, revision_id).model_copy(
+        update={"form_layouts": () if layout is None else (layout,)}
+    )
+
+
+def _indexed_snapshot(operation: PinnedAuthorityOperation) -> Callable[..., RegistrySnapshot]:
+    """Return the indexed snapshot builder with the selected edition's form layout composed back.
+
+    An indexed snapshot is built from the base revision and its export layouts;
+    its form layout is served apart by :meth:`PinnedAuthorityOperation.form_layout`.
+    """
+
+    def snapshot(
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        revision_id: str | None = None,
+    ) -> RegistrySnapshot:
+        value = operation.snapshot(modelo_id, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
+        selected = str(value.revision.id)
+        revision = _indexed_revision(operation, modelo_id, selected)
+        revisions = {
+            revision_id: revision if str(revision_id) == selected else edition
+            for revision_id, edition in value.modelo.revisions.items()
+        }
+        return value.model_copy(
+            update={"revision": revision, "modelo": value.modelo.model_copy(update={"revisions": revisions})}
+        )
+
+    return snapshot
+
+
 def _indexed_selection_result(
     operation: PinnedAuthorityOperation,
     modelo_id: str,
@@ -958,8 +1001,8 @@ def _indexed_selection_result(
             "authored_filing_year": resolution.authored_filing_year,
             "projection_direction": str(resolution.projection_direction),
             # Selection loads the base revision; the source side's revision carries its
-            # export layouts, so the indexed value is composed the same way.
-            "value": _typed_projection(operation.revision_with_export_layouts(modelo_id, str(selected.id))),
+            # export and form layouts, so the indexed value is composed the same way.
+            "value": _typed_projection(_indexed_revision(operation, modelo_id, str(selected.id))),
         }
     except Exception as exc:
         return {"outcome": "refused", "error_type": type(exc).__name__, "detail": str(exc)}
@@ -1375,7 +1418,7 @@ def _authority_checks(
                 if indexed_difference is None:
                     for modelo_id, revision_id in expected_ids:
                         expected = candidate_authority.modelo(modelo_id).revisions[revision_id]
-                        actual = operation.revision_with_export_layouts(modelo_id, revision_id)
+                        actual = _indexed_revision(operation, modelo_id, revision_id)
                         indexed_checked += 1
                         indexed_difference = _first_difference(
                             _typed_projection(expected), _typed_projection(actual), f"$.{modelo_id}.{revision_id}"
@@ -1402,7 +1445,7 @@ def _authority_checks(
                             indexed_capability_checked += 1
                             source_snapshot = _snapshot_result(source_authority.snapshot, modelo_id, coordinate)
                             candidate_snapshot = _snapshot_result(candidate_authority.snapshot, modelo_id, coordinate)
-                            indexed_snapshot = _snapshot_result(operation.snapshot, modelo_id, coordinate)
+                            indexed_snapshot = _snapshot_result(_indexed_snapshot(operation), modelo_id, coordinate)
                             indexed_difference = _first_difference(
                                 source_snapshot,
                                 candidate_snapshot,
