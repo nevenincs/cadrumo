@@ -155,7 +155,7 @@ After target writes, rerun source inspection and independent minimality/currentn
 just registry-publish-authority
 ```
 
-The result must be an accepted `authority.current.json` in the authority root reported by the publisher, referencing the content-addressed SQLite generation. Retain the publisher's identity/receipt and verify through the canonical runtime reader and checks below; pointer existence alone proves nothing. Do not edit these artifacts manually.
+The result must be an accepted `src/cadrumo/_data/registry/authority/authority.current.json` referencing the content-addressed SQLite generation. Retain the publisher's identity/receipt and verify through the canonical runtime reader and checks below; pointer existence alone proves nothing. Do not edit these artifacts manually.
 
 If captured inputs change during publication, the refusal invalidates that attempt. Identify the writer, wait for the affected inputs to stabilize, revalidate the changed dependencies and retry against a fresh receipt. Do not repeatedly rerun an unchanged failed attempt or remove lock sidecars. A publication failure does not undo or conceal already-installed source; report both states and retain recovery artifacts.
 
@@ -163,8 +163,7 @@ Final checks:
 
 ```powershell
 just check-registry
-uv run --no-sync pytest -o addopts='' -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py
-uv run --no-sync pytest -o addopts='' -n 0 -q dev/packaging/tests/test_cadrumo_data_distribution.py dev/packaging/tests/test_installed_oracles.py
+uv run --no-sync pytest -o addopts='' -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py dev/packaging/tests/test_authority_runtime_boundary.py src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py
 ```
 
 Check report components and actual test selection/results. Runtime/package acceptance must consume the final published generation. No-op source, validated candidate, published target and adopted runtime generation are separate outcomes; report each one relevant to the requested completion boundary.
