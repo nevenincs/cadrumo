@@ -18,6 +18,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
 from ...core.config_support import LLMProvider
 from ...core.confirmation_gate import FindingResolutionAction
+from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import canonical_json_bytes
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -180,7 +181,7 @@ class LedgerEvidenceConfirmRequest(BaseModel):
     expected_source_sha256: Hex64Str
     expected_draft_review_sha256: Hex64Str
     kind: InvoiceKind
-    counterparty_country: Annotated[str, Field(min_length=2, max_length=2)] = "ES"
+    counterparty_country: CountryCodeAlpha2 = "ES"
     counterparty_tax_id: _Label | None = None
     counterparty_name: _Label | None = None
     invoice_number: _Label | None = None

@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.country_code import CountryCodeAlpha2
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -70,7 +71,7 @@ class LedgerCounterpartyRequest(BaseModel):
     profile_id: UUID
     action: Literal["confirm", "withdraw", "view"]
     tax_identifier: str = Field(min_length=1, max_length=256)
-    country_code: str | None = Field(default=None, max_length=16)
+    country_code: CountryCodeAlpha2 | None = None
     territorial_scope: str | None = Field(default=None, min_length=1, max_length=64)
     identification_state: str | None = Field(default=None, min_length=2, max_length=2)
     evidenced_scope: str | None = Field(default=None, min_length=1, max_length=64)

@@ -13,8 +13,8 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.filing_year import FilingYear
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value
 from ...domain.deadlines.models import TaxpayerProfile

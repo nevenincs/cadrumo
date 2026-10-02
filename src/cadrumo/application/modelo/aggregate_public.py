@@ -14,6 +14,7 @@ from typing import Self, cast
 
 from pydantic import BaseModel, Field
 
+from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN, CountryCodeAlpha2
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..aggregation.counterpart import CounterpartObservation
 from ..aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -147,7 +148,7 @@ class PublicCounterpartObservation(BaseModel):
     source_object_id: str = Field(min_length=1)
     counterparty_nif: str = Field(min_length=1, max_length=20)
     counterparty_name: str = Field(default="", max_length=200)
-    counterparty_country: str = Field(pattern=r"^[A-Z]{2}$")
+    counterparty_country: CountryCodeAlpha2 = Field(pattern=COUNTRY_CODE_ALPHA2_PATTERN)
     operation_kind: str = Field(min_length=1)
     operation_period: str = Field(min_length=1, max_length=16)
     taxable_base: PublicDecimal

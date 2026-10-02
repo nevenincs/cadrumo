@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -117,7 +118,7 @@ class LedgerAddRequest(BaseModel):
     iva_category: _AddIvaCategory = None
     deduction_fact_kind: Annotated[str, Field(max_length=128)] | None = None
     investment_asset_id: _AddOptionalId = None
-    counterparty_country: Annotated[str, Field(max_length=16)] | None = None
+    counterparty_country: CountryCodeAlpha2 | None = None
     counterparty_identification_state: _AddEUMemberState = None
     recargo_amount: _AddOptionalDecimalText = None
     irpf_category: _AddOptionalText = None

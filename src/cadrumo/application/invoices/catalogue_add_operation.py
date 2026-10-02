@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, ValidationError, model_validator
 from ...core.aggregation import IntracomOperationType
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.country_code import CountryCodeAlpha2
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -147,7 +148,7 @@ class InvoiceAddRequest(BaseModel):
     kind: InvoiceKind
     counterparty_name: str = Field(min_length=1)
     counterparty_tax_id: str | None = None
-    counterparty_country: str = Field(min_length=2, max_length=2)
+    counterparty_country: CountryCodeAlpha2
     invoice_number: str = Field(min_length=1)
     issued_at: date
     taxable_base: PublicDecimal | None = None

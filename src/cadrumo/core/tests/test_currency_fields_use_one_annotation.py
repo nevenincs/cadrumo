@@ -100,6 +100,82 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "code, and a normalising annotation here would layer a second policy "
         "over the one its sibling field follows"
     ),
+    # The seven entries below share one structural cause, stated per site
+    # because each also names the boundary that does own its ISO policy.
+    # IsoCurrencyCode is a BeforeValidator, and a BeforeValidator carries
+    # ``__get_pydantic_core_schema__``; ``_require_no_custom_core_schema_hook``
+    # in application/operations/_model_contract.py refuses exactly that on a
+    # registered operation's public schema, as the sibling rule refuses
+    # before/plain/wrap validators. A public operation field therefore cannot
+    # normalise at all -- it declares shape and nothing else -- so the canonical
+    # policy stays at the boundary each field feeds or is projected from.
+    "application/invoices/catalogue_add_operation.py::currency": (
+        "a registered operation's public request schema, which the operation "
+        "model contract forbids from carrying a core-schema-customising "
+        "annotation; build_catalogue_invoice constructs the domain Invoice, "
+        "whose currency IS IsoCurrencyCode, so the canonical policy applies one "
+        "step later rather than not at all"
+    ),
+    "application/invoices/catalogue_read_projection.py::currency": (
+        "a public projection of the domain Invoice, under the same operation "
+        "schema contract; it does not merely omit the policy -- its _bounds "
+        "model validator REFUSES any value that normalise_iso_4217_currency "
+        "would change, which an after-mode validator may do where the "
+        "annotation may not"
+    ),
+    "application/ledger/add_operation.py::currency": (
+        "a public request schema under the same operation model contract; it "
+        "feeds ManualLedgerTransactionCommand, whose currency is "
+        "IsoCurrencyCode, so the canonical normalisation happens at that "
+        "command boundary"
+    ),
+    "application/ledger/export_operation.py::currency": (
+        "a public projection of LedgerExportRow.currency, which is already "
+        "IsoCurrencyCode; the operation schema contract forbids restating that "
+        "annotation here, and the row it copies cannot hold a value the "
+        "canonical policy would reject"
+    ),
+    "application/ledger/transaction_projection.py::currency": (
+        "a public projection of LedgerTransactionPayload.currency, which is "
+        "already IsoCurrencyCode, under the same operation schema contract; "
+        "from_payload revalidates that payload's own JSON, so the value is "
+        "canonical before it arrives"
+    ),
+    "application/ledger/invoice_evidence_operation.py::currency": (
+        "a public operator-confirmation request under the same contract. The "
+        "optional spelling escapes the core-schema check only because that "
+        "walk does not enter a union, which is a gap rather than a licence to "
+        "carry a policy its non-optional siblings cannot; prepare_invoice_"
+        "confirmation_from_evidence reaches the domain Invoice that owns it"
+    ),
+    "application/modelo/modelo_spreadsheet_operation_contracts.py::currency_code": (
+        "the public wire mirror of Modelo720RowObservation.currency_code, "
+        "which is itself exempt here because the uppercase_alpha_code "
+        "validator beside its country_code REFUSES a lowercase code rather "
+        "than folding it; the operation schema contract separately forbids the "
+        "canonical annotation on this mirror, and the mirror projects an "
+        "already-validated row"
+    ),
+    "application/invoices/catalogue_intake_operation.py::currency": (
+        "a wizard request field held as raw transport text because "
+        "create_invoice_via_wizard validates every field independently and "
+        "ACCUMULATES the failures, so a malformed code is reported beside a "
+        "malformed NIF and date; refusing it at the request boundary would "
+        "mask the other two behind the first"
+    ),
+    "application/ledger/update_operation.py::currency": (
+        "a canonical-text patch whose sibling date and decimal fields REFUSE "
+        "non-canonical text rather than normalising it, which _canonical_currency "
+        "enforces here for the same reason: the operator is editing one stored "
+        "row and is told which token is wrong, where a folding annotation would "
+        "silently rewrite it"
+    ),
+    "application/ledger/invoice_evidence_operation_dtos.py::currency": (
+        "the wire projection of invoice_draft_records, read off a document "
+        "rather than declared, and exempt for that record's own reason: it "
+        "carries what the invoice actually said so the confirmation step can "
+        "quote an unreadable value back to the operator"
+    ),
     "domain/transactions/raw_transaction.py::currency": (
         "carries the length bound as an annotation but normalises through "
         "normalise_iso_4217_currency in a mode='before' validator, so it "

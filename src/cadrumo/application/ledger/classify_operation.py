@@ -19,6 +19,7 @@ from pydantic import (
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -150,7 +151,7 @@ class LedgerClassifyPatch(BaseModel):
     iva_category: _ShortText | None = None
     deduction_fact_kind: _ShortText | None = None
     investment_asset_id: _ShortText | None = None
-    counterparty_country: Annotated[str, Field(max_length=2)] | None = None
+    counterparty_country: CountryCodeAlpha2 | None = None
     counterparty_identification_state: Annotated[str, Field(max_length=2)] | None = None
     notes: _LongText | None = None
 

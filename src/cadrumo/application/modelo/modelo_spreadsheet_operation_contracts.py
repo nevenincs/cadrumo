@@ -11,6 +11,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.hex import HEX_PATTERN_64
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -66,7 +67,7 @@ class SpreadsheetWithholdingObservation(BaseModel):
     source_allocation_id: _Text
     perceptor_tax_id: _Text
     perceptor_legal_name: _Text
-    country_code: _Text | None
+    country_code: CountryCodeAlpha2 | None
     transaction_date: _Text
     clave: _Text
     subclave: _Text
@@ -164,7 +165,7 @@ class SpreadsheetRelatedPartyOperationObservation(BaseModel):
     source_id: _Text
     counterparty_tax_id: _Text
     counterparty_legal_name: _Text
-    country_code: _Text
+    country_code: CountryCodeAlpha2
     transaction_date: _Text
     operation_kind_code: _Text
     transfer_pricing_method_code: _Text
@@ -177,7 +178,7 @@ class SpreadsheetModelo720RowObservation(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     source_id: _Text
     asset_class_code: _Text
-    country_code: _Text
+    country_code: CountryCodeAlpha2
     currency_code: _Text
     asset_identifier: _Text
     acquisition_date: _Text
@@ -191,7 +192,7 @@ class SpreadsheetAtributionMemberObservation(BaseModel):
     source_id: _Text
     member_tax_id: _Text
     member_legal_name: _Text
-    country_code: _Text | None
+    country_code: CountryCodeAlpha2 | None
     transaction_date: _Text
     share_percentage: _Text
     base_imponible_assigned: _Text
@@ -217,7 +218,7 @@ class SpreadsheetRefundOperationObservation(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     source_id: _Text
-    member_state_code: _Text
+    member_state_code: CountryCodeAlpha2
     operation_kind_code: _Text
     operation_date: _Text
     supplier_tax_id: _Text
@@ -231,7 +232,7 @@ class SpreadsheetDonativoDonorObservation(BaseModel):
     source_id: _Text
     donor_tax_id: _Text
     donor_legal_name: _Text
-    country_code: _Text
+    country_code: CountryCodeAlpha2
     transaction_date: _Text
     amount_donated: _Text
     deduction_percentage: _Text
@@ -289,8 +290,8 @@ class SpreadsheetWithholding296Observation(BaseModel):
     nif_pais_residencia: _Text | None
     fecha_nacimiento: _Text | None
     ciudad_nacimiento: _Text | None
-    codigo_pais: _Text | None
-    pais_residencia_fiscal: _Text | None
+    codigo_pais: CountryCodeAlpha2 | None
+    pais_residencia_fiscal: CountryCodeAlpha2 | None
     transaction_date: _Text
 
 
