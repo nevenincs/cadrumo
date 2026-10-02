@@ -175,7 +175,6 @@ flows:
           borrador: AEAT draft
           collectible_invoice: Sales invoices
           design_constant: Design constant
-          donativo_donor: Donation donor
           foreign_asset: Foreign asset
           gasto193_contributor: Expenses per contribuyente (modelo 193)
           inventory: Inventory
@@ -198,8 +197,6 @@ flows:
           profile: Profile
           prorrata_regularizacion: Pro-rata adjustment
           purchase_invoice_evidence: Purchase-invoice evidence
-          refund_operation: Refund operation
-          related_party_operation: Related-party operation
           relation_prefill: Related filing
           retenciones_aggregation: Withholding totals
           withholding: Withholding record

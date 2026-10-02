@@ -157,29 +157,20 @@ class RowSetGroupingKind(StrEnum):
 
     This is the **row-assembly grouping axis** consumed in the application layer
     (`_row_set_assembly.py`), a separate concept from the binding ``source``
-    token enumerated by :class:`BindingSourceKind`. For the three detail-record
-    families whose grouping member differs from the binding source token, the
+    token enumerated by :class:`BindingSourceKind`. Where a detail-record
+    family's grouping member differs from its binding source token, the
     correspondence is intentional and explicit; see
     :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE`:
 
     - ``BindingSourceKind.WITHHOLDING`` (``"withholding"``) ↔ ``WITHHOLDING``
     - ``BindingSourceKind.FOREIGN_ASSET`` (``"foreign_asset"``) ↔ ``FOREIGN_ASSET``
-    - ``BindingSourceKind.RELATED_PARTY_OPERATION`` (``"related_party_operation"``)
-      ↔ ``RELATED_PARTY`` (``"related_party"``)
     - ``BindingSourceKind.ATRIBUCION_MEMBER`` (``"atribucion_member"``)
       ↔ ``ATRIBUCION`` (``"atribucion"``)
-    - ``BindingSourceKind.REFUND_OPERATION`` (``"refund_operation"``)
-      ↔ ``REFUND`` (``"refund"``)
-    - ``BindingSourceKind.DONATIVO_DONOR`` (``"donativo_donor"``)
-      ↔ ``DONATIVO`` (``"donativo"``)
     """
 
     WITHHOLDING = "withholding"
-    RELATED_PARTY = "related_party"
     FOREIGN_ASSET = "foreign_asset"
     ATRIBUCION = "atribucion"
-    REFUND = "refund"
-    DONATIVO = "donativo"
     GASTO193 = "gasto193"
     WITHHOLDING296 = "withholding296"
 
@@ -352,24 +343,14 @@ class BindingSourceKind(StrEnum):
     LEDGER_TRANSACTION = "ledger_transaction"
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
-    # RowSetGroupingKind value; the other four carry their distinct
-    # source-token value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
+    # RowSetGroupingKind value; the others carry their own source-token
+    # value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
     WITHHOLDING = RowSetGroupingKind.WITHHOLDING.value
     FOREIGN_ASSET = RowSetGroupingKind.FOREIGN_ASSET.value
-    RELATED_PARTY_OPERATION = "related_party_operation"
     ATRIBUCION_MEMBER = "atribucion_member"
-    REFUND_OPERATION = "refund_operation"
-    # Modelo 182 (Ley 49/2002 art. 24, Orden EHA/3021/2007) per-donor register:
-    # the "registro tipo 2" detail row carrying the donor's NIF, importe
-    # donado, porcentaje de deducción aplicable, and the recurrencia flag
-    # (donativo plurianual a la misma entidad, LIRPF art. 68.3 / LIS art. 20).
-    # The row family is currently produced by the Sheets pull surface. A
-    # calculate request refuses these bindings until an executable route owns
-    # the source.
-    DONATIVO_DONOR = "donativo_donor"
     # Modelo 193 hoja-anexo gastos relationship rows (NIF del contribuyente
-    # plus the annual gastos de administracion y deposito amount), the same
-    # Sheets-pull row shape matching the donativo family.
+    # plus the annual gastos de administracion y deposito amount), produced by
+    # the Sheets pull surface in the detail-record row shape.
     GASTO193_CONTRIBUTOR = "gasto193_contributor"
     # Modelo 296 perceptor rows (IRNR retenciones): its own clave
     # vocabulary (numeric renta claves) cannot ride the shared
@@ -382,20 +363,17 @@ ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGrou
     {
         BindingSourceKind.WITHHOLDING: RowSetGroupingKind.WITHHOLDING,
         BindingSourceKind.FOREIGN_ASSET: RowSetGroupingKind.FOREIGN_ASSET,
-        BindingSourceKind.RELATED_PARTY_OPERATION: RowSetGroupingKind.RELATED_PARTY,
         BindingSourceKind.ATRIBUCION_MEMBER: RowSetGroupingKind.ATRIBUCION,
-        BindingSourceKind.REFUND_OPERATION: RowSetGroupingKind.REFUND,
-        BindingSourceKind.DONATIVO_DONOR: RowSetGroupingKind.DONATIVO,
         BindingSourceKind.GASTO193_CONTRIBUTOR: RowSetGroupingKind.GASTO193,
         BindingSourceKind.WITHHOLDING296: RowSetGroupingKind.WITHHOLDING296,
     },
 )
 """Explicit detail-record binding-source ↔ row-assembly grouping correspondence.
 
-The binding ``source`` token (e.g. ``"related_party_operation"``) and the
-row-assembly :class:`RowSetGroupingKind` value (e.g. ``"related_party"``) are
-distinct strings for the three families whose source token carries the
-``_operation`` / ``_member`` suffix; this mapping makes the relationship
+The binding ``source`` token (e.g. ``"atribucion_member"``) and the
+row-assembly :class:`RowSetGroupingKind` value (e.g. ``"atribucion"``) are
+distinct strings where the source token carries a suffix such as ``_member``
+or ``_contributor``; this mapping makes the relationship
 explicit so a reader is not misled into assuming the two axes share a value.
 """
 

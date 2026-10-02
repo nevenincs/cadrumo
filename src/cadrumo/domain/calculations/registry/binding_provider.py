@@ -37,10 +37,7 @@ from .design_constant_bindings import DesignConstantProvider
 from .detail_record_bindings import (
     AtribucionMemberProvider,
     ForeignAssetProvider,
-    RefundOperationProvider,
-    RelatedPartyOperationProvider,
 )
-from .donativo_bindings import DonativoDonorProvider
 from .gasto193_bindings import Gasto193ContributorProvider
 from .inventory_bindings import InventoryProvider
 from .invoice_bindings import (
@@ -96,10 +93,7 @@ BindingProvider = Annotated[
     | CollectibleInvoiceProvider
     | M347ThirdPartyOperationProvider
     | ForeignAssetProvider
-    | RelatedPartyOperationProvider
     | AtribucionMemberProvider
-    | RefundOperationProvider
-    | DonativoDonorProvider
     | Gasto193ContributorProvider
     | InventoryProvider,
     Field(discriminator="kind"),

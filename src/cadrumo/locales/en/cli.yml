@@ -748,7 +748,6 @@ cli:
           datos_libro: data from your records
           decision_compensacion_iva: IVA compensation decision
           declaracion_previa: earlier declaration recorded as filed
-          donante_donativo: donation donor
           entrada_manual: manual input
           entrada_relacion: relation input
           evidencia_factura_compra: purchase-invoice evidence
@@ -757,9 +756,7 @@ cli:
           gasto193_contribuyente: gastos-relationship contributor
           inventario: inventory stock schedule
           miembro_atribucion: income-attribution member
-          operacion_reembolso: refund operation
           operacion_tercero: third-party operation
-          operacion_vinculada: related-party operation
           registro_retenciones: withholding register
           regularizacion_bienes_inversion: capital-goods adjustment
           regularizacion_prorrata: prorrata adjustment

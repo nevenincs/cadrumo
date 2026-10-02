@@ -53,17 +53,13 @@ from ...core.aggregation import BindingAggregationOp, RowSetGroupingKind
 from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.foreign_asset_obligation import M720AssetClassCode
-from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
-    RefundOperationObservation,
-    RelatedPartyOperationObservation,
 )
-from ...domain.calculations.registry.donativo_bindings import DonativoDonorObservation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.gasto193_bindings import Gasto193Observation
 from ...domain.calculations.registry.schema import (
@@ -76,13 +72,10 @@ from ...domain.calculations.registry.withholding_bindings import WithholdingObse
 __all__ = [
     "AssembledObservations",
     "assemble_atribucion_observations",
-    "assemble_donativo_observations",
     "assemble_foreign_asset_observations",
     "assemble_gasto193_observations",
     "assemble_observations_for_grouping",
     "assemble_observations_for_snapshot",
-    "assemble_refund_observations",
-    "assemble_related_party_observations",
     "assemble_withholding296_observations",
     "assemble_withholding_observations",
 ]
@@ -96,11 +89,8 @@ _GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
     "per_perceptor": RowSetGroupingKind.WITHHOLDING,
     "per_perceptor_clave": RowSetGroupingKind.WITHHOLDING,
     "per_perceptor_clave_devengo": RowSetGroupingKind.WITHHOLDING,
-    "per_related_party_operation": RowSetGroupingKind.RELATED_PARTY,
     "per_foreign_asset": RowSetGroupingKind.FOREIGN_ASSET,
     "per_atribucion_member": RowSetGroupingKind.ATRIBUCION,
-    "per_refund_operation": RowSetGroupingKind.REFUND,
-    "per_donativo_donor": RowSetGroupingKind.DONATIVO,
     "per_gasto193_contribuyente": RowSetGroupingKind.GASTO193,
     "per_perceptor_296": RowSetGroupingKind.WITHHOLDING296,
 }
@@ -109,15 +99,12 @@ _GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
 # Tuple of typed observations dispatched by source-kind name. Returned
 # by ``assemble_observations_for_grouping`` as a discriminated union
 # the caller pattern-matches on. The string discriminator avoids
-# pinning ``isinstance`` checks against five separate observation
-# classes at every call site.
+# pinning ``isinstance`` checks against each observation class at
+# every call site.
 AssembledObservations = (
     tuple[str, tuple[WithholdingObservation, ...]]
-    | tuple[str, tuple[RelatedPartyOperationObservation, ...]]
     | tuple[str, tuple[Modelo720RowObservation, ...]]
     | tuple[str, tuple[AtributionMemberObservation, ...]]
-    | tuple[str, tuple[RefundOperationObservation, ...]]
-    | tuple[str, tuple[DonativoDonorObservation, ...]]
     | tuple[str, tuple[Gasto193Observation, ...]]
     | tuple[str, tuple[Withholding296Observation, ...]]
 )
@@ -133,16 +120,10 @@ def _assemble_grouping_kind(
     """Run the assembler selected by an already validated grouping kind."""
     if source_kind == RowSetGroupingKind.WITHHOLDING:
         return (source_kind, assemble_withholding_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.RELATED_PARTY:
-        return (source_kind, assemble_related_party_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.FOREIGN_ASSET:
         return (source_kind, assemble_foreign_asset_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.ATRIBUCION:
         return (source_kind, assemble_atribucion_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.REFUND:
-        return (source_kind, assemble_refund_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.DONATIVO:
-        return (source_kind, assemble_donativo_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.GASTO193:
         return (source_kind, assemble_gasto193_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.WITHHOLDING296:
@@ -171,8 +152,8 @@ def assemble_observations_for_grouping(
 
     Args:
         grouping: Row-set grouping token; selects which assembler runs
-            (``withholding`` / ``related_party`` / ``foreign_asset`` /
-            ``atribucion`` / ``refund`` / ``donativo``).
+            (``withholding`` / ``foreign_asset`` / ``atribucion`` /
+            ``gasto193`` / ``withholding296``).
         cells: Per-row cell shapes consumed by the chosen assembler.
         revision: The
             :class:`~domain.calculations.registry.schema.ModeloRevision` used to
@@ -184,8 +165,8 @@ def assemble_observations_for_grouping(
 
     Returns a 2-tuple ``(source_kind, observations)`` where
     ``source_kind`` identifies the assembler that ran (``withholding`` /
-    ``related_party`` / ``foreign_asset`` / ``atribucion`` /
-    ``refund`` / ``donativo``). Raises
+    ``foreign_asset`` / ``atribucion`` / ``gasto193`` /
+    ``withholding296``). Raises
     :class:`~domain.calculations.registry.errors.RegistryValidationError` for groupings
     that have no matching assembler — those are registry layout
     declarations the application layer cannot consume yet.
@@ -441,14 +422,6 @@ def _row_fields_for_assembly(
     return fields
 
 
-class _OperationKindCodeKwarg(TypedDict, total=False):
-    operation_kind_code: TipoOperacionVinculada
-
-
-class _TransferPricingMethodCodeKwarg(TypedDict, total=False):
-    transfer_pricing_method_code: MetodoValoracion
-
-
 def _hydrate_coded_field[EnumT: StrEnum](*, field_name: str, text: str, code_set: type[EnumT]) -> EnumT:
     """Widen a raw registry token into its typed DR23200-style code, or raise.
 
@@ -462,52 +435,6 @@ def _hydrate_coded_field[EnumT: StrEnum](*, field_name: str, text: str, code_set
     except ValueError:
         accepted = ", ".join(repr(str(member)) for member in code_set)
         raise ValueError(f"{field_name} must be one of {accepted}; got {text!r}") from None
-
-
-def _optional_operation_kind_code_kwarg(fields: Mapping[str, Decimal | str]) -> _OperationKindCodeKwarg:
-    """Pass ``operation_kind_code`` only when the row supplies a non-empty value.
-
-    The coded counterpart of :func:`_optional_text_kwarg`: the target field is
-    typed as the closed ``TipoOperacionVinculada`` enum rather than plain
-    text, so it cannot be forwarded as a bare ``str``.
-    """
-    raw = fields.get("operation_kind_code")
-    if raw is None:
-        return {}
-    text = _coerce_text(raw)
-    if not text:
-        return {}
-    return {
-        "operation_kind_code": _hydrate_coded_field(
-            field_name="operation_kind_code",
-            text=text,
-            code_set=TipoOperacionVinculada,
-        ),
-    }
-
-
-def _optional_transfer_pricing_method_code_kwarg(
-    fields: Mapping[str, Decimal | str],
-) -> _TransferPricingMethodCodeKwarg:
-    """Pass ``transfer_pricing_method_code`` only when the row supplies a non-empty value.
-
-    The coded counterpart of :func:`_optional_text_kwarg`: the target field is
-    typed as the closed ``MetodoValoracion`` enum rather than plain text, so
-    it cannot be forwarded as a bare ``str``.
-    """
-    raw = fields.get("transfer_pricing_method_code")
-    if raw is None:
-        return {}
-    text = _coerce_text(raw)
-    if not text:
-        return {}
-    return {
-        "transfer_pricing_method_code": _hydrate_coded_field(
-            field_name="transfer_pricing_method_code",
-            text=text,
-            code_set=MetodoValoracion,
-        ),
-    }
 
 
 class _Withholding296IdentityKwargs(TypedDict, total=False):
@@ -794,73 +721,6 @@ def assemble_withholding_observations(
     )
 
 
-def assemble_related_party_observations(
-    cells: Iterable[_RowCellShape],
-    revision: ModeloRevision,
-    *,
-    filing_year: int,
-) -> tuple[RelatedPartyOperationObservation, ...]:
-    """Reassemble per-operation related-party observations from row-set cells.
-
-    Args:
-        cells: Per-row cell shapes the assembler projects into typed
-            observations.
-        revision: The
-            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
-            look up typed row-set selector projections.
-        filing_year: AEAT filing year carried through to each observation's
-            provenance.
-
-    Returns a tuple of
-    :class:`~domain.calculations.registry.detail_record_bindings.RelatedPartyOperationObservation`
-    instances.
-    """
-    by_row = _cells_by_row(cells)
-    row_field = _row_field_lookup(revision)
-    default_date = date(filing_year, 12, 31)
-
-    observations: list[RelatedPartyOperationObservation] = []
-    for row_index in sorted(by_row):
-        row = by_row[row_index]
-        fields: dict[str, Decimal | str] = {}
-        for binding_id, value in row.items():
-            field = row_field.get(binding_id)
-            if field is None:
-                continue
-            fields[field] = value if value is not None else ""
-        try:
-            observations.append(
-                RelatedPartyOperationObservation(
-                    source_id=f"detalle:per_related_party_operation:row-{row_index}",
-                    counterparty_tax_id=_coerce_text(fields.get("counterparty_tax_id")),
-                    counterparty_legal_name=_coerce_text(fields.get("counterparty_legal_name")),
-                    # No invented default: "01" is a real clave (bienes
-                    # tangibles), so substituting it for an absent value
-                    # would declare an operation kind the row never carried.
-                    # The coded-kwarg helpers (rather than the plain-text one)
-                    # because the field is the typed
-                    # TipoOperacionVinculada/MetodoValoracion enum, not text.
-                    # Spread before the generic ``dict[str, str]`` kwargs below:
-                    # a type checker that cannot see a plain dict's key set
-                    # must assume it might supply any parameter, so ordering
-                    # the precisely-keyed ``TypedDict`` spreads first lets it
-                    # narrow the remaining parameter set before that.
-                    **_optional_operation_kind_code_kwarg(fields),
-                    **_optional_transfer_pricing_method_code_kwarg(fields),
-                    # No invented default: modelo 232 declares paraíso-fiscal
-                    # operations, so substituting Spain for an absent country
-                    # marks a tax-haven counterparty as domestic on the exact
-                    # axis the declaration exists to surface.
-                    **_optional_text_kwarg(fields, "country_code"),
-                    transaction_date=default_date,
-                    amount=coerce_decimal(fields.get("amount"), default=Decimal("0")),
-                ),
-            )
-        except (ValidationError, ValueError) as exc:
-            raise _row_assembly_refusal(row_index, exc) from exc
-    return tuple(observations)
-
-
 def assemble_foreign_asset_observations(
     cells: Iterable[_RowCellShape],
     revision: ModeloRevision,
@@ -975,54 +835,6 @@ def assemble_atribucion_observations(
     return tuple(observations)
 
 
-def assemble_refund_observations(
-    cells: Iterable[_RowCellShape],
-    revision: ModeloRevision,
-    *,
-    filing_year: int,
-) -> tuple[RefundOperationObservation, ...]:
-    """Reassemble Modelo 360 refund-operation records from row-set cells.
-
-    Args:
-        cells: Row-set cells exported from the calc sheet.
-        revision: The
-            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
-            map binding ids to row fields.
-        filing_year: Calendar year of the filing; used to derive default
-            operation dates.
-
-    Each element in the returned tuple is a
-    :class:`~domain.calculations.registry.detail_record_bindings.RefundOperationObservation`.
-    """
-    by_row = _cells_by_row(cells)
-    row_field = _row_field_lookup(revision)
-    default_operation_date = date(filing_year, 12, 31)
-
-    observations: list[RefundOperationObservation] = []
-    for row_index in sorted(by_row):
-        row = by_row[row_index]
-        fields: dict[str, Decimal | str] = {}
-        for binding_id, value in row.items():
-            field = row_field.get(binding_id)
-            if field is None:
-                continue
-            fields[field] = value if value is not None else ""
-        try:
-            observations.append(
-                RefundOperationObservation(
-                    source_id=f"detalle:per_refund_operation:row-{row_index}",
-                    **_optional_text_kwarg(fields, "member_state_code"),
-                    **_optional_text_kwarg(fields, "operation_kind_code"),
-                    operation_date=_coerce_iso_date(fields.get("operation_date"), default=default_operation_date),
-                    supplier_tax_id=_coerce_text(fields.get("supplier_tax_id")),
-                    refund_amount=coerce_decimal(fields.get("refund_amount"), default=Decimal("0")),
-                ),
-            )
-        except (ValidationError, RegistryValidationError) as exc:
-            raise _row_assembly_refusal(row_index, exc) from exc
-    return tuple(observations)
-
-
 def assemble_withholding296_observations(
     cells: Iterable[_RowCellShape],
     revision: ModeloRevision,
@@ -1094,54 +906,5 @@ def assemble_gasto193_observations(
                 ),
             )
         except (ValidationError, ValueError) as exc:
-            raise _row_assembly_refusal(row_index, exc) from exc
-    return tuple(observations)
-
-
-def assemble_donativo_observations(
-    cells: Iterable[_RowCellShape],
-    revision: ModeloRevision,
-    *,
-    filing_year: int,
-) -> tuple[DonativoDonorObservation, ...]:
-    """Reassemble Modelo 182 per-donor donativo records from row-set cells.
-
-    Args:
-        cells: Row-set cells exported from the calc sheet.
-        revision: The
-            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
-            map binding ids to row fields.
-        filing_year: Calendar year of the filing; used to derive the default
-            transaction date.
-
-    Each element in the returned tuple is a
-    :class:`~domain.calculations.registry.donativo_bindings.DonativoDonorObservation`.
-    """
-    by_row = _cells_by_row(cells)
-    row_field = _row_field_lookup(revision)
-    default_date = date(filing_year, 12, 31)
-
-    observations: list[DonativoDonorObservation] = []
-    for row_index in sorted(by_row):
-        row = by_row[row_index]
-        fields: dict[str, Decimal | str] = {}
-        for binding_id, value in row.items():
-            field = row_field.get(binding_id)
-            if field is None:
-                continue
-            fields[field] = value if value is not None else ""
-        try:
-            observations.append(
-                DonativoDonorObservation(
-                    source_id=f"detalle:per_donativo_donor:row-{row_index}",
-                    donor_tax_id=_coerce_text(fields.get("donor_tax_id")),
-                    donor_legal_name=_coerce_text(fields.get("donor_legal_name")),
-                    transaction_date=default_date,
-                    amount_donated=coerce_decimal(fields.get("amount_donated"), default=Decimal("0")),
-                    deduction_percentage=coerce_decimal(fields.get("deduction_percentage"), default=Decimal("0")),
-                    is_recurrent=_coerce_flag(fields.get("is_recurrent")),
-                ),
-            )
-        except ValidationError as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)

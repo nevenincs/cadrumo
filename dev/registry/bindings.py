@@ -32,7 +32,7 @@ from dev.registry.compiler.export_fragment_grammar import revision_section_for_d
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-SCHEMA_VERSION = "binding-signal.v2"
+SCHEMA_VERSION = "binding-signal.v3"
 BINDING_REF_KEYS = frozenset(
     {
         "binding",
@@ -45,6 +45,17 @@ BINDING_REF_KEYS = frozenset(
         "alternate_bindings",
     }
 )
+# Delta-authoring storage restates a predecessor member's fields; it never reads
+# a binding's value, so a mention there is not even evidence of use.
+_AUTHORING_DELTA_FAMILIES = frozenset({"casilla_overrides", "family_overrides"})
+# A mention on one of these surfaces names a binding without carrying its value
+# into a calculation or an export. It is reported as evidence, never as use.
+_NON_CONSUMING_SURFACES = {
+    "casillas": "unbound_casilla",
+    "constructs": "construct_membership",
+    "form_layouts": "form_input",
+}
+_SUMMARY_FINDING_LIMIT = 25
 
 
 @dataclass(frozen=True)
@@ -434,6 +445,87 @@ def _finding(
     }
 
 
+def _structural_binding_mentions(
+    families: Mapping[str, object],
+) -> Iterable[tuple[str, Mapping[str, object], tuple[str, ...], str]]:
+    """Yield every non-binding row field that names a binding, skipping authoring deltas."""
+    for family, rows in sorted(families.items()):
+        if family == "bindings" or family in _AUTHORING_DELTA_FAMILIES:
+            continue
+        for row in _rows(rows):
+            for field_path, binding_id in _walk_binding_refs(row):
+                yield family, row, field_path, binding_id
+
+
+def _unconsumed_classification(*, applicability_kind: object, provider_disposition: str) -> str:
+    """Classify a binding that no bound casilla, formula or export consumes."""
+    if applicability_kind == "non_calculation":
+        return "excluded_non_calculation"
+    return {
+        "filing_grade": "filing_grade_unconsumed",
+        "deferred": "deferred_provider",
+        "non_runtime": "non_runtime_provider",
+    }.get(provider_disposition, "unregistered_provider")
+
+
+def _unconsumed_binding_report(
+    binding: Mapping[str, object],
+    *,
+    typed_consumers: Sequence[Mapping[str, object]],
+    structural_mentions: Sequence[Mapping[str, object]],
+    provider_disposition: str,
+    python_literal_references: int,
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    """Return the unconsumed-binding row and its blocking finding, if any.
+
+    Only the typed consumer census proves use. A form input, a construct
+    membership or an unbound casilla names the binding without carrying its
+    value anywhere, so those mentions travel with the row as evidence instead of
+    clearing it. A filing-grade binding left unconsumed is a blocking error:
+    filing-grade data that reaches no casilla, formula or export is either
+    missing wiring or a declaration that should not exist.
+    """
+    if typed_consumers:
+        return None, None
+    applicability = _mapping(binding.get("applicability"))
+    applicability_kind = applicability.get("kind") if applicability is not None else None
+    classification = _unconsumed_classification(
+        applicability_kind=applicability_kind,
+        provider_disposition=provider_disposition,
+    )
+    mentions = sorted(
+        {_NON_CONSUMING_SURFACES.get(str(item["family"]), str(item["family"])) for item in structural_mentions}
+    )
+    row: dict[str, object] = {
+        "modelo": binding["modelo"],
+        "revision": binding["revision"],
+        "binding": binding["binding_id"],
+        "provider_kind": binding.get("provider_kind"),
+        "provider_disposition": provider_disposition,
+        "applicability": applicability_kind,
+        "classification": classification,
+        "structural_mentions": mentions,
+        "exact_python_literal_references": python_literal_references,
+        "location": binding["location"],
+    }
+    if classification != "filing_grade_unconsumed":
+        return row, None
+    mentioned = f"; it is only named as {', '.join(mentions)}" if mentions else ""
+    finding = _finding(
+        "UNCONSUMED_FILING_GRADE_BINDING",
+        severity="error",
+        actionability="actionable",
+        coordinate={
+            "modelo": binding["modelo"],
+            "revision": binding["revision"],
+            "binding": binding["binding_id"],
+        },
+        message=f"filing-grade binding feeds no bound casilla, formula or export{mentioned}",
+        evidence=(row,),
+    )
+    return row, finding
+
+
 def _binding_closure(
     binding: Mapping[str, object],
     registration: Mapping[str, object] | None,
@@ -804,23 +896,19 @@ def audit(root: Path) -> dict[str, object]:
                     for reference in references
                 )
 
-        for family, rows in sorted(effective_families.items()):
-            if family == "bindings":
-                continue
-            for row in _rows(rows):
-                for field_path, binding_id in _walk_binding_refs(row):
-                    consumer_refs.append(
-                        {
-                            "modelo": modelo_id,
-                            "revision": revision_id,
-                            "family": family,
-                            "consumer_id": row.get("id"),
-                            "field_path": ".".join(field_path),
-                            "binding_id": binding_id,
-                            "binding_declared": binding_id in effective_binding_by_id,
-                            "surface": "compiler_materialised" if compiled_revision is not None else "raw_authored",
-                        }
-                    )
+        for family, row, field_path, binding_id in _structural_binding_mentions(effective_families):
+            consumer_refs.append(
+                {
+                    "modelo": modelo_id,
+                    "revision": revision_id,
+                    "family": family,
+                    "consumer_id": row.get("id"),
+                    "field_path": ".".join(field_path),
+                    "binding_id": binding_id,
+                    "binding_declared": binding_id in effective_binding_by_id,
+                    "surface": "compiler_materialised" if compiled_revision is not None else "raw_authored",
+                }
+            )
 
     unique_binding_ids = frozenset(str(item["binding_id"]) for item in binding_rows)
     code_binding_refs, code_reference_limits = _python_binding_references(root, unique_binding_ids)
@@ -832,6 +920,11 @@ def audit(root: Path) -> dict[str, object]:
     for item in consumer_refs:
         structural_consumers[(str(item["modelo"]), str(item["revision"]), str(item["binding_id"]))].append(item)
 
+    # A revision the loader did not materialise has no typed consumer census, so
+    # its bindings are unknown rather than unconsumed and must not be counted as
+    # orphans; the gap is reported as a critical limitation instead.
+    censused_revisions = frozenset(compiled) if binding_consumers is not None else frozenset[tuple[str, str]]()
+    census_unavailable_modelo: Counter[str] = Counter()
     unreferenced_rows: list[dict[str, object]] = []
     unreferenced_classification: Counter[str] = Counter()
     unreferenced_disposition: Counter[str] = Counter()
@@ -898,52 +991,26 @@ def audit(root: Path) -> dict[str, object]:
                 )
             )
 
-        if typed_consumers or discovered_consumers:
+        if (str(binding["modelo"]), str(binding["revision"])) not in censused_revisions:
+            census_unavailable_modelo[str(binding["modelo"])] += 1
             continue
-        applicability = binding.get("applicability")
-        applicability_kind = applicability.get("kind") if isinstance(applicability, Mapping) else None
         provider_disposition = str(registration.get("disposition")) if registration else "unregistered"
-        if applicability_kind == "non_calculation":
-            classification = "excluded_non_calculation"
-        elif provider_disposition == "filing_grade":
-            classification = "filing_grade_review"
-        elif provider_disposition == "deferred":
-            classification = "deferred_provider"
-        elif provider_disposition == "non_runtime":
-            classification = "non_runtime_provider"
-        else:
-            classification = "unregistered_provider"
-        unreferenced_classification[classification] += 1
+        row, finding = _unconsumed_binding_report(
+            binding,
+            typed_consumers=typed_consumers,
+            structural_mentions=discovered_consumers,
+            provider_disposition=provider_disposition,
+            python_literal_references=len(code_refs_by_binding.get(str(binding["binding_id"]), [])),
+        )
+        if row is None:
+            continue
+        unreferenced_classification[str(row["classification"])] += 1
         unreferenced_disposition[provider_disposition] += 1
         unreferenced_provider[str(binding.get("provider_kind") or "<missing>")] += 1
         unreferenced_modelo[str(binding["modelo"])] += 1
-        row = {
-            "modelo": binding["modelo"],
-            "revision": binding["revision"],
-            "binding": binding["binding_id"],
-            "provider_kind": binding.get("provider_kind"),
-            "provider_disposition": provider_disposition,
-            "applicability": applicability_kind,
-            "classification": classification,
-            "exact_python_literal_references": len(code_refs_by_binding.get(str(binding["binding_id"]), [])),
-            "location": binding["location"],
-        }
         unreferenced_rows.append(row)
-        if classification == "filing_grade_review":
-            findings.append(
-                _finding(
-                    "UNREFERENCED_FILING_GRADE_BINDING",
-                    severity="warning",
-                    actionability="review",
-                    coordinate={
-                        "modelo": binding["modelo"],
-                        "revision": binding["revision"],
-                        "binding": binding["binding_id"],
-                    },
-                    message="filing-grade binding has no canonical or structural registry consumer",
-                    evidence=(row,),
-                )
-            )
+        if finding is not None:
+            findings.append(finding)
 
     if modelos_without_revisions:
         limitations.append(
@@ -963,6 +1030,15 @@ def audit(root: Path) -> dict[str, object]:
             }
         )
 
+    if census_unavailable_modelo:
+        limitations.append(
+            {
+                "code": "CONSUMER_CENSUS_UNAVAILABLE",
+                "count": sum(census_unavailable_modelo.values()),
+                "by_modelo": dict(sorted(census_unavailable_modelo.items())),
+            }
+        )
+
     finding_counts = Counter(item["code"] for item in findings)
     severity_counts = Counter(item["severity"] for item in findings)
     route_status_counts = Counter(
@@ -976,6 +1052,7 @@ def audit(root: Path) -> dict[str, object]:
         "REGISTRY_LOADER_FAILED",
         "RUNTIME_RESOLVER_INVENTORY_IMPORT_FAILED",
         "CANONICAL_CONSUMER_PROJECTION_IMPORT_FAILED",
+        "CONSUMER_CENSUS_UNAVAILABLE",
         "TOML_PARSE_FAILURES",
     }
     processing_error = bool(parse_failures) or any(
@@ -1045,6 +1122,7 @@ def audit(root: Path) -> dict[str, object]:
             "binding_routes": len(routes),
             "casilla_edges": len(casilla_edges),
             "unreferenced_bindings": len(unreferenced_rows),
+            "consumer_census_unavailable_bindings": sum(census_unavailable_modelo.values()),
             "findings": len(findings),
             "finding_severity": dict(sorted(severity_counts.items())),
             "limitations": len(limitations),
@@ -1067,7 +1145,7 @@ def audit(root: Path) -> dict[str, object]:
             "structural_consumer_distribution": dict(sorted(Counter(item["family"] for item in consumer_refs).items())),
             "route_status": dict(sorted(route_status_counts.items())),
             "unreferenced_bindings": {
-                "authority": "canonical_and_structural_registry_consumers",
+                "authority": "canonical_typed_registry_consumers",
                 "by_classification": dict(sorted(unreferenced_classification.items())),
                 "by_provider_disposition": dict(sorted(unreferenced_disposition.items())),
                 "by_provider_kind": dict(sorted(unreferenced_provider.items())),
@@ -1115,10 +1193,33 @@ def audit(root: Path) -> dict[str, object]:
     }
 
 
+def _blocking_findings(payload: Mapping[str, object]) -> list[Mapping[str, object]]:
+    return [
+        item
+        for item in _rows(payload["findings"])
+        if item["severity"] == "error" and item["actionability"] == "actionable"
+    ]
+
+
 def _summary(payload: Mapping[str, object], output: Path) -> dict[str, object]:
     lanes = _required_mapping(payload["lanes"], context="audit lanes")
+    blocking = _blocking_findings(payload)
+    summary = _required_mapping(payload["summary"], context="audit summary")
+    if summary.get("classification") == "processing_error":
+        codes = sorted({str(item.get("code")) for item in _rows(payload.get("limitations", ()))})
+        headline = f"binding census incomplete ({', '.join(codes) or 'unknown'}); counts below are partial"
+    elif blocking:
+        headline = f"{len(blocking)} blocking binding finding(s); full list in the output artifact"
+    else:
+        headline = "no blocking binding findings"
     return {
-        "schema_version": "binding-signal-summary.v2",
+        "schema_version": "binding-signal-summary.v3",
+        "headline": headline,
+        "blocking_findings_total": len(blocking),
+        "blocking_findings": [
+            {"code": item["code"], **_required_mapping(item["coordinate"], context="finding coordinate")}
+            for item in blocking[:_SUMMARY_FINDING_LIMIT]
+        ],
         "output": output.resolve().as_posix(),
         "summary": payload["summary"],
         "declaration_shape": lanes["declaration_shape"],
@@ -1152,10 +1253,7 @@ def main() -> int:
         print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
         summary_payload = _required_mapping(payload["summary"], context="audit summary")
         processing_error = summary_payload["classification"] == "processing_error"
-        finding_rows = _rows(payload["findings"])
-        actionable_errors = any(
-            item["severity"] == "error" and item["actionability"] == "actionable" for item in finding_rows
-        )
+        actionable_errors = bool(_blocking_findings(payload))
         if processing_error:
             return 2
         if args.strict and actionable_errors:
@@ -1163,7 +1261,7 @@ def main() -> int:
         return 0
     except Exception as exc:
         failure = {
-            "schema_version": "binding-signal-summary.v2",
+            "schema_version": "binding-signal-summary.v3",
             "output": output.resolve().as_posix(),
             "summary": {
                 "classification": "processing_error",

@@ -107,14 +107,14 @@ def test_row_producing_binding_uses_its_detail_row_channel() -> None:
 
 
 def _deferred_binding() -> BindingDefinition:
-    grouping = ROW_SET_GROUPING_FOR_BINDING_SOURCE[BindingSourceKind.RELATED_PARTY_OPERATION]
+    grouping = ROW_SET_GROUPING_FOR_BINDING_SOURCE[BindingSourceKind.GASTO193_CONTRIBUTOR]
     return BindingDefinition.model_validate(
         {
-            "id": "synthetic-deferred-related-party-rows",
-            "provider": {"kind": "related_party_operation", "fact": "row_field", "row_field": "counterparty_tax_id"},
-            "value": {"data_type": "money", "channel": "row_set", "row_grouping": grouping},
+            "id": "synthetic-deferred-gasto193-rows",
+            "provider": {"kind": "gasto193_contributor", "fact": "row_field", "row_field": "contributor_tax_id"},
+            "value": {"data_type": "text", "channel": "row_set", "row_grouping": grouping},
             "aggregation": {"op": "rows"},
-            "legal_refs": ("ley-27-2014:art-18",),
+            "legal_refs": ("ley-35-2006:art-25",),
             "source_refs": ("aeat-manual",),
         },
     )
@@ -139,5 +139,5 @@ def test_deferred_source_binding_surfaces_as_deferred_diagnostic() -> None:
     diagnostics = collect_unhandled_source_diagnostics(patched, handled_sources=frozenset())
 
     assert [d.reason for d in diagnostics] == ["deferred_binding_source"]
-    assert diagnostics[0].binding_id == "synthetic-deferred-related-party-rows"
-    assert diagnostics[0].source_kind == "related_party_operation"
+    assert diagnostics[0].binding_id == "synthetic-deferred-gasto193-rows"
+    assert diagnostics[0].source_kind == "gasto193_contributor"

@@ -7,7 +7,6 @@ docs:
       collectible_invoice: desde las facturas emitidas
       design_constant: desde una constante fijada por el diseño de registro de la
         AEAT
-      donativo_donor: desde los donantes registrados
       foreign_asset: desde tus bienes en el extranjero
       gasto193_contributor: desde los gastos de administración y depósito por contribuyente
       inventory: desde tu inventario de existencias
@@ -33,8 +32,6 @@ docs:
       profile: desde tu perfil de contribuyente
       prorrata_regularizacion: desde la regularización de prorrata
       purchase_invoice_evidence: desde los justificantes de tus facturas recibidas
-      refund_operation: desde tus operaciones de devolución
-      related_party_operation: desde tus operaciones vinculadas
       relation_prefill: desde el resultado de un modelo relacionado
       retenciones_aggregation: desde las retenciones registradas
       withholding: desde las retenciones soportadas

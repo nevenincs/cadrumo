@@ -6,7 +6,6 @@ docs:
       borrador: from AEAT data (the borrador)
       collectible_invoice: from the invoices you issued
       design_constant: from a constant fixed by the AEAT record design
-      donativo_donor: from the donativo donor records
       foreign_asset: from your foreign-asset records
       gasto193_contributor: from the administration and deposit expenses per contribuyente
       inventory: from your stock inventory
@@ -33,8 +32,6 @@ docs:
       profile: from your taxpayer profile
       prorrata_regularizacion: from your prorrata regularisation
       purchase_invoice_evidence: from the supporting documents of your received invoices
-      refund_operation: from your refund operations
-      related_party_operation: from your related-party operations
       relation_prefill: from a related modelo's result
       retenciones_aggregation: from the retenciones you recorded
       withholding: from the withholdings you recorded

@@ -83,21 +83,21 @@ def test_every_registry_grouping_has_an_assembler_or_a_confirmed_owner() -> None
     )
 
 
-def test_dispatch_table_contains_at_least_the_five_known_detail_record_groupings() -> None:
-    """Sanity: the assembler dispatch table covers the five detail-record modelos.
+def test_dispatch_table_contains_the_known_detail_record_groupings() -> None:
+    """Sanity: the assembler dispatch table covers the detail-record modelos.
 
     Pins the closed enum so a refactor that accidentally removes one of
-    the five known groupings fails here, rather than at the operator's
-    first invocation.
+    the known groupings fails here, rather than at the operator's first
+    invocation.
     """
 
     expected = {
         "per_perceptor",
         "per_perceptor_clave",
-        "per_related_party_operation",
         "per_foreign_asset",
         "per_atribucion_member",
-        "per_refund_operation",
+        "per_gasto193_contribuyente",
+        "per_perceptor_296",
     }
     missing = expected - set(_GROUPING_DISPATCH)
     assert not missing, f"`_row_set_assembly._GROUPING_DISPATCH` is missing canonical groupings: {sorted(missing)}"

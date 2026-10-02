@@ -179,7 +179,6 @@ flows:
           borrador: Esborrany de l'AEAT
           collectible_invoice: Factures emeses
           design_constant: Constant del disseny
-          donativo_donor: Donant
           foreign_asset: Actiu estranger
           gasto193_contributor: Despeses per contribuent (model 193)
           inventory: Existències
@@ -203,8 +202,6 @@ flows:
           profile: Perfil
           prorrata_regularizacion: Regularització de prorrata
           purchase_invoice_evidence: Evidència de factura de compra
-          refund_operation: Operació de reemborsament
-          related_party_operation: Operació vinculada
           relation_prefill: Declaració relacionada
           retenciones_aggregation: Totals de retencions
           withholding: Registre de retenció

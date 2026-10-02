@@ -281,11 +281,10 @@ check-registry:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-registry --signal registry-health -- uv run --no-sync python -m dev.registry.analysis.registry_status --check --json
 
 # `--strict` is not decoration: without it the screen returns 0 whatever it
-# finds, so the recipe passed unless the tool itself crashed. The flag is
-# reachable -- nine call sites raise an actionable error finding, and the
-# gate at bindings.py:1157 fails on any of them. Measured before adding it:
-# the live corpus reports 0 errors and 18 warnings, so this changes no
-# verdict today and changes the one that matters on the day an error lands.
+# finds, so the recipe passed unless the tool itself crashed. It fails on any
+# actionable error finding, including a filing-grade binding that no bound
+# casilla, formula or export consumes. Only the typed consumer census proves
+# use; a form input or construct membership is reported as evidence, not use.
 [doc('Measure binding declarations, consumers, provider enrollment, temporal coherence, and advisory resolution routes.')]
 [group('check')]
 [no-exit-message]

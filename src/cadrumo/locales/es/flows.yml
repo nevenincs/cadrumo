@@ -179,7 +179,6 @@ flows:
           borrador: Borrador de la AEAT
           collectible_invoice: Facturas emitidas
           design_constant: Constante del diseño
-          donativo_donor: Donante
           foreign_asset: Activo extranjero
           gasto193_contributor: Gastos por contribuyente (modelo 193)
           inventory: Existencias
@@ -203,8 +202,6 @@ flows:
           profile: Perfil
           prorrata_regularizacion: Regularización de prorrata
           purchase_invoice_evidence: Evidencia de factura de compra
-          refund_operation: Operación de reembolso
-          related_party_operation: Operación vinculada
           relation_prefill: Declaración relacionada
           retenciones_aggregation: Totales de retenciones
           withholding: Registro de retención

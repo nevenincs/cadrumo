@@ -10,9 +10,9 @@ OssIossLedgerSourceResolver (M369 OSS/IOSS), InvoiceCatalogueSourceResolver
 foreign_asset), and M184 attribution members (atribucion_member) are enrolled
 in the live merge_source_resolutions tuple so they fire on their modelos.
 
-Deferred source kinds: the remaining deferred source kinds (related_party_operation,
-refund_operation) produce an 'unhandled_binding_source' advisory on source_diagnostics
-rather than a silent blank; only a ``non_runtime`` kind is exempt.
+Deferred source kinds: a deferred source kind (gasto193_contributor, for example)
+produces an 'unhandled_binding_source' advisory on source_diagnostics rather than a
+silent blank; only a ``non_runtime`` kind is exempt.
 
 Boundary gate: assert_no_novel_source_kinds raises on a synthetic novel-source binding
 so a TOML source that would resolve to blank fails fast instead of compiling silently.

@@ -67,7 +67,9 @@ unwithdrawn authority rather than proving a 2026 design, and must be re-cut when
 NOT CLAIMED -- no production calculation resolver owns the 5 donativo_donor bindings, so \
 calculation refuses them rather than resolving a silent blank. NOT CLAIMED -- no export layout is declared and the tipo-2 \
 per-donor detail rows are not modelled. NOT CLAIMED -- all 3 locales are complete for the 7 labels, \
-but the translated strings were not audited for accuracy."""
+but the translated strings were not audited for accuracy. REMOVED 2026-10-02 -- the 5 \
+donativo_donor bindings this review names are no longer declared: no route resolved them and \
+no layout of this applicability-grade modelo wrote them."""
 reviewed_at = 2026-09-12
 family_storage_baseline = "2024"
 

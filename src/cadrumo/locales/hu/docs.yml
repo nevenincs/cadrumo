@@ -6,7 +6,6 @@ docs:
       borrador: az AEAT-adatokból (borrador)
       collectible_invoice: a kiállított számláiból
       design_constant: az AEAT rekordtervében rögzített állandóból
-      donativo_donor: a nyilvántartott adományozóiból
       foreign_asset: a külföldi vagyonelemeiből
       gasto193_contributor: az adózónkénti kezelési és letéti költségekből
       inventory: a készletnyilvántartásából
@@ -32,8 +31,6 @@ docs:
       profile: az adózói profiljából
       prorrata_regularizacion: az arányosítás korrekciójából
       purchase_invoice_evidence: a beérkezett számlák bizonylataiból
-      refund_operation: a visszatérítési ügyleteiből
-      related_party_operation: a kapcsolt ügyleteiből
       relation_prefill: egy kapcsolódó nyomtatvány eredményéből
       retenciones_aggregation: a nyilvántartott retenciones tételekből
       withholding: a levont forrásadókból

@@ -54,14 +54,9 @@ from .design_constant_bindings import DesignConstantProvider, validate_design_co
 from .detail_record_bindings import (
     AtribucionMemberProvider,
     ForeignAssetProvider,
-    RefundOperationProvider,
-    RelatedPartyOperationProvider,
     validate_atribucion_binding,
     validate_foreign_asset_binding,
-    validate_refund_binding,
-    validate_related_party_binding,
 )
-from .donativo_bindings import DonativoDonorProvider, validate_donativo_binding
 from .errors import RegistryValidationError
 from .gasto193_bindings import Gasto193ContributorProvider, validate_gasto193_binding_selector_shape
 from .ids import RevisionId
@@ -572,27 +567,6 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         output="rows",
         resolver_id="inventory",
         stage="mesh",
-    ),
-    _deferred(
-        BindingSourceKind.RELATED_PARTY_OPERATION,
-        RelatedPartyOperationProvider,
-        validate_related_party_binding,
-        origins=frozenset({TerminalOriginClass.DETAIL_RECORD}),
-        owner=_DEFERRED_DETAIL_RECORD_OWNER,
-    ),
-    _deferred(
-        BindingSourceKind.REFUND_OPERATION,
-        RefundOperationProvider,
-        validate_refund_binding,
-        origins=frozenset({TerminalOriginClass.DETAIL_RECORD}),
-        owner=_DEFERRED_DETAIL_RECORD_OWNER,
-    ),
-    _deferred(
-        BindingSourceKind.DONATIVO_DONOR,
-        DonativoDonorProvider,
-        validate_donativo_binding,
-        origins=frozenset({TerminalOriginClass.DETAIL_RECORD}),
-        owner=_DEFERRED_DETAIL_RECORD_OWNER,
     ),
     _deferred(
         BindingSourceKind.GASTO193_CONTRIBUTOR,

@@ -177,7 +177,6 @@ flows:
           borrador: AEAT-tervezet
           collectible_invoice: Kimenő számlák
           design_constant: Tervezeti állandó
-          donativo_donor: Adományozó
           foreign_asset: Külföldi eszköz
           gasto193_contributor: Adózónkénti költségek (Modelo 193)
           inventory: Készlet
@@ -201,8 +200,6 @@ flows:
           profile: Profil
           prorrata_regularizacion: Arányosítás kiigazítása
           purchase_invoice_evidence: Beszerzési számla bizonylata
-          refund_operation: Visszatérítési művelet
-          related_party_operation: Kapcsolt ügylet
           relation_prefill: Kapcsolódó bevallás
           retenciones_aggregation: Levonások összesítése
           withholding: Levonási nyilvántartás

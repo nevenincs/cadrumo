@@ -1502,7 +1502,6 @@
         "cadrumo.domain.calculations.registry.descendant_relacion_catalogue",
         "cadrumo.domain.calculations.registry.design_constant_bindings",
         "cadrumo.domain.calculations.registry.detail_record_bindings",
-        "cadrumo.domain.calculations.registry.donativo_bindings",
         "cadrumo.domain.calculations.registry.entity_type",
         "cadrumo.domain.calculations.registry.errors",
         "cadrumo.domain.calculations.registry.eu_member_state_catalogue",

@@ -37,23 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: (modelo, revision) -> why its row bindings are currently unreachable.
 #: An entry is a defect awaiting repair, never a permanent exemption.
-_UNCONSUMED_ROW_BINDING_DEFECTS: Final[dict[tuple[str, str], str]] = {
-    ("360", "2010-y-siguientes"): (
-        "5 modelo-360-refund-row-* bindings, 0 consumed across 235 fields on two page "
-        "records. The shape of the repair is settled and is NOT a repeat: the bundled "
-        "diseno enumerates operations as fixed numbered slots on the pagina-2 record, "
-        "'1. Numero de operacion' at position 11 against '2. Numero de operacion' at "
-        "3111, each group carrying its own declared positions. So these bindings are "
-        "consumed by explicit binding fields at those positions, two groups of five, "
-        "and never by repeat = binding_rows. What still blocks the repair is not the "
-        "design but the bindings: all five select record = 'operacion' with "
-        "aggregation op = 'rows' and grouping per_refund_operation, and no such "
-        "record exists -- the layout declares only page_01 and page_02, and the "
-        "design puts both operation groups INSIDE page_02 at fixed positions. So the "
-        "bindings model a row record this modelo does not have, and reconciling that "
-        "is a modelling decision about indexed occurrences, not a transcription."
-    ),
-}
+_UNCONSUMED_ROW_BINDING_DEFECTS: Final[dict[tuple[str, str], str]] = {}
 
 
 def _unconsumed_row_bindings() -> dict[tuple[str, str], int]:

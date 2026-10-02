@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
@@ -15,7 +15,6 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.external_constants import DEFAULT_CURRENCY
 from ....core.foreign_asset_obligation import M720AssetClassCode
 from ....core.identity.tax_id import TaxIdIdentityToken
-from ....core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
@@ -35,14 +34,10 @@ if TYPE_CHECKING:
 __all__ = [
     "AtributionMemberObservation",
     "Modelo720RowObservation",
-    "RefundOperationObservation",
-    "RelatedPartyOperationObservation",
     "resolve_atribucion_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
     "validate_atribucion_binding",
     "validate_foreign_asset_binding",
-    "validate_refund_binding",
-    "validate_related_party_binding",
 ]
 
 
@@ -62,12 +57,12 @@ def _validate_detail_record_row_field(
     selector_row_field: object,
     family_label: str,
 ) -> None:
-    """Shared op/fact invariant for the four detail-record families.
+    """Shared op/fact invariant for the detail-record families.
 
     Every detail-record family declares exactly the ``row_field`` fact, defaults
     to (and requires) the ``rows`` aggregation op, and must name a ``row_field``
-    selector key. The four families enforced this with byte-identical bodies; the
-    one shared check raises a family-labelled :class:`RegistryValidationError`.
+    selector key; the one shared check raises a family-labelled
+    :class:`RegistryValidationError`.
     """
     if selector_fact != "row_field":
         raise RegistryValidationError(
@@ -77,131 +72,6 @@ def _validate_detail_record_row_field(
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
     if selector_row_field is None:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
-
-
-# Related-party operation source bindings (modelo 232).
-#
-# Legal authority: LIS art. 18 (operaciones vinculadas), RD 634/2015
-# art. 13 (informe-pa�s-por-pa�s y declaraci�n modelo 232), Orden
-# HFP/816/2017 Anexo (diseno de registro modelo 232).
-# ---------------------------------------------------------------------------
-
-
-_RelatedPartyRowField = Literal[
-    "counterparty_tax_id",
-    "counterparty_legal_name",
-    "country_code",
-    "operation_kind_code",
-    "transfer_pricing_method_code",
-    "amount",
-]
-
-
-def _hydrate_operation_kind_code(value: object) -> object:
-    """Hydrate a resolved binding value into its typed ``TipoOperacionVinculada`` member.
-
-    Binding values arrive from the registry as free-form text, so this is the
-    boundary that turns a token into a member. It is the same code set the
-    operator-supplied CLI row carries, which is why both read it from ``core``
-    rather than either side re-spelling the table.
-    """
-    if not isinstance(value, str):
-        return value
-    try:
-        return TipoOperacionVinculada(value.upper())
-    except ValueError:
-        accepted = ", ".join(repr(str(member)) for member in TipoOperacionVinculada)
-        raise ValueError(f"operation_kind_code must be one of {accepted}; got {value!r}") from None
-
-
-def _hydrate_transfer_pricing_method_code(value: object) -> object:
-    """Hydrate a resolved binding value into its typed ``MetodoValoracion`` member."""
-    if not isinstance(value, str):
-        return value
-    try:
-        return MetodoValoracion(value.upper())
-    except ValueError:
-        accepted = ", ".join(repr(str(member)) for member in MetodoValoracion)
-        raise ValueError(f"transfer_pricing_method_code must be one of {accepted}; got {value!r}") from None
-
-
-class RelatedPartyOperationObservation(BaseModel):
-    """One related-party operation for modelo 232."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source_id: str = Field(min_length=1, max_length=128)
-    counterparty_tax_id: TaxIdIdentityToken
-    counterparty_legal_name: str = Field(default="", max_length=200)
-    # Required, and deliberately not defaulted to Spain. Modelo 232 declares
-    # operations with pa�ses o territorios calificados como para�sos fiscales
-    # alongside operaciones vinculadas, so the country is the axis the
-    # declaration exists to surface -- a default marks a tax-haven counterparty
-    # as domestic on exactly that axis. The operator-supplied row carrying the
-    # same operation is required for the same reason; this is the registry-side
-    # representation of it, and the two must agree.
-    country_code: CountryCodeAlpha2
-    transaction_date: date
-    operation_kind_code: Annotated[TipoOperacionVinculada, BeforeValidator(_hydrate_operation_kind_code)]
-    transfer_pricing_method_code: Annotated[
-        MetodoValoracion,
-        BeforeValidator(_hydrate_transfer_pricing_method_code),
-    ] = MetodoValoracion.NO_DECLARADO
-    amount: Decimal
-
-    _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
-
-    @field_validator("amount")
-    @classmethod
-    @pydantic_validation_boundary
-    def _decimal_amount(cls, value: Decimal) -> Decimal:
-        return value
-
-
-class RelatedPartyOperationProvider(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-
-    kind: Literal[BindingSourceKind.RELATED_PARTY_OPERATION] = BindingSourceKind.RELATED_PARTY_OPERATION
-
-    # Only ``row_field`` is a legal fact for related-party-operation
-    # bindings; every handler raises on anything else. Promoting to a
-    # Literal at the type level mirrors the runtime check at the
-    # snapshot-build gate. Audit selector-drift F2.
-    fact: Literal["row_field"]
-    row_field: _RelatedPartyRowField | None = None
-    grouping: str | None = Field(default=None, min_length=1, max_length=64)
-    record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: ExportFieldDataType | None = None
-    """Scalar type of the value this row field contributes to the export.
-
-    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
-    so the selector model admits the key, since a source-family selector is
-    validated whole against its own strict model. Optional while the families
-    adopt it.
-    """
-
-
-def _validated_related_party_selector(binding: BindingDefinition) -> RelatedPartyOperationProvider:
-    try:
-        selector = provider_member(binding, RelatedPartyOperationProvider)
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed related-party selector") from exc
-    _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "related-party")
-    return selector
-
-
-def validate_related_party_binding(binding: BindingDefinition) -> list[str]:
-    """Validate a related-party-operation binding at registry-build time.
-
-    Accumulating ``list[str]`` validator: validates the selector shape against
-    :class:`RelatedPartyOperationProvider` and lifts the resolve-time op/fact invariant
-    (``row_field`` fact paired with the ``rows`` op and a named ``row_field``)
-    to build time, preserving the underlying pydantic field error.
-    """
-    failures = selector_against_model(binding, RelatedPartyOperationProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(binding, "related-party", lambda b: _validated_related_party_selector(b))
 
 
 # ---------------------------------------------------------------------------
@@ -573,88 +443,5 @@ def resolve_atribucion_binding_row_values(
     return resolved
 
 
-# ---------------------------------------------------------------------------
-# Refund operation source bindings (modelo 360).
-#
-# Legal authority: Ley 37/1992 art. 117 bis (devolucion 8a Directiva),
-# Orden EHA/789/2010 Anexo (modelo 360 diseno de registro).
-# ---------------------------------------------------------------------------
-
-
-_RefundRowField = Literal[
-    "member_state_code",
-    "operation_kind_code",
-    "operation_date",
-    "supplier_tax_id",
-    "refund_amount",
-]
-
-
-class RefundOperationObservation(BaseModel):
-    """One foreign-MS refund operation for modelo 360."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source_id: str = Field(min_length=1, max_length=128)
-    member_state_code: CountryCodeAlpha2
-    operation_kind_code: str = Field(min_length=1, max_length=4)
-    operation_date: date
-    supplier_tax_id: TaxIdIdentityToken
-    refund_amount: Decimal
-
-    _iso_code_uppercase = field_validator("member_state_code")(uppercase_alpha_code("member_state_code"))
-
-    @field_validator("refund_amount")
-    @classmethod
-    @pydantic_validation_boundary
-    def _decimal_amount(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0"):
-            raise RegistryValidationError("refund_amount must be non-negative")
-        return value
-
-
-class RefundOperationProvider(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-
-    kind: Literal[BindingSourceKind.REFUND_OPERATION] = BindingSourceKind.REFUND_OPERATION
-
-    fact: Literal["row_field"]
-    row_field: _RefundRowField | None = None
-    grouping: str | None = Field(default=None, min_length=1, max_length=64)
-    record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: ExportFieldDataType | None = None
-    """Scalar type of the value this row field contributes to the export.
-
-    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
-    so the selector model admits the key, since a source-family selector is
-    validated whole against its own strict model. Optional while the families
-    adopt it.
-    """
-
-
 AtribucionMemberProvider = AtribucionMemberProvider
 ForeignAssetProvider = ForeignAssetProvider
-RefundOperationProvider = RefundOperationProvider
-RelatedPartyOperationProvider = RelatedPartyOperationProvider
-
-
-def _validated_refund_selector(binding: BindingDefinition) -> RefundOperationProvider:
-    try:
-        selector = provider_member(binding, RefundOperationProvider)
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed refund selector") from exc
-    _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "refund")
-    return selector
-
-
-def validate_refund_binding(binding: BindingDefinition) -> list[str]:
-    """Validate a refund-operation binding at registry-build time.
-
-    Accumulating ``list[str]`` validator: validates the selector against
-    :class:`RefundOperationProvider` and lifts the resolve-time op/fact invariant to
-    build time, preserving the underlying pydantic field error.
-    """
-    failures = selector_against_model(binding, RefundOperationProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(binding, "refund", lambda b: _validated_refund_selector(b))

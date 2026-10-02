@@ -41,8 +41,8 @@ casilla_source_refs = ["aeat-dr-182-2024", "enrolled-modelo-182-procedure"]
 # this year.
 #
 # Why the grade is 'applicability' and NOT 'filing': the calculation surface of
-# this modelo -- the five donativo_donor row bindings and the construct that
-# gathers them -- is grounded in the corpus only by enrolled-modelo-182-procedure,
+# this modelo -- its casillas and the construct that gathers them -- is
+# grounded in the corpus only by enrolled-modelo-182-procedure,
 # a 1355-byte excerpt of Orden EHA/3021/2007 carrying arts. 1 and 5 and no anexo
 # at all. That excerpt names the modelo; it does not instruct a filing.
 #
@@ -103,7 +103,9 @@ snapshot validates. NOT CLAIMED -- the recurrencia binding carries the donor row
 flag and no year-specific clave test. NOT CLAIMED -- no formulas, export layout, \
 completeness manifest or verification expectation are declared, and the grade stays \
 applicability. NOT CLAIMED -- no independent AEAT oracle checked any value. No human \
-operator has countersigned this."""
+operator has countersigned this. REMOVED \
+2026-10-02 -- the five donativo_donor row bindings named above are no longer declared: no \
+route resolved them and no layout of this applicability-grade modelo wrote them."""
 reviewed_at = 2026-10-01
 
 [[revisions."2024".family_overrides]]

@@ -354,22 +354,14 @@ def _hydrate_m232_codigo[EnumT: StrEnum](*, field_name: str, value: object, code
 class Modelo232VinculadaRow(BaseModel):
     """One operación vinculada row for Modelo 232.
 
-    Fields mirror the related_party_operation binding source declared in
-    ``232/revisions/2018-y-siguientes/bindings/0218…0223-*.toml``.
+    Row ``n`` fills the ``n``-th of the positional related-party slots the
+    revision declares (casillas ``vinculada-<n>-*``) through
+    :func:`~domain.modelos.m232_row_materialisation.m232_related_party_row_casilla_values`.
 
     The three coded fields carry the closed catalogues AEAT's diseño de
     registro DR23200 publishes as Tablas A, C and B — off-catalogue codes are
     refused here rather than travelling into a fichero field that cannot hold
     them.
-
-    Parity assertions:
-
-    * ``nif`` → ``counterparty_tax_id`` (binding: modelo-232-related-party-row-nif)
-    * ``nombre`` → ``counterparty_legal_name`` (binding: modelo-232-related-party-row-name)
-    * ``pais`` → ``country_code`` (binding: modelo-232-related-party-row-country)
-    * ``tipo_operacion`` → ``operation_kind_code`` (binding: modelo-232-related-party-row-operation-kind)
-    * ``metodo`` → ``transfer_pricing_method_code`` (binding: modelo-232-related-party-row-tpr-method)
-    * ``importe`` → ``amount`` (binding: modelo-232-related-party-row-amount)
     """
 
     model_config = STRICT_FROZEN_CONFIG

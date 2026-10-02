@@ -7,7 +7,7 @@ revision_id = "2010-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "265963adcdf082b2f38f6515cd345aa4ed254d538348c3a000ff4e27b3309ad3"
+source_state_digest = "41e18d6669c6e4643ac5ca835fc520c7891833c717138ed41f413f1d8f43f412"
 placements = [
     { casilla_id = "decl.anexo-descripcion-1", kind = "on_form" },
     { casilla_id = "decl.anexo-descripcion-10", kind = "on_form" },

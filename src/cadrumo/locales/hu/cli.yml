@@ -795,7 +795,6 @@ cli:
           datos_libro: a nyilvántartás adatai
           decision_compensacion_iva: IVA-kompenzációs döntés
           declaracion_previa: korábbi, benyújtottként rögzített bevallás
-          donante_donativo: adományozó
           entrada_manual: kézi bevitel
           entrada_relacion: kapcsolati bemenet
           evidencia_factura_compra: beszerzési számla bizonylata
@@ -804,9 +803,7 @@ cli:
           gasto193_contribuyente: költség-kimutatás adóalanya
           inventario: készletnyilvántartás
           miembro_atribucion: jövedelemtulajdonítás tagja
-          operacion_reembolso: visszatérítési művelet
           operacion_tercero: harmadik féllel folytatott ügylet
-          operacion_vinculada: kapcsolt ügylet
           registro_retenciones: levonási nyilvántartás
           regularizacion_bienes_inversion: tárgyi eszközök korrekciója
           regularizacion_prorrata: prorrata-korrekció

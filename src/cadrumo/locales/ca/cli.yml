@@ -809,7 +809,6 @@ cli:
           datos_libro: dades dels teus registres
           decision_compensacion_iva: decisió de compensació d’IVA
           declaracion_previa: declaració anterior registrada com a presentada
-          donante_donativo: donant del donatiu
           entrada_manual: entrada manual
           entrada_relacion: entrada de relació
           evidencia_factura_compra: evidència de factura de compra
@@ -818,9 +817,7 @@ cli:
           gasto193_contribuyente: contribuent de la relació de despeses
           inventario: inventari d’existències
           miembro_atribucion: membre d'atribució de rendes
-          operacion_reembolso: operació de reemborsament
           operacion_tercero: operació amb tercers
-          operacion_vinculada: operació vinculada
           registro_retenciones: registre de retencions
           regularizacion_bienes_inversion: regularització de béns d’inversió
           regularizacion_prorrata: regularització de prorrata
