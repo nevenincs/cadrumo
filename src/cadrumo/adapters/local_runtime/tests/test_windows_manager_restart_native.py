@@ -1,23 +1,28 @@
-"""Separate native HRESULT crash control for the bound scheduler restart policy."""
+"""Native installed supervision keeps the bound Task while replacing a lost host."""
 
 from __future__ import annotations
 
-import ctypes
-import json
+import asyncio
 import sys
 import time
-from collections.abc import Generator
-from contextlib import contextmanager
-from ctypes import wintypes
 from pathlib import Path
-from typing import Protocol, cast
-from uuid import uuid4
 
 import pytest
 
-from . import test_windows_manager_stop_native as fixture
+from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
+from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.management import RuntimeManagerProcessState
+from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources, has_async_cleanup_failure
 
-_E_FAIL = 0x80004005
+from .windows_managed_runtime_fixture import (
+    installed_windows_runtime_task,
+    installed_windows_task_identity,
+    installed_windows_task_instance,
+    retain_windows_runtime_tree,
+    retain_windows_task_engine,
+    wait_windows_recovery_processes_gone,
+)
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_outbound_adapter,
@@ -27,96 +32,71 @@ pytestmark = [
 ]
 
 
-class _TaskResult(Protocol):
-    LastTaskResult: int
-
-
-def _last_result(task_name: str, identity: fixture._XmlShape) -> int:
-    def sample(folder: fixture._TaskFolder) -> int:
-        task = cast(_TaskResult, fixture._require_owned_task(folder, task_name, identity))
-        return task.LastTaskResult & 0xFFFFFFFF
-
-    return fixture._scheduler_call(sample)
-
-
-@contextmanager
-def _retained_process(first: fixture._Event) -> Generator[tuple[ctypes.CDLL, int]]:
-    kernel = fixture._win_library("kernel32")
-    kernel.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
-    kernel.OpenProcess.restype = wintypes.HANDLE
-    kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
-    kernel.CloseHandle.restype = wintypes.BOOL
-    handle = cast(int, kernel.OpenProcess(0x1000 | 0x100000, False, first["pid"]))
-    assert handle, "first native crash process handle was unavailable"
-    try:
-        kernel.GetProcessTimes.argtypes = (
-            wintypes.HANDLE,
-            ctypes.POINTER(wintypes.FILETIME),
-            ctypes.POINTER(wintypes.FILETIME),
-            ctypes.POINTER(wintypes.FILETIME),
-            ctypes.POINTER(wintypes.FILETIME),
+@pytest.mark.asyncio
+async def test_installed_task_supervisor_replaces_crashed_host_without_demand(tmp_path: Path) -> None:
+    """Actual native crash preserves the Task; confirmed Stop ends its retained engine."""
+    async with installed_windows_runtime_task(tmp_path) as task:
+        identity = installed_windows_task_identity(task.task_name, task.binding)
+        assert identity is not None
+        task.mark_launch_possible()
+        await task.manager.start()
+        deadline = time.monotonic() + 75
+        while True:
+            try:
+                observed, first_boot = await task.observe_live_process(deadline=deadline)
+                break
+            except RuntimeRefusalError as error:
+                if (
+                    error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY
+                    or has_async_cleanup_failure(error)
+                    or time.monotonic() >= deadline
+                ):
+                    task.retain_transport_cleanup(error)
+                    raise
+                await asyncio.sleep(0.05)
+        first_guid, engine_pid = await asyncio.to_thread(
+            installed_windows_task_instance, task.binding, task.task_name, identity, observed.pid
         )
-        kernel.GetProcessTimes.restype = wintypes.BOOL
-        created, exited, kernel_time, user_time = (wintypes.FILETIME() for _ in range(4))
-        assert kernel.GetProcessTimes(
-            handle, ctypes.byref(created), ctypes.byref(exited), ctypes.byref(kernel_time), ctypes.byref(user_time)
-        ), "retained crash process birth was unavailable"
-        birth = str((created.dwHighDateTime << 32) | created.dwLowDateTime)
-        assert birth == first["start"], "first native crash process incarnation changed"
-        kernel.WaitForSingleObject.argtypes = (wintypes.HANDLE, wintypes.DWORD)
-        kernel.WaitForSingleObject.restype = wintypes.DWORD
-        kernel.GetExitCodeProcess.argtypes = (wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD))
-        kernel.GetExitCodeProcess.restype = wintypes.BOOL
-        yield kernel, handle
-    finally:
-        kernel.CloseHandle(handle)
-
-
-def test_task_restarts_after_unrequested_native_hresult_failure(tmp_path: Path, request: pytest.FixtureRequest) -> None:
-    """Observe native E_FAIL and a distinct scheduler restart without requesting Stop."""
-    pythonw, owner_sid = fixture._native_prerequisites()
-    root = fixture._make_temp_root(tmp_path)
-    artifact = request.config.rootpath / ".tmp" / f"windows-task-hresult-restart-{uuid4().hex}.json"
-    record: dict[str, object] = {"native_exit_expected": _E_FAIL, "intentional_stop_before_observation": False}
-    try:
-        with fixture._registered_probe_task(
-            root=root, scenario="fail_start_hresult", pythonw=pythonw, owner_sid=owner_sid
-        ) as (task_name, identity, events_path):
-            fixture._start_task(task_name, identity)
-            events = fixture._wait_for_event(events_path, "started", timeout=12)
-            starts = tuple(event for event in events if event["kind"] == "started")
-            assert len(starts) == 1
-            first = starts[0]
-            restart_deadline = time.monotonic() + 90
-            record["first_process"] = first
-            artifact.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
-            with _retained_process(first) as (kernel, handle):
-                waited = kernel.WaitForSingleObject(handle, 12_000)
-                assert waited == 0, "first native HRESULT crash did not exit within twelve seconds"
-                exit_code = wintypes.DWORD()
-                assert kernel.GetExitCodeProcess(handle, ctypes.byref(exit_code))
-                record["first_native_exit"] = exit_code.value
-                assert exit_code.value == _E_FAIL
-            deadline = time.monotonic() + 5
-            result = _last_result(task_name, identity)
-            while result != _E_FAIL and time.monotonic() < deadline:
-                time.sleep(0.05)
-                result = _last_result(task_name, identity)
-            record["task_last_result_after_first_exit"] = result
-            assert result == _E_FAIL, "scheduler did not expose the actual first native HRESULT exit"
-            artifact.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
-            while time.monotonic() < restart_deadline:
-                starts = tuple(event for event in fixture._read_events(events_path) if event["kind"] == "started")
-                if len(starts) >= 2:
-                    break
-                time.sleep(0.25)
-            record["observed_starts"] = starts
-            assert len(starts) >= 2, "Task Scheduler did not restart an unrequested native HRESULT failure"
-            assert starts[1]["at_ns"] - first["at_ns"] >= 55_000_000_000
-            assert (starts[1]["pid"], starts[1]["start"]) != (first["pid"], first["start"])
-        record["exact_fixture_cleanup_completed"] = True
-    except BaseException as error:
-        error.add_note(json.dumps(record, sort_keys=True))
-        raise
-    finally:
-        artifact.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+        engine = await await_cancellation_complete(
+            asyncio.to_thread(retain_windows_task_engine, engine_pid, task.cleanup),
+            task_name="recovery-native-handle-capture",
+        )
+        tree = await await_cancellation_complete(
+            asyncio.to_thread(retain_windows_runtime_tree, observed.pid, task.cleanup, require_worker=False),
+            task_name="recovery-native-handle-capture",
+        )
+        first_host = next(process for process in tree if process.pid == observed.pid)
+        assert engine.alive() and all(process.alive() for process in tree)
+        first_host.terminate()
+        await wait_windows_recovery_processes_gone(tree, timeout=17)
+        assert engine.alive()
+        # This public hello precedes every fresh admission/start request.
+        replacement, replacement_boot = await task.observe_replacement_process(
+            first_host, first_boot, deadline=time.monotonic() + 90
+        )
+        assert replacement_boot != first_boot
+        replacement_guid, replacement_engine = await asyncio.to_thread(
+            installed_windows_task_instance, task.binding, task.task_name, identity, replacement.pid
+        )
+        assert replacement_guid == first_guid and replacement_engine == engine_pid
+        assert engine.alive()
+        await task.prepare_physical_cleanup()
+        assert task.stop_accepted is not None and task.stop_accepted.runtime_boot_id == replacement_boot
+        await asyncio.to_thread(engine.wait, timeout=25)
+        await asyncio.to_thread(replacement.wait, timeout=25)
+        deadline = time.monotonic() + 7
+        while time.monotonic() < deadline:
+            assert not engine.alive()
+            inspection = await task.manager.inspect()
+            assert inspection.binding_matches and inspection.process_state is RuntimeManagerProcessState.STOPPED
+            try:
+                channel = task.endpoint.connect(timeout=0.1)
+            except RuntimeRefusalError as absent:
+                assert absent.reason is RuntimeRefusalCode.ENDPOINT_NOT_READY
+            else:
+                primary = AssertionError("confirmed Stop unexpectedly exposed a new runtime")
+                await close_async_resources(
+                    RuntimeTransportCleanup(channel), task_name="unexpected-restart-channel", primary_error=primary
+                )
+                raise primary
+            await asyncio.sleep(0.05)

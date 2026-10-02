@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import date
 from pathlib import Path
@@ -23,7 +24,8 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityGenerationPin,
     SnapshotGlobalsComponentQuery,
 )
-from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreCutoverError
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
     minimal_catalogues,
     minimal_modelo,
@@ -33,7 +35,6 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
 from cadrumo_harness.mcp import server as mcp_server
 from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
-from dev.registry.pipeline.authority_publication import install_validated_authority_database
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -53,7 +54,7 @@ async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAda
     async with connected_server_and_client_session(build_server(adapter)) as client:
         tools = (await client.list_tools()).tools
         authority_tool = next(tool for tool in tools if tool.name == "authority")
-        queries = authority_tool.inputSchema["properties"]["query"]["enum"]
+        queries = authority_tool.input_schema["properties"]["query"]["enum"]
         assert set(queries) == set(requests)
         for query in queries:
             refused = await client.call_tool("authority", {"query": query, **requests[query]})
@@ -162,6 +163,7 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
     finally:
         await adapter.close()
 
+
 def _copy_and_corrupt_published_database(source_descriptor: Path, destination: Path) -> Path:
     """Copy one real publication and alter one database byte in the isolated copy."""
     descriptor = AuthorityDescriptor.read(source_descriptor)
@@ -196,21 +198,29 @@ async def test_corrupt_configured_database_refuses_without_packaged_fallback(
         await adapter.close()
 
 
-
 @pytest.mark.anyio
 async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    publish_authority_artifact: Callable[[AuthorityArtifact], AuthorityDescriptor],
 ) -> None:
     with bundled_indexed_authority().operation() as packaged:
         profile_schema = packaged.profile_schema()
+        directory = packaged.modelo_directory("130")
+    modelo = minimal_modelo(minimal_revision()).model_copy(
+        update={
+            "title_localization_key": directory.modelo.title_localization_key,
+            "official_name_localization_key": directory.modelo.official_name_localization_key,
+        }
+    )
     first_artifact = AuthorityArtifact(
-        modelos=(minimal_modelo(minimal_revision()),),
+        modelos=(modelo,),
         catalogues=minimal_catalogues(),
         identity_digest=synthetic_legal_identity("mcp-first-publication"),
         profile_schema=profile_schema,
     )
     second_artifact = replace(first_artifact, identity_digest=synthetic_legal_identity("mcp-second-publication"))
-    first = install_validated_authority_database(first_artifact, destination=tmp_path, require_current=lambda: None)
+    first = publish_authority_artifact(first_artifact)
     authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
     canonical_query = mcp_server.registry_support_matrix
     with authority.operation() as initial:
@@ -219,9 +229,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
 
     def cut_over_and_query(*, operation: PinnedAuthorityOperation) -> object:
         assert operation.pin() == first_pin
-        second = install_validated_authority_database(
-            second_artifact, destination=tmp_path, require_current=lambda: None
-        )
+        second = publish_authority_artifact(second_artifact)
         assert second.logical_generation != first.logical_generation
         assert operation.profile_decode_context().generation == first_pin
         return canonical_query(operation=operation)
@@ -245,9 +253,8 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
             assert isinstance(current.structured_content, dict)
             assert current.structured_content["logical_generation"] == second_artifact.identity_digest
             assert current.structured_content["reader_incarnation"] != first_pin.reader_incarnation
-        with authority.operation() as successor:
-            with pytest.raises(AuthorityStoreCutoverError):
-                successor.load(SnapshotGlobalsComponentQuery(), pin=first_pin)
+        with authority.operation() as successor, pytest.raises(RegistrySnapshotError, match="generation boundary"):
+            successor.load(SnapshotGlobalsComponentQuery(), pin=first_pin)
     finally:
         await adapter.close()
         authority.close()

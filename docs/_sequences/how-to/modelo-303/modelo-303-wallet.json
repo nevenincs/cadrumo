@@ -21,7 +21,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2024\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nprovenance\toperator_seed\nregister_status\t\n"
+      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2024\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nprovenance\toperator_seed\nregister_status\t\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -39,7 +39,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.iva_wallet.balance",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "active_balance": "0",
           "as_of_year": 2026,
@@ -51,7 +59,7 @@
           "unallocated_applied_amount": "0"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

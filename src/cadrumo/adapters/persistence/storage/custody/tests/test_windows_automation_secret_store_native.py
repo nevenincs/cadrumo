@@ -8,6 +8,7 @@ any item except the random accounts it creates.
 
 from __future__ import annotations
 
+import asyncio
 import ctypes
 import os
 import secrets
@@ -25,7 +26,9 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import (
     CONTROL_NAMESPACE,
     WRAP_NAMESPACE,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.automation_support import TrackedWindowsItemCleanup
 from cadrumo.application.user_profile.automation_custody_port import NativeSecretBackend
+from cadrumo.core.async_cleanup import close_async_resources
 
 pytestmark = [
     pytest.mark.integration,
@@ -144,6 +147,8 @@ def test_windows_credential_manager_replaces_and_deletes_exact_binary_item(
     replacement = SecretBytes(b"\x80" + secrets.token_bytes(47) + b"\x00\xfe")
     assert not secrets.compare_digest(first.get_secret_value(), replacement.get_secret_value())
 
+    owner = TrackedWindowsItemCleanup(store, namespace, account)
+    primary: BaseException | None = None
     try:
         store.replace(namespace, account, first)
         first_readback = store.read(namespace, account)
@@ -159,6 +164,11 @@ def test_windows_credential_manager_replaces_and_deletes_exact_binary_item(
         assert store.read(namespace, account) is None
         store.delete(namespace, account)
         assert store.read(namespace, account) is None
+    except BaseException as error:
+        primary = error
+        raise
     finally:
-        store.delete(namespace, account)
-        assert store.read(namespace, account) is None
+        asyncio.run(
+            close_async_resources(owner, task_name="synthetic-windows-credential-cleanup", primary_error=primary)
+        )
+    assert store.read(namespace, account) is None

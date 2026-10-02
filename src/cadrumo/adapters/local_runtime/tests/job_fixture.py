@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 from threading import Timer
 
@@ -56,6 +57,102 @@ async def _browser(record: Path) -> None:
             await browser.close()
 
 
+class _UnpublishedHandles:
+    """Retain the actual creation handles until the real launch receives them."""
+
+    def __init__(self, process: int, thread: int) -> None:
+        self.process: int | None = process
+        self.thread: int | None = thread
+
+    async def close(self) -> None:
+        import win32api
+
+        failures: list[BaseException] = []
+        for name in ("thread", "process"):
+            handle = getattr(self, name)
+            if handle is not None:
+                try:
+                    win32api.CloseHandle(handle)
+                except BaseException as error:
+                    failures.append(error)
+                else:
+                    setattr(self, name, None)
+        if failures:
+            raise BaseExceptionGroup("unpublished creation handles remain owned", failures)
+
+
+def _launch_owner_loss(record: Path) -> None:
+    """Hold only the return from the real native creation, before its Python owner exists."""
+    from collections.abc import Mapping, Sequence
+    from threading import Event
+
+    import pytest
+    import win32api
+    import win32job
+    import win32process
+
+    from cadrumo.core.async_cleanup import close_async_resources
+
+    from .. import windows_process
+
+    scope = WindowsProcessScope()
+    original = windows_process._launch_in_job
+    primary: BaseException | None = None
+
+    def paused_launch(
+        job: int, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
+    ) -> tuple[int, int, int]:
+        created = original(
+            job, executable=executable, arguments=arguments, directory=directory, environment=environment
+        )
+        unpublished = _UnpublishedHandles(created[0], created[1])
+        transferred = False
+        body: BaseException | None = None
+        try:
+            assert scope._children == []
+            assert scope._job == job and win32job.IsProcessInJob(created[0], job)
+            deadline = time.monotonic() + 15
+            facts = {
+                "owner_pid": os.getpid(),
+                "owner_created": win32process.GetProcessTimes(win32api.GetCurrentProcess())["CreationTime"].isoformat(),
+                "child_pid": created[2],
+                "child_created": win32process.GetProcessTimes(created[0])["CreationTime"].isoformat(),
+                "job_handle": job,
+                "published_children": len(scope._children),
+                "barrier_deadline": deadline,
+            }
+            pending = record.with_suffix(".pending")
+            pending.write_text(json.dumps(facts), encoding="utf-8")
+            pending.replace(record)
+            print("native-created-unpublished", flush=True)
+            Event().wait(max(0, deadline - time.monotonic()))
+            transferred = True
+            return created
+        except BaseException as error:
+            body = error
+            raise
+        finally:
+            if not transferred:
+                asyncio.run(
+                    close_async_resources(unpublished, task_name="unpublished-native-handles-close", primary_error=body)
+                )
+
+    try:
+        with pytest.MonkeyPatch.context() as interception:
+            interception.setattr(windows_process, "_launch_in_job", paused_launch)
+            scope.launch(
+                executable=native_python(),
+                arguments=("-c", "import time; time.sleep(60)"),
+                directory=record.parent,
+                environment=fixture_environment(),
+            )
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        asyncio.run(close_async_resources(scope, task_name="native-launch-owner-scope-close", primary_error=primary))
+
+
 def main() -> None:
     """Keep every synthetic process finite even if the outer test fails."""
     lifetime = Timer(20, os._exit, args=(124,))
@@ -63,7 +160,9 @@ def main() -> None:
     lifetime.start()
     mode, filename = sys.argv[1:]
     record = Path(filename)
-    if mode in {"owner", "browser-owner"}:
+    if mode == "launch-owner-loss":
+        _launch_owner_loss(record)
+    elif mode in {"owner", "browser-owner"}:
         scope = WindowsProcessScope()
         try:
             scope.launch(

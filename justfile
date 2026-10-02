@@ -106,36 +106,19 @@ doctor-python:
 doctor-python:
     uv pip check --python .venv/bin/python
 
-# Provision both browser channels the codebase needs (the post-install step
-# `uv sync` does not perform). Bundled Chromium: some tests launch it directly
-# regardless of the configured channel. The `chrome` channel: AEAT browser
-# automation is pinned to `channel: "chrome"` by ADR 2026-04-12-playwright-anti-
-# bot-adr (anti-bot fingerprint reasons; bundled Chromium is the explicit
-# fallback only if system Chrome breaks). Playwright does NOT download a private
-# copy of Chrome for the `chrome` channel — it installs/detects the SYSTEM
-# Google Chrome. On Linux this shells out to the OS package manager and
-# typically needs root/apt access; a non-root Linux box may need
-# `google-chrome-stable` pre-installed by an administrator, or rerun this
-# recipe with elevation. Verify the result with `just doctor-browser`.
-#
-# The `chrome` install runs with `CI` removed from its environment. Under `CI`
-# Playwright reinstalls the channel even when Chrome is already present, which
-# needs root; a CI runner whose host provisions `google-chrome-stable` cannot
-# escalate, so the step failed there on every run. Without `CI` an installed
-# Chrome is left alone and a missing one is installed exactly as before.
+# Provision Playwright's bundled Chromium (the post-install step `uv sync` does
+# not perform): it is the only browser AEAT automation and the browser tests
+# launch. Verify the result with `just doctor-browser`.
 
-[doc('Provision optional Playwright Chromium and system Chrome browser channels.')]
+[doc('Provision the Playwright Chromium browser.')]
 [group('setup')]
 setup-browser:
     uv run --no-sync playwright install chromium
-    uv run --no-sync python -c "import os, subprocess, sys; env = {k: v for k, v in os.environ.items() if k != 'CI'}; sys.exit(subprocess.call([sys.executable, '-m', 'playwright', 'install', 'chrome'], env=env))"
 
-# Verify the local environment is correctly provisioned with the CONFIGURED
-# Playwright browser channel (per `cadrumo_browser_channel`, default `chrome`)
-# and its dependencies, per ADR 2026-04-12-playwright-anti-bot-adr. Performs a
-# real headless launch-and-close of that channel (never hardcodes "chrome" —
-# reads the live setting) and prints the exact remediation command on failure.
-[doc('Probe the configured browser channel with a real read-only launch.')]
+# Verify the local environment is correctly provisioned with Playwright's
+# bundled Chromium and its dependencies. Performs a real headless
+# launch-and-close and prints the exact remediation command on failure.
+[doc('Probe the bundled Chromium with a real read-only launch.')]
 [group('doctor')]
 doctor-browser:
     uv run --no-sync python -m dev.env.playwright_doctor

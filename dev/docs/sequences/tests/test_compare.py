@@ -47,7 +47,7 @@ from ..golden_store import (
     write_golden,
 )
 from ..parser import parse_sequence
-from ..runner import FrameExecution, SequenceTranscript, execute_sequence
+from ..runner import CapturedValue, FrameExecution, SequenceTranscript, execute_sequence
 from ..schema import FrameKind, ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -673,3 +673,187 @@ class TestStepDescriptionGoldenImmunity:
 
         rerun = execute_sequence(annotated, sandbox_root=tmp_path / "annotated-run")
         assert check_transcript(annotated, rerun, golden, page=_PAGE) == ()
+
+
+class TestExplicitSandboxPathExpectations:
+    @pytest.mark.parametrize("workdir", ["/sandbox/workdir", r"C:\sandbox\workdir"])
+    @pytest.mark.parametrize(
+        ("destination", "accepted"),
+        [
+            ("exact", True),
+            ("other-root", False),
+            ("sibling", False),
+            ("wrong-basename", False),
+            ("relative", False),
+        ],
+    )
+    def test_export_destination_requires_the_exact_runner_workdir(
+        self,
+        workdir: str,
+        destination: str,
+        *,
+        accepted: bool,
+    ) -> None:
+        separator = "\\" if "\\" in workdir else "/"
+        output_path = {
+            "exact": workdir + separator + "modelo-349.boe",
+            "other-root": workdir.replace("sandbox", "elsewhere") + separator + "modelo-349.boe",
+            "sibling": workdir + "-other" + separator + "modelo-349.boe",
+            "wrong-basename": workdir + separator + "modelo-303.boe",
+            "relative": "modelo-349.boe",
+        }[destination]
+        envelope: dict[str, JsonValue] = {
+            "result": {"output_path": output_path, "byte_size": 1500, "format": "fichero-boe"},
+        }
+        frame = FrameExecution(
+            kind=FrameKind.RESULT,
+            command_line="aeat --format json app modelo export --output ./modelo-349.boe",
+            argv=("aeat", "--format", "json", "app", "modelo", "export", "--output", "./modelo-349.boe"),
+            exit_code=0,
+            output=json.dumps(envelope),
+            envelope=envelope,
+            envelope_source="stdout",
+        )
+        transcript = SequenceTranscript(
+            sequence_id="exact-export-path",
+            profile_id="docs-sequence-sandbox",
+            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            storage_root=workdir.rsplit(separator, 1)[0] + separator + "storage",
+            workdir=workdir,
+            frames=(frame,),
+        )
+        sequence = parse_sequence(
+            sequence_id="exact-export-path",
+            options={"verify": "Verify the export reaches the caller workdir with its expected filename."},
+            body=(
+                frame.command_line.replace("aeat ", "@result aeat ", 1) + "\n"
+                '@expect result.output_path == "<sandbox-workdir>/modelo-349.boe"\n'
+                "@expect result.byte_size == 1500\n"
+                '@expect result.format == "fichero-boe"\n'
+                "@expect exit_code == 0\n"
+            ),
+        )
+        problems = evaluate_expectations(sequence, transcript, page=_PAGE)
+        if accepted:
+            assert problems == ()
+        else:
+            assert len(problems) == 1
+            assert "result.output_path" in problems[0]
+
+    def test_raw_scalar_expectations_do_not_normalise_paths(self) -> None:
+        envelope: dict[str, JsonValue] = {"result": {"output_path": "/sandbox/workdir/modelo-349.boe"}}
+        frame = FrameExecution(
+            kind=FrameKind.RESULT,
+            command_line="aeat --format json app modelo export --output ./modelo-349.boe",
+            argv=("aeat", "--format", "json", "app", "modelo", "export", "--output", "./modelo-349.boe"),
+            exit_code=0,
+            output=json.dumps(envelope),
+            envelope=envelope,
+            envelope_source="stdout",
+        )
+        transcript = SequenceTranscript(
+            sequence_id="raw-export-path",
+            profile_id="docs-sequence-sandbox",
+            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            storage_root="/sandbox/storage",
+            workdir="/sandbox/workdir",
+            frames=(frame,),
+        )
+        sequence = parse_sequence(
+            sequence_id="raw-export-path",
+            options={"verify": "Verify the literal absolute path remains an exact scalar expectation."},
+            body=(
+                "@result " + frame.command_line + '\n@expect result.output_path == "/sandbox/workdir/modelo-349.boe"\n'
+            ),
+        )
+        assert evaluate_expectations(sequence, transcript, page=_PAGE) == ()
+
+    @pytest.mark.parametrize("workdir", ["/sandbox/workdir", r"C:\sandbox\workdir"])
+    @pytest.mark.parametrize("captured_token", [False, True])
+    def test_captured_paths_remain_raw_even_when_the_capture_contains_a_sandbox_token(
+        self,
+        workdir: str,
+        *,
+        captured_token: bool,
+    ) -> None:
+        separator = "\\" if "\\" in workdir else "/"
+        native_path = workdir + separator + "modelo-349.boe"
+        captured_path = "<sandbox-workdir>/modelo-349.boe" if captured_token else native_path
+        setup_envelope: dict[str, JsonValue] = {"result": {"output_path": captured_path}}
+        result_envelope: dict[str, JsonValue] = {"result": {"output_path": native_path}}
+        setup = FrameExecution(
+            kind=FrameKind.SETUP,
+            command_line="aeat --format json config profile status",
+            argv=("aeat", "--format", "json", "config", "profile", "status"),
+            exit_code=0,
+            output=json.dumps(setup_envelope),
+            envelope=setup_envelope,
+            envelope_source="stdout",
+            captured=(CapturedValue(name="destination", json_path="result.output_path", value=captured_path),),
+        )
+        result = FrameExecution(
+            kind=FrameKind.RESULT,
+            command_line="aeat --format json app modelo export --output ./modelo-349.boe",
+            argv=("aeat", "--format", "json", "app", "modelo", "export", "--output", "./modelo-349.boe"),
+            exit_code=0,
+            output=json.dumps(result_envelope),
+            envelope=result_envelope,
+            envelope_source="stdout",
+        )
+        transcript = SequenceTranscript(
+            sequence_id="captured-export-path",
+            profile_id="docs-sequence-sandbox",
+            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            storage_root=workdir.rsplit(separator, 1)[0] + separator + "storage",
+            workdir=workdir,
+            frames=(setup, result),
+        )
+        sequence = parse_sequence(
+            sequence_id="captured-export-path",
+            options={"verify": "Compare the earlier captured path as a raw scalar."},
+            body=(
+                "@setup " + setup.command_line + "\n"
+                "@capture destination result.output_path\n"
+                "@result " + result.command_line + "\n"
+                '@expect result.output_path == "{destination}"\n'
+            ),
+        )
+        problems = evaluate_expectations(sequence, transcript, page=_PAGE)
+        if captured_token:
+            assert len(problems) == 1
+            assert "result.output_path" in problems[0]
+        else:
+            assert problems == ()
+
+    @pytest.mark.parametrize("separator", ["/", "\\"])
+    def test_explicit_sandbox_path_rejects_pre_tokenized_live_output(self, separator: str) -> None:
+        envelope: dict[str, JsonValue] = {
+            "result": {"output_path": "<sandbox-workdir>" + separator + "modelo-349.boe"},
+        }
+        frame = FrameExecution(
+            kind=FrameKind.RESULT,
+            command_line="aeat --format json app modelo export --output ./modelo-349.boe",
+            argv=("aeat", "--format", "json", "app", "modelo", "export", "--output", "./modelo-349.boe"),
+            exit_code=0,
+            output=json.dumps(envelope),
+            envelope=envelope,
+            envelope_source="stdout",
+        )
+        transcript = SequenceTranscript(
+            sequence_id="pre-tokenized-export-path",
+            profile_id="docs-sequence-sandbox",
+            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            storage_root="/sandbox/storage",
+            workdir="/sandbox/workdir",
+            frames=(frame,),
+        )
+        sequence = parse_sequence(
+            sequence_id="pre-tokenized-export-path",
+            options={"verify": "Require a genuine native output destination."},
+            body=(
+                "@result " + frame.command_line + '\n@expect result.output_path == "<sandbox-workdir>/modelo-349.boe"\n'
+            ),
+        )
+        problems = evaluate_expectations(sequence, transcript, page=_PAGE)
+        assert len(problems) == 1
+        assert "native destination" in problems[0]

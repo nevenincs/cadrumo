@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import struct
+from typing import override
 from uuid import UUID, uuid4
 
 import pytest
@@ -18,7 +20,9 @@ from cadrumo.application.runtime.contracts import (
 )
 from cadrumo.application.runtime.management_status import RuntimeListenerState
 from cadrumo.application.runtime.transport import RuntimeTransportStatus
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures, close_async_resources
 
+from ..framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
 from ..management_status import probe_runtime_listener
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -128,3 +132,119 @@ def test_missing_endpoint_is_unavailable_and_root_mismatch_never_connects() -> N
     assert different.connects == 0
     untrusted = _Endpoint(refusal=RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
     assert probe_runtime_listener(untrusted, expected=expected) is RuntimeListenerState.REFUSED
+
+
+class _ReleaseFaultChannel(_Channel):
+    """Expose native release faults through actual verified framing."""
+
+    def __init__(
+        self,
+        *,
+        expected: RuntimeClientHello,
+        failures: int,
+        primary: BaseException | None = None,
+        handshake: bool = False,
+        release_cancellation: asyncio.CancelledError | None = None,
+    ) -> None:
+        super().__init__(expected=expected, accepting=True)
+        self.failures = failures
+        self.primary = primary
+        self.handshake = handshake
+        self.release_cancellation = release_cancellation
+        self.close_calls = 0
+
+    @override
+    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
+        super().write_all(payload, deadline=deadline)
+        is_status = b'"action":"runtime_status"' in payload
+        if self.primary is not None and is_status != self.handshake:
+            raise self.primary
+
+    @override
+    def close(self) -> None:
+        self.close_calls += 1
+        if self.close_calls <= self.failures:
+            if self.release_cancellation is not None:
+                raise self.release_cancellation
+            raise OSError("synthetic probe release failure")
+        super().close()
+
+
+@pytest.mark.asyncio
+async def test_probe_success_retains_failed_verified_connection_for_one_retry() -> None:
+    expected = RuntimeClientHello(product_version="test", storage_identity=_IDENTITY)
+    channel = _ReleaseFaultChannel(expected=expected, failures=1)
+    with pytest.raises(AsyncResourceCleanupError) as failed:
+        probe_runtime_listener(_Endpoint(channel), expected=expected)
+    assert channel.requests == 1 and channel.close_calls == 1 and not channel.closed
+    (owner,) = failed.value.resources
+    assert isinstance(owner, RuntimeTransportCleanup)
+    assert isinstance(owner.resource, VerifiedRuntimeConnection)
+    await failed.value.retry_cleanup()
+    await failed.value.retry_cleanup()
+    assert owner.released and channel.closed and channel.close_calls == 2
+    assert channel.requests == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("handshake", [False, True], ids=["status", "handshake"])
+@pytest.mark.parametrize("cancelled", [False, True], ids=["typed-primary", "native-cancellation"])
+async def test_probe_preserves_exact_primary_and_original_failed_framing_owner(
+    handshake: bool, cancelled: bool
+) -> None:
+    expected = RuntimeClientHello(product_version="test", storage_identity=_IDENTITY)
+    primary = (
+        asyncio.CancelledError("native-probe-cancellation")
+        if cancelled
+        else RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    )
+    channel = _ReleaseFaultChannel(expected=expected, failures=2, primary=primary, handshake=handshake)
+    with pytest.raises(type(primary)) as failed:
+        probe_runtime_listener(_Endpoint(channel), expected=expected)
+    assert failed.value is primary
+    assert channel.close_calls == 1 and not channel.closed
+    (retained,) = async_cleanup_failures(primary)
+    (owner,) = retained.resources
+    assert owner is primary.__dict__["_runtime_transport_cleanup"]
+    assert isinstance(owner, RuntimeTransportCleanup)
+    assert isinstance(owner.resource, VerifiedRuntimeConnection)
+    with pytest.raises(AsyncResourceCleanupError) as retry_failed:
+        await retained.retry_cleanup()
+    assert retry_failed.value.resources == (owner,) and channel.close_calls == 2
+    await retry_failed.value.retry_cleanup()
+    await retry_failed.value.retry_cleanup()
+    assert owner.released and channel.closed and channel.close_calls == 3
+
+
+@pytest.mark.asyncio
+async def test_probe_preserves_terminal_native_release_cancellation() -> None:
+    expected = RuntimeClientHello(product_version="test", storage_identity=_IDENTITY)
+    primary = asyncio.CancelledError("native-probe-release-cancellation")
+    earlier = _EarlierProbeOwner()
+    with pytest.raises(asyncio.CancelledError) as prior:
+        await close_async_resources(earlier, task_name="earlier-probe-release", primary_error=primary)
+    assert prior.value is primary and earlier.calls == 1
+    channel = _ReleaseFaultChannel(expected=expected, failures=1, release_cancellation=primary)
+    with pytest.raises(asyncio.CancelledError) as failed:
+        probe_runtime_listener(_Endpoint(channel), expected=expected)
+    assert failed.value is primary and channel.close_calls == 1
+    (retained,) = async_cleanup_failures(primary)
+    assert primary.__dict__["async_cleanup_error"] is primary.__dict__["cleanup_error"] is retained
+    assert earlier in retained.resources and len(retained.resources) == 2
+    await retained.retry_cleanup()
+    assert channel.closed and channel.close_calls == earlier.calls == 2 and earlier.closed
+
+
+class _EarlierProbeOwner:
+    """An actual earlier failed owner attached by canonical cancellation cleanup."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+        self.closed = False
+
+    async def close(self) -> None:
+        assert not self.closed
+        self.calls += 1
+        if self.calls == 1:
+            raise OSError("earlier synthetic probe release failure")
+        self.closed = True

@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 import math
 import time
-from collections.abc import Callable
-from typing import Protocol
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
+from typing import Literal, Protocol
 
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
@@ -16,7 +17,53 @@ from ...application.runtime.contracts import (
 )
 from ...application.runtime.management import RuntimeUserManager
 from ...core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
+from ...core.logging import LogExtra, get_logger
 from .framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
+
+_LOGGER = get_logger(__name__)
+
+
+def _log_startup_phase(
+    phase: Literal["existing_connect", "manager_inspect", "manager_start", "readiness_wait"],
+    transition: Literal["enter", "leave"],
+    elapsed: float,
+    *,
+    primary_error: BaseException | None = None,
+) -> None:
+    """Keep diagnostic failures from replacing an existing product primary."""
+    try:
+        _LOGGER.info(
+            "runtime_startup phase=%s transition=%s elapsed_seconds=%.6f",
+            phase,
+            transition,
+            elapsed,
+            extra=LogExtra(
+                {"startup_phase": phase, "transition": transition, "elapsed_seconds": elapsed}
+            ).for_logging(),
+        )
+    except Exception:
+        return
+    except BaseException:
+        if primary_error is None:
+            raise
+
+
+@contextmanager
+def _startup_phase(
+    phase: Literal["existing_connect", "manager_inspect", "manager_start", "readiness_wait"],
+) -> Generator[None]:
+    """Emit only fixed phase names and elapsed native monotonic seconds."""
+    started = time.monotonic()
+    primary: list[BaseException] = []
+    _log_startup_phase(phase, "enter", 0.0)
+    try:
+        yield
+    except BaseException as error:
+        primary.append(error)
+        raise
+    finally:
+        elapsed = time.monotonic() - started
+        _log_startup_phase(phase, "leave", elapsed, primary_error=primary[0] if primary else None)
 
 
 class RuntimeEndpointConnector(Protocol):
@@ -112,17 +159,21 @@ class RuntimeLaunchDoor:
         if not math.isfinite(timeout) or timeout <= 0:
             raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
         deadline = time.monotonic() + timeout
+        opened: VerifiedRuntimeConnection | None = None
         try:
             async with asyncio.timeout(timeout):
                 try:
-                    return await self._connect(deadline)
+                    with _startup_phase("existing_connect"):
+                        opened = await self._connect(deadline)
+                        return opened
                 except RuntimeRefusalError as error:
                     if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY:
                         raise
                 manager = self._manager if self._manager_factory is None else self._manager_factory()
                 if manager is None:
                     raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-                current = await manager.inspect()
+                with _startup_phase("manager_inspect"):
+                    current = await manager.inspect()
                 if not current.available or not current.provisioned:
                     raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
                 if not current.binding_matches:
@@ -130,17 +181,27 @@ class RuntimeLaunchDoor:
                 # login_autostart is deliberately not an admission condition.
                 # Native manager adapters re-check the binding before control.
                 _remaining(deadline)
-                await manager.start()
-                while True:
-                    _remaining(deadline)
-                    try:
-                        return await self._connect(deadline)
-                    except RuntimeRefusalError as error:
-                        if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY:
-                            raise
-                    await asyncio.sleep(min(0.05, _remaining(deadline)))
+                with _startup_phase("manager_start"):
+                    await manager.start()
+                with _startup_phase("readiness_wait"):
+                    while True:
+                        _remaining(deadline)
+                        try:
+                            opened = await self._connect(deadline)
+                            return opened
+                        except RuntimeRefusalError as error:
+                            if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY:
+                                raise
+                        await asyncio.sleep(min(0.05, _remaining(deadline)))
         except TimeoutError as error:
             refusal = RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
             if isinstance(error.__cause__, asyncio.CancelledError):
                 _carry_cleanup_owner(refusal, error.__cause__)
             raise refusal from error
+
+        except BaseException as error:
+            if opened is not None:
+                await close_async_resources(
+                    RuntimeTransportCleanup(opened), task_name="runtime-startup-diagnostic-close", primary_error=error
+                )
+            raise

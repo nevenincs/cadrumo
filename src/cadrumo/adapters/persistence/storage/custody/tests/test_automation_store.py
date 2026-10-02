@@ -45,7 +45,10 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import (
     AutomationControlStore,
 )
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
-from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
+from cadrumo.adapters.persistence.storage.custody.tests.automation_support import (
+    MemoryNativePort,
+    TrackedWindowsItemCleanup,
+)
 from cadrumo.adapters.persistence.storage.custody.zeroise import zeroise
 from cadrumo.adapters.persistence.storage.master_key.active_session import get_active_master_key
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
@@ -64,7 +67,6 @@ from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyPort,
     AutomationGrantMaterial,
     AutomationKeyVerifier,
-    AutomationSecretStore,
     NativeSecretBackend,
 )
 from cadrumo.application.user_profile.capsule_archive import (
@@ -483,27 +485,6 @@ class TrackedWindowsStore(WindowsAutomationSecretStore):
     def replace(self, namespace: str, account: str, value: SecretBytes) -> None:
         self.created.add((namespace, account))
         super().replace(namespace, account, value)
-
-
-@dataclass
-class TrackedWindowsItemCleanup:
-    """Retain one exact synthetic item until native deletion and absence succeed."""
-
-    native: AutomationSecretStore
-    namespace: str
-    account: str
-    released: bool = False
-
-    def _release(self) -> None:
-        if not self.released:
-            self.native.delete(self.namespace, self.account)
-            if self.native.read(self.namespace, self.account) is not None:
-                raise AutomationCustodyError(AutomationCustodyCode.INVALID)
-            self.released = True
-
-    async def close(self) -> None:
-        """Keep synchronous native calls off the cleanup event loop."""
-        await asyncio.to_thread(self._release)
 
 
 async def close_tracked_windows_items(native: TrackedWindowsStore, *, primary_error: BaseException | None) -> None:

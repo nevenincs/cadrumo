@@ -51,7 +51,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "applicability_guard_bypassed": false,
           "bucket_id": "<bucket-id>",
@@ -83,7 +91,7 @@
           "work_unit_id": "66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -257,6 +265,13 @@
               "legal_refs": "ley-58-2003:art-27.2"
             },
             "message": "WARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
@@ -1627,7 +1642,8 @@
           {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"binding_id":"34e394179c5fc6b1baf01a7b23ffe80f2d681f95dff3ccb841ff0462fa620b0a","diagnostic_reason_code":"missing_transaction_evidence","kind":"advisory","legal_refs":"ley-37-1992:art-97, rd-1619-2012:art-2","severity":"warning","source_kind_code":"output_iva_evidence","source_refs":"boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"},"message":"An output transaction has no supporting evidence (binding 34e394179c5fc6b1baf01a7b23ffe80f2d681f95dff3ccb841ff0462fa620b0a, source output_iva_evidence, reason missing_transaction_evidence).","severity":"warning"},
           {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"binding_id":"3b3cb00c8570e633605d04fcdde9c8a43314a4109ea8c8933cbb3fb9b6d0432c","diagnostic_reason_code":"missing_transaction_evidence","kind":"advisory","legal_refs":"ley-37-1992:art-97, rd-1619-2012:art-2","severity":"warning","source_kind_code":"output_iva_evidence","source_refs":"boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"},"message":"An output transaction has no supporting evidence (binding 3b3cb00c8570e633605d04fcdde9c8a43314a4109ea8c8933cbb3fb9b6d0432c, source output_iva_evidence, reason missing_transaction_evidence).","severity":"warning"},
           {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"binding_id":"686e740b2d1feb1b0d9976809469fc0043b31869d9964f5f09d04150e7c11afc","diagnostic_reason_code":"missing_transaction_evidence","kind":"advisory","legal_refs":"ley-37-1992:art-97, rd-1619-2012:art-2","severity":"warning","source_kind_code":"output_iva_evidence","source_refs":"boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"},"message":"An output transaction has no supporting evidence (binding 686e740b2d1feb1b0d9976809469fc0043b31869d9964f5f09d04150e7c11afc, source output_iva_evidence, reason missing_transaction_evidence).","severity":"warning"},
-          {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"binding_id":"6a5063cd02ff0c94af2c67ad1040fd2f9ad674b4c3a8dfdeec652db84e5a4d98","diagnostic_reason_code":"missing_transaction_evidence","kind":"advisory","legal_refs":"ley-37-1992:art-97, rd-1619-2012:art-2","severity":"warning","source_kind_code":"output_iva_evidence","source_refs":"boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"},"message":"An output transaction has no supporting evidence (binding 6a5063cd02ff0c94af2c67ad1040fd2f9ad674b4c3a8dfdeec652db84e5a4d98, source output_iva_evidence, reason missing_transaction_evidence).","severity":"warning"}
+          {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"binding_id":"6a5063cd02ff0c94af2c67ad1040fd2f9ad674b4c3a8dfdeec652db84e5a4d98","diagnostic_reason_code":"missing_transaction_evidence","kind":"advisory","legal_refs":"ley-37-1992:art-97, rd-1619-2012:art-2","severity":"warning","source_kind_code":"output_iva_evidence","source_refs":"boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"},"message":"An output transaction has no supporting evidence (binding 6a5063cd02ff0c94af2c67ad1040fd2f9ad674b4c3a8dfdeec652db84e5a4d98, source output_iva_evidence, reason missing_transaction_evidence).","severity":"warning"},
+          {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
         ],
         "result": {
           "calculation_revision_id": "06bb88cc4143da3baffba8034845b9c97655cb8f9e9a6ecd041f50129eeac622",

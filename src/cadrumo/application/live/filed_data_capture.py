@@ -2583,7 +2583,16 @@ async def pull_filed_history(
             on_session_write=on_session_write,
             events=events,
         )
-    stage_failures = tuple(failure for failure in (iva_wallet.failure, notifications.failure) if failure is not None)
+    nominated_coordinates = set(walk_pairs)
+    # Keep rectangular capture refusals that have no discovered pair to carry them.
+    capture_stage_failures = tuple(
+        f"filed_capture: modelo {failure.modelo} ejercicio {failure.year}: {failure.error_type}"
+        for failure in capture.failures
+        if (failure.modelo, failure.year) not in nominated_coordinates
+    )
+    stage_failures = capture_stage_failures + tuple(
+        failure for failure in (iva_wallet.failure, notifications.failure) if failure is not None
+    )
 
     return FiledHistoryOnboardingRun(
         pairs=pairs,

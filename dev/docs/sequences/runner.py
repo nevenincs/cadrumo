@@ -564,6 +564,9 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
         )
     finally:
         session.close()
+    # A settings override provides a route; it does not publish the durable
+    # CLI default whose logout/delete walkthroughs observe real transitions.
+    ProfileCapsuleLifecycle().select(SANDBOX_PROFILE_ID)
     with open_test_profile_session(SANDBOX_PROFILE_ID):
         from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
         from cadrumo.application.filing.retention import try_record_filing_retention_snapshot

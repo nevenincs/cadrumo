@@ -92,9 +92,7 @@ def windows_task_xml(binding: RuntimeServiceBinding, *, login_autostart: bool) -
             idle = ElementTree.SubElement(settings, "IdleSettings")
             element(idle, "StopOnIdleEnd", "true")
             element(idle, "RestartOnIdle", "false")
-    restart = ElementTree.SubElement(settings, "RestartOnFailure")
-    element(restart, "Interval", "PT1M")
-    element(restart, "Count", "3")
+    # The isolated native launcher is the sole bounded host-restart owner.
     actions = ElementTree.SubElement(task, "Actions", {"Context": "Owner"})
     action = ElementTree.SubElement(actions, "Exec")
     element(action, "Command", binding.executable)

@@ -16,6 +16,7 @@ from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
 from ...adapters.local_runtime.framing import RuntimeTransportCleanup
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.management import RuntimeManagerKind, RuntimeManagerProcessState
 from ...application.runtime.management_status import (
     RuntimeListenerState,
@@ -25,6 +26,7 @@ from ...application.runtime.management_status import (
 from ...core.async_cleanup import (
     AsyncCloseable,
     AsyncResourceCleanupError,
+    async_cleanup_failures,
     await_cancellation_complete,
     close_async_resources,
 )
@@ -127,12 +129,8 @@ class RuntimeManagementCleanup:
 
     def retain(self, error: BaseException) -> None:
         """Adopt canonical owners directly, without adding an aggregate retry owner."""
-        seen: set[int] = set()
         retained: AsyncResourceCleanupError | None = None
-        for candidate in (error, error.__dict__.get("async_cleanup_error"), error.__dict__.get("cleanup_error")):
-            if not isinstance(candidate, AsyncResourceCleanupError) or id(candidate) in seen:
-                continue
-            seen.add(id(candidate))
+        for candidate in async_cleanup_failures(error):
             retained = candidate if retained is None else retained.merged_with(candidate)
             for resource in candidate.resources:
                 if self._retired.get(id(resource)) is resource:
@@ -395,20 +393,47 @@ class RuntimeManagementScreen(ModalScreen[None]):
             button.disabled = True
         self._clear()
         self.query_one("#runtime-management-status", Static).update(tr("tui.runtime_management.busy"))
+        failures: list[BaseException] = []
+
+        def read_outcome() -> RuntimeManagementSnapshot | None:
+            try:
+                return _read_off_loop(self._reader, action)
+            except BaseException as error:
+                failures.append(error)
+                return None
+
         try:
-            observed = await await_cancellation_complete(
-                asyncio.to_thread(_read_off_loop, self._reader, action), task_name="tui-runtime-management-status"
-            )
+            try:
+                observed = await await_cancellation_complete(
+                    asyncio.to_thread(read_outcome), task_name="tui-runtime-management-status"
+                )
+            except asyncio.CancelledError as cancellation:
+                if failures:
+
+                    async def failed_read() -> None:
+                        raise failures[0]
+
+                    await await_cancellation_complete(
+                        failed_read(), task_name="tui-runtime-management-status-failure", cancellation=cancellation
+                    )
+                raise
+            if failures:
+                raise failures[0]
+            if observed is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
             snapshot = RuntimeManagementSnapshot.model_validate(observed.model_dump(mode="python"), strict=True)
             if self._active():
                 self._render_snapshot(snapshot)
                 self.query_one("#runtime-management-status", Static).update(self._stop_status())
-        except (Exception, asyncio.CancelledError):
+        except (Exception, asyncio.CancelledError) as error:
+            self._cleanup.retain(error)
             if self._active():
                 self._clear()
                 self.query_one("#runtime-management-status", Static).update(
                     self._stop_status() or tr("tui.runtime_management.refused")
                 )
+            if isinstance(error, asyncio.CancelledError):
+                raise
         finally:
             self._busy = False
             if self._active():

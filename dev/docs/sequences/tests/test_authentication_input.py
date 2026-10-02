@@ -29,6 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
         (("config", "profile", "view", "--help"), False),
         (("not-a-command",), False),
         (("--profile-secrets-stdin", "config", "profile", "view"), False),
+        (("--profile-auth-method", "password", "config", "profile", "view"), False),
         (("--profile-secrets-fd=9", "config", "profile", "view"), False),
         (("config", "profile", "resume", "--secrets-stdin"), False),
     ],

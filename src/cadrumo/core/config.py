@@ -439,10 +439,6 @@ class Settings(CadrumoLlmSettings):
     )
 
     # ── Browser Automation ──────────────────────────────────────────────────
-    cadrumo_browser_channel: str = Field(
-        default="chrome",
-        description="Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge')",
-    )
     cadrumo_browser_headless: bool = Field(
         default=True,
         description="Run browser in headless mode",

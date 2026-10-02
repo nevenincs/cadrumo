@@ -19,6 +19,8 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
+from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.management import RuntimeServiceBinding
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
@@ -27,7 +29,7 @@ from .. import windows_managed_stop, windows_manager
 from ..service_definitions import runtime_service_name, windows_task_xml
 from ..windows_managed_stop import WindowsManagedRuntimeStop
 from ..windows_manager import WindowsTaskManager, _RegisteredTask, _RunningTask, _TaskFolder, _TaskService
-from . import test_windows_manager_stop_native as stop_probe
+from . import windows_managed_runtime_fixture as stop_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -302,7 +304,7 @@ def probe_ports(monkeypatch: pytest.MonkeyPatch) -> _ProbePorts:
     def register(_name: str, xml: str, _owner: str) -> str:
         return xml
 
-    def stop(_name: str, _identity: stop_probe._XmlShape) -> None:
+    def stop(_name: str, _identity: stop_probe.WindowsTaskXmlShape) -> None:
         ports.stops += 1
         ports.entered.set()
         try:
@@ -313,30 +315,30 @@ def probe_ports(monkeypatch: pytest.MonkeyPatch) -> _ProbePorts:
         finally:
             ports.finished.set()
 
-    def wait(_path: Path, kind: str, *, timeout: float) -> tuple[stop_probe._Event, ...]:
+    def wait(_path: Path, kind: str, *, timeout: float) -> tuple[stop_probe.WindowsFixtureEvent, ...]:
         assert timeout in {8, 12}
         assert ports.entered.wait(5)
         if ports.wait_error is not None:
             raise ports.wait_error
         return ({"at_ns": 1, "kind": kind, "pid": 1, "start": "1"},)
 
-    def release(_root: Path, _process: stop_probe._Event) -> None:
+    def release(_root: Path, _process: stop_probe.WindowsFixtureEvent) -> None:
         if ports.release_error is not None:
             raise ports.release_error
         if ports.wait_error is None:
             ports.release.set()
 
-    def cleanup(_name: str, _identity: stop_probe._XmlShape, _root: Path, _path: Path) -> None:
+    def cleanup(_name: str, _identity: stop_probe.WindowsTaskXmlShape, _root: Path, _path: Path) -> None:
         assert ports.finished.is_set()
         ports.cleanups += 1
 
     monkeypatch.setattr(stop_probe, "WindowsRuntimeEndpoint", endpoint)
-    monkeypatch.setattr(stop_probe, "_require_temp_child", lambda root: root)
-    monkeypatch.setattr(stop_probe, "_registered_task_xml", register)
-    monkeypatch.setattr(stop_probe, "_stop_task", stop)
-    monkeypatch.setattr(stop_probe, "_wait_for_event", wait)
-    monkeypatch.setattr(stop_probe, "_release_drain", release)
-    monkeypatch.setattr(stop_probe, "_cleanup_task", cleanup)
+    monkeypatch.setattr(stop_probe, "require_windows_fixture_root", lambda root: root)
+    monkeypatch.setattr(stop_probe, "register_windows_probe_task", register)
+    monkeypatch.setattr(stop_probe, "stop_exact_windows_task", stop)
+    monkeypatch.setattr(stop_probe, "wait_windows_probe_event", wait)
+    monkeypatch.setattr(stop_probe, "release_windows_probe_drain", release)
+    monkeypatch.setattr(stop_probe, "cleanup_windows_probe_task", cleanup)
     return ports
 
 
@@ -357,20 +359,20 @@ def test_probe_failure_retains_original_stop_until_joined_before_cleanup(
         if terminal == "error"
         else None
     )
-    owner: stop_probe._ProbeTaskCleanup | None = None
-    call: stop_probe._NativeCall | None = None
-    prior = stop_probe._PROBE_TASK_CLEANUP.get()
+    owner: stop_probe.WindowsProbeTaskCleanup | None = None
+    call: stop_probe.WindowsSchedulerCall | None = None
+    prior = stop_probe.WINDOWS_PROBE_TASK_CLEANUP.get()
     try:
         with (
             pytest.raises(AssertionError) as caught,
-            stop_probe._registered_probe_task(
+            stop_probe.registered_windows_probe_task(
                 root=tmp_path, scenario="graceful", pythonw=Path(sys.executable), owner_sid="S-1-5-21-1-2-3-1001"
             ) as (name, identity, events),
         ):
-            owner = stop_probe._PROBE_TASK_CLEANUP.get()
+            owner = stop_probe.WINDOWS_PROBE_TASK_CLEANUP.get()
             assert owner is not None
             owner.settlement_seconds = 0
-            stop_probe._stop_and_release_drain(
+            stop_probe.stop_windows_probe_and_release_drain(
                 name, identity, tmp_path, events, {"at_ns": 1, "kind": "window_ready", "pid": 1, "start": "1"}
             )
         assert caught.value is primary
@@ -378,7 +380,7 @@ def test_probe_failure_retains_original_stop_until_joined_before_cleanup(
         call = owner.stop_call
         assert call is not None and call.thread.is_alive()
         assert ports.stops == 1 and ports.cleanups == 0
-        assert stop_probe._PROBE_TASK_CLEANUP.get() is prior
+        assert stop_probe.WINDOWS_PROBE_TASK_CLEANUP.get() is prior
         retained = primary.__dict__["async_cleanup_error"]
         assert isinstance(retained, AsyncResourceCleanupError)
         assert primary.__dict__["cleanup_error"] is retained
@@ -420,20 +422,20 @@ def test_probe_failure_retains_original_stop_until_joined_before_cleanup(
 
 def test_probe_normal_stop_joins_before_registered_task_cleanup(probe_ports: _ProbePorts, tmp_path: Path) -> None:
     """Normal drain still returns its original events and retires the same task."""
-    prior = stop_probe._PROBE_TASK_CLEANUP.get()
-    with stop_probe._registered_probe_task(
+    prior = stop_probe.WINDOWS_PROBE_TASK_CLEANUP.get()
+    with stop_probe.registered_windows_probe_task(
         root=tmp_path, scenario="graceful", pythonw=Path(sys.executable), owner_sid="S-1-5-21-1-2-3-1001"
     ) as (name, identity, events):
-        owner = stop_probe._PROBE_TASK_CLEANUP.get()
+        owner = stop_probe.WINDOWS_PROBE_TASK_CLEANUP.get()
         assert owner is not None
-        result = stop_probe._stop_and_release_drain(
+        result = stop_probe.stop_windows_probe_and_release_drain(
             name, identity, tmp_path, events, {"at_ns": 1, "kind": "window_ready", "pid": 1, "start": "1"}
         )
         assert result == ({"at_ns": 1, "kind": "drain_completed", "pid": 1, "start": "1"},)
         assert owner.stop_call is None
         assert probe_ports.stops == 1 and probe_ports.cleanups == 0
     assert owner.released and probe_ports.cleanups == 1
-    assert stop_probe._PROBE_TASK_CLEANUP.get() is prior
+    assert stop_probe.WINDOWS_PROBE_TASK_CLEANUP.get() is prior
 
 
 @pytest.mark.parametrize(
@@ -443,7 +445,7 @@ def test_probe_settlement_preserves_caller_interruption_after_callback_finished(
     probe_ports: _ProbePorts, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, interruption: BaseException
 ) -> None:
     """A concurrent successful callback cannot erase an unrelated waiting caller's error."""
-    owner = stop_probe._ProbeTaskCleanup("controlled", ("tag", "", (), ()), tmp_path, tmp_path / "events")
+    owner = stop_probe.WindowsProbeTaskCleanup("controlled", ("tag", "", (), ()), tmp_path, tmp_path / "events")
     probe_ports.release.set()
     owner.start_stop()
     call = owner.stop_call
@@ -473,3 +475,180 @@ def test_probe_settlement_preserves_caller_interruption_after_callback_finished(
     assert probe_ports.stops == 1
     asyncio.run(owner.close())
     assert owner.released and probe_ports.cleanups == 1
+
+
+@pytest.mark.parametrize("failed_stop", [False, True])
+def test_installed_task_cleanup_joins_original_stop_after_registration_disappears(
+    monkeypatch: pytest.MonkeyPatch, failed_stop: bool
+) -> None:
+    """A missing registration cannot discard its still-running original COM call."""
+    entered, release = Event(), Event()
+    stops: list[None] = []
+    failure = RuntimeError("controlled native stop failure")
+
+    def stop() -> None:
+        stops.append(None)
+        entered.set()
+        if not release.wait(timeout=5):
+            raise TimeoutError("controlled stop was not released")
+        if failed_stop:
+            raise failure
+
+    binding = RuntimeServiceBinding(
+        executable="C:/test/runtime.exe",
+        storage_root="C:/test/storage",
+        storage_identity="1" * 64,
+        os_owner_id="S-1-5-21-1-2-3-1001",
+        product_version="test",
+    )
+    owner = stop_probe.WindowsInstalledTaskCleanup("controlled", binding)
+    owner.adopted = True
+    call = stop_probe.WindowsSchedulerCall(stop)
+    owner.pending_stop = call
+    monkeypatch.setattr(stop_probe, "installed_windows_task_identity", lambda *args, **kwargs: None)
+    call.start()
+
+    async def exercise() -> None:
+        try:
+            assert await asyncio.to_thread(entered.wait, timeout=2)
+            closing = asyncio.create_task(
+                close_async_resources(owner, task_name="controlled-installed-task-close", primary_error=None)
+            )
+            await asyncio.sleep(0)
+            assert owner.pending_stop is call and not owner.released
+            assert call.thread.is_alive() and not call.result.done()
+            release.set()
+            if failed_stop:
+                with pytest.raises(AsyncResourceCleanupError) as caught:
+                    await closing
+                assert caught.value.resources == (owner,)
+                assert caught.value.__cause__ is failure
+                assert owner.pending_stop is None and not owner.released
+                assert not call.thread.is_alive()
+                await caught.value.retry_cleanup()
+                await caught.value.retry_cleanup()
+            else:
+                await closing
+            assert owner.released and owner.pending_stop is None
+            assert not call.thread.is_alive() and len(stops) == 1
+        finally:
+            release.set()
+            await close_async_resources(owner, task_name="controlled-installed-task-finally")
+
+    asyncio.run(exercise())
+
+
+def test_installed_task_cleanup_retries_only_transport_after_native_retirement(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Explicit native ports expose post-delete failure without replaying retired work."""
+
+    class ProcessPort:
+        def __init__(self) -> None:
+            self.closed = False
+            self.waits = 0
+            self.closes = 0
+
+        def wait(self, *, timeout: float) -> int:
+            assert timeout >= 0 and not self.closed
+            self.waits += 1
+            return 0
+
+        def close(self) -> None:
+            self.closes += 1
+            assert not self.closed
+            self.closed = True
+
+    class ConnectionPort:
+        def __init__(self) -> None:
+            self.closes = 0
+
+        def close(self) -> None:
+            self.closes += 1
+            if self.closes == 1:
+                raise failure
+
+    failure = OSError("controlled connection close failure")
+    process, connection = ProcessPort(), ConnectionPort()
+    physical_preparations: list[None] = []
+    queries: list[None] = []
+    deletions: list[None] = []
+    identity = ("Task", "", (), ())
+
+    async def prepared() -> None:
+        physical_preparations.append(None)
+
+    def lookup(*args, **kwargs):
+        queries.append(None)
+        return identity
+
+    binding = RuntimeServiceBinding(
+        executable="C:/test/runtime.exe",
+        storage_root="C:/test/storage",
+        storage_identity="1" * 64,
+        os_owner_id="S-1-5-21-1-2-3-1001",
+        product_version="test",
+    )
+    owner = stop_probe.WindowsInstalledTaskCleanup("controlled", binding)
+    owner.adopted = True
+    owner.launch_possible = True
+    owner.runtime = cast(stop_probe.InstalledWindowsRuntimeTask, SimpleNamespace(prepare_physical_cleanup=prepared))
+    owner.processes.append(cast(WindowsOwnedProcess, process))
+    process_owner = RuntimeTransportCleanup(process)
+    connection_owner = RuntimeTransportCleanup(connection)
+    owner.transports.extend((process_owner, connection_owner))
+    monkeypatch.setattr(stop_probe, "installed_windows_task_identity", lookup)
+    monkeypatch.setattr(stop_probe, "exact_windows_task_state", lambda *args: 3)
+    monkeypatch.setattr(stop_probe, "delete_exact_windows_task", lambda *args: deletions.append(None))
+
+    async def exercise() -> None:
+        with pytest.raises(AsyncResourceCleanupError) as caught:
+            await close_async_resources(owner, task_name="controlled-post-delete-release", primary_error=None)
+        assert caught.value.resources == (owner,)
+        assert isinstance(caught.value.__cause__, AsyncResourceCleanupError)
+        assert caught.value.__cause__.resources == (connection_owner,)
+        assert caught.value.__cause__.__cause__ is failure
+        assert process_owner.released and not connection_owner.released
+        assert process.waits == 1 and process.closes == 1 and connection.closes == 1
+        assert len(deletions) == 1 and len(queries) == 1 and len(physical_preparations) == 1
+        assert not owner.released
+        await caught.value.retry_cleanup()
+        await caught.value.retry_cleanup()
+        assert owner.released and connection_owner.released
+        assert process.waits == 1 and process.closes == 1 and connection.closes == 2
+        assert len(deletions) == 1 and len(queries) == 1 and len(physical_preparations) == 1
+
+    asyncio.run(exercise())
+
+
+def test_installed_task_cleanup_refuses_delete_without_possible_launch_physical_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An uncertain CLI start cannot turn a missing physical witness into completion."""
+    binding = RuntimeServiceBinding(
+        executable="C:/test/runtime.exe",
+        storage_root="C:/test/storage",
+        storage_identity="1" * 64,
+        os_owner_id="S-1-5-21-1-2-3-1001",
+        product_version="test",
+    )
+    owner = stop_probe.WindowsInstalledTaskCleanup("controlled", binding)
+    owner.adopted = True
+    owner.launch_possible = True
+    deletions: list[None] = []
+    monkeypatch.setattr(stop_probe, "delete_exact_windows_task", lambda *args: deletions.append(None))
+    primary = RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+
+    async def exercise() -> None:
+        await close_async_resources(owner, task_name="controlled-uncertain-launch", primary_error=primary)
+        retained = primary.__dict__.get("async_cleanup_error")
+        assert isinstance(retained, AsyncResourceCleanupError)
+        assert retained.resources == (owner,)
+        assert isinstance(retained.__cause__, RuntimeError)
+        assert not owner.released and deletions == []
+        with pytest.raises(AsyncResourceCleanupError) as retried:
+            await retained.retry_cleanup()
+        assert retried.value.resources == (owner,)
+        assert not owner.released and deletions == []
+
+    asyncio.run(exercise())

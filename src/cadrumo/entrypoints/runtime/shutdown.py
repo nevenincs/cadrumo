@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from threading import Event, Thread
 from types import TracebackType
-from typing import NoReturn, Self
+from typing import NoReturn, Self, override
 
 
 def terminate_runtime() -> NoReturn:
@@ -16,6 +17,25 @@ def terminate_runtime() -> NoReturn:
     Journals remain available for honest lease/effect reconciliation afterwards.
     """
     os._exit(2)
+
+
+class RuntimeShutdownEvent(Event):
+    """Publish terminal native launcher disposition before local shutdown."""
+
+    def __init__(self, *, before_stop: Callable[[], None]) -> None:
+        """Bind native stop publication before the local Event is set."""
+        super().__init__()
+        self._before_stop = before_stop
+
+    @override
+    def set(self) -> None:
+        """Latch intentional stop, including when later drain cannot finish."""
+        try:
+            self._before_stop()
+        except BaseException:
+            # An unreadable stop disposition must never become a crash retry.
+            terminate_runtime()
+        super().set()
 
 
 class RuntimeShutdownWatchdog:
