@@ -5,18 +5,19 @@ aggregation:
         sol·licitat.
   invoice_retencion:
     defects:
-      fx_unresolved: La factura és en moneda estrangera i no té tipus de canvi a euros.
-      iva_treatment_undeclared: No s'ha declarat el tractament d'IVA, de manera que
-        no es pot determinar el sentit de la retenció.
+      fx_unresolved: La factura és en moneda estrangera i no té cap tipus de canvi
+        per convertir-la a euros.
+      iva_treatment_undeclared: No s'ha declarat cap tractament d'IVA, de manera que
+        no es pot saber si la retenció s'ha d'ingressar o s'acredita.
       missing_counterparty_tax_id: La factura no indica el NIF del perceptor, que
         la declaració de retencions exigeix.
-      no_retencion_declared: La factura no declara cap import retingut.
+      no_retencion_declared: La factura no indica cap import retingut.
       non_resident_supplier: El proveïdor no és resident a Espanya; les retencions
         sobre pagaments a no residents es declaren a l'Impost sobre la Renda de no
         Residents.
       not_a_retenedor_liability: Amb aquest tractament d'IVA i aquest tipus de factura,
-        la retenció no és una obligació del contribuent com a retenidor; la retenció
-        d'una factura emesa és un crèdit al seu favor.
+        la retenció no és una obligació teva com a pagador que reté (retenidor); la
+        retenció d'una factura emesa per tu és un crèdit al teu favor.
     errors:
       euro_figures_unavailable_after_defect_sweep: Les xifres en euros no estan disponibles
         en una factura que ha superat l'escombrat de defectes.
@@ -173,14 +174,14 @@ aggregation:
     errors:
       filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès
         %{min_year}-%{max_year}.
-      m111_no_retenciones_attestation_missing: 'No hi ha observacions de retenció
-        per perceptor per al model 111 %{filing_year} %{period}. No presentis un Model
+      m111_no_retenciones_attestation_missing: 'No hi ha cap retenció registrada per
+        a cap perceptor al Model 111 %{filing_year} %{period}. No presentis un Model
         111 en blanc: declara el trimestre com a període sense retencions amb `aeat
         config profile edit --modelo-111-no-retenciones-periods %{attestation_period}`
-        (l''opció substitueix la llista desada, així que inclou també, separats per
-        comes, els períodes ja declarats), o registra els pagaments amb retenció amb
-        `aeat app modelo aggregate`, fent servir --received-invoice-retencion per
-        a una factura rebuda o --ledger-payment-withholding per a una nòmina.'
+        (l''opció substitueix la llista desada, així que indica també, separats per
+        comes, els períodes que ja hagis declarat), o registra els pagaments als quals
+        has retingut impost amb `aeat app modelo aggregate`, fent servir --received-invoice-retencion
+        per a una factura rebuda o --ledger-payment-withholding per a una nòmina.'
       m193_phase_allocation_collision: 'Model %{modelo} %{filing_year}: les assignacions
         %{source_allocations} consten declarades manualment i també provenen de les
         retencions de capital capturades. Elimina la fila manual.'
@@ -527,74 +528,74 @@ entries:
     label: Domiciliació bancària de pagaments
     purpose: Domiciliació bancària d'autoliquidacions i pagaments tributaris.
   portal_m036_censal:
-    label: "Modelo 036 - Declaració censal"
+    label: Modelo 036 - Declaració censal
     purpose: Alta, modificació i baixa en el cens d'empresaris i professionals.
   portal_m037_censal_simplificada:
-    label: "Modelo 037 - Declaració censal simplificada (retirat)"
+    label: Modelo 037 - Declaració censal simplificada (retirat)
     notes:
       '0': Suprimit per l'Ordre HAC/1526/2024, amb efecte des de 2025-02-03.
       '1': Utilitzeu el Model 036 per a qualsevol tràmit censal posterior.
     purpose: Declaració censal simplificada per a autònoms, suprimida el 2025.
   portal_m100_renta:
-    label: "Modelo 100 - Declaració de la Renda (IRPF)"
+    label: Modelo 100 - Declaració de la Renda (IRPF)
     purpose: Declaració anual de l'Impost sobre la Renda de les Persones Físiques.
   portal_m111_retenciones_trabajo:
-    label: "Modelo 111 - Retencions del treball i activitats"
+    label: Modelo 111 - Retencions del treball i activitats
     purpose: Autoliquidació de retencions i ingressos a compte de l'IRPF sobre rendiments
       del treball.
   portal_m115_retenciones_arrendamientos:
-    label: "Modelo 115 - Retencions per arrendament d'immobles"
+    label: Modelo 115 - Retencions per arrendament d'immobles
     purpose: Autoliquidació de retencions de l'IRPF per lloguer d'immobles urbans.
   portal_m123_retenciones_capital:
-    label: "Modelo 123 - Retencions del capital mobiliari"
+    label: Modelo 123 - Retencions del capital mobiliari
     purpose: Autoliquidació de retencions de l'IRPF sobre rendiments del capital mobiliari.
   portal_m130_pago_fraccionado_ed:
-    label: "Modelo 130 - Pagament fraccionat IRPF (estimació directa)"
+    label: Modelo 130 - Pagament fraccionat IRPF (estimació directa)
     purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
       directa.
   portal_m131_pago_fraccionado_eo:
-    label: "Modelo 131 - Pagament fraccionat IRPF (estimació objectiva)"
+    label: Modelo 131 - Pagament fraccionat IRPF (estimació objectiva)
     purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
       objectiva (mòduls).
   portal_m180_resumen_arrendamientos:
-    label: "Modelo 180 - Resum anual d'arrendaments"
+    label: Modelo 180 - Resum anual d'arrendaments
     purpose: Resum anual de retencions per arrendament d'immobles urbans.
   portal_m190_resumen_trabajo:
-    label: "Modelo 190 - Resum anual de retencions del treball"
+    label: Modelo 190 - Resum anual de retencions del treball
     purpose: Resum anual de retencions i ingressos a compte sobre rendiments del treball.
   portal_m193_resumen_capital:
-    label: "Modelo 193 - Resum anual de retencions del capital"
+    label: Modelo 193 - Resum anual de retencions del capital
     purpose: Resum anual de retencions sobre rendiments del capital mobiliari.
   portal_m200_sociedades_anual:
-    label: "Modelo 200 - Impost sobre Societats"
+    label: Modelo 200 - Impost sobre Societats
     purpose: Declaració anual de l'Impost sobre Societats.
   portal_m202_sociedades_fraccionado:
-    label: "Modelo 202 - Pagament fraccionat de l'Impost sobre Societats"
+    label: Modelo 202 - Pagament fraccionat de l'Impost sobre Societats
     purpose: Pagament fraccionat a compte de l'Impost sobre Societats.
   portal_m232_vinculadas:
-    label: "Modelo 232 - Operacions vinculades"
+    label: Modelo 232 - Operacions vinculades
     purpose: Declaració informativa d'operacions amb persones o entitats vinculades.
   portal_m303_iva_autoliquidacion:
-    label: "Modelo 303 - Autoliquidació de l'IVA"
+    label: Modelo 303 - Autoliquidació de l'IVA
     purpose: Autoliquidació periòdica de l'Impost sobre el Valor Afegit.
   portal_m347_operaciones_terceros:
-    label: "Modelo 347 - Operacions amb terceres persones"
+    label: Modelo 347 - Operacions amb terceres persones
     purpose: Declaració informativa anual d'operacions amb tercers superiors a 3.005,06
       €.
   portal_m349_intracomunitarias:
-    label: "Modelo 349 - Operacions intracomunitàries"
+    label: Modelo 349 - Operacions intracomunitàries
     purpose: Declaració recapitulativa d'operacions intracomunitàries de béns i serveis.
   portal_m369_oss_ioss:
-    label: "Modelo 369 - Finestreta única IVA (OSS/IOSS)"
+    label: Modelo 369 - Finestreta única IVA (OSS/IOSS)
     purpose: Autoliquidació de l'IVA en els règims de finestreta única OSS i IOSS.
   portal_m390_resumen_iva:
-    label: "Modelo 390 - Resum anual de l'IVA"
+    label: Modelo 390 - Resum anual de l'IVA
     purpose: Declaració resum anual de l'Impost sobre el Valor Afegit.
   portal_m720_bienes_extranjero:
-    label: "Modelo 720 - Béns i drets a l'estranger"
+    label: Modelo 720 - Béns i drets a l'estranger
     purpose: Declaració informativa de béns i drets situats a l'estranger.
   portal_m840_iae:
-    label: "Modelo 840 - Impost sobre Activitats Econòmiques"
+    label: Modelo 840 - Impost sobre Activitats Econòmiques
     purpose: Declaració de l'Impost sobre Activitats Econòmiques (IAE).
   portal_mi_area_personal:
     label: La Meva Àrea Personal
@@ -1471,7 +1472,7 @@ tui:
         exists: Aquesta declaració ja existeix. Obrir-la?
         period_selection_hint: Prem Enter per triar el període; després, crea i obre
           la declaració.
-        show_all: "Mostra tots els models, no només els teus"
+        show_all: Mostra tots els models, no només els teus
         start_confirm: Començar el {modelo} de {period}?
       next:
         check_aeat: Comprova la presentació a l'AEAT
@@ -1485,16 +1486,16 @@ tui:
       not_openable:
         help: Aquesta fila encara no es pot obrir des d'aquí.
       search:
-        hint: "Cerca per número de model, nom o període"
+        hint: Cerca per número de model, nom o període
       sort:
         deadline: Termini
-        modelo: "Model"
+        modelo: Model
         result: Resultat
         state: Estat
       state:
         aeat_needs_check: Presentació a l'AEAT pendent de comprovar
         aeat_unlinked: Presentada a l'AEAT, sense vincular aquí
-        aeat_unlinked_on: "Presentada a l'AEAT el {date}, sense vincular aquí"
+        aeat_unlinked_on: Presentada a l'AEAT el {date}, sense vincular aquí
         blocked: Alguna cosa n'impedeix la presentació
         calculated: Calculada, sense comprovar
         checked: Comprovada
@@ -1738,17 +1739,17 @@ tui:
         discrepancies: 'Comprovacions que no quadren amb el document: {count}'
         identity: Factura {number} amb data {date}
         label_reading:
-          busy_refused: 'Una altra lectura estava fent servir la inferència d''aquest
-            equip, de manera que no s''ha executat el model de lectura. {count} camps
-            que les etiquetes no han llegit queden buits: {fields}. Torneu a llegir
-            el document quan acabi.'
-          headroom_refused: 'No s''ha carregat el model de lectura: aquest equip no
-            ha mostrat marge de memòria per a ell. {count} camps que les etiquetes
-            no han llegit queden buits: {fields}. Allibereu memòria i torneu a llegir
-            el document.'
-          reader_unavailable: 'No s''ha pogut executar el lector local, de manera
-            que {count} camps que les etiquetes no han llegit queden buits: {fields}.
-            Comproveu el lector i torneu a llegir el document.'
+          busy_refused: 'El lector automàtic no s''ha executat perquè una altra lectura
+            feia servir aquest equip. {count} camps que les etiquetes no cobrien encara
+            no s''han llegit i queden buits: {fields}. Torna a llegir el document
+            quan acabi l''altra lectura.'
+          headroom_refused: 'El lector automàtic no s''ha executat perquè aquest equip
+            no té prou memòria lliure. {count} camps que les etiquetes no cobrien
+            encara no s''han llegit i queden buits: {fields}. Allibera memòria i torna
+            a llegir el document.'
+          reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
+            camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
+            {fields}. Torna a llegir el document més tard.'
         supplier: 'Proveïdor: {name} · NIF {nif}'
         unread: sense llegir
       empty: No hi ha justificants pendents de revisió.
@@ -2399,11 +2400,13 @@ tui:
         confirm_all: Confirmar valors suposats d'aquesta secció
         detail:
           advisory: És un consell. Pots presentar la declaració tal com està.
-          blocking_rule: "No es compleix una regla del model; encara no es pot registrar la presentació."
+          blocking_rule: No es compleix una regla del model; encara no es pot registrar
+            la presentació.
           cross_period_dependency_unclean: Aquesta declaració fa servir xifres d'un
             període anterior que encara no està resolt, així que el resultat encara
             pot canviar.
-          missing_required_casilla: "Cal aquest valor per presentar. Si és zero, escriu 0 perquè consti."
+          missing_required_casilla: Cal aquest valor per presentar. Si és zero, escriu
+            0 perquè consti.
           reconciliation_mismatch: 'Dues xifres que haurien de coincidir no coincideixen.
             No se''n tria cap per tu: revisa-les totes dues i corregeix la que estigui
             malament.'

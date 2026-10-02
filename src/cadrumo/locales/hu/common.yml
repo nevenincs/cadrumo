@@ -4,18 +4,18 @@ aggregation:
       unsupported_modelo: Nincs regisztrált összesítési szerződés a kért nyomtatványhoz.
   invoice_retencion:
     defects:
-      fx_unresolved: A számla devizában készült, és nincs euróra átváltási árfolyama.
-      iva_treatment_undeclared: Nincs megadva áfakezelés, ezért a levonás iránya nem
-        állapítható meg.
-      missing_counterparty_tax_id: A számlán nem szerepel a kedvezményezett adóazonosítója,
-        amelyet a levonási bevallás megkövetel.
-      no_retencion_declared: A számla nem tartalmaz levont összeget.
+      fx_unresolved: A számla devizában készült, és nincs árfolyam az euróra váltásához.
+      iva_treatment_undeclared: Nincs megadva áfakezelés, ezért nem állapítható meg,
+        hogy a levonás fizetendő vagy jóváírandó.
+      missing_counterparty_tax_id: A számlán nem szerepel a kedvezményezett adóazonosítója
+        (NIF), amelyet a levonási bevallás megkövetel.
+      no_retencion_declared: A számlán nem szerepel levont összeg.
       non_resident_supplier: A szállító nem spanyol illetőségű; a nem belföldi illetőségűeknek
         teljesített kifizetések levonását a nem belföldi illetőségűek jövedelemadójában
         kell bevallani.
       not_a_retenedor_liability: Ennél az áfakezelésnél és számlatípusnál a levonás
-        nem az adózó kifizetőként fennálló kötelezettsége; a kiállított számlán szereplő
-        levonás az adózó javára szóló követelés.
+        nem olyan tartozás, amellyel te mint a levonást végző kifizető (retenedor)
+        tartozol; az általad kiállított számlán szereplő levonás a javadra szóló jóváírás.
     errors:
       euro_figures_unavailable_after_defect_sweep: Az euróösszegek nem érhetők el
         egy olyan számlán, amely átment a hibaszűrésen.
@@ -164,15 +164,15 @@ aggregation:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
         tartományon kívül van.
-      m111_no_retenciones_attestation_missing: 'A Modelo 111-hez nincs perceptoronkénti
-        levonási megfigyelés a következőre: %{filing_year} %{period}. Ne nyújtson
-        be teljesen üres Modelo 111-et: nyilatkozzon a negyedévről mint levonásmentes
+      m111_no_retenciones_attestation_missing: 'A Modelo 111 %{filing_year} %{period}
+        bevallásához egyetlen kedvezményezettre sincs levonás rögzítve. Ne nyújts
+        be üres Modelo 111-et: nyilatkozz a negyedévről mint levonás nélküli (no-retenciones)
         időszakról az `aeat config profile edit --modelo-111-no-retenciones-periods
-        %{attestation_period}` paranccsal (a kapcsoló felülírja a tárolt listát, ezért
-        vesszővel elválasztva adja meg a már bejelentett időszakokat is), vagy rögzítse
-        a levonással terhelt kifizetéseket az `aeat app modelo aggregate` paranccsal:
-        befogadott számlához a --received-invoice-retencion, bérfizetéshez a --ledger-payment-withholding
-        kapcsolóval.'
+        %{attestation_period}` paranccsal (a kapcsoló felülírja a mentett listát,
+        ezért vesszővel elválasztva add meg a már bejelentett időszakokat is), vagy
+        rögzítsd azokat a kifizetéseket, amelyekből adót vontál le, az `aeat app modelo
+        aggregate` paranccsal: beérkezett számlához a --received-invoice-retencion,
+        bérszámfejtéshez a --ledger-payment-withholding kapcsolóval.'
       m193_phase_allocation_collision: 'Modelo %{modelo}, %{filing_year}: a(z) %{source_allocations}
         felosztás(ok) kézzel is rögzítve vannak, és a rögzített tőkejövedelem-visszatartásból
         is származnak. Törölje a kézi sort.'
@@ -520,77 +520,77 @@ entries:
     label: Közvetlen banki terhelés beállítása befizetésekhez
     purpose: Közvetlen banki terhelés beállítása önértékelési bevallásokhoz és adóbefizetésekhez.
   portal_m036_censal:
-    label: "Modelo 036 - Adóhatósági nyilvántartási bevallás"
+    label: Modelo 036 - Adóhatósági nyilvántartási bevallás
     purpose: Bejegyzés, módosítás és törlés a vállalkozások és szakemberek nyilvántartásában.
   portal_m037_censal_simplificada:
-    label: "Modelo 037 - Egyszerűsített nyilvántartási bevallás (megszűnt)"
+    label: Modelo 037 - Egyszerűsített nyilvántartási bevallás (megszűnt)
     notes:
       '0': A HAC/1526/2024 rendelet hatályon kívül helyezte, 2025-02-03-tól érvényes.
       '1': A Modelo 036-at kell használni minden további nyilvántartási eljáráshoz.
     purpose: Egyszerűsített nyilvántartási bevallás önálló vállalkozók számára, 2025-ben
       megszűnt.
   portal_m100_renta:
-    label: "Modelo 100 - Személyi jövedelemadó bevallás"
+    label: Modelo 100 - Személyi jövedelemadó bevallás
     purpose: Éves személyi jövedelemadó (IRPF) bevallás.
   portal_m111_retenciones_trabajo:
-    label: "Modelo 111 - Foglalkoztatásból származó jövedelemadó-visszatartás"
+    label: Modelo 111 - Foglalkoztatásból származó jövedelemadó-visszatartás
     purpose: IRPF-visszatartások és előlegfizetések önértékelése foglalkoztatásból
       származó jövedelemre.
   portal_m115_retenciones_arrendamientos:
-    label: "Modelo 115 - Ingatlan-bérbeadásból való visszatartás"
+    label: Modelo 115 - Ingatlan-bérbeadásból való visszatartás
     purpose: IRPF-visszatartások önértékelése városi ingatlan-bérbeadásból.
   portal_m123_retenciones_capital:
-    label: "Modelo 123 - Befektetési jövedelemadó-visszatartás"
+    label: Modelo 123 - Befektetési jövedelemadó-visszatartás
     purpose: IRPF-visszatartások önértékelése befektetési jövedelemre.
   portal_m130_pago_fraccionado_ed:
-    label: "Modelo 130 - IRPF részletfizetés (közvetlen becslés)"
+    label: Modelo 130 - IRPF részletfizetés (közvetlen becslés)
     purpose: Negyedéves IRPF részletfizetés közvetlen becslés szerint adózó önálló
       vállalkozók számára.
   portal_m131_pago_fraccionado_eo:
-    label: "Modelo 131 - IRPF részletfizetés (objektív becslés)"
+    label: Modelo 131 - IRPF részletfizetés (objektív becslés)
     purpose: Negyedéves IRPF részletfizetés objektív becslés (modulok) szerint adózó
       önálló vállalkozók számára.
   portal_m180_resumen_arrendamientos:
-    label: "Modelo 180 - Ingatlan-bérbeadás éves összesítő"
+    label: Modelo 180 - Ingatlan-bérbeadás éves összesítő
     purpose: Városi ingatlan-bérbeadásból való visszatartások éves összesítője.
   portal_m190_resumen_trabajo:
-    label: "Modelo 190 - Foglalkoztatási visszatartások éves összesítője"
+    label: Modelo 190 - Foglalkoztatási visszatartások éves összesítője
     purpose: Foglalkoztatásból származó jövedelemadó-visszatartások és előlegfizetések
       éves összesítője.
   portal_m193_resumen_capital:
-    label: "Modelo 193 - Befektetési visszatartások éves összesítője"
+    label: Modelo 193 - Befektetési visszatartások éves összesítője
     purpose: Befektetési jövedelemadó-visszatartások éves összesítője.
   portal_m200_sociedades_anual:
-    label: "Modelo 200 - Társasági adóbevallás"
+    label: Modelo 200 - Társasági adóbevallás
     purpose: Éves társasági adóbevallás.
   portal_m202_sociedades_fraccionado:
-    label: "Modelo 202 - Társasági adó részletfizetés"
+    label: Modelo 202 - Társasági adó részletfizetés
     purpose: Társasági adó előlege részletfizetés formájában.
   portal_m232_vinculadas:
-    label: "Modelo 232 - Kapcsolt vállalkozásokkal való ügyletek"
+    label: Modelo 232 - Kapcsolt vállalkozásokkal való ügyletek
     purpose: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek tájékoztató
       bevallása.
   portal_m303_iva_autoliquidacion:
-    label: "Modelo 303 - IVA önértékelés"
+    label: Modelo 303 - IVA önértékelés
     purpose: Időszakos hozzáadottérték-adó (IVA) önértékelés.
   portal_m347_operaciones_terceros:
-    label: "Modelo 347 - Harmadik felekkel folytatott ügyletek"
+    label: Modelo 347 - Harmadik felekkel folytatott ügyletek
     purpose: Éves tájékoztató bevallás harmadik felekkel folytatott, 3 005,06 EUR
       feletti ügyletekről.
   portal_m349_intracomunitarias:
-    label: "Modelo 349 - Intraközösségi ügyletek"
+    label: Modelo 349 - Intraközösségi ügyletek
     purpose: Összesítő nyilatkozat intraközösségi termékértékesítésekről és -szolgáltatásokról.
   portal_m369_oss_ioss:
-    label: "Modelo 369 - IVA egyablakos rendszer (OSS/IOSS)"
+    label: Modelo 369 - IVA egyablakos rendszer (OSS/IOSS)
     purpose: IVA önértékelés az OSS és IOSS egyablakos rendszerek keretein belül.
   portal_m390_resumen_iva:
-    label: "Modelo 390 - Éves IVA összesítő"
+    label: Modelo 390 - Éves IVA összesítő
     purpose: Éves összesítő hozzáadottérték-adóra vonatkozó bevallás.
   portal_m720_bienes_extranjero:
-    label: "Modelo 720 - Külföldi vagyon és jogok"
+    label: Modelo 720 - Külföldi vagyon és jogok
     purpose: Tájékoztató bevallás külföldön elhelyezett vagyonról és jogokról.
   portal_m840_iae:
-    label: "Modelo 840 - Gazdasági tevékenységek adója"
+    label: Modelo 840 - Gazdasági tevékenységek adója
     purpose: Bevallás a gazdasági tevékenységek adójára (IAE).
   portal_mi_area_personal:
     label: Személyes területem
@@ -1483,16 +1483,16 @@ tui:
       not_openable:
         help: Ez a sor itt még nem nyitható meg.
       search:
-        hint: "Keresés nyomtatványszám, név vagy időszak szerint"
+        hint: Keresés nyomtatványszám, név vagy időszak szerint
       sort:
         deadline: Határidő
-        modelo: "Nyomtatvány"
+        modelo: Nyomtatvány
         result: Eredmény
         state: Állapot
       state:
         aeat_needs_check: Az AEAT-benyújtás ellenőrzést igényel
         aeat_unlinked: Benyújtva az AEAT-nál, itt még nincs összekapcsolva
-        aeat_unlinked_on: "Benyújtva az AEAT-nál: {date} Itt még nincs összekapcsolva"
+        aeat_unlinked_on: 'Benyújtva az AEAT-nál: {date} Itt még nincs összekapcsolva'
         blocked: Valami akadályozza a benyújtást
         calculated: Kiszámítva, nincs ellenőrizve
         checked: Ellenőrizve
@@ -1734,17 +1734,17 @@ tui:
         discrepancies: 'A dokumentummal nem egyező ellenőrzések: {count}'
         identity: '{number} számla, kelte {date}'
         label_reading:
-          busy_refused: 'Egy másik olvasás már használta a gép következtetési kapacitását,
-            ezért az olvasómodell nem futott. A címkék által olvasatlanul hagyott
-            {count} mező üres marad: {fields}. Olvassa be újra a dokumentumot, ha
-            az befejeződött.'
-          headroom_refused: 'Az olvasómodell nem töltődött be: ezen a gépen nem volt
-            elegendő szabad memória hozzá. A címkék által olvasatlanul hagyott {count}
-            mező üres marad: {fields}. Szabadítson fel memóriát, és olvassa be újra
-            a dokumentumot.'
-          reader_unavailable: 'A helyi olvasó nem futtatható, ezért a címkék által
-            olvasatlanul hagyott {count} mező üres marad: {fields}. Ellenőrizze az
-            olvasót, és olvassa be újra a dokumentumot.'
+          busy_refused: 'Az automatikus olvasó nem futott le, mert egy másik olvasás
+            használta ezt a gépet. A címkék által nem lefedett {count} mező még nem
+            lett beolvasva, ezért üres marad: {fields}. Olvasd be újra a dokumentumot,
+            amint a másik olvasás befejeződött.'
+          headroom_refused: 'Az automatikus olvasó nem futott le, mert ezen a gépen
+            nincs elég szabad memória hozzá. A címkék által nem lefedett {count} mező
+            még nem lett beolvasva, ezért üres marad: {fields}. Szabadíts fel memóriát,
+            és olvasd be újra a dokumentumot.'
+          reader_unavailable: 'Az automatikus olvasó nem indult el. A címkék által
+            nem lefedett {count} mező még nem lett beolvasva, ezért üres marad: {fields}.
+            Olvasd be újra a dokumentumot később.'
         supplier: 'Szállító: {name} · NIF {nif}'
         unread: nem olvasható
       empty: Nincs ellenőrzésre váró bizonylat.
@@ -2394,7 +2394,8 @@ tui:
         confirm_all: Feltételezett értékek megerősítése ebben a szakaszban
         detail:
           advisory: Ez tanács. A bevallást a jelenlegi formájában is benyújthatja.
-          blocking_rule: "A nyomtatvány egyik szabálya nem teljesül; a benyújtás még nem rögzíthető."
+          blocking_rule: A nyomtatvány egyik szabálya nem teljesül; a benyújtás még
+            nem rögzíthető.
           cross_period_dependency_unclean: Ez a bevallás egy még le nem zárt korábbi
             időszak számait használja, ezért az eredménye még változhat.
           missing_required_casilla: A bevallás nem nyújtható be ez az érték nélkül.

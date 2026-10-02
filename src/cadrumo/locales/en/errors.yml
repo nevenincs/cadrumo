@@ -763,13 +763,12 @@ errors:
       under the current access scope.
     canonical_inventory_closing_authority_conflict: A different immutable inventory
       closing authority is already recorded.
-    canonical_invoice_draft_reader_busy_refused: The invoice-draft reader's model
-      was not run because another on-host reading already held this machine's inference
-      slot.
-    canonical_invoice_draft_reader_headroom_refused: The invoice-draft reader's model
-      was not loaded because this machine showed no measured memory headroom for it.
-    canonical_invoice_withholding_defects: The invoice evidence cannot support a withholding
-      capture until every listed defect is corrected on the invoice.
+    canonical_invoice_draft_reader_busy_refused: The automatic invoice reader did
+      not run because another reading was already using this machine.
+    canonical_invoice_draft_reader_headroom_refused: The automatic invoice reader
+      did not run because this machine does not have enough free memory for it.
+    canonical_invoice_withholding_defects: The invoice cannot be used to record the
+      withholding until every listed defect is corrected on the invoice.
     canonical_invoice_withholding_evidence: The invoice evidence cannot support a
       withholding capture.
     canonical_ledger_payment_withholding_evidence: The ledger payment cannot support

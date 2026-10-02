@@ -775,13 +775,12 @@ errors:
       elutasított a jelenlegi hozzáférési hatókörben.
     canonical_inventory_closing_authority_conflict: Már rögzítve van egy másik, megváltoztathatatlan
       készletzárási hatóság.
-    canonical_invoice_draft_reader_busy_refused: A számlatervezet-olvasó modellje
-      nem futott, mert egy másik helyi olvasás már lefoglalta a gép következtetési
-      kapacitását.
-    canonical_invoice_draft_reader_headroom_refused: A számlatervezet-olvasó modellje
-      nem töltődött be, mert ezen a gépen nem mérhető elegendő szabad memória hozzá.
-    canonical_invoice_withholding_defects: A számla bizonyítékai alapján a forrásadó-levonás
-      nem rögzíthető, amíg a számlán minden felsorolt hibát ki nem javítasz.
+    canonical_invoice_draft_reader_busy_refused: Az automatikus számlaolvasó nem futott
+      le, mert egy másik olvasás már használta ezt a gépet.
+    canonical_invoice_draft_reader_headroom_refused: Az automatikus számlaolvasó nem
+      futott le, mert ezen a gépen nincs elég szabad memória hozzá.
+    canonical_invoice_withholding_defects: A számla nem használható a levonás rögzítéséhez,
+      amíg a számlán minden felsorolt hibát ki nem javítasz.
     canonical_invoice_withholding_evidence: A számla bizonyítékai alapján a forrásadó-levonás
       nem rögzíthető.
     canonical_ledger_payment_withholding_evidence: A főkönyvi kifizetés alapján a
@@ -954,11 +953,11 @@ errors:
     refused_active_profile_pointer_manual_recovery: Az aktív profil mutatója ({path})
       nem olvasható, ezért a revíziója elvesztése nélkül nem törölhető; kézi helyreállítást
       igényel.
-    refused_actividad_asset_accelerated_da18_depreciation_not_computed: Ebben az adóévben
+    refused_actividad_asset_accelerated_da18_depreciation_not_computed: Ebben az adóidőszakban
       a LIS DA 18 az új elektromos járművekre és töltőpontokra a maximális lineáris
-      leírási kulcs kétszeresével számolt gyorsított értékcsökkenést biztosít, nem
-      szabad értékcsökkenést. Ez a kedvezmény nem kerül kiszámításra, ezért nem készült
-      értékcsökkenési számítás.
+      együttható kétszeresével számolt gyorsított értékcsökkenést biztosít, nem szabad
+      értékcsökkenést. Ezt a szabályozást a program nem számítja ki, ezért értékcsökkenési
+      költség nem lett számítva.
     refused_actividad_asset_claim_conflict: Az értékcsökkenési elszámolás ütközik
       az eszköz már rögzített elszámolásaival.
     refused_actividad_asset_incomplete: Az eszköz értékcsökkenési ütemtervéből hiányzik
