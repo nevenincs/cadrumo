@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2041909c36b1c562d46703540ae5c705479f6119d4aff60382e863107f56bda9'
+body_hash: 'sha256:2c16fa0f65c86c2a2290c4fefac513314b53f87bfa7cb54b5f89cfeb7bc8bbb5'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -528,6 +528,12 @@ The owning refresh reviewed all 23 previously divergent outputs against current 
 S56 review verdict: PASS. Frozen code cb04a1021c6a829b9b3cded1ee26c8ba0e3516bb and authority generation bbea0e6a55b9de2ae3f4b5f00df110ac956bb604a0b8953aeac6463623595e3b produce all 64 required portfolio/new-modelo/new-period/external-details frames: four languages, 80x24/120x40 and dark/light, exit 0. There are no failed/skipped frames, missing glyphs, geometry findings or source drift; all manifests share TUI fingerprint 62c91605ba3dcc5f14ccd742d1ab63828ebe235b0aa904249ab0fe144fcd571b. Independent review covers 30 PNGs, including every affected Catalan/Hungarian size/theme combination; the coordinator also inspected the corrected Spanish, Catalan and Hungarian layouts and the Catalan external-details dialog. Search and context remain visible, attention focus and one scroll owner remain, Cancel/Show all are accessible, and external filing declares its observed date without borrowing a local amount or promising unavailable linkage/receipt access. No critical/high or unresolved finding remains in the declarations phase. The original a943 capture is retained with its actual medium finding, now resolved.
 
 Exact descriptor/source hashes and commands are in C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/p08-closing-cb04a1021c/p08-capture-evidence/receipt.json and independent-review.json. All four locale snapshots are installed through the dev/tui artifact owner under runs/p08-closing-cb04a1021c-{es,en,ca,hu}; the prior current capture is preserved as closing-before-17ea5aa02e. The review server was restarted using only just tui-review serve; review_page.html retains its original SHA256 c7219ec24e94c78491c641519f0dc7826a12d1d42b6c7f73f539f53e25bafedf. S50 and the final S30 verdict remain pending the complete workbench render/review and closing documentation artifacts.
+
+### closing-artifact-gates | low | Current code and documentation gates have complete results and explicit baseline exceptions
+
+The closing cb04a1021c static aggregate is complete: just check-code exits 1 with three of twelve constituent gates red solely for the three proven baseline findings already named in broad-gate-final-disposition. All nine other constituents pass, including current architecture, types and formatting; no introduced finding remains. Exact complete output: C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/code-closing-final.log. The broad unit exit 1 and its subsequent four real pointer-race/refusal passes remain separately recorded, without upgrading that full unit run to green. Full locale inventory likewise remains red for its 19 inventoried baseline issues.
+
+After the 23 sequence goldens changed, all four strict isolated user HTML builds were rerun from current source: en/es/ca/hu all exit 0 with zero Sphinx warnings. The current artifacts pass all 24,316 local links/fragments over 60 authored pages per language and all 16 changed-output sentinels. Each of the 23 current golden hashes remains stable. Commands, exits, link and output results are in C:/Users/hello/AppData/Local/Temp/modelo-docs-closing-20261002/build-results.json, html-link-review.json and rendered-sequence-review.json. No pre-refresh HTML output is substituted for current proof. Independent code review of a9439772ab through cb04a1021c reports PASS and no critical/high finding. The complete workbench capture and its visual review remain the only outstanding plan-close evidence.
 
 ## Recommendations
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce4d9edc6adc755283793f72cf1968af783017ed73e0ff640bfeb26456d724d2'
+body_hash: 'sha256:c1c6efd65948f6023a3d86114340df0b3d99cdf9bc1afe3373b029be132438f1'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1785,6 +1785,11 @@ related:
 - `S56` `verify:` `corrected P08 independent30-PNG and coordinator review with no unresolved findings` -> `pass`
 - `S56` `verify:` `dev.tui canonical stage-copy and snapshot installation all four locale runs` -> `pass`
 - `S56` `verify:` `review_page.html original SHA256 preserved through just tui-review serve restart` -> `pass`
+- `S58` `verify:` `four current strict isolated user HTML builds en/es/ca/hu after golden refresh (modelo-docs-closing-20261002)` -> `pass`
+- `S58` `verify:` `current HTML 24316 local links and fragments across240 authored localized pages` -> `pass`
+- `S58` `verify:` `16 current refreshed sequence-output HTML sentinels across4 languages` -> `pass`
+- `S30` `verify:` `just check-code closing cb04a1021c (3 baseline gate failures; no new findings)` -> `fail`
+- `S30` `verify:` `check-code current style format data types imports dependencies secure-store-write persistence-write docstring-reference constituents` -> `pass`
 
 ## Notes
 
@@ -1896,3 +1901,5 @@ related:
 - `S58` Final whole gate exits0;25non-blocking advisories remain21oversizedreaderframes+4unusedcaptures, no divergence. Sourcegoldens unchangedafterstablehandoff; semanticdiff/currentSHAreceipts C:/Users/hello/AppData/Local/Temp/modelo-sequences-final-20261002/handoff.json.
 - `S56` New16actualgeometrycases provevisiblefixedsearch/context inall4locales small/medium boththemes withone scrolling owner and '/' focus. Original64-frame actualfindingprovenance preserved. Requiredcorrected-sourcefresh64andfinal712 capture/reviewremainpending; S56staysopen.
 - `S56` Original a94364-frame findingprovenance preserved; mediuminitialscroll issue resolved by74currentowningtests and30post-fix images. Published authority/source/import receipts immutable underCtemp/p08-closing-cb04a1021c. No push/PR or external action.
+- `S58` Fresh exactcommands, logs and zero-warning exit0results preserved C:/Users/hello/AppData/Local/Temp/modelo-docs-closing-20261002/build-results.json; html-link-review.json haszerofailures; all23goldenSHAvalues unchanged. Earlierpre-refreshHTMLartifactnotusedascurrentproof.
+- `S30` Actual closingaggregateexit1preserved C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/code-closing-final.log:9of12gatespass. Three distinct unchangedbaselinefindings only: `invoice_retencion` projectionunused/unconsumed; Unicodeversionconstantunused/unconsumed; `form_layout_integrityruntime-unreachablebutactivelydevcompilerused.` No detector, ratchet or type scope weakened. Finalworkbenchcapture/reviewrequiredforS30closure.
