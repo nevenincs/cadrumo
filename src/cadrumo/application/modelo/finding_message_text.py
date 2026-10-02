@@ -109,6 +109,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "weighted_count": FindingFactKind.NUMBER,
         # Counts.
         "changed_count": FindingFactKind.COUNT,
+        "added_count": FindingFactKind.COUNT,
         "contradicting_invoice_count": FindingFactKind.COUNT,
         "contradicting_ledger_row_count": FindingFactKind.COUNT,
         "removed_count": FindingFactKind.COUNT,
@@ -123,6 +124,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "tipo_renta_code": FindingFactKind.OFFICIAL_CODE,
         # Identifiers, for technical details only.
         "anchored": FindingFactKind.TECHNICAL,
+        "membership_available": FindingFactKind.TECHNICAL,
         "attestation_profile_path": FindingFactKind.TECHNICAL,
         "attested_periods": FindingFactKind.TECHNICAL,
         "binding_id": FindingFactKind.TECHNICAL,

@@ -75,20 +75,26 @@ def source_diagnostics_for[T](
     )
 
 
-def source_issue_diagnostics(
-    issues: Sequence[_SourceIssue],
+def source_issue_diagnostics[T: _SourceIssue](
+    issues: Sequence[T],
     *,
     source_kind: str,
     resolver_id: str,
     suppressed_reasons: frozenset[object] = frozenset(),
+    held_back_reasons: frozenset[object] = frozenset(),
+    source_ref: Callable[[T], str | None] = _no_source_text,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Project typed aggregation issues, optionally excluding known non-advisories."""
-    return source_diagnostics_for(
-        (issue for issue in issues if issue.reason not in suppressed_reasons),
-        reason="source_issue",
-        source_kind=source_kind,
-        resolver_id=resolver_id,
-        message=lambda issue: issue.detail,
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="source_domain_not_ready" if issue.reason in held_back_reasons else "source_issue",
+            source_kind=source_kind,
+            resolver_id=resolver_id,
+            message=issue.detail,
+            source_ref=source_ref(issue) if issue.reason in held_back_reasons else None,
+        )
+        for issue in issues
+        if issue.reason not in suppressed_reasons
     )
 
 

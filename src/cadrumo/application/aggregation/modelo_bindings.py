@@ -132,7 +132,11 @@ from .modelo_bindings_actividad_assets import (
     classify_ledger_expenses_against_asset_register,
     register_owned_acquisition_diagnostics,
 )
-from .renta_gasto_ledger import RentaGastoObservation, aggregate_renta_gasto_ledger_from_repositories
+from .renta_gasto_ledger import (
+    RentaGastoLedgerAggregationIssueReason,
+    RentaGastoObservation,
+    aggregate_renta_gasto_ledger_from_repositories,
+)
 from .renta_income_ledger import (
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
@@ -456,6 +460,13 @@ class LedgerIvaAggregationSourceResolver:
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
                 suppressed_reasons=_IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS,
+                held_back_reasons=frozenset(
+                    {
+                        IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
+                        IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE,
+                    }
+                ),
+                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
             )
             + _selected_scope_iva_evidence_diagnostics(
                 aggregation.issues,
@@ -1148,7 +1159,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                 owned_sources=self.owned_sources,
                 diagnostics=(
                     CalculationSourceDiagnostic(
-                        reason="source_issue",
+                        reason="source_domain_not_ready",
                         source_kind="ledger_irnr_income_aggregation",
                         resolver_id=self.resolver_id,
                         message=(
@@ -1367,6 +1378,13 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 aggregation.issues,
                 source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                 resolver_id=self.resolver_id,
+                held_back_reasons=frozenset(
+                    {
+                        RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
+                        RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+                    }
+                ),
+                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
             )
             + register_owned_acquisition_diagnostics(
                 register_owned,

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:863be5635e00eda757f48a85427df39bc58d07dc5e3bac8dd5fe3274c7fd36ab'
+body_hash: 'sha256:f1f94be7594921c10bd2d095401f46cda097c1e7d9ab09d1120325107ec60147'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1633,6 +1633,34 @@ related:
 - `S59` `M` `src/cadrumo/locales/hu/common.yml`
 - `S59` `verify:` `uv run --no-sync pytest -q -n0 -m unit dev/locales/tests/test_parity.py::test_codebase_to_locale_parity dev/locales/tests/test_parity.py::test_inter_locale_parity` -> `pass`
 - `S59` `by:` `vaultspec-high-executor`
+- `S30` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S30` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S30` `M` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S30` `M` `src/cadrumo/application/aggregation/renta_gasto_ledger.py`
+- `S30` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S30` `A` `src/cadrumo/application/aggregation/ledger_membership.py`
+- `S30` `M` `src/cadrumo/application/modelo/_ledger_drift_gate.py`
+- `S30` `M` `src/cadrumo/application/modelo/finding_message_text.py`
+- `S30` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S30` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S30` `M` `src/cadrumo/application/modelo/verification_repository_ports.py`
+- `S30` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S30` `M` `src/cadrumo/entrypoints/tests/profile_persistence/_verify_ledger_drift_gate_support.py`
+- `S30` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verify_ledger_drift_gate.py`
+- `S30` `M` `src/cadrumo/entrypoints/tests/profile_persistence/verification_repository_support.py`
+- `S30` `M` `src/cadrumo/locales/ca/application.yml`
+- `S30` `M` `src/cadrumo/locales/en/application.yml`
+- `S30` `M` `src/cadrumo/locales/es/application.yml`
+- `S30` `M` `src/cadrumo/locales/hu/application.yml`
+- `S30` `M` `.vault/adr/2026-09-30-modelo-editor-workbench-adr.md`
+- `S30` `M` `.vault/adr/2026-10-02-modelo-editor-workbench-generated-export-layout-companion-cutover-adr.md`
+- `S30` `verify:` `owning source/profile real suite (160 cases; 20261002T003542.029177Z-pytest-62844-9f2cb710)` -> `pass`
+- `S30` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py src/cadrumo/application/modelo/tests/test_verification_preconditions.py (24 cases)` -> `pass`
+- `S30` `verify:` `owning narrow Ruff ty Basedpyright nine files` -> `pass`
+- `S30` `verify:` `production composition ty and Basedpyright` -> `pass`
+- `S30` `verify:` `git diff --check` -> `pass`
+- `S30` `by:` `vaultspec-execute`
+- `S30` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py (8 passed; 20261002T003653.548934Z-pytest-72332-317dba71)` -> `pass`
 
 ## Notes
 
@@ -1731,3 +1759,4 @@ related:
 - `S62` Final installation receipts and exact command exits are in C:/Users/hello/AppData/Local/Temp/modelo-s62-installation-sequence. Temporary reviewed disposition rows retired through their owner with other ledger content unchanged. Published generation bbea0e6a55b9de2ae3f4b5f00df110ac956bb604a0b8953aeac6463623595e3b; six real published-layout adoption cases pass. An initial default-unit selector deselected all six integration cases and is not passing evidence.
 - `S61` First focused run found fixture omissions, missing terminal-action translations and unregistered incoming printed-total fact kinds; corrected without relaxing production boundaries. Three new real CLI fixtures initially had invalid gross amounts; corrected to the owning ledger contract. Final 63 unit and 8 integration cases pass. Exact logs and preserved initial failures: C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/handoff.json. Shared compiler dependency is refreshed at the final authority gate before frozen captures.
 - `S59` Follow-up corrects five contextual Hungarian filing labels/explanations, retaining actual taxpayer-model language. A wrong glossary prefix initially created one extra leaf; the canonical remove-batch owner removed it, then set-batch corrected topic.modelos.title. Initial 404-case parity/key suite returned 402 passed and two extra-key failures; both affected cases pass after correction (20261002T001253.779211Z-pytest-3020-c9bc3cf2). No test expectation or detector changed.
+- `S30` Initial variable finding-key producer failed six live word-gate cases; corrected to explicit literal constructors without changing the detector. Initial source scope issue priority regression corrected to preserve filing-window-first refusal before business/flow ownership and currency substrate. S30 remains open for final authority refresh, canonical broad gates and current frozen render review. Accepted D4 retains preparation in the declarations picker and four workbench steps; original five-step text retained as history.

@@ -200,7 +200,11 @@ def _repositories(
 
 
 def calculate_irene_revision(
-    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+    empty: bool = False,
+    held_back_purchase: bool = False,
 ) -> tuple[
     CalculationRevision,
     Transaction,
@@ -225,7 +229,9 @@ def calculate_irene_revision(
         direction=TransactionDirection.OUTGOING,
         taxable_base=Decimal("200.00"),
     )
-    tx_repo.save(TransactionCatalogue.from_transactions((sale, purchase)))
+    if held_back_purchase:
+        purchase = purchase.model_copy(update={"deduction_fact_kind": None, "deduction_provenance": None})
+    tx_repo.save(TransactionCatalogue.from_transactions(() if empty else (sale, purchase)))
     snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=_PERIOD)
     work_unit = create_work_unit(
         bucket_id=BUCKET_ID,

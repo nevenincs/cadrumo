@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-editor-workbench'
 date: '2026-10-02'
-modified: '2026-10-01'
+modified: '2026-10-02'
 body_schema: 'body-v2'
 body_hash: 'sha256:9712d5a13c0de996453c5e36b79253656b8ce7f1c94f3c68efb122e96e66280f'
 related:

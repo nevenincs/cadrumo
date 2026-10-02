@@ -1656,12 +1656,24 @@ application:
       ledger_snapshot_drift: 'Tus registros han cambiado desde que se calculó el modelo
         %{modelo} de %{filing_year}, periodo %{period}: %{changed_count} apuntes modificados
         y %{removed_count} eliminados. Vuelve a calcularlo.'
+      ledger_snapshot_drift_added: Sus registros contienen %{added_count} apuntes
+        que no se han tenido en cuenta en el cálculo del Modelo %{modelo} %{filing_year},
+        período %{period}. Vuelva a calcular esta declaración.
       ledger_snapshot_drift_changed: 'Tus registros han cambiado desde que se calculó
         el modelo %{modelo} de %{filing_year}, periodo %{period} (apuntes modificados:
         %{changed_count}). Vuelve a calcularlo.'
       ledger_snapshot_drift_removed: 'Tus registros han cambiado desde que se calculó
         el modelo %{modelo} de %{filing_year}, periodo %{period} (apuntes eliminados:
         %{removed_count}). Vuelve a calcularlo.'
+      ledger_snapshot_drift_with_added: 'Sus registros ya no coinciden con el cálculo
+        del Modelo %{modelo} %{filing_year}, período %{period}: %{added_count} apuntes
+        no se han tenido en cuenta, %{changed_count} han cambiado y %{removed_count}
+        se han eliminado. Vuelva a calcular esta declaración.'
+      ledger_snapshot_membership_unavailable: Cadrumo no ha podido comparar sus registros
+        actuales con el cálculo del Modelo %{modelo} %{filing_year}, período %{period}.
+        La presentación queda bloqueada hasta que esta comparación se complete. Inténtelo
+        de nuevo cuando sus registros estén disponibles y vuelva a calcular si han
+        cambiado.
       m193_settled_row_amount_authority_unresolved: El modelo 193 de %{filing_year}
         incluye %{settled_prior_accrual_rows} pago(s) de rendimientos devengados en
         un ejercicio anterior. Las normas oficiales no indican cómo declarar su base

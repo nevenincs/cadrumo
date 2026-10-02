@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-01'
+modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f7d6a9f87b621edeb9f16b6bcdff8a39fb0fafe34d8734b8c65d97e962a0061'
+body_hash: 'sha256:df3fd20be867e4d01be55c049b6176da75eee6946656d2a0fb2112d5d92522f3'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -238,6 +238,8 @@ unhandled binding source and a source domain not ready withhold filing again in 
 entrypoint; an unresolved working figure stays worth checking. A terminal origin mismatch stays
 deferred: it fires only on Modelo 720's observation route, which no production caller uses and
 whose provenance is held back by an earlier grounding decision.
+
+Amendment 2026-10-02, reconciling the approved P06 and P08 filing journey. Preparation selects the modelo and period in the declarations list's two-step new-declaration picker and creates or opens the exact local declaration. Once that declaration exists, its workbench presents four steps: fill in, calculate, check, and record filing. This replaces only the earlier placement of prepare inside a five-step workbench stepper. Calculation, checking, export and local filing remain separate guarded operations with one next action; preparation is not repeated as a completed tab in every open declaration. This follows the approved declarations-list phase and preserves the filer's words, compact-terminal reachability and honest distinction between making an AEAT file and recording a filing. Authorized under the standing advance authorization recorded in the plan. The owning creation, reuse and progress tests and final frozen review provide execution evidence in the feature ledger and rolling audit.
 
 ### D5 Editing interaction
 

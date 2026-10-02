@@ -141,6 +141,7 @@ from ..aggregation.ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
     compute_ledger_filing_snapshot,
 )
+from ..aggregation.ledger_membership import LedgerMembershipPorts, query_ledger_membership
 from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
 )
@@ -499,6 +500,7 @@ def _collect_verification_gate_findings(
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile,
+    ledger_membership_ports: LedgerMembershipPorts,
 ) -> tuple[
     list[ModeloVerificationFinding],
     list[CasillaId],
@@ -668,19 +670,33 @@ def _collect_verification_gate_findings(
     # Runs beside the evidence gate, not inside it: that gate reads the live
     # ledger while the casilla values come from the stored draft, and this is
     # what refuses the case where those two views have drifted apart.
+    if any(failure.scenario_id in _REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()):
+        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
+    current_membership = query_ledger_membership(
+        target=target,
+        work_unit=work_unit,
+        revision=operation.revision(work_unit.modelo, work_unit.revision_id),
+        profile=work_profile,
+        ports=ledger_membership_ports,
+    )
     drift_findings = ledger_drift_findings(
         target=target,
         work_unit=work_unit,
         transaction_repository=transaction_repository,
+        current_membership=current_membership,
         source_refs=_optional_observation_refs(target.observations, "source_refs"),
-        blocking_finding_observer=lambda finding, anchored, changed_ids, removed_ids: (
+        blocking_finding_observer=lambda finding, anchored, changed_ids, removed_ids, added_ids: (
             failures_by_finding_id.__setitem__(
                 id(finding),
                 build_verification_precondition_failure(
                     calculation_revision_id=target.calculation_revision_id,
                     work_unit_id=target.work_unit_id,
                     condition_id="modelo.work.verify.ledger_snapshot.current",
-                    scenario_id="modelo.work.verify.ledger_snapshot.drift_detected",
+                    scenario_id=(
+                        "modelo.work.verify.ledger_snapshot.drift_detected"
+                        if current_membership.available
+                        else "modelo.work.verify.ledger_snapshot.membership_unavailable"
+                    ),
                     evidence_id="modelo.work.verify.ledger_snapshot",
                     evidence_values={
                         "snapshot_anchored": anchored,
@@ -688,6 +704,9 @@ def _collect_verification_gate_findings(
                         "changed_transaction_ids": "|".join(changed_ids),
                         "removed_transaction_count": len(removed_ids),
                         "removed_transaction_ids": "|".join(removed_ids),
+                        "added_transaction_count": len(added_ids),
+                        "added_transaction_ids": "|".join(added_ids),
+                        "membership_available": current_membership.available,
                     },
                     provenance=ActionEvidenceProvenance.PERSISTED_STATE,
                 ),
@@ -1005,6 +1024,7 @@ def verify_modelo_revision_with_preconditions(
             cross_period_expected_member_sets=cross_period_expected_member_sets,
             operation=operation,
             work_profile=checked_profile,
+            ledger_membership_ports=repos.ledger_membership_ports,
         )
     )
     # A registry-snapshot refusal already stands as a blocking finding, and

@@ -1653,12 +1653,24 @@ application:
       ledger_snapshot_drift: 'Els teus registres han canviat des que es va calcular
         el model %{modelo} de %{filing_year}, període %{period}: %{changed_count}
         apunts modificats i %{removed_count} eliminats. Torna a calcular-lo.'
+      ledger_snapshot_drift_added: Els vostres registres contenen %{added_count} apunts
+        que no s'han tingut en compte en el càlcul del Modelo %{modelo} %{filing_year},
+        període %{period}. Torneu a calcular aquesta declaració.
       ledger_snapshot_drift_changed: 'Els teus registres han canviat des que es va
         calcular el model %{modelo} de %{filing_year}, període %{period} (apunts modificats:
         %{changed_count}). Torna a calcular-lo.'
       ledger_snapshot_drift_removed: 'Els teus registres han canviat des que es va
         calcular el model %{modelo} de %{filing_year}, període %{period} (apunts eliminats:
         %{removed_count}). Torna a calcular-lo.'
+      ledger_snapshot_drift_with_added: 'Els vostres registres ja no coincideixen
+        amb el càlcul del Modelo %{modelo} %{filing_year}, període %{period}: %{added_count}
+        apunts no s''han tingut en compte, %{changed_count} han canviat i %{removed_count}
+        s''han eliminat. Torneu a calcular aquesta declaració.'
+      ledger_snapshot_membership_unavailable: Cadrumo no ha pogut comparar els vostres
+        registres actuals amb el càlcul del Modelo %{modelo} %{filing_year}, període
+        %{period}. La presentació queda bloquejada fins que aquesta comparació es
+        completi. Torneu-ho a provar quan els registres estiguin disponibles i torneu
+        a calcular si han canviat.
       m193_settled_row_amount_authority_unresolved: El model 193 de %{filing_year}
         inclou %{settled_prior_accrual_rows} pagament(s) de rendiments meritats en
         un exercici anterior. Les normes oficials no indiquen com declarar-ne la base

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-01'
+modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8e6802a81aca1451177ed9c47aad38939304ec414dd17f2053052ce9886b92b'
+body_hash: 'sha256:02bc4c69fd0cdc0434b76e048acdb673222a71d65c8db5397a53feab7ab00e77'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -459,7 +459,6 @@ Reviewed S64 at commit `3a24afb920` on 2026-10-01. A second frozen snapshot, ret
 
 The review server on port 8740 remains running and its existing page is untouched. `runs/current` holds these 124 current-source frames; `runs/corrective-82b7844265` preserves the 712-frame broad corrective capture, and `runs/handover-before-p07-resume` preserves the earlier 640-frame review. The owning `dev.tui diff` reports 548 of 712 frames changed between the handover and corrective captures, with exit 1 as its documented changed-frame result; the report is `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/corrective-preview.diff.log`. The before/after evidence closes S28, not S50 or S30. Rate-scale and formula-values work remains queued as S62/S63; declarations and documentation convergence remain open. Artifacts for the named tree and its render log remain under `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/naming-snapshot` and `naming-render.log`.
 
-
 ### S62 publication boundary reconciliation | low | Existing source owners suffice before authority publication
 
 The companion cutover proposal is rejected before authorization or rollout. Investigation showed that the refusal came from newly added target checks, not an existing accepted transaction requirement. The accepted export-only source journal and existing generator-owned form-layout writes can converge while consumers remain on the complete prior published generation. Candidate layout regeneration and full validation remain; stale-layout and authority publication checks are not weakened. Install exports through their existing owner, regenerate forms through theirs, verify the complete tree, then publish the atomic authority descriptor. Source interruption fails closed and is repaired through these owners. The pending approval question was withdrawn in commentary. Required source installation, publication and runtime adoption still remain open for S62.
@@ -479,6 +478,22 @@ The expanded `pytest src -m unit -q` run returned 24945 passed and 30 failed. It
 ### S62 cutover proposal disposition | low | Source authoring is repaired by existing owners before runtime publication
 
 The proposed whole-revision companion-journal amendment is rejected and retained as decision history. It conflated mutable authoring source with the active complete registry authority. Existing export recovery remains byte-for-byte unchanged. The isolated candidate receives a generated form companion and full validation; each live export replacement is followed by the canonical form generator/check before the next target. The active runtime descriptor changes only after complete source/evidence/compiler validation. The pending approval question was withdrawn; no amendment or new publication protocol is required.
+
+### installed-rate-authority | low | Reviewed rate exports and generated forms pass publication and adoption
+
+S62 is installed at 536e94d4fa. Five exact-source target replacements each passed their canonical form regeneration/check, independent export check and currentness check; reviewed temporary disposition rows were retired without changing other ledger rows. Complete authority publication and all validity/runtime-load/integrity lanes passed for 58 modelos and 146 revisions. Generation bbea0e6a55b9de2ae3f4b5f00df110ac956bb604a0b8953aeac6463623595e3b serves the grounded literal percentages, including 21% and 1.75%, while zero placeholders and literals lacking a declared scale claim no rate. All six published-layout adoption cases passed. Exact installation commands, source receipts and logs are in C:/Users/hello/AppData/Local/Temp/modelo-s62-installation-sequence. Later compiler-source corrections receive a final complete publication before captures; this entry does not claim those pending gates or visual review passed.
+
+### unrecordable-document-recovery | low | Each supported documentary refusal identifies its own ledger entry
+
+S61 is committed at 17d35bdbc2. The existing typed deduction catalogue identifies four required authorities no production transaction writer can record: intra-EU self-assessment, customs declaration, REAGP receipt and rectification evidence. Each affected entry receives one terminal blocking finding with its native booked date, amount and actual currency, and an explicit instruction to file the declaration another way. IDs and required-authority codes remain technical. The working investment-goods register is preserved; invalid register-owned ledger rows and unknown facts retain general correction/recalculation, rather than a false attach-document promise. Sixty-three owning unit cases and eight real CLI integration cases passed, alongside narrow type/lint/format checks. The evidence includes two entries per documentary family, mixed general failures, deduplication and native foreign-currency precision. Exact checks and corrected initial fixture failures are recorded in C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/handoff.json.
+
+### stepper-contract-reconciliation | low | Preparation belongs to declaration creation before the four workbench steps
+
+The accepted D4 amendment dated 2026-10-02 reconciles the approved P06/P08 journey under the standing advance authorization recorded in the plan. Preparation selects a modelo and period in the declarations picker; an existing declaration then shows Fill, Calculate, Check and Record filing. The previous five-step placement is preserved as history and explicitly replaced only in this respect. Calculation, checking, export and local filing keep their guarded boundaries and one next action. Existing creation/reuse and progress evidence applies; final captures remain pending. Cross-reference placement was bounded and clipped, so its result is advisory rather than proof of complete coverage; the directly governing decisions and unchanged interface boundaries provide local coverage.
+
+### final-review-remaining-evidence | medium | Current membership safety and frozen previews are still being completed
+
+The rolling review re-established ledger-drift-coverage: an added in-period sale can evade a contributor-only fingerprint check. The corrective implementation now queries only registry-declared ledger source owners and retains the sealed snapshot/hash contract; its focused added-row, empty-set, held-back and exclusion checks are in flight. No passing verdict is assigned yet. S30, S50 and S56 remain open for that correction, canonical final gates, complete current authority and fresh frozen sequence/declarations review. Registry-owned modelling questions and deliberately deferred identity decisions remain explicitly separate from approved workbench obligations.
 
 ## Recommendations
 

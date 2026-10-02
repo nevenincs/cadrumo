@@ -151,7 +151,7 @@ class _IvaTransactionAdmission:
     classification: _IvaTransactionClassification
 
 
-def _substrate_admission_issue(
+def _period_admission_issue(
     transaction: Transaction,
     *,
     resolved_period: Period,
@@ -159,15 +159,7 @@ def _substrate_admission_issue(
     cash_treatment: IvaCashAccountingTreatment,
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregationIssue | None:
-    """Return why the row cannot be an IVA observation at all, or ``None``.
-
-    These three screens run before anything is derived from the row because
-    they are about whether a usable substrate EXISTS -- the operation falls in
-    the period, the currency is settleable, and the tax figures are denominated
-    in the currency the return is filed in. A row failing any of them yields no
-    fact worth classifying, so nothing downstream needs their result beyond the
-    refusal itself.
-    """
+    """Preserve the filing-window refusal before any source-ownership diagnosis."""
     transaction_id = transaction.transaction_id
     if is_iva_cash_accounting_none(cash_treatment, authority=operation) and not resolved_period.contains(
         operation_date
@@ -177,6 +169,12 @@ def _substrate_admission_issue(
             reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
             detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period}",
         )
+    return None
+
+
+def _substrate_admission_issue(transaction: Transaction) -> IvaLedgerAggregationIssue | None:
+    """Read tax substrate only after the row's business/flow ownership is known."""
+    transaction_id = transaction.transaction_id
     if is_non_eur_without_conversion(transaction):
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -206,15 +204,15 @@ def _resolve_iva_transaction_context(
     ledger_date = transaction.raw.value_date or transaction.raw.booked_date
     operation_date = transaction.operation_date or ledger_date
     cash_treatment = transaction.cash_accounting_treatment
-    substrate_issue = _substrate_admission_issue(
+    period_issue = _period_admission_issue(
         transaction,
         resolved_period=resolved_period,
         operation_date=operation_date,
         cash_treatment=cash_treatment,
         operation=operation,
     )
-    if substrate_issue is not None:
-        return _IvaTransactionOutcome(gate_issue=substrate_issue)
+    if period_issue is not None:
+        return _IvaTransactionOutcome(gate_issue=period_issue)
     invoice_kind = invoice_kind_for_direction(transaction.direction)
     if invoice_kind is None:
         return _IvaTransactionOutcome(
@@ -239,6 +237,11 @@ def _resolve_iva_transaction_context(
                 detail=f"business classification {business_classification!r} cannot feed IVA aggregation",
             ),
         )
+    # Establish the source's business/flow ownership before diagnosing missing
+    # tax substrate. A personal foreign-currency row is not held-back IVA.
+    substrate_issue = _substrate_admission_issue(transaction)
+    if substrate_issue is not None:
+        return _IvaTransactionOutcome(gate_issue=substrate_issue)
     return _IvaTransactionContext(
         transaction_id=transaction_id,
         operation_date=operation_date,

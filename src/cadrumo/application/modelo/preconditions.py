@@ -521,6 +521,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.ledger_snapshot.current",
+        "modelo.work.verify.ledger_snapshot.membership_unavailable",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.m210.agrupacion.valid",
         "modelo.work.verify.m210.agrupacion.invalid",
     ),

@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
     from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+    from ..application.aggregation.ledger_membership import LedgerMembershipPorts
     from ..application.aggregation.percepciones_observations_repository import (
         PercepcionObservationPorts,
         PercepcionObservationPortsFactory,
@@ -123,6 +124,7 @@ if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.calculations.registry.tax_id_format import SubjectTaxId
     from ..domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+    from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ..domain.usage_ratios.model import UsageRatioProfile
 
 
@@ -1392,6 +1394,34 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
     )
 
 
+def build_ledger_membership_ports(
+    *, bucket_id: str, transaction_repository: TransactionCatalogueRepositoryProtocol
+) -> LedgerMembershipPorts:
+    """Compose read-only source admission capabilities over the verification bucket."""
+    from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
+    from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+    from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
+    from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+    from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.aggregation.ledger_membership import LedgerMembershipPorts
+
+    normalized_bucket_id = bucket_id.strip()
+    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    return LedgerMembershipPorts(
+        transaction_repository=transaction_repository,
+        invoice_catalogue_read_ports=build_invoice_catalogue_read_ports(bucket_id=normalized_bucket_id),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=normalized_bucket_id, objects=objects),
+        bienes_inversion_repository=BienesInversionIvaRegisterRepository(
+            bucket_id=normalized_bucket_id, objects=objects
+        ),
+        activity_asset_history_repository=ActividadAssetHistoryRepository(
+            bucket_id=normalized_bucket_id, objects=objects
+        ),
+        usage_ratio_profile_loader=load_usage_ratios,
+    )
+
+
 def build_verification_repository_bundle(bucket_id: str) -> VerificationRepositoryBundle:
     """Compose every verification repository against one bucket store."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -1414,11 +1444,12 @@ def build_verification_repository_bundle(bucket_id: str) -> VerificationReposito
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    transaction_repository = TransactionCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
     return VerificationRepositoryBundle(
         calculation=CalculationRevisionCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
         work_unit=WorkUnitCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
         filing=ModeloRecordCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
-        transaction=TransactionCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
+        transaction=transaction_repository,
         verification=VerificationReportCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
@@ -1430,6 +1461,9 @@ def build_verification_repository_bundle(bucket_id: str) -> VerificationReposito
         draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
         retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        ledger_membership_ports=build_ledger_membership_ports(
+            bucket_id=normalized_bucket_id, transaction_repository=transaction_repository
+        ),
     )
 
 
@@ -1448,6 +1482,7 @@ __all__ = [
     "build_filing_action_ports",
     "build_inventory_service_ports",
     "build_ledger_evidence_ports",
+    "build_ledger_membership_ports",
     "build_modelo_edit_receipt_repository",
     "build_modelo_export_ports",
     "build_modelo_history_ports",

@@ -385,19 +385,18 @@ def _gasto_gate_issue(
     cumulative_end: date,
 ) -> RentaGastoLedgerAggregationIssue | None:
     """Return the first downstream issue for an eligible gasto transaction."""
-    if is_non_eur_without_conversion(transaction):
-        return RentaGastoLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
-            detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta gastos",
-        )
-
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
     if not (cumulative_start <= filing_date <= cumulative_end):
         return RentaGastoLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD,
             detail=f"filing date {filing_date} is outside the cumulative gasto window",
+        )
+    if is_non_eur_without_conversion(transaction):
+        return RentaGastoLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+            detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta gastos",
         )
 
     # A deductible gasto must declare its IVA-exclusive base imponible: the gross

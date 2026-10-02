@@ -1541,12 +1541,23 @@ application:
       ledger_snapshot_drift: 'Your records changed after modelo %{modelo} %{filing_year},
         period %{period}, was calculated: %{changed_count} entries changed and %{removed_count}
         removed. Calculate it again.'
+      ledger_snapshot_drift_added: Your records contain %{added_count} entries not
+        accounted for in the calculation of Modelo %{modelo} %{filing_year}, period
+        %{period}. Calculate this declaration again.
       ledger_snapshot_drift_changed: 'Your records changed after modelo %{modelo}
         %{filing_year}, period %{period}, was calculated (entries changed: %{changed_count}).
         Calculate it again.'
       ledger_snapshot_drift_removed: 'Your records changed after modelo %{modelo}
         %{filing_year}, period %{period}, was calculated (entries removed: %{removed_count}).
         Calculate it again.'
+      ledger_snapshot_drift_with_added: 'Your records no longer match the calculation
+        of Modelo %{modelo} %{filing_year}, period %{period}: %{added_count} entries
+        are not accounted for, %{changed_count} changed and %{removed_count} were
+        removed. Calculate this declaration again.'
+      ledger_snapshot_membership_unavailable: Cadrumo could not compare your current
+        records with the calculation of Modelo %{modelo} %{filing_year}, period %{period}.
+        Filing is blocked until this comparison succeeds. Try again when your records
+        are available, and calculate again if they changed.
       m193_settled_row_amount_authority_unresolved: Modelo 193 for %{filing_year}
         includes %{settled_prior_accrual_rows} payment(s) of income earned in an earlier
         year. The official rules do not say how to report their base and withholding,

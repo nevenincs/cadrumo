@@ -1611,12 +1611,24 @@ application:
       ledger_snapshot_drift: 'A nyilvántartása megváltozott a Modelo %{modelo} (%{filing_year},
         %{period} időszak) kiszámítása óta: %{changed_count} tétel módosult és %{removed_count}
         törlődött. Számítsa ki újra.'
+      ledger_snapshot_drift_added: A nyilvántartásában %{added_count} olyan tétel
+        van, amelyet a Modelo %{modelo} %{filing_year} bevallás %{period} időszakának
+        számítása nem vett figyelembe. Számolja újra ezt a bevallást.
       ledger_snapshot_drift_changed: 'A nyilvántartása megváltozott a Modelo %{modelo}
         nyomtatvány (%{filing_year}, %{period} időszak) kiszámítása óta (módosult
         tételek: %{changed_count}). Számítsa ki újra.'
       ledger_snapshot_drift_removed: 'A nyilvántartása megváltozott a Modelo %{modelo}
         nyomtatvány (%{filing_year}, %{period} időszak) kiszámítása óta (törölt tételek:
         %{removed_count}). Számítsa ki újra.'
+      ledger_snapshot_drift_with_added: 'A nyilvántartása már nem egyezik a Modelo
+        %{modelo} %{filing_year} bevallás %{period} időszakának számításával: %{added_count}
+        tételt nem vett figyelembe, %{changed_count} megváltozott, %{removed_count}
+        pedig törölve lett. Számolja újra ezt a bevallást.'
+      ledger_snapshot_membership_unavailable: A Cadrumo nem tudta összehasonlítani
+        a jelenlegi nyilvántartását a Modelo %{modelo} %{filing_year} bevallás %{period}
+        időszakának számításával. A benyújtás az összehasonlítás sikeres befejezéséig
+        tiltott. Próbálja újra, amikor a nyilvántartása elérhető, és számolja újra
+        a bevallást, ha a tételek megváltoztak.
       m193_settled_row_amount_authority_unresolved: A(z) %{filing_year}. évi Modelo
         193 %{settled_prior_accrual_rows} olyan kifizetést tartalmaz, amely korábbi
         évben keletkezett jövedelemre vonatkozik. A hivatalos szabályok nem határozzák
