@@ -153,7 +153,9 @@ class WindowsOwnedProcess:
             raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
         if result != win32event.WAIT_OBJECT_0:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        return win32process.GetExitCodeProcess(self._handle)
+        # pywin32 reports the DWORD as a signed C long, so NTSTATUS-style
+        # crash codes such as 0xC0000005 would otherwise read as negative.
+        return win32process.GetExitCodeProcess(self._handle) & 0xFFFFFFFF
 
     def close(self) -> None:
         """Attempt both handles, retaining each until its native release succeeds."""

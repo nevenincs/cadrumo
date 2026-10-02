@@ -334,7 +334,7 @@ async def test_installed_windows_sdk_reconnects_with_exact_runtime_recovery(tmp_
                             AccessDenialCode.SESSION_INACTIVE.value,
                             AccessDenialCode.CONNECTION_MISMATCH.value,
                         }
-                    await close_async_resources(sdk_owner, task_name="recovery-first-sdk-close", primary_error=None)
+                    await sdk_owner.close()
                 if recovery == "demand-after-stop":
                     # A completed intentional Stop permits a distinct explicit demand.
                     task.control, task.runtime_boot = None, None
@@ -431,9 +431,7 @@ async def test_installed_windows_sdk_reconnects_with_exact_runtime_recovery(tmp_
                     )
                     inspection = await task.manager.inspect()
                     assert inspection.binding_matches and not inspection.login_autostart
-                    await close_async_resources(
-                        sdk_owner, task_name="recovery-replacement-sdk-close", primary_error=None
-                    )
+                    await sdk_owner.close()
                     # Session traffic used the previous probe; retain a fresh owner-control channel.
                     task.control = None
                     owner_host, owner_boot = await task.observe_live_process()
@@ -447,13 +445,22 @@ async def test_installed_windows_sdk_reconnects_with_exact_runtime_recovery(tmp_
             primary = error
             raise
         finally:
+            # The SDK's anyio scopes must exit in the task that entered them, so
+            # its stacks close here rather than inside the shared cleanup task.
+            sdk_failure: BaseException | None = None
+            for owner in sdk_owners:
+                try:
+                    await owner.close()
+                except BaseException as error:
+                    sdk_failure = sdk_failure or error
             await close_async_resources(
-                *sdk_owners,
                 client_owner,
                 server_owner,
                 endpoint_owner,
                 task_name="installed-recovery-custody-close",
-                primary_error=primary,
+                primary_error=primary or sdk_failure,
             )
+            if primary is None and sdk_failure is not None:
+                raise sdk_failure
         assert native.read(CONTROL_NAMESPACE, subject.store.account) is None
         assert all(native.read(WRAP_NAMESPACE, account) is None for account in wrap_accounts)

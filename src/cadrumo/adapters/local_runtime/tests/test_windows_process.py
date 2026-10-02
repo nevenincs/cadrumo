@@ -45,6 +45,20 @@ async def _record(path: Path) -> _ProcessFacts:
     pytest.fail("synthetic child did not publish process facts within the deadline")
 
 
+def test_crash_status_exit_is_reported_as_the_unsigned_native_code(tmp_path: Path) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = scope.launch(
+            executable=native_python(),
+            arguments=("-c", "import ctypes; ctypes.windll.kernel32.ExitProcess(0xC0000005)"),
+            directory=tmp_path,
+            environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+        )
+        assert process.wait(timeout=5) == 0xC0000005
+    finally:
+        scope.terminate()
+
+
 def test_normal_exit_and_environment_are_preserved(tmp_path: Path) -> None:
     scope = WindowsProcessScope()
     try:
