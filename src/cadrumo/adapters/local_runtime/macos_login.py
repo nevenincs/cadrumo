@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import errno
 import socket
 import struct
 import sys
@@ -71,9 +72,33 @@ def macos_peer_audit_token(sock: socket.socket, *, expected_owner: str) -> Macos
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         if read_macos_process(pid, expected_owner=expected_owner) != before:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        _require_current_process_version(payload)
         return token
     except (OSError, struct.error):
         raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED) from None
+
+
+def _require_current_process_version(payload: bytes) -> None:
+    # The public libproc API compares the token's pidversion inside the kernel.
+    # BSD birth timestamps alone remain unchanged when the peer executes a new
+    # program. Its path is only a bounded output buffer and is never disclosed.
+    value = (ctypes.c_uint32 * 8).from_buffer_copy(payload)
+    buffer = (ctypes.c_ubyte * 4096)()
+    try:
+        native = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
+        query = native.proc_pidpath_audittoken
+        query.argtypes = (ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint32)
+        query.restype = ctypes.c_int
+        ctypes.set_errno(0)
+        count = query(ctypes.byref(value), ctypes.byref(buffer), ctypes.sizeof(buffer))
+        if count == 0 and ctypes.get_errno() in (errno.EACCES, errno.EPERM):
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        if type(count) is not int or not 0 < count < ctypes.sizeof(buffer) or buffer[count] != 0:
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+    except (AttributeError, OSError):
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+    finally:
+        ctypes.memset(ctypes.byref(buffer), 0, ctypes.sizeof(buffer))
 
 
 @dataclass(frozen=True, slots=True)
