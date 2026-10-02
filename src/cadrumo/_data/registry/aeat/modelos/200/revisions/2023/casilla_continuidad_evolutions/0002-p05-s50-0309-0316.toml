@@ -1,0 +1,32 @@
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200012-00309-2022-2023-label_and_legal_refs_evolved"
+continuidad_id = "is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-aumentos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-27-2014:art-12-3-a", "ley-27-2014:art-12-3-d", "ley-27-2014:da-16", "ley-27-2014:da-17"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200012-00310-2022-2023-label_and_legal_refs_evolved"
+continuidad_id = "is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-disminuciones"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-27-2014:art-12-3-a", "ley-27-2014:art-12-3-d", "ley-27-2014:da-16", "ley-27-2014:da-17"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018-00315-2022-2023-label_evolved"
+continuidad_id = "is-deduccion-centenario-rugby-pendiente-generada"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-11-2020:da-76"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018-00316-2022-2023-label_evolved"
+continuidad_id = "is-deduccion-centenario-rugby-aplicado-periodo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-11-2020:da-76"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]

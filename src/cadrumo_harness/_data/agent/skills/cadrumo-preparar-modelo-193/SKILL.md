@@ -31,8 +31,8 @@ against four already-filed quarterly self-assessments of the same
 retenciones tax category, with a per-perceptor detail block. The lifecycle
 spine (work create → calculate → verify → revision review → export →
 reconcile) is identical. The delta is the source modelo (123, capital
-mobiliario, not 111, trabajo/actividades), the fold-in shape (two summed
-totals plus a distinct-perceptor count, not nine income blocks), and the
+mobiliario, not 111, trabajo/actividades), the declarante shape (two totals
+plus a count of perceptor records, not nine income blocks), and the
 per-perceptor row content (a single clave per perceptor, not a
 clave/subclave combination across nine income categories).
 
@@ -46,10 +46,11 @@ clave/subclave combination across nine income categories).
 - **All four Modelo 123 quarters (`1T`, `2T`, `3T`, `4T`) for the same
   `filing_year` are already calculated** — read each with
   `aeat app modelo work revision <work-unit-id> --format json` before
-  starting the 193. Modelo 193 folds these four filings' casilla `06` (base
-  total) and casilla `09` (retenciones total) into its own annual totals via
-  the `annual_summary` relation; a missing or stale quarter blocks
-  verification (see below). Confirm the taxpayer actually files Modelo 123
+  starting the 193. For ejercicio 2024, Modelo 193 folds these four filings'
+  casilla `06` (base total) and casilla `09` (retenciones total) into its own
+  annual totals via the `annual_summary` relation, so a missing or stale
+  quarter blocks verification (see below); from 2025 the quarters are a
+  reconciliation cross-check only. Confirm the taxpayer actually files Modelo 123
   on quarterly cadence via `aeat app overview explain 123 --year <YEAR>`
   before assuming it.
 - The `filing_year`. The period is always the annual token `0A` — Modelo 193
@@ -71,34 +72,37 @@ clave/subclave combination across nine income categories).
 
 ## What Modelo 193 adds over the annual-informativa pattern
 
-- **Three declarante-level summary casillas**, each folding all four
-  Modelo 123 quarters, never re-summed by hand:
-  - **Casilla "Numero total de perceptores"** — the count of distinct
-    perceptors for the year, computed directly from the dedicated
-    per-perceptor retención store (a `perceptor_count_distinct` fact), not a
-    sum of the four quarters' perceptor counts (a perceptor paid in more
-    than one quarter is not double-counted).
-  - **Casilla "Base retenciones e ingresos a cuenta total"** — the year's
-    four Modelo 123 casilla-`06` totals (each quarter's own base total)
-    summed via an `annual_summary` relation.
-  - **Casilla "Retenciones e ingresos a cuenta total"** — the year's four
-    Modelo 123 casilla-`09` totals (each quarter's own retenciones total)
-    summed via an `annual_summary` relation.
+- **Three declarante-level summary casillas**, never re-summed by hand:
+  - **Casilla "Numero total de perceptores"** — the number of type-2
+    perceptor records the declaration carries, as every record design
+    states: a perceptor on several records (several claves, or from 2025
+    several ejercicios de devengo) counts once per record. It is not a sum
+    of the quarters' perceptor counts and not a count of distinct NIFs.
+  - **Casilla "Base retenciones e ingresos a cuenta total"** — for ejercicio
+    2024, the year's four Modelo 123 casilla-`06` totals summed via an
+    `annual_summary` relation; in the other supported years, the sum of the
+    base field over the type-2 perceptor records.
+  - **Casilla "Retenciones e ingresos a cuenta total"** — for ejercicio
+    2024, the year's four Modelo 123 casilla-`09` totals summed via an
+    `annual_summary` relation; in the other supported years, the sum of the
+    retenciones field over the type-2 perceptor records.
 - **Per-perceptor detail rows.** Unlike Modelo 390 (which has no row-level
-  detail), Modelo 193 is an informativa: it reports one row per distinct
-  perceptor for the year — tax id, legal name, clave (the capital-income
+  detail), Modelo 193 is an informativa: it reports one type-2 record per
+  perceptor and clave (and, from 2025, ejercicio de devengo) — tax id, legal
+  name, clave (the capital-income
   category code, e.g. intereses de cuentas, dividendos), the amount
   perceived (dinerario), and the retención practicada. These rows are
   ledger-derived from the same withholding store the declarante-level
   totals draw from; do not hand-construct or edit a perceptor row.
 - **No manual-block distinction at this layer.** Every declarante total and
-  every perceptor row on Modelo 193 is ledger-derived through the
-  `retenciones_aggregation` and `withholding` binding sources; there is no
+  every perceptor row on Modelo 193 is ledger-derived (the 2024 money totals
+  through the Modelo 123 relation, everything else through the `withholding`
+  binding source); there is no
   manual (non-ledger-derived) income block equivalent to Modelo 111's
   trabajo-en-especie or ganancias-forestales casillas. A suspicious `0` on
-  any Modelo 193 total traces back to a Modelo 123 quarter that is missing,
-  stale, or has an unclassified ledger entry — check the source quarter, not
-  the 193.
+  any Modelo 193 total traces back to a missing perceptor record, or for
+  2024 to a Modelo 123 quarter that is missing, stale, or has an
+  unclassified ledger entry — check the source, not the 193.
 
 ## Success assertions
 

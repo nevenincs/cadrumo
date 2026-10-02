@@ -28,6 +28,7 @@ from ....domain.deadlines.models import (
     ObligationStatus,
     TaxpayerProfile,
 )
+from ....domain.deadlines.tests.withdrawn_deadline_window_authority import withdrawn_deadline_window_operation
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...live.expedientes import PersistedExpedientesSnapshot
@@ -89,8 +90,8 @@ _M202_CENSO_ENROLMENT_KEYS = frozenset(
 )
 
 
-def _annual_work_unit_without_authored_window(*, modelo: str, filing_year: int) -> WorkUnit:
-    """Build a real historic annual work unit for overview deadline lookup."""
+def _annual_work_unit(*, modelo: str, filing_year: int) -> WorkUnit:
+    """Build a real annual work unit for overview deadline lookup."""
     period = Period.from_year_and_code(filing_year, "0A")
     revision_id = "historic-annual-deadline-selection"
     created_at = datetime(filing_year, 1, 2, tzinfo=UTC)
@@ -121,29 +122,37 @@ def test_calendar_does_not_project_historic_annual_work_into_future_registry_win
     modelo: str,
     filing_year: int,
     calendar_range: OverviewCalendarRange,
-    authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Overview retains an unregistered annual work unit instead of borrowing the successor's campaign."""
-    work_unit = _annual_work_unit_without_authored_window(modelo=modelo, filing_year=filing_year)
+    """Overview retains an unregistered annual work unit instead of borrowing the successor's campaign.
 
-    assert _registry_window_for_work_unit(work_unit) is None
+    The year is made unregistered by withdrawing its windows from the published
+    generation, so the case does not wait on a real gap that authoring closes.
+    The range is the successor's campaign, and the successor's own work unit is
+    placed in it: a unit given that window would be placed there too.
+    """
+    work_unit = _annual_work_unit(modelo=modelo, filing_year=filing_year)
+    successor = _annual_work_unit(modelo=modelo, filing_year=filing_year + 1)
 
-    calendar = build_overview_calendar(
-        _profile(),
-        calendar_range,
-        operation=authority_operation,
-        today=calendar_range.from_date,
-        work_units=(work_unit,),
-    )
+    with withdrawn_deadline_window_operation(modelo_id=modelo, filing_year=filing_year) as operation:
+        assert _registry_window_for_work_unit(work_unit, operation=operation) is None
+        calendar = build_overview_calendar(
+            _profile(),
+            calendar_range,
+            operation=operation,
+            today=calendar_range.from_date,
+            work_units=(work_unit, successor),
+        )
 
-    assert all(entry.local_work_unit_id != work_unit.work_unit_id for entry in calendar.entries)
+    placed = {entry.local_work_unit_id for entry in calendar.entries}
+    assert successor.work_unit_id in placed, "the range does not hold the successor's campaign, so this proves nothing"
+    assert work_unit.work_unit_id not in placed
 
 
 def test_calendar_refuses_a_window_for_annual_work_below_the_supported_floor() -> None:
     """A work unit below the supported floor is refused rather than given a later campaign."""
     supported_years = published_supported_filing_years()
     assert supported_years is not None
-    work_unit = _annual_work_unit_without_authored_window(modelo="100", filing_year=supported_years.floor - 1)
+    work_unit = _annual_work_unit(modelo="100", filing_year=supported_years.floor - 1)
 
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         _registry_window_for_work_unit(work_unit)

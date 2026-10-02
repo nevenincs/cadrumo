@@ -19,6 +19,7 @@ source_refs = [
 ]
 
 [modelo.inception.unauthored]
-earliest_authored = 2023
-reason = "Censo de empresarios approved by Orden EHA/1274/2007; filing years before 2023 existed in law and are not yet authored. 2023 onward is covered by the 2023-hasta-2025-02-02 edition, whose span is the bundled aeat-dr-036-2023 window and meets the 2025-02-03 successor with no day uncovered."
+earliest_authored = 2022
+reason = "Censo de empresarios approved by Orden EHA/1274/2007; filing years before 2022 existed in law and lie below the supported floor, so they are not authored. From 2022 to 2023-04-24 the declaracion censal is authored from aeat-dr-036-v35, the form Orden HAC/609/2021 put in force on 2021-07-01; Orden HFP/381/2023 replaced it from 2023-04-25, rendered by the 2023-hasta-2025-02-02 edition, which meets the 2025-02-03 successor with no day uncovered."
 legal_refs = ["orden-eha-1274-2007:art-1"]
+source_refs = ["aeat-dr-036-v35"]

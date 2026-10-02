@@ -14,7 +14,7 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
+from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryError
 
 from ..analysis.revision_selection_probe import declared_period_codes, probe_modelo
 from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
@@ -259,14 +259,33 @@ def test_a_year_that_cannot_choose_between_split_windows_is_recorded_not_erased(
     the year decided outright. The single coordinate this screen was built to
     show was therefore invisible in its own output.
 
-    The flag is asserted where the split is, not where a previous corpus state
-    put it: every flagged row must name the later window at the split year, and
-    no other row may carry the flag.
+    Every flagged coordinate must be ambiguous through the canonical resolver,
+    including any additional splits the live authority declares.
     """
     probes = probe_modelo(authority, mid_year_split.modelo)
     ambiguous = [probe for probe in probes if probe.year_alone_ambiguous]
 
     assert ambiguous, "the split year must reach the probe as an ambiguity, or the flag is never exercised"
-    assert {(probe.revision, probe.filing_year) for probe in ambiguous} == {(mid_year_split.later, mid_year_split.year)}
-    assert all(probe.resolved == mid_year_split.later for probe in ambiguous), "the date retry must still answer"
+    expected = set()
+    for probe in probes:
+        try:
+            admitted_revision_id(
+                authority,
+                probe.modelo,
+                filing_year=probe.filing_year,
+                period=probe.period,
+                grade=RegistryAuthorityGrade.APPLICABILITY,
+            )
+        except AmbiguousRevisionSelectionError:
+            expected.add((probe.revision, probe.filing_year, probe.period))
+        except RegistryError:
+            continue
+    assert {(probe.revision, probe.filing_year, probe.period) for probe in ambiguous} == expected
+    selected_split = [
+        probe
+        for probe in ambiguous
+        if (probe.revision, probe.filing_year) == (mid_year_split.later, mid_year_split.year)
+    ]
+    assert selected_split, "the discovered split must remain visible among all declared ambiguities"
+    assert all(probe.resolved == mid_year_split.later for probe in selected_split), "the date retry must still answer"
     assert all(probe.refusal is None for probe in ambiguous), "a rescued coordinate is not a refusal"

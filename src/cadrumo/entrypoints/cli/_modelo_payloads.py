@@ -1642,24 +1642,18 @@ class ModeloAggregateResult(OutputSchema):
     could be emitted as a valid envelope. Build it through
     :meth:`from_aggregation_result` rather than field-by-field.
 
-    ``clave_breakdown`` carries the Modelo 190 per-clave retención rows (empty
-    for every other modelo); it is primary structured result data the command
-    produces, sourced from the already-ingested per-perceptor-clave withholding
-    detail, not an incidental diagnostic.
+    ``clave_breakdown`` carries per-clave rows of the stored per-perceptor-clave
+    withholding detail the modelo's calculation reads (empty when it reads
+    none); it is primary structured result data the command produces, not an
+    incidental diagnostic.
 
     ``clave_breakdown`` and ``observation_count`` are deliberately NOT
-    cross-validated against each other. They are different slices of the same
-    ledger, not one derived from the other: ``observation_count`` reflects the
-    retenciones provider's own aggregation (``result.log_fields``), while
-    ``clave_breakdown`` is a separate CLI-local projection of the withholding
-    observations the ``--withholding-observation`` flags supplied directly
-    (see ``aggregate_withholding_by_clave`` in ``_modelo_aggregate_cli.py``). A
-    prior invariant asserting ``breakdown_percepciones <= observation_count``
-    was removed: it was never true by construction (the two counts have no
-    routed relationship for M190, the only modelo that ever populates
-    ``clave_breakdown``) and it rejected every M190 call whose withholding
-    observations were not additionally routed through the retenciones
-    provider's own store.
+    cross-validated against each other. They are different stores, not one
+    derived from the other: ``observation_count`` counts the retención rows the
+    retenciones provider aggregated (``result.log_fields``), while
+    ``clave_breakdown`` projects the per-perceptor-clave rows through
+    ``aggregate_withholding_by_clave``. Modelo 190's calculation reads only the
+    second store, so its ``observation_count`` is zero by construction.
     """
 
     operation: str = "modelo.aggregate"
@@ -1725,7 +1719,8 @@ class ModeloAggregateResult(OutputSchema):
 
         Args:
             result: The canonical per-modelo aggregation result.
-            clave_breakdown: Modelo 190 per-clave rows, empty elsewhere.
+            clave_breakdown: Per-clave rows of the per-perceptor-clave detail
+                the calculation reads, empty when it reads none.
             withholding_window: Current baseline and generation metadata for an
                 invoice-backed withholding scope, absent for other modelos.
         """

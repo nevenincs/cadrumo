@@ -22,7 +22,7 @@ from .errors import (
     RegistryValidationError,
 )
 from .ids import RevisionId
-from .modelo_inception import ModeloInceptionField
+from .modelo_inception import DeclaredInception, ModeloInceptionField
 from .modelo_localization import require_modelo_localization
 from .modelo_pending_orden import PendingEjercicioOrden, PendingEjercicioOrdenes
 from .period_selector_match import selector_token_for_request
@@ -292,6 +292,38 @@ def _require_supported_filing_year(
                 is not None
             )
         ),
+    )
+
+
+def _refuse_before_declared_inception(
+    modelo_id: str,
+    revisions: Sequence[_SelectableRevision],
+    inception: ModeloInceptionField | None,
+    *,
+    filing_year: int,
+    period: str | None,
+    revision_id: RevisionId | None,
+) -> None:
+    """Refuse a year before the modelo's declared inception, for every selector.
+
+    Projection answers a year nobody authored from the nearest authored edition,
+    which is right for a modelo that existed and wrong for one that did not: a
+    design cannot govern a period that predates the modelo. The refusal is the
+    plain absence refusal, because no revision exists for the year and none is
+    owed.
+
+    Only a declared inception gates. An unauthored-debt declaration records that
+    earlier years exist in law without their own edition, and those years stay
+    answerable by projection.
+    """
+    if not isinstance(inception, DeclaredInception) or inception.admits_filing_year(filing_year):
+        return
+    raise NoRevisionForPeriodError(
+        modelo_id=modelo_id,
+        filing_year=filing_year,
+        period="year" if period is None else period,
+        revision_id=revision_id,
+        available_revision_ids=tuple(str(revision.id) for revision in revisions),
     )
 
 
@@ -572,6 +604,9 @@ def select_revision_for_year(
             filing window it declares for this coordinate.
         support: Optional registry envelope that hard-gates the request and
             carries a year beyond its authored horizon back to that horizon.
+
+    A year before the modelo's declared inception is refused whatever the
+    envelope admits.
     """
     revisions = tuple(modelo.revisions.values())
     _require_supported_filing_year(
@@ -580,6 +615,14 @@ def select_revision_for_year(
         filing_year=filing_year,
         period=None,
         support=support,
+    )
+    _refuse_before_declared_inception(
+        str(modelo.id),
+        revisions,
+        modelo.inception,
+        filing_year=filing_year,
+        period=None,
+        revision_id=None,
     )
     matching, authored_year = _nearest_authored_candidates(
         revisions,
@@ -609,7 +652,7 @@ def select_revision_metadata_for_year(
     on: date | None = None,
     support: SupportedFilingYearsCatalogue | None = None,
 ) -> RevisionSelectionMetadata:
-    """Select metadata with the exact canonical year-scoped rules."""
+    """Select metadata with the exact canonical year-scoped rules, declared inception included."""
     effective_support = directory.supported_filing_years if support is None else support
     _require_supported_filing_year(
         directory.modelo_id,
@@ -617,6 +660,14 @@ def select_revision_metadata_for_year(
         filing_year=filing_year,
         period=None,
         support=effective_support,
+    )
+    _refuse_before_declared_inception(
+        directory.modelo_id,
+        directory.revisions,
+        directory.modelo.inception,
+        filing_year=filing_year,
+        period=None,
+        revision_id=None,
     )
     matching, authored_year = _nearest_authored_candidates(
         directory.revisions,
@@ -663,6 +714,9 @@ def select_revision(
             the matching revision when supplied.
         support: Optional registry envelope that hard-gates the request and
             carries a year beyond its authored horizon back to that horizon.
+
+    A year before the modelo's declared inception is refused whatever the
+    envelope admits.
     """
     revisions = tuple(modelo.revisions.values())
     _require_supported_filing_year(
@@ -671,6 +725,14 @@ def select_revision(
         filing_year=filing_year,
         period=period,
         support=support,
+    )
+    _refuse_before_declared_inception(
+        str(modelo.id),
+        revisions,
+        modelo.inception,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
     )
     matching, authored_year = _nearest_authored_candidates(
         revisions,
@@ -705,7 +767,7 @@ def select_revision_metadata(
     revision_id: RevisionId | None = None,
     support: SupportedFilingYearsCatalogue | None = None,
 ) -> RevisionSelectionMetadata:
-    """Select complete revision metadata through the canonical period rules."""
+    """Select complete revision metadata through the canonical period rules, declared inception included."""
     effective_support = directory.supported_filing_years if support is None else support
     _require_supported_filing_year(
         directory.modelo_id,
@@ -713,6 +775,14 @@ def select_revision_metadata(
         filing_year=filing_year,
         period=period,
         support=effective_support,
+    )
+    _refuse_before_declared_inception(
+        directory.modelo_id,
+        directory.revisions,
+        directory.modelo.inception,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
     )
     matching, authored_year = _nearest_authored_candidates(
         directory.revisions,
@@ -751,7 +821,17 @@ def select_authored_revision_metadata(
     law applied to a past period. Reading a carried prior filing needs the latter,
     so this selects only among revisions whose own period selector covers the
     exact coordinate and never projects a year onto another authored edition.
+    A year before the modelo's declared inception is refused here too: the law
+    applied no design of this modelo to it.
     """
+    _refuse_before_declared_inception(
+        directory.modelo_id,
+        directory.revisions,
+        directory.modelo.inception,
+        filing_year=filing_year,
+        period=period,
+        revision_id=None,
+    )
     matching, _authored_year = _nearest_authored_candidates(
         directory.revisions,
         filing_year=filing_year,

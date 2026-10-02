@@ -93,16 +93,21 @@ class TestFiledObservationRelations:
                     f"{max_single} — at least one period did not contribute"
                 )
 
-            # Annual receivers are op=copy passthroughs — assert the
-            # fixture's literal threads through to the resolved relation
-            # value unchanged.
-            annual_copies = {
-                "renta-modelo-184-atribucion-actividades-economicas": Decimal("77"),
-            }
-            for relation_id, fixture_value in annual_copies.items():
-                assert resolved[relation_id] == fixture_value, (
-                    f"{relation_id} copy thread broke — expected {fixture_value} from fixture"
-                )
+            # No annual receiver remains: the withholding-agent returns credit the
+            # declarant nothing, and the instalment returns are the only relations.
+            assert set(resolved) == set(quarterly_aggregations)
+
+            # The fixture's filed Modelo 184 carries the entity's type-2 attribution
+            # total, not the member's share that casilla 1577 declares, so it moves
+            # no Modelo 100 relation value.
+            without_m184 = _resolve_relations_from_observations(
+                snapshot.revision,
+                tuple(observation for observation in observations if observation.modelo != "184"),
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
+                operation=_authority_operation_for_test,
+            )
+            assert resolved == without_m184
 
     def test_modelo_100_relation_resolution_requires_each_source_period(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:

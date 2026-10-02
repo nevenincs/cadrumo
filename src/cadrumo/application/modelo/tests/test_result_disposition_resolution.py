@@ -12,6 +12,7 @@ from ....core.errors.hierarchy import CoreValidationError
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -198,6 +199,11 @@ def test_m123_result_disposition_uses_revision_specific_canonical_result_casilla
     assert disposition is ResultDisposition.INGRESO
 
 
+def _casillas_printing(revision: ModeloRevision, number: str) -> tuple[CasillaId, ...]:
+    """Return, in id order, every casilla of the revision that carries the printed number."""
+    return tuple(sorted(casilla.id for casilla in revision.casillas if casilla.number == number))
+
+
 def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token() -> None:
     """A registry metadata token must not silently drive result disposition."""
     work_unit = _registry_work_unit(modelo="200", filing_year=2025, period_code="0A")
@@ -214,9 +220,17 @@ def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token
             period=work_unit.period,
         )
 
-    assert f"{_M200_PRINTED_RESULT_NUMBER!r} -> {_M200_REFUND_RESULT_CASILLA}" in str(
-        (exc_info.value.context or {})["casilla_refs"]
+    # The design prints the result number on the equity-statement sheets too, so the
+    # refusal names every casilla carrying it, the canonical result casilla among them.
+    revision_casillas = published_snapshot("200", filing_year=2025, period="0A").revision
+    candidates = _casillas_printing(revision_casillas, _M200_PRINTED_RESULT_NUMBER)
+    assert _M200_REFUND_RESULT_CASILLA in candidates
+    refusal = (
+        f"{_M200_PRINTED_RESULT_NUMBER!r} is ambiguous; candidate casilla.id values: {', '.join(candidates)}"
+        if len(candidates) > 1
+        else f"{_M200_PRINTED_RESULT_NUMBER!r} -> {_M200_REFUND_RESULT_CASILLA}"
     )
+    assert refusal in str((exc_info.value.context or {})["casilla_refs"])
 
 
 def test_resolve_modelo_result_disposition_rejects_ambiguous_printed_number_metadata_token() -> None:
@@ -235,7 +249,12 @@ def test_resolve_modelo_result_disposition_rejects_ambiguous_printed_number_meta
             period=work_unit.period,
         )
 
+    candidates = _casillas_printing(
+        published_snapshot("200", filing_year=2025, period="0A").revision, _M200_AMBIGUOUS_PRINTED_NUMBER
+    )
+    assert {_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA, _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA} <= set(
+        candidates
+    )
     assert (
-        f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
-        f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
+        f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: {', '.join(candidates)}"
     ) in str((exc_info.value.context or {})["casilla_refs"])

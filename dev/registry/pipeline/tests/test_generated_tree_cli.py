@@ -156,17 +156,11 @@ def test_republish_admits_only_provenance_only_drift() -> None:
 
 
 def test_pipeline_cli_refuses_a_bootstrap_source_absent_from_the_catalogue() -> None:
-    """An absent tree's bootstrap selector must resolve to a real catalogued source.
-
-    Modelo 200/2024 has no published export tree yet, so ``prepare_generated_tree_invocation`` takes the
-    bootstrap branch before ``revision_render_inputs`` is ever reached. The
-    given ``source_ref`` is not any catalogued source at all, so this proves
-    the bootstrap guard in ``cli.py`` rather than the record-design guard in
-    ``render_check.py``.
-    """
+    """An isolated absent target reaches the bootstrap guard regardless of completed publications."""
+    filing_year = max(compiled_bundled_authority().supported_filing_years().years)
     result = CliRunner().invoke(
         app,
-        ["check", "200", "2024", "not-a-declared-source", "2024", "0A"],
+        ["check", "999", "unpublished-fixture", "not-a-declared-source", str(filing_year), "0A"],
     )
 
     assert result.exit_code == 1
@@ -204,28 +198,30 @@ def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
         )
 
 
-#: The one reviewed Modelo 200 design enrolled as a bootstrap target, found by its
-#: pinned bytes; its applicability names the exercise, revision and generated layout.
+#: The reviewed Modelo 200 design whose export publication retires its bootstrap authorization.
 _M200_BOOTSTRAP_DESIGN_SHA256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
 _M200_BOOTSTRAP_DESIGN = source_with_sha256(_M200_BOOTSTRAP_DESIGN_SHA256)
 _M200_BOOTSTRAP_DESIGN_EXERCISE = source_first_exercise(_M200_BOOTSTRAP_DESIGN)
 
 
-def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_design() -> None:
-    """The absent tree may bootstrap only from its own reviewed source."""
+def test_a_published_modelo_200_design_has_no_bootstrap_authorization() -> None:
+    """The published tree retains its own layout and cannot be bootstrapped again."""
     source_ref = _M200_BOOTSTRAP_DESIGN.id
-    target = reviewed_bootstrap_target(
-        GeneratedTreeInvocation(
-            "200", str(_M200_BOOTSTRAP_DESIGN_EXERCISE), source_ref, _M200_BOOTSTRAP_DESIGN_EXERCISE, "0A"
-        ),
-        source_sha256=_M200_BOOTSTRAP_DESIGN_SHA256,
+    revision = (
+        compiled_bundled_authority()
+        .snapshot(
+            "200", filing_year=_M200_BOOTSTRAP_DESIGN_EXERCISE, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        )
+        .revision
     )
-
-    assert target.layout_id == f"generated-modelo-200-{_M200_BOOTSTRAP_DESIGN_EXERCISE}-fichero"
-    assert target.line_ending == "crlf"
-    assert target.source_ref == source_ref
-    assert target.supersedes_layout_id is None
-    assert target.superseded_construct_references == 0
+    assert {str(layout.id) for layout in revision.export_layouts} == {
+        f"generated-modelo-200-{_M200_BOOTSTRAP_DESIGN_EXERCISE}-fichero"
+    }
+    with pytest.raises(ValueError, match="no reviewed generated-export bootstrap target"):
+        reviewed_bootstrap_target(
+            GeneratedTreeInvocation("200", str(revision.id), source_ref, _M200_BOOTSTRAP_DESIGN_EXERCISE, "0A"),
+            source_sha256=_M200_BOOTSTRAP_DESIGN_SHA256,
+        )
 
 
 @pytest.mark.parametrize(
@@ -284,7 +280,7 @@ def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> Non
     path = Path(__file__).resolve().parents[2] / "pipeline" / "generated_export_bootstrap_targets.toml"
     payload = parse_toml(path.read_text("utf-8"))
     targets = payload["targets"]
-    assert targets, "the bootstrap-target roster must not be silently emptied"
+    assert isinstance(targets, list), "the bootstrap-target roster must declare its targets explicitly"
 
     registry_root = bundled_path("registry", "aeat")
     already_bootstrapped = [

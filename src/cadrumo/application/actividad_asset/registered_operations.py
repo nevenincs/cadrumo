@@ -504,6 +504,7 @@ def _activity_asset_operations(
             covered_until=covered_until,
             history=history,
             taxpayer_workforce=taxpayer_workforce,
+            legal_reference=operation.legal_reference,
             requested_free_amount=requested_free_amount,
         )
 

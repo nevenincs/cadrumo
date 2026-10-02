@@ -1180,31 +1180,6 @@ additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025
 # records. The conformance comparison reported it as declared by the
 # dictionary and absent from the registry.
 
-# Toma-de-datos-only eligibility flag for the reducción agricultores jóvenes
-# (LIRPF disposición adicional sexta; instrucción 3 del Anexo I Orden
-# HAC/1347/2024). AEAT's own Diseño de Registros declares this field
-# (aeat-dr-100-2025-input-dictionary, campo "AJ",
-# /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/
-# InformacionAdicionalAgr/AJ, tipo S_N) at the same level as the sibling
-# InformacionAdicionalAgr fields (P3, CP, AE, REG, ACTF, BATEA, RETENAO) — none
-# of which carry a printed casilla número on the declaración; the asterisk
-# número convention (see DPNIF_D *01, ZCCAD *70, HIJOSUE *88) is used here for
-# the same reason. The eligibility condition itself (agricultor joven de 18 a
-# 40 años, o asalariado agrario, primeros cinco años desde la primera
-# instalación como titular de una explotación prioritaria, con plan de mejora
-# acreditado) is not derivable from any other casilla on this form — it is an
-# operator/preparer-declared fact, exactly like the Fase 3ª índices correctores
-# (blank/false = not applied, never fabricated).
-[[revisions."2025".casillas]]
-id = "AJ"
-number = "*98"
-section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
-data_type = "boolean"
-semantic_role = "irpf_eo_agr_reduccion_jovenes_flag"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "2025-only EO-agraria agricultores-jovenes eligibility flag (AEAT DR field AJ); no sibling revision models this Fase 4a gate yet."
-legal_refs = ["ley-35-2006:da-6", "orden-hac-1347-2024:anexo-i-instruccion-3"]
-additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-renta-2025-manual-parte1"]
 # Internal computed ceiling (Ley 35/2006 art. 50.3): the maximum
 # ejercicio-2024 negative base liquidable general compensable this period.
 # The positive base liquidable general before this carry is
@@ -1225,32 +1200,24 @@ internal_only = true
 data_type = "decimal"
 legal_refs = ["ley-35-2006:art-50"]
 additional_source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
-# Fase 5ª: determinación del rendimiento neto reducido de la actividad
-# (art. 32.1 LIRPF). The AEAT Diseño de Registros field for casilla 1554
-# (IMPE5AL, /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/
-# ActividadAgr/IMPE5AL) — like its estimación-directa (IMPE1REDU, casilla
-# 0225) and estimación-objetiva-no-agraria (IMPE4AM, casilla 1480) siblings
-# — is declared as a single "Importe de la deducción" amount field; AEAT's
-# own record design carries no separate sub-field for the "rendimientos con
-# período de generación superior a dos años... o notoriamente irregulares"
-# base the 30 por 100 applies to (art. 32.1 LIRPF). Which portion of the
-# rendimiento neto is genuinely irregular/multi-year is a taxpayer/preparer
-# fact not derivable from any other casilla on this form — exactly the same
-# class of off-form fact the AJ agricultores-jóvenes eligibility casilla
-# already models (2237-aj-reduccion-agricultores-jovenes-flag.toml). This
-# calculation-support casilla — id/number both the descriptive slug, no AEAT
-# casilla número, following the modelo-131 módulos-engine support-casilla
-# convention (0003-modulos-engine.toml) — carries the declared base so
-# casilla 1554 itself becomes computed: 30 por 100 x min(base, 300.000
-# euros anuales) (art. 32.1, segundo párrafo). A blank/zero base yields a
-# zero reducción, never fabricating a value the preparer has not supplied.
+# Exempt employment income of a trabajador del mar: the art. 7.p) LIRPF
+# pathway (work abroad, capped annually) or the REBECA pathway (Ley 19/1994
+# arts. 73 and 75, a fraction of the navigation income). Both are plain
+# exemptions. They are not rentas exentas con progresividad (DA 20ª LIRPF),
+# which is what box 0525 carries: the 2025 input dictionary files 0525 under
+# "Rentas exentas, excepto para determinar el tipo de gravamen"
+# (aeat-dr-100-2025-input-dictionary:1279) and the 2025 manual, cap. 15,
+# defines that class as treaty income that still sets the rate. No AEAT box
+# carries the maritime amount, so it is an internal node and files nowhere.
 [[revisions."2025".casillas]]
-id = "eo-agraria-reduccion-irregularidad-base"
-number = "eo-agraria-reduccion-irregularidad-base"
-section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
-semantic_role = "irpf_eo_agr_reduccion_irregulares_base"
+id = "trabajo-mar-renta-exenta"
+number = "trabajo-mar-renta-exenta"
+section = ["toma_datos_ampliada", "rdto_trabajo"]
+semantic_role = "irpf_trabajo_mar_renta_exenta"
 semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "2025-only EO-agraria art. 32.1 irregularidad reducción base support casilla (no AEAT DR sub-field exists for this component); no sibling revision models this Fase 5a base input yet."
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-32"], source_refs = ["aeat-renta-2025-manual-parte1"] }
-legal_refs = ["ley-35-2006:art-32"]
-source_refs = ["aeat-renta-2025-manual-parte1"]
+semantic_role_cardinality_reason = "2025-only internal carrier of the maritime-worker exemption (art. 7.p LIRPF or REBECA); AEAT's record design has no box for it and no sibling revision models it."
+input_kind = "computed"
+formula = "renta-maritime-exempt-income"
+internal_only = true
+legal_refs = ["ley-35-2006:art-7", "ley-19-1994:art-75"]
+source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2025-manual-parte1"]

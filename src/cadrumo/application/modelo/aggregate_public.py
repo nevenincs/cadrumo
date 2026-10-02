@@ -280,8 +280,6 @@ class PublicModeloAggregateCommand(BaseModel):
     @classmethod
     def from_domain(cls, command: PerModeloAggregationCommand) -> Self:
         """Copy the typed aggregation command without custom domain schemas."""
-        if command.withholding_observations:
-            raise ValueError("withholding observations are not accepted by modelo aggregate")
         return cls(
             modelo=command.modelo,
             period=PublicPeriod.from_period(command.period),
@@ -304,7 +302,6 @@ class PublicModeloAggregateCommand(BaseModel):
             retencion_observations=tuple(value.to_domain() for value in self.retencion_observations),
             counterpart_observations=tuple(value.to_domain() for value in self.counterpart_observations),
             foreign_asset_observations=tuple(value.to_domain() for value in self.foreign_asset_observations),
-            withholding_observations=(),
         )
 
 

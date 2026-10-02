@@ -823,6 +823,14 @@ errors:
       un archivo dentro del ámbito de acceso concedido.
     canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable
       de cierre del inventario.
+    canonical_invoice_draft_reader_busy_refused: No se ejecutó el modelo del lector
+      de borradores de facturas porque otra lectura local ya ocupaba la inferencia
+      de este equipo.
+    canonical_invoice_draft_reader_headroom_refused: No se cargó el modelo del lector
+      de borradores de facturas porque este equipo no mostró margen de memoria medido
+      para él.
+    canonical_invoice_withholding_defects: La evidencia de la factura no permite registrar
+      la retención hasta que se corrijan en la factura todos los defectos indicados.
     canonical_invoice_evidence_review_changed: El justificante o el borrador de la
       factura ha cambiado desde la revisión. Vuelva a leer y revisar el documento
       actual antes de confirmarlo.
@@ -1014,6 +1022,11 @@ errors:
     refused_active_profile_pointer_manual_recovery: El puntero de perfil activo {path}
       no se puede leer, así que no se puede borrar sin perder su revisión; requiere
       una recuperación manual.
+    refused_actividad_asset_accelerated_da18_depreciation_not_computed: En este período
+      impositivo, la DA 18 LIS concede a los vehículos eléctricos nuevos y a los puntos
+      de recarga amortización acelerada al doble del coeficiente lineal máximo, no
+      libertad de amortización. Ese régimen no se calcula, por lo que no se ha calculado
+      ninguna amortización.
     refused_actividad_asset_claim_conflict: La amortización registrada entra en conflicto
       con las ya registradas para el activo.
     refused_actividad_asset_incomplete: Al cuadro de amortización del activo le falta

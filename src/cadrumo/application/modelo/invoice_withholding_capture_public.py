@@ -273,7 +273,6 @@ class PublicInvoiceWithholdingCommand(BaseModel):
                 value.retencion_observations,
                 value.counterpart_observations,
                 value.foreign_asset_observations,
-                value.withholding_observations,
             )
         ):
             raise ValueError("received-invoice capture forbids caller-authored observations")

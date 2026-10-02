@@ -51,6 +51,7 @@ def run_modelo_aggregate(
     try:
         if not isinstance(projection, ModeloAggregateProjection):
             raise ValueError("modelo aggregate result has an unexpected type")
+        projection = ModeloAggregateProjection.model_validate(projection.model_dump(mode="python"), strict=True)
         if (
             projection.profile_id != client.profile_id
             or projection.modelo != command.modelo
@@ -88,7 +89,6 @@ def run_modelo_aggregate(
                 or projection.source_kinds is None
                 or projection.result_row_count is None
                 or projection.clave_breakdown is None
-                or projection.clave_breakdown
                 or expects_window != (window is not None)
                 or (
                     window is not None

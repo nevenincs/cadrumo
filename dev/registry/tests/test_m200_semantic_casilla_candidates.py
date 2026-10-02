@@ -270,10 +270,9 @@ def test_target_identity_worklist_classifies_every_noncanonical_owner_and_true_o
 def test_target_identity_worklist_keeps_printed_diagnostics_separate_from_map_owner(target_identity_worklist) -> None:
     worklist = target_identity_worklist
 
-    assert len(worklist.printed_identity_diagnostics) == 15
+    assert len(worklist.printed_identity_diagnostics) == 11
     assert Counter(row.state for row in worklist.printed_identity_diagnostics) == {
         subject.M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY: 11,
-        subject.M200PrintedIdentityState.CONFLICTS_WITH_MAP_OWNER: 4,
     }
     assert {row.export_field_id for row in worklist.printed_identity_diagnostics}.isdisjoint(
         row.export_field_id for row in worklist.map_owner_mismatches

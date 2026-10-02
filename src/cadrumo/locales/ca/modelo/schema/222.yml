@@ -356,6 +356,9 @@ modelo:
           Pagament fraccionat.
         title: IS pagament fraccionat règim de consolidació fiscal (grups)
       revision:
+        '2022':
+          field:
+            label: Model 222, exercici 2022
         '2023':
           field:
             label: Model 222, exercici 2023

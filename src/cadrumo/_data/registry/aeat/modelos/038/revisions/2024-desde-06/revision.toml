@@ -1,10 +1,12 @@
 [revisions."2024-desde-06"]
+casilla_storage_baseline = "2022-hasta-2024-05"
 casilla_source_refs = ["enrolled-modelo-038-procedure"]
 application_link_source_refs = ["enrolled-modelo-038-procedure"]
 authority_grade = "applicability"
 # BOE-A-2024-13049 applies the IRUS design amendment first to the June 2024
-# declaration. No selected source attests the earlier 2024 months, so this
-# revision begins at that exact declaration boundary and stops at year end.
+# declaration, so this revision begins at that exact declaration boundary and
+# stops at year end; January to May 2024 are filed on the 2012 design in the
+# 2022-hasta-2024-05 edition, whose payload this edition stores against.
 valid_from = 2024-06-01
 valid_to = 2024-12-31
 period_selector = { years = [2024], periods = ["06", "07", "08", "09", "10", "11", "12"] }
@@ -23,3 +25,24 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent: applicability-grade review; June-December 2024 selection is bounded by BOE-A-2024-13049's first-applicable declaration; no pre-June design authority is selected"
 reviewed_at = 2026-08-25
+family_storage_baseline = "2022-hasta-2024-05"
+scoped_families = ["workbook_parity_refs"]
+
+[[revisions."2024-desde-06".family_overrides]]
+family = "constructs"
+selector = {revision = "2022-hasta-2024-05", id = "modelo-038-informative"}
+sequence_additions = {deadline_windows = ["modelo-038-2024-06", "modelo-038-2024-07", "modelo-038-2024-08", "modelo-038-2024-09", "modelo-038-2024-10", "modelo-038-2024-11", "modelo-038-2024-12"], source_refs = ["aeat-dr-038-2024"]}
+sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28], source_refs = [1]}
+
+[[revisions."2024-desde-06".family_overrides]]
+family = "application_links"
+selector = {revision = "2022-hasta-2024-05", id = "modelo-038-export"}
+sequence_additions = {source_refs = ["aeat-dr-038-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2024-desde-06".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2022-hasta-2024-05", id = "modelo-038-static-layout"}
+fields = {fixture_id = "modelo-038-2024-layout", workbook_source = "aeat-dr-038-2024"}
+sequence_additions = {source_refs = ["aeat-dr-038-2024"]}
+sequence_removals = {source_refs = [0]}

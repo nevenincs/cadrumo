@@ -11,6 +11,21 @@ from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_VALID_COUNTERPART = (
+    '{"source_kind": "ledger_transaction", "source_object_id": "ctr-001",'
+    ' "counterparty_nif": "B00000001", "counterparty_name": "Cliente SL",'
+    ' "counterparty_country": "ES", "operation_kind": "entregas_y_prestaciones",'
+    ' "operation_period": "0A", "taxable_base": "2000.00",'
+    ' "invoice_total": "2000.00", "accrued_on": "2025-03-01"}'
+)
+
+_COUNTERPART_WITHOUT_COUNTRY = (
+    '{"source_kind": "ledger_transaction", "source_object_id": "ctr-001",'
+    ' "counterparty_nif": "B00000001", "counterparty_name": "Cliente SL",'
+    ' "operation_kind": "entregas_y_prestaciones", "operation_period": "0A",'
+    ' "taxable_base": "2000.00", "invoice_total": "2000.00", "accrued_on": "2025-03-01"}'
+)
+
 # ---------------------------------------------------------------------------
 # contract -- _parse_typed_cli_observations typed-boundary warmup
 # ---------------------------------------------------------------------------
@@ -18,96 +33,80 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def test_parse_typed_cli_observations_round_trips_valid_json() -> None:
     """A valid JSON object is parsed into the typed model with all fields preserved."""
-    import typer as _typer
+    from decimal import Decimal
 
-    from ....application.aggregation.retenciones import RetencionObservation
-    from ....core.aggregation import RetencionScheme
+    from ....application.aggregation.counterpart import CounterpartObservation
+    from ....core.aggregation import BindingSourceKind
     from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
-    raw = (
-        '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
-        ' "perceptor_nif": "A12345678", "perceptor_name": "Empresa SL",'
-        ' "scheme": "rendimientos_trabajo", "taxable_base": "1000.00",'
-        ' "retencion_amount": "190.00", "accrued_on": "2024-01-15"}'
+    result = _parse_typed_cli_observations(
+        [_VALID_COUNTERPART], model=CounterpartObservation, flag="--counterpart-observation"
     )
-    result = _parse_typed_cli_observations([raw], model=RetencionObservation, flag="--retencion-observation")
 
     assert len(result) == 1
     obs = result[0]
-    assert isinstance(obs, RetencionObservation)
-    assert obs.source_kind == "ledger_transaction"
-    assert obs.source_object_id == "txn-001"
-    assert obs.perceptor_nif == "A12345678"
-    assert obs.perceptor_name == "Empresa SL"
-    assert obs.scheme == RetencionScheme("rendimientos_trabajo")
-    assert obs.accrued_on == "2024-01-15"
-    _ = _typer  # ensure import is referenced
+    assert isinstance(obs, CounterpartObservation)
+    assert obs.source_kind == BindingSourceKind.LEDGER_TRANSACTION
+    assert obs.source_object_id == "ctr-001"
+    assert obs.counterparty_nif == "B00000001"
+    assert obs.counterparty_name == "Cliente SL"
+    assert obs.counterparty_country == "ES"
+    assert obs.taxable_base == Decimal("2000.00")
+    assert obs.accrued_on == "2025-03-01"
 
 
 def test_parse_typed_cli_observations_rejects_invalid_json_syntax() -> None:
     """A string that is not valid JSON raises ``typer.BadParameter``."""
-    import typer as _typer
+    import typer
 
-    from ....application.aggregation.retenciones import RetencionObservation
+    from ....application.aggregation.counterpart import CounterpartObservation
     from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
-    with pytest.raises(_typer.BadParameter):
-        _parse_typed_cli_observations(["{not: json}"], model=RetencionObservation, flag="--retencion-observation")
+    with pytest.raises(typer.BadParameter):
+        _parse_typed_cli_observations(["{not: json}"], model=CounterpartObservation, flag="--counterpart-observation")
 
 
 def test_parse_typed_cli_observations_rejects_non_object_json() -> None:
     """A JSON value that is not an object (e.g. an array) raises ``typer.BadParameter``."""
-    import typer as _typer
+    import typer
 
-    from ....application.aggregation.retenciones import RetencionObservation
+    from ....application.aggregation.counterpart import CounterpartObservation
     from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
-    with pytest.raises(_typer.BadParameter):
+    with pytest.raises(typer.BadParameter):
         _parse_typed_cli_observations(
             ['["not", "an", "object"]'],
-            model=RetencionObservation,
-            flag="--retencion-observation",
+            model=CounterpartObservation,
+            flag="--counterpart-observation",
         )
 
 
 def test_parse_typed_cli_observations_rejects_schema_violation() -> None:
     """A JSON object that fails pydantic validation raises ``typer.BadParameter``.
 
-    An object missing the required ``scheme`` field must be refused with a
-    typed validation message, not a bare pydantic traceback.
+    An object missing the required ``counterparty_country`` field must be
+    refused with a typed validation message, not a bare pydantic traceback.
     """
-    import typer as _typer
+    import typer
 
-    from ....application.aggregation.retenciones import RetencionObservation
+    from ....application.aggregation.counterpart import CounterpartObservation
     from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
-    missing_scheme = (
-        '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
-        ' "perceptor_nif": "A12345678", "taxable_base": "1000.00",'
-        ' "retencion_amount": "190.00", "accrued_on": "2024-01-15"}'
-    )
-    with pytest.raises(_typer.BadParameter):
-        _parse_typed_cli_observations([missing_scheme], model=RetencionObservation, flag="--retencion-observation")
+    with pytest.raises(typer.BadParameter, match="counterparty_country: Field required"):
+        _parse_typed_cli_observations(
+            [_COUNTERPART_WITHOUT_COUNTRY], model=CounterpartObservation, flag="--counterpart-observation"
+        )
 
 
-def test_cli_retencion_observation_schema_violation_is_argument_validation(tmp_path: Path) -> None:
-    """A malformed retencion observation is refused as a CLI argument error.
+def test_cli_counterpart_observation_schema_violation_is_argument_validation(tmp_path: Path) -> None:
+    """A malformed counterpart observation is refused as a CLI argument error.
 
-    ``aeat app modelo aggregate`` persists observations, so it sits behind the
-    profile-bound write guard. The guard runs ahead of the command body that
-    parses ``--retencion-observation``, so the run needs a real active profile:
+    ``aeat app modelo aggregate`` sits behind the profile-bound write guard,
+    which runs ahead of the command body that parses
+    ``--counterpart-observation``, so the run needs a real active profile:
     without one the guard's no-active-profile refusal preempts the argument
-    error this test exists to pin. Modelo 111, 115 and 123 refuse the flag
-    outright -- their evidence comes from invoices -- so the parse is pinned on
-    Modelo 180, which still reads caller-authored observations.
+    error this test exists to pin.
     """
-
-    missing_scheme = (
-        '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
-        ' "perceptor_nif": "A12345678", "taxable_base": "1000.00",'
-        ' "retencion_amount": "190.00", "accrued_on": "2024-01-15"}'
-    )
-
     with isolated_runtime_profile(tmp_path=tmp_path):
         result = invoke_cached_cli(
             [
@@ -117,65 +116,21 @@ def test_cli_retencion_observation_schema_violation_is_argument_validation(tmp_p
                 "modelo",
                 "aggregate",
                 "--modelo",
-                "180",
+                "347",
                 "--year",
                 "2024",
                 "--period",
                 "0A",
-                "--retencion-observation",
-                missing_scheme,
+                "--counterpart-observation",
+                _COUNTERPART_WITHOUT_COUNTRY,
             ],
         )
 
     assert result.exit_code == 2, result.output
     assert "Invalid value" in result.output
-    assert "--retencion-observation" in result.output
+    assert "--counterpart-observation" in result.output
     assert "not a valid" in result.output
     assert "observation object" in result.output
-    assert "scheme: Field required" in result.output
+    assert "counterparty_country: Field required" in result.output
     assert "config repair" not in result.output
     assert "no longer matches the expected schema" not in result.output
-
-
-@pytest.mark.parametrize("modelo", ["111", "115", "123"])
-def test_cli_refuses_caller_authored_retenciones_for_invoice_withholding_modelos(tmp_path: Path, modelo: str) -> None:
-    """Modelo 111, 115 and 123 take withholding only from invoice evidence.
-
-    The observation is schema-valid, so the refusal can only come from the
-    modelo policy: the flag is not a writable retencion transport for them.
-    """
-    valid_observation = (
-        '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
-        ' "perceptor_nif": "A12345678", "perceptor_name": "Empresa SL",'
-        ' "scheme": "rendimientos_trabajo", "taxable_base": "1000.00",'
-        ' "retencion_amount": "190.00", "accrued_on": "2024-01-15"}'
-    )
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        result = invoke_cached_cli(
-            [
-                "--language",
-                "en",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                modelo,
-                "--year",
-                "2024",
-                "--period",
-                "1T",
-                "--retencion-observation",
-                valid_observation,
-            ],
-        )
-
-    assert result.exit_code == 2, result.output
-    if modelo == "123":
-        # Modelo 123 takes withholding only from its paying ledger transaction,
-        # so the refusal names that one accepted transport.
-        assert "--ledger-payment-withholding" in result.output
-        assert "nothing was written" in result.output
-    else:
-        assert f"--retencion-observation is not accepted for Modelo {modelo}" in result.output
-        assert "use invoice evidence" in result.output

@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, model_validator
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
+from ....application.ledger.invoice_draft_records import LabelReadingFallback
 from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
@@ -430,7 +431,9 @@ class LedgerEvidenceDraftV1(BaseModel):
     """What the on-host reader found in one document, including its canonical review.
 
     ``None`` is a field the reader could not ground in the document; it is
-    shown as unread, never as zero.
+    shown as unread, never as zero. ``label_reading_fallback`` says when some
+    of those fields are unread because the model fill did not run, so a gap in
+    the machine is not shown as a gap in the page.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -448,6 +451,7 @@ class LedgerEvidenceDraftV1(BaseModel):
     suggested_kind: InvoiceKind | None
     discrepancies: int
     full_projection: InvoiceDraftProjectionV1 | None = None
+    label_reading_fallback: LabelReadingFallback | None = None
 
 
 class LedgerEvidenceConfirmationV1(BaseModel):

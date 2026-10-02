@@ -697,6 +697,30 @@ required_text = [
     "1 millón de euros",
 ]
 
+# Ley 7/2024, de 20 de diciembre, art. 6: subjects of the Impuesto Complementario,
+# which names the grupo nacional de gran magnitud beside the grupo multinacional.
+[legal."ley-7-2024:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-7-2024-art-6.html#a6"
+document_id = "BOE-A-2024-26694"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-26694#a6"
+published_at = 2024-12-21
+effective_from = 2024-12-22
+governs_periods_from = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled consolidated BOE-A-2024-26694 art 6; pending operator re-stamp)"
+notes = """Ley 7/2024 art 6 (sujetos pasivos y reglas de sujeción del Impuesto Complementario): the constituent entity located in Spain that belongs to a grupo multinacional or to a grupo nacional de gran magnitud whose consolidated INCN reaches 750 million euros in two of the four preceding periods. The law enters into force the day after its BOE publication of 2024-12-21 and has effects for periods starting on or after 2023-12-31 (disposición final vigésima segunda), hence governs_periods_from. The AEAT Sociedades 2025 manual cites this article for widening Modelo 200 keys [00081] and [00082] to filiales and sociedades matriz última of a grupo nacional de gran magnitud; the 2024 manual cites it for the grupo mercantil section of page 1 bis."""
+required_text = [
+    "Sujetos pasivos y reglas de sujeción",
+    "que forme parte de un grupo multinacional o de un grupo nacional de gran magnitud",
+    "750 millones de euros",
+]
+corpus_tier = "provision_excerpt"
+
 [legal."ley-27-2014:art-101"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1171,6 +1195,48 @@ retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR222e23.xlsx"
+review_status = "pending_review"
+
+# Modelo 222 diseno de registro for ejercicios 2019 to 2022. AEAT's historical
+# index titles it "222 - Orden HAC/941/2018 (Ejercicios 2019 a 2022, actualizado
+# Septiembre 2019)". It is the design the 2022 edition renders: measured against
+# aeat-dr-222-2023-2024, it lacks the page-1 flag the 2023 design inserts at
+# position 226 (grupo fiscal with importe neto de la cifra de negocios below one
+# million euros) and boxes [59] and [60] (DA 19a LIS adjustments), so every later
+# page-1 field sits one or, after [39], thirty-five positions earlier; page 2 is
+# identical. It had been classified as a historical exclusion although filing
+# year 2022 is inside the supported envelope.
+[sources."aeat-dr-222-2019-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx"
+sha256 = "dcda923080570aa7ad9d5bd48e0fc4224ca4e142fbf8960363f175c3244d6c2a"
+bytes = 137380
+retrieved_at = 2026-09-30
+applies_from = 2019-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_17/DR222e17v55.xlsx"
+review_status = "pending_review"
+
+# Modelo 222 instrucciones for the era AEAT's instructions index lists as
+# "Instrucciones para periodos impositivos 2019 a 2022": the page links this PDF,
+# "Instrucciones para periodos impositivos iniciados en 2019 (pago fraccionado de
+# octubre y siguientes)". It states each computed clave of that era, including
+# "clave [10] = clave [04] + clave [38] - clave [39]", without the [59]/[60] terms
+# the 2023-2024 instructions add.
+[sources."aeat-modelo-222-instructions-2019-2022"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf"
+sha256 = "1d6a5c0fc17ec85fcdc3af20cb8b48a3296b251c4a25a950610667751e9a338c"
+bytes = 303752
+retrieved_at = 2026-09-30
+applies_from = 2019-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GE03/222_instrucciones_2019.pdf"
 review_status = "pending_review"
 
 [sources."aeat-dr-202-2023"]
@@ -1774,6 +1840,30 @@ applies_to = 2024-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
 review_status = "pending_review"
 
+[legal."orden-hac-529-2026:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-529-2026-art-1.html#a1"
+document_id = "BOE-A-2026-11583"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
+published_at = 2026-05-29
+effective_from = 2026-07-01
+governs_periods_from = 2025-01-01
+governs_periods_to = 2025-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2026-11583 art 1; pending operator re-stamp)"
+notes = """Orden HAC/529/2026 art 1 approves Modelo 200, the declaration of the Impuesto sobre Sociedades and of the IRNR for establecimientos permanentes and entidades en atribución de rentas constituidas en el extranjero, and its documento de ingreso o devolución, for períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025 (apartado 1.a).1.º and 1.b).1.º, anexo I); apartado 2 makes it applicable to every IS and IRNR-EP contributor obliged to declare. It is the approval clause of Modelo 200's 2025 edition. The orden enters into force on 2026-07-01 (disposición final segunda) and governs only the periods its own article 1 names. The excerpt is sliced verbatim from the as-published text; BOE holds no consolidated text for this orden."""
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025",
+    "que figura en el anexo I",
+    "es aplicable, con carácter general, a todos los contribuyentes del Impuesto sobre Sociedades",
+]
+corpus_tier = "provision_excerpt"
+
 [legal."orden-hac-529-2026:art-3"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1844,6 +1934,276 @@ published_at = 2026-05-29
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
+review_status = "pending_review"
+
+# The approving ordenes of the IS declaration models for periodos impositivos
+# iniciados en 2022 (Orden HFP/523/2023) and en 2023 (Orden HAC/495/2024). Each
+# approves Modelo 220 in its art. 1, fixes its domiciliacion window in art. 3.2
+# and its plazo in art. 6.3. The bundled corpus files are the as-published BOE
+# texts; neither orden has a consolidated text.
+[legal."orden-hfp-523-2023:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a1"
+document_id = "BOE-A-2023-12416"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+governs_periods_from = 2022-01-01
+governs_periods_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 1; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the regimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2023-07-01 (disposicion final unica). It is the approval clause of Modelo 220's ejercicio 2022 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022",
+    "Modelo 220: Declaración del Impuesto sobre Sociedades–Régimen de consolidación fiscal correspondiente a los grupos fiscales, que figura en el anexo II",
+    "El Modelo 220, que figura como anexo II, es aplicable a los grupos fiscales",
+]
+
+[legal."orden-hfp-523-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a3"
+document_id = "BOE-A-2023-12416"
+article = "3.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 3.2; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 3.2: the domiciliacion bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2022 may be ordered from 1 to 20 July 2023, both inclusive. It grounds the Modelo 220 ejercicio 2022 window's payment_cutoff_on."
+required_text = [
+    "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 20 de julio de 2023, ambos inclusive.",
+]
+
+[legal."orden-hfp-523-2023:art-6-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a6"
+document_id = "BOE-A-2023-12416"
+article = "6.3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 6.3; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 6.3: under LIS art 75.2 the Modelo 220 approved in art 1 is filed within the plazo of the individual declaration of the group's representante or cabeza de grupo. It is the Modelo 220 plazo clause for periodos impositivos iniciados en 2022."
+required_text = [
+    "el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden",
+    "dentro del plazo correspondiente a la declaración en régimen de tributación individual",
+    "artículo 75.2 de la Ley 27/2014",
+]
+
+[sources."boe-modelo-220-2022-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-523-2023.html"
+sha256 = "4affd45014e78fee00eb60dea9f8603a8d23d046b57052f977fd92a32baba827"
+bytes = 125408
+retrieved_at = 2026-10-01
+published_at = 2023-05-29
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+review_status = "pending_review"
+
+[legal."orden-hac-495-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a1"
+document_id = "BOE-A-2024-10574"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+governs_periods_from = 2023-01-01
+governs_periods_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 1; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the regimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2024-07-01 (disposicion final tercera). It is the approval clause of Modelo 220's ejercicio 2023 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023",
+    "Modelo 220: Declaración del Impuesto sobre Sociedades–Régimen de consolidación fiscal correspondiente a los grupos fiscales, que figura en el anexo II",
+    "El Modelo 220, que figura como anexo II, es aplicable a los grupos fiscales",
+]
+
+[legal."orden-hac-495-2024:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a3"
+document_id = "BOE-A-2024-10574"
+article = "3.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 3.2; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 3.2: the domiciliacion bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2023 may be ordered from 1 to 22 July 2024, both inclusive. It grounds the Modelo 220 ejercicio 2023 window's payment_cutoff_on."
+required_text = [
+    "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 22 de julio de 2024, ambos inclusive.",
+]
+
+[legal."orden-hac-495-2024:art-6-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a6"
+document_id = "BOE-A-2024-10574"
+article = "6.3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 6.3; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 6.3: under LIS art 75.2 the Modelo 220 approved in art 1 is filed within the plazo of the individual declaration of the group's representante or cabeza de grupo. It is the Modelo 220 plazo clause for periodos impositivos iniciados en 2023."
+required_text = [
+    "el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden",
+    "dentro del plazo correspondiente a la declaración en régimen de tributación individual",
+    "artículo 75.2 de la Ley 27/2014",
+]
+
+[sources."boe-modelo-220-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-495-2024.html"
+sha256 = "be465cf9848e6c008eeb28cbb980312b48e738b3f0effbb5dc698b6b9a59412a"
+bytes = 136988
+retrieved_at = 2026-10-01
+published_at = 2024-05-27
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+review_status = "pending_review"
+
+# Modelo 200 approval and plazo clauses of the same two ordenes, for the periodos
+# impositivos iniciados en 2022 (Orden HFP/523/2023) and en 2023 (Orden HAC/495/2024):
+# art. 1.1.a).1.o approves Modelo 200 (anexo I) and art. 1.2 applies it to every IS
+# contribuyente and IRNR establecimiento permanente; art. 6.1 sets its plazo under LIS
+# art. 124.1. Art. 3.2 (domiciliacion, Modelos 200 y 220) is catalogued above.
+[legal."orden-hfp-523-2023:modelo-200"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a1"
+document_id = "BOE-A-2023-12416"
+article = "1.1.a).1.o y 1.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+governs_periods_from = 2022-01-01
+governs_periods_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 1; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 1.1.a).1.o approves Modelo 200, the declaracion del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2023-07-01 (disposicion final unica). It is the approval clause of Modelo 200's ejercicio 2022 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022",
+    "Modelo 200: Declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español), que figura en el anexo I",
+    "El Modelo 200, que figura como anexo I, es aplicable, con carácter general, a todos los contribuyentes del Impuesto sobre Sociedades",
+]
+
+[legal."orden-hfp-523-2023:art-6-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a6"
+document_id = "BOE-A-2023-12416"
+article = "6.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 6.1; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the 25 dias naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2022."
+required_text = [
+    "el modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente orden, se presentará en el plazo de los 25 días naturales siguientes a los seis meses posteriores a la conclusión del período impositivo",
+]
+
+[sources."boe-modelo-200-2022-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-523-2023.html"
+sha256 = "4affd45014e78fee00eb60dea9f8603a8d23d046b57052f977fd92a32baba827"
+bytes = 125408
+retrieved_at = 2026-10-01
+published_at = 2023-05-29
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+review_status = "pending_review"
+
+[legal."orden-hac-495-2024:modelo-200"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a1"
+document_id = "BOE-A-2024-10574"
+article = "1.1.a).1.o y 1.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+governs_periods_from = 2023-01-01
+governs_periods_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 1; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 1.1.a).1.o approves Modelo 200, the declaracion del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2024-07-01 (disposicion final tercera). It is the approval clause of Modelo 200's ejercicio 2023 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023",
+    "Modelo 200: Declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español), que figura en el anexo I",
+    "El Modelo 200, que figura como anexo I, es aplicable, con carácter general, a todos los contribuyentes del Impuesto sobre Sociedades",
+]
+
+[legal."orden-hac-495-2024:art-6-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a6"
+document_id = "BOE-A-2024-10574"
+article = "6.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 6.1; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the veinticinco dias naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2023."
+required_text = [
+    "el modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente orden, se presentará en el plazo de los veinticinco días naturales siguientes a los seis meses posteriores a la conclusión del período impositivo",
+]
+
+[sources."boe-modelo-200-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-495-2024.html"
+sha256 = "be465cf9848e6c008eeb28cbb980312b48e738b3f0effbb5dc698b6b9a59412a"
+bytes = 136988
+retrieved_at = 2026-10-01
+published_at = 2024-05-27
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
 review_status = "pending_review"
 
 [legal."ley-44-2015:art-1"]
@@ -2249,6 +2609,25 @@ required_text = [
     "del Reglamento General de Vehículos, aprobado por el Real Decreto 2822/1998",
 ]
 
+[legal."real-decreto-ley-4-2024:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/boe-a-2024-12944-rdl-4-2024-iva-alimentos.html#a4"
+document_id = "BOE-A-2024-12944"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-12944#a4"
+published_at = 2024-06-27
+effective_from = 2024-06-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from the bundled consolidated RDL 4/2024 (block a4); operator to re-stamp"
+notes = "RDL 4/2024 art. 4.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2024 y que no hayan concluido a la entrada en vigor del real decreto-ley (28 de junio de 2024), redacta de nuevo la disposicion adicional decimoctava LIS: libertad de amortizacion de vehiculos nuevos FCV, FCHV, BEV, REEV o PHEV y de nuevas infraestructuras de recarga que entren en funcionamiento en los periodos impositivos que se inicien en 2024 y 2025, sustituyendo la amortizacion acelerada al doble del coeficiente lineal maximo que regia desde 2023. Un periodo impositivo concluido antes del 28 de junio de 2024 (en el IRPF, el del contribuyente fallecido antes de esa fecha) queda fuera de esta redaccion y conserva la amortizacion acelerada, como recoge el Manual practico de Renta 2024. Los apartados Dos y Tres del articulo (reserva de capitalizacion) no se citan desde esta entrada."
+required_text = [
+    "Modificación de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
+    "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2024 y que no hayan concluido a la entrada en vigor de este real decreto-ley, se modifica la disposición adicional decimoctava",
+]
+
 [legal."ley-27-2014:da-17"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2267,6 +2646,46 @@ required_text = [
     "Libertad de amortización en inversiones que utilicen energía procedente de fuentes renovables",
     "la plantilla media total de la entidad se mantenga respecto de la plantilla media de los doce meses anteriores",
     "Los edificios no podrán acogerse a la libertad de amortización regulada en esta disposición.",
+]
+
+[legal."real-decreto-ley-18-2022:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/xml/real-decreto-ley-18-2022-art-22.xml#a2-4"
+document_id = "BOE-A-2022-17040"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-17040#a2-4"
+published_at = 2022-10-19
+effective_from = 2022-10-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a2-4, single redaction fecha_vigencia 20221020); pending operator re-stamp"
+notes = "RDL 18/2022 art. 22: introduce la disposicion adicional decimoseptima LIS, libertad de amortizacion de instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, puestas a disposicion del contribuyente a partir de la entrada en vigor del real decreto-ley (20 de octubre de 2022) y que entren en funcionamiento en 2023, en los periodos impositivos que se inicien o concluyan en dicho ano; condicionada al mantenimiento de la plantilla media, excluye edificios e inversion maxima de 500.000 euros. Funda los parametros de Renta 2023 de esta libertad de amortizacion; la ampliacion a 2024 es del art. 18 del RDL 8/2023 (real-decreto-ley-8-2023:art-18)."
+required_text = [
+    "Se introduce una nueva disposición adicional decimoséptima en la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
+    "entren funcionamiento en 2023, podrán ser amortizadas libremente en los períodos impositivos que se inicien o concluyan en dicho año",
+    "La cuantía máxima de la inversión que podrá beneficiarse del régimen de libertad de amortización será de 500.000 euros.",
+]
+
+[legal."real-decreto-ley-8-2023:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/xml/real-decreto-ley-8-2023-art-18.xml#a1-10"
+document_id = "BOE-A-2023-26452"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-26452#a1-10"
+published_at = 2023-12-28
+effective_from = 2023-12-29
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-10, single redaction fecha_vigencia 20231229); pending operator re-stamp"
+notes = "RDL 8/2023 art. 18: modifica el apartado 1 de la disposicion adicional decimoseptima LIS para admitir tambien las instalaciones que entren en funcionamiento en 2024, amortizables libremente en los periodos impositivos que se inicien o concluyan en 2024 (letra ii), manteniendo la puesta a disposicion desde la entrada en vigor del RDL 18/2022, la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. Funda los parametros de Renta 2024 de esta libertad de amortizacion."
+required_text = [
+    "Se modifica el apartado 1 de la disposición adicional decimoséptima de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
+    "ii) Que se inicien o concluyan en 2024, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2024.",
+    "La cuantía máxima de la inversión que podrá beneficiarse del régimen de libertad de amortización será de 500.000 euros.",
 ]
 
 [legal."rdl-16-2025:art-17"]
@@ -2676,6 +3095,36 @@ source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BO
 review_status = "agent_reviewed"
 corpus_tier = "provision_excerpt"
 
+[sources."boe-rdl-18-2022-art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/xml/real-decreto-ley-18-2022-art-22.xml"
+sha256 = "5fd9f498d20192c4a92e15fbfcfba57cc9dfafd5af9777375de624ea37be4a40"
+bytes = 9698
+retrieved_at = 2026-09-30
+published_at = 2022-10-19
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2022-17040/texto/bloque/a2-4"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rdl-8-2023-art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/xml/real-decreto-ley-8-2023-art-18.xml"
+sha256 = "42a523ab66770b5bb202297fabf280754c8ba4022be09379cb3d4d9d68541dad"
+bytes = 10090
+retrieved_at = 2026-09-30
+published_at = 2023-12-28
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2023-26452/texto/bloque/a1-10"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
 [sources."boe-derogacion-rdl-16-2025"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2702,3 +3151,136 @@ applies_from = 2025-01-01
 applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-noticias/2026/abril/1/nota-sobre-efectos-ambito-tributario-febrero.html"
 review_status = "agent_reviewed"
+
+[legal."ley-27-2014:art-12-3-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+section = "3.b"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; checked against captured 2022, 2026-01-28 and current BOE Article 12; operator review pending"
+notes = "LIS article 12.3(b): free amortization of tangible and intangible fixed assets used in research and development, excluding buildings from that rule; buildings used in those activities may be amortized linearly over ten years. This reference is limited to subsection 3(b)."
+required_text = ["3. No obstante, podrán amortizarse libremente:", "b) Los elementos del inmovilizado material e intangible, excluidos los edificios, afectos a las actividades de investigación y desarrollo.", "Los edificios podrán amortizarse de forma lineal durante un período de 10 años, en la parte que se hallen afectos a las actividades de investigación y desarrollo."]
+
+[legal."ley-27-2014:art-12-3-c"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+section = "3.c"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; checked against captured 2022, 2026-01-28 and current BOE Article 12; operator review pending"
+notes = "LIS article 12.3(c): free amortization of research and development expenses capitalized as intangible fixed assets, excluding amortization of assets that already enjoy free amortization. This reference is limited to subsection 3(c)."
+required_text = ["3. No obstante, podrán amortizarse libremente:", "c) Los gastos de investigación y desarrollo activados como inmovilizado intangible, excluidas las amortizaciones de los elementos que disfruten de libertad de amortización."]
+
+[legal."ley-27-2014:art-12-3-a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; exact clause resolved from enrolled full Article 12; 2022/current held text comparison recorded separately"
+notes = "LIS Article 12.3(a): free amortization for qualifying assets of worker-owned limited/public companies acquired during the first five years after qualification. The printed aggregate field cites this precise clause; taxpayer eligibility is not inferred."
+effective_from = 2015-01-01
+section = "3.a"
+required_text = ["3. No obstante, podrán amortizarse libremente:", "a) Los elementos del inmovilizado material, intangible e inversiones inmobiliarias de las sociedades anónimas laborales y de las sociedades limitadas laborales afectos a la realización de sus actividades, adquiridos durante los cinco primeros años a partir de la fecha de su calificación como tales."]
+
+[legal."ley-27-2014:art-12-3-d"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; exact clause resolved from enrolled full Article 12; 2022/current held text comparison recorded separately"
+notes = "LIS Article 12.3(d): free amortization for qualifying assets of priority associative agricultural holdings acquired during the first five years after recognition. The printed aggregate field cites this precise clause; taxpayer eligibility is not inferred."
+effective_from = 2015-01-01
+section = "3.d"
+required_text = ["3. No obstante, podrán amortizarse libremente:", "d) Los elementos del inmovilizado material o intangible de las entidades que tengan la calificación de explotaciones asociativas prioritarias de acuerdo con lo dispuesto en la Ley 19/1995, de 4 de julio, de modernización de las explotaciones agrarias, adquiridos durante los cinco primeros años a partir de la fecha de su reconocimiento como explotación prioritaria."]
+
+[legal."ley-27-2014:da-16"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#da"
+document_id = "BOE-A-2014-12328"
+article = "DA-16"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#da"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; native #da uniquely resolves the DA 16 title and operative limits; amendment provenance and entry-into-force note verified in held BOE text"
+notes = "LIS DA 16, introduced by RDL 23/2020 and amended by RDL 34/2020: automotive mobility-chain free amortization. The held text confines entry into service to 2 April 2020 through 30 June 2021 and imposes workforce and qualifying-report conditions. Later filed adjustments do not assert that new investments in 2022+ qualify. Investment/programme dates are not statute repeal dates."
+effective_from = 2020-06-25
+required_text = ["Libertad de amortización en inversiones realizadas en la cadena de valor de movilidad eléctrica, sostenible o conectada.", "entre el 2 de abril de 2020 y el 30 de junio de 2021", "deberán aportar informe motivado"]
+
+[legal."ley-27-2014:dt-28"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dtvigesimaoctava"
+document_id = "BOE-A-2014-12328"
+article = "DT-28"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dtvigesimaoctava"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; complete operative DT28 clause resolved at the held BOE anchor and checked against the predecessor-regime and tax-period wording"
+notes = "LIS DT28 continues the former TRLIS Article 113 reinvestment amortization regime for entities applying it under the wording in tax periods beginning before 1 January 2015, subject to the requirements and conditions of that regime."
+effective_from = 2015-01-01
+required_text = ["Las entidades que estuviesen aplicando lo dispuesto en el artículo 113 del texto refundido de la Ley del Impuesto sobre Sociedades, aprobado por el Real Decreto Legislativo 4/2004, de 5 de marzo, según redacción vigente en períodos impositivos iniciados con anterioridad a 1 de enero de 2015, podrán continuar su aplicación, con los requisitos y condiciones establecidos en aquel."]
+
+[legal."ley-27-2014:art-36-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-36-full.html#a36"
+document_id = "BOE-A-2014-12328"
+article = "36"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a36"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; full Article 36 captured through canonical BOE acquisition/extraction; foreign criterion corroborated against 2024/2025 redactions in saved BOE API history receipt"
+notes = "LIS Article 36.2 grounds the foreign-production identity for qualifying Spanish expenses of registered producers executing a foreign audiovisual production. This reference identifies the statutory regime, not rates or eligibility limits for another vintage. The captured current full article and actual BOE redactions effective at the end of 2024 and 2025 share the identity criterion; no unchanged numeric-rate claim is made."
+section = "2"
+effective_from = 2015-01-01
+required_text = ["ejecución de una producción extranjera", "gastos realizados en territorio español"]
+
+[legal."ley-11-2020:da-76"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-11-2020-da-76.html#da-77"
+document_id = "BOE-A-2020-17339"
+article = "DA-76"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-17339#da-77"
+published_at = 2020-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; canonical whole-document BOE capture, actual titled #da-77 selected and exact DA 76 extracted; programme end distinguished from legal effective_to"
+notes = "Ley 11/2020 DA 76 declares the Centenario del Rugby en España y de la Unió Esportiva Santboiana programme an event of exceptional public interest. Its support programme ends 31 December 2023. This is not a claim that all carried-forward deductions expire then. The native BOE locator is #da-77 despite the legal ordinal 76."
+effective_from = 2021-01-01
+required_text = ["Centenario del Rugby en España y de la Unió Esportiva Santboiana", "acontecimiento de excepcional interés público", "31 de diciembre de 2023"]

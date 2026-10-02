@@ -8147,6 +8147,9 @@ modelo:
             '1916':
               label: Increment per despeses en guarderies o centres d'educació infantil
                 autoritzats (quantitats no aplicades en l'exercici 2021)
+            AJ:
+              label: Reducció agricultors joves (disposició addicional sisena de la
+                Llei de l'Impost) (Sí/No)
             ANOASDLG:
               label: Ascendent data de naixement
             APENOMDLG:
@@ -8208,6 +8211,13 @@ modelo:
               label: Comunitat Autònoma de residència
             ZRUE2:
               label: País UE o EEE del cònjuge
+            eo-agraria-reduccion-irregularidad-base:
+              label: Rendiments nets de l'activitat agrícola, ramadera o forestal
+                amb període de generació superior a dos anys, o qualificats reglamentàriament
+                com obtinguts de forma notòriament irregular en el temps, imputats
+                en aquest únic període impositiu (base sobre la qual s'aplica la reducció
+                del 30 per 100 de l'article 32.1 de la Llei de l'Impost; import declarat
+                per l'operador - vegeu la casella [1554])
           construct:
             renta-dependent-modelos:
               field:
@@ -17944,9 +17954,6 @@ modelo:
               label: 'nre. de col·legiat / codi numèric personal del metge:'
             '2248':
               label: Per malaltia celíaca diagnosticada
-            AJ:
-              label: Reducció agricultors joves (disposició addicional sisena de la
-                Llei de l'Impost) (Sí/No)
             CONVASDLG:
               label: Ascendent descendents convivents
             DECFAL:
@@ -17986,13 +17993,9 @@ modelo:
             base-liq-neg-general-2024-aplicada-maxima:
               label: 'Base liquidable general negativa ej. 2024: compensació màxima
                 aplicable (límit art.. 50.3 LIRPF) [interno]'
-            eo-agraria-reduccion-irregularidad-base:
-              label: Rendiments nets de l'activitat agrícola, ramadera o forestal
-                amb període de generació superior a dos anys, o qualificats reglamentàriament
-                com obtinguts de forma notòriament irregular en el temps, imputats
-                en aquest únic període impositiu (base sobre la qual s'aplica la reducció
-                del 30 per 100 de l'article 32.1 de la Llei de l'Impost; import declarat
-                per l'operador - vegeu la casella [1554])
+            trabajo-mar-renta-exenta:
+              label: Rendiments del treball exempts dels treballadors del mar (art.
+                7.p) LIRPF o Llei 19/1994) [intern]
           construct:
             renta-dependent-modelos:
               field:

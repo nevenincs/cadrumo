@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#test-reconciliation-sweep'
 date: '2026-08-28'
-modified: '2026-08-28'
+modified: '2026-09-30'
 body_schema: 'body-v2'
 body_hash: 'sha256:51180d529e0875cdb3299c1531920bb06a8862202ad8b237a8310e095506eff3'
-related: []
+related:
+  - '[[2026-08-26-cli-root-verb-homes-close-honesty-audit]]'
 ---
 
 # `test-reconciliation-sweep` adr: `test reconciliation sweep` | (**status:** `accepted`)

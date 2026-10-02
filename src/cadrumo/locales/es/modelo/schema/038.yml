@@ -17,6 +17,9 @@ modelo:
         title: Operaciones de entidades inscritas en registros públicos (informativa
           mensual)
       revision:
+        2022-hasta-2024-05:
+          field:
+            label: Modelo 038, de 2022 a mayo de 2024
         2024-desde-06:
           field:
             label: Modelo 038, desde junio de 2024

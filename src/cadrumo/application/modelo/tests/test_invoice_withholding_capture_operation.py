@@ -505,6 +505,7 @@ def test_prewrite_refusal_is_bounded_and_stored_as_secure_result_detail(
         "result_row_count",
         "withholding_window",
         "refusal_reason",
+        "refusal_defects",
     }
 
 

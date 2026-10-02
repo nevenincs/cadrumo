@@ -32,12 +32,16 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
+from ....domain.calculations.registry.relation_dependency import RelationDependencyTreatment
 from ....domain.calculations.registry.relations import (
     RegistryFoldRequirement,
     relation_prefill_bindings_for_period,
     relation_source_requirements,
 )
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ..binding_prefill import PrefilledBinding, _prefilled_bindings
 from ..relation_prefill import _relation_value_grounding
 
@@ -50,8 +54,15 @@ _SETTLEMENT = "direct_annual_settlement"
 _EVIDENCE = "factual_evidence"
 
 
-def _m100_2024() -> RegistrySnapshot:
-    return published_snapshot("100", filing_year=2024, period="0A")
+def _supported_years() -> tuple[int, ...]:
+    catalogue = published_supported_filing_years()
+    assert catalogue is not None, "the published legal support range is required"
+    return catalogue.years
+
+
+def _m100(filing_year: int | None = None) -> RegistrySnapshot:
+    year = max(_supported_years()) if filing_year is None else filing_year
+    return published_snapshot("100", filing_year=year, period="0A")
 
 
 def _requirements_by_binding(snapshot: RegistrySnapshot) -> dict[str, RegistryFoldRequirement]:
@@ -74,22 +85,42 @@ def _grounded_treatments(snapshot: RegistrySnapshot) -> dict[str, str]:
     return treatments
 
 
-def test_the_join_carries_both_declared_treatments_and_they_differ() -> None:
-    """Both classes survive the join, and they are not interchangeable afterwards.
+@pytest.mark.parametrize("filing_year", _supported_years())
+def test_the_join_carries_both_declared_treatments_and_they_differ(filing_year: int) -> None:
+    """The real join preserves either typed treatment without requiring a withdrawn relation."""
+    snapshot = _m100(filing_year)
+    requirements = _requirements_by_binding(snapshot)
+    binding, provider = next(
+        (binding, provider)
+        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+        if binding.id in requirements
+    )
+    original = requirements[binding.id]
+    carried = set()
+    for treatment in (
+        RelationDependencyTreatment.DIRECT_ANNUAL_SETTLEMENT,
+        RelationDependencyTreatment.FACTUAL_EVIDENCE,
+    ):
+        requirement = RegistryFoldRequirement.model_validate(
+            {**original.model_dump(), "dependency_treatment": treatment}
+        )
+        grounding = _relation_value_grounding(binding, provider, requirement)
+        assert grounding["dependency_treatment"] == treatment
+        carried.add(grounding["dependency_treatment"])
+    assert carried == {_SETTLEMENT, _EVIDENCE}, "the join collapsed the two classes into one value"
 
-    Asserted as the presence of two DISTINCT declared values rather than against a
-    named relation id, so a registry rename does not make this pass vacuously while
-    the distinction is lost.
-    """
-    snapshot = _m100_2024()
 
+@pytest.mark.parametrize("filing_year", _supported_years())
+def test_the_join_preserves_the_selected_revision_treatments(filing_year: int) -> None:
+    """Every live relation retains the treatment selected by temporal authority."""
+    snapshot = _m100(filing_year)
+    requirements = _requirements_by_binding(snapshot)
     treatments = _grounded_treatments(snapshot)
-
     assert treatments, "the revision declares no relations, so this proves nothing"
-    declared = {value for value in treatments.values() if value}
-    assert _SETTLEMENT in declared, f"no settlement carry survived the join: {sorted(declared)}"
-    assert _EVIDENCE in declared, f"no evidence carry survived the join: {sorted(declared)}"
-    assert len(declared) >= 2, "the join collapsed the two classes into one value"
+    for binding_id, treatment in treatments.items():
+        requirement = requirements.get(binding_id)
+        expected = requirement.dependency_treatment or "" if requirement is not None else ""
+        assert treatment == expected
 
 
 def test_an_unresolved_binding_carries_no_treatment_rather_than_a_default_one() -> None:
@@ -99,7 +130,7 @@ def test_an_unresolved_binding_carries_no_treatment_rather_than_a_default_one() 
     scoping removed the source periods. Reading the empty result as any particular
     treatment is the failure this pins.
     """
-    snapshot = _m100_2024()
+    snapshot = _m100()
     binding_and_provider = next(
         iter(relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)),
         None,

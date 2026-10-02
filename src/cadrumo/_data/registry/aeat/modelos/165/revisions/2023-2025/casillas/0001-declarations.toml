@@ -1,23 +1,19 @@
-[[revisions."2023-2025".casillas]]
-id = "decl.ejercicio"
-continuidad_id = "filing-year"
-continuidad_origin = "seeded"
-number = "ejercicio"
-section = ["declarante"]
-data_type = "year"
-semantic_role = "filing_year"
-required = true
-input_kind = "informational"
-legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+# Modelo 165 casillas of the ejercicio 2023 design. The declaration header and
+# the fourteen design campos the 2016 design already lays out are inherited
+# from 2016-2022 through casilla_storage_baseline; this file states only the
+# campo the 2023 design adds.
 
+# Campo 15. Position 184, alfabetico. "Se consignara 'X' cuando el declarante
+# tenga la consideracion de empresa emergente, segun lo establecido en el
+# apartado 1 del articulo 3 de la Ley 28/2022, de 21 de diciembre, de fomento
+# del ecosistema de las empresas emergentes." In any other case it goes blank.
 [[revisions."2023-2025".casillas]]
-id = "decl.tipo-declaracion"
-continuidad_id = "tipo-declaracion"
-continuidad_origin = "seeded"
-number = "tipo-declaracion"
+id = "empresa-emergente"
+continuidad_id = "m165-empresa-emergente"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "Orden HFP/1284/2023 art. 13 introduces EMPRESA EMERGENTE at position 184 of the tipo 1 record and shortens BLANCOS accordingly (corpus/normatives/html/orden-hfp-1284-2023.html.extracted.md:1331-1342); its disposicion final unica applies it first to the declaraciones informativas of ejercicio 2023 (same file:1643). The 2023 design prints it at corpus/aeat_official/disenos_registro/modelo_165/files/01-165-diseno-de-registro-actualizado-en-2023.pdf.extracted.md:196, while the 2016-2022 design (aeat-dr-165-2016-2022) leaves positions 184-500 as BLANCOS."
+number = "tipo1.184"
 section = ["declarante"]
 data_type = "text"
-semantic_role = "tipo_declaracion"
-required = true
-input_kind = "informational"
+semantic_role = "m165_empresa_emergente"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]

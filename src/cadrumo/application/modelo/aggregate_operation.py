@@ -27,6 +27,7 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.withholding_bindings import aggregate_withholding_by_clave
 from ...domain.transactions.models import TransactionCatalogue
 from ..aggregation.errors import AggregationConfigError, AggregationUnsupportedModeloError
 from ..aggregation.ledger_payment_withholding import (
@@ -36,12 +37,16 @@ from ..aggregation.ledger_payment_withholding import (
     build_ledger_payment_withholding_capture,
     resolve_ledger_payment_transaction,
 )
-from ..aggregation.retencion_observations_repository import RetencionObservationRepository
+from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
+from ..aggregation.retencion_observations_repository import RetencionObservationPorts, RetencionObservationRepository
 from ..aggregation.service import (
+    CalculationWithholdingRows,
     PerModeloAggregationCommand,
     PerModeloAggregationContributor,
     PerModeloAggregationResult,
     aggregate_per_modelo,
+    load_calculation_withholding_rows,
     provider_for_modelo,
 )
 from ..aggregation.withholding_filing_cadence import (
@@ -73,6 +78,7 @@ from ..operations.capabilities import (
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
+from ..operations.public_scalar import PublicDecimal
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
     OperationDefinition,
@@ -140,6 +146,7 @@ class ModeloAggregateOperationPorts:
     transaction_catalogue_repository: TransactionCatalogueReadPort
     retencion_observation_repository: RetencionObservationRepository
     withholding_observation_service: WithholdingObservationService
+    percepcion_observation_ports: PercepcionObservationPorts | None = None
 
 
 class ModeloAggregateOperationPortsFactory(Protocol):
@@ -218,6 +225,16 @@ class ModeloAggregateWindow(BaseModel):
     generation_audit: ModeloAggregateGenerationAudit | None = None
 
 
+class ModeloAggregateClaveBreakdown(BaseModel):
+    """Bounded per-clave financial summary released under RESULT disclosure."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    clave: str = Field(min_length=1, max_length=128)
+    percepcion_count: NonNegativeInt
+    percibido_total: PublicDecimal
+    retencion_total: PublicDecimal
+
+
 class ModeloAggregateProjection(BaseModel):
     """Allowlisted aggregation summary; raw observation rows never leave custody."""
 
@@ -231,7 +248,9 @@ class ModeloAggregateProjection(BaseModel):
     observation_count: NonNegativeInt | None = None
     source_kinds: tuple[BindingSourceKind, ...] | None = None
     result_row_count: NonNegativeInt | None = None
-    clave_breakdown: tuple[Literal[""], ...] | None = Field(default=None, max_length=0)
+    clave_breakdown: tuple[ModeloAggregateClaveBreakdown, ...] | None = Field(default=None, max_length=64)
+    calculation_revision_id: str | None = Field(default=None, max_length=128)
+    absent_source_families: tuple[BindingSourceKind, ...] = Field(default=(), max_length=2)
     withholding_window: ModeloAggregateWindow | None = None
     refusal_reason: _SAFE_REFUSAL_REASON | None = None
 
@@ -249,10 +268,16 @@ class ModeloAggregateProjection(BaseModel):
                 raise ValueError("aggregated result requires the canonical summary fields")
             if self.modelo in _WITHHOLDING_MODELOS and self.withholding_window is None:
                 raise ValueError("withholding aggregate requires its exact window readback")
+            if self.modelo in _WITHHOLDING_MODELOS and (
+                self.clave_breakdown or self.calculation_revision_id is not None or self.absent_source_families
+            ):
+                raise ValueError("periodic withholding aggregate cannot carry annual detail metadata")
         elif self.refusal_reason is None or any(value is not None for value in aggregate_fields):
             raise ValueError("refused result requires only a bounded refusal reason")
         elif self.withholding_window is not None:
             raise ValueError("refused result cannot carry a withholding window")
+        elif self.calculation_revision_id is not None or self.absent_source_families:
+            raise ValueError("refused result cannot carry annual detail metadata")
         return self
 
 
@@ -514,6 +539,23 @@ class ModeloAggregateExecutor:
         ports = _profile_ports(self._factory, profile_id=profile_id)
         with validating_governed_facts(operation):
             command = payload.command.to_domain()
+            calculation_rows = None
+            if command.modelo not in _WITHHOLDING_MODELOS and RetencionesAggregationSourceResolver.supports_modelo(
+                command.modelo
+            ):
+                if ports.percepcion_observation_ports is None:
+                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+                calculation_rows = load_calculation_withholding_rows(
+                    command.modelo,
+                    command.period,
+                    operation=operation,
+                    retencion_ports=RetencionObservationPorts(repository=ports.retencion_observation_repository),
+                    percepcion_ports=ports.percepcion_observation_ports,
+                    cadence=lambda: load_bucket_withholding_filer_cadence(
+                        bucket_id=profile_id, filing_year=command.period.filing_year, operation=operation
+                    ),
+                )
+                command = command.model_copy(update={"retencion_observations": calculation_rows.retenciones or ()})
             window_state = (
                 ports.withholding_observation_service.read_window(
                     WithholdingWindowScope(modelo=command.modelo, period=command.period)
@@ -532,6 +574,7 @@ class ModeloAggregateExecutor:
                 aggregate_command=command,
                 preflight_result=preflight_result,
                 window_state=window_state,
+                calculation_rows=calculation_rows,
             )
 
         if provider is not PerModeloAggregationContributor.RETENCIONES:
@@ -625,7 +668,23 @@ class ModeloAggregateExecutor:
             observation_count=aggregate_result.log_fields.observation_count,
             source_kinds=aggregate_result.source_kinds,
             result_row_count=aggregate_result.log_fields.result_row_count,
-            clave_breakdown=(),
+            clave_breakdown=tuple(
+                ModeloAggregateClaveBreakdown(
+                    clave=str(row.clave),
+                    percepcion_count=row.percepcion_count,
+                    percibido_total=PublicDecimal(decimal=str(row.percibido_total)),
+                    retencion_total=PublicDecimal(decimal=str(row.retencion_total)),
+                )
+                for row in aggregate_withholding_by_clave(
+                    () if prepared.calculation_rows is None else prepared.calculation_rows.percepciones or ()
+                )
+            ),
+            calculation_revision_id=(
+                None if prepared.calculation_rows is None else prepared.calculation_rows.revision_id
+            ),
+            absent_source_families=(
+                () if prepared.calculation_rows is None else prepared.calculation_rows.absent_source_families
+            ),
             withholding_window=window,
         )
         await context.events.phase(_RESULT_PHASE)
@@ -701,6 +760,7 @@ class _PreparedModeloAggregate:
     window_state: WithholdingWindowState | None = None
     capture: LedgerPaymentWithholdingCapture | None = None
     cadence: WithholdingFilerCadence | None = None
+    calculation_rows: CalculationWithholdingRows | None = None
 
 
 def build_modelo_aggregate_operation_definition(

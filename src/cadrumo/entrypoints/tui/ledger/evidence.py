@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from typing import Final, cast, override
+from typing import Final, assert_never, cast, override
 
 from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Input, Select, Static
 
+from ....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from ....application.ledger.invoice_evidence_operation_dtos import (
     FieldProvenanceProjectionV1,
     InvoiceDraftProjectionV1,
@@ -54,7 +55,7 @@ def draft_lines(draft: LedgerEvidenceDraftV1) -> tuple[str, ...]:
         return unread if value is None else value
 
     if draft.full_projection is None:
-        return (
+        lines = (
             ledger_copy(
                 "tui.ledger.evidence.draft.supplier",
                 name=shown(draft.supplier_name),
@@ -75,10 +76,28 @@ def draft_lines(draft: LedgerEvidenceDraftV1) -> tuple[str, ...]:
             ),
             ledger_copy("tui.ledger.evidence.draft.discrepancies", count=draft.discrepancies),
         )
+        fallback = draft.label_reading_fallback
+        return lines if fallback is None else (*lines, _label_reading_line(fallback))
 
     projection = draft.full_projection
     lines = _full_draft_lines(projection, shown=shown)
+    if projection.label_reading_fallback is not None:
+        lines.append(_label_reading_line(projection.label_reading_fallback.to_fallback()))
     return tuple(lines)
+
+
+def _label_reading_line(fallback: LabelReadingFallback) -> str:
+    """Name the unread fields and the remedy for the reader's refusal."""
+    match fallback.cause:
+        case LabelReadingFallbackCause.READER_UNAVAILABLE:
+            key = "tui.ledger.evidence.draft.label_reading.reader_unavailable"
+        case LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED:
+            key = "tui.ledger.evidence.draft.label_reading.headroom_refused"
+        case LabelReadingFallbackCause.INFERENCE_SLOT_BUSY:
+            key = "tui.ledger.evidence.draft.label_reading.busy_refused"
+        case unhandled:
+            assert_never(unhandled)
+    return ledger_copy(key, count=len(fallback.unread_fields), fields=", ".join(fallback.unread_fields))
 
 
 def _full_draft_lines(

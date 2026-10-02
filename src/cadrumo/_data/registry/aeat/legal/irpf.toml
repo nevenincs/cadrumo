@@ -737,6 +737,276 @@ required_text = [
     "año\u00a02022",
 ]
 
+[legal."orden-hfp-1335-2021:da-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021-da-1.html#da"
+document_id = "BOE-A-2021-19904"
+section = "disposición adicional primera"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-19904#da"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from the BOE consolidated-text excerpt orden-hfp-1335-2021-da-1.html (block da), sliced with the canonical excerpt tool from act.php as served in force; operator to re-stamp"
+notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2022, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2022 (apartado 3). El texto consolidado anota dos alteraciones posteriores de la cuantia que esta entrada no cita: el 15 por 100 de la disposicion adicional octava de la Orden HFP/1172/2022 (orden-hfp-1172-2022:da-8), tambien para el pago fraccionado del cuarto trimestre de 2022, y el 25 por ciento para las actividades agricolas, ganaderas y forestales del anexo I que fija el art. 2 de la Orden HFP/405/2023 (BOE-A-2023-9955), no catalogado."
+required_text = [
+    "Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva",
+    "podrán reducir el rendimiento neto de módulos obtenido en 2022 en un 5 por 100",
+    "Esta reducción se tendrá en cuenta para cuantificar el rendimiento neto a efectos de los pagos fraccionados correspondientes a 2022",
+]
+
+[legal."orden-hfp-1335-2021:instruccion-2-2-a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-ii-instruccion-2-2-a"
+document_id = "BOE-A-2021-19904"
+section = "Anexo II, instrucción 2.2.a) Minoración por incentivos al empleo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 2a: minoracion por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoracion (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado."
+required_text = [
+    "2.2 Fase 2: Rendimiento neto minorado.",
+    "El rendimiento neto previo se minorará en el importe de los incentivos al empleo y la inversión",
+    "a) Minoración por incentivos al empleo.",
+    "Si la diferencia resultase positiva, a ésta se aplicará el coeficiente 0,40",
+]
+
+[legal."orden-hfp-1335-2021:instruccion-2-2-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-ii-instruccion-2-2-b"
+document_id = "BOE-A-2021-19904"
+section = "Anexo II, instrucción 2.2.b) Minoración por incentivos a la inversión"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 2a: minoracion por incentivos a la inversion. Son deducibles las cantidades que, en concepto de amortizacion del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada segun la tabla de amortizacion de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio)."
+required_text = [
+    "b) Minoración por incentivos a la inversión.",
+    "Serán deducibles las cantidades que, en concepto de amortización del inmovilizado, material o intangible, correspondan a la depreciación efectiva",
+    "El coeficiente de amortización lineal máximo.",
+]
+
+[legal."orden-hfp-1335-2021:instruccion-2-3-b-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-ii-instruccion-2-3-b-3"
+document_id = "BOE-A-2021-19904"
+section = "Anexo II, instrucción 2.3.b.3) Índice corrector de exceso"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30."
+required_text = [
+    "b.3) Índice corrector de exceso:",
+    "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
+]
+
+[legal."orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-ii-instruccion-2-3-incompatibilidades"
+document_id = "BOE-A-2021-19904"
+section = "Anexo II, instrucción 2.3 Fase 3: Rendimiento neto de módulos — Incompatibilidades entre los índices correctores"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 a a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si."
+required_text = [
+    "Incompatibilidades entre los índices correctores:",
+    "En ningún caso será aplicable el índice corrector para empresas de pequeña dimensión (b.1) a las actividades para las que están previstos los índices correctores especiales enumerados en las letras a.2), a.3), a.4) y a.5).",
+    "Cuando resulte aplicable el índice corrector para empresas de pequeña dimensión (b.1) no se aplicará el índice corrector de exceso (b.3).",
+]
+
+[legal."orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-ii-instruccion-2-3-b-1"
+document_id = "BOE-A-2021-19904"
+section = "Anexo II, instrucción 2.3.b.1) Índice corrector para empresas de pequeña dimensión"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90)."
+required_text = [
+    "b.1) Índice corrector para empresas de pequeña dimensión:",
+    "Titular persona física.",
+    "Sin personal asalariado.",
+]
+
+[legal."orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-ii-instruccion-2-3-b-2"
+document_id = "BOE-A-2021-19904"
+section = "Anexo II, instrucción 2.3.b.2) Índice corrector de temporada"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos dias del ano, continuos o alternos, sin exceder de 180 dias por ano) se aplica el indice que corresponda a la duracion de la temporada. Incompatible con el indice corrector por inicio de nuevas actividades (b.4)."
+required_text = [
+    "b.2) Índice corrector de temporada:",
+    "Tendrán la consideración de actividades de temporada las que habitualmente sólo se desarrollen durante ciertos días del año",
+]
+
+[legal."orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-ii-instruccion-2-3-b-4"
+document_id = "BOE-A-2021-19904"
+section = "Anexo II, instrucción 2.3.b.4) Índice corrector por inicio de nuevas actividades"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector por inicio de nuevas actividades. Aplica al contribuyente que inicie una nueva actividad a partir del 1 de enero de 2021, que no sea de temporada, no ejercida previamente bajo otra titularidad, y realizada en local exclusivo. Incompatible con el indice corrector de temporada (b.2)."
+required_text = [
+    "b.4) Índice corrector por inicio de nuevas actividades.",
+    "Que se trate de nuevas actividades cuyo ejercicio se inicie a partir del 1 de enero de 2021.",
+]
+
+[legal."orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-i-instruccion-2-1"
+document_id = "BOE-A-2021-19904"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.1 Fase 1: Rendimiento neto previo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 1a agraria: rendimiento neto previo. Para cada cultivo o explotacion el rendimiento neto previo es el volumen total de ingresos (incluidas subvenciones e indemnizaciones) multiplicado por el indice de rendimiento neto que le corresponda; la ayuda directa desacoplada de la PAC se acumula a los ingresos de los cultivos y explotaciones en proporcion a sus importes. Base de las casillas de rendimiento base producto y del rendimiento neto previo (casilla 1537) del Modelo 100 del ejercicio 2022."
+required_text = [
+    "2.1 Fase 1: Rendimiento neto previo.",
+    "se obtendrá multiplicando el volumen total de ingresos",
+    "por el «índice de rendimiento neto» que corresponda a cada uno de ellos",
+]
+
+[legal."orden-hfp-1335-2021:anexo-i-instruccion-2-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-i-instruccion-2-2"
+document_id = "BOE-A-2021-19904"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.2 Fase 2: Rendimiento neto minorado"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 2a agraria: rendimiento neto minorado. Se obtiene deduciendo del rendimiento neto previo la amortizacion del inmovilizado material e intangible por su depreciacion efectiva, con la tabla de amortizacion de este Anexo I para los grupos que tabula; en las actividades forestales no se deducen amortizaciones. Base de la casilla 1539 del Modelo 100 del ejercicio 2022, que resta la amortizacion declarada (casilla 1538)."
+required_text = [
+    "2.2 Fase 2: Rendimiento neto minorado.",
+    "El rendimiento neto minorado se obtiene deduciendo del anterior las cantidades que, en concepto de amortización del inmovilizado material e intangible correspondan a la depreciación efectiva",
+    "No obstante, los elementos patrimoniales del inmovilizado descritos a continuación, se amortizarán conforme a la siguiente tabla",
+]
+
+[legal."orden-hfp-1335-2021:anexo-i-instruccion-2-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-i-instruccion-2-3"
+document_id = "BOE-A-2021-19904"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.3 Fase 3: Rendimiento neto de módulos"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 3a agraria: rendimiento neto de modulos. Sobre el rendimiento neto minorado se aplican en secuencia, cuando correspondan, los indices correctores de las letras a) a h), cada uno sobre el rendimiento ya rectificado por los anteriores, con sus incompatibilidades: el indice por personal asalariado no se aplica cuando procede el de medios de produccion ajenos, y a las actividades forestales solo les es aplicable el indice de la letra h). Base de la casilla 1548 del Modelo 100 del ejercicio 2022 (indices declarados en las casillas 1540 a 1547)."
+required_text = [
+    "Rendimiento neto de módulos.",
+    "Sobre el rendimiento neto minorado se aplicarán, cuando correspondan, los índices correctores que se establecen a continuación",
+    "según las circunstancias, cuantía, orden e incompatibilidad que se indica a continuación, sobre el rendimiento neto minorado o, en su caso, sobre el rectificado por aplicación de los mismos",
+    "Cuando resulte aplicable el índice corrector de la letra a) anterior no podrá aplicarse el contenido en esta letra b).",
+    "A las actividades forestales únicamente le será aplicable el índice señalado en la letra h) anterior.",
+]
+
+[legal."orden-hfp-1335-2021:anexo-i-instruccion-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#anexo-i-instruccion-3"
+document_id = "BOE-A-2021-19904"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 3: Reducción agricultores jóvenes"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
+notes = "Fase 4a agraria: reduccion agricultores jovenes. Los agricultores jovenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de modulos de su actividad agraria durante los periodos impositivos cerrados en los cinco anos siguientes a su primera instalacion como titulares de una explotacion prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2022 la disposicion adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2022."
+required_text = [
+    "Los agricultores jóvenes o asalariados agrarios podrán reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento",
+    "primera instalación como titulares de una explotación prioritaria",
+]
+
+[legal."orden-hfp-405-2023:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/xml/orden-hfp-405-2023-art-2.xml#a2"
+document_id = "BOE-A-2023-9955"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-9955#a2"
+published_at = 2023-04-25
+effective_from = 2023-04-25
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from the BOE consolidated-text article orden-hfp-405-2023-art-2.xml (block a2), fetched with the canonical article fetcher as served in force; operator to re-stamp"
+notes = "Orden HFP/405/2023 art. 2: eleva al 25 por ciento, para las actividades del anexo I de la Orden HFP/1335/2021 (agricolas, ganaderas y forestales), la reduccion general del rendimiento neto de modulos del periodo impositivo 2022 prevista en la disposicion adicional primera de esa orden (5 por ciento, elevado al 15 por ciento para todas las actividades por la disposicion adicional octava de la Orden HFP/1172/2022). En vigor el dia de su publicacion (disposicion final unica), dentro del plazo de declaracion del ejercicio 2022, cuyo periodo impositivo rige."
+required_text = [
+    "Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva para las actividades agrícolas, ganaderas y forestales",
+    "será del 25 por ciento para las actividades incluidas en el anexo I de la citada orden",
+]
+
 [legal."orden-hfp-1172-2022:art-4"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -756,6 +1026,341 @@ required_text = [
     "Aprobación de los signos, índices o módulos",
     "método de estimación objetiva",
     "año\u00a02023",
+]
+
+[legal."orden-hfp-1172-2022:da-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022-da-1.html#da"
+document_id = "BOE-A-2022-20025"
+section = "disposición adicional primera"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-20025#da"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from the BOE consolidated-text excerpt orden-hfp-1172-2022-da-1.html (block da), sliced with the canonical excerpt tool from act.php as served in force; operator to re-stamp"
+notes = "Reduccion general del 10 por ciento del rendimiento neto de modulos para 2023, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2023 (apartado 3). El texto consolidado anota que la reduccion sera del 15 por ciento para las actividades del anexo I segun el art. 2 de la Orden HAC/348/2024 (BOE-A-2024-7804), no catalogado."
+required_text = [
+    "Reducción en 2023 del rendimiento neto calculado por el método de estimación objetiva",
+    "podrán reducir el rendimiento neto de módulos obtenido en 2023 en un 10 por 100",
+    "Esta reducción se tendrá en cuenta para cuantificar el rendimiento neto a efectos de los pagos fraccionados correspondientes a 2023",
+]
+
+[legal."orden-hfp-1172-2022:da-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022-da-8.html#da-8"
+document_id = "BOE-A-2022-20025"
+section = "disposición adicional octava"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-20025#da-8"
+published_at = 2022-12-01
+effective_from = 2022-12-02
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from the BOE consolidated-text excerpt orden-hfp-1172-2022-da-8.html (block da-8), sliced with the canonical excerpt tool from act.php as served in force; operator to re-stamp"
+notes = "Eleva al 15 por ciento la reduccion general de 2022 del rendimiento neto de modulos de la disposicion adicional primera de la Orden HFP/1335/2021 (orden-hfp-1335-2021:da-1, 5 por ciento), en todas las actividades economicas, y la hace computable en el pago fraccionado del cuarto trimestre de 2022. En vigor el dia siguiente a su publicacion (2 de diciembre de 2022, disposicion final unica); rige el periodo impositivo 2022, cuyo devengo es posterior a esa fecha."
+required_text = [
+    "Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva en todas las actividades económicas",
+    "La reducción prevista en la disposición adicional primera de la Orden HFP/1335/2021, de 1 de diciembre, será del 15 por 100.",
+    "Esta reducción se tendrá en cuenta para cuantificar el rendimiento neto a efectos del pago fraccionado correspondientes al cuarto trimestre de 2022.",
+]
+
+[legal."orden-hfp-1172-2022:instruccion-2-2-a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-ii-instruccion-2-2-a"
+document_id = "BOE-A-2022-20025"
+section = "Anexo II, instrucción 2.2.a) Minoración por incentivos al empleo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 2a: minoracion por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoracion (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado."
+required_text = [
+    "2.2 Fase 2: Rendimiento neto minorado.",
+    "El rendimiento neto previo se minorará en el importe de los incentivos al empleo y la inversión",
+    "a) Minoración por incentivos al empleo.",
+    "Si la diferencia resultase positiva, a ésta se aplicará el coeficiente 0,40",
+]
+
+[legal."orden-hfp-1172-2022:instruccion-2-2-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-ii-instruccion-2-2-b"
+document_id = "BOE-A-2022-20025"
+section = "Anexo II, instrucción 2.2.b) Minoración por incentivos a la inversión"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 2a: minoracion por incentivos a la inversion. Son deducibles las cantidades que, en concepto de amortizacion del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada segun la tabla de amortizacion de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio)."
+required_text = [
+    "b) Minoración por incentivos a la inversión.",
+    "Serán deducibles las cantidades que, en concepto de amortización del inmovilizado, material o intangible, correspondan a la depreciación efectiva",
+    "El coeficiente de amortización lineal máximo.",
+]
+
+[legal."orden-hfp-1172-2022:instruccion-2-3-b-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-ii-instruccion-2-3-b-3"
+document_id = "BOE-A-2022-20025"
+section = "Anexo II, instrucción 2.3.b.3) Índice corrector de exceso"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30."
+required_text = [
+    "b.3) Índice corrector de exceso:",
+    "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
+]
+
+[legal."orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-ii-instruccion-2-3-incompatibilidades"
+document_id = "BOE-A-2022-20025"
+section = "Anexo II, instrucción 2.3 Fase 3: Rendimiento neto de módulos — Incompatibilidades entre los índices correctores"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 a a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si."
+required_text = [
+    "Incompatibilidades entre los índices correctores:",
+    "En ningún caso será aplicable el índice corrector para empresas de pequeña dimensión (b.1) a las actividades para las que están previstos los índices correctores especiales enumerados en las letras a.2), a.3), a.4) y a.5).",
+    "Cuando resulte aplicable el índice corrector para empresas de pequeña dimensión (b.1) no se aplicará el índice corrector de exceso (b.3).",
+]
+
+[legal."orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-ii-instruccion-2-3-b-1"
+document_id = "BOE-A-2022-20025"
+section = "Anexo II, instrucción 2.3.b.1) Índice corrector para empresas de pequeña dimensión"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90)."
+required_text = [
+    "b.1) Índice corrector para empresas de pequeña dimensión:",
+    "Titular persona física.",
+    "Sin personal asalariado.",
+]
+
+[legal."orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-ii-instruccion-2-3-b-2"
+document_id = "BOE-A-2022-20025"
+section = "Anexo II, instrucción 2.3.b.2) Índice corrector de temporada"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos dias del ano, continuos o alternos, sin exceder de 180 dias por ano) se aplica el indice que corresponda a la duracion de la temporada. Incompatible con el indice corrector por inicio de nuevas actividades (b.4)."
+required_text = [
+    "b.2) Índice corrector de temporada:",
+    "Tendrán la consideración de actividades de temporada las que habitualmente sólo se desarrollen durante ciertos días del año",
+]
+
+[legal."orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-ii-instruccion-2-3-b-4"
+document_id = "BOE-A-2022-20025"
+section = "Anexo II, instrucción 2.3.b.4) Índice corrector por inicio de nuevas actividades"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector por inicio de nuevas actividades. Aplica al contribuyente que inicie una nueva actividad a partir del 1 de enero de 2022, que no sea de temporada, no ejercida previamente bajo otra titularidad, y realizada en local exclusivo. Incompatible con el indice corrector de temporada (b.2)."
+required_text = [
+    "b.4) Índice corrector por inicio de nuevas actividades.",
+    "Que se trate de nuevas actividades cuyo ejercicio se inicie a partir del 1 de enero de 2022.",
+]
+
+[legal."orden-hfp-1172-2022:anexo-i-instruccion-2-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-i-instruccion-2-1"
+document_id = "BOE-A-2022-20025"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.1 Fase 1: Rendimiento neto previo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 1a agraria: rendimiento neto previo. Para cada cultivo o explotacion el rendimiento neto previo es el volumen total de ingresos (incluidas subvenciones e indemnizaciones) multiplicado por el indice de rendimiento neto que le corresponda; la ayuda directa desacoplada de la PAC se acumula a los ingresos de los cultivos y explotaciones en proporcion a sus importes. Base de las casillas de rendimiento base producto y del rendimiento neto previo (casilla 1537) del Modelo 100 del ejercicio 2023."
+required_text = [
+    "2.1 Fase 1: Rendimiento neto previo.",
+    "se obtendrá multiplicando el volumen total de ingresos",
+    "por el «índice de rendimiento neto» que corresponda a cada uno de ellos",
+]
+
+[legal."orden-hfp-1172-2022:anexo-i-instruccion-2-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-i-instruccion-2-2"
+document_id = "BOE-A-2022-20025"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.2 Fase 2: Rendimiento neto minorado"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 2a agraria: rendimiento neto minorado. Se obtiene deduciendo del rendimiento neto previo la amortizacion del inmovilizado material e intangible por su depreciacion efectiva, con la tabla de amortizacion de este Anexo I para los grupos que tabula; en las actividades forestales no se deducen amortizaciones. Base de la casilla 1539 del Modelo 100 del ejercicio 2023, que resta la amortizacion declarada (casilla 1538)."
+required_text = [
+    "2.2 Fase 2: Rendimiento neto minorado.",
+    "El rendimiento neto minorado se obtiene deduciendo del anterior las cantidades que, en concepto de amortización del inmovilizado material e intangible correspondan a la depreciación efectiva",
+    "No obstante, los elementos patrimoniales del inmovilizado descritos a continuación, se amortizarán conforme a la siguiente tabla",
+]
+
+[legal."orden-hfp-1172-2022:anexo-i-instruccion-2-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-i-instruccion-2-3"
+document_id = "BOE-A-2022-20025"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.3 Fase 3: Rendimiento neto de módulos"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 3a agraria: rendimiento neto de modulos. Sobre el rendimiento neto minorado se aplican en secuencia, cuando correspondan, los indices correctores de las letras a) a h), cada uno sobre el rendimiento ya rectificado por los anteriores, con sus incompatibilidades: el indice por personal asalariado no se aplica cuando procede el de medios de produccion ajenos, y a las actividades forestales solo les es aplicable el indice de la letra h). Base de la casilla 1548 del Modelo 100 del ejercicio 2023 (indices declarados en las casillas 1540 a 1547)."
+required_text = [
+    "Rendimiento neto de módulos.",
+    "Sobre el rendimiento neto minorado se aplicarán, cuando correspondan, los índices correctores que se establecen a continuación",
+    "según las circunstancias, cuantía, orden e incompatibilidad que se indica a continuación, sobre el rendimiento neto minorado o, en su caso, sobre el rectificado por aplicación de los mismos",
+    "Cuando resulte aplicable el índice corrector de la letra a) anterior no podrá aplicarse el contenido en esta letra b).",
+    "A las actividades forestales únicamente le será aplicable el índice señalado en la letra h) anterior.",
+]
+
+[legal."orden-hfp-1172-2022:anexo-i-instruccion-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#anexo-i-instruccion-3"
+document_id = "BOE-A-2022-20025"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 3: Reducción agricultores jóvenes"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Fase 4a agraria: reduccion agricultores jovenes. Los agricultores jovenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de modulos de su actividad agraria durante los periodos impositivos cerrados en los cinco anos siguientes a su primera instalacion como titulares de una explotacion prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2023 la disposicion adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2023."
+required_text = [
+    "Los agricultores jóvenes o asalariados agrarios podrán reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento",
+    "primera instalación como titulares de una explotación prioritaria",
+]
+
+[legal."orden-hfp-1172-2022:da-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#da-septima"
+document_id = "BOE-A-2022-20025"
+section = "disposición adicional séptima"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2022-12-02
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Medida excepcional para 2022 (Orden HFP/1172/2022, en vigor el dia siguiente a su publicacion; rige el periodo impositivo 2022, cuyo devengo es posterior): el rendimiento neto previo de las actividades agricolas y ganaderas en estimacion objetiva, calculado segun la instruccion 2.1 del anexo I de la Orden HFP/1335/2021, puede reducirse en el 35 por ciento del precio de adquisicion del gasoleo agricola y en el 15 por ciento del de los fertilizantes adquiridos y facturados en 2022. Apartado 2: los indices correctores por piensos adquiridos a terceros y por regadio con energia electrica de la Orden HFP/1172/2022 sustituyen en 2022 a los de la Orden HFP/1335/2021. Base de las casillas 0158 y 0159 que minoran el rendimiento neto previo al obtener el rendimiento neto minorado (casilla 1539) del Modelo 100 del ejercicio 2022."
+required_text = [
+    "Medidas excepcionales en el Impuesto sobre la Renta de las Personas Físicas para para paliar el efecto producido por el precio de los insumos de explotación en las actividades agrícolas y ganaderas el año 2022",
+    "En el 35 por 100 del precio de adquisición del gasóleo agrícola",
+    "En el 15 por 100 del precio de adquisición de los fertilizantes",
+    "Ambas reducciones únicamente procederán cuanto se trate de adquisiciones efectuadas en el ejercicio 2022",
+]
+
+[legal."orden-hfp-1172-2022:da-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#da-tercera"
+document_id = "BOE-A-2022-20025"
+section = "disposición adicional tercera"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1172-2022.html; operator to re-stamp"
+notes = "Medida excepcional para 2023: el rendimiento neto previo de las actividades agricolas y ganaderas en estimacion objetiva, calculado segun la instruccion 2.1 del anexo I de esta orden, puede reducirse en el 35 por ciento del precio de adquisicion del gasoleo agricola y en el 15 por ciento del de los fertilizantes adquiridos y facturados en 2023. Base de las casillas 0158 y 0159 que minoran el rendimiento neto previo al obtener el rendimiento neto minorado (casilla 1539) del Modelo 100 del ejercicio 2023."
+required_text = [
+    "Medidas excepcionales en el Impuesto sobre la Renta de las Personas Físicas para paliar el efecto producido por el precio de los insumos de explotación en las actividades agrícolas y ganaderas en el año 2023",
+    "En el 35 por 100 del precio de adquisición del gasóleo agrícola",
+    "En el 15 por 100 del precio de adquisición de los fertilizantes",
+    "Ambas reducciones únicamente procederán cuando se trate de adquisiciones efectuadas en el ejercicio 2023",
+]
+
+[legal."orden-hac-348-2024:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-348-2024.html#a2"
+document_id = "BOE-A-2024-7804"
+article = "2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-7804"
+published_at = 2024-04-19
+effective_from = 2024-04-19
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from the BOE as-published orden-hac-348-2024.html, fetched with the canonical published-document fetcher after BOE redirected its consolidated view away; operator to re-stamp"
+notes = "Orden HAC/348/2024 art. 2: eleva al 15 por ciento, para las actividades del anexo I de la Orden HFP/1172/2022 (agricolas, ganaderas y forestales), la reduccion general del rendimiento neto de modulos del periodo impositivo 2023 prevista en la disposicion adicional primera de esa orden (10 por ciento). En vigor el dia de su publicacion (disposicion final unica), dentro del plazo de declaracion del ejercicio 2023, cuyo periodo impositivo rige."
+required_text = [
+    "Reducción en 2023 del rendimiento neto calculado por el método de estimación objetiva para las actividades agrícolas, ganaderas y forestales",
+    "será del 15 por ciento para las actividades incluidas en el anexo I de la citada orden",
 ]
 
 [legal."orden-hfp-1359-2023:art-4"]
@@ -1016,6 +1621,113 @@ orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.4)."""
 required_text = [
     "b.4) Índice corrector por inicio de nuevas actividades.",
     "Que se trate de nuevas actividades cuyo ejercicio se inicie a partir del 1 de enero de 2023.",
+]
+
+[legal."orden-hfp-1359-2023:anexo-i-instruccion-2-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-i-instruccion-2-1"
+document_id = "BOE-A-2023-25882"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.1 Fase 1: Rendimiento neto previo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 1a agraria: rendimiento neto previo. Para cada cultivo o explotacion el rendimiento neto previo es el volumen total de ingresos (incluidas subvenciones e indemnizaciones) multiplicado por el indice de rendimiento neto que le corresponda; la ayuda directa desacoplada de la PAC se acumula a los ingresos de los cultivos y explotaciones en proporcion a sus importes. Base de las casillas de rendimiento base producto y del rendimiento neto previo (casilla 1537) del Modelo 100 del ejercicio 2024."
+required_text = [
+    "2.1 Fase 1: Rendimiento neto previo.",
+    "se obtendrá multiplicando el volumen total de ingresos",
+    "por el «índice de rendimiento neto» que corresponda a cada uno de ellos",
+]
+
+[legal."orden-hfp-1359-2023:anexo-i-instruccion-2-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-i-instruccion-2-2"
+document_id = "BOE-A-2023-25882"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.2 Fase 2: Rendimiento neto minorado"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 2a agraria: rendimiento neto minorado. Se obtiene deduciendo del rendimiento neto previo la amortizacion del inmovilizado material e intangible por su depreciacion efectiva, con la tabla de amortizacion de este Anexo I para los grupos que tabula; en las actividades forestales no se deducen amortizaciones. Base de la casilla 1539 del Modelo 100 del ejercicio 2024, que resta la amortizacion declarada (casilla 1538)."
+required_text = [
+    "2.2 Fase 2: Rendimiento neto minorado.",
+    "El rendimiento neto minorado se obtiene deduciendo del anterior las cantidades que, en concepto de amortización del inmovilizado material e intangible correspondan a la depreciación efectiva",
+    "No obstante, los elementos patrimoniales del inmovilizado descritos a continuación, se amortizarán conforme a la siguiente tabla",
+]
+
+[legal."orden-hfp-1359-2023:anexo-i-instruccion-2-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-i-instruccion-2-3"
+document_id = "BOE-A-2023-25882"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 2.3 Fase 3: Rendimiento neto de módulos"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 3a agraria: rendimiento neto de modulos. Sobre el rendimiento neto minorado se aplican en secuencia, cuando correspondan, los indices correctores de las letras a) a h), cada uno sobre el rendimiento ya rectificado por los anteriores, con sus incompatibilidades: el indice por personal asalariado no se aplica cuando procede el de medios de produccion ajenos, y a las actividades forestales solo les es aplicable el indice de la letra h). Base de la casilla 1548 del Modelo 100 del ejercicio 2024 (indices declarados en las casillas 1540 a 1547)."
+required_text = [
+    "Rendimiento neto de módulos.",
+    "Sobre el rendimiento neto minorado se aplicarán, cuando correspondan, los índices correctores que se establecen a continuación",
+    "según las circunstancias, cuantía, orden e incompatibilidad que se indica a continuación, sobre el rendimiento neto minorado o, en su caso, sobre el rectificado por aplicación de los mismos",
+    "Cuando resulte aplicable el índice corrector de la letra a) anterior no podrá aplicarse el contenido en esta letra b).",
+    "A las actividades forestales únicamente le será aplicable el índice señalado en la letra h) anterior.",
+]
+
+[legal."orden-hfp-1359-2023:anexo-i-instruccion-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-i-instruccion-3"
+document_id = "BOE-A-2023-25882"
+section = "Anexo I (actividades agrícolas, ganaderas y forestales), instrucción 3: Reducción agricultores jóvenes"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 4a agraria: reduccion agricultores jovenes. Los agricultores jovenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de modulos de su actividad agraria durante los periodos impositivos cerrados en los cinco anos siguientes a su primera instalacion como titulares de una explotacion prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2024 la disposicion adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2024."
+required_text = [
+    "Los agricultores jóvenes o asalariados agrarios podrán reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento",
+    "primera instalación como titulares de una explotación prioritaria",
+]
+
+[legal."orden-hfp-1359-2023:da-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#da-tercera"
+document_id = "BOE-A-2023-25882"
+section = "disposición adicional tercera"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Medida excepcional para 2024: el rendimiento neto previo de las actividades agricolas y ganaderas en estimacion objetiva, calculado segun la instruccion 2.1 del anexo I de esta orden, puede reducirse en el 35 por ciento del precio de adquisicion del gasoleo agricola y en el 15 por ciento del de los fertilizantes adquiridos y facturados en 2024. Base de las casillas 0158 y 0159 que minoran el rendimiento neto previo al obtener el rendimiento neto minorado (casilla 1539) del Modelo 100 del ejercicio 2024."
+required_text = [
+    "Medidas excepcionales en el Impuesto sobre la Renta de las Personas Físicas para paliar el efecto producido por el precio de los insumos de explotación en las actividades agrícolas y ganaderas en el año 2024",
+    "En el 35 por ciento del precio de adquisición del gasóleo agrícola",
+    "En el 15 por ciento del precio de adquisición de los fertilizantes",
+    "Ambas reducciones únicamente procederán cuando se trate de adquisiciones efectuadas en el ejercicio 2024",
 ]
 
 [legal."real-decreto-ley-7-2024:art-11"]
@@ -3196,6 +3908,33 @@ required_text = [
     "no podrá superar el importe de 300.000 euros anuales",
 ]
 
+[legal."ley-35-2006:art-32-2015"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-32-2015.html#a32"
+document_id = "BOE-A-2006-20764"
+article = "32"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn=1#a32"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-review"
+notes = "LIRPF art 32, redaction selected by BOE at 2014-11-28 (art. 1.19 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2022-12-31: reducciones del rendimiento neto de actividades economicas (30 por ciento irregulares con limite de 300.000 euros; reduccion de 2.000 euros mas la minoracion de 3.700 euros para rendimientos netos inferiores a 14.450 euros; 20 por ciento por inicio de actividad). Selected on the article's own version selector (checked 20141128) and cross-checked against the BOE consolidated-text article endpoint redaction BOE-A-2014-12327 fecha_vigencia 20150101; the next redaction (art. 60.1 Ley 31/2022, BOE-A-2022-22128) changes apartado 2.1.o a) from 2023-01-01, which the current ley-35-2006:art-32 entry covers. Grounds ejercicio 2022, whose devengo precedes that change."
+required_text = [
+    "Reducciones.",
+    "rendimientos netos con un período de generación superior a dos años",
+    "sean inferiores a 14.450 euros",
+    "el saldo resultante no podrá ser negativo",
+    "inicien el ejercicio de una actividad económica",
+    "no podrá superar el importe de 300.000 euros anuales",
+]
+forbidden_text = [
+    "19.747,5 euros",
+]
+
 [legal."ley-35-2006:art-33"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -4482,6 +5221,25 @@ required_text = [
     # this excerpt is amendment chrome. The title alone previously grounded
     # it. Verified complete against live BOE: apartados 1-6 on both sides.
     "reglamentariamente se regularán las obligaciones de información a cumplir por los concesionarios",
+]
+
+[legal."ley-35-2006:da-59"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-13"
+document_id = "BOE-A-2006-20764"
+article = "DA-59"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-13"
+published_at = 2006-11-29
+effective_from = 2024-06-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from bundled ley-35-2006.html#da-13 (DA quincuagesima novena), anchor verified to resolve to exactly that unit through the production resolver; operator to re-stamp"
+notes = "LIRPF disposicion adicional 59a: extiende a los contribuyentes del IRPF que desarrollen la actividad economica a la que se afecten los vehiculos e instalaciones de recarga, cualquiera que sea el metodo de determinacion de su rendimiento neto, la libertad de amortizacion de la disposicion adicional decimoctava LIS; el exceso amortizado se integra como rendimiento de la actividad al transmitir el elemento. Anadida por el art. 3.4 del Real Decreto-ley 4/2024 (BOE-A-2024-12944), texto publicado el 27/06/2024 y en vigor desde el 28/06/2024, con efectos desde 1 de enero de 2024; la DA 18 LIS a la que remite, redactada por el art. 4.Uno del mismo real decreto-ley (real-decreto-ley-4-2024:art-4), solo alcanza a los periodos impositivos no concluidos a su entrada en vigor, por lo que no se declara alcance retroactivo de devengo."
+required_text = [
+    "Libertad de amortización en determinados vehículos y en nuevas infraestructuras de recarga",
+    "resultará de aplicación a los contribuyentes de este impuesto que desarrollen la actividad económica a la que se afecten los vehículos e instalaciones de recarga, cualquiera que sea el método de determinación de su rendimiento neto",
 ]
 
 [legal."ley-35-2006:da-60"]

@@ -2,7 +2,7 @@
 casilla_storage_baseline = "2024-2025"
 binding_source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 formula_source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", cause = "predecessor_row_without_lineage", legal_refs = ["orden-eha-3434-2007:art-1"], source_refs = ["aeat-dr-322-2026"] } }
+predecessor = { none = { reason = "No legal predecessor is declared. The root was introduced on the converter's predecessor-row-without-lineage diagnostic against '2024-2025', a materialisation limit and not an official-structure claim: the 2026 record design (aeat-dr-322-2026) keeps every casilla of the 2024-2025 edition and adds box [112] and the identification field for the gasolinas pago a cuenta. The payload is stored against the '2024-2025' edition through casilla_storage_baseline and family_storage_baseline, so this edition states only its differences: the two new casillas, positions reproducing the 2026 casilla order, overrides for each kept row's continuity claim and changed constraints, the continuity evolutions it records, the 2026 deadline windows, its own export layout in place of the generated one, and overrides moving the inherited references to the 2026 design. Storage reuse makes no continuity claim; naming '2024-2025' as legal predecessor is a separate continuity decision.", cause = "predecessor_row_without_lineage", legal_refs = ["orden-eha-3434-2007:art-1"], source_refs = ["aeat-dr-322-2026"] } }
 casilla_source_refs = ["aeat-dr-322-2026"]
 live_cross_reference_source_refs = ["aeat-modelo-322-procedure"]
 application_link_source_refs = ["aeat-modelo-322-procedure"]
@@ -1447,544 +1447,256 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "11"
-position = 10
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "12"
-position = 11
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "13"
-position = 12
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "14"
-position = 13
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "15"
-position = 14
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "16"
-position = 15
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "17"
-position = 16
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "18"
-position = 17
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "19"
-position = 18
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "20"
-position = 19
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "21"
-position = 20
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "22"
-position = 21
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "23"
-position = 22
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "24"
-position = 23
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "25"
-position = 24
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "26"
-position = 25
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "27"
-position = 26
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "28"
-position = 27
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "29"
-position = 28
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "30"
-position = 29
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "31"
-position = 30
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "32"
-position = 31
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "33"
-position = 32
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "34"
-position = 33
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "35"
-position = 34
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "36"
-position = 35
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "37"
-position = 36
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "38"
-position = 37
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "39"
-position = 38
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "40"
-position = 39
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "41"
-position = 40
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "42"
-position = 41
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "43"
-position = 42
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "44"
-position = 43
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "45"
-position = 44
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "46"
-position = 45
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "47"
-position = 46
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "48"
-position = 47
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "49"
-position = 48
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "50"
-position = 49
-
-[[revisions."2026-y-siguientes".casilla_positions]]
 id = "125"
-position = 50
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "126"
-position = 51
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "127"
-position = 52
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "128"
-position = 53
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "150"
-position = 54
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "151"
-position = 55
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "152"
-position = 56
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "153"
-position = 57
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "154"
-position = 58
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "155"
-position = 59
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "156"
-position = 60
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "157"
-position = 61
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "158"
-position = 62
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "159"
-position = 63
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "160"
-position = 64
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "161"
-position = 65
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "162"
-position = 66
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "163"
-position = 67
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "164"
-position = 68
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "165"
-position = 69
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "166"
-position = 70
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "167"
-position = 71
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "168"
-position = 72
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "169"
-position = 73
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "170"
-position = 74
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "171"
-position = 75
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "172"
-position = 76
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "173"
-position = 77
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "500"
-position = 78
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "501"
-position = 79
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "502"
-position = 80
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "503"
-position = 81
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "504"
 position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "505"
-position = 83
+id = "126"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "506"
-position = 84
+id = "127"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "507"
-position = 85
+id = "128"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "508"
-position = 86
+id = "150"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "509"
-position = 87
+id = "151"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "510"
-position = 88
+id = "152"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "511"
-position = 89
+id = "153"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "512"
-position = 90
+id = "154"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "513"
-position = 91
+id = "155"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "514"
-position = 92
+id = "156"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "515"
-position = 93
+id = "157"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "516"
-position = 94
+id = "158"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "517"
-position = 95
+id = "159"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "518"
-position = 96
+id = "160"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "519"
-position = 97
+id = "161"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "520"
-position = 98
+id = "162"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "521"
-position = 99
+id = "163"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "164"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "165"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "166"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "167"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "168"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "169"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "170"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "171"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "172"
+position = 82
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "173"
+position = 82
 
 [[revisions."2026-y-siguientes".casilla_positions]]
 id = "51"
-position = 100
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "52"
-position = 101
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "53"
-position = 102
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "54"
-position = 103
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "55"
-position = 104
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "56"
-position = 105
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "57"
 position = 106
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "58"
-position = 107
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "59"
-position = 108
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "60"
-position = 109
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "61"
-position = 110
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "62"
-position = 111
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "63"
-position = 112
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "64"
-position = 113
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "65"
-position = 114
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "66"
-position = 115
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "67"
-position = 116
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "68"
-position = 117
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "69"
-position = 118
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "70"
-position = 119
+id = "52"
+position = 106
 
 [[revisions."2026-y-siguientes".casilla_positions]]
 id = "71"
-position = 120
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "72"
-position = 121
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "74"
-position = 122
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "75"
-position = 123
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "76"
-position = 124
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "77"
-position = 125
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "79"
-position = 126
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "80"
-position = 127
-
-[[revisions."2026-y-siguientes".casilla_positions]]
-id = "81"
 position = 128
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "83"
+id = "72"
 position = 129
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "84"
+id = "74"
 position = 130
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "86"
+id = "75"
 position = 131
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "88"
+id = "76"
 position = 132
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "89"
+id = "77"
 position = 133
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "90"
+id = "79"
 position = 134
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "91"
+id = "80"
 position = 135
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "92"
+id = "81"
 position = 136
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "93"
+id = "83"
 position = 137
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "94"
+id = "84"
 position = 138
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "95"
+id = "86"
 position = 139
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "96"
+id = "88"
 position = 140
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "97"
+id = "89"
 position = 141
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "98"
+id = "90"
 position = 142
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "99"
+id = "91"
 position = 143
 
 [[revisions."2026-y-siguientes".casilla_positions]]
-id = "112"
+id = "92"
+position = 144
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "93"
 position = 145
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "94"
+position = 146
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "95"
+position = 147
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "96"
+position = 148
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "97"
+position = 149
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "98"
+position = 150
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "99"
+position = 151
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "107"
+position = 151
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "112"
+position = 152
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "120"
+position = 152
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "122"
+position = 152
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "123"
+position = 152
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "124"
+position = 152
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "522"
+position = 152
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "523"
+position = 152
+
+[[revisions."2026-y-siguientes".casilla_positions]]
+id = "524"
+position = 152
 
 [[revisions."2026-y-siguientes".casilla_positions]]
 id = "decl.ejercicio"

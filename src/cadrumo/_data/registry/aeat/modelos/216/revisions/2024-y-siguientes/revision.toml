@@ -4,7 +4,10 @@
 # without two editions of modelo 216 omitting the key at once, which the
 # predecessor-forest rule refuses. The declaration is inert while this is the
 # only edition and load-bearing the moment an earlier one lands.
-predecessor = { none = { cause = "official_structure_differs", reason = "The 2024 form is a redesign, not a revision of the 2020-2023 form: aeat-dr-216-2020-2023 prints seven unnumbered partidas over a flat liquidacion with no section structure, while aeat-dr-216-2024 prints numbered boxes [01] to [21] in two sections (I rentas sometidas a retencion, II rentas no sometidas), each split dividendos / resto de rentas / totales. This edition's seventeen casillas are ids '05' to '21', which are 2024 box numbers and do not exist on the earlier form. The 2024 design refuses the earlier years in its own validation: its devengo-ejercicio field [01] is declared obligatorio with >= 2024. So no earlier edition can be materialised into this one by the merge.", legal_refs = ["orden-eha-3290-2008:art-1"], source_refs = ["aeat-dr-216-2024"] } }
+predecessor = { none = { cause = "official_structure_differs", reason = "The 2024 form is a redesign, not a revision of the 2020-2023 form: aeat-dr-216-2020-2023 prints seven unnumbered partidas over a flat liquidacion with no section structure, while aeat-dr-216-2024 prints numbered boxes [01] to [21] in two sections (I rentas sometidas a retencion, II rentas no sometidas), each split dividendos / resto de rentas / totales. This edition's seventeen casillas are ids '05' to '21', which are 2024 box numbers and do not exist on the earlier form. The 2024 design refuses the earlier years in its own validation: its devengo-ejercicio field [01] is declared obligatorio with >= 2024. No merge from the earlier edition produces this one, so no predecessor is declared. The payload is stored against the 2020-2023 edition through family_storage_baseline: the shared applicability seed, filing schedule and filing and deadline links are inherited with overrides for their differences. No casilla is shared, so no casilla baseline is declared. Storage reuse makes no continuity claim.", legal_refs = ["orden-eha-3290-2008:art-1"], source_refs = ["aeat-dr-216-2024"] } }
+# Storage reuse only, not legal continuity: keyed families are stored as
+# differences from the 2020-2023 edition's effective members.
+family_storage_baseline = "2020-2023"
 formula_source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 casilla_source_refs = ["boe-modelo-216-form-layout"]
 application_link_source_refs = ["aeat-modelo-216-procedure"]
@@ -98,10 +101,43 @@ fragment can assert."""
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-24",
     "orden-eha-3290-2008:art-1",
-    "orden-eha-3290-2008:art-1",
 ]
 source_refs = [
     "aeat-modelo-216-procedure",
     "boe-modelo-216-form-layout",
     "aeat-dr-216-2024",
 ]
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "constructs"
+selector = {revision = "2020-2023", id = "modelo-216-liquidacion"}
+
+[[revisions."2024-y-siguientes".family_positions]]
+family = "application_links"
+id = "modelo-216-calculation"
+position = 0
+
+# This revision's period_selector declares ONLY the four quarterly periods, so
+# the quarterly schedule is the whole of what it can express. The AEAT
+# instructions bundled for this revision do describe a monthly regime for grandes
+# empresas, and it is deliberately NOT declared here: authoring a monthly schedule
+# against a selector that admits no monthly period would assert a filing this
+# revision cannot resolve. Modelling that regime is a revision-scope change, not
+# a schedule fragment.
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2020-2023", id = "modelo-216-trimestral"}
+sequence_additions = {profile_conditions = [{field = "enrollment.large_company", op = "equals", value = false, explanation = "Modelo 216 trimestral para retenedores no sujetos a autoliquidacion mensual por gran empresa; el plazo es de los veinte primeros dias naturales de abril, julio, octubre y enero.", legal_refs = ["orden-eha-3290-2008:art-4"], source_refs = ["aeat-modelo-216-procedure"]}], source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]}
+sequence_removals = {profile_conditions = [0], source_refs = [0, 1]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-deadline"}
+sequence_additions = {source_refs = ["aeat-modelo-216-procedure"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-filing"}
+sequence_additions = {source_refs = ["aeat-modelo-216-procedure"]}
+sequence_removals = {source_refs = [0, 1]}

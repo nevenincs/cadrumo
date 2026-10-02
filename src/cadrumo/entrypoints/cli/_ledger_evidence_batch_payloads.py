@@ -37,10 +37,26 @@ from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 
 __all__ = [
     "EvidenceBatchItemPayload",
+    "EvidenceBatchLabelReadingFallbackPayload",
     "EvidenceBatchPausePayload",
     "EvidenceBatchResult",
     "EvidenceBatchUnresolvedPayload",
 ]
+
+
+class EvidenceBatchLabelReadingFallbackPayload(OutputSchema):
+    """Why one row's stored draft stands on its label reading without the model fill.
+
+    Mirrors :class:`~cadrumo.application.ledger.invoice_draft_records.LabelReadingFallback`:
+    the cause token, the draft fields the fill was to read and left empty, the
+    class of the refusal or failure, and the precondition an admission refusal
+    failed. Machine facts only; nothing read from the document.
+    """
+
+    cause: str
+    unread_fields: list[str]
+    reader_error_type: str
+    failed_condition_id: str | None = None
 
 
 class EvidenceBatchItemPayload(OutputSchema):
@@ -52,6 +68,10 @@ class EvidenceBatchItemPayload(OutputSchema):
     application owns the failed condition and its facts; this transport only
     resolves the verdict against the live action surface, adding no instruction
     or rendered explanation of its own.
+
+    ``label_reading_fallback`` is present only on a row whose stored draft
+    stands on its label reading because the model fill did not run; the row's
+    status still says the document was read.
     """
 
     content_address: str
@@ -63,6 +83,7 @@ class EvidenceBatchItemPayload(OutputSchema):
     refusal_facts: Mapping[str, str | int | bool | Decimal] = Field(default_factory=dict)
     refusal_action: ResolvedPreconditionAction | None = None
     needed_inference: bool = True
+    label_reading_fallback: EvidenceBatchLabelReadingFallbackPayload | None = None
 
 
 class EvidenceBatchUnresolvedPayload(OutputSchema):

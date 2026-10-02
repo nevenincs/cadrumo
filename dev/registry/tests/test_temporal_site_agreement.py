@@ -69,7 +69,7 @@ def test_open_ended_windows_are_not_measured_for_year_gaps(authority: ValidatedR
 
 def test_a_closed_window_missing_a_year_is_reported(authority: ValidatedRegistryAuthority) -> None:
     """A closed window with no deadline window for one of its years is a gap."""
-    revision = authority.modelo("353").revisions["2021-2025"]
+    revision = authority.modelo("353").revisions["2021-hasta-2026-01"]
     findings = site_agreement_findings(revision, modelo_id="353")
     gaps = [finding for finding in findings if finding.kind == "window_year_without_deadline"]
     assert gaps

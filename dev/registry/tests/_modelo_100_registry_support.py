@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.schema import (
     RegistryCatalogues,
     RegistrySnapshot,
 )
+from cadrumo.domain.calculations.registry.snapshot import legal_window_covers_devengo
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -83,6 +84,28 @@ def _modelo_100_revision(filing_year: int = 2025) -> ModeloRevision:
     only for questions about what runtime would select.
     """
     return _loaded_registry()[0]["100"].revisions[str(filing_year)]
+
+
+def _governing_redaction(reference_id: str, revision: ModeloRevision) -> str:
+    """Return ``reference_id`` when it governs ``revision``, else the one row of its article that does.
+
+    An article the catalogue records in several redactions is cited in the one in
+    force at the edition's devengo, so an expectation written against the current
+    redaction resolves to the historical row for an earlier edition.
+    """
+    legal = _loaded_registry()[1].legal
+    cited = legal[reference_id]
+    if legal_window_covers_devengo(revision, cited):
+        return reference_id
+    article = (cited.document_id, cited.article, cited.section)
+    governing = [
+        reference.id
+        for reference in legal.values()
+        if (reference.document_id, reference.article, reference.section) == article
+        and legal_window_covers_devengo(revision, reference)
+    ]
+    assert len(governing) == 1, (reference_id, revision.id, governing)
+    return governing[0]
 
 
 def _modelo_100_snapshot(filing_year: int = 2025) -> RegistrySnapshot:
@@ -791,7 +814,8 @@ _NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS: Mapping[tuple[str, ...], int] 
     ("toma_datos_ampliada", "gp_reinversion"): 1,
     ("toma_datos_ampliada", "inmuebles"): 128,
     ("toma_datos_ampliada", "rdto_capital_mobiliario"): 3,
-    ("toma_datos_ampliada", "rdto_trabajo"): 7,
+    # Seven printed work-income boxes plus the internal maritime-exemption node.
+    ("toma_datos_ampliada", "rdto_trabajo"): 8,
     ("toma_datos_ampliada", "red_base_imponible"): 25,
     ("toma_datos_ampliada", "reg_estima_directa"): 5,
     ("toma_datos_ampliada", "reg_estima_obj"): 39,

@@ -15,10 +15,12 @@ from ...application.aggregation.invoice_retencion import (
 from ...application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
 from ...application.aggregation.retenciones import RetencionObservation
 from ...application.aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
+from ...application.aggregation.withholding_filing_cadence import PERIODIC_WITHHOLDING_MODELOS
 from ...application.modelo.aggregate_operation import ModeloAggregateProjection
 from ...application.modelo.invoice_withholding_capture_operation import ModeloInvoiceWithholdingCaptureProjection
+from ...core.aggregation import RetencionClave
 from ...core.i18n.render import tr
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode
@@ -30,11 +32,12 @@ from ._modelo_payloads import (
     WithholdingWindowReadbackPayload,
 )
 from .common import emit_envelope
+from .modelo_aux_payloads import WithholdingClaveBreakdownPayload
 from .runtime_modelo_aggregate import run_modelo_aggregate
 from .runtime_modelo_invoice_withholding import aggregate_modelo_with_received_invoice_retencion
 
-_INVOICE_WITHHOLDING_MODELOS = frozenset({"111", "115", "123"})
-_INVOICE_WITHHOLDING_CAPTURE_MODELOS = frozenset({"111", "115"})
+_INVOICE_EVIDENCE_MODELOS = frozenset({"111", "115"})
+_PERIODIC_WINDOW_MODELOS = frozenset(modelo.value for modelo in PERIODIC_WITHHOLDING_MODELOS)
 _LEDGER_PAYMENT_WITHHOLDING_MODELOS = frozenset({"111", "123"})
 
 
@@ -98,7 +101,7 @@ def _aggregate_operation_result(projection: ModeloAggregateProjection) -> Modelo
     ):
         raise ValueError("registered modelo aggregate omitted its summary fields")
     window = projection.withholding_window
-    if projection.modelo in _INVOICE_WITHHOLDING_MODELOS:
+    if projection.modelo in _PERIODIC_WINDOW_MODELOS:
         if window is None:
             raise ValueError("registered modelo aggregate omitted its withholding-window readback")
     elif window is not None:
@@ -111,9 +114,15 @@ def _aggregate_operation_result(projection: ModeloAggregateProjection) -> Modelo
         observation_count=projection.observation_count,
         source_kinds=list(projection.source_kinds),
         result_row_count=projection.result_row_count,
-        # Caller-authored M190 detail transport is retired; the operation's
-        # bounded projection therefore carries only an empty breakdown.
-        clave_breakdown=[],
+        clave_breakdown=[
+            WithholdingClaveBreakdownPayload(
+                clave=RetencionClave.from_registry(row.clave),
+                percepcion_count=row.percepcion_count,
+                percibido_total=row.percibido_total.decimal,
+                retencion_total=row.retencion_total.decimal,
+            )
+            for row in projection.clave_breakdown
+        ],
         withholding_window=(
             None
             if window is None
@@ -263,7 +272,7 @@ def aggregate_modelo(
         ),
         retencion_observations=(
             ()
-            if modelo in _INVOICE_WITHHOLDING_MODELOS
+            if modelo in _PERIODIC_WINDOW_MODELOS
             else _parse_typed_cli_observations(
                 retencion_observation, model=RetencionObservation, flag="--retencion-observation"
             )
@@ -280,6 +289,7 @@ def aggregate_modelo(
         model=LedgerPaymentWithholdingEvidenceRequest,
         flag="--ledger-payment-withholding",
     )
+    aggregate_projection: ModeloAggregateProjection | None = None
     if received_invoice_retencion:
         invoice_withholding_requests = _parse_typed_cli_observations(
             received_invoice_retencion,
@@ -287,8 +297,14 @@ def aggregate_modelo(
             flag="--received-invoice-retencion",
         )
         invoice_evidence = next(iter(invoice_withholding_requests), None)
-        if modelo not in _INVOICE_WITHHOLDING_CAPTURE_MODELOS:
-            raise typer.BadParameter(tr("cli.app.modelo.aggregate.invoice_retencion_wrong_modelo", modelo=modelo))
+        if modelo not in _INVOICE_EVIDENCE_MODELOS:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.aggregate.invoice_retencion_wrong_modelo",
+                    modelo=modelo,
+                    accepted_modelos=", ".join(sorted(_INVOICE_EVIDENCE_MODELOS)),
+                )
+            )
         if invoice_evidence is None:
             raise typer.BadParameter("one invoice withholding allocation is required per command")
         if retencion_observation:
@@ -308,7 +324,7 @@ def aggregate_modelo(
         )
         aggregate_result = _invoice_capture_aggregate_result(capture.projection)
     else:
-        if modelo in _INVOICE_WITHHOLDING_MODELOS and retencion_observation:
+        if modelo in _PERIODIC_WINDOW_MODELOS and retencion_observation:
             raise typer.BadParameter(
                 f"--retencion-observation is not accepted for Modelo {modelo}; use invoice evidence"
             )
@@ -319,5 +335,28 @@ def aggregate_modelo(
         )
         aggregate_result = _aggregate_operation_result(aggregate_projection)
     notices: list[Notice] = []
+    if aggregate_projection is not None:
+        notices.extend(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="modelo.aggregate.calculation_rows_absent",
+                message=tr(
+                    "cli.app.modelo.aggregate.calculation_rows_absent",
+                    modelo=modelo,
+                    filing_year=year,
+                    period=period,
+                    source_family=family.value,
+                ),
+                context={
+                    "modelo": modelo,
+                    "filing_year": str(year),
+                    "period": command.period.registry_token,
+                    "revision": aggregate_projection.calculation_revision_id or "",
+                    "source_family": family.value,
+                    "reason": "stored_rows_absent",
+                },
+            )
+            for family in aggregate_projection.absent_source_families
+        )
     lines = _aggregate_output_lines(aggregate_result, notices=notices)
     emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)

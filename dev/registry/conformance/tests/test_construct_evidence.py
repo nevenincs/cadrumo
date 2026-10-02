@@ -129,6 +129,14 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
         )
         for revision in m038_revisions
     } == {
+        "2022-hasta-2024-05": (
+            date(2022, 1, 1),
+            date(2024, 5, 31),
+            (),
+            2022,
+            2024,
+            ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
+        ),
         "2024-desde-06": (
             date(2024, 6, 1),
             date(2024, 12, 31),

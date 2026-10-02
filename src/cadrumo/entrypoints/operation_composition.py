@@ -814,11 +814,14 @@ def _build_modelo_invoice_withholding_capture_ports(*, profile_id: str) -> Model
 
 def _build_modelo_aggregate_operation_ports(*, profile_id: str) -> ModeloAggregateOperationPorts:
     """Bind the existing aggregate and ledger-payment services to one profile."""
+    from .adapter_composition import build_percepcion_observation_ports
+
     return ModeloAggregateOperationPorts(
         profile_id=profile_id,
         transaction_catalogue_repository=TransactionCatalogueRepository(bucket_id=profile_id),
         retencion_observation_repository=build_retencion_observation_ports(bucket_id=profile_id).repository,
         withholding_observation_service=build_withholding_observation_service(bucket_id=profile_id),
+        percepcion_observation_ports=build_percepcion_observation_ports(bucket_id=profile_id),
     )
 
 

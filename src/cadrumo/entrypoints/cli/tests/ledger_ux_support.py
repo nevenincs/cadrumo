@@ -97,8 +97,8 @@ def admit_an_unmeasurable_host() -> Iterator[None]:
 
     A document whose labels leave fields unread asks the on-host text reader to
     fill them, and admission control fails closed wherever the accelerator is
-    unreadable: the command then refuses on this host's hardware before the
-    unreachable runtime could let the label reading stand. The override is the
+    unreadable: the fill is then refused for headroom on this host's hardware
+    and never reaches the runtime these modules exercise. The override is the
     documented operator setting for exactly that machine class, so it configures
     the guard rather than reaching beneath it; a measured shortfall still refuses.
     """

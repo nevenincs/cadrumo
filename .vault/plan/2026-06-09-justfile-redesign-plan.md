@@ -7,8 +7,9 @@ tier: L1
 related:
   - '[[2026-06-09-justfile-redesign-adr]]'
   - '[[2026-06-09-justfile-redesign-research]]'
-modified: '2026-09-08'
-body_hash: 'sha256:85b6805af63632a47cbac66b32e5fe7941d7f403366e23f7fd6339471597beeb'
+  - '[[2026-10-01-vault-health-reconciliation-preexisting-errors-audit]]'
+modified: '2026-10-01'
+body_hash: 'sha256:c53d006615288738a51138bb521ba9ad6713ef86dfa124f1d88f151f6db73b88'
 ---
 
 # `justfile-redesign` `implementation` plan
@@ -41,33 +42,33 @@ This plan implements the build harness and project quality gate redesign authori
 - [x] `S18` - update CI workflow step names and just commands; `.github/workflows/ci.yml`.
 - [x] `S19` - run local pre-commit and check-all validations to verify harness health; `justfile`.
 - [x] `S20` - delete temporary backup file once verification passes; `justfile.bak`.
-- [x] `S21` - Audit check-style output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
-- [x] `S22` - Audit check-format output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
-- [x] `S23` - Audit check-types output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_types.py`.
-- [x] `S24` - Audit check-imports output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
-- [x] `S25` - Audit check-relative-imports output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_relative_imports.py`.
-- [x] `S26` - Audit check-dependencies output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
-- [x] `S27` - Audit check-security output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S28` - Audit check-rag output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S29` - Audit check-semantic output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/audit_semantic.py`.
-- [x] `S30` - Audit check-pre-commit output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
-- [x] `S31` - Audit check-all output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_all.py`.
-- [x] `S32` - Audit audit-types output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_types.py`.
-- [x] `S33` - Audit audit-complexity output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/audit_complexity.py`.
-- [x] `S34` - Audit audit-dead-code output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S35` - Audit audit-duplication output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S36` - Audit audit-rag output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S37` - Audit audit-debt-dashboard output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S38` - Audit test-unit output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S39` - Audit test-integration output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S40` - Audit test-live output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S41` - Audit test-smoke output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S42` - Audit test-workbook-parity output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S43` - Audit test-coverage output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S44` - Audit env-doctor output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S21` - Audit check-style output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [ ] `S22` - Audit check-format output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [ ] `S23` - Audit check-types output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_types.py`.
+- [ ] `S24` - Audit check-imports output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [ ] `S25` - Audit check-relative-imports output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_relative_imports.py`.
+- [ ] `S26` - Audit check-dependencies output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [ ] `S27` - Audit check-security output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S28` - Audit check-rag output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S29` - Audit check-semantic output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/audit_semantic.py`.
+- [ ] `S30` - Audit check-pre-commit output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/quiet_ok.py`.
+- [ ] `S31` - Audit check-all output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_all.py`.
+- [ ] `S32` - Audit audit-types output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/check_types.py`.
+- [ ] `S33` - Audit audit-complexity output for cognitive load and readability; `suppress passing noise, present only actionable findings; `scripts/audit_complexity.py`.
+- [ ] `S34` - Audit audit-dead-code output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S35` - Audit audit-duplication output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S36` - Audit audit-rag output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S37` - Audit audit-debt-dashboard output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S38` - Audit test-unit output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S39` - Audit test-integration output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S40` - Audit test-live output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S41` - Audit test-smoke output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S42` - Audit test-workbook-parity output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S43` - Audit test-coverage output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
+- [ ] `S44` - Audit env-doctor output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
 - [x] `S45` - Audit docs-check output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
-- [x] `S46` - Relocate scripts/ dev tooling into dev.quality and dev.audit submodules with cohabiting tests; `rewire recipes, ruff ignores, and the utf8/ratchet gates; `dev/quality, dev/audit, justfile`.
-- [x] `S47` - Relocate docs/tools into dev.docs (build, cli_reference, apidocs) with cohabiting tests; `rewire conf.py, recipes, ruff ignores, and the docs rules; `dev/docs, docs/conf.py, justfile`.
+- [ ] `S46` - Relocate scripts/ dev tooling into dev.quality and dev.audit submodules with cohabiting tests; `rewire recipes, ruff ignores, and the utf8/ratchet gates; `dev/quality, dev/audit, justfile`.
+- [ ] `S47` - Relocate docs/tools into dev.docs (build, cli_reference, apidocs) with cohabiting tests; `rewire conf.py, recipes, ruff ignores, and the docs rules; `dev/docs, docs/conf.py, justfile`.
 - [x] `S48` - Consolidate redundant recipes and reorganize command groups; `justfile`.
 - [x] `S49` - Update initialization selector and documentation after removing the empty Node phase; `dev/init`.
 - [x] `S50` - Migrate workflow calls to parameterized audit output; `.github/workflows/code-health-report.yml`.

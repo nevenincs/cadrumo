@@ -91,7 +91,7 @@ _TAX_ID = "B12345674"
 _M202_RELATION_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
 _M202_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 _M202_INCN_BINDING = "modelo-202-incn-prior-12-months"
-_M200_CUOTA_LIQUIDA = "DP200014B:00592"
+_M200_CUOTA_EJERCICIO = "DP200014B:00599"
 _ZERO_M202_CASILLA_VALUES = {
     "01": Decimal("0"),
     "03": Decimal("0"),
@@ -217,7 +217,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
         operation=operation,
     )
     evidence_reference_id = "JUSTM20020240A"
-    casilla_values = {_M200_CUOTA_LIQUIDA: Decimal("0")}
+    casilla_values = {_M200_CUOTA_EJERCICIO: Decimal("0")}
     persist_justificante_metadata(
         evidence_reference_id,
         modelo="200",

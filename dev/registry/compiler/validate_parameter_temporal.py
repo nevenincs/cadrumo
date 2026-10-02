@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date, timedelta
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_formula import DatedValue, ParameterDefinition
 
 __all__ = [
@@ -160,13 +160,25 @@ def bracket_coverage_gaps(
     return gaps
 
 
-def validate_bracket_table_temporal_coverage(scope: str, revision: ModeloRevision) -> list[str]:
-    """Surface bracket_table parameters whose windows gap the revision date range.
+def validate_bracket_table_temporal_coverage(
+    scope: str,
+    revision: ModeloRevision,
+    *,
+    support: SupportedFilingYearsCatalogue | None,
+) -> list[str]:
+    """Surface bracket_table parameters whose windows gap the supported part of the revision date range.
 
     Every ``bracket_table`` parameter with ``bracket_axis = "filing_period"``
     must have at least one bracket window covering every date in the revision's
     ``[valid_from, valid_to]`` range (or from ``valid_from`` to the first
     bracket window's ``valid_to`` when the revision is open-ended).
+
+    The range starts no earlier than the support floor. Nothing resolves below
+    the floor, so no filing there can reach a bracket, and the support
+    declaration claims nothing there for a bracket to cover: demanding it would
+    force an edition that straddles the floor to author, or split off, law the
+    product never applies. Inside the envelope the full coverage stays required,
+    and a revision lying wholly below the floor has nothing to cover.
 
     A gap detected here would otherwise surface at runtime as a
     ``bracket_no_window`` error when an operator files for a period in the
@@ -176,17 +188,25 @@ def validate_bracket_table_temporal_coverage(scope: str, revision: ModeloRevisio
         scope: Diagnostic scope string prefixed to each failure message.
         revision: The :class:`ModeloRevision` whose bracket_table parameters
             are checked for temporal coverage gaps.
+        support: The registry's supported filing years, or ``None`` when the
+            registry declares none, in which case the whole revision range is
+            checked.
     """
+    covered_from = revision.valid_from
+    if support is not None:
+        covered_from = max(covered_from, support.date_envelope().floor)
+        if revision.valid_to is not None and revision.valid_to < covered_from:
+            return []
     failures: list[str] = []
     for parameter in revision.parameters:
         if parameter.data_type != "bracket_table" or parameter.bracket_axis != "filing_period":
             continue
-        gaps = bracket_coverage_gaps(parameter, revision.valid_from, revision.valid_to)
+        gaps = bracket_coverage_gaps(parameter, covered_from, revision.valid_to)
         for gap_start, gap_end in gaps:
             failures.append(
                 f"{scope}: bracket_table parameter {parameter.id!r} has no bracket "
                 f"covering [{gap_start.isoformat()}, {gap_end.isoformat()}] "
-                f"within revision date range starting {revision.valid_from.isoformat()}",
+                f"within the supported revision date range starting {covered_from.isoformat()}",
             )
     return failures
 

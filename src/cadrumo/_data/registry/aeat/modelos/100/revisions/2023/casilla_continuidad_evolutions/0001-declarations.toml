@@ -3130,3 +3130,1363 @@ to_revision = "2023"
 evolution_kind = "unchanged"
 legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary", "aeat-renta-2022-manual-parte1", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2022-form", "boe-modelo-100-2023-form"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0072-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-afecto-actividades-economicas-flag"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0080-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-dias-afecto-actividades-economicas"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0081-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-contribuyente-actividad-economica"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0166-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-actividad-tipo-clave"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0167-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-actividad-iae-code"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0168-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-modalidad-clave"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0169-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-cobros-pagos-flag"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0170-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-derechos-imagen-cessation-flag"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0171-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-ingresos-explotacion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0172-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-ingresos-financieros-aplazamiento"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0173-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-ingresos-subvenciones-corrientes"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0174-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-ingresos-subvenciones-capital"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0175-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-autoconsumo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0176-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-iva-devengado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0177-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-variacion-existencias-incremento"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0178-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-otros-ingresos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0179-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-exceso-amortizacion-libertad"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0180-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-total-ingresos-computables"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0181-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-compra-existencias"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0182-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-variacion-existencias-disminucion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0183-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-otros-consumos-explotacion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0184-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-sueldos-salarios"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0185-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-seguridad-social-empresa"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0187-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-indemnizaciones"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0188-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-dietas-viajes-personal"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0189-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-aportaciones-prevision-social-personal"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0190-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-otros-gastos-personal"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0191-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-gastos-manutencion-contribuyente"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0192-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-arrendamientos-canones"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0193-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-reparaciones-conservacion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0194-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-suministros"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0198-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-otros-suministros"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0199-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-servicios-profesionales-independientes"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0200-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-primas-seguros"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0202-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-otros-servicios-exteriores"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0203-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-gastos-financieros"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0205-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-iva-soportado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0206-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-otros-tributos-deducibles"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0208-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-amortizacion-inmovilizado-material"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0214-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-perdidas-insolvencias-deudores"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0215-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-mecenazgo-convenios-colaboracion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0216-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-mecenazgo-actividades-interes-general"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0217-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-otros-conceptos-deducibles"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0218-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-suma-gastos-previos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0219-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-provisiones-deducibles"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0220-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-total-gastos-deducibles-normal"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0221-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-diferencia-ingresos-gastos-previos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0223-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-total-gastos-deducibles-simplificada"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0224-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-rdto-neto-previo-reduccion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0225-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-reduccion-rendimientos-irregulares"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0227-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-amortizacion-inmovilizado-inmaterial"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0231-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-suma-rdtos-netos-reducidos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0232-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-reduccion-art-32-2-1"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0233-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-reduccion-art-32-2-3"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0234-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-reduccion-inicio-actividad"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0235-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-ed-rdto-neto-reducido-total"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1442-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-actividad-iae-code"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1443-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-cobros-pagos-flag"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1444-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-definicion-e4ad1"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1445-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-num-unidades-e4au1"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1446-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn1"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1447-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-definicion-e4ad2"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1448-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-num-unidades-e4au2"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1449-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn2"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1450-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-definicion-e4ad3"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1451-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-num-unidades-e4au3"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1452-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn3"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1453-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-definicion-e4ad4"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1454-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-num-unidades-e4au4"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1455-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn4"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1456-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-definicion-e4ad5"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1457-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-num-unidades-e4au5"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1458-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn5"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1459-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-definicion-e4ad6"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1460-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-num-unidades-e4au6"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1461-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn6"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1462-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-definicion-e4ad7"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1463-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-num-unidades-e4au7"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1464-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn7"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1465-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-rdto-neto-previo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1466-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-minoracion-empleo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1467-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-minoracion-inversion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1468-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-rdto-neto-minorado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1469-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-indice-corrector-especial"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1470-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-indice-corrector-pequena-dimension"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1471-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-indice-corrector-temporada"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1472-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-indice-corrector-exceso"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1473-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-indice-corrector-inicio"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1474-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-rdto-neto-modulos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1475-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-reduccion-general"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1477-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-gastos-extraordinarios"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1478-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-otras-percepciones"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1479-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-rendimiento-act-eco-eo-resto-rdto-neto"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1480-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-reduccion-irregulares"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1481-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-rdto-neto-reducido"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1482-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-suma-rdtos-netos-reducidos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1483-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-reduccion-art-32-2-3"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1484-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-rdto-neto-reducido-total"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1486-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-clave-actividad"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1487-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-cobros-pagos-flag"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1488-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-porcino-carne"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1489-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e501"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1490-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn01"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1491-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-remolacha"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1492-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e502"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1493-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn02"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1494-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-bovino-carne-avicultura"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1495-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e503"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1496-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn03"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1497-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-forestal-corta-larga"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1498-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e504"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1499-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn04"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1500-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-bovino-leche"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1501-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e505"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1502-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn05"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1503-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-cereales-citricos-horticultura"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1504-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e506"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1505-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn06"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1506-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-porcino-cria-ovino-leche-apicultura"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1507-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e507"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1508-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn07"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1509-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-forestal-corta-corta"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1510-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e508"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1511-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn08"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1512-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-arroz-oleaginosas-flores"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1513-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e509"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1514-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn09"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1515-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-otras-especies-ganaderas"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1516-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e510"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1517-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn10"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1518-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-forestal-resina"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1519-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e511"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1520-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn11"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1521-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-raices-tuberculos-forrajes"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1522-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e512"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1523-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn12"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1524-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-plantas-textiles"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1525-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e513"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1526-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn13"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1527-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-actividades-accesorias"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1528-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e514"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1529-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn14"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1530-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-otros-trabajos-accesorios"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1531-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e515"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1532-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn15"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1533-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-ingresos-integros-cria-guarda-engorde-ganado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1534-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-e516"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1535-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn16"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1536-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-total-ingresos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1537-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rdto-neto-previo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1538-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-amortizacion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1539-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rdto-neto-minorado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1540-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-medios-ajenos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1541-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-personal-asalariado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1542-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-tierras-arrendadas"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1543-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-piensos-terceros"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1544-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-ecologica"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1545-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-regadio-electrico"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1546-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-pequena-empresa"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1547-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-indice-forestal"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1548-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rdto-neto-modulos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1549-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-reduccion-general"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1550-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-diferencia-reduccion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1552-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-gastos-extraordinarios"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1553-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-rendimiento-act-eco-eo-agr-rdto-neto"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1554-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-reduccion-irregulares"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1558-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-suma-rdtos-netos-reducidos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1559-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-reduccion-art-32-2-3"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1560-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-eo-agr-rdto-neto-reducido-total"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1577-2022-2023-legal-refs-evolved"
+continuidad_id = "irpf-rendimiento-act-eco-atribuido-rdto-neto"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

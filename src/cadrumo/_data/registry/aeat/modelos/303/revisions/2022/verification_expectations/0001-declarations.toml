@@ -15,8 +15,10 @@ source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-
 # enrolling a situational casilla never lowers coverage or flips a
 # legitimate filing's verdict (min_coverage = 0). Grounded in the
 # revision's AEAT DR / framework-law refs (reused from modelo-303-iva-chain-verification).
-# The deducible boxes [28]-[41] are situational: a filer without that kind of
-# purchase leaves them blank. [27], [45], [64], [66] and [71] are printed on
+# The devengado boxes [10], [11] and [13], the rate rows' bases [01], [04] and
+# [07] and their cuota carriers, the promotor's autoconsumo split and the
+# deducible boxes [28]-[41] are situational: a filer without that kind of
+# operation leaves them blank. [27], [45], [64], [66] and [71] are printed on
 # every return, but this revision's coverage-gated contract already reconciles
 # what they are computed from ([27] restates iva.cuota-devengada-total, [45]
 # restates iva.cuota-deducible-total, [64] and [66] feed iva.resultado, and
@@ -41,8 +43,16 @@ reconcile_when_present_casilla_ids = [
     "64",
     "66",
     "71",
+    "10",
     "11",
     "13",
+    "01",
+    "04",
+    "07",
+    "iva.cuota-devengada.super-reducido",
+    "iva.cuota-devengada.reducido",
+    "iva.cuota-devengada.general",
+    "iva.autoconsumo.promotor.base.por-tipo",
 ]
 tolerance = "0.01"
 rounding = "money-2"

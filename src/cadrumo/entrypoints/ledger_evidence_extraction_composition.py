@@ -14,7 +14,13 @@ from ..adapters.inbound.einvoice.xml import EInvoiceXmlParseError
 from ..adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from ..adapters.outbound.llm.client import LLMClient
 from ..adapters.outbound.llm.consent import EvidenceConsentToken
-from ..adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
+from ..adapters.outbound.llm.errors import (
+    LLMBusyError,
+    LLMConsentError,
+    LLMContentionError,
+    LLMPdfRasterisationError,
+    LLMProviderError,
+)
 from ..adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
 from ..adapters.outbound.llm.evidence_draft_vision import (
     VISION_TRANSCRIPTION_PROMPT_ID,
@@ -49,6 +55,8 @@ from ..application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from ..application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
+    InvoiceDraftReaderBusyRefusedError,
+    InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
     VisionImage,
@@ -88,6 +96,12 @@ def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
             ) from exc
 
     return EvidenceTextLayerPorts(extract_pages_text=extract_pages_text)
+
+
+def _failed_condition_id(refusal: LLMContentionError | LLMBusyError) -> str | None:
+    """Preserve the failed admission precondition without exception prose."""
+    verdict = refusal.terminal_precondition_verdict
+    return None if verdict is None else str(verdict.failed_condition_id)
 
 
 def invoice_draft_extraction_ports(
@@ -174,6 +188,10 @@ def invoice_draft_extraction_ports(
                 ).extract(transcription=transcription)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
+        except LLMContentionError as exc:
+            raise InvoiceDraftReaderHeadroomRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
+        except LLMBusyError as exc:
+            raise InvoiceDraftReaderBusyRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
 
     def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
         if before_read is not None:

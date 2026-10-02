@@ -66,7 +66,12 @@ _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 
 # `_ZIP_TIMESTAMP` already gives every other archive this module writes
 # (1980-01-01T00:00:00Z).
 _SOURCE_DATE_EPOCH: Final[str] = "315532800"
-REQUIRED_PYTHON_VERSION: Final[str] = (_REPO_ROOT / ".python-version").read_text(encoding=UTF_8).strip()
+# The release builder is one exact CPython patch so a cohort can be rebuilt on
+# the identical interpreter. `.python-version` names only the minor every
+# development and CI environment uses, and this patch must belong to it.
+REQUIRED_PYTHON_VERSION: Final[str] = (
+    (_REPO_ROOT / "dev" / "packaging" / "release-python-version").read_text(encoding=UTF_8).strip()
+)
 _BUILD_CONSTRAINTS: Final[Path] = Path("packaging/build-system-constraints.txt")
 
 

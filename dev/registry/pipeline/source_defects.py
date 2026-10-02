@@ -362,6 +362,69 @@ class NoteGovernedAmountDeclaration(BaseModel):
 
 
 _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ...]] = {
+    "aeat-dr-200-2024": (
+        NoteGovernedAmountDeclaration(
+            source_ref="aeat-dr-200-2024",
+            source_sha256="ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218",
+            sheet="DP200019",
+            published_content="Nota 1",
+            note_cell="A239",
+            note_statement=(
+                "A cumplimentar exclusivamente por entidades que pertenezcan a grupos mercantiles (carácter 00039)"
+            ),
+            integer_digits=15,
+            decimal_digits=2,
+            sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=None,
+            evidence=(
+                "The 2024 workbook's DP200019!A238/A239 defines Nota 1 as an applicability condition for "
+                "grupo mercantil entities. It states no wire representation. The referenced deduction amounts "
+                "are Tipo Num, length 17; DP200001!A121 explicitly gives unsigned amounts 15 integer digits "
+                "and 2 decimals. The reviewed 2024 width-17 profile cites that same statement for the adjacent "
+                "deduction amounts. The note does not change their scale."
+            ),
+        ),
+        *(
+            NoteGovernedAmountDeclaration(
+                source_ref="aeat-dr-200-2024",
+                source_sha256="ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218",
+                sheet="DP200014B",
+                published_content=pointer,
+                note_cell=note_cell,
+                note_statement=note_statement,
+                integer_digits=14,
+                decimal_digits=2,
+                sign_policy=_N_PREFIX_SIGN_POLICY,
+                mandated_values=None,
+                evidence=(
+                    "The 2024 workbook's DP200014B!A94/A95 declares fields 89/90 at positions 1408/1425 "
+                    "as Tipo N, length 17, for the prior self-assessment amounts A and B. Its Nota 1 "
+                    "(A101/A102) restricts when they may carry content, and Nota 2 (A105/A106) requires "
+                    "01578 to equal A minus B. Neither changes the representation. DP200001!A121 explicitly "
+                    "states N plus 14 integer digits and 2 decimals for signed amounts, also cited by the "
+                    "2024 reviewed profile for their signed width-17 siblings. These pointers therefore "
+                    "preserve signed cents rather than making the amounts unsigned integers."
+                ),
+            )
+            for pointer, note_cell, note_statement in (
+                (
+                    "Nota 1",
+                    "A102",
+                    'Estas casillas solo pueden tener contenido si el campo "Autoliquidación rectificativa - Como '
+                    "consecuencia de la presentación de la autoliquidación rectificativa solicito dar de baja la "
+                    'domiciliación efectuada" de la página 1 tiene valor 1 (opción SÍ). ',
+                ),
+                (
+                    "Nota 2",
+                    "A106",
+                    'Si el campo "Autoliquidación rectificativa - Como consecuencia de la presentación de la '
+                    'autoliquidación rectificativa solicito dar de baja la domiciliación efectuada" de la página 1 '
+                    "tiene valor 1 (opción SÍ), el valor de la casilla 01578 debe coincidir con el resultado de "
+                    "calcular A - B (campos 89 y 90 de esta misma página).",
+                ),
+            )
+        ),
+    ),
     "aeat-dr-200-2025": (
         NoteGovernedAmountDeclaration(
             source_ref="aeat-dr-200-2025",

@@ -308,7 +308,7 @@ class WithholdingObservation(BaseModel):
     """Annual food annuities to children by judicial decision (design positions
     210-222); the design's own zeros when none."""
     descendants_under_3_total: int | None = Field(default=None, ge=0, le=9)
-    """Descendants under 3 (design position 223), counted per art. 58 m�nimo por
+    """Descendants under 3 (design position 223), counted per art. 58 mínimo por
     descendientes rules; the design's own zero when none."""
     descendants_under_3_whole: int | None = Field(default=None, ge=0, le=9)
     """Of the position-223 descendants, those computed por entero (design 224)."""
@@ -656,10 +656,10 @@ def _devengo_year(observation: WithholdingObservation) -> int:
 def distinct_percepcion_keys(
     observations: Iterable[WithholdingObservation],
 ) -> set[tuple[str, RetencionClave, str]]:
-    """Return the distinct ``(perceptor, clave, subclave)`` percepci�n keys.
+    """Return the distinct ``(perceptor, clave, subclave)`` percepción keys.
 
-    Modelo 190's "n�mero total de percepciones" counts DISTINCT type-2
-    "registro de perceptor" records (AEAT Dise�o de Registros), not distinct
+    Modelo 190's "número total de percepciones" counts DISTINCT type-2
+    "registro de perceptor" records (AEAT Diseño de Registros), not distinct
     NIFs: one perceptor paid under two claves files two percepciones. The key is
     therefore clave-bearing.
 
@@ -761,7 +761,7 @@ def _retenciones_ingresadas_total(
 
 
 def retencion_total(observations: Iterable[WithholdingObservation]) -> Decimal:
-    """Sum retenci�n practicada, ingreso a cuenta, and the incap retentions.
+    """Sum retención practicada, ingreso a cuenta, and the incap retentions.
 
     The base amount facts carry the NON-incapacidad part; the retentions on the
     incapacidad-laboral percepciones file in their own design block, so the
@@ -1023,19 +1023,20 @@ def resolve_withholding_binding_row_values(
 
 
 class WithholdingClaveBreakdown(BaseModel):
-    """One per-clave row of the Modelo 190 retenci�n reconciliation breakdown.
+    """One per-clave row of an annual withholding summary's reconciliation breakdown.
 
-    Groups the per-perceptor-clave withholding detail (the AEAT Dise�o de
-    Registros type-2 records) by ``clave de percepci�n`` and carries that clave's
-    distinct percepci�n count and percibido / retenci�n magnitudes. The figures
+    Groups the per-perceptor-clave rows an annual summary's calculation reads
+    (the type-2 perceptor records of the AEAT Diseño de Registros, as for
+    Modelos 190 and 193) by their ``clave`` and carries that clave's
+    distinct percepción count and percibido / retención magnitudes. The figures
     reuse the scalar withholding-fact arithmetic
     (:func:`resolve_withholding_binding_values`): ``percepcion_count`` is the
     distinct ``(perceptor, clave, subclave)`` count, ``percibido_total`` is
     ``percibido_dinerario + percibido_especie``, and ``retencion_total`` is
     ``retencion_practicada + ingreso_a_cuenta``. It is a projection of the same
-    store the percepciones-count resolver reads, so the operator can reconcile
-    the annual Modelo 190 totals against the individual Modelo 111 quarterly
-    filings clave by clave.
+    rows the percepciones resolver materialises for that calculation, so the
+    operator can reconcile the annual totals clave by clave against the periodic
+    filings and captured allocations they were composed from.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -1052,7 +1053,7 @@ def aggregate_withholding_by_clave(
     """Project withholding observations into :class:`WithholdingClaveBreakdown` rows.
 
     Pure function: identical observations in any order yield the same tuple,
-    sorted by ``clave``. No new aggregation is introduced � each magnitude is
+    sorted by ``clave``. No new aggregation is introduced — each magnitude is
     produced by the same :func:`distinct_percepcion_keys` /
     :func:`percibido_total` / :func:`retencion_total` helper that
     :func:`resolve_withholding_binding_values` uses for the corresponding bound

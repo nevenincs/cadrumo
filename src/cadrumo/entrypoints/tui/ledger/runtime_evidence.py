@@ -406,6 +406,9 @@ class RuntimeEvidenceTuiDoorV1:
             suggested_kind=draft.suggested_kind,
             discrepancies=len(draft.discrepancies),
             full_projection=draft,
+            label_reading_fallback=(
+                None if draft.label_reading_fallback is None else draft.label_reading_fallback.to_fallback()
+            ),
         )
 
 

@@ -14,7 +14,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
@@ -234,15 +234,18 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
     # regression on the 2009 revision's existing capability.
     assert values["modelo-303-iva-repercutido-general-cuota"] == Decimal("1365")
     assert values["modelo-303-iva-soportado-interiores-cuota"] == Decimal("63")
-    # The repercutido base binding maps to its numbered box directly. The
-    # soportado base is one of the two components box 28 adds (the other is the
-    # deducible half of a domestic inversión del sujeto pasivo), so the binding
-    # lands on that component and box 28 carries it through its formula.
+    # Each base binding lands on a component its numbered box adds. Box 07 is the
+    # general rate row's whole base: the ledger base plus the promotor's
+    # autoconsumo declared at that rate. Box 28 adds the soportado base and the
+    # deducible half of a domestic inversión del sujeto pasivo. Both boxes carry
+    # the ledger base through their formulas.
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    assert inputs[_M303_REPERCUTIDO_GENERAL_BASE_CASILLA] == Decimal("6500")
+    assert inputs[validated_casilla_id("iva.repercutido.general.base")] == Decimal("6500")
+    assert _M303_REPERCUTIDO_GENERAL_BASE_CASILLA not in inputs
     assert inputs[validated_casilla_id("iva.soportado.interiores.base")] == Decimal("300")
     assert _M303_SOPORTADO_INTERIORES_BASE_CASILLA not in inputs
     result = _calculate_303_from_observations(filing_year=2022, period="2T", observations=observations)
+    assert result.values[_M303_REPERCUTIDO_GENERAL_BASE_CASILLA] == Decimal("6500")
     assert result.values[_M303_SOPORTADO_INTERIORES_BASE_CASILLA] == Decimal("300")
 
 
@@ -386,26 +389,14 @@ def _calculate_303_2009_from_observations(
     period: str,
     observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
-    """Calculate helper scoped to the 2022 revision's own binding set.
+    """Calculate one quarter of the edition covering ``filing_year``.
 
-    Unlike :func:`_calculate_303_from_observations` (which seeds the
-    post-2022-only ``modelo-303-autoconsumo-promotor-base`` /
-    ``modelo-303-profile-state-attribution-ratio`` bindings), the
-    2022 revision declares only
-    ``modelo-303-compensacion-pendiente-anteriores`` as a manual binding fact.
+    The 2022 edition declares the same profile-sourced bindings as the later
+    editions (the promotor's autoconsumo base and the State attribution
+    percentage), so the shared helper, which seeds exactly the bindings an
+    edition declares, serves it unchanged.
     """
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
-    binding_values = {
-        "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
-        **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
-    }
-    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    return calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        binding_values=binding_values,
-        date_context={"filing_period": observations[-1].transaction_date},
-    )
+    return _calculate_303_from_observations(filing_year=filing_year, period=period, observations=observations)
 
 
 def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_changes_total() -> None:
@@ -418,12 +409,9 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
     excluding the recargo cuota tiers (casillas 18/21/24, LIVA art. 161) a
     ledger-driven filer's supplier may have charged. filing_year=2022 resolves
     to the 2022 revision. This test grades the formula's own
-    target casilla ``iva.cuota-devengada-total`` (the semantic casilla "27"
-    projects onto in the export layout); the 2009 revision's literal-number
-    casilla 27 remains a separate ``input_kind = manual`` casilla with no
-    projection formula wired from the computed total on this revision
-    (unlike the post-2022 ``modelo-303-dr303-27-projection``) — a
-    pre-existing, separate structural gap out of scope of this recargo fix.
+    target casilla ``iva.cuota-devengada-total``, which the official box
+    [27] projects through ``modelo-303-dr303-27-projection`` on this edition
+    as on every later one.
 
     Anti-tautology: this does not hand-compute the with-recargo absolute
     figure from the registry's own formula under test. It runs the full

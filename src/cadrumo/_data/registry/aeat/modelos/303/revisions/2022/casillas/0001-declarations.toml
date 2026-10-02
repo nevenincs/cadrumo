@@ -2077,8 +2077,8 @@ number = "01"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_01"
 continuidad_id = "dr303-01"
-input_kind = "bound"
-binding = "modelo-303-iva-repercutido-super-reducido-base"
+input_kind = "computed"
+formula = "modelo-303-iva-devengado-super-reducido-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2104,8 +2104,8 @@ number = "04"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_04"
 continuidad_id = "dr303-04"
-input_kind = "bound"
-binding = "modelo-303-iva-repercutido-reducido-base"
+input_kind = "computed"
+formula = "modelo-303-iva-devengado-reducido-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2131,8 +2131,8 @@ number = "07"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_07"
 continuidad_id = "dr303-07"
-input_kind = "bound"
-binding = "modelo-303-iva-repercutido-general-base"
+input_kind = "computed"
+formula = "modelo-303-iva-devengado-general-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2158,7 +2158,9 @@ number = "10"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_10"
 continuidad_id = "dr303-10"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-dr303-10-projection"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 # The 2022 diseno de registro prints this box as "Adquisiciones
 # intracomunitarias de bienes y servicios - Cuota [11]" (aeat-dr-303-2022), the
@@ -2276,3 +2278,158 @@ section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_22"
 continuidad_id = "dr303-22"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Base-imponible parity casilla for official box 10, mirroring the cuota
+# parity casilla iva.autorepercutido.intracomunitaria.devengado (box 11).
+# Feeds box 10 via a projection formula only -- never the resultado, which is
+# cuota-denominated and already carries this quantity's tax through
+# iva.autorepercutido.intracomunitaria.
+[[revisions.2022.casillas]]
+id = "iva.autorepercutido.intracomunitaria.devengado.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campos 34 y 35, distingue base [10] y cuota [11] de adquisiciones intracomunitarias. Esta fila es la entrada de agregacion que la formula proyecta en [10]; no constituye una segunda casilla impresa."
+number = "iva.autorepercutido.intracomunitaria.devengado.base"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
+semantic_role = "iva_base_autorepercutida_intracomunitaria_devengado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole base-imponible parity casilla for the AIC devengado box pair (10/11); no sibling rate or category split exists on this casilla."
+continuidad_id = "iva-base-autorepercutida-intracomunitaria-devengado"
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autoconsumo.promotor.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 declara las bases y cuotas del regimen general por tipo, sin casilla separada para autoconsumo del promotor. Esta fila recibe del perfil la base total del autoconsumo, sin tipo; se contrasta con la suma de las bases que el promotor declara en la fila de su tipo y no representa una casilla impresa."
+continuidad_id = "iva-autoconsumo-promotor-base"
+number = "iva.autoconsumo.promotor.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_autoconsumo_promotor_base"
+input_kind = "bound"
+binding = "modelo-303-autoconsumo-promotor-base"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# The promotor's autoconsumo (Ley 37/1992 art. 9.1º, base at cost under art.
+# 79.Tres) is an entrega de bienes of the period, so it is declared in the
+# regimen general row of the rate its building bears, as every row of the
+# design and the official instructions state the rows by rate: [01]-[03] at the
+# super-reducido rate (art. 91.Dos.1.6º, viviendas de protección oficial de
+# régimen especial o de promoción pública delivered by their promotor), [04]-[06]
+# at the reducido rate (art. 91.Uno.1.7º, edificios aptos para vivienda) and
+# [07]-[09] at the general rate (art. 90.Uno) for everything else. No design
+# prints a separate autoconsumo box or adds it to [27] outside those rows. The
+# operator states the base in the row of its rate; the row's cuota applies that
+# row's rate, and the profile's rate-less total is reconciled against the sum.
+
+[[revisions.2022.casillas]]
+id = "iva.repercutido.super-reducido.base"
+number = "iva.repercutido.super-reducido.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_base_repercutida_super_reducido"
+continuidad_id = "iva-base-repercutida-super-reducido"
+input_kind = "bound"
+binding = "modelo-303-iva-repercutido-super-reducido-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.repercutido.reducido.base"
+number = "iva.repercutido.reducido.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_base_repercutida_reducido"
+continuidad_id = "iva-base-repercutida-reducido"
+input_kind = "bound"
+binding = "modelo-303-iva-repercutido-reducido-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.repercutido.general.base"
+number = "iva.repercutido.general.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_base_repercutida_general"
+continuidad_id = "iva-base-repercutida-general"
+input_kind = "bound"
+binding = "modelo-303-iva-repercutido-general-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autoconsumo.promotor.super-reducido.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 declara en [01] y [03] la base y la cuota de una fila del regimen general por tipo, sin casilla separada para autoconsumo del promotor. Esta fila recoge la base del autoconsumo gravada al tipo de esa fila, que la formula suma en [01]; no representa una casilla impresa."
+continuidad_id = "iva-autoconsumo-promotor-super-reducido-base"
+number = "iva.autoconsumo.promotor.super-reducido.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_autoconsumo_promotor_super_reducido_base"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autoconsumo.promotor.reducido.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 declara en [04] y [06] la base y la cuota de una fila del regimen general por tipo, sin casilla separada para autoconsumo del promotor. Esta fila recoge la base del autoconsumo gravada al tipo de esa fila, que la formula suma en [04]; no representa una casilla impresa."
+continuidad_id = "iva-autoconsumo-promotor-reducido-base"
+number = "iva.autoconsumo.promotor.reducido.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_autoconsumo_promotor_reducido_base"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autoconsumo.promotor.general.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 declara en [07] y [09] la base y la cuota de una fila del regimen general por tipo, sin casilla separada para autoconsumo del promotor. Esta fila recoge la base del autoconsumo gravada al tipo de esa fila, que la formula suma en [07]; no representa una casilla impresa."
+continuidad_id = "iva-autoconsumo-promotor-general-base"
+number = "iva.autoconsumo.promotor.general.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_autoconsumo_promotor_general_base"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autoconsumo.promotor.base.por-tipo"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 no imprime casilla de autoconsumo del promotor. Esta fila suma las bases de autoconsumo declaradas en las filas de cada tipo para contrastarlas con la base total del perfil; no representa una casilla impresa."
+continuidad_id = "iva-autoconsumo-promotor-base-por-tipo"
+number = "iva.autoconsumo.promotor.base.por-tipo"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_autoconsumo_promotor_base_por_tipo"
+input_kind = "computed"
+formula = "modelo-303-autoconsumo-promotor-base-por-tipo"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+export_exemption_reason = "not_in_record_design"
+
+[[revisions.2022.casillas]]
+id = "iva.cuota-devengada.super-reducido"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 suma en [27] la cuota [03] de la fila del regimen general de este tipo. Esta fila es la cuota devengada de esa fila: la cuota repercutida del libro registro mas la del autoconsumo del promotor al tipo de la fila; no constituye una segunda casilla impresa."
+continuidad_id = "iva-cuota-devengada-super-reducido"
+number = "iva.cuota-devengada.super-reducido"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_cuota_devengada_super_reducido"
+input_kind = "computed"
+formula = "modelo-303-iva-cuota-devengada-super-reducido"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+export_exemption_reason = "feeds_addressed_casilla"
+
+[[revisions.2022.casillas]]
+id = "iva.cuota-devengada.reducido"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 suma en [27] la cuota [06] de la fila del regimen general de este tipo. Esta fila es la cuota devengada de esa fila: la cuota repercutida del libro registro mas la del autoconsumo del promotor al tipo de la fila; no constituye una segunda casilla impresa."
+continuidad_id = "iva-cuota-devengada-reducido"
+number = "iva.cuota-devengada.reducido"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_cuota_devengada_reducido"
+input_kind = "computed"
+formula = "modelo-303-iva-cuota-devengada-reducido"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+export_exemption_reason = "feeds_addressed_casilla"
+
+[[revisions.2022.casillas]]
+id = "iva.cuota-devengada.general"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 suma en [27] la cuota [09] de la fila del regimen general de este tipo. Esta fila es la cuota devengada de esa fila: la cuota repercutida del libro registro mas la del autoconsumo del promotor al tipo de la fila; no constituye una segunda casilla impresa."
+continuidad_id = "iva-cuota-devengada-general"
+number = "iva.cuota-devengada.general"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_cuota_devengada_general"
+input_kind = "computed"
+formula = "modelo-303-iva-cuota-devengada-general"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+export_exemption_reason = "feeds_addressed_casilla"

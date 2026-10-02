@@ -2,171 +2,157 @@
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_verification import VerificationFindingKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.period import calculation_filing_date
 
-from ._modelo_303_registry_support import (
-    _M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA,
-    _M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA,
-    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    load_modelo_303,
-)
+from ._modelo_303_registry_support import load_modelo_303
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The statutory rate of each régimen general row, from Ley 37/1992 itself and
+# not from the registry under test: art. 91.Dos 4 per cent (viviendas de
+# protección oficial de régimen especial o de promoción pública delivered by
+# their promotor, art. 91.Dos.1.6º), art. 91.Uno 10 per cent (edificios aptos
+# para vivienda, art. 91.Uno.1.7º) and art. 90.Uno 21 per cent for any other
+# building. Each row is (autoconsumo base casilla, base box, cuota box, rate).
+_RATE_ROWS = {
+    "super-reducido": ("iva.autoconsumo.promotor.super-reducido.base", "01", "03", Decimal("0.04")),
+    "reducido": ("iva.autoconsumo.promotor.reducido.base", "04", "06", Decimal("0.10")),
+    "general": ("iva.autoconsumo.promotor.general.base", "07", "09", Decimal("0.21")),
+}
+_PROFILE_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
+_BASE_POR_TIPO: CasillaId = validated_casilla_id("iva.autoconsumo.promotor.base.por-tipo")
+_RECONCILING_PREDICATE = "equals:iva-autoconsumo-promotor-base-equals-por-tipo"
 
-def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuota() -> None:
-    """Oracle: Ramón has construction cost €1,400,000 and converts the building
-    to his rental estate.  Art. 9.1.c LISIVA triggers the autoconsumo; Art. 79.4
-    LISIVA sets the base at cost; Art. 90 LISIVA sets the tipo at 21%.
 
-    Expected cuota = 1,400,000 x 0.21 = 294,000.00.
+def _revisions() -> tuple[ModeloRevision, ...]:
+    modelo, _ = load_modelo_303()
+    return tuple(sorted(modelo.revisions.values(), key=lambda revision: revision.valid_from))
 
-    The expected value is derived from the statutory formula (Art. 90 LISIVA:
-    tipo general = 21%), NOT from the registry implementation under test; this
-    test would fail if the formula were mis-wired or the tipo were wrong.
-    """
-    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
+def _calculate(
+    revision: ModeloRevision, *, profile_base: Decimal, row_bases: dict[str, Decimal]
+) -> dict[CasillaId, Decimal]:
+    """Calculate one edition with an empty ledger and the promotor's autoconsumo as stated."""
     modelo, catalogues = load_modelo_303()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
-
+    assert revision.period_selector is not None
+    period = revision.period_selector.periods[0]
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=revision.valid_from.year,
+        period=period,
+        revision_id=revision.id,
+    )
+    declared = {binding.id for binding in snapshot.revision.bindings}
     binding_values = {
-        "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
-        "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
-        "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
-        # No issued domestic reverse charge in this fixture either, so the
-        # supplier-side base for casilla 122 resolves to zero. Supplied for the
-        # same reason 59 and 60 are: a bound casilla demands its fact, and the
-        # absence of contributing rows is stated rather than left missing.
-        "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
-        # And no EU B2B service located outside the TAI, so the sibling
-        # informacion-adicional box 120 resolves to zero for the same reason.
-        "modelo-303-casilla-120-no-sujetas-localizacion-base": Decimal("0"),
-        "modelo-303-iva-repercutido-general-base": Decimal("0"),
-        "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
-        "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
-        "modelo-303-iva-soportado-interiores-base": Decimal("0"),
-        "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
-        "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
-        "modelo-303-recargo-equivalencia-super-reducido-cuota": Decimal("0"),
-        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-        "modelo-303-autoconsumo-promotor-base": Decimal("1400000"),
-        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-        # No criterio-de-caja operations in this fixture, so the art. 163
-        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
-        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
-        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
-        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
-        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
+        binding_id: value
+        for binding_id, value in {
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+            _PROFILE_BASE_BINDING: profile_base,
+            "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+            **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()),
+        }.items()
+        if binding_id in declared
     }
-    bound_inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs: dict[CasillaId, Decimal] = {
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **{validated_casilla_id(_RATE_ROWS[row][0]): base for row, base in row_bases.items()},
+    }
+    filing_period = calculation_filing_date(Period.from_year_and_code(revision.valid_from.year, period))
     result = calculate_registry_snapshot(
         snapshot,
-        inputs=bound_inputs,
+        inputs=inputs,
         binding_values=binding_values,
-        date_context={"filing_period": date(2025, 3, 31)},
+        date_context={"filing_period": filing_period},
     )
-
-    # Art. 90 LISIVA tipo general 21%: 1,400,000 x 0.21 = 294,000.00
-    assert result.values[_M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA] == Decimal("1400000"), (
-        "base casilla must carry the supplied construction cost"
-    )
-    assert result.values[_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA] == Decimal("294000.00"), (
-        "cuota must equal 1,400,000 x 21% = 294,000.00 per Art. 90 LISIVA"
-    )
-    # The autoconsumo cuota must also flow into the total devengada.
-    cuota_devengada_total = result.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
-    assert cuota_devengada_total == Decimal("294000.00"), (
-        "cuota-devengada-total must include the autoconsumo promotor cuota"
-    )
+    return dict(result.values)
 
 
-def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
-    """Anti-tautology: halving the construction base must halve the cuota.
+def _box(values: dict[CasillaId, Decimal], casilla_id: str) -> Decimal:
+    return values[validated_casilla_id(casilla_id)]
 
-    The assertion is derived from the statutory multiplication (Art. 90 LISIVA
-    tipo 21%), not from a second call to the same formula.  If the formula
-    constant were changed to, say, 0.10, this test would catch it immediately.
+
+def _derives_rate_row_cuota(revision: ModeloRevision, box: str) -> bool:
+    return next(casilla for casilla in revision.casillas if str(casilla.id) == box).formula is not None
+
+
+@pytest.mark.parametrize("row", sorted(_RATE_ROWS))
+def test_the_promotor_autoconsumo_is_declared_in_the_row_of_its_rate_in_every_edition(row: str) -> None:
+    """Oracle: 1,400,000 of construction cost self-supplied at one rate, nothing else in the period.
+
+    Ley 37/1992 art. 9.1º makes the self-supply an entrega de bienes, art.
+    79.Tres sets its base at cost, and every design prints the régimen general
+    rows by rate, so the base lands in that row's base box and its cuota,
+    1,400,000 times the row's statutory rate, in that row's cuota and in [27].
+    No other row moves and no edition keeps a cuota outside the printed rows.
     """
-    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+    _base_casilla, base_box, cuota_box, rate = _RATE_ROWS[row]
+    base = Decimal("1400000")
+    cuota = (base * rate).quantize(Decimal("0.01"))
+    for revision in _revisions():
+        values = _calculate(revision, profile_base=base, row_bases={row: base})
+        assert _box(values, base_box) == base, revision.id
+        assert _box(values, f"iva.cuota-devengada.{row}") == cuota, revision.id
+        assert _box(values, "27") == cuota, revision.id
+        assert _box(values, "iva.cuota-devengada-total") == cuota, revision.id
+        if _derives_rate_row_cuota(revision, cuota_box):
+            assert _box(values, cuota_box) == cuota, revision.id
+        for other, (_, other_base_box, _, _) in _RATE_ROWS.items():
+            if other != row:
+                assert _box(values, other_base_box) == Decimal("0"), (revision.id, other)
+                assert _box(values, f"iva.cuota-devengada.{other}") == Decimal("0"), (revision.id, other)
+        assert validated_casilla_id("iva.autoconsumo.promotor.cuota") not in values, revision.id
 
-    modelo, catalogues = load_modelo_303()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
 
-    zero_bindings: dict[str, Decimal] = {
-        "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
-        "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
-        "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
-        # No issued domestic reverse charge in this fixture either, so the
-        # supplier-side base for casilla 122 resolves to zero. Supplied for the
-        # same reason 59 and 60 are: a bound casilla demands its fact, and the
-        # absence of contributing rows is stated rather than left missing.
-        "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
-        # And no EU B2B service located outside the TAI, so the sibling
-        # informacion-adicional box 120 resolves to zero for the same reason.
-        "modelo-303-casilla-120-no-sujetas-localizacion-base": Decimal("0"),
-        "modelo-303-iva-repercutido-general-base": Decimal("0"),
-        "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
-        "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
-        "modelo-303-iva-soportado-interiores-base": Decimal("0"),
-        "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
-        "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
-        "modelo-303-recargo-equivalencia-super-reducido-cuota": Decimal("0"),
-        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-        # No criterio-de-caja operations in this fixture, so the art. 163
-        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
-        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
-        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
-        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
-        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
-    }
+def test_the_rate_row_cuota_is_proportional_to_the_base_it_is_given() -> None:
+    """Anti-tautology: one base in two rows yields cuotas in the ratio of their statutory rates."""
+    revision = _revisions()[-1]
+    base = Decimal("700000")
+    reducido = _calculate(revision, profile_base=base, row_bases={"reducido": base})
+    general = _calculate(revision, profile_base=base, row_bases={"general": base})
+    assert _box(reducido, "iva.cuota-devengada.reducido") == Decimal("70000.00")
+    assert _box(general, "iva.cuota-devengada.general") == Decimal("147000.00")
+    doubled = _calculate(revision, profile_base=base * 2, row_bases={"general": base * 2})
+    assert _box(doubled, "iva.cuota-devengada.general") == Decimal("2") * _box(general, "iva.cuota-devengada.general")
 
-    def _run(base: Decimal) -> Decimal:
-        bv = {**zero_bindings, "modelo-303-autoconsumo-promotor-base": base}
-        bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, bv)
-        r = calculate_registry_snapshot(
-            snapshot,
-            inputs=bound,
-            binding_values=bv,
-            date_context={"filing_period": date(2025, 3, 31)},
+
+def test_every_edition_refuses_a_profile_base_the_rate_rows_do_not_account_for() -> None:
+    """The profile's rate-less base cannot reach [27] alone; the reconciling guard is blocking.
+
+    With the base stated only on the profile, no row carries it, so the
+    devengado total stays at zero and the two sides of the blocking equality
+    differ; stating it in the rate rows closes the gap.
+    """
+    base = Decimal("1400000")
+    split_rows = {"reducido": Decimal("1000000"), "general": Decimal("400000")}
+    for revision in _revisions():
+        predicate = next(item for item in revision.verification_predicates if str(item.id) == _RECONCILING_PREDICATE)
+        assert predicate.expression == (
+            'equals(["iva.autoconsumo.promotor.base", "iva.autoconsumo.promotor.base.por-tipo"])'
         )
-        return r.values[_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA]
-
-    # Statutory expectation from Art. 90 LISIVA (tipo general 21%):
-    #   700,000 x 0.21 = 147,000.00
-    assert _run(Decimal("700000")) == Decimal("147000.00")
-    # Cross-check: result at 1,400,000 is exactly double — if the registry formula
-    # were wrong the ratio would differ.
-    assert _run(Decimal("1400000")) == Decimal("2") * _run(Decimal("700000"))
+        assert predicate.finding_kind is VerificationFindingKind.BLOCKING_RULE, revision.id
+        unsplit = _calculate(revision, profile_base=base, row_bases={})
+        assert _box(unsplit, "iva.autoconsumo.promotor.base") == base, revision.id
+        assert unsplit[_BASE_POR_TIPO] == Decimal("0"), revision.id
+        assert _box(unsplit, "27") == Decimal("0"), revision.id
+        split = _calculate(revision, profile_base=base, row_bases=split_rows)
+        assert split[_BASE_POR_TIPO] == base, revision.id
+        # 1,000,000 x 10 % + 400,000 x 21 %
+        assert _box(split, "27") == Decimal("184000.00"), revision.id
 
 
 def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:

@@ -1,6 +1,8 @@
 [revisions."2024"]
+casilla_storage_baseline = "2022-2023"
 id = "2024"
 application_link_source_refs = ["enrolled-modelo-182-procedure"]
+binding_source_refs = ["enrolled-modelo-182-procedure"]
 authority_grade = "applicability"
 casilla_source_refs = ["aeat-dr-182-2024", "enrolled-modelo-182-procedure"]
 # Applicability-grade historical epoch for modelo 182, ejercicio 2024, presented
@@ -42,11 +44,24 @@ casilla_source_refs = ["aeat-dr-182-2024", "enrolled-modelo-182-procedure"]
 # this modelo -- the five donativo_donor row bindings and the construct that
 # gathers them -- is grounded in the corpus only by enrolled-modelo-182-procedure,
 # a 1355-byte excerpt of Orden EHA/3021/2007 carrying arts. 1 and 5 and no anexo
-# at all. That excerpt names the modelo; it does not instruct a filing. Rather
-# than restate bindings this edition cannot ground in a record layout, it
-# declares no bindings, constructs, formulas, export layout, completeness
-# manifest or verification expectations, and its 7 casillas are input_kind
-# 'manual' or 'informational' with no binding reference left dangling.
+# at all. That excerpt names the modelo; it does not instruct a filing.
+#
+# The casillas, bindings, construct and filing schedule are stated once on the
+# 2022-2023 edition, whose design (aeat-dr-182-2021-2023) prints every one of
+# these fields at the same position, and this edition stores its payload against
+# it. Their grounding does not change between the ejercicios: the bindings cite
+# the same Orden EHA/3021/2007 excerpt, whose window opens in 2007 and never
+# closes, and every record field they carry sits at the same position in the
+# 2021, 2024 and 2025 designs (tipo 2 18-26 N.I.F. DEL DECLARADO, 36-75
+# APELLIDOS Y NOMBRE, 79-83 % DE DEDUCCION, 84-96 IMPORTE, 132 RECURRENCIA
+# DONATIVOS). The recurrencia binding carries the donor row's own flag and cites
+# no year-specific test, so the amended clave test is keyed on the casilla, not
+# on the binding. What this edition keys is its own design and deadline window;
+# what stays on 2025 is what 2025 alone claims: its verification expectation,
+# its workbook pin and its completeness manifest. No formulas, export layout,
+# completeness manifest or verification expectations are declared here, and the
+# 7 casillas are input_kind 'manual' or 'informational' with no binding
+# reference left dangling.
 #
 # ACQUIRABLE DEBT -- promoting this edition to filing grade needs ONE
 # acquisition: AEAT's modelo 182 instrucciones or procedure page as it stood for
@@ -67,19 +82,32 @@ source_refs = [
     "enrolled-modelo-182-procedure",
     "enrolled-modelo-182-layout",
 ]
+family_storage_baseline = "2022-2023"
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: authored from the bundled hash-pinned aeat-dr-182-2024 record design. VERIFIED -- every \
-position line of the ejercicio 2024 design was diffed against the ejercicio 2025 design and the \
-two field sets are identical, so the 7 modelled casillas sit at the same places in both epochs; \
-the only substantive textual difference between the two designs is the RECURRENCIA DONATIVOS \
-clave test at tipo 2 position 132, recorded above verbatim on both sides. VERIFIED -- every \
-legal_ref and source_ref cited here has a catalogue window covering ejercicio 2024: \
-orden-hac-1430-2025 art. 2 and df-unica and the source aeat-dr-182-2025 are DELIBERATELY absent \
-because that orden first applies to ejercicio 2025. NOT CLAIMED -- no independent AEAT oracle \
-checked any value here; independent_check_coverage is no claim, not zero. NOT CLAIMED -- no \
-bindings, formulas, export layout or completeness manifest are declared, so calculation refuses \
-this edition rather than resolving a silent blank. NOT CLAIMED -- the per-donor tipo 2 detail rows \
-beyond the 5 modelled boxes are not modelled, exactly as in the 2025 sibling. No human operator \
-has countersigned this."""
-reviewed_at = 2026-09-12
+agent: re-review on 2026-10-01 of the ejercicio 2024 edition after its payload moved to \
+the 2022-2023 edition it now stores against. SCOPE -- this pass checks what that move \
+changed; the 2026-09-30 review's design comparison against aeat-dr-182-2025 is not \
+repeated. VERIFIED -- STORAGE: the converter's equivalence check passed on the move, so \
+the 7 casillas, the five donativo_donor row bindings, the informative construct and the \
+filing schedule hydrate here as they did when stated on this edition; what this edition \
+keys is its own design aeat-dr-182-2024, its deadline window modelo-182-2024-0a (enero \
+2025, Orden EHA/3021/2007 art. 5) and the construct's design and window. VERIFIED -- \
+DESIGN: the tipo 2 fields the bindings carry, 18-26, 36-75, 79-83, 84-96 and 132, are \
+printed at lines 208, 271, 371, 408 and 548 of both \
+03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf.extracted.md \
+and 02-182-ejercicio-2024.pdf.extracted.md; aeat-dr-182-2021-2023 is cited by the \
+2022-2023 edition only, not here. VERIFIED -- every legal and source reference the \
+hydrated edition cites has a window covering ejercicio 2024, and its declared-grade \
+snapshot validates. NOT CLAIMED -- the recurrencia binding carries the donor row's own \
+flag and no year-specific clave test. NOT CLAIMED -- no formulas, export layout, \
+completeness manifest or verification expectation are declared, and the grade stays \
+applicability. NOT CLAIMED -- no independent AEAT oracle checked any value. No human \
+operator has countersigned this."""
+reviewed_at = 2026-10-01
+
+[[revisions."2024".family_overrides]]
+family = "constructs"
+selector = {revision = "2022-2023", id = "modelo-182-informative"}
+sequence_additions = {deadline_windows = ["modelo-182-2024-0a"], source_refs = ["aeat-dr-182-2024"]}
+sequence_removals = {deadline_windows = [0, 1], legal_refs = [2], source_refs = [2]}

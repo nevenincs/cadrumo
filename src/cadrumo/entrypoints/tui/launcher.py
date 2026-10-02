@@ -75,11 +75,14 @@ def main(
 ) -> int:
     """Start an installed session through the authenticated runtime boundary."""
     from ...core.logging import configure_logging
+    from ...domain.calculations.registry.authority import release_bundled_indexed_authority
 
     configure_logging()
     from .installed_session import run_installed_workbench_session
 
-    return run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
+    status = run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
+    release_bundled_indexed_authority()
+    return status
 
 
 __all__ = [

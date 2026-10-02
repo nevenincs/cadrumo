@@ -16,9 +16,5 @@ updates:
       actions:
         patterns:
           - "*"
-    ignore:
-      # The `just` installer commit is pinned by the workflow contract in
-      # `dev/ci_contract.py`; it moves there, together with every workflow.
-      - dependency-name: taiki-e/install-action
     commit-message:
       prefix: ci

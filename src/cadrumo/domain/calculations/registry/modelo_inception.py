@@ -1,10 +1,10 @@
-"""The first filing year a modelo answers for, and why it answers no earlier.
+"""The first filing year a modelo answers for, and why an earlier year is or is not answered.
 
 A modelo with no revision for a requested year gives no reason for the absence,
 and two opposite situations produce that same silence: the modelo did not exist
 yet, or it existed and nobody has authored the edition. The first is the product
-declaring its scope; the second is debt. Refusing both identically is correct;
-reporting both identically is not, because only one of them is work.
+declaring its scope; the second is debt. The two are answered differently, so
+the declaration has to say which one holds.
 
 Nothing derives this from the corpus. The earliest authored revision is the same
 in both cases, which is exactly why it cannot be the evidence. Grounding a
@@ -18,9 +18,13 @@ claim, or a single grounding table stating what absence cannot say.
     inception = { filing_year = 2023, legal_refs = ["orden-hfp-886-2023:art-1"] }
     inception = { unauthored = { earliest_authored = 2025, reason = "..." } }
 
-Both refuse a request below them. Neither permits a later edition to be carried
-backwards into a year the modelo did not answer for: applying a design to a
-period that predates it is wrong as law whether or not anybody has noticed.
+Only the first arm is a gate. The canonical temporal resolver refuses every
+year before a declared inception, whichever selector asks, because applying a
+design to a period in which the modelo did not exist is wrong as law. The
+second arm gates nothing: a year below ``earliest_authored`` that the support
+envelope admits is answered like any other unauthored year, by projecting the
+nearest authored edition onto it, and the declaration keeps that projection
+visible as authoring debt instead of letting it read as the year's own edition.
 """
 
 from __future__ import annotations
@@ -60,23 +64,30 @@ _INCEPTION_KIND_REFUSAL: Final = (
 class DeclaredInception(RegistryModel):
     """The modelo began here in law; earlier years are outside the product's reach.
 
-    A refusal below this year is final and carries no worklist entry: nothing is
-    owed for a year in which the modelo did not exist. ``legal_refs`` names the
-    authority that created it, because a claim about when a modelo began is a
-    claim about law and cannot rest on the corpus's own shape.
+    The temporal resolver refuses every year before ``filing_year``, and no
+    authored edition may be projected backwards past it: nothing is owed for a
+    year in which the modelo did not exist. ``legal_refs`` names the authority
+    that created it, because a claim about when a modelo began is a claim about
+    law and cannot rest on the corpus's own shape.
     """
 
     filing_year: FilingYear
     legal_refs: LegalRefs
     source_refs: tuple[SourceRefId, ...] = ()
 
+    def admits_filing_year(self, filing_year: int) -> bool:
+        """Return whether the modelo existed in law for ``filing_year``."""
+        return filing_year >= self.filing_year
+
 
 class UnauthoredBefore(RegistryModel):
     """The modelo existed earlier; those editions are simply not authored yet.
 
-    A refusal below ``earliest_authored`` is equally final, and equally a
-    refusal, but it stays on the worklist. This is the arm that keeps a gap
-    visible as debt instead of letting it read as scope.
+    Informational, never a gate: a year below ``earliest_authored`` that the
+    support envelope admits is served by projecting the nearest authored
+    edition onto it. ``earliest_authored`` states the corpus's own earliest
+    edition, so it must agree with the revisions the modelo authors. This is the
+    arm that keeps a gap visible as debt instead of letting it read as scope.
     """
 
     earliest_authored: FilingYear

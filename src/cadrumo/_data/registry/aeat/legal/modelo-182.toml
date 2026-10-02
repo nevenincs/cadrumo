@@ -53,6 +53,43 @@ notes = "Orden HAC/1430/2025 articulo 2 modifies the Modelo 182 type-2 RECURRENC
 required_text = ["Modelo 182", "RECURRENCIA DONATIVOS", "posición 132"]
 
 
+[legal."orden-hfp-1351-2021:art-cuarto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1351-2021.html#a4"
+document_id = "BOE-A-2021-20004"
+article = "cuarto"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-20004#a4"
+published_at = 2021-12-03
+effective_from = 2021-12-04
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-20004 articulo cuarto; pending operator re-stamp)"
+notes = "Articulo cuarto de la Orden HFP/1351/2021: modifica el anexo II de la Orden EHA/3021/2007 (modelo 182), campo NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR, posiciones 123-135 del registro de tipo 1. Es la ultima modificacion del anexo II antes de la Orden HAC/1504/2024, segun el analisis del BOE de BOE-A-2007-18192, y fija el diseno que AEAT publica como 182.pdf para los ejercicios 2021 a 2023."
+required_text = [
+    "Se modifica el campo «NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR», que ocupa las posiciones 123 a 135 del registro de tipo 1",
+]
+
+[legal."orden-hfp-1351-2021:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1351-2021.html#df"
+document_id = "BOE-A-2021-20004"
+article = "disposición final única"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-20004#df"
+published_at = 2021-12-03
+effective_from = 2021-12-04
+governs_periods_from = 2021-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-20004 disposicion final unica; pending operator re-stamp)"
+notes = "Orden HFP/1351/2021 disposicion final unica: entrada en vigor al dia siguiente de su publicacion y primera aplicacion a las declaraciones correspondientes a 2021 que se presentan en 2022. Opens the ejercicio from which the design its articulo cuarto amends governs."
+required_text = [
+    "será aplicable, por primera vez, para las declaraciones correspondientes a 2021 que se presentarán en 2022",
+]
+
 [sources."enrolled-modelo-182-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
@@ -83,6 +120,28 @@ retrieved_at = 2026-07-03
 published_at = 2007-10-11
 applies_from = 2007-10-12
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192"
+review_status = "pending_review"
+
+# AEAT's design "182 - Orden EHA/3021/2007 (actualizado por Orden HFP/1351/2021,
+# de 1 de diciembre)", headed "Ejercicio 2021". The BOE analysis of
+# BOE-A-2007-18192 lists the anexo II amendments in order: Orden HFP/1351/2021,
+# first applicable to the 2021 declarations, then Orden HAC/1504/2024, first
+# applicable to ejercicio 2024. So this design governs ejercicios 2021 to 2023.
+# Its position lines equal those of aeat-dr-182-2024 line for line; the only
+# difference in its text is the 150 euros the % DE DEDUCCION description names,
+# which Orden HAC/1504/2024 art. quinto raises to 250 euros from 2024.
+[sources."aeat-dr-182-2021-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2021"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf"
+sha256 = "4cd35064834a1b741c84de205d66de122bcaaddfe75ec66bddcb5d988c96f27a"
+bytes = 113189
+retrieved_at = 2026-10-01
+applies_from = 2021-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/182.pdf"
 review_status = "pending_review"
 
 [sources."aeat-dr-182-2024"]

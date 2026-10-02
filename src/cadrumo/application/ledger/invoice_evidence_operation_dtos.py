@@ -51,6 +51,8 @@ from ..ledger.invoice_draft_records import (
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
+    LabelReadingFallback,
+    LabelReadingFallbackCause,
 )
 from ..ledger.structured_invoice_ports import (
     StructuredInvoiceClassificationKind,
@@ -219,6 +221,26 @@ _RateBreakdowns = Annotated[tuple[InvoiceDraftRateBreakdownProjectionV1, ...], F
 _Discrepancies = Annotated[tuple[DraftDiscrepancyProjectionV1, ...], Field(max_length=128)]
 
 
+class LabelReadingFallbackProjectionV1(BaseModel):
+    """Bounded machine facts explaining an incomplete label reading."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    cause: LabelReadingFallbackCause
+    unread_fields: Annotated[tuple[_FieldName, ...], Field(min_length=1, max_length=128)]
+    reader_error_type: _ShortText
+    failed_condition_id: _ShortText | None = None
+
+    @classmethod
+    def from_fallback(cls, fallback: LabelReadingFallback) -> Self:
+        """Project machine facts without document text or exception messages."""
+        return cls.model_validate(fallback.model_dump(mode="python"), strict=True)
+
+    def to_fallback(self) -> LabelReadingFallback:
+        """Restore typed facts for the shared notice renderer."""
+        return LabelReadingFallback.model_validate(self.model_dump(mode="python"), strict=True)
+
+
 class InvoiceDraftProjectionV1(BaseModel):
     """Closed public projection preserving the full canonical ``InvoiceDraft``."""
 
@@ -260,6 +282,7 @@ class InvoiceDraftProjectionV1(BaseModel):
     discrepancies: _Discrepancies = ()
     raw_text_length: Annotated[int, Field(ge=0)] = 0
     facturae_invoice_class: StructuredInvoiceClassProjectionV1 | None = None
+    label_reading_fallback: LabelReadingFallbackProjectionV1 | None = None
 
     @model_validator(mode="after")
     def _provenance_names_are_unique_draft_fields(self) -> Self:
@@ -312,6 +335,11 @@ class InvoiceDraftProjectionV1(BaseModel):
             provenance=tuple(FieldProvenanceProjectionV1.from_provenance(row) for row in draft.provenance),
             discrepancies=tuple(DraftDiscrepancyProjectionV1.from_finding(row) for row in draft.discrepancies),
             raw_text_length=draft.raw_text_length,
+            label_reading_fallback=(
+                None
+                if draft.label_reading_fallback is None
+                else LabelReadingFallbackProjectionV1.from_fallback(draft.label_reading_fallback)
+            ),
             facturae_invoice_class=(
                 None
                 if structured_class is None

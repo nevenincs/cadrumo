@@ -4,11 +4,9 @@ Usage::
 
     python -m dev.env workstation-tools
     python -m dev.env setup
-    python -m dev.env doctor
 
 ``setup`` materializes ``env/.env`` and ports the values set in the main
-worktree's copy; ``workstation-tools`` provisions workstation CLIs. ``doctor`` is a PATH-only readiness probe and never
-provisions anything.
+worktree's copy; ``workstation-tools`` provisions workstation CLIs.
 """
 
 from __future__ import annotations
@@ -17,12 +15,10 @@ import argparse
 
 from ._dotenv import env_setup
 from ._workstation import workstation_tools
-from .doctor import check_developer_toolchain
 
 ACTIONS = {
     "workstation-tools": workstation_tools,
     "setup": env_setup,
-    "doctor": check_developer_toolchain,
 }
 
 

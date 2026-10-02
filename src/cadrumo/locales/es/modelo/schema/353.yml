@@ -46,7 +46,7 @@ modelo:
           Modelo agregado. Autoliquidación mensual.
         title: IVA. Grupo de entidades. Modelo agregado. Autoliquidación mensual
       revision:
-        2021-2025:
+        2021-hasta-2026-01:
           casilla:
             '01':
               label: Resultado total (sumatorio del resultado de entidades)
@@ -65,7 +65,7 @@ modelo:
               label: Cuotas a compensar de periodos previos pendientes para periodos
                 posteriores ([02] - [08])
           field:
-            label: Modelo 353 ejercicios 2008 a 2025 (Orden EHA/3434/2007)
+            label: Modelo 353, ejercicios 2021 a 2025 y enero de 2026 (Orden EHA/3434/2007)
         2026-desde-02:
           casilla:
             '01':

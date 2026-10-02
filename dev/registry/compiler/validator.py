@@ -114,9 +114,8 @@ class RegistryValidator:
         self._sources = catalogues.sources
         self._facts = catalogues.facts
         self._runtime = catalogues.runtime
-        self._supported_filing_years = (
-            () if catalogues.supported_filing_years is None else catalogues.supported_filing_years.years
-        )
+        self._support = catalogues.supported_filing_years
+        self._supported_filing_years = () if self._support is None else self._support.years
         self._source_root = source_root
         self._user_profile_schema = user_profile_schema
         self._evidence = EvidenceValidator(
@@ -465,6 +464,7 @@ class RegistryValidator:
             evidence=self._evidence,
             source_root=self._source_root,
             justificante_corpus_root=self.justificante_corpus_root,
+            support=self._support,
         )
         for failure in validate_producer_inventory(prefix, revision):
             if failure not in failures:

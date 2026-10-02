@@ -329,7 +329,7 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
             ledger_payment=_capital_capture_request(),
         )
 
-    with pytest.raises(ValueError, match="withholding observations are not accepted"):
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         annual_detail = WithholdingObservation(
             source_id="transaction-1",
             perceptor_tax_id="11111111H",
@@ -349,9 +349,8 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
             foral_retention_bizkaia=Decimal("0"),
             base_retenciones=Decimal("100.00"),
         )
-        ModeloAggregateOperationRequest.from_inputs(
-            profile_id=_PROFILE,
-            command=_command().model_copy(update={"withholding_observations": (annual_detail,)}),
+        PerModeloAggregationCommand.model_validate(
+            {**_command().model_dump(mode="python"), "withholding_observations": (annual_detail,)}
         )
 
 
@@ -520,6 +519,7 @@ def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
         preflight_result=SimpleNamespace(provider=PerModeloAggregationContributor.RETENCIONES),
         capture=SimpleNamespace(command=object(), scope=_SCOPE, catalogue_read_revision_id="b" * 64),
         cadence=object(),
+        calculation_rows=None,
     )
     monkeypatch.setattr(
         "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
@@ -590,6 +590,7 @@ def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown
         preflight_result=SimpleNamespace(provider=PerModeloAggregationContributor.RETENCIONES),
         capture=SimpleNamespace(command=object(), scope=_SCOPE, catalogue_read_revision_id="b" * 64),
         cadence=object(),
+        calculation_rows=None,
     )
     monkeypatch.setattr(
         "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",

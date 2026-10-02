@@ -28,7 +28,9 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.invoices.models import InvoiceCatalogue
 from ..aggregation.invoice_retencion import (
+    InvoiceRetencionProjectionDefect,
     InvoiceWithholdingCapture,
+    InvoiceWithholdingDefectsError,
     InvoiceWithholdingEvidenceError,
     InvoiceWithholdingEvidenceRequest,
     build_invoice_withholding_capture,
@@ -201,6 +203,7 @@ class ModeloInvoiceWithholdingCaptureProjection(BaseModel):
     result_row_count: NonNegativeInt | None = None
     withholding_window: ModeloInvoiceWithholdingWindow | None = None
     refusal_reason: _SAFE_REFUSAL_REASON | None = None
+    refusal_defects: tuple[InvoiceRetencionProjectionDefect, ...] = Field(default=(), max_length=6)
 
     @model_validator(mode="after")
     def _outcome_shape(self) -> Self:
@@ -212,7 +215,11 @@ class ModeloInvoiceWithholdingCaptureProjection(BaseModel):
             self.withholding_window,
         )
         if self.outcome == "captured":
-            if self.refusal_reason is not None or any(value is None for value in captured_fields):
+            if (
+                self.refusal_reason is not None
+                or self.refusal_defects
+                or any(value is None for value in captured_fields)
+            ):
                 raise ValueError("captured result requires aggregate and withholding-window summary fields")
         elif self.refusal_reason is None or any(value is not None for value in captured_fields):
             raise ValueError("refused result requires only a bounded refusal reason")
@@ -358,6 +365,8 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         operation = context.authority_operation
         try:
             prepared = await asyncio.to_thread(self._prepare, payload, profile_id, operation)
+        except InvoiceWithholdingDefectsError as error:
+            return await self._refuse(payload, context, error.defects[0].value, defects=error.defects)
         except (
             InvoiceLookupRefusedError,
             InvoiceWithholdingEvidenceError,
@@ -507,25 +516,29 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         payload: ModeloInvoiceWithholdingCaptureRequest,
         context: OperationExecutorContext,
         reason: str,
+        *,
+        defects: tuple[InvoiceRetencionProjectionDefect, ...] = (),
     ) -> OperationRefusalEvidence:
         async with context.cancellation.irreversible_section():
             if require_active_bucket_id() != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             await context.events.effect(OperationEffect.NONE)
-            return await self._record_refusal(payload, context, reason)
+            return await self._record_refusal(payload, context, reason, defects=defects)
 
     async def _record_refusal(
         self,
         payload: ModeloInvoiceWithholdingCaptureRequest,
         context: OperationExecutorContext,
         reason: str,
+        *,
+        defects: tuple[InvoiceRetencionProjectionDefect, ...] = (),
     ) -> OperationRefusalEvidence:
         detail = ModeloInvoiceWithholdingCaptureReport(
             projection=_capture_refusal(
                 profile_id=payload.profile_id,
                 command=payload.command,
                 reason=reason,
-            ),
+            ).model_copy(update={"refusal_defects": defects}),
             local_write_performed=False,
         )
         detail_ref = await context.operands.put(detail, written_at=now())

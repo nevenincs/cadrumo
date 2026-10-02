@@ -8,6 +8,7 @@
 id = "modelo-151-calculation-verification"
 computed_casilla_ids = [
     "impatriado.cuota-integra-general",
+    "impatriado.cuota-integra-ahorro",
     "impatriado.cuota-diferencial",
 ]
 tolerance = "0.01"

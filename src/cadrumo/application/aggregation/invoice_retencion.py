@@ -28,8 +28,11 @@ The production caller is the ``modelo aggregate`` CLI: an operator (or the LLM
 operator on their behalf) declares one allocation via
 ``--received-invoice-retencion``, which the CLI parses into an
 :class:`InvoiceWithholdingEvidenceRequest` and hands to
-:func:`build_invoice_withholding_capture`. The shared withholding producer owns
-the write, so this module never persists anything itself.
+:func:`build_invoice_withholding_capture`. That capture routes the invoice
+through :func:`project_received_invoice_retencion`, the one projection, so a
+refused invoice reports every defect it carries rather than the first one
+found. The shared withholding producer owns the write, so this module never
+persists anything itself.
 
 See Also:
     :mod:`~.retenciones`
@@ -55,6 +58,7 @@ from ...core.aggregation import BindingSourceKind, RetencionScheme
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
+from ...core.i18n.render import tr as render_tr
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -144,6 +148,27 @@ class InvoiceRetencionProjectionDefect(StrEnum):
     """
 
 
+_DEFECT_REASON_LOCALE_KEYS: Final[dict[InvoiceRetencionProjectionDefect, str]] = {
+    InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY: (
+        "aggregation.invoice_retencion.defects.not_a_retenedor_liability"
+    ),
+    InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED: (
+        "aggregation.invoice_retencion.defects.iva_treatment_undeclared"
+    ),
+    InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED: (
+        "aggregation.invoice_retencion.defects.no_retencion_declared"
+    ),
+    InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER: (
+        "aggregation.invoice_retencion.defects.non_resident_supplier"
+    ),
+    InvoiceRetencionProjectionDefect.FX_UNRESOLVED: "aggregation.invoice_retencion.defects.fx_unresolved",
+    InvoiceRetencionProjectionDefect.MISSING_COUNTERPARTY_TAX_ID: (
+        "aggregation.invoice_retencion.defects.missing_counterparty_tax_id"
+    ),
+}
+"""The operator-facing explanation of each defect, one canonical key per member."""
+
+
 class InvoiceRetencionProjection(BaseModel):
     """The verdict for one invoice: a store observation, or why there is none.
 
@@ -194,6 +219,31 @@ class InvoiceWithholdingEvidenceError(CadrumoError):
         """Build a refusal that carries only its stable reason token."""
         super().__init__(f"invoice withholding evidence refused: {refusal_code}")
         self.refusal_code = refusal_code
+
+
+class InvoiceWithholdingDefectsError(InvoiceWithholdingEvidenceError):
+    """Refusal naming every defect that keeps an invoice's retención out of capture.
+
+    ``refusal_code`` joins every defect token in the projection's order, so a
+    one-defect refusal keeps the exact code it always carried and a transport
+    that shows only the code still shows every defect. The context carries
+    each defect's explanation in the operator's language beside the registered
+    refusal message; it holds no invoice figure or identity.
+    """
+
+    def __init__(self, defects: tuple[InvoiceRetencionProjectionDefect, ...]) -> None:
+        """Build the refusal from the projection's complete defect tuple."""
+        super().__init__(",".join(defect.value for defect in defects))
+        self._defects = defects
+        reasons: dict[str, object] = {
+            "defect_reasons": " ".join(render_tr(_DEFECT_REASON_LOCALE_KEYS[defect]) for defect in defects),
+        }
+        self.context = reasons
+
+    @property
+    def defects(self) -> tuple[InvoiceRetencionProjectionDefect, ...]:
+        """Every defect the projection found, in its sweep order."""
+        return self._defects
 
 
 class InvoiceWithholdingEvidenceRequest(BaseModel):
@@ -265,18 +315,22 @@ def build_invoice_withholding_capture(
     for a liability limit, source revision, recognition coordinate, or
     recipient identity.  ``cadence`` is the filer's canonical schedule for
     ``applicable_year``; a recognition quarter it does not assign is refused.
+
+    The invoice is routed through :func:`project_received_invoice_retencion`,
+    so the liability figures come from the one projection and an unroutable
+    invoice is refused with every defect that projection found.
     """
     if request.invoice_id != invoice.invoice_id:
         raise InvoiceWithholdingEvidenceError("invoice_identity_mismatch")
     if cadence.filing_year != applicable_year:
         raise InvoiceWithholdingEvidenceError("filer_cadence_year_mismatch")
-    defects = invoice_retencion_liability_defects(invoice)
-    if defects:
-        raise InvoiceWithholdingEvidenceError(defects[0].value)
-    base = invoice.base_total_eur
-    withholding = invoice.retention_amount_eur
+    projection = project_received_invoice_retencion(invoice, scheme=request.scheme)
+    if projection.observation is None:
+        raise InvoiceWithholdingDefectsError(projection.defects)
+    base = projection.observation.taxable_base
+    withholding = projection.observation.retencion_amount
     total = invoice.grand_total_eur
-    if base is None or withholding is None or total is None:
+    if total is None:
         raise InvoiceWithholdingEvidenceError("invoice_eur_liability_unavailable")
     settlement = total - withholding
     if settlement < Decimal("0"):

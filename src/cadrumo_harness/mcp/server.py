@@ -73,7 +73,7 @@ from cadrumo.core.async_cleanup import (
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.time.clock import now
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority, release_bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_store import AuthorityStoreError
 from cadrumo.domain.calculations.registry.errors import (
     AuthorityDescriptorUnavailableError,
@@ -949,4 +949,10 @@ def serve(*, profile_id: UUID, credential_reference: UUID | None = None) -> None
         finally:
             await adapter.close()
 
-    anyio.run(run)
+    _serve_until_orderly_shutdown(lambda: anyio.run(run))
+
+
+def _serve_until_orderly_shutdown(serve_transport: Callable[[], object]) -> None:
+    """Release the adapter's shared authority after an orderly transport return."""
+    serve_transport()
+    release_bundled_indexed_authority()

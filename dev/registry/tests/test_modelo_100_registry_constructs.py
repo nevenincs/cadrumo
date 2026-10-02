@@ -540,7 +540,9 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
         "renta-work-income": set(),
         "renta-real-estate-capital": set(),
         "renta-movable-capital": set(),
-        "renta-economic-activities": {"130", "131", "184"},
+        # A filed Modelo 184 carries the entity's type-2 totals, not the member's
+        # share casilla 1577 declares, so no economic-activity fold reads it.
+        "renta-economic-activities": {"130", "131"},
     }
     real_estate = constructs["renta-real-estate-capital"]
     assert "0598" in _members_of_kind(real_estate, "casilla")

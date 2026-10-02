@@ -63,6 +63,9 @@ modelo:
           i rendes.
         title: Declaració informativa anual sobre valors, assegurances i rendes
       revision:
+        '2022':
+          field:
+            label: Model 189, exercici 2022
         '2023':
           field:
             label: Model 189, exercici 2023

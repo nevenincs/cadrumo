@@ -43,20 +43,34 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import authored_revisions_where, manual_editions_printing
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The Art. 81.2 guardería profile bindings the fixture supplies beside the
+# maternidad binding.
+_FIXTURE_GUARDERIA_BINDINGS = frozenset(
+    {
+        "renta-profile-guarderia-gastos-reales",
+        "renta-profile-incremento-guarderia",
+        "renta-profile-cotizaciones-ss-madre",
+        "renta-profile-descendientes-guarderia",
+    }
+)
 # The Modelo 100 edition these cuotas are computed for: the newest one whose AEAT Renta
 # manual prints the Cataluna scale the expected cuotas use and whose declared bindings
-# are the ones the fixture below supplies (it still carries the maternidad binding).
+# are the ones the fixture below supplies (the maternidad and guardería bindings).
 _TARIFF_EXERCISE = max(
     set(manual_editions_printing("renta", "17.707,20", "33.007,20"))
     & {
         revision.valid_from.year
         for revision in authored_revisions_where(
-            "100", lambda revision: set(M100_2024_EMPTY_MATERNIDAD_BINDINGS) <= {b.id for b in revision.bindings}
+            "100",
+            lambda revision: (
+                set(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS) | _FIXTURE_GUARDERIA_BINDINGS
+                <= {b.id for b in revision.bindings}
+            ),
         )
     }
 )
@@ -66,9 +80,6 @@ _TARIFF_EXERCISE = max(
 def tariff_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> RegistrySnapshot:
     """The tariff exercise at calculation grade: these tests assert arithmetic, never filing eligibility."""
     return registry_snapshot("100", _TARIFF_EXERCISE, "0A", grade=RegistryAuthorityGrade.CALCULATION)
-
-
-_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 
 # -----------------------------------------------------------------------
@@ -353,7 +364,7 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # (Option A engine): zero baseline for a
         # childless profile; scenarios that exercise real descendientes
         # override this key directly.
-        **_M100_2024_MATERNIDAD_BINDINGS,
+        **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         # Parte autonómica (casilla 0514): every scenario in this file
         # runs a Cataluña-resident profile, which is absent from the wired
@@ -411,7 +422,7 @@ def test_m100_cuota_estatal_pere_age_70_with_age_supplement(
         enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
             **_base_binding_values(),
-            **_M100_2024_MATERNIDAD_BINDINGS,
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
@@ -462,7 +473,7 @@ def test_m100_cuota_estatal_two_descendants_one_under_three(
         enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
             **_base_binding_values(),
-            **_M100_2024_MATERNIDAD_BINDINGS,
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
             "renta-profile-minimo-descendientes-estatal": Decimal("7900"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("7900"),
         },

@@ -9,6 +9,7 @@ from functools import lru_cache
 
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ..ids import LegalRefId, SourceRefId
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .registry_tree import bundled_modelo_components
 from .scenarios import (
     RegistryCalculationScenario,
@@ -182,7 +183,6 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -258,10 +258,12 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 ),
                 operand_casilla_refs=(),
                 legal_refs=(
+                    "ley-35-2006:art-99",
                     "rd-439-2007:art-109",
                     "rd-439-2007:art-110",
-                    "orden-hac-277-2026:art-3",
+                    "orden-eha-672-2007:art-1",
                     "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
                 ),
             ),
             _expected(
@@ -316,7 +318,6 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -375,7 +376,6 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -457,7 +457,6 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -615,7 +614,8 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
                 "0603": Decimal("110.00"),
                 "0605": Decimal("120.00"),
                 "0606": Decimal("130.00"),
-                "0611": Decimal("100.00"),
+                # 0611 is computed from the maternity deduction the profile
+                # derives per descendant; it arrives through its binding below.
                 "0612": Decimal("10.00"),
                 "0613": Decimal("20.00"),
                 "0623": Decimal("30.00"),
@@ -636,7 +636,6 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -647,6 +646,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
             # 0596 takes the salary certificate the payee holds.
             "renta-certificado-trabajo-retenciones": Decimal("40.00"),
+            **dict.fromkeys(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, Decimal("100.00")),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={

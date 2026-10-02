@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-09-17'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8aa13a437730ad0249297499e9ad201ff6581b5a24ec85bc4bb84c0559a20c7'
+body_hash: 'sha256:a688048bd61793c2497d6327306f00d72a871bf0d50dd25fb26ecf6bc2a9508d'
 related:
   - "[[2026-08-11-tui-interface-plan]]"
 ---
@@ -320,6 +320,9 @@ related:
 - `S120` `verify:` `bite proof, one baselined entry removed at runtime` -> `red`
 - `S120` `verify:` `bite proof, empty baseline` -> `red, vacuity guard fires`
 - `S120` `verify:` `baseline size` -> `2, both belonging to other campaigns`
+- `S31` `A` `.vault/audit/2026-08-31-tui-interface-audit.md`
+- `S34` `A` `.vault/audit/2026-08-31-tui-interface-audit.md`
+- `S99` `A` `.vault/reference/2026-08-31-tui-architecture-evidence-ancestry-practice-reference.md`
 
 ## Notes
 
@@ -1863,3 +1866,6 @@ related:
 - `S120` during this same breakage. A deleted module whose importers remain is not a
 - `S120` syntax error, so that gate cannot see it. "Every file parses" and "every import
 - `S120` resolves" are different properties, and only the first is gated.
+- `S31` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/audit/2026-08-31-tui-interface-audit.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. The original review's self-review independence limit, retired C5 receipt precondition, and accessibility/locale findings remain explicit. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.
+- `S34` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/audit/2026-08-31-tui-interface-audit.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. The original review's self-review independence limit, retired C5 receipt precondition, and accessibility/locale findings remain explicit. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.
+- `S99` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/reference/2026-08-31-tui-architecture-evidence-ancestry-practice-reference.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. Both retired dependency references are present under `.vault/_archive/reference/;` their methods are retained in the linked ancestry reference. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.

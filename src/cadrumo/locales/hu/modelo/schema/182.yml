@@ -33,6 +33,9 @@ modelo:
         title: Kapott adományok, ajándékok és hozzájárulások, valamint teljesített
           rendelkezések (éves adatszolgáltatás)
       revision:
+        2022-2023:
+          field:
+            label: 182-es modelo, 2022. és 2023. adóév
         '2024':
           field:
             label: 182-es modelo, 2024. adóév

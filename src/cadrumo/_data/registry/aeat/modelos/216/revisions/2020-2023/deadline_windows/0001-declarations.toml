@@ -1,0 +1,93 @@
+# Modelo 216 trimestral windows for 2022 and 2023 under Orden EHA/3290/2008
+# art 4. Closing and domiciliacion dates come from the calendario del
+# contribuyente of the year each window closes in: presentacion hasta el 20
+# (22 de enero de 2024 for the 2023 fourth quarter) and domiciliacion del 1 al
+# 15 (1 al 17 de enero de 2024).
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-1t"
+filing_year = 2022
+period = "2022 1T"
+period_kind = "quarterly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+payment_cutoff_on = 2022-04-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-2t"
+filing_year = 2022
+period = "2022 2T"
+period_kind = "quarterly"
+opens_on = 2022-07-01
+closes_on = 2022-07-20
+payment_cutoff_on = 2022-07-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-3t"
+filing_year = 2022
+period = "2022 3T"
+period_kind = "quarterly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+payment_cutoff_on = 2022-10-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2022-4t"
+filing_year = 2022
+period = "2022 4T"
+period_kind = "quarterly"
+opens_on = 2023-01-01
+closes_on = 2023-01-20
+payment_cutoff_on = 2023-01-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-1t"
+filing_year = 2023
+period = "2023 1T"
+period_kind = "quarterly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+payment_cutoff_on = 2023-04-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-2t"
+filing_year = 2023
+period = "2023 2T"
+period_kind = "quarterly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+payment_cutoff_on = 2023-07-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-3t"
+filing_year = 2023
+period = "2023 3T"
+period_kind = "quarterly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+payment_cutoff_on = 2023-10-15
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".deadline_windows]]
+id = "modelo-216-2023-4t"
+filing_year = 2023
+period = "2023 4T"
+period_kind = "quarterly"
+opens_on = 2024-01-01
+closes_on = 2024-01-22
+payment_cutoff_on = 2024-01-17
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2024"]

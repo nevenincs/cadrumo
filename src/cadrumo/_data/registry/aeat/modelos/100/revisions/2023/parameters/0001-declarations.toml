@@ -25,7 +25,7 @@ valid_from = 2023-01-01
 id = "renta-actividad-inmovilizado-amortizacion-renovables-inversion-maxima"
 data_type = "money"
 unit = "EUR"
-legal_refs = ["ley-27-2014:da-17"]
+legal_refs = ["ley-27-2014:da-17", "real-decreto-ley-18-2022:art-22"]
 
 [[revisions."2023".parameters.values]]
 value = "500000"
@@ -39,7 +39,7 @@ required_text = ["beneficiarse del régimen de libertad de amortización será d
 id = "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"
 data_type = "integer"
 unit = "year"
-legal_refs = ["ley-27-2014:da-17"]
+legal_refs = ["ley-27-2014:da-17", "real-decreto-ley-18-2022:art-22"]
 
 [[revisions."2023".parameters.values]]
 value = "2023"
@@ -53,7 +53,7 @@ required_text = ["Se podrán amortizar libremente en el período impositivo 2023
 id = "renta-actividad-inmovilizado-amortizacion-renovables-ultimo-ejercicio"
 data_type = "integer"
 unit = "year"
-legal_refs = ["ley-27-2014:da-17"]
+legal_refs = ["ley-27-2014:da-17", "real-decreto-ley-18-2022:art-22"]
 
 [[revisions."2023".parameters.values]]
 value = "2023"
@@ -67,7 +67,7 @@ required_text = ["Se podrán amortizar libremente en el período impositivo 2023
 id = "renta-actividad-inmovilizado-amortizacion-renovables-puesta-a-disposicion-admitida"
 data_type = "integer"
 unit = "flag"
-legal_refs = ["ley-27-2014:da-17"]
+legal_refs = ["ley-27-2014:da-17", "real-decreto-ley-18-2022:art-22"]
 
 [revisions."2023".parameters.non_filing_axis_admission]
 date_axis = "transaction_date"

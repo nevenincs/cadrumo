@@ -44,7 +44,7 @@ from ...domain.iva.schema import IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 from ._date_parsing import _parse_iso_date, _parse_optional_iso_date_str
 from ._decimal_parsing import parse_optional_decimal_amount
-from ._evidence_field_notices import field_degradation_notices
+from ._evidence_field_notices import field_degradation_notices, label_reading_fallback_notices
 from ._ledger_evidence_review_cli import parse_finding_resolution
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
 from .errors import CliRefusedBoundaryError
@@ -443,6 +443,11 @@ def _evidence_extract_notices(reference: str, draft: InvoiceDraftProjectionV1) -
         ),
     ]
     notices.extend(field_degradation_notices(_domain_provenance(draft)))
+    notices.extend(
+        label_reading_fallback_notices(
+            None if draft.label_reading_fallback is None else draft.label_reading_fallback.to_fallback()
+        )
+    )
     return notices
 
 
@@ -799,6 +804,11 @@ def _evidence_confirm_notices(result: InvoiceConfirmationProjectionV1) -> list[N
             ),
         )
     notices.extend(field_degradation_notices(_domain_provenance(result.draft)))
+    notices.extend(
+        label_reading_fallback_notices(
+            None if result.draft.label_reading_fallback is None else result.draft.label_reading_fallback.to_fallback()
+        )
+    )
     notices.extend(_resolution_notices(result.establishment))
     return notices
 

@@ -241,11 +241,21 @@ modelo:
           filing-year:
             label: Az önbevallás adóéve
           iva-autoconsumo-promotor-base:
-            label: Az ingatlanfejlesztő önfogyasztásának adóalapja (építési költség,
-              LISIVA 9.1.c + 79.4 cikk)
-          iva-autoconsumo-promotor-cuota:
-            label: Az ingatlanfejlesztő önfogyasztása utáni áfa (21% az adóalap után,
-              Art. 9.1.c + Art. 90 LISIVA)
+            label: Az ingatlanfejlesztő önfogyasztásának teljes adóalapja a profil
+              szerint, kulcsonkénti bontás nélkül (építési költség, LIVA 9. + 79.
+              cikk)
+          iva-autoconsumo-promotor-base-por-tipo:
+            label: Az ingatlanfejlesztő önfogyasztásának kulcsonként bevallott adóalapjai
+              összesen
+          iva-autoconsumo-promotor-general-base:
+            label: Az ingatlanfejlesztő önfogyasztásának adóalapja általános kulccsal
+              (21%) (a hivatalos 07. rovat része)
+          iva-autoconsumo-promotor-reducido-base:
+            label: Az ingatlanfejlesztő önfogyasztásának adóalapja csökkentett kulccsal
+              (10%) (a hivatalos 04. rovat része)
+          iva-autoconsumo-promotor-super-reducido-base:
+            label: Az ingatlanfejlesztő önfogyasztásának adóalapja szupercsökkentett
+              kulccsal (4%) (a hivatalos 01. rovat része)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Adja össze a Közösségen belüli beszerzések után önszámlázással keletkezett
               adóalapot.
@@ -263,6 +273,15 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Belföldi tárgyi eszköz ügyletek előzetesen felszámított ÁFA-jának
               adóalapja (a hivatalos 30. rovat része)
+          iva-base-repercutida-general:
+            label: Felszámított ÁFA adóalapja általános kulccsal (21%) (a hivatalos
+              07. rovat része)
+          iva-base-repercutida-reducido:
+            label: Felszámított ÁFA adóalapja csökkentett kulccsal (10%) (a hivatalos
+              04. rovat része)
+          iva-base-repercutida-super-reducido:
+            label: Felszámított ÁFA adóalapja szupercsökkentett kulccsal (4%) (a hivatalos
+              01. rovat része)
           iva-compensacion-aplicada-periodo:
             label: Korábbi időszakokból fennmaradó ÁFA-összegek, amelyeket ebben az
               időszakban alkalmaznak
@@ -296,6 +315,15 @@ modelo:
               (LIVA 13., 15. és 84. cikk Uno.2.; hivatalos 10/11. rovat)
           iva-cuota-deducible-total:
             label: Összes levonható ÁFA összeg
+          iva-cuota-devengada-general:
+            label: Fizetendő ÁFA általános kulccsal (21%), az ingatlanfejlesztő önfogyasztásával
+              együtt (hivatalos 09. rovat)
+          iva-cuota-devengada-reducido:
+            label: Fizetendő ÁFA csökkentett kulccsal (10%), az ingatlanfejlesztő
+              önfogyasztásával együtt (hivatalos 06. rovat)
+          iva-cuota-devengada-super-reducido:
+            label: Fizetendő ÁFA szupercsökkentett kulccsal (4%), az ingatlanfejlesztő
+              önfogyasztásával együtt (hivatalos 03. rovat)
           iva-cuota-devengada-total:
             label: Összes keletkezett ÁFA összeg
           iva-cuota-repercutida-general:

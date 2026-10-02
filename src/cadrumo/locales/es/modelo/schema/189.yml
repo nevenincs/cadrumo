@@ -63,6 +63,9 @@ modelo:
           seguros y rentas.
         title: Declaración informativa anual acerca de valores, seguros y rentas
       revision:
+        '2022':
+          field:
+            label: Modelo 189, ejercicio 2022
         '2023':
           field:
             label: Modelo 189, ejercicio 2023

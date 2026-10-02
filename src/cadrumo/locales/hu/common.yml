@@ -3,6 +3,19 @@ aggregation:
     errors:
       unsupported_modelo: Nincs regisztrált összesítési szerződés a kért modellhez.
   invoice_retencion:
+    defects:
+      fx_unresolved: A számla devizában készült, és nincs euróra átváltási árfolyama.
+      iva_treatment_undeclared: Nincs megadva áfakezelés, ezért a levonás iránya nem
+        állapítható meg.
+      missing_counterparty_tax_id: A számlán nem szerepel a kedvezményezett adóazonosítója,
+        amelyet a levonási bevallás megkövetel.
+      no_retencion_declared: A számla nem tartalmaz levont összeget.
+      non_resident_supplier: A szállító nem spanyol illetőségű; a nem belföldi illetőségűeknek
+        teljesített kifizetések levonását a nem belföldi illetőségűek jövedelemadójában
+        kell bevallani.
+      not_a_retenedor_liability: Ennél az áfakezelésnél és számlatípusnál a levonás
+        nem az adózó kifizetőként fennálló kötelezettsége; a kiállított számlán szereplő
+        levonás az adózó javára szóló követelés.
     errors:
       euro_figures_unavailable_after_defect_sweep: Az euróösszegek nem érhetők el
         egy olyan számlán, amely átment a hibaszűrésen.
@@ -156,8 +169,9 @@ aggregation:
         időszakról az `aeat config profile edit --modelo-111-no-retenciones-periods
         %{attestation_period}` paranccsal (a kapcsoló felülírja a tárolt listát, ezért
         vesszővel elválasztva add meg a már bejelentett időszakokat is), vagy rögzítsd
-        a perceptor-sorokat az `aeat app modelo aggregate --retencion-observation`
-        paranccsal.'
+        a levonással terhelt kifizetéseket az `aeat app modelo aggregate` paranccsal:
+        befogadott számlához a --received-invoice-retencion, bérfizetéshez a --ledger-payment-withholding
+        kapcsolóval.'
       m193_phase_allocation_collision: '%{modelo} modell, %{filing_year}: a(z) %{source_allocations}
         felosztás(ok) kézzel is rögzítve vannak, és a rögzített tőkejövedelem-visszatartásból
         is származnak. Törölje a kézi sort.'
@@ -1707,6 +1721,18 @@ tui:
         findings_empty: Nincsenek megállapítások
         findings_heading: Ellenőrzési megállapítások
         identity: '{number} számla, kelte {date}'
+        label_reading:
+          busy_refused: 'Egy másik olvasás már használta a gép következtetési kapacitását,
+            ezért az olvasómodell nem futott. A címkék által olvasatlanul hagyott
+            {count} mező üres marad: {fields}. Olvassa be újra a dokumentumot, ha
+            az befejeződött.'
+          headroom_refused: 'Az olvasómodell nem töltődött be: ezen a gépen nem volt
+            elegendő szabad memória hozzá. A címkék által olvasatlanul hagyott {count}
+            mező üres marad: {fields}. Szabadítson fel memóriát, és olvassa be újra
+            a dokumentumot.'
+          reader_unavailable: 'A helyi olvasó nem futtatható, ezért a címkék által
+            olvasatlanul hagyott {count} mező üres marad: {fields}. Ellenőrizze az
+            olvasót, és olvassa be újra a dokumentumot.'
         line: '{index}. {description} · mennyiség: {quantity} · egységár: {unit_price}
           · adóalap: {base} · adókulcs: {rate} · áfa: {iva} · áfapótlék kulcsa: {recargo_rate}
           · áfapótlék: {recargo}'

@@ -6,7 +6,10 @@ from dataclasses import dataclass
 
 import typer
 
-from ...application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from ...application.aggregation.invoice_retencion import (
+    InvoiceWithholdingDefectsError,
+    InvoiceWithholdingEvidenceRequest,
+)
 from ...application.aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
 from ...application.modelo.invoice_withholding_capture_operation import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
@@ -110,6 +113,8 @@ def aggregate_modelo_with_received_invoice_retencion(
             refusal_code=completed.refusal_code,
         ) from None
     if refusal_reason is not None:
+        if projection.refusal_defects:
+            raise InvoiceWithholdingDefectsError(projection.refusal_defects)
         raise typer.BadParameter(refusal_reason)
     return ModeloInvoiceWithholdingCaptureRead(completion=completed, projection=projection)
 

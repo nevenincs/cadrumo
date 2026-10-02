@@ -1,6 +1,6 @@
 """Drift gates binding the environment-overrides surface to the settings model.
 
-Three surfaces describe the same closed set of environment overrides:
+Three surfaces describe the product environment overrides:
 
 - :class:`cadrumo.core.config.Settings` — the live model, the source of truth;
 - ``docs/reference/environment-overrides.md`` — the generated reference page
@@ -37,6 +37,21 @@ _KEY_RE = re.compile(r"^#?\s*([A-Z][A-Z0-9_]+)=", re.MULTILINE)
 #: through the product settings model.
 _DEVELOPMENT_TOOLING_KEYS = frozenset({DEV_CACHE_ROOT_ENV, *DELIVERY_CREDENTIAL_ENV})
 
+#: Runner and SDK inputs read outside product Settings. Inherited run IDs and
+#: artifact paths are intentionally absent: the harness creates those itself.
+_TEST_RUNNER_KEYS = frozenset(
+    {
+        "CADRUMO_PYTEST_WORKERS",
+        "CADRUMO_SCRATCH_BASE",
+        "VAULTSPEC_CI_REPORTS",
+        "VAULTSPEC_CI_REPORT_NAME",
+        "AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH",
+        "AEAT_GOOGLE_LIVE_PROFILE",
+        "AEAT_IMPERSONATION_TARGET_PRINCIPAL",
+        "GOOGLE_APPLICATION_CREDENTIALS",
+    },
+)
+
 
 def _settings_env_names() -> frozenset[str]:
     """Return the names an environment source can actually populate.
@@ -60,9 +75,9 @@ def test_generated_page_is_fresh() -> None:
 
 
 def test_env_example_keys_all_resolve_to_settings_fields() -> None:
-    """Every key in env/.env.example is a live Settings env name."""
+    """Every template key is read by Settings or the declared tooling/SDKs."""
     keys = frozenset(_KEY_RE.findall(_ENV_EXAMPLE.read_text(encoding="utf-8")))
-    dead = sorted(keys - _settings_env_names() - _DEVELOPMENT_TOOLING_KEYS)
+    dead = sorted(keys - _settings_env_names() - _DEVELOPMENT_TOOLING_KEYS - _TEST_RUNNER_KEYS)
     assert not dead, f"env/.env.example keys with no Settings field (dead knobs): {dead}"
 
 

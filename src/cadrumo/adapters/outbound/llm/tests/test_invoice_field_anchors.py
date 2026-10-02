@@ -46,6 +46,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
@@ -546,9 +547,16 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         Read off the compiled snapshot rather than the TOML, so the comparison is
         against what the authority actually serves. Stored as fractions because a
         ledger row carries a fraction; scaled here because a printed invoice --
-        and the prompt -- states a percentage.
+        and the prompt -- states a percentage. The rates an edition can record do
+        not depend on its authority grade, and a year's edition may be authored
+        below filing grade, so the snapshot is taken at the lowest rung.
         """
-        snapshot = published_snapshot("390", filing_year=period.filing_year, period=str(period.code))
+        snapshot = published_snapshot(
+            "390",
+            filing_year=period.filing_year,
+            period=str(period.code),
+            grade=RegistryAuthorityGrade.APPLICABILITY,
+        )
         rates: set[Decimal] = set()
         for binding in snapshot.revision.bindings:
             applied = getattr(binding.provider, "applied_rates", None)

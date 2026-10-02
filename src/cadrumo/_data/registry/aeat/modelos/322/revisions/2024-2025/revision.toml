@@ -2,7 +2,7 @@
 casilla_storage_baseline = "2023"
 binding_source_refs = ["aeat-dr-322-2024-2025", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 formula_source_refs = ["aeat-dr-322-2024-2025", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", cause = "predecessor_row_without_lineage", legal_refs = ["orden-eha-3434-2007:art-1"], source_refs = ["aeat-dr-322-2024-2025"] } }
+predecessor = { none = { reason = "No legal predecessor is declared. The root was introduced on the converter's predecessor-row-without-lineage diagnostic against '2023', a materialisation limit and not an official-structure claim: the 2024-2025 record design (aeat-dr-322-2024-2025) keeps every casilla of the 2023 edition and adds boxes [165] to [173]. The payload is stored against the '2023' edition through casilla_storage_baseline and family_storage_baseline, so this edition states only its differences: the nine new boxes and their positions, each kept row's continuity claim, the 2024 and 2025 deadline windows, its generated export layout, and overrides moving the inherited formula, binding, link, construct and verification references to the 2024-2025 design. Storage reuse makes no continuity claim; naming '2023' as legal predecessor is a separate continuity decision.", cause = "predecessor_row_without_lineage", legal_refs = ["orden-eha-3434-2007:art-1"], source_refs = ["aeat-dr-322-2024-2025"] } }
 casilla_source_refs = ["aeat-dr-322-2024-2025"]
 live_cross_reference_source_refs = ["aeat-modelo-322-procedure"]
 application_link_source_refs = ["aeat-modelo-322-procedure"]

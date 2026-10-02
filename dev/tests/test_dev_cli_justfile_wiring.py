@@ -15,7 +15,7 @@ _EXPECTED_WIRING: Final[dict[str, str]] = {
     "dev.docs.terminology.coverage": "report-terminology-coverage",
     "dev.docs.terminology.synonyms": "docs-synonyms-maintain",
     "dev.docs.terminology_handbook": "docs-terminology-report",
-    "dev.env": "doctor-dev",
+    "dev.env": "setup-env",
     "dev.identity": "check-identity",
     "dev.locales": "check-locales",
     "dev.release": "release-preview",

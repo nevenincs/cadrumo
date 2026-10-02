@@ -557,6 +557,12 @@ sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instruc
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2023-2024", id = "modelo-202-incn-prior-12-months"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions", required_text = ["importe neto de la cifra de negocios"]}], source_refs = ["aeat-modelo-202-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
 family = "workbook_parity_refs"
 selector = {revision = "2023-2024", id = "modelo-202-dr-xlsx"}
 fields = {fixture_id = "modelo-202-2025-record-design-layout", workbook_source = "aeat-dr-202-2025"}

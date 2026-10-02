@@ -1,0 +1,528 @@
+# Modelo 220 ejercicio 2023 casillas, each declared where the 2023 record design
+# aeat-dr-220-2023 (03-220-ejercicio-2023.xlsm) prints it, on the record sheets the
+# 2024 edition models. 1761 rows: 88 declaration-header rows and the rest on 38
+# record sheets. A row is stated when the 2023 design prints the same field -- the same box
+# number on the same sheet, or for an unnumbered field the same caption -- with a caption
+# equal to the 2024 one, equal once the period year it names is read as 2023, or
+# differing only in wording the comment above the row records. A field the 2023 design
+# places at other byte positions keeps its caption and takes the 2023 positions in its
+# number (and, for a positional id, in its id).
+#
+# NOT DECLARED HERE, recorded as debt rather than guessed: 258 rows of the 2024 edition --
+# 148 on sheets the 2023 design does not print (T22007A01, T22012A01, T22012A11),
+# 69 whose box or caption the 2023 sheet does not print, 38 whose 2023 caption
+# states a different text that no adjudication here reconciles, and 3 the 2023 sheet
+# prints more than once without saying which occurrence is meant. Boxes the 2023 design
+# prints that the 2024 edition does not declare, and the record sheets it leaves
+# unmodelled, are not declared either.
+#
+# These rows state no legal_refs: each takes the edition's orden_aplicabilidad,
+# orden-hac-495-2024:art-1, which approves the Modelo 220 of anexo II for the periods
+# this edition covers. Labels live in the locale catalogue under this edition's keys.
+
+
+# ---- record T22003A00
+
+# @169+17 N. ACTIVO. Participaciones en entidades del grupo no consolidadas. [00152]
+[[revisions."2023".casillas]]
+id = "T22003B02:00152"
+number = "00152"
+segmento = "T22003B02"
+section = ["liquidacion", "balance_consolidado_activo_aseguradoras"]
+
+# @356+17 N. OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras. Beneﬁcios, otras empresas [00321]
+[[revisions."2023".casillas]]
+id = "T22004B00:00321"
+number = "00321"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+
+# @373+17 N. OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras. Pérdidas, empresas del grupo asociadas y vinculadas [00322]
+[[revisions."2023".casillas]]
+id = "T22004B00:00322"
+number = "00322"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+
+# @390+17 N. OPERACIONES CONTINUADAS (cont.). Resultados por enajenaciones y otras. Pérdidas, otras empresas [00323]
+[[revisions."2023".casillas]]
+id = "T22004B00:00323"
+number = "00323"
+segmento = "T22004B00"
+section = ["liquidacion", "cuenta_perdidas_ganancias_resultado_financiero"]
+
+# @339+17 N. Base imponible del grupo, previa a la aplicación de las reservas de capitalización y a la compensación de bases imponibles negativas de períodos anteriores [00550]
+[[revisions."2023".casillas]]
+id = "T22007000:00550"
+continuidad_id = "t22007000-00550"
+number = "00550"
+segmento = "T22007000"
+section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
+
+# @135+17 Num. Límite art. 16.1 y 16.2 LIS. g) Gastos financieros del grupo del período impositivo (= [c1+f]) [03203]
+[[revisions."2023".casillas]]
+id = "T22007M00:03203"
+number = "03203"
+segmento = "T22007M00"
+section = ["liquidacion", "limitacion_gastos_financieros_art_16_1_16_2"]
+
+# @118+17 Num. IMPUESTO SOBRE SOCIEDADES. Ingresos y gastos directamente imputados al patrimonio neto. (A) [00522]
+[[revisions."2023".casillas]]
+id = "T22008B00:00522"
+number = "00522"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+
+# @135+17 Num. IMPUESTO SOBRE SOCIEDADES. Ingresos y gastos directamente imputados al patrimonio neto. (D) [00523]
+[[revisions."2023".casillas]]
+id = "T22008B00:00523"
+number = "00523"
+segmento = "T22008B00"
+section = ["liquidacion", "consolidacion_resultados_bases"]
+
+# @101+17 Num. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Bonificación rendimientos por venta bienes corporales producidos en Illes Balears (DA 70.Cinco Ley 31/2022) (pág. 11) [01375]
+[[revisions."2023".casillas]]
+id = "T22009000:01375"
+continuidad_id = "t22009000-01375"
+number = "01375"
+segmento = "T22009000"
+section = ["liquidacion", "liquidacion_del_grupo"]
+
+# @441+17 Num. Otras deducciones. Cuota líquida. Deducciones por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) (pág. 14 ter). [02354]
+[[revisions."2023".casillas]]
+id = "T22009000:02354"
+continuidad_id = "t22009000-02354"
+number = "02354"
+segmento = "T22009000"
+section = ["liquidacion", "liquidacion_del_grupo"]
+
+# @1053+17 N. Liquidación. Resultado de la autoliquidación. Estado. [02538]
+[[revisions."2023".casillas]]
+id = "T22009000:02538"
+continuidad_id = "t22009000-02538"
+number = "02538"
+segmento = "T22009000"
+section = ["liquidacion", "liquidacion_del_grupo"]
+
+# @1070+17 N. Liquidación. Resultado de la autoliquidación. D. Forales/Navarra. [02539]
+[[revisions."2023".casillas]]
+id = "T22009000:02539"
+continuidad_id = "t22009000-02539"
+number = "02539"
+segmento = "T22009000"
+section = ["liquidacion", "liquidacion_del_grupo"]
+
+# ---- record T22009001
+
+# @76+17 Num. Bonificación rendimientos por venta bienes corporales producidos en Illes Balears (DA 70.Cinco Ley 31/2022). 1
+[[revisions."2023".casillas]]
+id = "T22011000:t22011000.76-92"
+number = "t22011000.76-92"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+
+# @144+17 Num. Bonificaciones empresas navieras en Canarias (art. 76 Ley.19/1994).1
+[[revisions."2023".casillas]]
+id = "T22011000:t22011000.144-160"
+number = "t22011000.144-160"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+
+# @3547+17 Num. Bonificación rendimientos por venta bienes corporales producidos en Illes Balears (DA 70.Cinco Ley 31/2022). Total [01375]
+[[revisions."2023".casillas]]
+id = "T22011000:01375"
+number = "01375"
+segmento = "T22011000"
+section = ["liquidacion", "detalle_bonificaciones"]
+
+# @288+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004.Per. ant: Ded.pendiente. Ejercicio de generación. 2012 [00112]
+[[revisions."2023".casillas]]
+id = "T22012000:00112"
+number = "00112"
+segmento = "T22012000"
+section = ["liquidacion", "di_interna_rdleg_4_2004"]
+
+# @1104+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna ejerc. anteriores: DI interna 2023(*). Deducción pendiente. [01376]
+[[revisions."2023".casillas]]
+id = "T22012000:01376"
+number = "01376"
+segmento = "T22012000"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1121+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna ejerc. anteriores: DI interna 2023(*).2023 deducción pendiente. [01377]
+[[revisions."2023".casillas]]
+id = "T22012000:01377"
+number = "01377"
+segmento = "T22012000"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1138+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna ejerc. anteriores: DI interna 2023(*). Aplicado en esta liquidación. [01378]
+[[revisions."2023".casillas]]
+id = "T22012000:01378"
+number = "01378"
+segmento = "T22012000"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1155+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna ejerc. anteriores: DI interna 2023(*). Pendiente de aplicación en períodos futuros. [01379]
+[[revisions."2023".casillas]]
+id = "T22012000:01379"
+number = "01379"
+segmento = "T22012000"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1189+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna ejerc. anteriores:Total. 2023 deducción pendiente. [01964]
+[[revisions."2023".casillas]]
+id = "T22012000:01964"
+number = "01964"
+segmento = "T22012000"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1240+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna 2023. Deducción generada. [01967]
+[[revisions."2023".casillas]]
+id = "T22012000:01967"
+number = "01967"
+segmento = "T22012000"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1291+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). Total. Deducción generada. [01970]
+[[revisions."2023".casillas]]
+id = "T22012000:01970"
+number = "01970"
+segmento = "T22012000"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @2107+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2015. 2023 deducción pendiente [03246]
+[[revisions."2023".casillas]]
+id = "T22012000:03246"
+number = "03246"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2175+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. 2023 deducción pendiente [01975]
+[[revisions."2023".casillas]]
+id = "T22012000:01975"
+number = "01975"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2243+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. 2023 deducción pendiente [00928]
+[[revisions."2023".casillas]]
+id = "T22012000:00928"
+number = "00928"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2311+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. 2023 deducción pendiente [02643]
+[[revisions."2023".casillas]]
+id = "T22012000:02643"
+number = "02643"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2379+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. 2023 deducción pendiente [01199]
+[[revisions."2023".casillas]]
+id = "T22012000:01199"
+number = "01199"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2447+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. 2023 deducción pendiente [02360]
+[[revisions."2023".casillas]]
+id = "T22012000:02360"
+number = "02360"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2515+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. 2023 deducción pendiente [02819]
+[[revisions."2023".casillas]]
+id = "T22012000:02819"
+number = "02819"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2583+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. 2023 deducción pendiente [01638]
+[[revisions."2023".casillas]]
+id = "T22012000:01638"
+number = "01638"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2634+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023(*). Deducción pendiente [01380]
+[[revisions."2023".casillas]]
+id = "T22012000:01380"
+number = "01380"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2651+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023(*). 2023 deducción pendiente [01381]
+[[revisions."2023".casillas]]
+id = "T22012000:01381"
+number = "01381"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2668+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023(*). Aplicado en esta liquidación [01382]
+[[revisions."2023".casillas]]
+id = "T22012000:01382"
+number = "01382"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2685+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023(*). Pendiente de aplicación períodos futuros [01408]
+[[revisions."2023".casillas]]
+id = "T22012000:01408"
+number = "01408"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2719+17 Num. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: Total. 2023 deducción pendiente [03250]
+[[revisions."2023".casillas]]
+id = "T22012000:03250"
+number = "03250"
+segmento = "T22012000"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2532+17 Num. Deducciones doble imposición internacional LIS. DI internac. períodos anteriores. DI internacional 2023(*). Deducción pendiente [02155]
+[[revisions."2023".casillas]]
+id = "T22012B00:02155"
+number = "02155"
+segmento = "T22012B00"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2549+17 Num. Deducciones doble imposición internacional LIS. DI internac. períodos anteriores. DI internacional 2023(*). 2023: deducción pendiente [02156]
+[[revisions."2023".casillas]]
+id = "T22012B00:02156"
+number = "02156"
+segmento = "T22012B00"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2566+17 Num. Deducciones doble imposición internacional LIS. DI internac. períodos anteriores. DI internacional 2023(*). Aplicado en esta liquidación [02157]
+[[revisions."2023".casillas]]
+id = "T22012B00:02157"
+number = "02157"
+segmento = "T22012B00"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2583+17 Num. Deducciones doble imposición internacional LIS. DI internac. períodos anteriores. DI internacional 2023(*). Pendiente de aplicación períodos futuros [02158]
+[[revisions."2023".casillas]]
+id = "T22012B00:02158"
+number = "02158"
+segmento = "T22012B00"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @1104+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna ejerc. anteriores: DI interna 2023(*). Deducción pendiente [02151]
+[[revisions."2023".casillas]]
+id = "T22012B00:02151"
+number = "02151"
+segmento = "T22012B00"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1121+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna ejerc. anteriores: DI interna 2023(*). 2023 deducción pendiente [02152]
+[[revisions."2023".casillas]]
+id = "T22012B00:02152"
+number = "02152"
+segmento = "T22012B00"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1138+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna ejerc. anteriores: DI interna 2023(*). Aplicado en esta liquidación [02153]
+[[revisions."2023".casillas]]
+id = "T22012B00:02153"
+number = "02153"
+segmento = "T22012B00"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1155+17 Num. Deducciones doble imposición interna (DT 23ª.1 LIS). DI interna ejerc. anteriores: DI interna 2023(*). Pendiente de aplicación en períodos futuros [02154]
+[[revisions."2023".casillas]]
+id = "T22012B00:02154"
+number = "02154"
+segmento = "T22012B00"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# ---- record T22012B10
+
+# @1160+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. : 2023 deducción pendiente [06140]
+[[revisions."2023".casillas]]
+id = "T22012B10:06140"
+number = "06140"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1211+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023(*). Deducción pendiente [02159]
+[[revisions."2023".casillas]]
+id = "T22012B10:02159"
+number = "02159"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1228/2770+6 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023(*). Tipo gravamen período generación [02160]
+[[revisions."2023".casillas]]
+id = "T22012B10:02160"
+number = "02160"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+
+# @1234+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023(*). : 2023 deducción pendiente [02161]
+[[revisions."2023".casillas]]
+id = "T22012B10:02161"
+number = "02161"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1251+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023(*). Aplicado en esta liquidación [02196]
+[[revisions."2023".casillas]]
+id = "T22012B10:02196"
+number = "02196"
+segmento = "T22012B10"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1541+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2007 [01400]
+[[revisions."2023".casillas]]
+id = "T22012B10:01400"
+number = "01400"
+segmento = "T22012B10"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+
+# @2702+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna 2022. : 2023 deducción pendiente [06144]
+[[revisions."2023".casillas]]
+id = "T22012B10:06144"
+number = "06144"
+segmento = "T22012B10"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2753+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna 2023(*). Deducción pendiente [02198]
+[[revisions."2023".casillas]]
+id = "T22012B10:02198"
+number = "02198"
+segmento = "T22012B10"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2776+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna 2023(*). : 2023 deducción pendiente [02199]
+[[revisions."2023".casillas]]
+id = "T22012B10:02199"
+number = "02199"
+segmento = "T22012B10"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2793+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna 2023(*). Aplicado en esta liquidación [02200]
+[[revisions."2023".casillas]]
+id = "T22012B10:02200"
+number = "02200"
+segmento = "T22012B10"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2810+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna 2023(*). Pendiente de aplicación períodos futuros [02201]
+[[revisions."2023".casillas]]
+id = "T22012B10:02201"
+number = "02201"
+segmento = "T22012B10"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @1160+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna. 2022.: 2023 deducción pendiente [06319]
+[[revisions."2023".casillas]]
+id = "T22012B20:06319"
+number = "06319"
+segmento = "T22012B20"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1211+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna. 2023(*). Deducción pendiente [02202]
+[[revisions."2023".casillas]]
+id = "T22012B20:02202"
+number = "02202"
+segmento = "T22012B20"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1228/2770+6 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna. 2023(*). Tipo gravamen período generación [02203]
+[[revisions."2023".casillas]]
+id = "T22012B20:02203"
+number = "02203"
+segmento = "T22012B20"
+section = ["liquidacion", "di_interna_dt23_lis"]
+data_type = "ratio"
+
+# @1234+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna. 2023(*).: 2023 deducción pendiente [02204]
+[[revisions."2023".casillas]]
+id = "T22012B20:02204"
+number = "02204"
+segmento = "T22012B20"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1251+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna. 2023(*). Aplicado en esta liquidación [02205]
+[[revisions."2023".casillas]]
+id = "T22012B20:02205"
+number = "02205"
+segmento = "T22012B20"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1268+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna. 2023.(*) Pendiente de aplicación en ejerc. futuros [02206]
+[[revisions."2023".casillas]]
+id = "T22012B20:02206"
+number = "02206"
+segmento = "T22012B20"
+section = ["liquidacion", "di_interna_dt23_lis"]
+
+# @1780+17 Num. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNACIONAL RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2010 [05626]
+[[revisions."2023".casillas]]
+id = "T22012B20:05626"
+number = "05626"
+segmento = "T22012B20"
+section = ["liquidacion", "di_internacional_rdleg_4_2004"]
+
+# @2628+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna. 2021. 2023 deducción pendiente [04541]
+[[revisions."2023".casillas]]
+id = "T22012B20:04541"
+number = "04541"
+segmento = "T22012B20"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2753+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna. 2023(*). Deducción pendiente [02207]
+[[revisions."2023".casillas]]
+id = "T22012B20:02207"
+number = "02207"
+segmento = "T22012B20"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2776+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna. 2023(*). 2023 deducción pendiente [02208]
+[[revisions."2023".casillas]]
+id = "T22012B20:02208"
+number = "02208"
+segmento = "T22012B20"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2793+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna. 2023(*). Aplicado en esta liquidación [02209]
+[[revisions."2023".casillas]]
+id = "T22012B20:02209"
+number = "02209"
+segmento = "T22012B20"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2810+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. DI interna. 2023(*). Pendiente de aplicación períodos futuros [02210]
+[[revisions."2023".casillas]]
+id = "T22012B20:02210"
+number = "02210"
+segmento = "T22012B20"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @2844+17 Num. Deducciones doble imposición internacional LIS. DI interna. períodos anteriores. Total. 2023: deducción pendiente [05652]
+[[revisions."2023".casillas]]
+id = "T22012B20:05652"
+number = "05652"
+segmento = "T22012B20"
+section = ["liquidacion", "di_internacional_lis"]
+
+# @1942+17 N. Determinación del líquido a ingresar o devolver en cada una de las administraciones. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2023. Navarra. [03296]
+[[revisions."2023".casillas]]
+id = "T22016000:03296"
+continuidad_id = "t22016000-03296"
+number = "03296"
+segmento = "T22016000"
+section = ["liquidacion", "reparto_foral"]
+
+# @233+11 An. Devolución (4) - Código SWIFT-BIC. {DID_dev_swift_bic} (sólo Resto de paises/no SEPA)
+[[revisions."2023".casillas]]
+id = "T220DID00:t220did00.233-243"
+continuidad_id = "documento-ingreso-devolucion-swift-bic"
+number = "t220did00.233-243"
+segmento = "T220DID00"
+section = ["documento_ingreso_devolucion", "devolucion"]
+data_type = "bic"

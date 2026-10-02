@@ -618,7 +618,7 @@ class TestTypoTwinWarning:
             (
                 "200",
                 "2024",
-                "00501",
+                "DP200012:00501",
                 "is_liquidacion_i_importe",
             ),
             (
@@ -1239,12 +1239,20 @@ class TestSignedCuotaResultadoRoles:
             }
         }
 
-        assert signed_roles == {
-            ("100", "2024", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
-            ("100", "2025", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
-            ("200", "2024", "DP200014B:00599", "is_resultado_ingresar_o_devolver", "money"),
-            ("200", "2025-y-siguientes", "DP200014B:00599", "is_resultado_ingresar_o_devolver", "money"),
+        # Each modelo binds its signed result to one committed casilla and data type in
+        # every edition that carries the role; which editions carry it is read from the
+        # registry rather than listed here.
+        assert {
+            (modelo_id, casilla_id, role, data_type) for modelo_id, _rev, casilla_id, role, data_type in signed_roles
+        } == {
+            ("100", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
+            ("200", "DP200014B:00599", "is_resultado_ingresar_o_devolver", "money"),
         }
+        for modelo in modelos.values():
+            newest = max(modelo.revisions.values(), key=lambda revision: revision.valid_from)
+            assert (modelo.id, newest.id) in {
+                (modelo_id, revision_id) for modelo_id, revision_id, *_ in signed_roles
+            }, f"modelo {modelo.id}'s newest edition {newest.id} binds no signed result role"
 
         stale_is_role_members = [item for item in signed_roles if item[3] == "resultado_ingresar_o_devolver_is"]
         assert stale_is_role_members == []

@@ -21,9 +21,11 @@ stored MIME type:
   :func:`~application.ledger.invoice_label_reader.read_invoice_fields_by_labels`.
   When those rules read every required field no model runs; otherwise the
   fields they could not read come from
-  :func:`~llm.extract_invoice_fields_from_text`, and an unreachable model leaves
-  the rule reading standing. Either way the draft is grounded against that
-  same transcription by
+  :func:`~llm.extract_invoice_fields_from_text`. An unreachable model, or a
+  fill admission control refuses for lack of headroom or because another read
+  holds every on-host inference slot, leaves the rule reading standing, and the
+  draft records why so the operator is told. Either way the draft is grounded
+  against that same transcription by
   :func:`~application.ledger.grounded_reading.ground_draft_against_transcription`. The
   transcription is produced by a DIFFERENT reader than the one that proposes
   values, which is what makes the anchor check an external check rather than a
@@ -102,6 +104,8 @@ from .evidence_textlayer import transcribe_text_layer
 from .invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
+    InvoiceDraftReaderBusyRefusedError,
+    InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
     VisionImage,
@@ -110,9 +114,11 @@ from .invoice_draft_records import (
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
+    LabelReadingFallback,
+    LabelReadingFallbackCause,
     facturae_invoice_class_findings,
 )
-from .invoice_label_reader import merge_label_reading_with_model_draft, read_invoice_fields_by_labels
+from .invoice_label_reader import LabelReading, merge_label_reading_with_model_draft, read_invoice_fields_by_labels
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
@@ -501,6 +507,9 @@ def _read_transcription_semantically(
         PurchaseInvoiceEvidenceInputError: When the semantic reader cannot be
             run. Deliberately OUTSIDE the caller's fallback ``try`` -- see
             :func:`_refuse_a_text_read_with_no_reader`.
+        Exception: Admission control's own headroom or occupancy refusal,
+            unchanged, when the model read is the whole read rather than a fill
+            over a partial label reading.
     """
     from .grounded_reading import ground_draft_against_transcription
     from .invoice_extraction_authority import resolve_invoice_extraction_authority_values
@@ -520,6 +529,7 @@ def _read_transcription_semantically(
         if transcription.transcriber.origin is FieldOrigin.TEXT_LAYER
         else None
     )
+    fallback: LabelReadingFallback | None = None
     if labels is not None and labels.complete:
         read = labels.draft
     else:
@@ -532,11 +542,32 @@ def _read_transcription_semantically(
                 _refuse_a_text_read_with_no_reader(exc.cause)
             # The rule reading stands; the fields it could not read stay empty
             # and confirm asks the operator for them.
-            get_logger(__name__).info(
-                "semantic reader unavailable; label reading stands with %d field(s) unread",
-                len(labels.missing_required_fields),
-            )
             read = labels.draft
+            fallback = _label_reading_fallback(
+                labels,
+                cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
+                reader_error=exc.cause,
+                failed_condition_id=None,
+            )
+        except (InvoiceDraftReaderHeadroomRefusedError, InvoiceDraftReaderBusyRefusedError) as exc:
+            if labels is None or not labels.read_fields:
+                # The model read was the whole read, not a fill, so the refusal
+                # stands exactly as admission control raised it.
+                raise exc.cause from None
+            # The model fill was optional: the refusal is respected by leaving
+            # the model unloaded, and the rule reading stands as it does for an
+            # unavailable reader.
+            read = labels.draft
+            fallback = _label_reading_fallback(
+                labels,
+                cause=(
+                    LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED
+                    if isinstance(exc, InvoiceDraftReaderHeadroomRefusedError)
+                    else LabelReadingFallbackCause.INFERENCE_SLOT_BUSY
+                ),
+                reader_error=exc.cause,
+                failed_condition_id=exc.failed_condition_id,
+            )
         else:
             read = model_read if labels is None else merge_label_reading_with_model_draft(labels, model_read)
     grounded_input = read.model_copy(
@@ -555,12 +586,40 @@ def _read_transcription_semantically(
             ),
         },
     )
-    return ground_draft_against_transcription(
+    grounded = ground_draft_against_transcription(
         draft=grounded_input,
         transcription=transcription,
         legends=legends,
         operation=operation,
         taxpayer_tax_id=taxpayer_tax_id,
+    )
+    return grounded if fallback is None else grounded.with_label_reading_fallback(fallback)
+
+
+def _label_reading_fallback(
+    labels: LabelReading,
+    *,
+    cause: LabelReadingFallbackCause,
+    reader_error: Exception,
+    failed_condition_id: str | None,
+) -> LabelReadingFallback:
+    """Record that a partial label reading stands because its model fill did not run.
+
+    The draft then carries the reason to the operator, so the fields left empty
+    read as a reading the machine could not finish rather than as a document
+    that does not print them.
+    """
+    unread_fields = tuple(sorted(labels.missing_required_fields))
+    get_logger(__name__).info(
+        "model fill did not run (%s); label reading stands with %d field(s) unread",
+        cause.value,
+        len(unread_fields),
+    )
+    return LabelReadingFallback(
+        cause=cause,
+        unread_fields=unread_fields,
+        reader_error_type=type(reader_error).__name__,
+        failed_condition_id=failed_condition_id,
     )
 
 

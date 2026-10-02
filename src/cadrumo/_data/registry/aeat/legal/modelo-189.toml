@@ -117,6 +117,27 @@ required_text = [
     "Se introducen las siguientes modificaciones en la Orden EHA/3481/2008",
 ]
 
+[legal."orden-hfp-115-2022:df-primera"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/xml/orden-hfp-115-2022-df-primera.xml#df"
+document_id = "BOE-A-2022-2980"
+article = "disposición final primera"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-2980#df"
+published_at = 2022-02-25
+effective_from = 2022-02-26
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block df, single redaction fecha_vigencia 20220226, incorporating the corrections BOE-A-2022-3810 and BOE-A-2022-4629); pending operator re-stamp"
+notes = "Orden HFP/115/2022 disposicion final primera: modifica el anexo II de la Orden EHA/3481/2008 (modelo 189). NOMINAL UNITARIO DE LOS VALORES pasa a las posiciones 146-163 del registro de tipo 2 (146-159 parte entera, 160-163 parte decimal) y BLANCOS a 164-500. Es la ultima modificacion del anexo II antes de las Ordenes HFP/1180/2023 y HFP/1284/2023, que se aplican por primera vez al ejercicio 2023, segun el analisis del BOE de BOE-A-2008-19523; rige por tanto la declaracion del ejercicio 2022."
+required_text = [
+    "Nominal unitario de los valores.",
+    "146-159 Parte entera del importe del nominal unitario de la operación.",
+    "160-163 Parte decimal del importe del nominal unitario de la operación.",
+    "164-500",
+]
+
 [sources."aeat-modelo-189-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -213,4 +234,25 @@ retrieved_at = 2026-07-01
 published_at = 2026-02-27
 applies_from = 2026-02-28
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-4521"
+review_status = "pending_review"
+
+
+# AEAT's design "189 - Orden EHA/3481/2008, de 1 de diciembre (actualizada por la
+# Orden HFP/115/2022, de 23 de febrero)", headed "Ejercicio 2021". The BOE
+# analysis of BOE-A-2008-19523 lists the anexo II amendments in order: Orden
+# HFP/1351/2021 (first applicable to the 2021 declarations presented in 2022),
+# Orden HFP/115/2022, then Ordenes HFP/1180/2023 and HFP/1284/2023, both first
+# applicable to ejercicio 2023. So this design governs ejercicios 2021 and 2022.
+[sources."aeat-dr-189-2021-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2021"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf"
+sha256 = "9cfcec402edf965492be9c0d2aed91eed5e2b58e0f37e52bbc9c24af47f26421"
+bytes = 244444
+retrieved_at = 2026-10-01
+applies_from = 2021-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/Dr_189_2022.pdf"
 review_status = "pending_review"

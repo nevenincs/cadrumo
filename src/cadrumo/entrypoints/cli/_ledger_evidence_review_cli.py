@@ -38,6 +38,7 @@ from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva.establishment import StatedCountryCodeStatus
+from ._evidence_field_notices import label_reading_fallback_notices
 from .common import bad, emit_envelope, resolve_notice_action
 from .ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
@@ -447,6 +448,8 @@ def _review_view_notices(
         projection.party_attribution_advisory,
         projection.country_vocabulary_advisory,
     )
+    fallback = projection.draft.label_reading_fallback
+    notices.extend(label_reading_fallback_notices(None if fallback is None else fallback.to_fallback()))
     if blockers:
         notices.append(
             Notice(

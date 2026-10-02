@@ -1270,7 +1270,7 @@ modelo:
           el Cens d'empresaris, professionals i retenidors.
         title: Cens d'empresaris, professionals i retenidors
       revision:
-        2023-hasta-2025-02-02:
+        2022-hasta-2023-04-24:
           casilla:
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
               label: Identificació. Domini o adreça d'internet (segon)
@@ -1336,7 +1336,10 @@ modelo:
               label: Percentatge de liquidació, participació o herència del successor
                 o beneficiari (successor 13f)
           field:
-            label: Model 036, des de 2023 fins al 2 de febrer de 2025
+            label: Model 036, des de 2022 fins al 24 d'abril de 2023
+        2023-hasta-2025-02-02:
+          field:
+            label: Model 036, des del 25 d'abril de 2023 fins al 2 de febrer de 2025
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:

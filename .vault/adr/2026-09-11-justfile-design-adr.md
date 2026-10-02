@@ -8,9 +8,9 @@ related:
 supersedes:
   - '2026-06-04-just-tooling-bootstrap-adr'
   - '2026-06-09-justfile-redesign-adr'
-modified: '2026-09-19'
+modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c2a31725107e41581d4e19756a07d9db376d9752ea6c06ca5d1ca8c093ed5eaa'
+body_hash: 'sha256:27782bd9b5c7ebb603c918c21f920b9ff9be23a94f2807221a953b953901b4d6'
 ---
 # `justfile-design` adr: `Operator-intent command and tooling boundaries` | (**status:** `accepted`)
 
@@ -57,7 +57,7 @@ Blocking verification uses subject aggregates for code, registry, and repository
 
 `audit-*` exposes advisory investigation. `report-*` renders findings or status with an explicit exit contract. Hard verdicts use `check-*`; mandatory security verdicts do not remain disguised as audits.
 
-`setup` performs minimal repository convergence. A distinct top-level `init` facade performs complete new-worktree provisioning: locked Python synchronization, default Vaultspec installation, RAG installation with its default external provisioning, and runtime-authority compilation. Optional browser and workstation provisioning stays separately named. Doctor recipes are read-only and capability-specific.
+`init` is the canonical complete repository initialization command: locked Python synchronization, default Vaultspec installation, browser provisioning, RAG installation with its default external provisioning, and runtime-authority compilation. Minimal `setup` remains a bounded subset for CI and other callers that do not provision those external resources; both paths share the same Python and tooling phase runner. Each provisioning operation has one owner. Optional workstation provisioning stays separately named. Doctor recipes are read-only and capability-specific. A request for sanity checks runs observation and verification commands; it does not itself authorize environment initialization.
 
 Documentation remains under `docs-*`, with names distinguishing checking, generation, building, serving, reporting, maintenance, infrastructure provisioning, and publication.
 
@@ -73,7 +73,7 @@ Within `dev/`, each primitive fact has one semantic owner. Alternate implementat
 
 ### Required public surface
 
-The setup surface is `init`, `setup`, `setup-python`, `setup-repository-tools`, `setup-env`, optional `setup-workstation-tools`, optional `setup-browser`, and read-only `setup-check`. `init` is the complete new-worktree facade; `setup` remains the minimal convergence facade. Diagnosis is `doctor-product`, `doctor-dev`, `doctor-python`, and `doctor-browser`.
+The setup surface is `init`, minimal `setup`, `setup-repository-tools`, `setup-env`, optional `setup-workstation-tools`, optional `setup-browser`, and read-only `setup-check`. `init` is the canonical repository initialization command. Its Python and tooling phases use the same owners as the bounded provisioning operations. Diagnosis is `doctor-product` and `doctor-browser`. The 2026-10-02 operator instruction removes the separate `setup-python`, `doctor-dev`, and `doctor-python` commands and the unused developer-toolchain doctor implementation. Remediation for stale Python dependencies points to `just init`; host requirements remain the initializer's preflight responsibility.
 
 Blocking subjects are `check-code`, `check-registry`, and `check-repository`, with `check-hooks` retained only as non-aggregated hook replay and dependency vulnerabilities exposed as an explicit blocking security check. Registry leaves distinguish validity, oracle bindings, per-target currentness, authority currency, and exact artifact-backed runtime loadability.
 

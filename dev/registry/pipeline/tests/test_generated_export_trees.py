@@ -27,6 +27,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
@@ -65,46 +66,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("g
 _GENERATED_TREES = generated_export_trees()
 _RECORD_DRIFT_DISPOSITIONS = {item.subject: item for item in record_drift_dispositions()}
 _RENDER_REFUSAL_DISPOSITIONS = {item.subject: item for item in render_refusal_dispositions()}
-#: Check mode's exact current refusal. A changed refusal makes the owning row red.
-_CHECK_MODE_PENDING: dict[str, str] = {
-    # The tree is published at calculation grade and reproduces exactly, but check
-    # mode validates the candidate as a filing snapshot, and the revision's
-    # relationship families are not yet resolved to filing grade. Retires, by
-    # failing the pass assertion below, the day the revision earns filing grade.
-    "m222-2025-y-siguientes": (
-        "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
-    ),
-    # The 2023 and 2024 editions are the same case as their in-force sibling
-    # above, from the same design family: each publishes a reproducing tree at
-    # calculation grade, and each still owes the relationship families the
-    # filing rung asserts. Both retire by the same pass assertion the day the
-    # revision earns filing grade.
-    "m222-2023": (
-        "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
-    ),
-    "m222-2024": (
-        "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
-    ),
-}
 
 
-def test_every_pending_check_mode_entry_names_an_enrolled_tree() -> None:
-    """A pending reason keyed to no row is unreachable, and unreachable is invisible.
+def _expected_filing_grade_refusals() -> dict[str, str]:
+    """The declared capability controls which targets must refuse a filing snapshot."""
+    authority = compiled_bundled_authority()
+    expected = {}
+    for tree in _GENERATED_TREES:
+        revision = authority.modelo(tree.modelo).revisions[tree.revision]
+        grade = revision.authority_grade or UNDECLARED_REGISTRY_AUTHORITY_GRADE
+        if grade is not RegistryAuthorityGrade.FILING:
+            expected[str(tree)] = (
+                f"declares '{grade.value}' authority grade, "
+                "which cannot satisfy the requested 'filing' snapshot authority"
+            )
+    return expected
 
-    ``_CHECK_MODE_PENDING`` is keyed by ``str(GeneratedExportTree)``, which embeds the
-    revision id, so renaming a row silently orphans its entry: the lookup returns
-    ``None``, check mode is then expected to PASS, and the recorded reason stops
-    being asserted without anything going red. That is the one failure this dict
-    cannot self-report, because every other drift in it surfaces as a refusal
-    that does not match its recorded text.
-    """
-    enrolled = {str(tree) for tree in _GENERATED_TREES}
-    orphaned = sorted(set(_CHECK_MODE_PENDING) - enrolled)
-    assert orphaned == [], (
-        f"pending check-mode entries name no enrolled tree: {orphaned}. A row rename must carry "
-        "its entry with it; deleting the entry instead silently drops the reason this gate is "
-        "allowed to be pending."
-    )
+
+_EXPECTED_FILING_GRADE_REFUSALS = _expected_filing_grade_refusals()
 
 
 def _published_layout(tree: GeneratedExportTree, root: Path) -> ExportLayoutDefinition:
@@ -234,10 +213,9 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
 
     Whether the generator's own `check_generated_export_tree` PASSES is a stronger
     question, because it validates the candidate through the real registry
-    authority and so demands a filing-complete, operator-reviewed revision. None of
-    the committed trees has reached that yet. Rather than skip the call or soften
-    it, the refusal is pinned to a named reason per tree, so the day a revision
-    becomes reviewable this test fails and the pin has to be removed.
+    authority at filing grade. A lower declared capability must refuse at that
+    boundary; a filing-grade target must pass the full check. The expected
+    refusal is selected from current authority rather than a revision roster.
     """
     joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     source_defects = source_defects_for(tree.source_ref)
@@ -380,7 +358,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         target_export_root=tree.committed,
         published_modelo_root=published_modelo_root,
     )
-    expected = _CHECK_MODE_PENDING.get(str(tree))
+    expected = _EXPECTED_FILING_GRADE_REFUSALS.get(str(tree))
     try:
         checked = check_generated_export_tree(
             context=context,
@@ -399,7 +377,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         return
     assert expected is None, (
         f"{tree}: check mode now PASSES, so the pending entry {expected!r} is stale -- remove it "
-        "from _CHECK_MODE_PENDING and let this gate assert the pass"
+        "from _EXPECTED_FILING_GRADE_REFUSALS and let this gate assert the pass"
     )
     assert str(checked.candidate.layout.id) == tree.layout_id
 
