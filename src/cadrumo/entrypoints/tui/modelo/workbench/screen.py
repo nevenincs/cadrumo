@@ -2285,6 +2285,14 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         load = self._load
         if load is None:
             return False
+        if self._active_apply_prerequisite() is not None:
+            self.action_issues()
+            self._state_apply_prerequisite()
+            return True
+        if self._session.dirty:
+            action = tr("tui.modelo.workbench.next.apply", count=len(self._session.changes))
+            self._notice(f"{action} [{_NEXT_KEYS[NextAction.APPLY]}]")
+            return True
         progress = self._progress(load)
         if not progress.filing_withheld:
             return False
@@ -2311,7 +2319,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             return
 
         def asked(request: WorkbenchExportRequest | None) -> None:
-            if request is not None:
+            if request is not None and not self._filing_withheld():
                 self._run_operation(partial(actions.export, request))
 
         self.app.push_screen(WorkbenchExportScreen(actions.export_offer()), asked)
@@ -2322,7 +2330,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
         def closed(confirmed: bool | None) -> None:
             if confirmed:
-                self._run_operation(submit)
+                if not self._filing_withheld() and not self._file_out_of_date():
+                    self._run_operation(submit)
             else:
                 self._notice(tr("application.modelo.lifecycle.file_cancelled"))
 

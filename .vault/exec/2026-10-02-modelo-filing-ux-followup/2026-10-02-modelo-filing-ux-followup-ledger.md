@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f529f9c9e1e9619acc3deff900b99293ccc41c8bb9c42eb272a7349f41f78ea'
+body_hash: 'sha256:968750713a62999685b0d49b14a73855eab351ac4bcba97459d95703eaeb9c07'
 related:
   - "[[2026-10-02-modelo-filing-ux-followup-plan]]"
 ---
@@ -127,6 +127,13 @@ related:
 - `S06` `verify:` `principal final recovery24 PNG/text current-copy and color review` -> `pass`
 - `S06` `verify:` `s04-locale-inventory-owned-final global census` -> `fail`
 - `S06` `by:` `vaultspec-high-executor`
+- `S07` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_pending_output.py`
+- `S07` `verify:` `s07-pending-output-corrected 22 cases` -> `pass`
+- `S07` `verify:` `s06-s07-ui-final 81 cases` -> `pass`
+- `S07` `verify:` `s04-final configured format lint types 31 explicit Python paths` -> `pass`
+- `S07` `verify:` `principal final native pending-output four contexts with actual Review R cue` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -136,3 +143,4 @@ related:
 - `S05` Initial return-contract consumer and wide test expectation were corrected before final checks. Native24 establishes identity, geometry and actions; `NO_COLOR` discovery excludes its severity-color acceptance, separately re-established in final correction captures.
 - `S05` Private-index header composition also normalized quotation of the same two owned proper-name leaves in ES/EN/HU without changing their values; actual touched paths are now explicit. Subsequent composition skips already matching values to avoid such syntax-only normalization.
 - `S06` Actual Modelo100 Apply remains an explained legacy-replay source refusal with unchanged saved1388 imported0 and retained0168 Yes; successful persistence, export wire and filing are unclaimed. The native40 source/24frames are immutable. Global census exit1 is classified in work/UX5-checks/s04-locale-inventory-final-disposition.json:25190 catalogue-only keys plus six inherited inventory/tool conditions and one missing frozen gettext source-manifest; required30040/30040, missing/repair/review/placeholder/discovery defects0. Earlier `NO_COLOR` and failed route/harness attempts remain evidence. Current shared register edits, including HU overlaps, are preserved and excluded from owned staged cells; native human HU review remains pending.
+- `S07` The direct e/export bypass is the reachable defect. Ordinary F8 already chose Apply while staged; the final filing callback guard is deliberate hardening. True, False, zero and clear plus late dialog changes retain drafts and call no export/record provider. Refusal copy is derived fresh from actual current count and `[R],` with active typed prerequisite taking Issues precedence. S06/S07 coexistence is verified by the final81-case and actual24-frame receipt; independent actual commit comparison is consolidated in S04.
