@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:77d66f022589c4629020e68fde4f4420f66d4585fd92c8fc69058a7982aa6f25'
+body_hash: 'sha256:5a08c61307e6e76527037efb135e89c6cc0075bfa87ef02915eee414aa9fef27'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -13,7 +13,6 @@ related:
 # `modelo-editor-workbench` ledger
 
 ## Changes
-
 
 - `S15` `A` `src/cadrumo/application/modelo/value_presentation.py`
 - `S15` `A` `src/cadrumo/application/modelo/tests/test_value_presentation.py`
@@ -1608,7 +1607,29 @@ related:
 - `S62` `verify:` `just registry-publish-authority` -> `pass`
 - `S62` `verify:` `just check-registry-gate (valid/runtime-load/integrity)` -> `pass`
 - `S62` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/application/modelo/tests/test_work_form_grids.py` -> `pass`
-
+- `S61` `M` `src/cadrumo/domain/iva/deduction_facts.py`
+- `S61` `A` `src/cadrumo/domain/iva/tests/test_deduction_evidence_authority_for_row.py`
+- `S61` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S61` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S61` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S61` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S61` `M` `src/cadrumo/application/modelo/finding_message_text.py`
+- `S61` `A` `src/cadrumo/application/modelo/tests/test_unrecordable_deduction_documents.py`
+- `S61` `M` `src/cadrumo/application/modelo/tests/test_verification_preconditions.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py`
+- `S61` `M` `src/cadrumo/locales/ca/application.yml`
+- `S61` `M` `src/cadrumo/locales/en/application.yml`
+- `S61` `M` `src/cadrumo/locales/es/application.yml`
+- `S61` `M` `src/cadrumo/locales/hu/application.yml`
+- `S61` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/domain/iva/tests/test_deduction_evidence_authority_for_row.py src/cadrumo/application/modelo/tests/test_unrecordable_deduction_documents.py src/cadrumo/application/modelo/tests/test_verification_preconditions.py src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py src/cadrumo/application/modelo/tests/test_export_evidence_gate.py src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py` -> `pass`
+- `S61` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py` -> `pass`
+- `S61` `verify:` `uv run --no-sync ty check src/cadrumo/domain/iva/deduction_facts.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/preconditions.py src/cadrumo/application/modelo/work_form_models.py src/cadrumo/application/modelo/work_form.py src/cadrumo/application/modelo/finding_message_text.py src/cadrumo/domain/iva/tests/test_deduction_evidence_authority_for_row.py src/cadrumo/application/modelo/tests/test_unrecordable_deduction_documents.py src/cadrumo/application/modelo/tests/test_verification_preconditions.py src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py` -> `pass`
+- `S61` `verify:` `uv run --no-sync pyrefly check src/cadrumo/domain/iva/deduction_facts.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/preconditions.py src/cadrumo/application/modelo/work_form_models.py src/cadrumo/application/modelo/work_form.py src/cadrumo/application/modelo/finding_message_text.py` -> `pass`
+- `S61` `verify:` `uv run --no-sync basedpyright src/cadrumo/domain/iva/deduction_facts.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/preconditions.py src/cadrumo/application/modelo/work_form_models.py src/cadrumo/application/modelo/work_form.py src/cadrumo/application/modelo/finding_message_text.py` -> `pass`
+- `S61` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/iva/deduction_facts.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/preconditions.py src/cadrumo/application/modelo/work_form_models.py src/cadrumo/application/modelo/work_form.py src/cadrumo/application/modelo/finding_message_text.py src/cadrumo/domain/iva/tests/test_deduction_evidence_authority_for_row.py src/cadrumo/application/modelo/tests/test_unrecordable_deduction_documents.py src/cadrumo/application/modelo/tests/test_verification_preconditions.py src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py` -> `pass`
+- `S61` `verify:` `uv run --no-sync ruff format --check src/cadrumo/domain/iva/deduction_facts.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/preconditions.py src/cadrumo/application/modelo/work_form_models.py src/cadrumo/application/modelo/work_form.py src/cadrumo/application/modelo/finding_message_text.py src/cadrumo/domain/iva/tests/test_deduction_evidence_authority_for_row.py src/cadrumo/application/modelo/tests/test_unrecordable_deduction_documents.py src/cadrumo/application/modelo/tests/test_verification_preconditions.py src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py` -> `pass`
+- `S61` `verify:` `git diff --check -- src/cadrumo/domain/iva/deduction_facts.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/preconditions.py src/cadrumo/application/modelo/work_form_models.py src/cadrumo/application/modelo/work_form.py src/cadrumo/application/modelo/finding_message_text.py src/cadrumo/domain/iva/tests/test_deduction_evidence_authority_for_row.py src/cadrumo/application/modelo/tests/test_unrecordable_deduction_documents.py src/cadrumo/application/modelo/tests/test_verification_preconditions.py src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py` -> `pass`
+- `S61` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1705,3 +1726,4 @@ related:
 - `S56` Four clearly synthetic typed portfolio/picker/period/external-details render surfaces are prepared. The required frozen current-tree four-language, two-size, two-theme render/review has not run yet; S56 remains open.
 - `S60` Current Modelo operations declare no REVIEW interaction; edit declares INPUT only. Shared review JSON is unreachable for these paths. Diagnostic/receipt references exist only at terminal settlement and the modal synchronously dismisses before the next paint. S60's current default Modelo surfaces satisfy the accepted operation/public-result contracts.
 - `S62` Final installation receipts and exact command exits are in C:/Users/hello/AppData/Local/Temp/modelo-s62-installation-sequence. Temporary reviewed disposition rows retired through their owner with other ledger content unchanged. Published generation bbea0e6a55b9de2ae3f4b5f00df110ac956bb604a0b8953aeac6463623595e3b; six real published-layout adoption cases pass. An initial default-unit selector deselected all six integration cases and is not passing evidence.
+- `S61` First focused run found fixture omissions, missing terminal-action translations and unregistered incoming printed-total fact kinds; corrected without relaxing production boundaries. Three new real CLI fixtures initially had invalid gross amounts; corrected to the owning ledger contract. Final 63 unit and 8 integration cases pass. Exact logs and preserved initial failures: C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/handoff.json. Shared compiler dependency is refreshed at the final authority gate before frozen captures.

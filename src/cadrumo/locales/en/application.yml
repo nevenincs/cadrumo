@@ -1516,13 +1516,26 @@ application:
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.
-      iva_intra_eu_self_assessment_unrecordable: Cadrumo cannot yet record the supporting
-        document that a purchase from another EU country needs, so this declaration
-        cannot pass the check (%{transaction_count} ledger entries affected). File
-        it another way.
-      iva_selected_scope_evidence_failure: Some VAT entries in this declaration are
-        missing supporting documents (%{source_ref_count} with a reference, %{unidentified_source_count}
-        without one), so the check cannot finish.
+      iva_import_document_unrecordable: The entry dated %{transaction_date} for %{transaction_amount}
+        %{transaction_currency} needs a customs declaration for the import. Cadrumo
+        cannot yet record it, so this declaration cannot pass the check. File this
+        declaration another way.
+      iva_intra_eu_self_assessment_unrecordable: The entry dated %{transaction_date}
+        for %{transaction_amount} %{transaction_currency} needs a supporting self-assessment
+        document for an intra-EU purchase. Cadrumo cannot yet record it, so this declaration
+        cannot pass the check. File this declaration another way.
+      iva_reagp_document_unrecordable: The entry dated %{transaction_date} for %{transaction_amount}
+        %{transaction_currency} needs a receipt for the special agriculture, livestock
+        and fishing regime (REAGP). Cadrumo cannot yet record it, so this declaration
+        cannot pass the check. File this declaration another way.
+      iva_rectification_document_unrecordable: The entry dated %{transaction_date}
+        for %{transaction_amount} %{transaction_currency} needs a supporting document
+        for the deduction adjustment. Cadrumo cannot yet record it, so this declaration
+        cannot pass the check. File this declaration another way.
+      iva_selected_scope_evidence_failure: Some VAT entries in this declaration have
+        missing or invalid facts or supporting documents (%{source_ref_count} with
+        a reference, %{unidentified_source_count} without one). Correct your records
+        and calculate again before checking this declaration.
       iva_wallet_precondition_failed: A condition for carrying VAT forward from earlier
         periods (compensar) is not met.
       ledger_snapshot_drift: 'Your records changed after modelo %{modelo} %{filing_year},
@@ -1728,6 +1741,8 @@ application:
           then check again.
         enter_withholding_certificate: Enter the withholding shown on your payer's
           certificado de retenciones e ingresos a cuenta, then calculate again.
+        file_another_way: Cadrumo cannot yet prepare this declaration for filing.
+          File this declaration another way, for example on AEAT's website.
         nothing_to_do: Nothing to do. It explains what the calculation did.
         read_and_decide: Read it and decide whether it applies to you. It does not
           stop you from filing.

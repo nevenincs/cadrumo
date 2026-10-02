@@ -49,6 +49,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -63,6 +64,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.config import Settings
 from ...core.identity.hex_ids import CalculationRevisionId
+from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.secure_object_write import SecureObjectWrite
@@ -91,7 +93,7 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.components import registry_category_projection
-from ...domain.iva.deduction_facts import is_intra_eu_self_assessed_deduction
+from ...domain.iva.deduction_facts import deduction_evidence_authority_for_row
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
@@ -129,6 +131,7 @@ from ...domain.modelos.verification_report import (
 from ...domain.modelos.verification_repository import upsert_verification_report
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.evidence_advisory import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
@@ -1414,58 +1417,79 @@ def _iva_selected_scope_evidence_issues(target: CalculationRevision) -> tuple[Ca
     )
 
 
-def _intra_eu_self_assessment_transaction_ids(
+@dataclass(frozen=True, slots=True)
+class _UnrecordableDeductionDocument:
+    transaction: Transaction
+    authority: IvaDeductionEvidenceAuthority
+    scenario_code: str
+
+
+_UNRECORDABLE_DEDUCTION_SCENARIOS: Final = {
+    "intra_eu_self_assessment": "intra_eu_self_assessment_unrecordable",
+    "customs_declaration": "import_document_unrecordable",
+    "reagp_receipt": "reagp_document_unrecordable",
+    "rectification_evidence": "rectification_document_unrecordable",
+}
+
+
+def _unrecordable_deduction_documents(
     target: CalculationRevision,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
-) -> tuple[str, ...]:
-    """Return the held-back rows whose deduction only an intra-EU self-assessment establishes.
+) -> tuple[_UnrecordableDeductionDocument, ...]:
+    """Read each held-back row's registry-required supporting authority.
 
-    The persisted issue says a row was held back, not why, so the row itself is
-    read to tell a gap the operator can close (an invoice to attach, a kind to
-    declare) from one no ledger write can close. A row the ledger no longer
-    holds stays with the general finding; the drift gate reports its removal.
+    Only authorities no production supporting-document writer records get a
+    terminal refusal. Missing rows and unresolved authorities keep the general
+    finding; removing a row never erases its persisted evidence failure.
     """
-    issue_transaction_ids = tuple(
+    transaction_ids = {
         issue.source_ref.removeprefix(_LEDGER_TRANSACTION_SOURCE_REF_PREFIX)
         for issue in _iva_selected_scope_evidence_issues(target)
         if issue.source_ref is not None and issue.source_ref.startswith(_LEDGER_TRANSACTION_SOURCE_REF_PREFIX)
-    )
-    if not issue_transaction_ids:
+    }
+    if not transaction_ids:
         return ()
     catalogue = transaction_repository.load()
-    intra_eu_ids: list[str] = []
-    for transaction_id in sorted(set(issue_transaction_ids)):
+    documents: list[_UnrecordableDeductionDocument] = []
+    for transaction_id in sorted(transaction_ids):
         transaction = catalogue.get(transaction_id)
-        if transaction is not None and is_intra_eu_self_assessed_deduction(
+        if transaction is None or not transaction.raw.amount.is_finite():
+            continue
+        authority = deduction_evidence_authority_for_row(
             kind=transaction.deduction_fact_kind,
             category=transaction.iva_category,
-        ):
-            intra_eu_ids.append(transaction_id)
-    return tuple(intra_eu_ids)
+        )
+        scenario = None if authority is None else _UNRECORDABLE_DEDUCTION_SCENARIOS.get(authority.value)
+        if authority is None or scenario is None:
+            continue
+        documents.append(_UnrecordableDeductionDocument(transaction, authority, scenario))
+    return tuple(documents)
 
 
 def _general_selected_scope_evidence_issues(
     target: CalculationRevision,
-    intra_eu_transaction_ids: tuple[str, ...],
+    unrecordable_transaction_ids: tuple[str, ...],
 ) -> tuple[CalculationSourceIssue, ...]:
-    intra_eu_source_refs = frozenset(
-        f"{_LEDGER_TRANSACTION_SOURCE_REF_PREFIX}{transaction_id}" for transaction_id in intra_eu_transaction_ids
+    unrecordable_source_refs = frozenset(
+        f"{_LEDGER_TRANSACTION_SOURCE_REF_PREFIX}{transaction_id}" for transaction_id in unrecordable_transaction_ids
     )
     return tuple(
-        issue for issue in _iva_selected_scope_evidence_issues(target) if issue.source_ref not in intra_eu_source_refs
+        issue
+        for issue in _iva_selected_scope_evidence_issues(target)
+        if issue.source_ref not in unrecordable_source_refs
     )
 
 
 def _iva_selected_scope_evidence_finding(
     target: CalculationRevision,
     *,
-    intra_eu_transaction_ids: tuple[str, ...] = (),
+    unrecordable_transaction_ids: tuple[str, ...] = (),
 ) -> ModeloVerificationFinding | None:
     """Return the blocking finding for persisted selected-scope IVA evidence failures.
 
-    Rows named in ``intra_eu_transaction_ids`` are left to their own finding.
+    Rows named in ``unrecordable_transaction_ids`` are left to their own finding.
     """
-    issues = _general_selected_scope_evidence_issues(target, intra_eu_transaction_ids)
+    issues = _general_selected_scope_evidence_issues(target, unrecordable_transaction_ids)
     if not issues:
         return None
     source_refs = tuple(issue.source_ref for issue in issues if issue.source_ref is not None)
@@ -1482,18 +1506,50 @@ def _iva_selected_scope_evidence_finding(
     )
 
 
-def _intra_eu_self_assessment_finding(intra_eu_transaction_ids: tuple[str, ...]) -> ModeloVerificationFinding:
-    """Return the blocking finding for intra-EU rows whose evidence cannot be recorded."""
-    return ModeloVerificationFinding(
-        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-        severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message_locale_key="application.modelo.findings.iva_intra_eu_self_assessment_unrecordable",
-        message_facts={
-            "transaction_count": len(intra_eu_transaction_ids),
-            "transaction_ids": "|".join(intra_eu_transaction_ids),
-        },
-        legal_refs=WORKFLOW_GATE_LEGAL_REFS,
-    )
+def _unrecordable_deduction_document_finding(document: _UnrecordableDeductionDocument) -> ModeloVerificationFinding:
+    """Keep each unsupported supporting document visible under its exact ledger subject."""
+    transaction = document.transaction
+    facts: dict[str, str | int | Decimal] = {
+        "transaction_count": 1,
+        "transaction_ids": transaction.transaction_id,
+        "transaction_date": transaction.raw.booked_date.isoformat(),
+        "transaction_amount": transaction.raw.amount,
+        "transaction_currency": transaction.raw.currency,
+        "required_evidence_authority": document.authority.value,
+    }
+    if document.scenario_code == "intra_eu_self_assessment_unrecordable":
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.iva_intra_eu_self_assessment_unrecordable",
+            message_facts=facts,
+            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+        )
+    if document.scenario_code == "import_document_unrecordable":
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.iva_import_document_unrecordable",
+            message_facts=facts,
+            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+        )
+    if document.scenario_code == "reagp_document_unrecordable":
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.iva_reagp_document_unrecordable",
+            message_facts=facts,
+            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+        )
+    if document.scenario_code == "rectification_document_unrecordable":
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.iva_rectification_document_unrecordable",
+            message_facts=facts,
+            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+        )
+    raise ValueError("unrecordable deduction document must identify a declared scenario")
 
 
 def _append_iva_selected_scope_evidence_finding(
@@ -1504,23 +1560,24 @@ def _append_iva_selected_scope_evidence_finding(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    intra_eu_transaction_ids = _intra_eu_self_assessment_transaction_ids(target, transaction_repository)
-    if intra_eu_transaction_ids:
-        intra_eu_finding = _intra_eu_self_assessment_finding(intra_eu_transaction_ids)
-        findings.append(intra_eu_finding)
-        failures_by_finding_id[id(intra_eu_finding)] = build_verification_precondition_failure(
+    documents = _unrecordable_deduction_documents(target, transaction_repository)
+    unrecordable_transaction_ids = tuple(document.transaction.transaction_id for document in documents)
+    for document in documents:
+        finding = _unrecordable_deduction_document_finding(document)
+        findings.append(finding)
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
             calculation_revision_id=target.calculation_revision_id,
             work_unit_id=work_unit.work_unit_id,
             condition_id="modelo.work.verify.iva_selected_scope_evidence.complete",
-            scenario_id="modelo.work.verify.iva_selected_scope_evidence.intra_eu_self_assessment_unrecordable",
+            scenario_id=f"modelo.work.verify.iva_selected_scope_evidence.{document.scenario_code}",
             evidence_id="modelo.work.verify.iva_selected_scope_evidence",
             evidence_values={
                 "modelo": str(work_unit.modelo),
-                "transaction_count": len(intra_eu_transaction_ids),
+                **finding.message_facts,
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         )
-    finding = _iva_selected_scope_evidence_finding(target, intra_eu_transaction_ids=intra_eu_transaction_ids)
+    finding = _iva_selected_scope_evidence_finding(target, unrecordable_transaction_ids=unrecordable_transaction_ids)
     if finding is None:
         return
     findings.append(finding)
@@ -1532,7 +1589,7 @@ def _append_iva_selected_scope_evidence_finding(
         evidence_id="modelo.work.verify.iva_selected_scope_evidence",
         evidence_values={
             "modelo": str(work_unit.modelo),
-            "source_issue_count": len(_general_selected_scope_evidence_issues(target, intra_eu_transaction_ids)),
+            "source_issue_count": len(_general_selected_scope_evidence_issues(target, unrecordable_transaction_ids)),
         },
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,
     )

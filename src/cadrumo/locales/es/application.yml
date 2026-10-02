@@ -1628,13 +1628,29 @@ application:
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
         datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.
-      iva_intra_eu_self_assessment_unrecordable: Cadrumo todavía no puede registrar
-        el justificante que necesita una adquisición intracomunitaria, por lo que
-        esta declaración no puede superar la comprobación (%{transaction_count} apuntes
-        afectados). Preséntela por otra vía.
-      iva_selected_scope_evidence_failure: Faltan justificantes en algunos apuntes
-        de IVA de esta declaración (%{source_ref_count} con referencia y %{unidentified_source_count}
-        sin ella), así que la comprobación no puede terminar.
+      iva_import_document_unrecordable: El apunte del %{transaction_date} por %{transaction_amount}
+        %{transaction_currency} necesita la declaración aduanera de la importación.
+        Cadrumo todavía no puede registrarla, por lo que esta declaración no puede
+        superar la comprobación. Presente esta declaración por otra vía.
+      iva_intra_eu_self_assessment_unrecordable: El apunte del %{transaction_date}
+        por %{transaction_amount} %{transaction_currency} necesita el justificante
+        de autoliquidación de la adquisición intracomunitaria. Cadrumo todavía no
+        puede registrarlo, por lo que esta declaración no puede superar la comprobación.
+        Presente esta declaración por otra vía.
+      iva_reagp_document_unrecordable: El apunte del %{transaction_date} por %{transaction_amount}
+        %{transaction_currency} necesita el recibo del régimen especial de la agricultura,
+        ganadería y pesca (REAGP). Cadrumo todavía no puede registrarlo, por lo que
+        esta declaración no puede superar la comprobación. Presente esta declaración
+        por otra vía.
+      iva_rectification_document_unrecordable: El apunte del %{transaction_date} por
+        %{transaction_amount} %{transaction_currency} necesita el justificante de
+        la rectificación de deducciones. Cadrumo todavía no puede registrarlo, por
+        lo que esta declaración no puede superar la comprobación. Presente esta declaración
+        por otra vía.
+      iva_selected_scope_evidence_failure: Algunos apuntes de IVA de esta declaración
+        tienen datos o justificantes ausentes o no válidos (%{source_ref_count} con
+        referencia y %{unidentified_source_count} sin ella). Corrija sus registros
+        y vuelva a calcular antes de comprobar esta declaración.
       iva_wallet_precondition_failed: No se cumple una condición para compensar IVA
         de periodos anteriores.
       ledger_snapshot_drift: 'Tus registros han cambiado desde que se calculó el modelo
@@ -1842,6 +1858,8 @@ application:
           de este modelo y vuelve a comprobar.
         enter_withholding_certificate: Introduce la retención que figura en el certificado
           de retenciones e ingresos a cuenta de tu pagador y vuelve a calcular.
+        file_another_way: Cadrumo todavía no puede preparar esta declaración para
+          presentarla. Preséntela por otra vía, por ejemplo en la web de la AEAT.
         nothing_to_do: No tienes que hacer nada. Explica lo que hizo el cálculo.
         read_and_decide: Léelo y decide si te afecta. No te impide presentar.
         regroup_income_lines: Corrige cómo están agrupadas las líneas de renta y vuelve

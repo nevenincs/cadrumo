@@ -214,7 +214,13 @@ _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {
     ),
     "unrouted_declarable_quantity": frozenset({"application.modelo.findings.cuota_less_ledger_row_base_missing"}),
     "iva_selected_scope_evidence_failure": frozenset(
-        {"application.modelo.findings.iva_selected_scope_evidence_failure"}
+        {
+            "application.modelo.findings.iva_selected_scope_evidence_failure",
+            "application.modelo.findings.iva_intra_eu_self_assessment_unrecordable",
+            "application.modelo.findings.iva_import_document_unrecordable",
+            "application.modelo.findings.iva_reagp_document_unrecordable",
+            "application.modelo.findings.iva_rectification_document_unrecordable",
+        }
     ),
     "iva_compensation_annual_source_evidence_failure": frozenset(
         {"application.modelo.findings.iva_compensation_annual_source_evidence_failure"}

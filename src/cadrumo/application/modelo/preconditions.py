@@ -463,6 +463,24 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.iva_selected_scope_evidence.complete",
+        "modelo.work.verify.iva_selected_scope_evidence.import_document_unrecordable",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.iva_selected_scope_evidence.complete",
+        "modelo.work.verify.iva_selected_scope_evidence.reagp_document_unrecordable",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.iva_selected_scope_evidence.complete",
+        "modelo.work.verify.iva_selected_scope_evidence.rectification_document_unrecordable",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.iva_compensation_annual_source_evidence.complete",
         "modelo.work.verify.iva_compensation_annual_source_evidence.unresolved",
     ),

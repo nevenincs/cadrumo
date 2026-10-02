@@ -1585,13 +1585,27 @@ application:
       iva_compensation_annual_source_evidence_failure: A Modelo 390-hez szükség van
         az év Modelo 303 bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.
-      iva_intra_eu_self_assessment_unrecordable: 'A Cadrumo egyelőre nem tudja rögzíteni
-        a Közösségen belüli beszerzéshez szükséges igazoló dokumentumot, ezért ez
-        a nyilatkozat nem mehet át az ellenőrzésen (érintett tételek száma: %{transaction_count}).
-        Nyújtsa be más módon.'
-      iva_selected_scope_evidence_failure: A bevallás egyes IVA-tételeihez hiányoznak
-        az alátámasztó bizonylatok (%{source_ref_count} hivatkozással, %{unidentified_source_count}
-        hivatkozás nélkül), ezért az ellenőrzés nem fejezhető be.
+      iva_import_document_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
+        %{transaction_currency} összegű tételhez a behozatal vámáru-nyilatkozata szükséges.
+        A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a bevallás nem mehet át
+        az ellenőrzésen. Nyújtsa be ezt a bevallást más módon.
+      iva_intra_eu_self_assessment_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
+        %{transaction_currency} összegű tételhez a közösségen belüli beszerzés önadózási
+        bizonylata szükséges. A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a
+        bevallás nem mehet át az ellenőrzésen. Nyújtsa be ezt a bevallást más módon.
+      iva_reagp_document_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
+        %{transaction_currency} összegű tételhez a mezőgazdasági, állattenyésztési
+        és halászati különleges rendszer (REAGP) szerinti bizonylat szükséges. A Cadrumo
+        ezt egyelőre nem tudja rögzíteni, ezért a bevallás nem mehet át az ellenőrzésen.
+        Nyújtsa be ezt a bevallást más módon.
+      iva_rectification_document_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
+        %{transaction_currency} összegű tételhez az adólevonás helyesbítésének bizonylata
+        szükséges. A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a bevallás nem
+        mehet át az ellenőrzésen. Nyújtsa be ezt a bevallást más módon.
+      iva_selected_scope_evidence_failure: A bevallás néhány IVA-tételének adatai
+        vagy bizonylatai hiányoznak vagy érvénytelenek (%{source_ref_count} hivatkozással,
+        %{unidentified_source_count} hivatkozás nélkül). Javítsa a nyilvántartását,
+        majd számolja újra a bevallást az ellenőrzés előtt.
       iva_wallet_precondition_failed: Nem teljesül a korábbi időszakokból származó
         IVA beszámításának (compensar) egyik feltétele.
       ledger_snapshot_drift: 'A nyilvántartása megváltozott a Modelo %{modelo} (%{filing_year},
@@ -1807,6 +1821,8 @@ application:
         enter_withholding_certificate: Írja be a kifizetője igazolásán (certificado
           de retenciones e ingresos a cuenta) szereplő levont adót (retención), majd
           számoljon újra.
+        file_another_way: A Cadrumo egyelőre nem tudja előkészíteni ezt a bevallást
+          benyújtásra. Nyújtsa be más módon, például az AEAT weboldalán.
         nothing_to_do: Nincs teendőd. Azt magyarázza el, mit csinált a számítás.
         read_and_decide: Olvassa el, és döntse el, hogy vonatkozik-e Önre. Nem akadályozza
           a benyújtást.

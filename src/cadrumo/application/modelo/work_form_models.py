@@ -627,8 +627,17 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.transaction_evidence_missing_deductible": (
             "application.modelo.work_form.finding_action.attach_document"
         ),
-        "application.modelo.findings.iva_selected_scope_evidence_failure": (
-            "application.modelo.work_form.finding_action.attach_document"
+        "application.modelo.findings.iva_intra_eu_self_assessment_unrecordable": (
+            "application.modelo.work_form.finding_action.file_another_way"
+        ),
+        "application.modelo.findings.iva_import_document_unrecordable": (
+            "application.modelo.work_form.finding_action.file_another_way"
+        ),
+        "application.modelo.findings.iva_reagp_document_unrecordable": (
+            "application.modelo.work_form.finding_action.file_another_way"
+        ),
+        "application.modelo.findings.iva_rectification_document_unrecordable": (
+            "application.modelo.work_form.finding_action.file_another_way"
         ),
         "application.modelo.findings.oss_evidence_missing": (
             "application.modelo.work_form.finding_action.attach_document"

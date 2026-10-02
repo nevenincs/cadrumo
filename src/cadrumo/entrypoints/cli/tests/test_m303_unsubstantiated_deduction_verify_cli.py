@@ -129,7 +129,7 @@ def _calculate_1t() -> tuple[str, str]:
 
 
 def _evidence_findings(output: str) -> dict[str, dict[str, str]]:
-    """Return the held-back-row findings by recovery outcome, with their locale-neutral facts.
+    """Return every held-back-row finding by exact subject, with its locale-neutral facts.
 
     The payload carries each finding's typed recovery verdict and the notice its
     facts, both in report order. Only findings failing the selected-scope
@@ -150,9 +150,12 @@ def _evidence_findings(output: str) -> dict[str, dict[str, str]]:
         if action["failed_condition_id"] != _EVIDENCE_CONDITION:
             continue
         outcome = str(action["no_recovery_outcome"])
-        assert outcome not in selected, output
         context = STR_KEYED_MAPPING_ADAPTER.validate_python(notice["context"])
-        selected[outcome] = {key: str(value) for key, value in context.items()}
+        facts = {key: str(value) for key, value in context.items()}
+        facts["recovery_outcome"] = outcome
+        subject = facts.get("transaction_ids", facts.get("source_ref_ids", "unidentified"))
+        assert subject not in selected, output
+        selected[subject] = facts
     return selected
 
 
@@ -185,9 +188,10 @@ def test_verify_refuses_an_intra_eu_acquisition_with_a_worded_refusal(
 
     findings = _assert_verify_refuses(calculation_revision_id)
 
-    assert set(findings) == {_INTRA_EU_FINDING}, findings
-    assert findings[_INTRA_EU_FINDING]["transaction_count"] == "1"
-    assert findings[_INTRA_EU_FINDING]["transaction_ids"] == acquisition
+    assert set(findings) == {acquisition}, findings
+    assert findings[acquisition]["recovery_outcome"] == _INTRA_EU_FINDING
+    assert findings[acquisition]["transaction_count"] == "1"
+    assert findings[acquisition]["transaction_ids"] == acquisition
     _assert_export_refuses(work_unit_id, tmp_path)
 
 
@@ -205,14 +209,14 @@ def test_the_intra_eu_refusal_renders_in_every_supported_locale(request: pytest.
         assert verified.exit_code == 1, verified.output
         rendered[language] = verified.output
 
-    assert "a purchase from another EU country needs" in rendered["en"]
-    assert "File it another way." in rendered["en"]
-    assert "una adquisición intracomunitaria" in rendered["es"]
-    assert "Preséntela por otra vía." in rendered["es"]
-    assert "una adquisició intracomunitària" in rendered["ca"]
+    assert "self-assessment document for an intra-EU purchase" in rendered["en"]
+    assert "File this declaration another way." in rendered["en"]
+    assert "adquisición intracomunitaria" in rendered["es"]
+    assert "Presente esta declaración por otra vía." in rendered["es"]
+    assert "adquisició intracomunitària" in rendered["ca"]
     assert "per una altra via." in rendered["ca"]
-    assert "Közösségen belüli beszerzéshez" in rendered["hu"]
-    assert "Nyújtsa be más módon." in rendered["hu"]
+    assert "közösségen belüli beszerzés önadózási bizonylata" in rendered["hu"]
+    assert "Nyújtsa be ezt a bevallást más módon." in rendered["hu"]
 
 
 def test_verify_refuses_a_deduction_without_its_invoice_with_the_general_finding(
@@ -226,8 +230,9 @@ def test_verify_refuses_a_deduction_without_its_invoice_with_the_general_finding
 
     findings = _assert_verify_refuses(calculation_revision_id)
 
-    assert set(findings) == {_GENERAL_FINDING}, findings
-    assert findings[_GENERAL_FINDING]["source_ref_ids"] == f"transaction:{purchase}"
+    assert set(findings) == {f"transaction:{purchase}"}, findings
+    assert findings[f"transaction:{purchase}"]["recovery_outcome"] == _GENERAL_FINDING
+    assert findings[f"transaction:{purchase}"]["source_ref_ids"] == f"transaction:{purchase}"
     _assert_export_refuses(work_unit_id, tmp_path)
 
 
@@ -240,6 +245,89 @@ def test_both_held_back_rows_are_refused_each_under_its_own_finding(request: pyt
 
     findings = _assert_verify_refuses(calculation_revision_id)
 
-    assert set(findings) == {_INTRA_EU_FINDING, _GENERAL_FINDING}, findings
-    assert findings[_INTRA_EU_FINDING]["transaction_ids"] == acquisition
-    assert findings[_GENERAL_FINDING]["source_ref_ids"] == f"transaction:{purchase}"
+    assert set(findings) == {acquisition, f"transaction:{purchase}"}, findings
+    assert findings[acquisition]["recovery_outcome"] == _INTRA_EU_FINDING
+    assert findings[acquisition]["transaction_ids"] == acquisition
+    assert findings[f"transaction:{purchase}"]["recovery_outcome"] == _GENERAL_FINDING
+    assert findings[f"transaction:{purchase}"]["source_ref_ids"] == f"transaction:{purchase}"
+
+
+@pytest.mark.parametrize(
+    ("category", "kind", "rate", "quota", "gross", "country", "authority"),
+    [
+        (
+            "intra_community_acquisition_reverse_charge",
+            "intra_eu_current",
+            "0.21",
+            "42.00",
+            "200.00",
+            "FR",
+            "intra_eu_self_assessment",
+        ),
+        ("import_third_country", "import_current", "0.21", "42.00", "200.00", "US", "customs_declaration"),
+        ("reagp_compensation", "reagp_compensation", "0", "24.00", "224.00", "ES", "reagp_receipt"),
+        ("domestic_general", "rectification", "0.21", "42.00", "242.00", "ES", "rectification_evidence"),
+    ],
+)
+def test_each_unrecordable_supporting_document_has_its_own_terminal_finding(
+    request: pytest.FixtureRequest,
+    tmp_path: Path,
+    category: str,
+    kind: str,
+    rate: str,
+    quota: str,
+    gross: str,
+    country: str,
+    authority: str,
+) -> None:
+    """Equal-looking entries remain two distinct blocked documents after real persistence."""
+    _seed_quarter(request)
+    transactions = tuple(
+        _added_transaction_id(
+            _invoke(
+                [
+                    "app",
+                    "ledger",
+                    "add",
+                    "--date",
+                    _OPERATION_DATE,
+                    "--amount",
+                    gross,
+                    "--direction",
+                    "OUTGOING",
+                    "--description",
+                    f"Supporting entry {index}",
+                    "--classification",
+                    "BUSINESS",
+                    "--category-id",
+                    "material_oficina",
+                    "--taxable-base",
+                    "200.00",
+                    "--iva-rate",
+                    rate,
+                    "--iva-amount",
+                    quota,
+                    "--iva-category",
+                    category,
+                    "--deduction-kind",
+                    kind,
+                    "--counterparty-country",
+                    country,
+                ]
+            )
+        )
+        for index in (1, 2)
+    )
+    work_unit_id, revision_id = _calculate_1t()
+    findings = _assert_verify_refuses(revision_id)
+    assert set(findings) == set(transactions), findings
+    for transaction in transactions:
+        facts = findings[transaction]
+        assert facts["recovery_outcome"] == "terminal"
+        assert facts["transaction_count"] == "1"
+        assert facts["transaction_ids"] == transaction
+        assert facts["transaction_date"] == _OPERATION_DATE
+        assert Decimal(facts["transaction_amount"]) == Decimal(gross)
+        assert facts["transaction_currency"] == "EUR"
+        assert facts["required_evidence_authority"] == authority
+    _assert_export_refuses(work_unit_id, tmp_path)

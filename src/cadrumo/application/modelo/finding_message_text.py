@@ -68,8 +68,10 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "target_period": FindingFactKind.PERIOD,
         # Dates.
         "activity_start_date": FindingFactKind.DATE,
+        "transaction_date": FindingFactKind.DATE,
         # Boxes, by casilla id or printed number.
         "casilla_id": FindingFactKind.BOX,
+        "box": FindingFactKind.BOX,
         "ingreso_id": FindingFactKind.BOX,
         "reduccion_id": FindingFactKind.BOX,
         "rnt_id": FindingFactKind.BOX,
@@ -94,6 +96,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "m303_total": FindingFactKind.MONEY,
         "m349_total": FindingFactKind.MONEY,
         "prior_value_eur": FindingFactKind.MONEY,
+        "printed_sum": FindingFactKind.MONEY,
         "redeclaration_increase_threshold_eur": FindingFactKind.MONEY,
         "reduccion_value": FindingFactKind.MONEY,
         "rnt_value": FindingFactKind.MONEY,
@@ -101,6 +104,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "total_base": FindingFactKind.MONEY,
         # Other figures.
         "declared": FindingFactKind.NUMBER,
+        "transaction_amount": FindingFactKind.NUMBER,
         "threshold": FindingFactKind.NUMBER,
         "weighted_count": FindingFactKind.NUMBER,
         # Counts.
@@ -115,6 +119,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "unidentified_source_count": FindingFactKind.COUNT,
         # Official codes printed on AEAT's forms.
         "country_code": FindingFactKind.OFFICIAL_CODE,
+        "transaction_currency": FindingFactKind.OFFICIAL_CODE,
         "tipo_renta_code": FindingFactKind.OFFICIAL_CODE,
         # Identifiers, for technical details only.
         "anchored": FindingFactKind.TECHNICAL,
@@ -145,6 +150,9 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "source_ref": FindingFactKind.TECHNICAL,
         "source_ref_ids": FindingFactKind.TECHNICAL,
         "transaction_id": FindingFactKind.TECHNICAL,
+        "transaction_ids": FindingFactKind.TECHNICAL,
+        "transaction_count": FindingFactKind.TECHNICAL,
+        "required_evidence_authority": FindingFactKind.TECHNICAL,
         "unattested_periods": FindingFactKind.TECHNICAL,
     }
 )
