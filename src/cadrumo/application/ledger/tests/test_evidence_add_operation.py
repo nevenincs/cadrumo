@@ -232,6 +232,9 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
     monkeypatch.setattr(
         "cadrumo.application.ledger.evidence_add_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr(
+        "cadrumo.application.ledger.evidence_port_identity.require_active_bucket_id", lambda: str(_PROFILE)
+    )
 
     def ports_factory(*, bucket_id: str) -> LedgerEvidencePorts:
         assert bucket_id == str(_PROFILE)

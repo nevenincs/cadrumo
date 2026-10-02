@@ -485,8 +485,8 @@ def test_both_evidence_surfaces_emit_the_degradation_notices() -> None:
     from .. import _ledger_evidence_cli
 
     source = Path(_ledger_evidence_cli.__file__).read_text(encoding="utf-8")
-    extract_calls = source.count("notices.extend(field_degradation_notices(draft.provenance))")
-    confirm_calls = source.count("notices.extend(field_degradation_notices(result.draft.provenance))")
+    extract_calls = source.count("notices.extend(field_degradation_notices(_domain_provenance(draft)))")
+    confirm_calls = source.count("notices.extend(field_degradation_notices(_domain_provenance(result.draft)))")
 
     assert extract_calls == 1, "the extract surface must emit per-field degradation notices"
     assert confirm_calls == 1, "the confirm surface must emit per-field degradation notices"

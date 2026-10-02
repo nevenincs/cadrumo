@@ -84,6 +84,7 @@ from .export_link_operation_ports import (
 )
 from .extraction_draft_store import bind_extraction_draft_repository_factory
 from .id_resolution import resolve_transaction_id
+from .invoice_draft_records import LabelReadingFallback
 from .invoice_extraction_authority import default_invoice_extraction_period
 from .transaction_projection import LedgerTransactionProjection
 
@@ -151,6 +152,7 @@ class LedgerEvidenceBatchItemSnapshot(BaseModel):
     refusal_code: str | None
     refusal_verdict: PreconditionVerdictSnapshot | None
     needed_inference: bool
+    label_reading_fallback: LabelReadingFallback | None = None
 
     @classmethod
     def from_item(cls, item: BatchItemResult) -> LedgerEvidenceBatchItemSnapshot:
