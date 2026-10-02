@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:69fb48adebf1d9a38c8354797e7ee14a3d4b85b77ea837a8bf225672d7988e05'
+body_hash: 'sha256:f61f7b6acfe19c3d556646a039a1df89818470cd06efd7ed9ce0be021807e627'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -507,11 +507,18 @@ Current gate corrections preserve the grounded 303 rates (including 21%, 1.75% a
 
 ## Recommendations
 
-- sources-hub-reason: a follow-on ADR decides whether the operator layer records an override
-  reason and the displaced source value, and how that participates in revision identity.
-- workbench-shape: a follow-on ADR decides whether D4's five-step stepper, official grids and
-  technical drawer, and D5's inline editing of simple types, stand or are amended.
-- blank-by-rule: a follow-on ADR decides the closed origin for a box left blank by rule.
-- transport-tokens: define one read-back of enumerated binding values shared by the form and
-  presentation.
-- dead-code: wire `renew_edit_baseline` into review-time renewal or delete it with `official_page`.
+## Recommendations
+
+- The accepted operator-layer decision D6 explicitly defers recording an override reason and the displaced source value; sources-hub-reason remains that separate decision question.
+- The accepted D4 amendment covers the four workbench steps, with preparation in the declarations picker; D5's docked editing and official grids are implemented. No follow-on workbench-shape decision is outstanding.
+- The reproduced negative-yield omission premise was withdrawn; a future blank-by-rule origin needs a grounded case before any additional implementation.
+- Registry owners retain the grounded questions recorded in informative-totals, window-opens, modelo-100-direction, transport-tokens, binding-input-registry-notes and the unproven Modelo 369 envelope constants. No label is used as evidence of a constant's export-envelope role.
+- The unused official_page and renew_edit_baseline facades have been removed. The live apply path continues to renew through its existing required renewal operation; all seven owning admission/preflight/staging/production-edit cases pass. Final current-source visual review determines closure.
+
+## Recommendations
+
+- The accepted operator-layer decision D6 explicitly defers recording an override reason and the displaced source value; sources-hub-reason remains that separate decision question.
+- The accepted D4 amendment covers the four workbench steps, with preparation in the declarations picker; D5's docked editing and official grids are implemented. No follow-on workbench-shape decision is outstanding.
+- The reproduced negative-yield omission premise was withdrawn; a future blank-by-rule origin needs a grounded case before any additional implementation.
+- Registry owners retain the grounded questions recorded in informative-totals, window-opens, modelo-100-direction, transport-tokens, binding-input-registry-notes and the unproven Modelo 369 envelope constants. No label is used as evidence of a constant's export-envelope role.
+- The unused official_page facade has been removed. The separate renewal facade is being removed; the live apply path continues to renew through its existing required renewal operation. Final owning verification and current-source visual review determine closure.

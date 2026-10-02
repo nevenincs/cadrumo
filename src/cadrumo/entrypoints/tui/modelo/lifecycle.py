@@ -149,10 +149,6 @@ class ModeloWorkspaceLifecycleDoor:
             )
         return await asyncio.to_thread(admit)
 
-    async def renew_edit_baseline(self, baseline: ModeloEditBaselineV1) -> ModeloEditRenewalResultV1:
-        """Renew ``baseline`` off the event loop, as an editor does when opening its review."""
-        return await asyncio.to_thread(self._require_renewal(), baseline)
-
     async def preflight_edits(
         self,
         *,

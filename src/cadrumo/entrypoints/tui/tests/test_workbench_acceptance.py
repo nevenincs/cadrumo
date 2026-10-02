@@ -1,7 +1,8 @@
 """The workbench over real declarations says nothing technical, returns focus and forgets what was typed.
 
 Driven over real encrypted storage and the bundled registry through the
-production reader and actions, in every shipped language:
+production reader and actions, in every shipped language, both appearances and
+compact 80x24 terminals and docked editors at 120x36 and 160x48:
 
 * no transport token reaches what the filer reads -- no digest, no work-unit
   or calculation identity, no casilla slug and no binding identifier, on the
@@ -21,6 +22,7 @@ from pathlib import Path
 
 import pytest
 from textual.pilot import Pilot
+from textual.widgets import OptionList, Static
 
 from ....application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
@@ -31,20 +33,25 @@ from ....application.modelo.work_form_models import (
 )
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
-from ....tests.terminal_sizes import TERMINAL_ORDINARY
+from ....tests.terminal_sizes import TERMINAL_FLOOR
 from ..components.host import ScreenHostApp
+from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..modelo.workbench.casilla_list import CasillaList
 from ..modelo.workbench.editor import CasillaEditorPanel
 from ..modelo.workbench.installed import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
+from ..modelo.workbench.sources import WorkbenchSourcesScreen
 from .modelo_workbench_session import real_workbench
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LANGUAGES = tuple(OutputLanguage)
+# The shared 80x24 floor opens the compact dialog; 120x36 and 160x48 exercise
+# the docked editor with ordinary and spacious working areas.
+_SIZES = (TERMINAL_FLOOR, (120, 36), (160, 48))
+_THEMES = (CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME)
 _DIGEST = re.compile(r"\b[0-9a-f]{64}\b")
 _SURFACES = [pytest.param((), id="workbench"), pytest.param(("s",), id="sources"), pytest.param(("f1",), id="help")]
-_TYPED = "987654,32"
 
 
 @pytest.fixture(scope="module", params=["130", "303"])
@@ -75,7 +82,9 @@ async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> ModeloWo
 def _frame_text(app: ScreenHostApp[None]) -> str:
     return (
         "\n".join(
-            widget.render_line(y).text for widget in app.screen.query(CasillaList) for y in range(widget.size.height)
+            widget.render_line(y).text
+            for widget in (*app.screen.query(CasillaList), *app.screen.query(OptionList))
+            for y in range(widget.size.height)
         )
         + "\n"
         + "\n".join(str(static.render()) for static in app.screen.query("Static"))
@@ -108,18 +117,29 @@ def _technical_tokens(form: ModeloWorkForm, workbench: InstalledModeloWorkbench)
 @pytest.mark.asyncio
 @pytest.mark.parametrize("keys", _SURFACES)
 @pytest.mark.parametrize("language", _LANGUAGES, ids=lambda language: language.value)
+@pytest.mark.parametrize("size", _SIZES, ids=lambda size: f"{size[0]}x{size[1]}")
+@pytest.mark.parametrize("theme", _THEMES)
 async def test_no_transport_token_reaches_what_the_filer_reads(
-    keys: tuple[str, ...], language: OutputLanguage, workbench: InstalledModeloWorkbench
+    keys: tuple[str, ...],
+    language: OutputLanguage,
+    size: tuple[int, int],
+    theme: str,
+    workbench: InstalledModeloWorkbench,
 ) -> None:
     with override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(workbench, actions=workbench)
         app = ScreenHostApp(screen)
-        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+        async with app.run_test(size=size) as pilot:
+            app.theme = theme
             form = await _opened(pilot, screen)
             if keys:
                 await pilot.press(*keys)
                 await pilot.pause()
                 await pilot.pause()
+            if keys == ("s",):
+                assert isinstance(app.screen, WorkbenchSourcesScreen), "the sources view did not open"
+            elif keys == ("f1",):
+                assert screen.query_one("#wb-help", Static).has_class("-expanded"), "the help did not expand"
             text = _frame_text(app)
             app.exit(None)
 
@@ -131,11 +151,17 @@ async def test_no_transport_token_reaches_what_the_filer_reads(
 
 
 @pytest.mark.asyncio
-async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(tmp_path: Path) -> None:
-    with real_workbench(tmp_path) as installed, override_settings(cadrumo_output_language="es"):
+@pytest.mark.parametrize("language", _LANGUAGES, ids=lambda language: language.value)
+@pytest.mark.parametrize("size", _SIZES, ids=lambda size: f"{size[0]}x{size[1]}")
+@pytest.mark.parametrize("theme", _THEMES)
+async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(
+    tmp_path: Path, language: OutputLanguage, size: tuple[int, int], theme: str
+) -> None:
+    with real_workbench(tmp_path) as installed, override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(installed, actions=installed)
         app = ScreenHostApp(screen)
-        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+        async with app.run_test(size=size) as pilot:
+            app.theme = theme
             form = await _opened(pilot, screen)
             casilla_list = screen.query_one(CasillaList)
             casilla_list.focus_address(address_key(_editable(form).address))
@@ -167,24 +193,35 @@ async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(tmp_
 
 
 @pytest.mark.asyncio
-async def test_a_typed_value_is_kept_nowhere_once_abandoned(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+@pytest.mark.parametrize("language", _LANGUAGES, ids=lambda language: language.value)
+@pytest.mark.parametrize("size", _SIZES, ids=lambda size: f"{size[0]}x{size[1]}")
+@pytest.mark.parametrize("theme", _THEMES)
+async def test_a_typed_value_is_kept_nowhere_once_abandoned(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    language: OutputLanguage,
+    size: tuple[int, int],
+    theme: str,
+) -> None:
     caplog.set_level(logging.DEBUG)
-    with real_workbench(tmp_path) as installed, override_settings(cadrumo_output_language="es"):
+    typed = "987654.32" if language is OutputLanguage.EN else "987654,32"
+    with real_workbench(tmp_path) as installed, override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(installed, actions=installed)
         app = ScreenHostApp(screen)
-        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+        async with app.run_test(size=size) as pilot:
+            app.theme = theme
             form = await _opened(pilot, screen)
             casilla_list = screen.query_one(CasillaList)
             casilla_list.focus_address(address_key(_editable(form).address))
             await pilot.press("enter")
             assert await _panel_opened(pilot)
-            await pilot.press(*_TYPED, "escape")
+            await pilot.press(*typed, "escape")
             await pilot.pause()
             after_cancel = [change.text for change in screen.staged_changes]
             await pilot.press("enter")
             assert await _panel_opened(pilot)
             # Keep and stay, so the panel closes on this box rather than refilling for the next.
-            await pilot.press(*_TYPED, "ctrl+enter")
+            await pilot.press(*typed, "ctrl+enter")
             await pilot.pause()
             staged = len(screen.staged_changes)
             await pilot.press("R")
@@ -194,9 +231,14 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(tmp_path: Path, capl
             await pilot.pause()
             after_discard = len(screen.staged_changes)
             app.exit(None)
+        stored = installed.load(language).form
+        assert stored.calculation_revision_id == form.calculation_revision_id
+        assert {address_key(field.address): field.value for field in stored.fields()} == {
+            address_key(field.address): field.value for field in form.fields()
+        }
 
     assert after_cancel == []
     assert staged == 1
     assert after_discard == 0
-    digits = _TYPED.replace(",", "").replace(".", "")
+    digits = typed.replace(",", "").replace(".", "")
     assert not [record for record in caplog.records if digits in record.getMessage().replace(",", "").replace(".", "")]
