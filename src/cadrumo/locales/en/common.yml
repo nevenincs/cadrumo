@@ -2140,6 +2140,14 @@ tui:
         period: Does not apply this period
         quarter: Does not apply this quarter
         year: Does not apply this year
+      apply_prerequisite:
+        action: Inspect this box and its source before applying again.
+        earlier: For this recalculation, the value from an earlier filing is unavailable.
+        legacy: This older calculation cannot reuse all the values originally entered.
+        next: Review the calculation source
+        notice: Not applied; changes kept. Check the source for {box} in Issues [i].
+        source_boxes: 'Earlier source boxes: {boxes}'
+        what: For this recalculation, the source value for this box is unavailable.
       attention:
         staged: Changed, not applied
       browse:
@@ -2210,8 +2218,8 @@ tui:
           can_change: Can you change it?
           new_value: New value
           now: Now
-          where_from: Where it comes from
           saved_value: Saved value
+          where_from: Where it comes from
         can_change:
           calculated: No. Cadrumo works it out from other boxes. Change those boxes
             instead.
@@ -2381,7 +2389,8 @@ tui:
           incomplete: 'The check is not complete: some values the declaration needs
             are missing.'
           none: The declaration has not been checked yet.
-          saved_with_changes: The saved calculation passed its check; your changes are not applied.
+          saved_with_changes: The saved calculation passed its check; your changes
+            are not applied.
         what_to_do: 'What to do: {action}'
         where:
           declaration: Whole declaration
@@ -2743,14 +2752,6 @@ tui:
       value:
         not_applicable: n/a
       was: was {value}
-      apply_prerequisite:
-        action: Inspect this box and its source before applying again.
-        earlier: For this recalculation, the value from an earlier filing is unavailable.
-        legacy: This older calculation cannot reuse all the values originally entered.
-        next: Review the calculation source
-        notice: Not applied; changes kept. Check the source for {box} in Issues [i].
-        source_boxes: 'Earlier source boxes: {boxes}'
-        what: For this recalculation, the source value for this box is unavailable.
   root:
     account:
       appearance: Appearance

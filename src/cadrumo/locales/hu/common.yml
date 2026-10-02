@@ -2176,6 +2176,16 @@ tui:
         period: Ebben az időszakban nem alkalmazandó
         quarter: Ebben a negyedévben nem alkalmazandó
         year: Ebben az évben nem alkalmazandó
+      apply_prerequisite:
+        action: Ellenőrizd ezt a rovatot és a forrását, mielőtt újra alkalmaznád.
+        earlier: Ehhez az újraszámításhoz egy korábbi bevallás értéke nem érhető el.
+        legacy: Ez a régebbi számítás nem tudja újra használni az összes eredeti értéket.
+        next: Tekintsd át a számítás forrását
+        notice: 'Nem alkalmaztuk; módosításaid megmaradtak. {box} forrása: Problémák
+          [i].'
+        source_boxes: 'Korábbi forrásrovatok: {boxes}'
+        what: Ehhez az újraszámításhoz ennek a rovatnak a forrásértéke nem érhető
+          el.
       attention:
         staged: Módosítva, még nem alkalmazva
       browse:
@@ -2249,8 +2259,8 @@ tui:
           can_change: Módosíthatja?
           new_value: Új érték
           now: Jelenleg
-          where_from: Honnan származik
           saved_value: Mentett érték
+          where_from: Honnan származik
         can_change:
           calculated: Nem. A Cadrumo más rovatokból számítja ki. Inkább azokat a rovatokat
             módosítsd.
@@ -2427,7 +2437,8 @@ tui:
           incomplete: 'Az ellenőrzés nem teljes: hiányoznak a bevalláshoz szükséges
             adatok.'
           none: A bevallást még nem ellenőrizték.
-          saved_with_changes: A mentett számítás ellenőrzése sikeres; a módosításaidat nem alkalmaztuk.
+          saved_with_changes: A mentett számítás ellenőrzése sikeres; a módosításaidat
+            nem alkalmaztuk.
         what_to_do: 'Teendő: {action}'
         where:
           declaration: A teljes bevallás
@@ -2800,14 +2811,6 @@ tui:
       value:
         not_applicable: nem alk.
       was: 'korábban: {value}'
-      apply_prerequisite:
-        earlier: Ehhez az újraszámításhoz egy korábbi bevallás értéke nem érhető el.
-        legacy: Ez a régebbi számítás nem tudja újra használni az összes eredeti értéket.
-        source_boxes: 'Korábbi forrásrovatok: {boxes}'
-        what: Ehhez az újraszámításhoz ennek a rovatnak a forrásértéke nem érhető el.
-        action: Ellenőrizd ezt a rovatot és a forrását, mielőtt újra alkalmaznád.
-        next: Tekintsd át a számítás forrását
-        notice: 'Nem alkalmaztuk; módosításaid megmaradtak. {box} forrása: Problémák [i].'
   root:
     account:
       appearance: Megjelenés

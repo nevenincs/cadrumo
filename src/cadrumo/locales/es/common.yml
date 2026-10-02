@@ -2199,6 +2199,16 @@ tui:
         period: No aplica en este periodo
         quarter: No aplica este trimestre
         year: No aplica este año
+      apply_prerequisite:
+        action: Revisa esta casilla y su origen antes de volver a aplicar.
+        earlier: Para este recálculo, no está disponible el valor de una declaración
+          anterior.
+        legacy: Este cálculo anterior no puede reutilizar todos los valores introducidos.
+        next: Revisa el origen del cálculo
+        notice: 'No se aplicó; cambios conservados. {box}: revisa su origen en Incidencias
+          [i].'
+        source_boxes: 'Casillas de origen anteriores: {boxes}'
+        what: Para este recálculo, el valor de origen de esta casilla no está disponible.
       attention:
         staged: Cambiada, sin aplicar
       browse:
@@ -2270,8 +2280,8 @@ tui:
           can_change: ¿Puedes cambiarlo?
           new_value: Nuevo valor
           now: Ahora
-          where_from: De dónde sale
           saved_value: Valor guardado
+          where_from: De dónde sale
         can_change:
           calculated: No. Cadrumo lo calcula a partir de otras casillas. Cambia esas
             casillas.
@@ -2442,7 +2452,8 @@ tui:
           incomplete: 'La comprobación no está completa: faltan datos que la declaración
             necesita.'
           none: La declaración aún no se ha comprobado.
-          saved_with_changes: El cálculo guardado superó la comprobación; tus cambios no se han aplicado.
+          saved_with_changes: El cálculo guardado superó la comprobación; tus cambios
+            no se han aplicado.
         what_to_do: 'Qué hacer: {action}'
         where:
           declaration: Toda la declaración
@@ -2807,14 +2818,6 @@ tui:
       value:
         not_applicable: no aplica
       was: 'antes: {value}'
-      apply_prerequisite:
-        action: Revisa esta casilla y su origen antes de volver a aplicar.
-        earlier: Para este recálculo, no está disponible el valor de una declaración anterior.
-        legacy: Este cálculo anterior no puede reutilizar todos los valores introducidos.
-        next: Revisa el origen del cálculo
-        notice: 'No se aplicó; cambios conservados. {box}: revisa su origen en Incidencias [i].'
-        source_boxes: 'Casillas de origen anteriores: {boxes}'
-        what: Para este recálculo, el valor de origen de esta casilla no está disponible.
   root:
     account:
       appearance: Apariencia
