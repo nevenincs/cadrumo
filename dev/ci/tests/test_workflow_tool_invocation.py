@@ -55,7 +55,7 @@ def _workflow_files() -> list[Path]:
 
     A "*.yml" glob skips a lane filed as .yaml, and this list feeds an
     offender check asserted for ABSENCE -- so an unswept lane reads exactly
-    like a clean one. The self-hosted fleet gate already unions both.
+    like a clean one.
     """
     workflows = REPO_ROOT / ".github" / "workflows"
     return sorted(path for path in workflows.iterdir() if path.suffix in (".yml", ".yaml"))
