@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:f513ff65379088e3ae54f86facb695b1097d4248d93b0ad9ed8a9a4d09aad4e9'
+body_hash: 'sha256:d11e5f1a6fed71d2e85735007f0f2d65a12b9b6c2bc7fe5a81fffe4652bf9772'
 ---
 
 # `modelo-editor-workbench` plan
@@ -130,7 +130,7 @@ Close what the combined render and the design verification found: nothing unconf
 - [x] `P07.S47` - Dock the box panel at the foot of the workbench, with the dialog below thirty rows of height; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
 - [x] `P07.S48` - Show the chain from an edited box to the result; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
 - [x] `P07.S49` - Author official headings for Modelo 100, then 349; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `P07.S50` - Render the phase in the review previews and close it with a review; `dev/tui`.
+- [x] `P07.S50` - Render the phase in the review previews and close it with a review; `dev/tui`.
 - [x] `P07.S51` - Apply the design lane's terminology, area-name and conformance packs across every catalogue and regenerate the tests and references they move; `src/cadrumo/locales`.
 - [x] `P07.S52` - Keep calculation diagnostics from firing for sources that do not apply to the filer, then restore the deferred reasons to the filing block; `src/cadrumo/application/aggregation`.
 - [x] `P07.S62` - Declare the scale of Modelo 303's rate literals so the general rate row prints its rate, grounded in the record design; `src/cadrumo/_data/registry/aeat/modelos/303`.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd1f9f9387af71b29cba01b2aa38abb4003b0ad4cd5f485e9f95b1c1a0d32188'
+body_hash: 'sha256:cac268edaefb86a204a6ae5c8da40b1d46761d0f207b27db5b37026218d73324'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -602,6 +602,16 @@ S17 now keeps the exact typed CasillaListRecords container for every known repea
 All 38 owning real cases pass, exit 0, run 20261002T035511.642247Z-pytest-51848-f6714352: 22 existing proofs and 16 new known-empty cases in es/en/ca/hu, 80x24/120x40, dark/light. Each creates a real empty calculation and persisted verification, proves truthful count0/source guidance, no filter-empty/no-box/unknown/not-applicable claim, no edit, bounded geometry, and keyboard Issues/Enter navigation from another page to the exact country-column table. The 24 existing grids plus unknown-record column-navigation case also pass, exit 0, run 20261002T035707.515420Z-pytest-37048-77d7b3bd. Narrow Ruff, formatting, ty and diff checks pass. Root reviewed the complete two-path diff and actual native receipts in s17-known-empty-verification-receipt.json under the C temp root.
 
 The final owning import driver passes on the exact frozen corrected candidate, run 20261002T035828.750226Z-check-import-boundaries-12772-5f02bbec: 15 contracts, 2,998 loaded modules, zero unapproved edge or debt. Both new render and import checks retain identical whole source/authority digests before/after: 57b27379d6b8286b08d04f599132389c42826d72749f5544c0fc0ea11baf38bf. Candidate inputs are rooted at cc9f4ab46a plus the exact two-path correction, excluding concurrent profile UX edits; their hashes match the owning proof. The affected complete 80-frame scenario rendered successfully with all goldens matching, no failure/skip/glyph issue or source drift. Its independent visual verdict and served installation belong to S50; S17 source correction is verified and closed.
+
+### closing-workbench-visual-review | low | affected corrected scenario passes and phase review closes
+
+S50 verdict: PASS. The final frozen affected scenario renders all 80 frames, exit 0, with every golden matching, no failure, skip or missing glyph. TUI fingerprint start/end is 685b4884e5b68cfe9af1a61105bed4383e9161326b075fa3cfd7bb76fdf93962; whole source/authority identity remains 57b27379d6b8286b08d04f599132389c42826d72749f5544c0fc0ea11baf38bf. The frozen source/test hashes match both actual owning proof and committed 16b6aa3e84. Exact receipt/commands are in known-empty-{render,imports}-execution.json and known-empty-source-snapshot/frozen-receipt.json under C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001.
+
+Independent visual review actually inspected 16 fresh PNGs: all eight next-page size/theme variants, two issues, two sources, two review and both small legend appearances. Root also inspected corrected small dark and medium light pages. All eight table views preserve zero detail rows and five missing requirements, show the source-owned read-only guidance, and omit the false filter-empty/next-declarant/no-box instructions. Actual real encrypted keyboard finding navigation and no-edit behavior are separately proven by the 16 new acceptance cases. The only two geometry advisories describe the focused small legend and hidden underlying list; the images show working Scroll/Esc controls, no overflow or obstructed interaction. The medium known-empty finding is resolved; no new critical, high or medium finding remains.
+
+The final delta affects only known-empty _record_items; unknown and populated branches retain their prior behavior and scalar journeys do not call the changed arm. The full 712-frame capture is retained with its actual finding, while these 80 fresh frames replace the affected scenario's evidence. The other 632 selected sequence frames, completed corrected 64-frame four-language declarations capture, exact 192-case filing matrix, published authority adoption/export gates and applicable documentation proof remain valid for their unchanged inputs. This is scoped evidence reuse, not a claim that all 712 frames were rerendered at one final fingerprint. The owning dev/tui diff reports exactly eight changed matching next-page frames; the other 72 matching scenario frames are unchanged, while 632 outside the targeted run are marked absent by selection rather than deleted product surfaces.
+
+The affected current run and named modelo-workbench-final-known-empty snapshot are installed through dev/tui's staged artifact owner. Complete before-fix captures remain available as closing-5f721a1d2e-before-empty-guidance and closing-cb04a1021c-before-record-fix; four corrected P08 locale snapshots remain. Review server HTTP/API respond 200 at port8740; review_page.html retains original SHA256 c7219ec24e94c78491c641519f0dc7826a12d1d42b6c7f73f539f53e25bafedf. Another profile UX owner continues in its own scope; its source, catalogues, capture harness and named review work are preserved.
 
 ## Recommendations
 
