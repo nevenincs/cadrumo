@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c16fa0f65c86c2a2290c4fefac513314b53f87bfa7cb54b5f89cfeb7bc8bbb5'
+body_hash: 'sha256:62a268369a8695f5351c3da29ab333c1826e69a18ce085ab5282928a6be1060d'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -534,6 +534,12 @@ Exact descriptor/source hashes and commands are in C:/Users/hello/AppData/Local/
 The closing cb04a1021c static aggregate is complete: just check-code exits 1 with three of twelve constituent gates red solely for the three proven baseline findings already named in broad-gate-final-disposition. All nine other constituents pass, including current architecture, types and formatting; no introduced finding remains. Exact complete output: C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/code-closing-final.log. The broad unit exit 1 and its subsequent four real pointer-race/refusal passes remain separately recorded, without upgrading that full unit run to green. Full locale inventory likewise remains red for its 19 inventoried baseline issues.
 
 After the 23 sequence goldens changed, all four strict isolated user HTML builds were rerun from current source: en/es/ca/hu all exit 0 with zero Sphinx warnings. The current artifacts pass all 24,316 local links/fragments over 60 authored pages per language and all 16 changed-output sentinels. Each of the 23 current golden hashes remains stable. Commands, exits, link and output results are in C:/Users/hello/AppData/Local/Temp/modelo-docs-closing-20261002/build-results.json, html-link-review.json and rendered-sequence-review.json. No pre-refresh HTML output is substituted for current proof. Independent code review of a9439772ab through cb04a1021c reports PASS and no critical/high finding. The complete workbench capture and its visual review remain the only outstanding plan-close evidence.
+
+### Integrated repeating-record projection — high, S17 reopened
+
+The fresh cb04a1021c frozen workbench capture shows two Modelo 349 operators in the summary and zero detail rows on its next page. The real calculation golden contains two persisted `detail_rows` for the `operador` binding record. The application form builder reads only `row_casilla_values`, and treats an export-record group as known whenever a revision exists. Its typed registry export record uses `repeat=binding_rows` and `binding_record=operador`; the form group selects that record. This is a real projection defect, not an empty fixture or a display filter.
+
+S17 is reopened. The correction belongs in the generic application read model, using existing typed registry relationships and persisted values, with faithful unknown-versus-empty semantics. The running cb04a1021c 712-frame capture is retained as evidence of the defect and cannot close S50 or S30. A corrected committed snapshot, owning calculation/read-model tests, and a new integrated capture are required. The completed P08 declarations review remains valid for its unaffected declarations-summary surface.
 
 ## Recommendations
 
