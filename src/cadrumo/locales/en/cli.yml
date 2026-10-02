@@ -69,11 +69,12 @@ cli:
           and a reviewable draft, one typed result row per document.
         batch_items_refused_message: Some documents were refused. Every other document
           in the run still completed; the refused rows name what was seen.
-        batch_label_reading_degraded_message: '{count} stored draft(s) stand on their
-          label reading alone because the model fill did not run; the fields it was
-          to read are empty in those drafts, not missing from the documents, and each
-          row names the reason. Confirming a document reads it again, so those fields
-          are filled then once the reason has cleared, or you can supply them yourself.'
+        batch_label_reading_degraded_message: '{count} stored draft(s) were read from
+          the document labels only, because the automatic reader did not run. The
+          fields it would have filled are empty in those drafts because they have
+          not been read yet, not because the documents lack them; each row gives the
+          reason. Confirming a document reads it again, so those fields are filled
+          then if the reason has cleared, or you can fill them in yourself.'
         batch_pending_review_message: Some drafts carry an issue you must resolve
           before an invoice is created. They are held, not failed.
         batch_progress_message: 'processed %{source}: %{status}'
@@ -210,19 +211,20 @@ cli:
         invoice_number_help: Supplier invoice number
         iva_amount_help: Invoice IVA amount
         iva_rate_help: Applied IVA rate as a percentage, for example 21
-        label_reading_busy_refused: 'Another on-host reading was already using this
-          machine''s inference slot, so the reading model was not run. The {count}
-          field(s) the label rules left unread stay empty: {fields}. The label reading
-          stands; extract again once the other reading finishes, or supply those fields
-          yourself.'
-        label_reading_headroom_refused: 'The on-host reading model was not loaded:
-          this machine showed no measured memory headroom for it. The {count} field(s)
-          the label rules left unread stay empty: {fields}. The label reading stands;
-          free memory and extract again, or supply those fields yourself.'
-        label_reading_reader_unavailable: 'The on-host semantic reader could not be
-          run ({error_type}), so the {count} field(s) the label rules left unread
-          stay empty: {fields}. The label reading stands, and those fields are yours
-          to supply.'
+        label_reading_busy_refused: 'The automatic reader did not run because another
+          reading was already using this machine. The {count} field(s) the labels
+          did not cover have not been read yet and stay empty: {fields}. The document
+          was read from its labels only; extract again once the other reading finishes,
+          or fill in those fields yourself.'
+        label_reading_headroom_refused: 'The automatic reader did not run because
+          this machine does not have enough free memory for it. The {count} field(s)
+          the labels did not cover have not been read yet and stay empty: {fields}.
+          The document was read from its labels only; free some memory and extract
+          again, or fill in those fields yourself.'
+        label_reading_reader_unavailable: 'The automatic reader could not start ({error_type}).
+          The {count} field(s) the labels did not cover have not been read yet and
+          stay empty: {fields}. The document was read from its labels only; extract
+          again later, or fill in those fields yourself.'
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
         pull_actor_help: Your name or label.
@@ -668,18 +670,18 @@ cli:
       year_help: Filing year
     modelo:
       aggregate:
-        calculation_rows_absent: 'Modelo {modelo} {filing_year} {period}: no stored
-          rows exist for the {source_family} source its calculation reads, so this
-          report is empty because the data is missing, not because it is zero.'
+        calculation_rows_absent: 'Modelo {modelo} {filing_year} {period}: no rows
+          are stored for the {source_family} data its calculation reads, so this report
+          is empty because the data is missing, not because the amount is zero.'
         counterpart_observation_help: JSON CounterpartObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
         foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
-        invoice_retencion_wrong_modelo: --received-invoice-retencion records received-invoice
-          withholding for Modelos %{accepted_modelos} only; modelo %{modelo} does
-          not accept invoice evidence.
+        invoice_retencion_wrong_modelo: --received-invoice-retencion records withholding
+          from received invoices for Modelos %{accepted_modelos} only; Modelo %{modelo}
+          does not take withholding from invoices.
         json_not_object: '{flag} must be a JSON object.'
         json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
         json_validation_error: 'The value of {flag} is not a valid observation object:
@@ -707,10 +709,11 @@ cli:
           one withholding allocation from a received invoice, with its payment or
           exigibility evidence. One allocation per command; the scheme is a legal
           fact about the perceptor''s activity and is never inferred from the invoice.'
-      aggregate_help: Run the per-modelo aggregation service for one modelo and period.
-        Counterpart and foreign-asset observations are passed as JSON options. Withholding
-        modelos read the rows already stored for the period, after recording the single
-        received-invoice or ledger-payment withholding allocation a command may carry.
+      aggregate_help: Aggregate the figures for one modelo and period. Counterpart
+        and foreign-asset observations are passed as JSON options. Withholding modelos
+        read the rows already stored for the period, after recording the one withholding
+        from a received invoice or from a payment in your records that a command may
+        carry.
       app_help: 'Inspect the modelo definitions: the catalogue of AEAT tax forms (modelos)'
       audit:
         bundle_id_help: Evidence bundle id (full SHA-256 or unambiguous prefix).
@@ -1844,13 +1847,14 @@ cli:
       output_language_help: Output language for the response text (es, en, ca, hu).
       provider_help: Authentication provider id (e.g. certificate)
       providers_help: List supported authentication providers
-      route_help: 'Cl@ve Móvil approval route: qr or app_request. Requires --provider clave_movil.'
       reset_all_help: Reset every known authentication provider
       reset_help: Remove local provider configuration, sessions, locks, certificate
         registrations, and stored certificate secrets
       reset_requires_yes: Authentication reset removes stored configuration and credentials.
         Re-run with --yes to confirm.
       reset_yes_help: Confirm the destructive authentication reset
+      route_help: 'Cl@ve Móvil approval route: qr or app_request. Requires --provider
+        clave_movil.'
       status_help: Show configured authentication state
       status_summary_configured: Authentication is configured but no live session
         is available yet.

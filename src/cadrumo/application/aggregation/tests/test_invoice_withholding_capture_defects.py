@@ -133,7 +133,7 @@ def test_an_invoice_with_two_defects_is_refused_with_both() -> None:
     assert envelope.context is not None
     assert envelope.context["refusal_code"] == "no_retencion_declared,non_resident_supplier"
     reasons = envelope.context["defect_reasons"]
-    assert "The invoice declares no withheld amount." in reasons
+    assert "The invoice shows no withheld amount." in reasons
     assert "The supplier is not resident in Spain" in reasons
     assert reasons.index("no withheld amount") < reasons.index("not resident in Spain")
 

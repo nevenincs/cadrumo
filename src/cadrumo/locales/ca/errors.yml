@@ -835,13 +835,11 @@ errors:
       un fitxer dins l'àmbit d'accés concedit.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
-    canonical_invoice_draft_reader_busy_refused: No s'ha executat el model del lector
-      d'esborranys de factures perquè una altra lectura local ja ocupava la inferència
-      d'aquest equip.
-    canonical_invoice_draft_reader_headroom_refused: No s'ha carregat el model del
-      lector d'esborranys de factures perquè aquest equip no ha mostrat marge de memòria
-      mesurat per a ell.
-    canonical_invoice_withholding_defects: L'evidència de la factura no permet registrar
+    canonical_invoice_draft_reader_busy_refused: El lector automàtic de factures no
+      s'ha executat perquè una altra lectura ja feia servir aquest equip.
+    canonical_invoice_draft_reader_headroom_refused: El lector automàtic de factures
+      no s'ha executat perquè aquest equip no té prou memòria lliure.
+    canonical_invoice_withholding_defects: La factura no es pot fer servir per registrar
       la retenció fins que es corregeixin a la factura tots els defectes indicats.
     canonical_invoice_withholding_evidence: L'evidència de la factura no permet registrar
       la retenció.
@@ -1023,10 +1021,10 @@ errors:
       no es pot llegir, així que no es pot esborrar sense perdre'n la revisió; cal
       recuperar-lo manualment.
     refused_actividad_asset_accelerated_da18_depreciation_not_computed: En aquest
-      període impositiu, la DA 18 LIS concedeix als vehicles elèctrics nous i als
+      període impositiu, la LIS DA 18 concedeix als vehicles elèctrics nous i als
       punts de recàrrega amortització accelerada al doble del coeficient lineal màxim,
       no llibertat d'amortització. Aquest règim no es calcula, per la qual cosa no
-      s'ha calculat cap amortització.
+      s'ha calculat cap càrrec.
     refused_actividad_asset_claim_conflict: L'amortització registrada entra en conflicte
       amb les ja registrades per a l'actiu.
     refused_actividad_asset_incomplete: Al quadre d'amortització de l'actiu li falta
