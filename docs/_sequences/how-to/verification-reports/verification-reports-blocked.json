@@ -365,18 +365,20 @@
             "action": null,
             "code": "modelo.work.verify.finding.stale_calculation",
             "context": {
+              "added_count": "1",
               "anchored": "True",
               "changed_count": "0",
               "filing_year": "2026",
               "kind": "stale_calculation",
               "legal_refs": "ley-37-1992:art-164, rd-1619-2012:art-2",
+              "membership_available": "True",
               "modelo": "303",
               "period": "1T",
               "removed_count": "1",
               "severity": "blocking",
               "source_refs": "aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2024-late"
             },
-            "message": "Your records changed after modelo 303 2026, period 1T, was calculated (entries removed: 1). Calculate it again.",
+            "message": "Your records no longer match the calculation of Modelo 303 2026, period 1T: 1 entries are not accounted for, 0 changed and 1 were removed. Calculate this declaration again.",
             "severity": "warning"
           }
         ],
@@ -430,9 +432,12 @@
                     "evidence_id": "modelo.work.verify.ledger_snapshot",
                     "provenance": "persisted_state",
                     "values": {
+                      "added_transaction_count": 1,
+                      "added_transaction_ids": "f92ac89c29e25f6160d7ddadfb7f86fa4ee5a49607626fdeeff269a6f034d5af",
                       "calculation_revision_id": "67fd5f3a8c15e9f7f77d6057ebded191437a263431f6ba8af2d821b4189dda3c",
                       "changed_transaction_count": 0,
                       "changed_transaction_ids": "",
+                      "membership_available": true,
                       "removed_transaction_count": 1,
                       "removed_transaction_ids": "9bb81ae61eb7eb1f6c141aa8bf750545163f9f952a99475eeced513df3270b5a",
                       "snapshot_anchored": true,
@@ -451,7 +456,7 @@
                 "ley-37-1992:art-164",
                 "rd-1619-2012:art-2"
               ],
-              "message": "Your records changed after modelo 303 2026, period 1T, was calculated (entries removed: 1). Calculate it again.",
+              "message": "Your records no longer match the calculation of Modelo 303 2026, period 1T: 1 entries are not accounted for, 0 changed and 1 were removed. Calculate this declaration again.",
               "severity": "blocking",
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -473,7 +478,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "e181794a8b44d00e43ccecfddea68e9e2c1d3411fb841dba10b3c44ba9f49829",
+          "verification_report_id": "ea73364343fb74046cab1e908d8044a31b009798e54338b845d756059607a814",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

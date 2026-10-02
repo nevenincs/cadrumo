@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:f5048a2664eb7a216a34cbcddf206103f8b011137d9d79898def3355f72f04c2'
+body_hash: 'sha256:ce74dab693c8b11811a3c50cc513730671d7b0d1c8f8541ff09148b614f77731'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1731,6 +1731,42 @@ related:
 - `S30` `verify:` `just test-tui (retired test paths; 20261002T004145.090510Z-pytest-42964-070266bf)` -> `fail`
 - `S30` `verify:` `just check-code (code-final.log; 6 of 12 gates failed)` -> `fail`
 - `S30` `verify:` `just check-locales (20261002T010652.866101Z-check-locales-56640-92f6d5cd; 19 baseline inventory findings)` -> `fail`
+- `S30` `verify:` `just test-tui (1848 executed; separate serial selection has no declared tests)` -> `pass`
+- `S30` `verify:` `just check-import-boundaries (20261002T011904.807883Z)` -> `pass`
+- `S30` `verify:` `just test-unit (20261002T010642.672625Z; 22580 passed; unchanged Windows pointer race failed)` -> `fail`
+- `S30` `verify:` `uv run --no-sync pytest -q -n0 -m unit pointer-write-and-read-owning-suites (20261002T012412.762031Z; 4 passed)` -> `pass`
+- `S30` `verify:` `real S61 CLI refusal suite after pinning (20261002T010738.729742Z; 8 passed)` -> `pass`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_acceptance.py`
+- `S30` `verify:` `uv run --no-sync pytest -q -n0 -m unit-or-integration lifecycle-edit-door-and-production-edits (20261002T012752.810018Z; 7 passed)` -> `pass`
+- `S30` `verify:` `uv run --no-sync ruff check and format-check lifecycle.py and test_workbench_acceptance.py` -> `pass`
+- `S30` `verify:` `uv run --no-sync ty check lifecycle.py and test_workbench_acceptance.py` -> `pass`
+- `S58` `M` `docs/_sequences/how-to/censo-update/censo-update-preflight.json`
+- `S58` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-applicability.json`
+- `S58` `M` `docs/_sequences/how-to/file-at-aeat/file-at-aeat-chain.json`
+- `S58` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-agenda.json`
+- `S58` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-backlog.json`
+- `S58` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-report.json`
+- `S58` `M` `docs/_sequences/how-to/filing-spine/filing-spine-chain.json`
+- `S58` `M` `docs/_sequences/how-to/filing-spine/filing-spine-exact-ids.json`
+- `S58` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-export-file.json`
+- `S58` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S58` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q2.json`
+- `S58` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1.json`
+- `S58` `M` `docs/_sequences/how-to/modelo-100/modelo-100-export-file.json`
+- `S58` `M` `docs/_sequences/how-to/modelo-130/modelo-130-manual-casilla.json`
+- `S58` `M` `docs/_sequences/how-to/modelo-130/modelo-130-export-file.json`
+- `S58` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S58` `M` `docs/_sequences/how-to/modelo-349/modelo-349-export.json`
+- `S58` `M` `docs/_sequences/how-to/profile-setup/profile-setup-inspect.json`
+- `S58` `M` `docs/_sequences/how-to/quickstart/quickstart-export.json`
+- `S58` `M` `docs/_sequences/how-to/review-calculation-values/review-values-manual-casilla.json`
+- `S58` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete.json`
+- `S58` `M` `docs/_sequences/how-to/verification-reports/verification-reports-blocked.json`
+- `S58` `M` `docs/_sequences/how-to/verification-reports/verification-reports-export-check.json`
+- `S58` `verify:` `23 owning dev.docs.sequences refresh commands (modelo-sequences-final-20261002/manifest.json)` -> `pass`
+- `S58` `verify:` `23 recorded sequences semantic review preserves argv/kind/exit_code/captures` -> `pass`
+- `S58` `verify:` `just docs-sequences-check initial integrated output (23 stale goldens)` -> `fail`
 
 ## Notes
 
@@ -1835,3 +1871,6 @@ related:
 - `S30` First broad run caught stale S62 rate oracles, old Hungarian locator wording, retired recipe paths, new finite locale families, misplaced integration tests/private imports and unused feature facades; each fixed through its owning boundary without weakening detectors. Four filesystem-scan failures arose because tests were moved while a cached source inventory was running; final canonical rerun uses quiet source.
 - `S30` The approved-draft first-read regression now uses a genuinely non-declarable personal row for its required nonempty catalogue and explicitly asserts the verification grant; an unrecorded business row is correctly refused by the new membership gate.
 - `S30` Full locale inventory is still red for proven baseline issues: six obsolete-ID catalogues, nine unrelated echoes, three ES-only draft REAGP short descriptions, absent spelling dictionaries and two accepted open reason namespaces. All new six finite families and all known required translation cells are ready. Final static/TUI/unit/sequence gates and fresh render review remain outstanding; S30 stays open.
+- `S30` The actual broad unit exit1 is preserved; its sole WinError5 pointer contention failure touches files unchanged from82b7844265. The real owning read/write race plus permanent-refusal suite passes4 after contention clears, no timeout/production/detector change. Source batch has independent PASS with no critical/high; final exact acceptance matrix and frozen captures still pending.
+- `S30` Removed the unused renewal facade; live apply renewal remains and real production edits pass. Exact192-case es/en/ca/hu ×80x24/120x36/160x48 ×dark/light acceptance matrix now exercises tokens, actual sources/help opening, focus and abandoned-value privacy; owning run still pending at this code checkpoint.
+- `S58` Canonical targeted refresh changes only approved notice wording, empty AEAT concern fields, override check-level, grounded 303 surcharge text, and corrected ledger-membership facts/verification-report digest. Complete original bytes and per-path deltas retained C:/Users/hello/AppData/Local/Temp/modelo-sequences-final-20261002; no new masks/assertion/command changes. Final whole read-only sequence gate is running; current goldens stable for frozen captures.

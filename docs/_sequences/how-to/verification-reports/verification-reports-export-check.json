@@ -341,7 +341,7 @@
               "modelo": "303",
               "period": "1T"
             },
-            "message": "The local export is not official filing evidence.",
+            "message": "The exported file is not an AEAT filing receipt.",
             "severity": "warning"
           },
           {
@@ -353,7 +353,7 @@
               "period": "1T",
               "software_identity_grade": "development_mock"
             },
-            "message": "The file header carries Cadrumo's all-zero development software identity; AEAT will not accept this file for presentation.",
+            "message": "AEAT will not accept this file for filing: it contains Cadrumo's all-zero development software identity. Enter the calculated box values in the AEAT form instead.",
             "severity": "warning"
           }
         ],
