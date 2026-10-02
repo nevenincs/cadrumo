@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/first-quarterly-filing.md:1
 msgid "Prepare your first quarterly IRPF filing"
-msgstr "Készítse elő az első negyedéves IRPF-benyújtását"
+msgstr "Készítsd elő az első negyedéves IRPF-benyújtásodat"
 
 #: ../../how-to/first-quarterly-filing.md:3
 msgid ""
@@ -31,12 +31,13 @@ msgid ""
 "employed taxpayer with a NIF or NIE who is running Cadrumo for the first "
 "time."
 msgstr ""
-"Ez az oldal az első negyedéves Modelo 130 benyújtását tárgyalja, elejétől"
-" a végéig: vigyen be egy negyedévnyi tranzakciót a nyilvántartásaiba, "
-"osztályozza őket üzleti bevételként és levonható kiadásként, készítse el "
-"a piszkozatot, és győződjön meg róla, hogy átment az ellenőrzésen, "
-"mielőtt benyújtja. Egy NIF-fel vagy NIE-vel rendelkező önfoglalkoztató "
-"adózó számára íródott, aki először használja a Cadrumót."
+"Ez az oldal az első negyedéves Modelo 130 benyújtását mutatja be az "
+"elejétől a végéig: vigyél be egy negyedévnyi tranzakciót a "
+"nyilvántartásaidba, sorold be őket üzleti bevételként és levonható "
+"kiadásként, készítsd el a piszkozatot, és győződj meg róla, hogy átment "
+"az ellenőrzésen, mielőtt benyújtod. Az útmutató neked szól, ha NIF-fel "
+"vagy NIE-vel rendelkező önálló vállalkozó vagy, és most futtatod először "
+"a Cadrumót."
 
 #: ../../how-to/first-quarterly-filing.md:9
 msgid ""
@@ -46,8 +47,8 @@ msgid ""
 msgstr ""
 "A Cadrumo soha nem nyújt be bevallást az Agencia Estatal de "
 "Administración Tributaria (AEAT) részére. Helyben állítja elő a Modelo "
-"130 fichero-BOE fájlját; ezt a fájlt az AEAT hivatalos csatornáján Ön "
-"nyújtja be."
+"130 fichero-BOE fájlját; ezt a fájlt az AEAT hivatalos csatornáján te "
+"nyújtod be."
 
 #: ../../how-to/first-quarterly-filing.md:13
 msgid ""
@@ -57,8 +58,8 @@ msgid ""
 msgstr ""
 "Az ezen az oldalon szereplő parancsok a dokumentáció összeállításakor "
 "élőben futnak egy friss, szintetikus sandboxban. A tranzakciók, az "
-"összegek és az adózó kitaláltak. Futtassa ugyanezeket a parancsokat a "
-"saját profilján, hogy a saját számait lássa."
+"összegek és az adózó kitaláltak. Futtasd ugyanezeket a parancsokat a "
+"profilodon, hogy lásd a saját számaidat."
 
 #: ../../how-to/first-quarterly-filing.md:17
 msgid ""
@@ -72,7 +73,7 @@ msgstr ""
 
 #: ../../how-to/first-quarterly-filing.md:21
 msgid "Bring your quarter's transactions in"
-msgstr "Hozza be a negyedéve tranzakcióit"
+msgstr "Hozd be a negyedéved tranzakcióit"
 
 #: ../../how-to/first-quarterly-filing.md:23
 msgid ""
@@ -80,9 +81,9 @@ msgid ""
 "comma-separated statement with two transactions: one payment collected "
 "from a client, and one office-supplies purchase."
 msgstr ""
-"Importálja a negyedévre vonatkozó bankszámlakivonatát. Ez a példa egy "
-"kicsi, vesszővel elválasztott kivonatot olvas be két tranzakcióval: egy "
-"ügyféltől beszedett kifizetéssel és egy irodaszer-beszerzéssel."
+"Importáld a negyedévre szóló bankszámlakivonatot. Ez a példa egy kis, "
+"vesszővel elválasztott kivonatot olvas be, rajta két tranzakcióval: egy "
+"ügyféltől beérkezett kifizetéssel és egy irodaszer-vásárlással."
 
 #: ../../how-to/first-quarterly-filing.md:31
 msgid ""
@@ -91,15 +92,15 @@ msgid ""
 "quarter of 2026. Point `--provider` at the format your bank exports; list"
 " the accepted providers with:"
 msgstr ""
-"Az import beolvassa a kivonatot, és minden tranzakciót tételként tárol az"
-" Ön nyilvántartásában. A lista megerősíti, hogy a két tétel a 2026-os "
-"első negyedévbe került. Irányítsa a `--provider`-t arra a formátumra, "
-"amelyet a bankja exportál; listázza az elfogadott szolgáltatókat a "
-"következővel:"
+"Az import beolvassa a kivonatot, és minden tranzakciót tételként tárol a "
+"nyilvántartásaidban. A lista megerősíti, hogy a két tétel a 2026-os első "
+"negyedévbe került. A `--provider` kapcsolót állítsd arra a formátumra, "
+"amelyet a bankod exportál; az elfogadott szolgáltatókat ezzel a "
+"paranccsal listázd:"
 
 #: ../../how-to/first-quarterly-filing.md:40
 msgid "Classify each transaction"
-msgstr "Sorolja be az egyes tranzakciókat"
+msgstr "Sorold be az egyes tranzakciókat"
 
 #: ../../how-to/first-quarterly-filing.md:42
 msgid ""
@@ -107,9 +108,9 @@ msgid ""
 "how the tax calculation should treat it. Classify each entry before you "
 "calculate."
 msgstr ""
-"Egy importált tétel hordoz egy dátumot és egy összeget, de még nem mondja"
-" meg, hogyan kezelje az adószámítás. Osztályozzon minden tételt a "
-"számítás előtt."
+"Egy importált tételhez tartozik dátum és összeg, de abból még nem derül "
+"ki, hogyan kezeli majd az adószámítás. Minden tételt sorolj be a számítás"
+" előtt."
 
 #: ../../how-to/first-quarterly-filing.md:45
 msgid ""
@@ -118,10 +119,10 @@ msgid ""
 "from the listing. The income classification takes only the business "
 "decision."
 msgstr ""
-"Jelölje meg a beérkezett fizetést üzleti bevételként, a vásárlást pedig "
-"kategóriával ellátott, levonható üzleti kiadásként. Az egyes "
-"tranzakcióazonosítókat a listából vegye. A bevétel besorolásához csak az "
-"üzleti döntés kell."
+"Jelöld az ügyféltől beszedett kifizetést üzleti bevételnek, a vásárlást "
+"pedig kategóriával ellátott, levonható üzleti kiadásnak. Válaszd ki az "
+"egyes tranzakcióazonosítókat a listából. A bevétel besorolásánál csak az "
+"üzleti jellegről kell döntened."
 
 #: ../../how-to/first-quarterly-filing.md:49
 msgid ""
@@ -133,16 +134,16 @@ msgid ""
 msgstr ""
 "A kiadáshoz emellett kell a `--category-id`, az adóalap, az IVA-mezők és "
 "a `--deduction-kind`, vagyis az IVA-levonás pontos forrása (itt "
-"`domestic_current`). Ezután regisztrálja a szállító számláját. A számla "
-"az IVA-kulcsát százalékban várja (`--iva-rate 21`), a `classify` viszont "
-"tizedes törtet (`0.21`):"
+"`domestic_current`). Ezután regisztráld a szállító számláját. A számlán "
+"az IVA-kulcs százalékos érték (`--iva-rate 21`), a `classify` parancs "
+"viszont tizedes törtet vár (`0.21`):"
 
 #: ../../how-to/first-quarterly-filing.md:58
 msgid ""
 "Link the invoice to the expense row with the `evidence_id` the "
 "registration printed:"
 msgstr ""
-"Kapcsolja a számlát a kiadássorhoz a regisztráció által kiírt "
+"Kapcsold a számlát a kiadási sorhoz a regisztráció által kiírt "
 "`evidence_id` segítségével:"
 
 #: ../../how-to/first-quarterly-filing.md:64
@@ -155,7 +156,7 @@ msgstr ""
 
 #: ../../how-to/first-quarterly-filing.md:67
 msgid "List the accepted expense categories any time:"
-msgstr "Az elfogadott kiadáskategóriákat bármikor listázhatja:"
+msgstr "Az elfogadott kiadáskategóriákat bármikor listázhatod:"
 
 #: ../../how-to/first-quarterly-filing.md:73
 msgid ""
@@ -164,12 +165,12 @@ msgid ""
 "transactions.md)."
 msgstr ""
 "A teljes besorolási munkafolyamathoz (tömeges besorolás, vegyes "
-"felhasználású arányok és az áttekintési sor) olvassa el a [Tranzakciók "
+"felhasználású arányok és az áttekintési sor) olvasd el a [Tranzakciók "
 "besorolása](classify-transactions.md) útmutatót."
 
 #: ../../how-to/first-quarterly-filing.md:76
 msgid "Prepare the Modelo 130 draft"
-msgstr "Készítse elő a Modelo 130 piszkozatot"
+msgstr "Készítsd elő a Modelo 130 piszkozatot"
 
 #: ../../how-to/first-quarterly-filing.md:78
 msgid ""
@@ -179,7 +180,7 @@ msgid ""
 "IRPF payment on account for self-employed activity under estimación "
 "directa."
 msgstr ""
-"Miután a negyedév tételei osztályozva vannak, készítse el az előleget. Az"
+"Miután a negyedév tételei osztályozva vannak, készítsd el az előleget. Az"
 " alábbi előkészítés beállít egy önfoglalkoztató profilt és osztályozott "
 "nyilvántartásokat, majd létrehozza a piszkozatot, kiszámítja és "
 "ellenőrzi. A Modelo 130 az önfoglalkoztató tevékenység IRPF-előlege "
@@ -187,15 +188,15 @@ msgstr ""
 
 #: ../../how-to/first-quarterly-filing.md:87
 msgid "Read the steps in order:"
-msgstr "Olvassa el a lépéseket sorrendben:"
+msgstr "Olvasd el a lépéseket sorrendben:"
 
 #: ../../how-to/first-quarterly-filing.md:89
 msgid ""
 "Create the draft for Modelo 130, first quarter 2026. The command reports "
 "a `work_unit_id` that identifies the draft."
 msgstr ""
-"Hozza létre a Modelo 130 piszkozatát a 2026-os első negyedévre. A parancs"
-" jelent egy `work_unit_id`-t, amely azonosítja a piszkozatot."
+"Hozd létre a Modelo 130 piszkozatát a 2026-os első negyedévre. A parancs "
+"egy `work_unit_id`-t jelent, amely azonosítja a piszkozatot."
 
 #: ../../how-to/first-quarterly-filing.md:91
 msgid ""
@@ -208,22 +209,23 @@ msgid ""
 "three `--binding ...=0` values are the prior-period carries a true first "
 "quarter does not have."
 msgstr ""
-"Számítsa ki. A Cadrumo beolvassa az Ön osztályozott nyilvántartásait, és "
+"Számítsd ki. A Cadrumo beolvassa a besorolt nyilvántartásaidat, és "
 "kitölti a rovatokat: a `01` rovat a negyedév bevétele, a `02` rovat a "
 "levonható kiadások, a `03` rovat a nettó hozam, a `04` rovat pedig az "
-"előleg. A 01 rovat az 1000.00-t mutatja, nem az Ön által beszedett "
-"1210.00-t: az IVA soha nem része a bevételének, ezért a 210.00 IVA "
-"kimarad. A példa-nyilvántartásokkal a nettó hozam `500.00`, az előleg "
-"pedig `100.00`, a nettó húsz százaléka. A három `--binding ...=0` érték "
-"az előző időszaki átvezetés, amely egy valódi első negyedévnek nincs."
+"előleg. A 01 rovat 1000.00-t mutat, nem azt az 1210.00-t, amit beszedtél:"
+" az IVA soha nem része a bevételednek, ezért a 210.00 IVA kimarad. A "
+"példában szereplő nyilvántartásokkal a nettó hozam `500.00`, az előleg "
+"pedig `100.00`, vagyis a nettó húsz százaléka. A három `--binding ...=0` "
+"érték az előző időszaki átvezetés; ilyen egy valódi első negyedévben "
+"nincs."
 
 #: ../../how-to/first-quarterly-filing.md:98
 msgid ""
 "Check the draft. The result reads `granted_verificado_completo` true, so "
 "the draft is complete and ready to file."
 msgstr ""
-"Ellenőrizze a piszkozatot. Az eredmény `granted_verificado_completo` igaz"
-" értéket mutat, így a piszkozat teljes és benyújtásra kész."
+"Ellenőrizd a piszkozatot. Az eredmény `granted_verificado_completo` "
+"értéke igaz, így a piszkozat teljes és benyújtásra kész."
 
 #: ../../how-to/first-quarterly-filing.md:101
 msgid "When your expenses exceed your income"
@@ -237,8 +239,8 @@ msgid ""
 "1500.00 against 1000.00 of income, then calculates and checks the draft "
 "again:"
 msgstr ""
-"Ha egy negyedévben a levonható kiadásai nagyobbak a bevételeinél, a nettó"
-" hozam negatív. Az alábbi példa ugyanabban a negyedévben rögzít egy "
+"Ha egy negyedévben a levonható kiadásaid nagyobbak a bevételeidnél, a "
+"nettó hozam negatív. Az alábbi példa ugyanabban a negyedévben rögzít egy "
 "második, 1000.00 összegű irodaszer-vásárlást, így a kiadások elérik az "
 "1500.00-t az 1000.00 bevétellel szemben, majd újra kiszámítja és "
 "ellenőrzi a piszkozatot:"
@@ -314,7 +316,7 @@ msgstr ""
 
 #: ../../how-to/first-quarterly-filing.md:137
 msgid "Check the figures and record the filing"
-msgstr "Ellenőrizze a számokat, és rögzítse a benyújtást"
+msgstr "Ellenőrizd a számokat, és rögzítsd a benyújtást"
 
 #: ../../how-to/first-quarterly-filing.md:139
 msgid ""
@@ -325,12 +327,13 @@ msgid ""
 " a draft bundles its supporting documents when you check it, so an "
 "invoice attached afterwards does not reach the filing."
 msgstr ""
-"Az ellenőrzés eredménye jelzi, hogy a piszkozat kész. Az ellenőrzés "
-"mindaddig elutasít, amíg minden levonható kiadás tételéhez nincs "
-"bizonylatként hozzákapcsolva a beszerzési számla, ezért a besorolási "
-"lépés rögzítette a szállítói számlát, és a számítás előtt hozzákapcsolta."
-" Tartsa ezt a sorrendet: a piszkozat az ellenőrzéskor gyűjti össze a "
-"bizonylatait, ezért az utólag csatolt számla nem kerül be a benyújtásba."
+"Az ellenőrzés eredménye jelzi, hogy a piszkozat kész. Az ellenőrzés addig"
+" elutasít, amíg minden levonható kiadás tételéhez nincs alátámasztó "
+"dokumentumként hozzákapcsolva a beszerzési számla, ezért a besorolási "
+"lépésnél a szállítói számlát regisztráld és kapcsold hozzá a számítás "
+"előtt. Tartsd meg ezt a sorrendet: a piszkozat az ellenőrzéskor "
+"összegyűjti az alátámasztó dokumentumokat, ezért az utólag csatolt számla"
+" nem kerül be a benyújtásba."
 
 #: ../../how-to/first-quarterly-filing.md:146
 msgid ""
@@ -340,7 +343,7 @@ msgid ""
 msgstr ""
 "Az alábbi sorozat exportálja az ellenőrzött piszkozatot, majd rögzíti a "
 "benyújtást. Az exportálás nem írja felül a meglévő fájlt, hacsak meg nem "
-"adja a `--replace` kapcsolót; az exportálási szabályokat [A benyújtási "
+"adod a `--replace` kapcsolót; az exportálási szabályokat [A benyújtási "
 "munkafolyamat](filing-spine.md) ismerteti."
 
 #: ../../how-to/first-quarterly-filing.md:154
@@ -350,10 +353,10 @@ msgid ""
 "Modelo 130 IRPF instalment](modelo-130.md) for the cumulative year-to-"
 "date behaviour."
 msgstr ""
-"Egy későbbi negyedév erre épül: hagyja beállítatlanul a három korábbi "
-"időszaki értéket, hogy a Cadrumo az Ön rögzített benyújtásaiból vegye "
-"őket. Az év eleji halmozott működésről lásd: [Egy Modelo 130 IRPF-előleg "
-"előkészítése](modelo-130.md)."
+"Egy későbbi negyedév erre épül: hagyd beállítatlanul a három korábbi "
+"időszaki értéket, hogy a Cadrumo átvegye őket az általad rögzített "
+"benyújtásokból. Az év elejétől halmozódó működésről lásd: [Egy Modelo 130"
+" IRPF-előleg előkészítése](modelo-130.md)."
 
 #: ../../how-to/first-quarterly-filing.md:159
 msgid "Next steps"
@@ -373,5 +376,4 @@ msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
 #: ../../how-to/first-quarterly-filing.md:164
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
-msgstr "[Nyújtsa be a nyomtatványát az AEAT-portálon](file-at-aeat.md)"
-
+msgstr "[Nyújtsd be a nyomtatványodat az AEAT-portálon](file-at-aeat.md)"

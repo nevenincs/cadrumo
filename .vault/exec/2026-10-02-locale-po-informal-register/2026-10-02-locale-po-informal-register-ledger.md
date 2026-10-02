@@ -5,40 +5,14 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:52b6c5e41c624f87b5d981047d62b3a454f23a16d77e3eb50ed58450e08c536a'
+body_hash: 'sha256:80831ad57d0e83f4cd61825680cdc359aec2b8764b910cfac18ac2cea2e56d7c'
 related:
   - "[[2026-10-02-locale-po-informal-register-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `locale-po-informal-register` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `src/cadrumo/locales`
 - `S01` `M` `dev/locales/tests/test_parity.py`
@@ -59,6 +33,61 @@ related:
 - `S03` `verify:` `uv run --no-sync pytest -q -n 0 -p no:randomly -m unit dev/docs/tests/test_docs_build_localized_ca.py dev/docs/tests/test_docs_build_localized_es.py` -> `pass`
 - `S03` `verify:` `uv run --no-sync pytest -q -n 0 -m integration dev/docs/tests/test_docs_catalogue_drift.py` -> `pass`
 - `S03` `by:` `root; Luna Max discovery; independent contextual adjudication`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/disclaimer.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/download.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/explanation/building-on-earlier-filings.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/explanation/editing-and-verifying.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/explanation/from-records-to-figures.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/explanation/how-renta-is-assembled.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/explanation/index.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/explanation/recording-a-filing-and-the-boundary.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/explanation/reviewing-and-exporting.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/authenticate-with-aeat.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/calculation-summary.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/censo-update.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/check-aeat-notifications.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/choose-modelo.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/classify-transactions.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/correct-ledger-entries.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/file-at-aeat.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/filing-calendar.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/filing-readiness.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/filing-spine.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/first-quarterly-filing.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/index.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/irpf-lifecycle.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/iva-lifecycle.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/ledger-evidence.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/manage-invoices.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/modelo-036.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/modelo-100.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/modelo-130.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/modelo-303.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/modelo-349.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/modelo-390.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/onboarding.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/profile-setup.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/prorrata.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/protect-data-access.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/quickstart.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/reconcile.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/review-calculation-values.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/review-with-google-sheets.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/troubleshooting.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/how-to/verification-reports.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/index.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/reference/commands-and-configuration.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/reference/filesystem-state-and-safety.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/reference/import-export-and-evidence.po`
+- `S04` `M` `docs/locales/hu/LC_MESSAGES/reference/index.po`
+- `S04` `verify:` `uv run --no-sync python -m scratch_locale_tone.po gate` -> `pass`
+- `S04` `by:` `root; independent source-meaning and informal-register review`
+- `S04` `verify:` `uv run --no-sync pytest -q -n 0 -p no:randomly -m unit dev/docs/tests/test_docs_build_localized_hu.py` -> `pass`
+- `S04` `by:` `root`
 
 ## Notes
 

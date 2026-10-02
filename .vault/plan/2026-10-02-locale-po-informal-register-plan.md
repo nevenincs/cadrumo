@@ -9,7 +9,7 @@ related:
   - '[[2026-07-12-multilang-externalization-adr]]'
 modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:627c8052b2d1194753d6af509d0447d027046c39a46f081505dc62dc04bce3a7'
+body_hash: 'sha256:2191f8f4935bf1b272a98bd7ab2a5630fd7a4b16faa7f1eabafd6291dabf2425'
 ---
 
 # Documentation PO informal register and runtime commit
@@ -23,7 +23,7 @@ Approved 2026-10-02. The operator requested committing the completed runtime loc
 - [x] `S01` - Review fresh runtime drift and commit only the completed owned corrections; `owned runtime catalogue coordinates, tests, locale rule and prior vault records`.
 - [x] `S02` - Discover and normalize Catalan documentation address; `docs/locales/ca/LC_MESSAGES/**/*.po`.
 - [x] `S03` - Discover and normalize Spanish documentation address; `docs/locales/es/LC_MESSAGES/**/*.po`.
-- [ ] `S04` - Discover and normalize Hungarian documentation address; `docs/locales/hu/LC_MESSAGES/**/*.po`.
+- [x] `S04` - Discover and normalize Hungarian documentation address; `docs/locales/hu/LC_MESSAGES/**/*.po`.
 - [ ] `S05` - Review residual signals, repair the scoped pre-existing source delta, verify documentation integrity and commit the PO corrections; `scratch PO detector, owning docs verification, how-to/review-calculation-values PO synchronization, PO catalogues and plan/audit/ledger`.
 
 ## Parallelization

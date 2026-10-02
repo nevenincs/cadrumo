@@ -5,31 +5,12 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4d30aef4f8661dd131e78e6ac4d1a17ba4de1d1c07d16f5a076db6cf6d8ebffb'
+body_hash: 'sha256:9d86a11bc1565e8bb086783d4e51d339569ea4e8217345f4236a9ded125c3253'
 related:
   - "[[2026-10-02-locale-po-informal-register-plan]]"
   - "[[2026-07-18-user-docs-localization-adr]]"
   - "[[2026-07-12-multilang-externalization-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace locale-po-informal-register with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `locale-po-informal-register` audit: `Documentation register, source synchronization and commit review`
 
@@ -38,15 +19,6 @@ related:
 Review the owned runtime commit and ca/es/hu documentation PO register against the accepted gettext and externalization ADRs. Runtime ownership is established by exact coordinates; PO completeness is derived from current source pages and real Babel catalogues. English message identities, official excerpts, code and links are protected. A scoped source synchronization for one pre-existing changed paragraph is reviewed separately from register rewrites.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### Documentation register, source synchronization and commit review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. Documentation register, source synchronization and commit review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### runtime-commit | low | Isolated index preserves concurrent work
 
@@ -76,8 +48,52 @@ Three isolated PO fixture tests pass. They prove that a partial grammatical exce
 - [low; resolved] The scoped owning source synchronization replaced one outdated paragraph identity in `how-to/review-calculation-values.po` for all three target languages. Three new translations were reviewed against fresh English gettext output, fuzzy flags cleared through the owning service, and exact old/new identity and control hashes recorded without changing the immutable baseline.
 - [low; verified] Catalan and Spanish nitpicky localized user documentation builds both pass (2 tests, 493.19 seconds). Six adversarial scratch gate tests pass, including stale runtime-label and authored-example source provenance controls. The new authored-example fixture initially included an unrelated third-person `mondja` match; its neutral fixture text was corrected, with no production exemption added.
 
+### supplemental-forms | medium | Broad finite-form discovery closes the initial lexical gaps
+
+Parent spot searches found omitted Hungarian potential forms and possessed infinitives, including guide introductions, a confirmation obligation, and optional-consent changes. The detector now counts open `-hatja/-heti/-hat/-het/-nia/-nie` families alongside its original curated forms. Six released-page rows were repaired with exact current guards. Existing third-party predicates remain counted until supported by a span-specific contextual decision; the initial baseline is unchanged.
+
+### range-and-agency-grammar | medium | Parent corrects range meaning and an agency subject
+
+Review found that a Hungarian draft shortened `across a year range` to a single vintage and omitted the grammatical marker for facts held by the agency. Root corrected the range to a multi-year interval and restored `által` to the agency clause through the owning service, then reviewed the exact final paragraphs. All four runtime keys previously deferred with new caller work now match HEAD after the contributor's commits; no runtime correction remains deferred.
+
+### renta-dependency-direction | medium | Restore the annual filing dependency direction
+
+Parent review rejected the drafted Renta prerequisite sentence: it reversed which filing depends on which. The English source requires earlier filings used by the annual declaration to be recorded as filed. Root restored that direction through the owning writer, retained the prior-year AEAT proof and same-year advisory conditions, and independently reviewed the final text. The same pass restored data-source contract terminology. A subsequent parent grammar pass corrected the article from `a` to `az` after the root's terminology change.
+
+### obsolete-download-entries | low | Owning writer removes seven exact obsolete download entries
+
+The HU-B packet 16 dry run refused all writes because download.po retained seven Babel obsolete entries. Active identities already match the fresh source extraction; there is no new source drift. Root saved the exact obsolete metadata and used the owning remove_obsolete manifest alongside one informal instruction. The dry run and write each report seven obsolete removals and one changed active translation. Active identities, flags, headers and source locations remain unchanged; an exact before/after control receipt keeps this limited repair visible to the gate.
+
+### residual-discovery-and-house-style | medium | Required checks expose gaps in writer coverage
+
+Independent review found a missed remove-link imperative and formal potential forms in table navigation and a help heading. Parent morphology spot searches added open Hungarian imperative endings and identifier possessives to live discovery, then repaired 23 additional released-page values through current guarded manifests. Existing third-party clauses remain unresolved until their exact grammatical evidence is accepted. The owning documentation test also rejected 58 Hungarian values that introduced em/en dashes absent from their English source; the scratch gate now counts that house-style violation. The failed run remains visible: 33 passed and 1 failed in 15.20 seconds. No test or requirement was weakened.
+
+Independent review also clarified workbench support coverage, restored the model-dependent filing-mode sentence and reader identifier grammar, and repaired invoice field coordination and the requirement for both profile-name option values. Each correction was re-read against the English source and sealed at its exact current value.
+
+### final-address-discovery | medium | Count prerequisite headings and authored reference labels
+
+The final contextual searches counted open Hungarian imperative endings, potential forms, necessity predicates and authored MyST display labels. They found additional direct instructions, prerequisite headings and dependent reader verbs outside the first worklist. Exact guarded writes made these informal singular. Three authored reference-label changes preserve their role and target; source and message hashes constrain the narrow literal receipts. Official Spanish and corpus excerpts remain unchanged by this work.
+
+### meaning-and-review-arbitration | medium | Preserve legal conditions and actual grammatical subjects
+
+Independent source review and parent arbitration repaired ambiguous withholding terminology, VAT-detail wording, a profile-bundle antecedent, the master-key requirement for reading an encrypted Drive copy, the distinction between a superseded capture and an overwritten capture, and informal reader clauses. The earlier calculation-history and quoted-example findings are resolved. Two review findings were bound to the wrong strings and were rejected and corrected without catalogue edits. Claims against valid Hungarian coordinated-inanimate singular agreement and accusative apposition were not upheld. Exact source context and current value hashes govern acceptance.
+
+### punctuation-resolution | low | Required documentation checks accept the corrected house style
+
+The 58 introduced Unicode dash violations were repaired with source-consistent punctuation through the owning manifest service. The final combined run passed all 42 translation-service, catalogue-integrity and scratch detector tests; its separate Hungarian build test failed on unrelated live registry validation. Fifteen adversarial scratch cases now exercise real Babel parsing, the owning writer, stale receipts, partial exemptions, metadata/source damage, machine-text punctuation and authored-label target preservation.
+
+### current-convergence | low | Runtime and documentation address signals reach zero
+
+The live runtime gate and documentation PO gate both equal zero. No stale decision, missing rewrite review, literal/control violation, fuzzy or untranslated message, source identity drift or source-context change remains in the PO gate. The immutable discovery baselines and history are retained. Zero describes the reviewed detector surface; it does not certify complete linguistic recall.
+
+### concurrent-build-input | medium | Keep the failed live build visible
+
+The Hungarian nitpicky documentation build stopped while compiling Modelo 360 revision 2010-y-siguientes: its live form layout referenced bindings that concurrent registry changes had removed. The run recorded 42 passed and 1 failed in 137.75 seconds. No localization test or registry condition was weakened. Current input comparison shows that the obsolete layout references have since been removed by that workstream; a fresh owning build remains required before final verification is closed.
+
+### live-build-resolution | low | Hungarian nitpicky rendering passes on the corrected shared inputs
+
+A fresh call through the actual compiled_bundled_authority path passed after the concurrent Modelo 360 layout was corrected. The owning Hungarian localized nitpicky test then passed in 453.96 seconds, with no test or production validation weakened. The prior failure remains recorded as an incomplete concurrent input state. Together with the earlier Catalan/Spanish localized builds, all three required language builds are verified. The 42 passing unit cases, three fresh-gettext integration cases, source/control receipts and zero runtime/PO gates complete the localization evidence.
+
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Keep informal singular address coupled to independent source-meaning review. A morphology detector supplies a worklist; zero is accepted only with current full-string hashes, exact-span grammatical evidence, complete rewrite reviews and passing owning documentation checks. Retain the frozen discovery baseline and rejected findings so later source or wording changes reopen the gate rather than erasing history.
