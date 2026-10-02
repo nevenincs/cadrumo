@@ -243,7 +243,7 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
     from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
     from cadrumo.application.modelo.declarations_list import DeclarationListGroup, declaration_list_rows
     from cadrumo.application.overview.coverage import CoverageAdviceReason
-    from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
+    from cadrumo.entrypoints.tui.declarations.grouped import DECLARATION_GROUP_LOCALE_KEYS, GroupedDeclarationsScreen
     from cadrumo.entrypoints.tui.declarations.row_words import row_lines
 
     producer = ast.parse(inspect.getsource(declaration_list_rows))
@@ -309,8 +309,12 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
                 values.add(element.value)
             choices[target.id] = values
     assert choices.keys() == {"_FILTERS", "_SORTS"}, "the actual screen choice vocabulary must remain discoverable"
+    assert set(DECLARATION_GROUP_LOCALE_KEYS) == set(DeclarationListGroup)
+    assert (
+        DECLARATION_GROUP_LOCALE_KEYS[DeclarationListGroup.AEAT_UNLINKED] == "tui.declarations.list.state.aeat_unlinked"
+    )
+    assert "tui.declarations.list.group.aeat_unlinked" not in get_registered_keys()
     expected = {
-        "group": {member.value for member in DeclarationListGroup},
         "advice": {member.value for member in CoverageAdviceReason},
         "filter": choices["_FILTERS"],
         "sort": choices["_SORTS"],
@@ -327,7 +331,7 @@ def test_declaration_list_enrolment_keeps_open_reason_namespaces_unbounded() -> 
     """Bounded feature copy must not admit arbitrary optional reason codes."""
     from .._signal import _dynamic_key_families
 
-    bounded = {f"tui.declarations.list.{family}.*" for family in ("group", "advice", "filter", "sort", "state", "next")}
+    bounded = {f"tui.declarations.list.{family}.*" for family in ("advice", "filter", "sort", "state", "next")}
     open_reasons = {prefix + ".*" for prefix in OPEN_ENDED_NAMESPACES}
     finite, unresolved = _dynamic_key_families(bounded | open_reasons)
     assert set(finite) == bounded

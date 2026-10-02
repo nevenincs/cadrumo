@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import ClassVar, override
+from types import MappingProxyType
+from typing import ClassVar, Final, override
 
 from rich.text import Text
 from textual.app import ComposeResult
@@ -41,6 +43,18 @@ from .row_words import is_unlinked_local_draft, row_lines
 
 _FILTERS = ("all", "attention", "this_year", "recorded", "not_started")
 _SORTS = ("deadline", "modelo", "result", "state")
+
+DECLARATION_GROUP_LOCALE_KEYS: Final[Mapping[DeclarationListGroup, str]] = MappingProxyType(
+    {
+        DeclarationListGroup.ATTENTION: "tui.declarations.list.group.attention",
+        DeclarationListGroup.IN_PROGRESS: "tui.declarations.list.group.in_progress",
+        DeclarationListGroup.READY: "tui.declarations.list.group.ready",
+        DeclarationListGroup.NOT_STARTED: "tui.declarations.list.group.not_started",
+        DeclarationListGroup.RECORDED: "tui.declarations.list.group.recorded",
+        DeclarationListGroup.AEAT_UNLINKED: "tui.declarations.list.state.aeat_unlinked",
+        DeclarationListGroup.MAYBE: "tui.declarations.list.group.maybe",
+    }
+)
 
 
 class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
@@ -189,11 +203,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             members = [row for row in visible if row.group is group]
             folded = not members or group in self.folded
             mark = "▹" if folded else "▿"
-            group_key = (
-                "tui.declarations.list.state.aeat_unlinked"
-                if group is DeclarationListGroup.AEAT_UNLINKED
-                else "tui.declarations.list.group." + group.value
-            )
+            group_key = DECLARATION_GROUP_LOCALE_KEYS[group]
             title = "\n".join(wrap_words(f"{mark} {tr(group_key)} ({len(members)})", width))
             table.add_row(
                 Text(title, style="bold"),

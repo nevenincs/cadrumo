@@ -11,7 +11,7 @@ related:
   - '[[2026-09-07-tuimodelo-filing-lifecycle-adr]]'
 modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:73b9fe28667a32ab97ad9077ab1a6189df4cb5af126f9d8ae43cfcdd011d1b52'
+body_hash: 'sha256:9e6aa94b295df82ea03c003ab8c333f97d9ef04d513d173c36f9e6972f8aab3c'
 ---
 
 <!-- LINK RULES:
@@ -126,9 +126,10 @@ Accepted decisions cover these routine changes without a new costly commitment. 
 
 ## Steps
 
-- [x] `S01` - Integrate reviewed declaration guidance, results and external-filing grouping; `src/cadrumo/application/modelo/declarations_list.py, src/cadrumo/entrypoints/tui/declarations, four common.yml catalogues`.
-- [ ] `S02` - Apply validated existing Modelo names and declaration copy; `src/cadrumo/locales/{es,en,ca,hu}/common.yml`.
-- [ ] `S03` - Align record-only page key guidance with actual admitted field actions; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py and owning workbench tests`.
+- [x] `S01` - Integrate reviewed declaration guidance, results and external-filing grouping; `src/cadrumo/application/modelo/declarations_list.py, src/cadrumo/entrypoints/tui/declarations, four common.yml catalogues, dev/locales/fstring_registry.py and owning finite-caption discovery test`.
+- [ ] `S02` - Apply validated existing Modelo names, declaration copy and period-selection instructions; `four common.yml catalogues, docs/how-to/fill-in-and-file-in-the-workbench.md and its three localized PO paragraphs`.
+- [ ] `S03` - Align record-only page key guidance with actual admitted field actions; `src/cadrumo/entrypoints/tui/modelo/workbench/{screen,casilla_list}.py, owning help/footer/installed records tests, and the repeating-record paragraph in the workbench guide and its ES/CA/HU PO catalogues`.
+- [ ] `S05` - Preserve complete declaration identity and deadline context in the persistent header; `workbench header.py/screen.py, owning header and real formula-value consumer tests, plus existing CA Modelo header name leaves`.
 - [ ] `S04` - Verify integrated installed filing UX and record the final cohesive review; `owning harness tests and modelo-filing-ux-followup audit`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or

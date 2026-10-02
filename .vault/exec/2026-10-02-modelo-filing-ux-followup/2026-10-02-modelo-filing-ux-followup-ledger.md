@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6aed2a1f054e19ddfe9031d4d032432c90e520867fc6f0c4c442f7300e3d625c'
+body_hash: 'sha256:91da431888e89e8e811041956f941a546afb1a4b17a857f275370dfa5d2be5b3'
 related:
   - "[[2026-10-02-modelo-filing-ux-followup-plan]]"
 ---
@@ -61,3 +61,15 @@ related:
 - `S01` `verify:` `configured ty check all eight Python paths` -> `pass`
 - `S01` `verify:` `exact twelve after hashes match reviewed5b7d candidate` -> `pass`
 - `S01` `verify:` `vault plan check` -> `pass`
+- `S01` `M` `dev/locales/fstring_registry.py`
+- `S01` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S01` `verify:` `s01-locale-discovery 30 cases` -> `pass`
+- `S01` `verify:` `s01-caption-ui 16 integrations` -> `pass`
+- `S01` `verify:` `s01-caption format lint configured-ty` -> `pass`
+- `S01` `verify:` `s02-locale-inventory introduced four missing cells` -> `fail`
+- `S01` `verify:` `s01-locale-inventory-repaired required missing0` -> `pass`
+- `S01` `verify:` `s04-native-frozen16 declarations stable and principal accepted` -> `pass`
+
+## Notes
+
+- `S01` Initial exact5b7d twelve-path integration committed3d40; later total typed caption map repairs obsolete discovery registration without duplicate state key. Full repaired census remains failing for baseline19 inventory plus in-progress docs4 and spelling tool; no aggregate-green claim. Receipt work/UX5-checks/s01-locale-inventory-delta.json separates the introduced four missing cells and their repair. Final native source receipt excludes unrelated auth/profile writes; calendar proof remains owning typed projection.

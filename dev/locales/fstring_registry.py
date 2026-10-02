@@ -574,7 +574,6 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
     """
     from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
     from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarSource
-    from cadrumo.application.modelo.declarations_list import DeclarationListGroup
     from cadrumo.application.modelo.declarations_workspace import (
         DeclarationsLifecycleKind,
         DeclarationsWorkspaceAvailability,
@@ -594,11 +593,6 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
         return tuple(str(member.value) for member in enum)
 
     return (
-        FStringKeyRegistration(
-            description="tui.declarations.list.group.* (DeclarationListGroup)",
-            key_factory=lambda v: f"tui.declarations.list.group.{v}",
-            values=_values(DeclarationListGroup),
-        ),
         FStringKeyRegistration(
             description="tui.declarations.list.advice.* (CoverageAdviceReason)",
             key_factory=lambda v: f"tui.declarations.list.advice.{v}",
