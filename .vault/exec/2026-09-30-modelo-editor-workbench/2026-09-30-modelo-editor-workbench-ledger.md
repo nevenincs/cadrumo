@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:de52e19e92737ebaf127e136868186ac84b56df1153e4c859ea3c96247929785'
+body_hash: 'sha256:dc8c28312a5641f10b6774131d94e93b1c336e4ff785389e4eab465bdf13aab8'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1823,6 +1823,18 @@ related:
 - `S17` `verify:` `20261002T025703.261469Z-pytest-37844-caa76698 unchanged7 cursor cases` -> `pass`
 - `S17` `verify:` `S17 keyboard two-path Ruff/format/canonical ty/diff check` -> `pass`
 - `S17` `verify:` `S17 keyboard independent narrow source review` -> `pass`
+- `S30` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_dormant_m349_invoice_resolver_live.py`
+- `S30` `A` `src/cadrumo/entrypoints/tests/modelo_349_invoice_facts.py`
+- `S30` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_records_real.py`
+- `S30` `verify:` `just test-unit keyboard-corrected tree (20261002T031326.307883Z; 22598 tests)` -> `pass`
+- `S30` `verify:` `just test-tui (20261002T032508.690201Z; 2030 passed; one unchanged onboarding refresh failure)` -> `fail`
+- `S30` `verify:` `real owning onboarding and confirmation suites (20261002T033425.895102Z; 8 tests)` -> `pass`
+- `S30` `verify:` `owning relocated resolver and installed record suites (20261002T033928.158020Z; 22 tests)` -> `pass`
+- `S30` `verify:` `Ruff check format-check and ty for three relocated test/helper paths` -> `pass`
+- `S30` `verify:` `canonical compile import load targets` -> `pass`
+- `S30` `verify:` `owning import driver frozen workbench candidate (20261002T034217.415427Z; 2998 modules, 15 contracts, zero debt)` -> `pass`
+- `S30` `verify:` `just check-code pre-correction aggregate (8 pass; import inventory plus three baseline constituents failed)` -> `fail`
+- `S30` `verify:` `just check-locales (20261002T031435.942733Z; 19 identical baseline inventory issues)` -> `fail`
 
 ## Notes
 
@@ -1940,3 +1952,4 @@ related:
 - `S62` Reconciled obsolete None assertion with already published typed rate scale; no new publication or production behavior change.
 - `S17` Source correction verified and closed; immutable before-fix 712 capture remains failure evidence. S50/S30 still require corrected frozen integrated capture and final broad gates.
 - `S17` Closed root-confirmed no-cursor keyboard trap; prior programmatic scroll proof did not cover keyboard reachability. Initial a7 frozen run intentionally terminated and retained; final capture and stable-tree broad gates remain S50/S30.
+- `S30` S30 remains open pending final S50 capture/review. Actual broad TUI, static aggregate and locale baseline failures retained; focused passes do not rewrite aggregate exits. Concurrent profile UX work is outside the frozen candidate and preserved. Late approval of the already withdrawn publication proposal acknowledged; existing accepted publication completed without it.

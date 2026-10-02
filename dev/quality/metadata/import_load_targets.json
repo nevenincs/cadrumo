@@ -921,6 +921,7 @@
         "cadrumo.application.modelo.work_create_policy",
         "cadrumo.application.modelo.work_form",
         "cadrumo.application.modelo.work_form_models",
+        "cadrumo.application.modelo.work_form_records",
         "cadrumo.application.modelo.work_form_result",
         "cadrumo.application.modelo.work_form_service",
         "cadrumo.application.modelo.work_form_sources",

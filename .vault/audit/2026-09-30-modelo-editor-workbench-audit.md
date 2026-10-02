@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc3a98a2025726632061988048e6e3ceb8c01e949a99f45ba0a3c6961ba14ce3'
+body_hash: 'sha256:25e1f68a3993293308765b7645475b5eedb2ce17049045cf6b32711b9159c11d'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -564,6 +564,26 @@ Root's integrated trace after a7a7f0360c found that the list overrides arrows, P
 When the list has no selectable fields, arrows now scroll one line, Page Up/Down scroll a visible page with overlap, and Home/End scroll to content bounds. Field and official-grid cursor branches retain their behavior; records remain read-only. Sixteen real encrypted installed cases now use pilot key presses exclusively to traverse records in all four languages, small/medium terminals and both themes, proving forward progress, boundary clamping, every column label, all operator identities and locale-formatted amounts, unchanged calculation identity and no edit on Enter. Actual run `20261002T025555.254915Z-pytest-84332-a98de5c2` passes; unchanged owning grid 24 and cursor 7 cases also pass. Two-path Ruff, format, canonical ty and diff check pass. Root inspected the native receipts and saved checker logs in `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/s17-keyboard-verification-receipt.json`; independent narrow review is PASS with no critical/high finding.
 
 S17's source correction is verified again. S50/S30 still require the final committed keyboard-corrected frozen capture. The broad unit run begun before this keyboard correction will be retained with its actual scope; final canonical broad verification must use the stable corrected tree. Documentation CLI replay/goldens/build inputs are unchanged by this keyboard delta.
+
+### closing-import-ownership | low | generated inventory and TUI test boundary corrections pass
+
+The final just check-code run preserved its actual exit 7: eight constituents passed, the three already classified baseline constituents remained red, and the import constituent was unavailable because its finite load inventory omitted new work_form_records. The canonical import_load_probe --compile-targets owner adds exactly that module. A subsequent actual import run loaded 2,998/2,998 modules but refused ten new sibling imports, all in the shared Modelo 349 resolver test. These were introduced by S17's installed TUI acceptance cases, not baseline exceptions.
+
+The original shared live resolver test and its non-vacuity/source-enrolment assertions remain. Synthetic invoice facts have one defining shared test helper; installed form, encrypted omitted/explicit-empty reload and keyboard cases now reside with the TUI owner and use the existing public real encrypted operator-work harness. All 22 focused cases pass, exit 0, native run 20261002T033928.158020Z-pytest-84444-5006eba1; three-path Ruff, formatting, ty and diff checks pass. Root reviewed the complete relocation and inspected actual native receipts in C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/s17-test-ownership-verification-receipt.json. No production, authority, schema or detector/ratchet behavior changed.
+
+The final owning import driver passes on the frozen workbench candidate (5f721a1d2e plus these four exact corrected inputs), native run 20261002T034217.415427Z-check-import-boundaries-85904-2c6be814: 15/15 graph contracts kept, all 2,998 modules load, zero hard finding, unapproved edge or active debt, stable source snapshot before/after. Exact imports, input hashes and command are in closing-owned-import-receipt.json under the same C temp root. Concurrent profile UX work is deliberately outside this candidate; its files are preserved. Current frozen product captures remain applicable because the correction changes tests and tooling inventory only. Integrated review remains PENDING final capture.
+
+### final-broad-gate-results | low | complete results retained with unrelated baseline exceptions
+
+The keyboard-corrected canonical just test-unit passes all 22,598 tests, exit 0, native run 20261002T031326.307883Z-pytest-87180-86358022. The earlier pre-keyboard run also passed 22,598 (20261002T025105.948367Z), retained with its narrower source provenance. The historical Windows pointer-race broad failure is not erased. One unchanged Typer deprecation warning remains.
+
+The final canonical just test-tui has 2,030 passed and one failed, exit 1, run 20261002T032508.690201Z-pytest-79916-72610c86. The original confirmation-and-apply regression passes, proving rendered StatusLine.text(), persisted ENTERED origin and unchanged confirmed figure through production preflight/apply/execution. The sole broad failure is the unrelated profile onboarding refresh (109 rather than 174 visible rows, with NoMatches for summary-renta_taxpayer). Its source/test and profile-overview producer are unchanged from handover 82b7844265 at this run. All seven owning onboarding cases plus the confirmation regression pass together, exit 0, run 20261002T033425.895102Z-pytest-82028-6971da6a; retain the full broad exit 1 rather than upgrading it. Its separate serial selection executed zero tests and is not extra evidence. Later concurrent profile UX changes belong to their own owner.
+
+The current check-locales run 20261002T031435.942733Z-check-locales-81092-8f875580 exits 1 for the same 19 baseline inventory issues; all 29,904 required cells are ready, none missing or malformed. The 21 native records belonging to those inventoried finding kinds are byte-meaning identical to the prior classification; catalogue-only and advisory records remain in the full stream. Comparison: keyboard-locale-baseline-comparison.json under the C temp root. No introduced workbench locale issue remains. The static baseline findings remain form_layout_integrity runtime reachability, project_received_invoice_retencion and COMBINING_MARK_UNIDATA_VERSION; their detector contracts remain intact.
+
+### superseded-publication-approval | low | late approval acknowledged after proposal withdrawal
+
+The operator's approval reply arrived after the proposed grouped export/form-layout source transaction had already been withdrawn and recorded rejected. The existing accepted separate source owners and complete atomic authority publication had successfully finished S62 without that transaction. Root acknowledged the late reply and explained that no further publication amendment is needed for the completed approved work. The rejection remains a historical withdrawal, not a new implemented journal or change to accepted authority boundaries.
 
 ## Recommendations
 
