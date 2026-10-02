@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:036c4d12c365e291dcc2c32d9b31db02440e8d2efe3bf0201a9615dced8dd896'
+body_hash: 'sha256:7633407af1b470058d1cd6706e28b46c9a49ec0a33649b468da12ae79e486272'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1794,6 +1794,12 @@ related:
 - `S17` `M` `.vault/plan/2026-09-30-modelo-editor-workbench-plan.md`
 - `S17` `verify:` `cb04a1021c actual 349 summary/detail visual consistency` -> `fail`
 - `S17` `by:` `vaultspec-execute`
+- `S62` `M` `src/cadrumo/application/modelo/tests/test_work_form_every_revision.py`
+- `S62` `M` `.vault/audit/2026-09-30-modelo-editor-workbench-audit.md`
+- `S62` `verify:` `20261002T023836.655110Z-pytest-83520-d96d9795 five installed-authority printed-rate/placeholder cases` -> `pass`
+- `S62` `verify:` `S62 owning test Ruff check and format --check` -> `pass`
+- `S62` `verify:` `S62 owning test canonical ty` -> `pass`
+- `S62` `by:` `vaultspec-execute`
 
 ## Notes
 
@@ -1908,3 +1914,4 @@ related:
 - `S58` Fresh exactcommands, logs and zero-warning exit0results preserved C:/Users/hello/AppData/Local/Temp/modelo-docs-closing-20261002/build-results.json; html-link-review.json haszerofailures; all23goldenSHAvalues unchanged. Earlierpre-refreshHTMLartifactnotusedascurrentproof.
 - `S30` Actual closingaggregateexit1preserved C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/code-closing-final.log:9of12gatespass. Three distinct unchangedbaselinefindings only: `invoice_retencion` projectionunused/unconsumed; Unicodeversionconstantunused/unconsumed; `form_layout_integrityruntime-unreachablebutactivelydevcompilerused.` No detector, ratchet or type scope weakened. Finalworkbenchcapture/reviewrequiredforS30closure.
 - `S17` Reopened S17 for confirmed generic `binding_rows` projection defect. Preserve the current frozen render as failing provenance; S50/S30 remain open until corrected integrated evidence.
+- `S62` Reconciled obsolete None assertion with already published typed rate scale; no new publication or production behavior change.

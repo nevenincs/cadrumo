@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:62a268369a8695f5351c3da29ab333c1826e69a18ce085ab5282928a6be1060d'
+body_hash: 'sha256:498a2571ce9ad585366e0851a105f5f0663e6e4950c34a9d681c50f6ac3271d1'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -540,6 +540,10 @@ After the 23 sequence goldens changed, all four strict isolated user HTML builds
 The fresh cb04a1021c frozen workbench capture shows two Modelo 349 operators in the summary and zero detail rows on its next page. The real calculation golden contains two persisted `detail_rows` for the `operador` binding record. The application form builder reads only `row_casilla_values`, and treats an export-record group as known whenever a revision exists. Its typed registry export record uses `repeat=binding_rows` and `binding_record=operador`; the form group selects that record. This is a real projection defect, not an empty fixture or a display filter.
 
 S17 is reopened. The correction belongs in the generic application read model, using existing typed registry relationships and persisted values, with faithful unknown-versus-empty semantics. The running cb04a1021c 712-frame capture is retained as evidence of the defect and cannot close S50 or S30. A corrected committed snapshot, owning calculation/read-model tests, and a new integrated capture are required. The completed P08 declarations review remains valid for its unaffected declarations-summary surface.
+
+### printed-rate integration assertion | low | published scale contract retained
+
+The owning form integration suite exposed a stale assertion that fixed Modelo 303 box 02 had no figure. The current published export scale grounds its printed value at 4.00 percent and ratio 0.04; the test now checks that value while retaining the design-constant/informational classification. It separately proves unscaled placeholder 151 stays fixed without an invented printed rate. Five focused installed-authority scale, printed-value, unknown and placeholder cases pass (`20261002T023836.655110Z-pytest-83520-d96d9795`), as do Ruff check, format check and canonical ty for the owning test. No authority, production scale behavior or detector changed. The full owning form integration suite will be reconciled with S17's current record correction.
 
 ## Recommendations
 

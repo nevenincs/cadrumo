@@ -16,6 +16,7 @@ identifier: a box the form gives no name says so in words.
 from __future__ import annotations
 
 from collections import Counter
+from decimal import Decimal
 
 import pytest
 
@@ -137,16 +138,20 @@ def test_a_box_the_design_fixes_is_shown_fixed_and_never_invents_its_figure(
 ) -> None:
     """Modelo 303's rate boxes are printed by the design, so they are shown, fixed, and never offered.
 
-    The registry emits their literal as text without declaring its scale, so
-    the form carries no number for them rather than the engine's own figure or
-    the literal's raw digits, neither of which is what the filed fichero shows.
+    The published registry declares the literal's two decimal places, so box
+    02 shows the official 4% rather than the literal's raw digits or an engine
+    figure. A zero placeholder still claims no printed rate.
     """
     form, _declared = _form(operation, "303", 2026, "1T")
     rate = next(field for field in form.fields() if address_key(field.address) == ("casilla", "02"))
 
     assert rate.editability is ModeloFormEditability.DESIGN_CONSTANT
     assert rate.origin is ModeloFormOrigin.INFORMATIONAL
-    assert rate.value is None
+    assert rate.value == Decimal("4.00")
+    assert rate.printed_rate is not None and rate.printed_rate.ratio == Decimal("0.04")
+    placeholder = next(field for field in form.fields() if address_key(field.address) == ("casilla", "151"))
+    assert placeholder.editability is ModeloFormEditability.DESIGN_CONSTANT
+    assert placeholder.printed_rate is None
 
 
 def test_no_field_of_any_reachable_revision_is_labelled_with_its_identifier(
