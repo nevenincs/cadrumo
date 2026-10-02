@@ -6609,6 +6609,22 @@ modelo:
             label: 'Arrendamiento financiero: régimen especial (art. 106 LIS) - Disminución
               - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
               [03217]'
+          is-aseguradora-vida-beneficios-realizacion-inmovilizado-inversiones:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Beneficios realización inmovilizado material e inversiones
+              [00305]
+          is-aseguradora-vida-beneficios-realizacion-inmovilizado-material-inversiones-inmobiliarias:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Beneficios realización inmovilizado material e inversiones
+              - Inmovilizado material e inv. inmobiliarias [00306]
+          is-aseguradora-vida-beneficios-realizacion-inversiones-financieras:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Beneficios realización inmovilizado material e inversiones
+              - Inversiones financieras [00307]
+          is-aseguradora-vida-inversiones-riesgo-tomador:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Inversiones afectas a seguros el tomador asume riesgo
+              de inversión [00308]
           is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
             label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
               seguro de vida - Aplic. correc. de valor por deterioro inmov. material
@@ -8893,6 +8909,22 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estado de cambios patrimonio neto (II) - Ajustes por errores de
               ejercicios anteriores - Capital - Escriturado [00408]
+          is-ecpn-bde-correccion-errores-capital:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Capital
+              [00305]
+          is-ecpn-bde-correccion-errores-otros-elementos-patrimonio-neto:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Otros
+              elementos del patrimonio neto [00308]
+          is-ecpn-bde-correccion-errores-otros-instrumentos-patrimonio:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Instrumentos
+              patrimonio emitidos distintos del capital [00307]
+          is-ecpn-bde-correccion-errores-prima-emision:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Prima
+              de emisión [00306]
           is-ecpn-bde-saldo-apertura-dividendos-cuenta:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Saldo de apertura [antes de la reexpresión]
@@ -9528,6 +9560,14 @@ modelo:
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Diferencias entre amortización contable y fiscal (arts.
               12.1 LIS) - Disminuciones [00304]
+          is-liquidacion-i-amortizacion-inmovilizado-id-art-12-3-b-aumentos:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Amortización inmovilizado afecto investigación y desarrollo
+              (art. 12.3.b) LIS) - Aumentos [00305]
+          is-liquidacion-i-amortizacion-inmovilizado-id-art-12-3-b-disminuciones:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Amortización inmovilizado afecto investigación y desarrollo
+              (art. 12.3.b) LIS) - Disminuciones [00306]
           is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
             label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
               - Correcciones por Impuesto Sociedades - Aumentos [00301]
@@ -9538,6 +9578,14 @@ modelo:
             label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
               - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades
               e Impuesto Complementario [00501]
+          is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Libertad de amortización de gastos de investigación y desarrollo
+              (art. 12.3.c) LIS) - Aumentos [00307]
+          is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-disminuciones:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Libertad de amortización de gastos de investigación y desarrollo
+              (art. 12.3.c) LIS) - Disminuciones [00308]
           is-liquidacion-iii-base-imponible:
             label: Liquidación III - Base imponible - Base imponible [00552]
           is-liquidacion-iii-base-imponible-postnivelacion:
@@ -10115,6 +10163,10 @@ modelo:
           is-sgr-otras-variaciones-ajustes-cambio-valor:
             label: Sociedades de garantia recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Ajustes cambio valor [00304]
+          is-sgr-otras-variaciones-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Otras variaciones patrimonio neto - Fondos provisiones técnicas.
+              Aportaciones de terceros [00305]
           is-sgr-otras-variaciones-reservas:
             label: Sociedades de garantia recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Reservas [00301]
@@ -10125,6 +10177,15 @@ modelo:
             label: Sociedades de garantia recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Resultados ejercicios anteriores
               [00302]
+          is-sgr-otras-variaciones-total:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Otras variaciones patrimonio neto - Total [00306]
+          is-sgr-saldo-final-capital-no-exigido:
+            label: 'Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - SALDO, FINAL DEL EJERCICIO - Capital - Menos: no exigido [00308]'
+          is-sgr-saldo-final-capital-suscrito:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - SALDO, FINAL DEL EJERCICIO - Capital - Suscrito [00307]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Indicador de sociedad de garantía recíproca o de reafianzamiento
               [00036].

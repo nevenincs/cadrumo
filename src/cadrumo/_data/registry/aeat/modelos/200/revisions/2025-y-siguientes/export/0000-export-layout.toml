@@ -5,6 +5,8 @@ source_refs = ['aeat-dr-200-2025']
 legal_refs = [
     'ley-27-2014:art-100',
     'ley-27-2014:art-12',
+    'ley-27-2014:art-12-3-b',
+    'ley-27-2014:art-12-3-c',
     'ley-27-2014:art-124',
     'ley-27-2014:art-15',
     'ley-27-2014:art-19',

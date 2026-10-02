@@ -649,7 +649,7 @@ id = 'm200-2025.dp200012.f0031'
 offset = 438
 length = 17
 kind = 'casilla'
-casilla_id = '00305'
+casilla_id = 'DP200012:00305'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'
@@ -658,11 +658,8 @@ decimals = 2
 signed = false
 design_type = 'Num'
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-12-3-b',
+    'orden-hac-529-2026:art-1',
 ]
 source_refs = ['aeat-dr-200-2025']
 
@@ -671,7 +668,7 @@ id = 'm200-2025.dp200012.f0032'
 offset = 455
 length = 17
 kind = 'casilla'
-casilla_id = '00306'
+casilla_id = 'DP200012:00306'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'
@@ -680,11 +677,8 @@ decimals = 2
 signed = false
 design_type = 'Num'
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-12-3-b',
+    'orden-hac-529-2026:art-1',
 ]
 source_refs = ['aeat-dr-200-2025']
 
@@ -693,7 +687,7 @@ id = 'm200-2025.dp200012.f0033'
 offset = 472
 length = 17
 kind = 'casilla'
-casilla_id = '00307'
+casilla_id = 'DP200012:00307'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'
@@ -702,11 +696,8 @@ decimals = 2
 signed = false
 design_type = 'Num'
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-12-3-c',
+    'orden-hac-529-2026:art-1',
 ]
 source_refs = ['aeat-dr-200-2025']
 
@@ -715,7 +706,7 @@ id = 'm200-2025.dp200012.f0034'
 offset = 489
 length = 17
 kind = 'casilla'
-casilla_id = '00308'
+casilla_id = 'DP200012:00308'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'
@@ -724,11 +715,8 @@ decimals = 2
 signed = false
 design_type = 'Num'
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-12-3-c',
+    'orden-hac-529-2026:art-1',
 ]
 source_refs = ['aeat-dr-200-2025']
 

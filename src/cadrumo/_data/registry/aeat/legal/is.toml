@@ -3151,3 +3151,37 @@ applies_from = 2025-01-01
 applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-noticias/2026/abril/1/nota-sobre-efectos-ambito-tributario-febrero.html"
 review_status = "agent_reviewed"
+
+[legal."ley-27-2014:art-12-3-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+section = "3.b"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; checked against captured 2022, 2026-01-28 and current BOE Article 12; operator review pending"
+notes = "LIS article 12.3(b): free amortization of tangible and intangible fixed assets used in research and development, excluding buildings from that rule; buildings used in those activities may be amortized linearly over ten years. This reference is limited to subsection 3(b)."
+required_text = ["3. No obstante, podrán amortizarse libremente:", "b) Los elementos del inmovilizado material e intangible, excluidos los edificios, afectos a las actividades de investigación y desarrollo.", "Los edificios podrán amortizarse de forma lineal durante un período de 10 años, en la parte que se hallen afectos a las actividades de investigación y desarrollo."]
+
+[legal."ley-27-2014:art-12-3-c"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+section = "3.c"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; checked against captured 2022, 2026-01-28 and current BOE Article 12; operator review pending"
+notes = "LIS article 12.3(c): free amortization of research and development expenses capitalized as intangible fixed assets, excluding amortization of assets that already enjoy free amortization. This reference is limited to subsection 3(c)."
+required_text = ["3. No obstante, podrán amortizarse libremente:", "c) Los gastos de investigación y desarrollo activados como inmovilizado intangible, excluidas las amortizaciones de los elementos que disfruten de libertad de amortización."]

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:145a2dc05856b4331ab19da99d645203bbda1c3fe65e67583221d90b5286d45b'
+body_hash: 'sha256:0c48311b48f5ddb3910ff6bec0898c9f340d3e298d79ff68b8d05ba40d7cfe60'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1704,6 +1704,50 @@ related:
 - `S50` `verify:` `isolated delta proof apply no-op cycle` -> `pass`
 - `S50` `verify:` `complete coupled target publication before guarded source installation` -> `pass`
 - `S50` `verify:` `canonical locale proposal preflight and authoring` -> `pass`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0107-record-m200-page-032.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0108-record-m200-page-032.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0134-record-m200-page-054.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0136-record-m200-page-054.toml`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-12-full.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-12-full.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-12-full.html.extracted.md`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/corpus/tests/test_extract_boe_article.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
+- `S50` `verify:` `just check-registry` -> `pass`
+- `S50` `verify:` `just check-bindings` -> `pass`
+- `S50` `verify:` `just check-registry-gate` -> `pass`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\prove_delta.py live` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `git diff --check` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_legal_anchor_verification_ratchet.py dev/registry/tests/test_legal_required_text_reaches_the_provision.py` -> `pass`
+- `S50` `verify:` `isolated delta proof apply no-op cycle` -> `pass`
+- `S50` `verify:` `full isolated legal/corpus validation and guarded enrollment` -> `pass`
+- `S50` `verify:` `canonical coupled target publication and locale preflight before source adoption` -> `pass`
+- `S50` `M` `.gitattributes`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/corpus/tests/test_extract_boe_article.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
+- `S50` `verify:` `just check-registry` -> `pass`
+- `S50` `verify:` `just check-bindings` -> `pass`
+- `S50` `verify:` `just check-registry-gate` -> `pass`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\prove_delta.py live` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `git diff --check` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_legal_anchor_verification_ratchet.py dev/registry/tests/test_legal_required_text_reaches_the_provision.py` -> `pass`
+- `S50` `verify:` `isolated delta proof apply no-op cycle` -> `pass`
+- `S50` `verify:` `full isolated legal/corpus validation and guarded enrollment` -> `pass`
+- `S50` `verify:` `canonical coupled target publication and locale preflight before source adoption` -> `pass`
+- `S50` `verify:` `git check-attr whitespace normative HTML and code/sidecar controls` -> `pass`
+- `S50` `verify:` `git diff --cached --check` -> `pass`
 
 ## Notes
 
@@ -1807,3 +1851,4 @@ related:
 - `S50` S50 remains open for other semantic mapping candidates and declaration debt. The introduced locale segment failure was corrected and its affected checks pass. Installed-package adoption and the previously recorded whole-catalogue literal-anchor failure remain unresolved; their suites were not repeated by this bounded repair.
 - `S50` S50 remains open for other mapping candidates and declaration debt. The three initial test failures were corrected and affected checks pass. Coupled target post-cutover refusal was recovered through the canonical publication journal; no intermediate pytest ran. Installed-package adoption remains unverified. The legal-anchor ratchet now passes without a ceiling change.
 - `S50` S50 remains open for the remaining semantic mapping and declaration inventory. Isolated construct legal-closure and locale preflight refusals were corrected before live installation; no intermediate pytest ran. Installed-package adoption remains unverified.
+- `S50` S50 remains open for the remaining semantic inventory. Isolated retained-order refusal was corrected; no pytest ran on intermediate registry inputs. Installed-package adoption remains unverified.

@@ -6641,6 +6641,22 @@ modelo:
           is-arrendamiento-financiero-ajuste-disminucion:
             label: 'Finance lease: special regime (art. 106 LIS) - Decrease - Adjustments
               for the tax year - Temporary (originating in this tax year) [03217]'
+          is-aseguradora-vida-beneficios-realizacion-inmovilizado-inversiones:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Gains on disposal of tangible fixed assets and investments
+              [00305]
+          is-aseguradora-vida-beneficios-realizacion-inmovilizado-material-inversiones-inmobiliarias:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Gains on disposal of tangible fixed assets and investments
+              - Tangible fixed assets and investment property [00306]
+          is-aseguradora-vida-beneficios-realizacion-inversiones-financieras:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Gains on disposal of tangible fixed assets and investments
+              - Financial investments [00307]
+          is-aseguradora-vida-inversiones-riesgo-tomador:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Investments linked to insurance contracts where
+              the policyholder bears the investment risk [00308]
           is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
             label: Insurance undertakings - Profit and loss (II) - Life insurance
               technical account - Application of impairment adjustments to tangible
@@ -8927,6 +8943,22 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Statement of changes in equity (II) - Adjustments for errors from
               previous periods - Capital - Subscribed [00408]
+          is-ecpn-bde-correccion-errores-capital:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Capital
+              [00305]
+          is-ecpn-bde-correccion-errores-otros-elementos-patrimonio-neto:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Other
+              components of equity [00308]
+          is-ecpn-bde-correccion-errores-otros-instrumentos-patrimonio:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Equity
+              instruments issued other than share capital [00307]
+          is-ecpn-bde-correccion-errores-prima-emision:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Share
+              premium [00306]
           is-ecpn-bde-saldo-apertura-dividendos-cuenta:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Opening balance [before restatement]
@@ -9544,6 +9576,14 @@ modelo:
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Differences between accounting and tax depreciation (arts.
               12.1 LIS) - Decreases [00304]
+          is-liquidacion-i-amortizacion-inmovilizado-id-art-12-3-b-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Depreciation of fixed assets used for research and development
+              (art. 12.3.b) LIS) - Increases [00305]
+          is-liquidacion-i-amortizacion-inmovilizado-id-art-12-3-b-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Depreciation of fixed assets used for research and development
+              (art. 12.3.b) LIS) - Decreases [00306]
           is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
             label: Settlement I - Profit and loss account result - Adjustments for
               corporate income tax - Increases [00301]
@@ -9553,6 +9593,14 @@ modelo:
           is-liquidacion-i-importe:
             label: Settlement I - Profit and loss account result - Profit and loss
               account result before Corporate Income Tax and Complementary Tax [00501]
+          is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Free depreciation of research and development expenditure (art.
+              12.3.c) LIS) - Increases [00307]
+          is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Free depreciation of research and development expenditure (art.
+              12.3.c) LIS) - Decreases [00308]
           is-liquidacion-iii-base-imponible:
             label: Settlement III - Taxable base - Taxable base [00552]
           is-liquidacion-iii-base-imponible-postnivelacion:
@@ -10111,6 +10159,10 @@ modelo:
           is-sgr-otras-variaciones-ajustes-cambio-valor:
             label: Mutual guarantee companies - Total statement of changes in equity
               - Other changes in equity - Adjustments for changes in value [00304]
+          is-sgr-otras-variaciones-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Technical provision funds - Third-party
+              contributions [00305]
           is-sgr-otras-variaciones-reservas:
             label: Mutual guarantee companies - Total statement of changes in equity
               - Other changes in equity - Reserves [00301]
@@ -10120,6 +10172,15 @@ modelo:
           is-sgr-otras-variaciones-resultados-ejercicios-anteriores:
             label: Mutual guarantee companies - Total statement of changes in equity
               - Other changes in equity - Results from previous periods [00302]
+          is-sgr-otras-variaciones-total:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Total [00306]
+          is-sgr-saldo-final-capital-no-exigido:
+            label: 'Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Capital - Less: uncalled [00308]'
+          is-sgr-saldo-final-capital-suscrito:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Capital - Subscribed [00307]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Flag indicating a mutual guarantee or re-guarantee company [00036].
             label: Mutual guarantee or re-guarantee company [00036]

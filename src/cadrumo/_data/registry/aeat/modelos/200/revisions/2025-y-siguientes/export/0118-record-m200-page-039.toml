@@ -425,20 +425,14 @@ id = 'm200-2025.dp200039.f0022'
 offset = 285
 length = 17
 kind = 'casilla'
-casilla_id = '00305'
+casilla_id = 'DP200039:00305'
 data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
 design_type = 'N'
-legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
-]
+legal_refs = ['orden-hac-529-2026:art-1']
 source_refs = ['aeat-dr-200-2025']
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
@@ -446,20 +440,14 @@ id = 'm200-2025.dp200039.f0023'
 offset = 302
 length = 17
 kind = 'casilla'
-casilla_id = '00306'
+casilla_id = 'DP200039:00306'
 data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
 design_type = 'N'
-legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
-]
+legal_refs = ['orden-hac-529-2026:art-1']
 source_refs = ['aeat-dr-200-2025']
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
@@ -467,20 +455,14 @@ id = 'm200-2025.dp200039.f0024'
 offset = 319
 length = 17
 kind = 'casilla'
-casilla_id = '00307'
+casilla_id = 'DP200039:00307'
 data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
 design_type = 'N'
-legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
-]
+legal_refs = ['orden-hac-529-2026:art-1']
 source_refs = ['aeat-dr-200-2025']
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
@@ -488,20 +470,14 @@ id = 'm200-2025.dp200039.f0025'
 offset = 336
 length = 17
 kind = 'casilla'
-casilla_id = '00308'
+casilla_id = 'DP200039:00308'
 data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
 design_type = 'N'
-legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
-]
+legal_refs = ['orden-hac-529-2026:art-1']
 source_refs = ['aeat-dr-200-2025']
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
