@@ -11,7 +11,7 @@ related:
   - '[[2026-09-07-tuimodelo-filing-lifecycle-adr]]'
 modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:d1a36e31f10e769f42430a0f914df7a39d60130d860b2d077dbe0d1239a44243'
+body_hash: 'sha256:db802fc0bf0b290eeb882b3fce239971a1370a4fa47f52319263e985037a15af'
 ---
 
 <!-- LINK RULES:
@@ -132,7 +132,7 @@ The final review also found a reachable direct Export path that could ignore pen
 
 - [x] `S01` - Integrate reviewed declaration guidance, results and external-filing grouping; `src/cadrumo/application/modelo/declarations_list.py, src/cadrumo/entrypoints/tui/declarations, four common.yml catalogues, dev/locales/fstring_registry.py and owning finite-caption discovery test`.
 - [x] `S02` - Apply validated existing Modelo names, declaration copy and period-selection instructions; `four common.yml catalogues, docs/how-to/fill-in-and-file-in-the-workbench.md and its three localized PO paragraphs`.
-- [ ] `S03` - Align record-only page key guidance with actual admitted field actions; `src/cadrumo/entrypoints/tui/modelo/workbench/{screen,casilla_list}.py, owning help/footer/installed records tests, and the repeating-record paragraph in the workbench guide and its ES/CA/HU PO catalogues`.
+- [x] `S03` - Align record-only page key guidance with actual admitted field actions; `src/cadrumo/entrypoints/tui/modelo/workbench/{screen,casilla_list}.py, owning help/footer/installed records tests, and the repeating-record paragraph in the workbench guide and its ES/CA/HU PO catalogues`.
 - [ ] `S05` - Preserve complete declaration identity and deadline context in the persistent header; `workbench header.py/screen.py, owning header and real formula-value consumer tests, plus existing CA Modelo header name leaves`.
 - [ ] `S06` - Explain typed calculation prerequisites after a refused Apply and preserve truthful staged-value qualifiers; `application/modelo edit executor and ephemeral refusal projection, operation composition and installed lifecycle/workbench doors, workbench screen/issues/session/page_items/casilla_list, focused owning tests, four common.yml prerequisite-message leaves and canonical import load-target metadata`.
 - [ ] `S07` - Prevent pending edits from exporting or recording an older saved result; `workbench screen.py shared output guard and focused pending True/False/zero/clear boundary tests with actual Review/Issues key evidence`.

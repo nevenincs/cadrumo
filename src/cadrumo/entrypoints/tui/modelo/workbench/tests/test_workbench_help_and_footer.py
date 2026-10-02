@@ -27,12 +27,13 @@ from ......application.modelo.work_form_models import (
     ModeloFormGridCell,
     ModeloFormIssue,
     ModeloFormOrigin,
+    ModeloFormRepeatingRow,
     ModeloWorkForm,
 )
 from ......core.casilla_id import CasillaId
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
-from ......core.i18n.render import lookup_translation
+from ......core.i18n.render import lookup_translation, tr
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -43,6 +44,7 @@ from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1
 from ..casilla_list import CasillaList
 from ..editor import CasillaEditorScreen
+from ..grid import CasillaListRecords
 from ..issues import WorkbenchIssuesScreen
 from ..progress import fit_next_line
 from ..screen import ModeloWorkbenchScreen
@@ -396,3 +398,85 @@ async def test_the_footer_always_keeps_the_key_the_next_step_names_and_issues_wh
     assert "i Issues" in words, f"the issues key shows while something blocks, at {width} columns: {words}"
     edge = width if palette is None else palette[0]
     assert all(right <= edge for _, _, right in keys)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", [80, 120])
+@pytest.mark.parametrize("row_count", [0, 30])
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+async def test_record_only_content_names_scroll_without_promising_field_actions(
+    width: int, row_count: int, language: OutputLanguage
+) -> None:
+    with override_settings(cadrumo_output_language=language.value):
+        screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(width, 24)) as pilot:
+            await _settle(pilot)
+            listing = screen.query_one(CasillaList)
+            listing.set_items(
+                (
+                    CasillaListRecords(
+                        headings=("Operator",),
+                        data_types=("text",),
+                        rows=tuple(
+                            ModeloFormRepeatingRow(index=index + 1, values=(f"Operator {index + 1}",))
+                            for index in range(row_count)
+                        ),
+                        column_casilla_ids=("operator.name",),
+                    ),
+                )
+            )
+            await _settle(pilot)
+            assert listing.highlighted is None
+            visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
+            assert {"enter", "s"}.isdisjoint(visible)
+            assert {"up", "question_mark", "escape"} <= visible
+            next_line = str(screen.query_one("#wb-next", Static).render())
+            named = next_line.rpartition("[")[2].removesuffix("]").lower()
+            assert named and named in visible
+            keys, palette = _footer(screen)
+            assert any(tr("tui.modelo.workbench.key.scroll") in words for words, _, _ in keys)
+            edge = width if palette is None else palette[0]
+            assert all(right <= edge for _, _, right in keys)
+            all_keys = screen._all_keys_text()
+            assert screen._key_label("enter", "tui.modelo.workbench.key.edit") not in all_keys
+            assert screen._key_label("s", "tui.modelo.workbench.key.sources") not in all_keys
+            assert tr("tui.modelo.workbench.grid.records_read_only") in str(
+                screen.query_one("#wb-help", Static).render()
+            )
+            await pilot.press("home", "down")
+            await _settle(pilot)
+            assert listing.scroll_y == min(1, listing.max_scroll_y)
+            await pilot.press("enter", "s")
+            await _settle(pilot)
+            assert app.screen is screen
+            await pilot.press("question_mark")
+            await _settle(pilot)
+            expanded = str(screen.query_one("#wb-help", Static).render())
+            assert tr("tui.modelo.workbench.key.scroll") in expanded
+            assert screen._key_label("enter", "tui.modelo.workbench.key.edit") not in expanded
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_filtered_out_fields_drop_actions_and_restore_them_on_a_selectable_page() -> None:
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=synthetic_form()), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(200, 30)) as pilot:
+            await _settle(pilot)
+            await pilot.press("f", "f")
+            await _settle(pilot)
+            assert screen.query_one(CasillaList).highlighted is None
+            visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
+            assert {"enter", "s"}.isdisjoint(visible)
+            await pilot.press("left_square_bracket")
+            await _settle(pilot)
+            entry = screen.query_one(CasillaList).highlighted
+            assert entry is not None and entry.field.box == "07"
+            visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
+            assert {"enter", "s"} <= visible and "up" not in visible
+            await pilot.press("enter")
+            await _settle(pilot)
+            assert app.screen is not screen or screen._docked is not None
+            app.exit(None)

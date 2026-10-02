@@ -197,6 +197,7 @@ _PALETTE_FRAME: Final[int] = 2
 """The command palette key's rule on its left and its gap on its right, beside its words, in the compact footer."""
 _FOOTER_PRIORITY: Final[tuple[str, ...]] = (
     "enter",
+    "up",
     "n",
     "question_mark",
     "escape",
@@ -291,6 +292,7 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
 _LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "enter": "tui.modelo.workbench.key.edit",
     "s": "tui.modelo.workbench.key.sources",
+    "up": "tui.modelo.workbench.key.scroll",
 }
 _RECORDED_ENTER_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.key.go"
 """What Enter does on a declaration recorded as filed: it opens the box, to read it, never to edit it."""
@@ -716,7 +718,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
                 for binding in others
             )
         )
-        hidden = _CHANGE_KEYS if self.recorded else frozenset()
+        hidden = self._hidden_keys()
         pinned = self._pinned_keys()
         shown: set[str] = set()
         for key in (*pinned, *(key for key in _FOOTER_PRIORITY if key not in pinned)):
@@ -732,20 +734,22 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         return frozenset(shown)
 
     def _pinned_keys(self) -> tuple[str, ...]:
-        """The footer keys kept before any other: the next-action line's key and F8, and ``i`` while ▲ or ! shows.
+        """Keep Help and the named next action; fieldless content then needs Scroll and Back.
 
-        The filer is told to press a key, or that something blocks or is
-        missing, so the key that does it, and F8 that runs the next step from
-        anywhere, are never the ones the footer drops.
+        F8 and urgent Issues follow those essential directions when no field
+        can be selected; scalar pages retain their existing priority.
         """
         load = self._load
+        fieldless = self.query_one(CasillaList).highlighted is None
         if load is None or self.recorded:
-            return ()
+            return ("question_mark", "up", "escape") if fieldless else ()
         progress = self._progress(load)
         named = _FINDINGS_KEY if progress.findings_lead else _NEXT_KEYS[progress.next_action]
         pinned = ["question_mark"]
         if named:
             pinned.append(named.lower() if named.startswith("F") and named[1:].isdigit() else named)
+        if fieldless:
+            pinned.extend(("up", "escape"))
         pinned.append("f8")
         urgent = {ChipLevel.BLOCKS, ChipLevel.MISSING}
         if any(chip.level in urgent for chip in attention_chips(load.form, recorded=False)):
@@ -755,6 +759,15 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             if key in _FOOTER_PRIORITY and key not in kept:
                 kept.append(key)
         return tuple(kept)
+
+    def _hidden_keys(self) -> frozenset[str]:
+        """Hide field actions without a selected field; read-only content keeps its scroll cue."""
+        hidden: set[str] = set(_CHANGE_KEYS) if self.recorded else set()
+        if self.query_one(CasillaList).highlighted is None:
+            hidden.update(("enter", "s"))
+        else:
+            hidden.add("up")
+        return frozenset(hidden)
 
     def _list_locale_keys(self) -> Mapping[str, str]:
         """What the list's keys say: Enter opens a box to read once the declaration is recorded as filed."""
@@ -1112,6 +1125,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     def on_casilla_list_highlighted(self, message: CasillaList.Highlighted) -> None:
         """Explain the casilla now under the cursor, then fetch its full help."""
+        self._describe_keys()
         self._render_help(message.entry)
         self._render_breadcrumb()
         entry = message.entry
@@ -1236,7 +1250,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
     def _all_keys_text(self) -> str:
         """Every key the help and the legend name; on a declaration recorded as filed, none that would change it."""
         descriptions = {**self._list_locale_keys(), **_SCREEN_LOCALE_KEYS}
-        hidden = _CHANGE_KEYS if self.recorded else frozenset()
+        hidden = self._hidden_keys()
         return " · ".join(
             self._key_label(key, descriptions[key])
             for key in (*_FOOTER_PRIORITY, *_HELP_ONLY_KEYS)

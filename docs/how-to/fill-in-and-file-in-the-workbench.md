@@ -88,9 +88,10 @@ The figures are Cadrumo's calculation. The AEAT has not seen them.
   appears as a table. Press ← and → (or `h` and `l`) to move between cells and
   ↑ and ↓ to move between rows. On a narrow terminal the table is stacked
   instead.
-- **Records that repeat**, such as the operators in Modelo 349, appear as a
-  numbered table. You read them here and change them where they come from, for
-  example in Records. Press Enter on a record to read all its boxes.
+- **Records that repeat**, such as the intra-community traders in Modelo 349,
+  appear as a numbered table. Use ↑ and ↓ or Page Up and Page Down to scroll
+  through the rows. These values are read-only here; change them where they
+  come from, for example in your records.
 
 A missing value is always said in words, never shown as a zero. "Optional, empty",
 "Needs your input", "Assumed, please confirm" and "Not applicable" are

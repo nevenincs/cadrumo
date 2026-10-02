@@ -675,7 +675,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
     )
 
     BINDINGS: ClassVar = [
-        Binding("up,k", "move(-1)", "", show=False),
+        Binding("up,k", "move(-1)", "", show=False, key_display="↑↓"),
         Binding("down,j", "move(1)", "", show=False),
         Binding("pageup", "page(-1)", "", show=False),
         Binding("pagedown", "page(1)", "", show=False),

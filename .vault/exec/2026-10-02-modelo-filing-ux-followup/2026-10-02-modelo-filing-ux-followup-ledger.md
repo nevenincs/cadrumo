@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8b8769fe4d1c9bd56db7d024211cae9289414c2a91214b6083f57e2a234bdff'
+body_hash: 'sha256:d845a587755b2c087b74c6d6f8d1f7cf3944a7cb8317d4928a78b51c88250b33'
 related:
   - "[[2026-10-02-modelo-filing-ux-followup-plan]]"
 ---
@@ -85,8 +85,23 @@ related:
 - `S02` `verify:` `s05-docs-frozen-authority-ca full strict build` -> `pass`
 - `S02` `verify:` `s05-docs-frozen-authority-hu full strict build` -> `pass`
 - `S02` `by:` `vaultspec-high-executor`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_help_and_footer.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_records_real.py`
+- `S03` `M` `docs/how-to/fill-in-and-file-in-the-workbench.md`
+- `S03` `M` `docs/locales/es/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S03` `M` `docs/locales/ca/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S03` `M` `docs/locales/hu/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S03` `verify:` `s03-footer-unit-corrected 50 tests` -> `pass`
+- `S03` `verify:` `s03-record-installed 37 tests` -> `pass`
+- `S03` `verify:` `s03 configured format lint types` -> `pass`
+- `S03` `verify:` `principal frozen-native record20 footer review` -> `pass`
+- `S03` `verify:` `two-paragraph scoped PO completeness and strict frozen locale builds` -> `pass`
+- `S03` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S01` Initial exact5b7d twelve-path integration committed3d40; later total typed caption map repairs obsolete discovery registration without duplicate state key. Full repaired census remains failing for baseline19 inventory plus in-progress docs4 and spelling tool; no aggregate-green claim. Receipt work/UX5-checks/s01-locale-inventory-delta.json separates the introduced four missing cells and their repair. Final native source receipt excludes unrelated auth/profile writes; calendar proof remains owning typed projection.
 - `S02` Live localized strict builds refused unrelated auth config.logout sequences; corrected frozen admitted-source builds pass. Native Hungarian human review remains release-pending. Foreign live informal-register overlap on two HU leaves is preserved and excluded from this Step's staged leaf delta; frozen accepted copy is evidence-versioned.
+- `S03` The initial scratch footer run was repaired to preserve fieldless Help plus actual named Next, worded Scroll and Back within 80 columns. Later narrow header findings belong S05; original footer captures are applicability evidence for this bounded action surface.

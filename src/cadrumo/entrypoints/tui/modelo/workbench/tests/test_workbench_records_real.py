@@ -223,6 +223,12 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             assert len(records) == 1 and len(records[0].rows) == 3
             assert not any(isinstance(item, CasillaListEntry) for item in listing.items)
             assert listing.highlighted is None
+            visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
+            assert {"enter", "s"}.isdisjoint(visible)
+            assert {"up", "question_mark", "escape"} <= visible
+            next_line = str(screen.query_one("#wb-next", Static).render())
+            named = next_line.rpartition("[")[2].removesuffix("]").lower()
+            assert named and named in visible
             assert screen._empty_listing_note() is None
             heading = str(screen.query_one("#wb-page", Static).render())
             help_text = str(screen.query_one("#wb-help", Static).render())
@@ -334,6 +340,12 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
             assert len(records) == 1 and not records[0].rows and column in records[0].column_casilla_ids
             assert not any(isinstance(item, CasillaListEntry) for item in listing.items)
             assert listing.highlighted is None
+            visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
+            assert {"enter", "s"}.isdisjoint(visible)
+            assert {"up", "question_mark", "escape"} <= visible
+            next_line = str(screen.query_one("#wb-next", Static).render())
+            named = next_line.rpartition("[")[2].removesuffix("]").lower()
+            assert named and named in visible
             count_text = tr("tui.modelo.workbench.repeating", count=0)
             body = "\n".join(listing.render_line(y).text for y in range(listing.size.height))
             assert count_text in body
