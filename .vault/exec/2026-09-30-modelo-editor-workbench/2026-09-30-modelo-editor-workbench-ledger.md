@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:53cf8d6d179630771495832b06c6465dda5ad83418ae59b3662329a3e374f44b'
+body_hash: 'sha256:ce4d9edc6adc755283793f72cf1968af783017ed73e0ff640bfeb26456d724d2'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1780,6 +1780,11 @@ related:
 - `S56` `verify:` `uv run --no-sync ruff check and format-check grouped.py and workspace tests` -> `pass`
 - `S56` `verify:` `uv run --no-sync ty check grouped.py and workspace tests` -> `pass`
 - `S56` `by:` `vaultspec-execute`
+- `S56` `M` `.vault/plan/2026-09-30-modelo-editor-workbench-plan.md`
+- `S56` `verify:` `frozen cb04a1021c corrected P08 64-frame render four locales two sizes two themes` -> `pass`
+- `S56` `verify:` `corrected P08 independent30-PNG and coordinator review with no unresolved findings` -> `pass`
+- `S56` `verify:` `dev.tui canonical stage-copy and snapshot installation all four locale runs` -> `pass`
+- `S56` `verify:` `review_page.html original SHA256 preserved through just tui-review serve restart` -> `pass`
 
 ## Notes
 
@@ -1890,3 +1895,4 @@ related:
 - `S27` Current exact acceptance matrix covers4locales ×80x24/120x36/160x48 ×both themes. 144 workbench/sources/help token cases overreal130/303; 24focusrestore and24cancel/discard/logprivacy/unchangedstoredform cases. This current proof replaces the old ordinary-size-only coverage without weakening assertions.
 - `S58` Final whole gate exits0;25non-blocking advisories remain21oversizedreaderframes+4unusedcaptures, no divergence. Sourcegoldens unchangedafterstablehandoff; semanticdiff/currentSHAreceipts C:/Users/hello/AppData/Local/Temp/modelo-sequences-final-20261002/handoff.json.
 - `S56` New16actualgeometrycases provevisiblefixedsearch/context inall4locales small/medium boththemes withone scrolling owner and '/' focus. Original64-frame actualfindingprovenance preserved. Requiredcorrected-sourcefresh64andfinal712 capture/reviewremainpending; S56staysopen.
+- `S56` Original a94364-frame findingprovenance preserved; mediuminitialscroll issue resolved by74currentowningtests and30post-fix images. Published authority/source/import receipts immutable underCtemp/p08-closing-cb04a1021c. No push/PR or external action.

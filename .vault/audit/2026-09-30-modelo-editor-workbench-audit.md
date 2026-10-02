@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:edd2a13c2ac666915b87c2bce7ba31274b9e07b00af24bf1f692c8102c2a6231'
+body_hash: 'sha256:2041909c36b1c562d46703540ae5c705479f6119d4aff60382e863107f56bda9'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -523,7 +523,11 @@ The frozen a9439772ab P08 matrix rendered 64 frames with no failed/skipped frame
 
 The owning refresh reviewed all 23 previously divergent outputs against current semantics. It changes human filing/readiness notices, adds empty typed AEAT concern arrays, corrects supplied-value attention to check, updates grounded 303 surcharge labels/help, and records the replacement ledger entry as one added and one retired contributor rather than unavailable membership. The saved calculation identity remains unchanged and the drift example still blocks filing. Commands, frame kinds, exit codes, captures, assertions and masks are unchanged. All 23 refreshes passed and the full just docs-sequences-check passes: 285 sequences across 34 pages, exit 0, cli-sequence goldens clean. The 25 non-blocking advisories (21 oversized reader frames and four unused captures) remain recorded. Exact original bytes, per-path hashes, semantic review and command results are preserved under C:/Users/hello/AppData/Local/Temp/modelo-sequences-final-20261002. Current strict localized HTML artifacts are refreshed after these changed golden inputs before final review.
 
-## Recommendations
+### declarations-closing-review | low | Corrected four-language portfolio and picker captures pass the phase review
+
+S56 review verdict: PASS. Frozen code cb04a1021c6a829b9b3cded1ee26c8ba0e3516bb and authority generation bbea0e6a55b9de2ae3f4b5f00df110ac956bb604a0b8953aeac6463623595e3b produce all 64 required portfolio/new-modelo/new-period/external-details frames: four languages, 80x24/120x40 and dark/light, exit 0. There are no failed/skipped frames, missing glyphs, geometry findings or source drift; all manifests share TUI fingerprint 62c91605ba3dcc5f14ccd742d1ab63828ebe235b0aa904249ab0fe144fcd571b. Independent review covers 30 PNGs, including every affected Catalan/Hungarian size/theme combination; the coordinator also inspected the corrected Spanish, Catalan and Hungarian layouts and the Catalan external-details dialog. Search and context remain visible, attention focus and one scroll owner remain, Cancel/Show all are accessible, and external filing declares its observed date without borrowing a local amount or promising unavailable linkage/receipt access. No critical/high or unresolved finding remains in the declarations phase. The original a943 capture is retained with its actual medium finding, now resolved.
+
+Exact descriptor/source hashes and commands are in C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/p08-closing-cb04a1021c/p08-capture-evidence/receipt.json and independent-review.json. All four locale snapshots are installed through the dev/tui artifact owner under runs/p08-closing-cb04a1021c-{es,en,ca,hu}; the prior current capture is preserved as closing-before-17ea5aa02e. The review server was restarted using only just tui-review serve; review_page.html retains its original SHA256 c7219ec24e94c78491c641519f0dc7826a12d1d42b6c7f73f539f53e25bafedf. S50 and the final S30 verdict remain pending the complete workbench render/review and closing documentation artifacts.
 
 ## Recommendations
 
@@ -532,11 +536,3 @@ The owning refresh reviewed all 23 previously divergent outputs against current 
 - The reproduced negative-yield omission premise was withdrawn; a future blank-by-rule origin needs a grounded case before any additional implementation.
 - Registry owners retain the grounded questions recorded in informative-totals, window-opens, modelo-100-direction, transport-tokens, binding-input-registry-notes and the unproven Modelo 369 envelope constants. No label is used as evidence of a constant's export-envelope role.
 - The unused official_page and renew_edit_baseline facades have been removed. The live apply path continues to renew through its existing required renewal operation; all seven owning admission/preflight/staging/production-edit cases pass. Final current-source visual review determines closure.
-
-## Recommendations
-
-- The accepted operator-layer decision D6 explicitly defers recording an override reason and the displaced source value; sources-hub-reason remains that separate decision question.
-- The accepted D4 amendment covers the four workbench steps, with preparation in the declarations picker; D5's docked editing and official grids are implemented. No follow-on workbench-shape decision is outstanding.
-- The reproduced negative-yield omission premise was withdrawn; a future blank-by-rule origin needs a grounded case before any additional implementation.
-- Registry owners retain the grounded questions recorded in informative-totals, window-opens, modelo-100-direction, transport-tokens, binding-input-registry-notes and the unproven Modelo 369 envelope constants. No label is used as evidence of a constant's export-envelope role.
-- The unused official_page facade has been removed. The separate renewal facade is being removed; the live apply path continues to renew through its existing required renewal operation. Final owning verification and current-source visual review determine closure.

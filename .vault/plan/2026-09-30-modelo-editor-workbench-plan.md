@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:3cc24e5367abee812de08999959b03a21ca5c59aa942d0b0eba80b08768f5167'
+body_hash: 'sha256:f513ff65379088e3ae54f86facb695b1097d4248d93b0ad9ed8a9a4d09aad4e9'
 ---
 
 # `modelo-editor-workbench` plan
@@ -143,7 +143,7 @@ Replace the declarations screens with one list grouped by what the filer must do
 - [x] `P08.S53` - Project one declaration summary per row with state, result, blocking count, verification and deadline, isolating each row's failure; `src/cadrumo/application/overview`.
 - [x] `P08.S54` - Show a period filed with AEAT but not linked to a declaration here as filed rather than overdue, expose its safe filing details, and explain linkage and receipt availability truthfully; `src/cadrumo/application/overview/calendar.py`.
 - [x] `P08.S55` - Draw the grouped declarations list with the two-step new-declaration picker, surfacing advised and undetermined modelos; `src/cadrumo/entrypoints/tui/declarations`.
-- [ ] `P08.S56` - Render the declarations list in the review previews and close the phase with a review; `dev/tui`.
+- [x] `P08.S56` - Render the declarations list in the review previews and close the phase with a review; `dev/tui`.
 - [x] `P08.S61` - Give each deduction document Cadrumo cannot record its own blocking finding that sends the filer to file another way, once the intra-community refusal reaches this branch from main; `src/cadrumo/application/modelo/verification_actions.py`.
 - [x] `P08.S64` - Name the binding inputs no casilla owns from their official descriptions in each modelo's schema catalogue, and read those names in the form; `src/cadrumo/application/modelo/work_form.py`.
 
