@@ -1,58 +1,4 @@
 [[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00417"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 22: ajustes por errores de ejercicios anteriores / otros instrumentos de patrimonio neto. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00417 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00417"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
-semantic_role = "is_ecpn_ajuste_errores_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00418"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 23: ajustes por errores de ejercicios anteriores / ajustes por cambios de valor. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00418 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00418"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
-semantic_role = "is_ecpn_ajuste_errores_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00547"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 80: operaciones con socios / reducciones de capital / total. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00547 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00547"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00558"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 84: conversion de pasivos financieros en patrimonio neto / ajustes por cambios de valor. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00558 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00558"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00575"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 92: distribucion de dividendos / total. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00575 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00575"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00603"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 104: incrementos o reducciones por combinaciones de negocios / total. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00603 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00603"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
 id = "03448"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "AEAT aeat-dr-200-2025 frente a aeat-dr-200-2024, DP200018: 93 | 1444 | 17 | Num |  | Deducc. para incentivar determ.actividades - 2025: Barcelona Music Lab. El Futuro de la Música (BM) - Deducción pendiente/generada [03448]. Nueva fila de deduccion del ejercicio 2025 para el acontecimiento nombrado, con importe generado, aplicado y futuro separados. No afirma que el acontecimiento o incentivo nazca en 2025: esta celda de cohorte anual no existe en el diseno 2024."
@@ -2000,102 +1946,29 @@ semantic_role = "is_correccion_impuesto_margen_intereses_comisiones_df9_permanen
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 [[revisions."2025-y-siguientes".casillas]]
-id = "DP200001:00082"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, DP200001 campo 78: entidad matriz ultima de grupo multinacional; en 2025 se amplia la descripcion a grupos nacionales de gran magnitud. La declaracion de 2024 omite esta celda identificativa, aunque existe en el diseno oficial. La casilla 00082 de DP200014B es una deduccion diferente; no acredita identidad. Se declara el hueco del predecesor, sin inventar una cadena que ignore la ampliacion de ambito."
-number = "00082"
-segmento = "DP200001"
-section = ["sociedad_matriz_ultima_grupo_multinacional_o_grupo"]
-data_type = "decimal"
-semantic_role = "is_identificacion_regimen_flag"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+id = "03627"
+continuidad_id = "03627"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-200-2025 DP200022 campo 30, posicion 421: Rég. especial reserva inversiones Canarias - RIC 2025 - Integrado en BI por incumplimiento de requisitos [03627]. aeat-dr-200-2024 no imprime la casilla 03627; su DP200022 posicion 421 es 03312. Celda de cohorte anual nueva en el diseno 2025."
+number = "03627"
+section = ["reg_especial_reserva_inversiones_canarias", "ric_2025"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
 [[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00569"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 87: distribucion de dividendos / resultado del ejercicio. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00569 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00569"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+id = "03628"
+continuidad_id = "03628"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-200-2025 DP200022 campo 31, posicion 438: Rég. especial reserva inversiones Canarias - RIC 2025 - Pendiente de materializar RIC al final de período [03628]. aeat-dr-200-2024 no imprime la casilla 03628; su DP200022 posicion 438 es 03313. Celda de cohorte anual nueva en el diseno 2025."
+number = "03628"
+section = ["reg_especial_reserva_inversiones_canarias", "ric_2025"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
 [[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00570"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 88: distribucion de dividendos / dividendo a cuenta. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00570 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00570"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00571"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 89: distribucion de dividendos / otros instrumentos de patrimonio neto. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00571 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00571"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00572"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 90: distribucion de dividendos / ajustes por cambios de valor. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00572 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00572"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00583"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 93: operaciones con acciones o participaciones propias / resultado del ejercicio. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00583 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00583"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00584"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 94: operaciones con acciones o participaciones propias / dividendo a cuenta. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00584 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00584"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00585"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 95: operaciones con acciones o participaciones propias / otros instrumentos de patrimonio neto. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00585 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00585"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00588"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 97: operaciones con acciones o participaciones propias / subvenciones, donaciones y legados. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00588 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00588"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00611"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 105: otras operaciones con socios / resultado del ejercicio. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00611 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00611"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2025-y-siguientes".casillas]]
-id = "DP200011:00625"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja DP200011, campo 112: otras variaciones del patrimonio neto / resultado del ejercicio. La celda del estado de cambios en el patrimonio neto ya figura en el diseno oficial de 2024, pero la edicion 2024 del registro no la declara. La casilla numerica 00625 de otra hoja representa otro concepto y no es un predecesor. Ausencia de declaracion, no alta legal ni continuidad inferida por numero."
-number = "00625"
-segmento = "DP200011"
-section = ["estado_de_cambios_patrimonio_neto_iii", "otras_variaciones_del_patrimonio_neto"]
-semantic_role = "is_ecpn_otras_variaciones_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+id = "03629"
+continuidad_id = "03629"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-200-2025 DP200022 campo 33, posicion 472: Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2024 - Pendiente de dotar RIC a principio de período [03629]. aeat-dr-200-2024 no imprime la casilla 03629; su DP200022 posicion 472 es 01176. Celda de cohorte anual nueva en el diseno 2025."
+number = "03629"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2024"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]

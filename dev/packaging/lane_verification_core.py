@@ -188,7 +188,6 @@ _DEV_PRESENT_NAMES = {
     "pytest",
     "ruff",
     "sphinx",
-    "torch",
 }
 
 

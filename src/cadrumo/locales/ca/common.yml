@@ -4,6 +4,19 @@ aggregation:
       unsupported_modelo: No hi ha cap contracte d'agregació registrat per al model
         sol·licitat.
   invoice_retencion:
+    defects:
+      fx_unresolved: La factura és en moneda estrangera i no té tipus de canvi a euros.
+      iva_treatment_undeclared: No s'ha declarat el tractament d'IVA, de manera que
+        no es pot determinar el sentit de la retenció.
+      missing_counterparty_tax_id: La factura no indica el NIF del perceptor, que
+        la declaració de retencions exigeix.
+      no_retencion_declared: La factura no declara cap import retingut.
+      non_resident_supplier: El proveïdor no és resident a Espanya; les retencions
+        sobre pagaments a no residents es declaren a l'Impost sobre la Renda de no
+        Residents.
+      not_a_retenedor_liability: Amb aquest tractament d'IVA i aquest tipus de factura,
+        la retenció no és una obligació del contribuent com a retenidor; la retenció
+        d'una factura emesa és un crèdit al seu favor.
     errors:
       euro_figures_unavailable_after_defect_sweep: Les xifres en euros no estan disponibles
         en una factura que ha superat l'escombrat de defectes.
@@ -167,8 +180,9 @@ aggregation:
         111 en blanc: declara el trimestre com a període sense retencions amb `aeat
         config profile edit --modelo-111-no-retenciones-periods %{attestation_period}`
         (l''opció substitueix la llista desada, així que inclou també, separats per
-        comes, els períodes ja declarats), o registra les files de perceptor amb `aeat
-        app modelo aggregate --retencion-observation`.'
+        comes, els períodes ja declarats), o registra els pagaments amb retenció amb
+        `aeat app modelo aggregate`, fent servir --received-invoice-retencion per
+        a una factura rebuda o --ledger-payment-withholding per a una nòmina.'
       m193_phase_allocation_collision: 'Model %{modelo} %{filing_year}: les assignacions
         %{source_allocations} consten declarades manualment i també provenen de les
         retencions de capital capturades. Elimineu la fila manual.'
@@ -1657,6 +1671,18 @@ tui:
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
         discrepancies: 'Comprovacions que no quadren amb el document: {count}'
         identity: Factura {number} amb data {date}
+        label_reading:
+          busy_refused: 'Una altra lectura estava fent servir la inferència d''aquest
+            equip, de manera que no s''ha executat el model de lectura. {count} camps
+            que les etiquetes no han llegit queden buits: {fields}. Torneu a llegir
+            el document quan acabi.'
+          headroom_refused: 'No s''ha carregat el model de lectura: aquest equip no
+            ha mostrat marge de memòria per a ell. {count} camps que les etiquetes
+            no han llegit queden buits: {fields}. Allibereu memòria i torneu a llegir
+            el document.'
+          reader_unavailable: 'No s''ha pogut executar el lector local, de manera
+            que {count} camps que les etiquetes no han llegit queden buits: {fields}.
+            Comproveu el lector i torneu a llegir el document.'
         supplier: 'Proveïdor: {name} · NIF {nif}'
         unread: sense llegir
       empty: No hi ha justificants pendents de revisió.

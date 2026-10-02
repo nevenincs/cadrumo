@@ -33,6 +33,9 @@ modelo:
         title: Donations, gifts and contributions received and disposals made (annual
           informative return)
       revision:
+        2022-2023:
+          field:
+            label: Modelo 182, tax years 2022 and 2023
         '2024':
           field:
             label: Modelo 182, tax year 2024

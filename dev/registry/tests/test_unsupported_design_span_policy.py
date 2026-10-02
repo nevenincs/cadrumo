@@ -15,8 +15,12 @@ from ._revision_span_design_support import _declared_revisions, _filing_revision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: Spans that declare design boundaries while their own authority_grade keeps
-#: them off the filing path: modelos 126 and 128 at 'calculation', both modelo
-#: 308 eras and modelo 345's 2023 era at 'applicability'.
+#: them off the filing path: modelos 126 and 128 at 'calculation' and modelo
+#: 345's 2023 era at 'applicability'.
+#:
+#: Modelo 308's two eras are not here. Each ends or starts at the July 2011
+#: boundary and cites only its own design, so neither spans that boundary; the
+#: one they once reported was both designs being handed to the shared year.
 #:
 #: Modelo 200's 2024 revision belongs here on grade -- it declares 'calculation'
 #: too -- and is absent only because a span needs boundaries to be counted, and
@@ -28,8 +32,6 @@ _KNOWN_UNSUPPORTED_SPANS = frozenset(
     {
         ("126", "2019-y-siguientes"),
         ("128", "2019-y-siguientes"),
-        ("308", "2009-2011-junio"),
-        ("308", "2011-julio-2015"),
         ("345", "2023"),
     },
 )

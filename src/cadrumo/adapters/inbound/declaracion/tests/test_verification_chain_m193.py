@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 _M123_TOTAL_RENTAS_CASILLA: CasillaId = validated_casilla_id("03")
 _M123_TOTAL_BASE_CASILLA: CasillaId = validated_casilla_id("06")
 _M123_TOTAL_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("09")
-_M193_PERCEPTORES_BINDING: BindingId = "modelo-193-123-perceptores-anual"
+_M193_PERCEPTORES_BINDING: BindingId = "modelo-193-perceptores-anual"
 _M193_RETIRED_PERCEPTORES_RELATION = "modelo-193-rel-123-perceptores-anual"
 _M123_QUARTERLY_VALUES: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
@@ -51,7 +51,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
     that the totals match AEAT.
 
     The fixture prints:
-      decl.total-perceptores = 2      (dedicated annual perceptor binding)
+      decl.total-perceptores = 2      (count of the type-2 perceptor records)
       decl.base-total        = 8000.00 (sum of M123 casilla 06 across 4 quarters)
       decl.retenciones-total = 1520.00 (sum of M123 casilla 09 across 4 quarters)
 
@@ -62,7 +62,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
       1. Parse the 2024-0A M193 fixture -> extracted closure values.
       2. Build M123 quarterly observations whose monetary sums match the M193 totals.
       3. Resolve relation_values via resolve_relation_values_from_observations.
-      4. Supply decl.total-perceptores through modelo-193-123-perceptores-anual.
+      4. Supply decl.total-perceptores through modelo-193-perceptores-anual.
       5. calculate_registry_snapshot(M193 snapshot, bound inputs, binding_values, relation_values).
       6. Assert perceptor count is bound, and monetary totals are relation-derived.
 

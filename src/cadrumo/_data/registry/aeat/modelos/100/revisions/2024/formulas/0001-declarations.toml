@@ -1,58 +1,4 @@
 [[revisions."2024".formulas]]
-id = "renta-minimo-contribuyente-autonomico"
-target_casilla_id = "0512"
-expression = { op = "lookup_parameter", args = [{ parameter = "renta-minimo-contribuyente-base" }] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-73"]
-source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
-
-[[revisions."2024".formulas.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = ["Mínimo del contribuyente"]
-[[revisions."2024".formulas]]
-id = "renta-matrimonio-vigente-todo-anio"
-target_casilla_id = "0245"
-# Casilla 0245: Si el matrimonio ha estado vigente durante todo el año 2024.
-# 1 when marriage_date predates 2024 (marriage_full_year = 1); 0 otherwise.
-# When no marriage_date is recorded the binding is absent and the engine
-# emits 0 via the default-missing path.
-expression = { binding = "renta-profile-marriage-full-year" }
-legal_refs = ["ley-35-2006:art-82"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
-
-[[revisions."2024".formulas.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = ["matrimonio", "vigente"]
-[[revisions."2024".formulas]]
-id = "renta-matrimonio-mes-inicio"
-target_casilla_id = "0246"
-# Casilla 0246: Primer mes en que estuvo vigente el matrimonio en 2024.
-# Resolves to the month integer (1-12) when marriage_date is in 2024,
-# or 1 when the marriage predates 2024.  The binding is absent when no
-# marriage_date is recorded and the engine emits 0 via the default-missing path.
-expression = { binding = "renta-profile-marriage-month-start" }
-legal_refs = ["ley-35-2006:art-82"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
-
-[[revisions."2024".formulas.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = ["Modelo 100", "ejercicio 2024"]
-[[revisions."2024".formulas]]
-id = "renta-matrimonio-mes-fin"
-target_casilla_id = "0247"
-# Casilla 0247: Último mes completo de 2024 en que estuvo vigente el matrimonio.
-# Always 12 when a marriage_date is present (the marriage remains in force
-# through year-end by assumption; dissolution is not modelled here).
-# The binding is absent when no marriage_date is recorded and the engine
-# emits 0 via the default-missing path.
-expression = { binding = "renta-profile-marriage-month-end" }
-legal_refs = ["ley-35-2006:art-82"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
-
-[[revisions."2024".formulas.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = ["Modelo 100", "ejercicio 2024"]
-[[revisions."2024".formulas]]
 id = "renta-incremento-guarderia-0613"
 target_casilla_id = "0613"
 # Art. 81.2 LIRPF: incremento deducción maternidad por gastos de guardería.
@@ -131,24 +77,3 @@ required_text = ["rendimientos netos positivos", "90 por 100", "70 por 100", "60
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["En un 90 por ciento", "En un 70 por ciento", "En un 60 por ciento", "En un 50 por ciento"]
 # M100 Art. 85 cadastral-value imputed real-estate income.
-
-[[revisions."2024".formulas]]
-id = "renta-deduccion-maternidad-0611"
-target_casilla_id = "0611"
-# Art. 81.1 LIRPF: per-child qualifying months, including the distinct 1.350
-# EUR alta-posterior cap, are folded at the profile boundary where the
-# descendant records live.  This registry leaf only carries that one derived
-# legal result into the official casilla; it must not recreate or accept an
-# operator-supplied 0611 total.
-expression = { binding = "renta-profile-deduccion-maternidad" }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-81"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
-
-[[revisions."2024".formulas.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = [
-    "Deducción por maternidad",
-    "Por tanto, 100 euros por cada mes.",
-    "El importe de la deducción por maternidad por cada hijo que otorgue derecho a la misma no podrá superar 1.200 euros anuales",
-]

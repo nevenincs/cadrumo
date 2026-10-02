@@ -115,6 +115,7 @@ def _runtime_cli(ctx: typer.Context) -> ActivityAssetCli:
             covered_until=covered_until,
             history=history,
             taxpayer_workforce=_taxpayer_workforce,
+            legal_reference=authority.legal_reference,
             requested_free_amount=requested_free_amount,
         )
 

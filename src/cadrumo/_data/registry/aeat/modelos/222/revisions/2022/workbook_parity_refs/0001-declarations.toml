@@ -1,0 +1,9 @@
+[[revisions.2022.workbook_parity_refs]]
+id = "modelo-222-record-design"
+workbook_source = "aeat-dr-222-2019-2022"
+fixture_id = "modelo-222-2019-2022-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-modelo-222-instructions", "aeat-dr-222-2019-2022"]

@@ -5,12 +5,33 @@ modelo:
         modelo-216-calculation-construct:
           field:
             title: 'Modelo 216: calculation of IRNR withholdings'
+        modelo-216-liquidacion:
+          field:
+            title: 'Modelo 216: settlement of IRNR withholdings'
       field:
         official_name: Modelo 216. Non-Resident Income Tax. Income obtained without
           the intermediation of a permanent establishment. Withholdings and payments
           on account. Return and payment document.
         title: IRNR withholdings and payments on account
       revision:
+        2020-2023:
+          casilla:
+            '1':
+              label: Settlement. Item 1. Number of income items
+            '2':
+              label: Settlement. Item 2. Withholding and advance payment tax base
+            '3':
+              label: Settlement. Item 3. Withholdings and payments on account
+            '4':
+              label: Settlement. Item 4. Number of income items
+            '5':
+              label: Settlement. Item 5. Withholding and advance payment tax base
+            '6':
+              label: Settlement. Item 6. Amount payable from prior returns
+            '7':
+              label: Settlement. Item 7. Result payable
+          field:
+            label: Order EHA/3290/2008, tax years 2020 to 2023
         2024-y-siguientes:
           casilla:
             '05':

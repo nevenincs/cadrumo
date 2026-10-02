@@ -74,6 +74,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.invoice_retencion.InvoiceWithholdingDefectsError",
+        ErrorCode(
+            code="REFUSED_INVOICE_WITHHOLDING_DEFECTS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_invoice_withholding_defects",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation.ledger_payment_withholding.LedgerPaymentWithholdingEvidenceError",
         ErrorCode(
             code="REFUSED_LEDGER_PAYMENT_WITHHOLDING_EVIDENCE",

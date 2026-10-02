@@ -1,0 +1,26 @@
+# Modelo 296 hoja-resumen casillas for ejercicio 2022, from ANEXO II of Orden
+# EHA/3290/2008 (boe-modelo-296-form-text, boe-modelo-296-form-layout).
+
+[[revisions.2022.casillas]]
+id = "02"
+continuidad_id = "irnr-resumen-base"
+number = "02"
+section = ["resumen"]
+semantic_role = "irnr_resumen_base"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+
+[[revisions.2022.casillas]]
+id = "03"
+continuidad_id = "irnr-resumen-retenciones"
+number = "03"
+section = ["resumen"]
+semantic_role = "irnr_resumen_retenciones"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+
+[[revisions.2022.casillas]]
+id = "04"
+continuidad_id = "irnr-resumen-retenciones-ingresadas"
+number = "04"
+section = ["resumen"]
+semantic_role = "irnr_resumen_retenciones_ingresadas"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]

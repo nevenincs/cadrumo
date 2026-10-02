@@ -1,0 +1,13 @@
+[[revisions."2020-2023".application_links]]
+id = "modelo-216-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-3290-2008:art-4"]
+
+[[revisions."2020-2023".application_links]]
+id = "modelo-216-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-3290-2008:art-1"]

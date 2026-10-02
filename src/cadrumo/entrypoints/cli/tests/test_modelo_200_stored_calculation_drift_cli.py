@@ -60,7 +60,7 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
             "app", "modelo", "work", "calculate",
             "--modelo", "200", "--year", "2026", "--period", "0A",
             "--revision", "2025-y-siguientes",
-            "--casilla", "00501=100000",
+            "--casilla", "DP200012:00501=100000",
             "--casilla", "DP200013:00417=0",
             "--casilla", "DP200013:00418=0",
             "--casilla", "01032=0",

@@ -1,10 +1,12 @@
 # Modelo 151 (régimen especial de impatriados, Ley Beckham) — casilla schema.
 #
-# Phase: the load-bearing cuota-íntegra escala (art. 93.2.e.1º, 24/47) IS
-# computed via lookup_bracket; retenciones and cuota a ingresar are derived.
-# The savings escala (art. 93.2.e.2º → IRPF art. 66) is intentionally out of
-# scope here (its current bracket set is not yet corpus-grounded — see the
-# art-93 corpus note); only the flat general escala is modelled.
+# Two cuota-íntegra tracks, per art. 93.2.e) LIRPF, both computed via
+# lookup_bracket: 1.º the base liquidable general (excluida la parte del ahorro)
+# by the general escala -> impatriado.cuota-integra-general; 2.º the part of the
+# base liquidable corresponding to the rentas of art. 25.1.f) TRLIRNR by the
+# escala del ahorro -> impatriado.cuota-integra-ahorro. The design prints them as
+# boxes [19] and [20] of pagina 08; the cuota diferencial nets the retenciones
+# from their sum.
 
 [[revisions."2015-2022".casillas]]
 id = "decl.ejercicio"
@@ -49,6 +51,31 @@ semantic_role = "impatriado_cuota_integra_general"
 continuidad_id = "impatriado-cuota-integra-general"
 input_kind = "computed"
 formula = "modelo-151-cuota-integra-general"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+
+# The part of the base liquidable corresponding to the rentas of art. 25.1.f)
+# TRLIRNR and its cuota by the escala of art. 93.2.e).2.º. The 2015-2022 design
+# prints them as "Base liquidable del ahorro [18]" (808-824) and "Cuota
+# correspondiente a la base liquidable general del ahorro [20]" (842-858) on
+# pagina 08, and the export writes both from these casillas.
+[[revisions."2015-2022".casillas]]
+id = "impatriado.base-liquidable-ahorro"
+number = "impatriado.base-liquidable-ahorro"
+section = ["liquidacion", "base"]
+semantic_role = "impatriado_base_liquidable_ahorro"
+continuidad_id = "impatriado-base-liquidable-ahorro"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+
+[[revisions."2015-2022".casillas]]
+id = "impatriado.cuota-integra-ahorro"
+number = "impatriado.cuota-integra-ahorro"
+section = ["liquidacion", "cuota"]
+semantic_role = "impatriado_cuota_integra_ahorro"
+continuidad_id = "impatriado-cuota-integra-ahorro"
+input_kind = "computed"
+formula = "modelo-151-cuota-integra-ahorro"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 

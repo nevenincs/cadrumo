@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import shutil
+from pathlib import Path
+
 import pytest
 
 from cadrumo.application.filing.producer_snapshot import (
@@ -9,11 +12,13 @@ from cadrumo.application.filing.producer_snapshot import (
     Modelo296ProfileFacts,
 )
 from cadrumo.application.filing.producer_snapshot_m200 import Modelo200ProfileFacts
+from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
-from ..compiler.loader import modelo_fact_scope
+from ..compiler.loader import load_modelo_directory, load_shared_catalogues, modelo_fact_scope
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..conformance.registry_schema_support import committed_modelo
 from ..edition_export_scenarios import (
     M123_SCENARIO_PERIODS,
@@ -24,6 +29,7 @@ from ..edition_export_scenarios import (
     M309_SCENARIO_PERIODS,
     M604_SCENARIO_PERIODS,
     edition_export_scenarios,
+    supported_scenario_periods,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -34,7 +40,7 @@ def test_enrollment_scenarios_select_their_supported_edition() -> None:
         ("123", "2019-2023", M123_SCENARIO_PERIODS["2019-2023"]),
         ("200", "2025-y-siguientes", M200_SCENARIO_PERIODS["2025-y-siguientes"]),
         ("222", "2025-y-siguientes", M222_SCENARIO_PERIODS["2025-y-siguientes"]),
-        ("296", "2024-y-siguientes", M296_SCENARIO_PERIODS["2024-y-siguientes"]),
+        ("296", "2024-2025", M296_SCENARIO_PERIODS["2024-2025"]),
         ("308", "2019-y-siguientes", M308_SCENARIO_PERIODS["2019-y-siguientes"]),
         ("309", "2018-2022", M309_SCENARIO_PERIODS["2018-2022"]),
         ("604", "2021-2023", M604_SCENARIO_PERIODS["2021-2023"]),
@@ -59,7 +65,7 @@ def test_the_retired_below_floor_period_still_refuses() -> None:
 
 def test_modelo296_scenario_supplies_every_required_detail_family() -> None:
     with modelo_fact_scope(bundled_path("registry", "aeat", "modelos", "296")):
-        scenario = edition_export_scenarios("296")["2024-y-siguientes"]
+        scenario = edition_export_scenarios("296")["2024-2025"]
         profile = scenario.producer_snapshot().model_profile
     assert isinstance(profile, Modelo296ProfileFacts)
     assert profile.ejercicio == str(scenario.period.filing_year)
@@ -91,3 +97,100 @@ def test_corporate_scenario_defers_software_identity_until_candidate_fact_scope(
             type(rows).model_fields,
             1,
         )
+
+
+def _write_edition(modelo_dir: Path, revision_id: str, *, year_from: int, year_to: int | None) -> None:
+    revision_dir = modelo_dir / "revisions" / revision_id
+    (revision_dir / "casillas").mkdir(parents=True)
+    valid_to = "" if year_to is None else f"valid_to = {year_to}-12-31\n"
+    selector_to = "" if year_to is None else f", year_to = {year_to}"
+    (revision_dir / "revision.toml").write_text(
+        f'[revisions."{revision_id}"]\n'
+        f"valid_from = {year_from}-01-01\n"
+        f"{valid_to}"
+        f'period_selector = {{ year_from = {year_from}{selector_to}, periods = ["0A"] }}\n'
+        'legal_refs = ["ley-58-2003:art-29"]\n'
+        'source_refs = ["aeat-manual"]\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    (revision_dir / "casillas" / "0001-casillas.toml").write_text(
+        f'[[revisions."{revision_id}".casillas]]\n'
+        'id = "0001"\n'
+        'number = "1"\n'
+        'section = ["liquidacion"]\n'
+        'data_type = "money"\n'
+        'continuidad_id = "base"\n'
+        'legal_refs = ["ley-58-2003:art-29"]\n'
+        'source_refs = ["aeat-manual"]\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def _synthetic_registry(root: Path) -> tuple[Path, dict[str, Period], int]:
+    """A registry holding the bundled legal tree and one modelo whose editions meet its floor differently.
+
+    The floor is the bundled one rather than a stated one: the shared catalogues
+    are validated together, so overriding the support span alone leaves the
+    catalogues that enumerate its years inconsistent with it. Returns the
+    registry, each edition's declared period keyed by revision id (wholly below,
+    straddling, then serving the floor), and the floor.
+    """
+    registry = root / "registry" / "aeat"
+    shutil.copytree(bundled_path("registry", "aeat", "legal"), registry / "legal")
+    floor = load_shared_catalogues(registry).require_supported_filing_years().floor
+    modelo_dir = registry / "modelos" / "999"
+    modelo_dir.mkdir(parents=True)
+    write_standard_manifest(modelo_dir, "Test")
+    spans = ((floor - 10, floor - 7), (floor - 6, floor + 1), (floor + 2, None))
+    declared: dict[str, Period] = {}
+    for year_from, year_to in spans:
+        revision_id = f"{year_from}-y-siguientes" if year_to is None else f"{year_from}-{year_to}"
+        _write_edition(modelo_dir, revision_id, year_from=year_from, year_to=year_to)
+        declared[revision_id] = Period.from_year_and_code(year_from, "0A")
+    return registry, declared, floor
+
+
+def test_a_period_declared_below_the_floor_renders_at_the_earliest_supported_one(tmp_path: Path) -> None:
+    """An edition straddling the floor renders at its first supported year; one wholly below it has no scenario.
+
+    The declared periods are what the tables used to render: the canonical
+    selection refuses both of them outright, so a scenario left there proves
+    nothing about the edition's bytes.
+    """
+    registry, declared, floor = _synthetic_registry(tmp_path)
+    wholly_below, straddling, serving = declared
+    modelo = load_modelo_directory(registry / "modelos" / "999")
+    support = load_shared_catalogues(registry).require_supported_filing_years()
+    for below in (wholly_below, straddling):
+        with pytest.raises(FilingYearOutsideSupportEnvelopeError):
+            select_revision(modelo, filing_year=declared[below].filing_year, period="0A", support=support)
+
+    rendered = supported_scenario_periods("999", declared, registry_root=registry)
+
+    assert rendered == {
+        straddling: Period.from_year_and_code(floor, "0A"),
+        serving: declared[serving],
+    }
+    for revision_id, period in rendered.items():
+        selected = select_revision(modelo, filing_year=period.filing_year, period="0A", support=support)
+        assert selected.id == revision_id
+
+
+def test_every_declared_scenario_renders_inside_the_support_envelope() -> None:
+    """Registry-wide: each scenario period is admitted and selects the edition it is keyed by."""
+    modelo_ids = sorted(path.name for path in bundled_path("registry", "aeat", "modelos").iterdir() if path.is_dir())
+    for modelo_id in modelo_ids:
+        scenarios = edition_export_scenarios(modelo_id)
+        if not scenarios:
+            continue
+        modelo, catalogues = committed_modelo(modelo_id)
+        support = catalogues.require_supported_filing_years()
+        for revision_id, scenario in scenarios.items():
+            period = scenario.period
+            assert support.admits_filing_year(period.filing_year), (modelo_id, revision_id, period)
+            selected = select_revision(
+                modelo, filing_year=period.filing_year, period=period.registry_token, support=support
+            )
+            assert selected.id == revision_id, (modelo_id, revision_id, period)

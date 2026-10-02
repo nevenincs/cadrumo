@@ -1,5 +1,7 @@
 [revisions."2026"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (row order and a dropped application_links member both diverge from the 2025 edition). Materialising by inheritance takes the inherited rows in the predecessor's order, and 'saldo-negativo-fin-periodo' is the last of the 35 rows this edition states while it sits sixteenth in 2025, immediately after casilla '15', so every row from that position on would materialise in an order this edition does not state. The 2025 edition also states the application_links member 'modelo-131-declaracion-extractor', which this edition does not state and which no retirement declares withdrawn; omission in an inheriting family is inheritance rather than deletion, so materialising from 2025 would carry that member into this edition.", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-dr-131-2026"] } }
+predecessor = { none = { reason = "No legal predecessor is declared. The root was introduced because this edition could not be materialised by adjacency from 2025: its casilla order places 'saldo-negativo-fin-periodo' last, where 2025 places it directly after casilla '15'. That is a materialisation limit, not an official-structure claim. The payload is stored against the 2025 edition through casilla_storage_baseline and family_storage_baseline, with positions, removals and overrides stating only this edition's differences; storage reuse makes no continuity claim, and naming 2025 as legal predecessor is a separate continuity decision.", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-dr-131-2026"] } }
+casilla_storage_baseline = "2025"
+family_storage_baseline = "2025"
 casilla_source_refs = ["aeat-modelo-131-instructions"]
 parameter_source_refs = ["aeat-modelo-131-instructions"]
 binding_source_refs = ["aeat-dr-131-2026"]
@@ -46,6 +48,7 @@ source_refs = [
     "aeat-modelo-131-recuperacion-declaraciones",
     "boe-modelo-131-2007-form",
 ]
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
 [revisions."2026".family_dispositions.projection_endpoints]
@@ -68,3 +71,1129 @@ source_refs = [
     "boe-modelo-131-2007-form",
 ]
 
+[[revisions."2026".casilla_positions]]
+id = "saldo-negativo-fin-periodo"
+position = 34
+
+[[revisions."2026".family_removals]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.sin-datos-base-ceuta-melilla-la-palma"}
+
+[[revisions."2026".family_removals]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla-la-palma"}
+
+[[revisions."2026".family_removals]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla-la-palma"}
+
+[[revisions."2026".family_removals]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.deduccion-ceuta-melilla-la-palma"}
+
+[[revisions."2026".family_positions]]
+family = "live_cross_references"
+id = "modelo-131-filed-declarations-read"
+position = 1
+
+[[revisions."2026".family_positions]]
+family = "extraction_profiles"
+id = "modelo-131-submitted-file"
+position = 1
+
+[[revisions."2026".family_positions]]
+family = "bindings"
+id = "modelo-131.page1.discapacidad-33"
+position = 0
+[[revisions."2026".family_positions]]
+family = "bindings"
+id = "modelo-131.page1.sin-datos-base-ceuta-melilla"
+position = 23
+[[revisions."2026".family_positions]]
+family = "bindings"
+id = "modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla"
+position = 33
+[[revisions."2026".family_positions]]
+family = "bindings"
+id = "modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla"
+position = 34
+[[revisions."2026".family_positions]]
+family = "bindings"
+id = "modelo-131.page1.justificante-anterior"
+position = 43
+[[revisions."2026".family_positions]]
+family = "bindings"
+id = "modelo-131.dpa.deduccion-ceuta-melilla"
+position = 49
+[[revisions."2026".family_positions]]
+family = "bindings"
+id = "modelo-131-resultados-negativos-anteriores"
+position = 98
+[[revisions."2026".family_positions]]
+family = "bindings"
+id = "modelo-131-volumen-ingresos-agrario"
+position = 98
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "01" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "02" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "03" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "04" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "05" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "06" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "07" }
+fields = { constraints = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }, source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "08" }
+fields = { constraints = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }, source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "09" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "10" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "11" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "12" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "13" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "14" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "15" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-epigrafe" }
+fields = { legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-1-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1425-2025:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-1-unidades-anterior" }
+fields = { constraints = { legal_refs = ["orden-hac-1425-2025:instruccion-2-2-a"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:instruccion-2-2-a"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-2-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1425-2025:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-3-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1425-2025:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-4-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1425-2025:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-5-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1425-2025:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-6-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1425-2025:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-7-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1425-2025:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-minoracion-inversion" }
+fields = { continuidad_origin = "seeded", constraints = { legal_refs = ["orden-hac-1425-2025:instruccion-2-2-b"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:instruccion-2-2-b"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-indice-pequena-dimension" }
+fields = { continuidad_origin = "seeded", constraints = { legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-1"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-1"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-indice-temporada" }
+fields = { continuidad_origin = "seeded", constraints = { legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-2"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-2"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-indice-inicio-actividad" }
+fields = { continuidad_origin = "seeded", constraints = { legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-pequena-dimension-ignorado-flag" }
+fields = { continuidad_origin = "seeded", legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-temporada-inicio-actividad-conflicto-flag" }
+fields = { continuidad_origin = "seeded", legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-rendimiento-neto-previo" }
+fields = { continuidad_origin = "seeded", legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-rendimiento-neto-minorado" }
+fields = { continuidad_origin = "seeded", legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:instruccion-2-2-a", "orden-hac-1425-2025:instruccion-2-2-b"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-rendimiento-neto-modulos" }
+fields = { continuidad_origin = "seeded", legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:instruccion-2-3-b-3", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-1", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-2", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-4", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "modulos-rendimiento-neto-actividad" }
+fields = { continuidad_origin = "seeded", legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:da-1"] }
+removed_fields = []
+
+[[revisions."2026".casilla_overrides]]
+selector = { revision = "2025", id = "saldo-negativo-fin-periodo" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"] }
+removed_fields = []
+
+[[revisions."2026".family_overrides]]
+family = "formulas"
+selector = {revision = "2025", id = "modelo-131-modulos-pequena-dimension-ignorado-flag"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["los índices correctores de actividad se reflejan en el formulario de declaración"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "formulas"
+selector = {revision = "2025", id = "modelo-131-modulos-rendimiento-neto-actividad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:da-1"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["las reducciones del rendimiento neto establecidas por disposiciones de carácter general para las actividades en estimación objetiva"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "formulas"
+selector = {revision = "2025", id = "modelo-131-modulos-rendimiento-neto-minorado"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:instruccion-2-2-a", "orden-hac-1425-2025:instruccion-2-2-b"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["las minoraciones por incentivos al empleo y a la inversión"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [1, 2], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "formulas"
+selector = {revision = "2025", id = "modelo-131-modulos-rendimiento-neto-modulos"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:instruccion-2-3-b-3", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-1", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-2", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-4", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["los índices correctores que, en su caso, resulten aplicables"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [1, 2, 3, 4, 5], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "formulas"
+selector = {revision = "2025", id = "modelo-131-modulos-rendimiento-neto-previo"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["el rendimiento neto correspondiente a cada actividad se calculará en función de los signos o módulos establecidos para la misma, teniendo en cuenta los", "rendimientos anuales por unidad antes de amortización"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "formulas"
+selector = {revision = "2025", id = "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["los índices correctores aplicables inicialmente en cada período anual"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "formulas"
+selector = {revision = "2025", id = "modelo-131-saldo-negativo-fin-periodo"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2026".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2025", id = "modelo-131-trimestral"}
+sequence_additions = {source_refs = ["aeat-modelo-131-procedure"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2025", id = "modelo-131-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-modelo-131-formulario-presentacion", "aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2025", id = "modelo-131-submitted-file"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "constructs"
+selector = {revision = "2025", id = "modelo-131-objective-estimation-instalment"}
+fields = {deadline_windows = ["modelo-131-2026-1t", "modelo-131-2026-2t", "modelo-131-2026-3t", "modelo-131-2026-4t"]}
+sequence_additions = {application_links = ["modelo-131-declaracion-extractor", "modelo-131-portal-cross-reference", "modelo-131-deadline"], extraction_profiles = ["modelo-131-declaracion-pdf"], legal_refs = ["orden-hac-1425-2025:art-4", "orden-hac-1425-2025:da-1", "orden-hac-1425-2025:instruccion-2-2-a", "orden-hac-1425-2025:instruccion-2-2-b", "orden-hac-1425-2025:instruccion-2-3-b-3", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-1", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-2", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-4", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"], live_cross_references = ["modelo-131-static-official"], source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-formulario-presentacion"]}
+sequence_removals = {legal_refs = [2, 3, 4, 5, 6, 7, 8, 9, 10], source_refs = [0, 1, 4]}
+sequence_order = {application_links = [0, 1, 2, 4, 5, 6, 3, 9, 10, 7, 11, 8], extraction_profiles = [1, 0], legal_refs = [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 2, 3], live_cross_references = [1, 0], source_refs = [3, 4, 0, 5, 1, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-131-approval"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-131-deadline"}
+sequence_additions = {source_refs = ["aeat-modelo-131-procedure"]}
+sequence_removals = {legal_refs = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-131-declaracion-extractor"}
+sequence_additions = {source_refs = ["aeat-modelo-131-formulario-presentacion", "aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-131-export"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-131-extractor"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-131-filing"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-131-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-131-review"}
+fields = {consumer = "cadrumo.application.review"}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-131-workflow"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 2, 0]}
+
+[[revisions."2026".family_overrides]]
+family = "parameters"
+selector = {revision = "2025", id = "m131-modulos-coeficiente-incremento-asalariados"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:instruccion-2-2-a"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["las minoraciones por incentivos al empleo y a la inversión"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "parameters"
+selector = {revision = "2025", id = "m131-modulos-coeficiente-tramos-asalariados"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:instruccion-2-2-a"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["las minoraciones por incentivos al empleo y a la inversión"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "parameters"
+selector = {revision = "2025", id = "m131-modulos-coeficientes"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["rendimientos anuales por unidad antes de amortización"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "parameters"
+selector = {revision = "2025", id = "m131-modulos-cuantia-exceso"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:instruccion-2-3-b-3"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["los índices correctores que, en su caso, resulten aplicables"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "parameters"
+selector = {revision = "2025", id = "m131-modulos-indice-exceso"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:instruccion-2-3-b-3"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["los índices correctores que, en su caso, resulten aplicables"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "parameters"
+selector = {revision = "2025", id = "m131-modulos-reduccion-general"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:da-1"], source_citations = [{source_ref = "aeat-modelo-131-instructions", required_text = ["las reducciones del rendimiento neto establecidas por disposiciones de carácter general para las actividades en estimación objetiva"]}], source_refs = ["aeat-modelo-131-instructions"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2025", id = "advisory-when-computed-diverges:modulos-computed-diverges-de-c01"}
+fields = {predicate_id = "modelo-131-2026-modulos-computed-diverges-de-c01"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4", "orden-hac-1425-2025:da-1"]}
+sequence_removals = {legal_refs = [1, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2025", id = "advisory-when-positive:modulos-pequena-dimension-ignorado-especial"}
+fields = {predicate_id = "modelo-131-2026-modulos-pequena-dimension-ignorado-especial"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2025", id = "advisory-when-positive:modulos-temporada-inicio-actividad-incompatibles"}
+fields = {predicate_id = "modelo-131-2026-modulos-temporada-inicio-actividad-incompatibles"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2025", id = "cap-le-when-positive:c11-cap-by-c10"}
+fields = {predicate_id = "modelo-131-2026-c11-cap-by-c10"}
+
+[[revisions."2026".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2025", id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-autotaxi"}
+fields = {predicate_id = "modelo-131-2026-modulos-indice-exceso-incompatible-autotaxi"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2025", id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-mercancias"}
+fields = {predicate_id = "modelo-131-2026-modulos-indice-exceso-incompatible-mercancias"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2026".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2025", id = "implies-nonzero:pago-fraccionado-determinado-cuando-rendimientos-positivos"}
+fields = {predicate_id = "modelo-131-2026-pago-fraccionado-determinado-cuando-rendimientos-positivos"}
+
+[[revisions."2026".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2025", id = "implies-nonzero:rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"}
+fields = {predicate_id = "modelo-131-2026-rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.did.iban"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.ano-inicio-actividad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.carga-superior-1000kg"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.dias-actividad-temporada"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.dias-ejercicio-trimestre"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.epigrafe-iae"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.incentivos-empleo"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.incentivos-inversion"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.indicador-auxiliar-actividad-iae"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.indice-corrector-especial"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.indice-corrector-exceso"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.indice-corrector-nueva-actividad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.indice-corrector-pequena-dimension"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.indice-corrector-temporada"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.local-unico"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.mesas-1-capacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.mesas-1-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.mesas-2-capacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.mesas-2-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.mesas-3-capacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.mesas-3-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.mesas-4-capacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.mesas-4-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-1-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-1-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-2-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-2-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-3-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-3-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-4-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-4-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-5-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-5-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-6-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-6-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-7-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.modulo-7-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.municipio-actividad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.participacion-comunidad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.personal-asalariado-discapacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.personal-asalariado-horas-convenio"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.personal-asalariado-mayor-19"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.personal-asalariado-menor-19"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.personal-no-asalariado-conyuge"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.personal-no-asalariado-hijos"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.personal-no-asalariado-titular"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.porcentaje-superior"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.resto-personal-asalariado-discapacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.resto-personal-asalariado-horas-convenio"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.resto-personal-asalariado-mayor-19"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.resto-personal-asalariado-menor-19"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.tractocamion-sin-semirremolque"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.tractocamion-unico-sin-semirremolque"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.dpa.vehiculos-afectos"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-1-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-1-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-1-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-1-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-2-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-2-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-2-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-2-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-3-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-3-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-3-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-3-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-4-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-4-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-4-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-4-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-5-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-5-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-5-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.actividad-5-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.agraria-ingresos-generales-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.agraria-ingresos-ordinarias-generales"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.agraria-ingresos-prioritarias-generales"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.agraria-ingresos-territoriales-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.agraria-vivienda-base"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.agraria-vivienda-limite"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.agraria-vivienda-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.declaracion-complementaria"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.deduccion-art-110-cuantia"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.deduccion-art-110-tramo"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.discapacidad-33"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.justificante-anterior"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.sin-datos-base-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.sin-datos-base-vivienda-base"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.sin-datos-base-vivienda-limite"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.sin-datos-base-vivienda-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.sin-datos-base-volumen"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.vivienda-deduccion-aplicada"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-131.page1.vivienda-derecho-deduccion"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2025", id = "modelo-131-dr-xlsx"}
+fields = {fixture_id = "modelo-131-2026-record-design-layout", workbook_source = "aeat-dr-131-2026"}
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2026".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2025", id = "modelo-131-calculation-verification"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2026".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2025", id = "modelo-131-reconcile-when-present"}
+sequence_additions = {source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2026".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2025", id = "aeat-dr-131-2025"}
+replacement_id = "aeat-dr-131-2026"
+sequence_additions = {legal_refs = ["orden-hac-1425-2025:art-4", "orden-hac-1425-2025:da-1", "orden-hac-1425-2025:instruccion-2-2-a", "orden-hac-1425-2025:instruccion-2-2-b", "orden-hac-1425-2025:instruccion-2-3-b-3"], source_refs = ["aeat-dr-131-2026"]}
+sequence_removals = {legal_refs = [3, 4, 5, 6, 7, 8, 9, 10, 11], source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}

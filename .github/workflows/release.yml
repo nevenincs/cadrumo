@@ -327,7 +327,7 @@ jobs:
 
       - name: Packaging performance contracts
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
-        run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not resident_service" dev/packaging/tests
+        run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests
 
       - name: Future-directive policy
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
@@ -353,10 +353,10 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Read the interpreter pin
+      - name: Read the release builder interpreter pin
         id: pin
         shell: bash
-        run: echo "python=$(tr -d '[:space:]' < .python-version)" >> "$GITHUB_OUTPUT"
+        run: echo "python=$(tr -d '[:space:]' < dev/packaging/release-python-version)" >> "$GITHUB_OUTPUT"
 
       - name: Set up toolchain
         uses: ./.github/actions/setup

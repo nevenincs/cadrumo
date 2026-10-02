@@ -124,6 +124,8 @@ def _withdraw_export_layouts(modelo_root: Path, *, revision: str) -> None:
     the edition states the family itself and the merge never consults the
     declaration, so it decides nothing; retiring it would mean the publication
     path writing outside ``revisions/<id>/export/``, which is not its boundary.
+    The authority validator refuses the leftover, so the author retires it
+    before the authority is compiled.
     """
     revision_dir = modelo_root / "revisions" / revision
     shutil.rmtree(revision_dir / "export")

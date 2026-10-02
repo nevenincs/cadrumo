@@ -67,7 +67,8 @@ def _pinned_service(modelo: ModeloDefinition) -> tuple[PinnedRegistryQueryServic
 
 def test_a_directory_backed_listing_counts_and_filters_by_every_directory_revision() -> None:
     modelo = _modelo()
-    assert set(modelo.revisions) == {_PREDECESSOR, _SUCCESSOR}
+    assert {_PREDECESSOR, _SUCCESSOR} <= set(modelo.revisions)
+    assert len(modelo.revisions) > 2, "the listing must count directory revisions the view does not carry"
     assert modelo.revisions[_PREDECESSOR].period_selector.includes_year(2024)
     assert not modelo.revisions[_SUCCESSOR].period_selector.includes_year(2024)
     predecessor_query = ModeloRevisionComponentQuery(_MODELO, _PREDECESSOR)
@@ -78,7 +79,7 @@ def test_a_directory_backed_listing_counts_and_filters_by_every_directory_revisi
     year_rows = service.list_modelos(year=2024).modelos
 
     assert tuple(view.revisions) == (_SUCCESSOR,)
-    assert row.revision_count == 2
+    assert row.revision_count == len(modelo.revisions)
     assert tuple(year_row.code for year_row in year_rows) == (_MODELO,)
     assert predecessor_query not in reader.loads
 
@@ -144,8 +145,11 @@ def test_a_directory_backed_support_matrix_reports_every_declared_revision() -> 
 
     assert tuple(view.revisions) == (_SUCCESSOR,)
     assert entry.latest_revision_id == _SUCCESSOR
-    assert entry.supported_revision_ids == (_PREDECESSOR, _SUCCESSOR)
-    assert entry.revision_count == 2
+    assert entry.supported_revision_ids == tuple(
+        str(revision.id) for revision in sorted(modelo.revisions.values(), key=lambda revision: revision.valid_from)
+    )
+    assert entry.supported_revision_ids[-2:] == (_PREDECESSOR, _SUCCESSOR)
+    assert entry.revision_count == len(modelo.revisions)
 
 
 def test_a_published_snapshot_keeps_its_cross_revision_view_valid_when_nested() -> None:

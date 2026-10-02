@@ -1,7 +1,9 @@
 :seed: renta-2025
+@step Record the taxpayer's employment and direct-estimation activity before supplying its instalment payments.
+aeat config profile edit --quiet --accept-defaults --irpf-income-categories trabajo,actividad_economica --irpf-estimation-regime directa_simplificada --activity-start-date 2025-01-01
 @step Open the annual Modelo 100 work unit for the filing year.
 @setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
 @step Supply a registry relation value during calculation.
-@result aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-certificado-trabajo-retenciones=2400 --binding renta-base-liquidable-negativa-general-anterior=0 --relation renta-modelo-184-atribucion-actividades-economicas=450
-@expect result.relation_overrides["renta-modelo-184-atribucion-actividades-economicas"] == "450"
+@result aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-certificado-trabajo-retenciones=2400 --binding renta-base-liquidable-negativa-general-anterior=0 --binding renta-modelo-100-estimacion-directa-es-normal=0 --relation renta-modelo-130-pagos-fraccionados=450
+@expect result.relation_overrides["renta-modelo-130-pagos-fraccionados"] == "450"
 @expect exit_code == 0

@@ -1,0 +1,22 @@
+# Modelo 165 filing window, ejercicio 2022 (the only supported year this
+# edition governs).
+#
+# Orden HAP/2455/2013 art. 4, never amended (BOE analysis of BOE-A-2013-13798
+# records changes to the anexo only), states the plazo: "se realizara en el mes
+# de enero de cada ano en relacion con la suscripcion de acciones o
+# participaciones en el ano inmediato anterior". AEAT's Calendario del
+# Contribuyente 2023 lists "Resumen anual 2022: 165" under "Hasta el 31 de
+# enero", so the ejercicio 2022 declaration is filed in January 2023. The dates
+# are the nominal month; weekend and festivo movement happens at read time.
+#
+# Ejercicios 2016 to 2021 are below the support floor and are not declared.
+
+[[revisions."2016-2022".deadline_windows]]
+id = "modelo-165-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-calendario-contribuyente-2023"]

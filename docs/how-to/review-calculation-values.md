@@ -182,7 +182,8 @@ at verification.
 
 For registry relation values, calculation accepts repeatable
 `--relation KEY=VALUE` inputs. Use them only when the bindings list identifies
-the relation you need:
+the relation you need. This example records employment and an activity in
+simplified direct estimation before supplying the Modelo 130 instalment payments:
 
 ```{cli-sequence} review-values-relation
 :verify: Confirm the supplied relation value is recorded on the saved calculation.

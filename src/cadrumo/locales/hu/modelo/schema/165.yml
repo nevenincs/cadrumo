@@ -3,26 +3,14 @@ modelo:
     '165':
       casilla:
         continuidad:
-          declaracion-complementaria-sustitutiva:
-            label: Kiegészítő vagy helyettesítő bevallás
-          declarante-razon-social:
-            label: A bejelentő neve vagy cégneve
-          fecha-adquisicion:
-            label: A részvények vagy üzletrészek megszerzésének dátuma
-          fecha-constitucion:
-            label: Az alapítás dátuma
           filing-year:
             label: Az adóbevallás vonatkozási éve
-          importe-fondos-propios:
-            label: A saját tőke összege
-          importe-suscripcion:
-            label: A jegyzés vagy szerzés összege
-          importe-total-suscripciones:
-            label: A jegyzések vagy szerzések teljes összege
           m165-declaracion-complementaria-sustitutiva:
             label: Kiegészítő vagy helyettesítő bevallás
           m165-declarante-razon-social:
             label: A bejelentő neve vagy cégneve
+          m165-empresa-emergente:
+            label: Induló vállalkozás
           m165-fecha-adquisicion:
             label: A részvények vagy üzletrészek megszerzésének dátuma
           m165-fecha-constitucion:
@@ -49,22 +37,6 @@ modelo:
             label: A tag vagy résztulajdonos adószáma
           m165-socio-nombre:
             label: A tag vagy résztulajdonos családi és utóneve
-          numero-identificativo-anterior:
-            label: A korábbi bevallás azonosító száma
-          numero-identificativo-declaracion:
-            label: A bevallás azonosító száma
-          numero-total-declarados:
-            label: A bejelentett tagok száma összesen
-          persona-relacion:
-            label: Kapcsolattartó személy
-          porcentaje-participacion:
-            label: A részesedés százaléka
-          representante-legal-nif:
-            label: A törvényes képviselő adószáma
-          socio-nif:
-            label: A tag vagy résztulajdonos adószáma
-          socio-nombre:
-            label: A tag vagy résztulajdonos családi és utóneve
           tipo-declaracion:
             label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
       construct:
@@ -87,8 +59,5 @@ modelo:
           field:
             label: 165-es modelo, 2023-2025. adóévek
         2026-y-siguientes:
-          casilla:
-            empresa-emergente:
-              label: Induló vállalkozás
           field:
             label: 165-es modelo, 2026. adóévtől

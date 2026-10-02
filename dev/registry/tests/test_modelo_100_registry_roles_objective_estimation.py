@@ -5,22 +5,29 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ._modelo_100_registry_support import _loaded_registry
+from ._modelo_100_registry_support import _governing_redaction, _loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: LIRPF arts. 27-32 in their current redactions; each edition expects the row governing its devengo.
+_OBJECTIVE_ESTIMATION_LEGAL_REFS = (
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+)
+
+
+def _objective_estimation_legal_refs(revision: ModeloRevision) -> set[str]:
+    return {_governing_redaction(reference_id, revision) for reference_id in _OBJECTIVE_ESTIMATION_LEGAL_REFS}
 
 
 def test_modelo_100_eo_module_units_are_decimal() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
-    expected_legal_refs = {
-        "ley-35-2006:art-27",
-        "ley-35-2006:art-28",
-        "ley-35-2006:art-30",
-        "ley-35-2006:art-31",
-        "ley-35-2006:art-32",
-    }
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
@@ -39,7 +46,7 @@ def test_modelo_100_eo_module_units_are_decimal() -> None:
             )
             assert casilla.data_type == "decimal"
             assert casilla.semantic_role == "irpf_eo_modulo_num_unidades"
-            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert _objective_estimation_legal_refs(revision).issubset(casilla.legal_refs)
             assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
                 casilla.source_refs,
             )
@@ -48,13 +55,6 @@ def test_modelo_100_eo_module_units_are_decimal() -> None:
 def test_modelo_100_eo_correction_indices_are_decimal() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
-    expected_legal_refs = {
-        "ley-35-2006:art-27",
-        "ley-35-2006:art-28",
-        "ley-35-2006:art-30",
-        "ley-35-2006:art-31",
-        "ley-35-2006:art-32",
-    }
     expected_roles = {
         "1469": "irpf_eo_indice_corrector_especial",
         "1470": "irpf_eo_indice_corrector_pequena_dimension",
@@ -90,7 +90,7 @@ def test_modelo_100_eo_correction_indices_are_decimal() -> None:
             )
             assert casilla.data_type == "decimal"
             assert casilla.semantic_role == expected_role
-            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert _objective_estimation_legal_refs(revision).issubset(casilla.legal_refs)
             assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
                 casilla.source_refs,
             )
@@ -99,13 +99,6 @@ def test_modelo_100_eo_correction_indices_are_decimal() -> None:
 def test_modelo_100_eo_agricultural_activity_key_is_integer() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
-    expected_legal_refs = {
-        "ley-35-2006:art-27",
-        "ley-35-2006:art-28",
-        "ley-35-2006:art-30",
-        "ley-35-2006:art-31",
-        "ley-35-2006:art-32",
-    }
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
@@ -123,7 +116,7 @@ def test_modelo_100_eo_agricultural_activity_key_is_integer() -> None:
         )
         assert casilla.data_type == "integer"
         assert casilla.semantic_role == "irpf_eo_agr_clave_actividad"
-        assert expected_legal_refs.issubset(casilla.legal_refs)
+        assert _objective_estimation_legal_refs(revision).issubset(casilla.legal_refs)
         assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
             casilla.source_refs,
         )
@@ -132,13 +125,6 @@ def test_modelo_100_eo_agricultural_activity_key_is_integer() -> None:
 def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
-    expected_legal_refs = {
-        "ley-35-2006:art-27",
-        "ley-35-2006:art-28",
-        "ley-35-2006:art-30",
-        "ley-35-2006:art-31",
-        "ley-35-2006:art-32",
-    }
     expected_ids = {
         validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
         for casilla_id in (
@@ -182,7 +168,7 @@ def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
                 "actividad_agr",
             )
             assert casilla.data_type == "decimal"
-            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert _objective_estimation_legal_refs(revision).issubset(casilla.legal_refs)
             assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
                 casilla.source_refs,
             )
@@ -191,13 +177,6 @@ def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
 def test_modelo_100_eo_agricultural_indices_are_decimal() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
-    expected_legal_refs = {
-        "ley-35-2006:art-27",
-        "ley-35-2006:art-28",
-        "ley-35-2006:art-30",
-        "ley-35-2006:art-31",
-        "ley-35-2006:art-32",
-    }
     expected_roles = {
         "1540": "irpf_eo_agr_indice_medios_ajenos",
         "1541": "irpf_eo_agr_indice_personal_asalariado",
@@ -238,7 +217,7 @@ def test_modelo_100_eo_agricultural_indices_are_decimal() -> None:
             )
             assert casilla.data_type == "decimal"
             assert casilla.semantic_role == expected_role
-            assert expected_legal_refs.issubset(casilla.legal_refs)
+            assert _objective_estimation_legal_refs(revision).issubset(casilla.legal_refs)
             assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
                 casilla.source_refs,
             )

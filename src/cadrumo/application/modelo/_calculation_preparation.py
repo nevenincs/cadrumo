@@ -311,7 +311,7 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
         "inadmissible_deduction_classification",
     },
 )
-_M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "00501"
+_M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "DP200012:00501"
 _M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
     {
         TransactionDirection.INCOMING,

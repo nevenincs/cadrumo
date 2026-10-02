@@ -5,10 +5,9 @@ Usage::
     python -m dev.env install
     python -m dev.env workstation-tools
     python -m dev.env setup
-    python -m dev.env doctor
 
 Provisioning actions mutate only the checkout's managed environment. The
-``doctor`` action is a PATH-only readiness probe and never provisions anything.
+initialization runner owns the dependency checks that precede provisioning.
 """
 
 from __future__ import annotations
@@ -18,13 +17,11 @@ import argparse
 from ._dotenv import env_setup
 from ._install import install
 from ._workstation import workstation_tools
-from .doctor import check_developer_toolchain
 
 ACTIONS = {
     "install": install,
     "workstation-tools": workstation_tools,
     "setup": env_setup,
-    "doctor": check_developer_toolchain,
 }
 
 

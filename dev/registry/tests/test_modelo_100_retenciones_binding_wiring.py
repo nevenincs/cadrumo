@@ -127,7 +127,6 @@ def _reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None)
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),
@@ -140,6 +139,9 @@ def _reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None)
         "renta-maritime-gross-navigation-income": Decimal("0"),
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
+        # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+        # zero for a scenario with no descendants.
+        "renta-profile-deduccion-maternidad": Decimal("0"),
     }
     if certificado_trabajo is not None:
         values["renta-certificado-trabajo-retenciones"] = certificado_trabajo

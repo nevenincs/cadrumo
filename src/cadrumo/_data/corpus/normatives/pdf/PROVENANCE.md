@@ -1,12 +1,12 @@
 # BOE form-annex corpus — provenance
 
 This directory holds two kinds of artefact, and confusing them is the thing this
-record exists to prevent. Three files are **captures**: BOE PDFs downloaded
+record exists to prevent. Four files are **captures**: BOE PDFs downloaded
 whole, where the bundled bytes are the bytes the publisher served. Nine are
 **transcriptions**: plain text typed out from a BOE annex, where the bundled
 bytes were produced here and no URL would ever serve them.
 
-The registry rows for all twelve have the same shape — `sha256`, `bytes`,
+The registry rows for all thirteen have the same shape — `sha256`, `bytes`,
 `retrieved_at`, `source_url` — so a reader cannot tell the two apart from the
 catalogue alone. That is what the tables below are for.
 
@@ -19,6 +19,7 @@ The bundled bytes are what the address served.
 | `boe-a-2003-1911-modelo-185-annex-i.pdf` | 290582 | 2026-08-26 | `boe.es/boe/dias/2003/01/30/pdfs/A03911-03920.pdf` |
 | `boe-a-2023-17429-modelo-721-layout.pdf` | 294687 | 2026-06-28 | `boe.es/boe/dias/2023/07/29/pdfs/BOE-A-2023-17429.pdf` |
 | `boe-a-2024-27528-modelo-721-layout-amendment.pdf` | 827110 | 2026-06-28 | `boe.es/boe/dias/2024/12/31/pdfs/BOE-A-2024-27528.pdf` |
+| `boe-a-2026-1761-modelo-390-form.pdf` | 1810016 | 2026-09-30 | `boe.es/boe/dias/2026/01/26/pdfs/BOE-A-2026-1761.pdf` |
 
 The 2003 modelo 185 PDF looks authored to
 `classify_normative_corpus_provenance`, which reads a file's own bytes for a

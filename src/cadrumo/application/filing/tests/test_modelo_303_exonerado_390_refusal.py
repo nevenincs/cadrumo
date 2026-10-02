@@ -187,7 +187,7 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
     period = Period.from_year_and_code(2025, "4T")
     provider = build_runtime_schema_provider(filing_year=2025, period=period, modelos=("303",), operation=operation)
     inputs = {
-        "07": Decimal("0"),
+        "iva.repercutido.general.base": Decimal("0"),
         "iva.soportado.interiores": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         **{endpoint: Decimal("0") for endpoint in _ENDPOINTS},

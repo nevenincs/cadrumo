@@ -59,12 +59,18 @@ def _authority():
 
 
 def _co_claimants(modelo, filing_year: int, period: str):
-    """Return every revision of ``modelo`` whose selector claims this year and period."""
+    """Return every revision of ``modelo`` whose selector claims this year and period.
+
+    The period surface is read for the year: a selector's ``period_overrides``
+    replace its steady-state periods in the years they name, so a transition
+    year served by one revision for January only does not claim February.
+    """
     return sorted(
         (
             revision
             for revision in modelo.revisions.values()
-            if revision.period_selector.includes_year(filing_year) and period in set(revision.period_selector.periods)
+            if revision.period_selector.includes_year(filing_year)
+            and period in set(revision.period_selector.periods_for_year(filing_year))
         ),
         key=lambda revision: revision.valid_from,
     )
@@ -100,7 +106,9 @@ def _irreducible_year_only_coordinates() -> tuple[_IrreducibleCoordinate, ...]:
     horizon = coverage_assessment_horizon(authority.catalogues)
     coordinates: list[_IrreducibleCoordinate] = []
     for modelo in authority.modelos:
-        declared = sorted({code for revision in modelo.revisions.values() for code in revision.period_selector.periods})
+        declared = sorted(
+            {code for revision in modelo.revisions.values() for code in revision.period_selector.declared_periods}
+        )
         for filing_year in range(floor, horizon + 1):
             for period in declared:
                 if len(_co_claimants(modelo, filing_year, period)) > 1:

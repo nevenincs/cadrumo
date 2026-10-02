@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import atexit
 import json
 import os
 import re
@@ -14,7 +15,13 @@ from uuid import uuid4
 
 import pytest
 
-from .paths import allocate_scratch_directory, scratch_environment
+from .paths import (
+    ScratchAllocation,
+    ScratchOwnershipError,
+    allocate_scratch_directory,
+    remove_scratch_directory,
+    scratch_environment,
+)
 
 _STATE_KEY = pytest.StashKey["RunLog"]()
 _SILENT_COLLECTION_KEY = pytest.StashKey[bool]()
@@ -29,7 +36,17 @@ _RUN_SCRATCH_ENV: Final = "CADRUMO_TEST_RUN_SCRATCH"
 class RunLog:
     """Live, flush-on-write record for one pytest controller invocation."""
 
-    def __init__(self, repository: Path) -> None:
+    def __init__(self, repository: Path, *, scratch: Path | None = None) -> None:
+        """Mint the run directory and take ``scratch``, or allocate one, as the run's scratch.
+
+        The scratch is released when the process exits: removed when the run
+        passed, kept when it did not. Exit is the one point after which nothing
+        of this run still writes there: xdist tears its workers down when the
+        session finishes, and the run controller mints this log before the
+        conftests register the collection storage root's exit cleanup, so that
+        cleanup has already run -- closing the product log file it holds open
+        inside the scratch -- when this release does.
+        """
         now = datetime.now(UTC)
         repository = repository.resolve()
         marker = f"{now:%Y%m%dT%H%M%S.%fZ}-pytest-{os.getpid()}-{uuid4().hex[:8]}"
@@ -39,7 +56,9 @@ class RunLog:
         self.cache = self.root / "cache"
         for path in (self.artifacts, self.cache):
             path.mkdir()
-        self.scratch = allocate_scratch_directory()
+        self.scratch = allocate_scratch_directory() if scratch is None else scratch
+        self.scratch_allocation = ScratchAllocation.record(self.scratch)
+        atexit.register(self.release_scratch)
         self.path = self.root / "run.log"
         self.metadata_path = self.root / "run.json"
         self.started = now
@@ -76,6 +95,38 @@ class RunLog:
             "started_at": self.started.isoformat(),
         }
         self.metadata_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+    def release_scratch(self) -> str:
+        """Remove a passing run's scratch, keep any other run's, and record which in the run log.
+
+        Decided by the exit status :meth:`finish` recorded, so a run that never
+        reached it -- one that crashed before its session finished -- keeps its
+        scratch like a failing one. A kept scratch stays for inspection and is
+        reclaimed by the run reaper once this process is gone. Nothing here can
+        change the run's exit status: a refused or incomplete removal is written
+        to the log beside the verdict, never raised.
+
+        Returns:
+            The line recorded in the run log.
+        """
+        scratch = self.scratch_allocation.path
+        if self.exit_status is None:
+            line = f"SCRATCH KEPT {scratch}: the run recorded no exit status"
+        elif self.exit_status != 0:
+            line = f"SCRATCH KEPT {scratch}: exit={self.exit_status}"
+        else:
+            try:
+                remove_scratch_directory(self.scratch_allocation)
+            except (ScratchOwnershipError, OSError) as error:
+                line = f"SCRATCH NOT REMOVED {scratch}: {type(error).__name__}: {error}"
+            else:
+                line = f"SCRATCH REMOVED {scratch}"
+        try:
+            with self.path.open("a", encoding="utf-8", newline="\n") as stream:
+                stream.write(line + "\n")
+        except OSError as error:
+            print(f"test run log {self.path} could not record: {line} ({error})", file=sys.stderr, flush=True)
+        return line
 
 
 def prepare_environment(repository: Path) -> None:
@@ -182,6 +233,7 @@ def configure(config: pytest.Config) -> None:
     """Create and announce the controller's unique run directory."""
     root = Path(os.environ["CADRUMO_TEST_RUN_ROOT"]).resolve()
     scratch = Path(os.environ[_RUN_SCRATCH_ENV])
+    own_scratch: Path | None = None
     if _INHERITED_RUN and _worker_id(config) is None:
         # A pytest that a test launched joins the run but is a controller of its
         # own. In the run's scratch it would take the run controller's
@@ -189,7 +241,7 @@ def configure(config: pytest.Config) -> None:
         # every live worker's tmp_path -- and its own workers' ids would match
         # the run's. It gets its own scratch before any worker of its starts,
         # and its workers inherit that through the environment.
-        scratch = allocate_scratch_directory()
+        scratch = own_scratch = allocate_scratch_directory()
         _apply_run_environment(root, scratch)
     _confine_pytest_storage(config, root, scratch)
     if hasattr(config, "workerinput"):
@@ -197,7 +249,9 @@ def configure(config: pytest.Config) -> None:
     global _ACTIVE
     run_log = _ACTIVE
     if run_log is None:
-        run_log = RunLog(Path(config.rootpath))
+        # The scratch allocated above already holds this controller's basetemp;
+        # the run log takes it rather than minting a second one beside it.
+        run_log = RunLog(Path(config.rootpath), scratch=own_scratch)
         _ACTIVE = run_log
     config.stash[_STATE_KEY] = run_log
     silent_collection = _redirect_collection_output(config, run_log)

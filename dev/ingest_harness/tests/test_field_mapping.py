@@ -38,13 +38,13 @@ _NON_SCORED = (MappingKind.OUT_OF_SCOPE, MappingKind.PRODUCT_GAP)
 # ----------------------------------------------------------------------------
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_every_mapping_target_is_a_real_draft_field(key: CorpusKey) -> None:
     """The whole point: no entry may name a field the product does not have."""
     validate_mapping_targets(draft_fields=_DRAFT_FIELDS, key=key)
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_a_typo_in_a_mapping_target_is_refused(key: CorpusKey) -> None:
     """PROOF: the validator bites.
 
@@ -56,14 +56,14 @@ def test_a_typo_in_a_mapping_target_is_refused(key: CorpusKey) -> None:
         validate_mapping_targets(draft_fields=_DRAFT_FIELDS - {"taxable_base"}, key=key)
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_table_covers_every_field_the_key_authors(key: CorpusKey) -> None:
     """A corpus that grows a field must fail loudly, not score it as a miss."""
     authored = {name for document in key.documents for name in document.ground_truth}
     assert authored == set(KEY_FIELD_MAPPINGS)
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_every_unmapped_entry_states_why(key: CorpusKey) -> None:
     """An unmapped field with no reason is one nobody has looked at yet."""
     for _kind, field_name, count, rationale in unmapped_slot_census(key):
@@ -81,7 +81,7 @@ def test_every_mapping_kind_is_populated() -> None:
     assert kinds == set(MappingKind)
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_both_role_branches_are_non_empty_in_the_corpus(key: CorpusKey) -> None:
     """Both sides of the role split must exist, or one branch is untested."""
     roles = [document.ground_truth.get("counterparty_role") for document in key.documents]
@@ -94,7 +94,7 @@ def test_both_role_branches_are_non_empty_in_the_corpus(key: CorpusKey) -> None:
 # ----------------------------------------------------------------------------
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_a_supplier_role_document_reads_the_supplier_field(key: CorpusKey) -> None:
     """PROOF: the supplier branch resolves."""
     document = next(d for d in key.documents if d.ground_truth.get("counterparty_role") == "supplier")
@@ -104,7 +104,7 @@ def test_a_supplier_role_document_reads_the_supplier_field(key: CorpusKey) -> No
     assert projected["counterparty_name"] == "S"
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_a_customer_role_document_reads_the_customer_field(key: CorpusKey) -> None:
     """PROOF: the customer branch resolves, and to the OTHER field."""
     document = next(d for d in key.documents if d.ground_truth.get("counterparty_role") == "customer")
@@ -114,7 +114,7 @@ def test_a_customer_role_document_reads_the_customer_field(key: CorpusKey) -> No
     assert projected["counterparty_name"] == "C"
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_an_unresolvable_role_slot_is_dropped_rather_than_missed(key: CorpusKey) -> None:
     """A slot that cannot be resolved is not a failed read.
 
@@ -135,7 +135,7 @@ def test_an_unresolvable_role_slot_is_dropped_rather_than_missed(key: CorpusKey)
 # ----------------------------------------------------------------------------
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_a_composite_expands_to_one_slot_per_leaf(key: CorpusKey) -> None:
     """The denominator is slots, not key field names."""
     document = next(d for d in key.documents if isinstance(d.ground_truth.get("issuer"), dict))
@@ -146,7 +146,7 @@ def test_a_composite_expands_to_one_slot_per_leaf(key: CorpusKey) -> None:
     assert {"issuer.name", "issuer.tax_id"} <= set(slots)
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_country_leaf_is_scored_against_the_resolved_code(key: CorpusKey) -> None:
     """The interim exclusion is retired, and the leaf now measures a real capability.
 
@@ -167,7 +167,7 @@ def test_the_country_leaf_is_scored_against_the_resolved_code(key: CorpusKey) ->
     assert KEY_FIELD_MAPPINGS["recipient"].leaves["country"] == "customer_country_code"
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_one_wrong_leaf_does_not_destroy_the_others(key: CorpusKey) -> None:
     """PROOF: the whole reason composites expand.
 
@@ -205,7 +205,7 @@ def test_one_wrong_leaf_does_not_destroy_the_others(key: CorpusKey) -> None:
 # ----------------------------------------------------------------------------
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_an_unmapped_field_never_becomes_a_miss(key: CorpusKey) -> None:
     """A product that cannot hold a field is not a model that failed to read it."""
     document = next(d for d in key.documents if d.ground_truth.get("known_defects") is not None)
@@ -232,7 +232,7 @@ def _divergent_total_documents(key: CorpusKey) -> tuple[IngestCorpusDocument, ..
     )
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_divergent_total_documents_still_exist(key: CorpusKey) -> None:
     """The anti-vacuity guard for every assertion below.
 
@@ -252,7 +252,7 @@ def test_the_divergent_total_documents_still_exist(key: CorpusKey) -> None:
         assert computed == base + iva == Decimal("927.22")
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_a_divergent_document_scores_the_printed_figure_not_the_computed_one(key: CorpusKey) -> None:
     """PROOF: a reader that copied the page is scored correct, not wrong.
 
@@ -270,7 +270,7 @@ def test_a_divergent_document_scores_the_printed_figure_not_the_computed_one(key
     assert "grand_total" not in verdicts, "the computed identity must not also claim the draft's printed slot"
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_a_divergent_document_scores_the_computed_figure_wrong(key: CorpusKey) -> None:
     """The other side of the same proof: recomputing is not reading.
 
@@ -286,7 +286,7 @@ def test_a_divergent_document_scores_the_computed_figure_wrong(key: CorpusKey) -
     assert verdicts["printed_total"].value == "wrong"
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_a_document_stating_no_printed_total_still_scores_its_total(key: CorpusKey) -> None:
     """The 184 documents that declare only the one total keep their slot.
 
@@ -305,7 +305,7 @@ def test_a_document_stating_no_printed_total_still_scores_its_total(key: CorpusK
     assert "printed_total" not in slots
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_unmapped_census_reports_both_groups_separately(key: CorpusKey) -> None:
     """The ruling is taken over this list, so it must carry counts AND kinds.
 
@@ -321,7 +321,7 @@ def test_the_unmapped_census_reports_both_groups_separately(key: CorpusKey) -> N
     assert {name: count for _, name, count, _ in census}["counterparty_role"] == 220
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_a_product_gap_is_never_reported_as_out_of_scope(key: CorpusKey) -> None:
     """The two groups must not pool: they are different findings.
 
@@ -341,7 +341,7 @@ def test_a_product_gap_is_never_reported_as_out_of_scope(key: CorpusKey) -> None
 # ----------------------------------------------------------------------------
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_projection_does_not_normalise_a_malformed_value(key: CorpusKey) -> None:
     """A projection that tidied a value would convert a reading failure to a match."""
     document = next(d for d in key.documents if d.ground_truth.get("base_total") is not None)
@@ -351,7 +351,7 @@ def test_the_projection_does_not_normalise_a_malformed_value(key: CorpusKey) -> 
     assert projected["base_total"] == "  1.234,56  "
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_an_absent_draft_field_is_absent_from_the_projection(key: CorpusKey) -> None:
     """Not emitted must stay not emitted, so it scores as a miss and not a wrong."""
     document = next(d for d in key.documents if d.ground_truth.get("base_total") is not None)

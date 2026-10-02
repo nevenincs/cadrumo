@@ -7,7 +7,7 @@
 [[revisions."2026-desde-02".casilla_continuidad_evolutions]]
 id = "m353-retired-iva-cuota-repercutida-general"
 continuidad_id = "iva-cuota-repercutida-general"
-from_revision = "2021-2025"
+from_revision = "2021-hasta-2026-01"
 to_revision = "2026-desde-02"
 evolution_kind = "retired"
 legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
@@ -16,7 +16,7 @@ source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
 [[revisions."2026-desde-02".casilla_continuidad_evolutions]]
 id = "m353-retired-iva-cuota-repercutida-reducido"
 continuidad_id = "iva-cuota-repercutida-reducido"
-from_revision = "2021-2025"
+from_revision = "2021-hasta-2026-01"
 to_revision = "2026-desde-02"
 evolution_kind = "retired"
 legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
@@ -25,7 +25,7 @@ source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
 [[revisions."2026-desde-02".casilla_continuidad_evolutions]]
 id = "m353-retired-iva-cuota-repercutida-super-reducido"
 continuidad_id = "iva-cuota-repercutida-super-reducido"
-from_revision = "2021-2025"
+from_revision = "2021-hasta-2026-01"
 to_revision = "2026-desde-02"
 evolution_kind = "retired"
 legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
@@ -34,7 +34,7 @@ source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
 [[revisions."2026-desde-02".casilla_continuidad_evolutions]]
 id = "m353-retired-iva-cuota-soportada-interiores"
 continuidad_id = "iva-cuota-soportada-interiores"
-from_revision = "2021-2025"
+from_revision = "2021-hasta-2026-01"
 to_revision = "2026-desde-02"
 evolution_kind = "retired"
 legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
@@ -43,7 +43,7 @@ source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
 [[revisions."2026-desde-02".casilla_continuidad_evolutions]]
 id = "m353-retired-iva-cuota-autorepercutida-intracomunitaria"
 continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
-from_revision = "2021-2025"
+from_revision = "2021-hasta-2026-01"
 to_revision = "2026-desde-02"
 evolution_kind = "retired"
 legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
@@ -52,7 +52,7 @@ source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
 [[revisions."2026-desde-02".casilla_continuidad_evolutions]]
 id = "m353-retired-iva-cuota-devengada-total"
 continuidad_id = "iva-cuota-devengada-total"
-from_revision = "2021-2025"
+from_revision = "2021-hasta-2026-01"
 to_revision = "2026-desde-02"
 evolution_kind = "retired"
 legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
@@ -61,7 +61,7 @@ source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
 [[revisions."2026-desde-02".casilla_continuidad_evolutions]]
 id = "m353-retired-iva-cuota-deducible-total"
 continuidad_id = "iva-cuota-deducible-total"
-from_revision = "2021-2025"
+from_revision = "2021-hasta-2026-01"
 to_revision = "2026-desde-02"
 evolution_kind = "retired"
 legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
@@ -70,7 +70,7 @@ source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
 [[revisions."2026-desde-02".casilla_continuidad_evolutions]]
 id = "m353-retired-iva-resultado-regimen-general"
 continuidad_id = "iva-resultado-regimen-general"
-from_revision = "2021-2025"
+from_revision = "2021-hasta-2026-01"
 to_revision = "2026-desde-02"
 evolution_kind = "retired"
 legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]

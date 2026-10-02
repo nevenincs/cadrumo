@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
     resolve_activity_asset_schedule_authority,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -69,7 +70,7 @@ from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
 )
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 
-from ..compiler.loader import load_modelo_directory
+from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -81,6 +82,10 @@ _SIMPLIFIED = DirectEstimationRegime.SIMPLIFIED
 
 def _modelo_100() -> ModeloRevision:
     return load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100")).revisions["2025"]
+
+
+def _legal_reference(reference_id: str) -> LegalReference:
+    return load_shared_catalogues(bundled_path("registry", "aeat")).legal[reference_id]
 
 
 def _election(
@@ -151,6 +156,7 @@ def _charge(
         covered_until=covered_until,
         history=history or AssetScheduleHistory(),
         taxpayer_workforce=lambda: workforce,
+        legal_reference=_legal_reference,
         requested_free_amount=Decimal(free_amount) if free_amount is not None else None,
     )
 
@@ -169,6 +175,7 @@ def test_linear_table_resolves_each_modality_maximum_from_source() -> None:
         asset_revision=_asset(_linear("equipo-proceso-informacion"), basis="2000"),
         authority_generation="candidate-source",
         workforce=(),
+        legal_reference=_legal_reference,
     )
     simplified = resolve_activity_asset_schedule_authority(
         _modelo_100(),
@@ -180,6 +187,7 @@ def test_linear_table_resolves_each_modality_maximum_from_source() -> None:
         ),
         authority_generation="candidate-source",
         workforce=(),
+        legal_reference=_legal_reference,
     )
 
     assert normal.annual_rate == Decimal("0.25")
@@ -647,6 +655,7 @@ def test_low_value_free_resolves_published_threshold_and_cap() -> None:
         ),
         authority_generation="candidate-source",
         workforce=(),
+        legal_reference=_legal_reference,
     )
 
     assert authority.free_depreciation_unit_threshold == Decimal("300")
@@ -868,6 +877,7 @@ def test_job_creating_free_depreciation_caps_the_investment_by_the_workforce_inc
         asset_revision=machine,
         authority_generation="candidate-source",
         workforce=_GROWING,
+        legal_reference=_legal_reference,
     )
 
     # 24 months after 1 January 2025: (12 x 365 + 13 x 365) / 730 = 12.50 against 10.00 before, an
@@ -1009,6 +1019,7 @@ def test_renewable_free_depreciation_charges_a_2025_installation_up_to_the_inves
         asset_revision=panels,
         authority_generation="candidate-source",
         workforce=_KEPT,
+        legal_reference=_legal_reference,
     )
 
     assert authority.free_depreciation_investment_cap == Decimal("500000")
@@ -1107,6 +1118,7 @@ def test_renewable_free_depreciation_is_taken_only_in_the_entry_year() -> None:
             asset_revision=installed_2024,
             authority_generation="candidate-source",
             workforce=_workforce((2023, "10.00", _OBSERVED), (2024, "10.00", _OBSERVED), (2025, "10.00", _OBSERVED)),
+            legal_reference=_legal_reference,
         )
 
 
@@ -1122,6 +1134,7 @@ def test_methods_the_workforce_does_not_condition_never_read_it() -> None:
         covered_until=_YEAR_END,
         history=AssetScheduleHistory(),
         taxpayer_workforce=unreadable,
+        legal_reference=_legal_reference,
     )
 
     assert charge.amount == Decimal("1200.00")  # machinery 12% of 10,000
@@ -1160,6 +1173,7 @@ def test_an_absent_admission_parameter_fails_closed() -> None:
             asset_revision=_asset(_linear("mobiliario"), basis="1000"),
             authority_generation="candidate-source",
             workforce=(),
+            legal_reference=_legal_reference,
         )
 
 
@@ -1202,6 +1216,7 @@ def _operations(
             covered_until=covered_until,
             history=history,
             taxpayer_workforce=lambda: workforce,
+            legal_reference=_legal_reference,
             requested_free_amount=requested_free_amount,
         )
 

@@ -795,6 +795,9 @@ modelo:
           iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
             label: Operacions específiques - Serveis localitzats al territori d'aplicació
               de l'impost per inversió del subjecte passiu [523]
+          iva-pago-cuenta-carburantes-deposito-fiscal:
+            label: Pagament a compte atribuïble a l'Administració de l'Estat deduït
+              en l'exercici per lliuraments de gasolines, gasoils i biocarburants
           iva-recargo-equivalencia-tipo-0-5-base:
             label: Recàrrec d'equivalència al tipus 0,5% - base imposable
           iva-recargo-equivalencia-tipo-1-4-base:
@@ -3837,3 +3840,7 @@ modelo:
           field:
             label: Model 390, exercici 2025 (Ordre EHA/3111/2009, modificada per ordres
               successives, inclosa l'HAP/2373/2014)
+        '2026':
+          field:
+            label: Model 390, exercici 2026 (Ordre EHA/3111/2009, modificada per l'Ordre
+              HAC/27/2026)

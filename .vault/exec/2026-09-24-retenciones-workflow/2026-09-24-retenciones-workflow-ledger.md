@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#retenciones-workflow'
 date: '2026-09-24'
-modified: '2026-09-24'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:646ecfa76c97509b2db649bdc62393f41a89c8d3177e7a54c5052e307ec2d8c2'
+body_hash: 'sha256:96ba0d8de6e0428427f79453380e703116c3a65f1f8af9ab69f69575f910e69b'
 related:
   - "[[2026-09-24-retenciones-workflow-plan]]"
 ---
@@ -41,6 +41,7 @@ related:
 - `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`
 - `S03` `M` `dev/registry/tests/test_modelo_193_registry.py`
 - `S03` `verify:` `inspect_authoring_candidate publication_valid 0 findings; test_modelo_193_registry and generated export trees anchor test 43` -> `pass`
+- `S05` `M` `src/cadrumo/application/aggregation/m193_phase_materialization.py`
 
 ## Notes
 
@@ -49,3 +50,4 @@ related:
 - `S06` end-to-end calculate assertion parked until S03 is published; filing_export_supported is read by nothing, so the export gate is a new Step
 - `S09` detection uses the phase contributor plus the 2025 accrual bound because the revision does not persist the phase; exact per-row detection needs CalculationSourceRef to keep source_filing_year
 - `S03` runtime adoption waits for the next authority republish; S04 byte tests run after it
+- `S05` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Retained Git commit 2268a294cf8971c67502f83eb47731c104e46312 records this operation. The investigation did not settle payment-year withholding authority; the typed `m193_settled_row_amounts_unresolved_authority` advisory remains. No filing block was lifted.

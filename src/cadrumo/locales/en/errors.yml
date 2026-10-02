@@ -750,6 +750,13 @@ errors:
       under the current access scope.
     canonical_inventory_closing_authority_conflict: A different immutable inventory
       closing authority is already recorded.
+    canonical_invoice_draft_reader_busy_refused: The invoice-draft reader's model
+      was not run because another on-host reading already held this machine's inference
+      slot.
+    canonical_invoice_draft_reader_headroom_refused: The invoice-draft reader's model
+      was not loaded because this machine showed no measured memory headroom for it.
+    canonical_invoice_withholding_defects: The invoice evidence cannot support a withholding
+      capture until every listed defect is corrected on the invoice.
     canonical_invoice_withholding_evidence: The invoice evidence cannot support a
       withholding capture.
     canonical_ledger_payment_withholding_evidence: The ledger payment cannot support
@@ -922,6 +929,10 @@ errors:
     refused_active_profile_pointer_manual_recovery: The active-profile pointer {path}
       cannot be read, so it cannot be cleared without losing its revision; it needs
       manual recovery.
+    refused_actividad_asset_accelerated_da18_depreciation_not_computed: For this tax
+      period, LIS DA 18 grants new electric vehicles and charging points accelerated
+      depreciation at twice the maximum linear coefficient, not free depreciation.
+      That regime is not computed, so no charge was calculated.
     refused_actividad_asset_claim_conflict: The amortization claim conflicts with
       the asset's recorded claims.
     refused_actividad_asset_incomplete: The activity-asset schedule lacks a fact it

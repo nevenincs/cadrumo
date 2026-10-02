@@ -10,7 +10,7 @@
 [[revisions."2024".verification_predicates]]
 id = "implies-nonzero:base-imponible-determinada-cuando-resultado-positivo"
 predicate_id = "modelo-200-base-imponible-determinada-cuando-resultado-positivo"
-expression = 'implies_nonzero(["00501", "DP200014:00552"])'
+expression = 'implies_nonzero(["DP200012:00501", "DP200014:00552"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-30"]
 
@@ -30,7 +30,7 @@ legal_refs = ["ley-27-2014:art-30"]
 [[revisions."2024".verification_predicates]]
 id = "implies-nonzero:resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
 predicate_id = "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
-expression = 'implies_nonzero(["00500", "00501"])'
+expression = 'implies_nonzero(["00500", "DP200012:00501"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-30"]
 

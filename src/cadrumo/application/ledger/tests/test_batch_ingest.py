@@ -24,6 +24,7 @@ from ..batch_ingest import (
     order_batch_sources,
     summarise_batch,
 )
+from ..invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from ..preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -192,3 +193,54 @@ def test_the_content_address_must_be_a_real_digest() -> None:
     """A filename or a truncated hash in this field would break ordering and identity."""
     with pytest.raises(ValidationError):
         _item("invoice.pdf", "ingested")
+
+
+def _busy_fallback() -> LabelReadingFallback:
+    return LabelReadingFallback(
+        cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+        unread_fields=("supplier_name",),
+        reader_error_type="LLMBusyError",
+        failed_condition_id="llm.local_inference.slot_available",
+    )
+
+
+@pytest.mark.parametrize("status", ["ingested", "pending_review", "no_op"])
+def test_a_row_whose_draft_exists_carries_its_degraded_reading(status: BatchItemStatus) -> None:
+    """The status stays what the work was; the degraded reading rides beside it."""
+    row = BatchItemResult(
+        content_address=_A,
+        identity=batch_item_identity(content_address=_A, direction=InvoiceKind.RECEIVED),
+        direction=InvoiceKind.RECEIVED,
+        status=status,
+        label_reading_fallback=_busy_fallback(),
+    )
+
+    assert row.status == status
+    assert row.label_reading_fallback == _busy_fallback()
+    assert not summarise_batch([row]).any_failed
+
+
+def test_a_paused_row_cannot_claim_a_degraded_reading() -> None:
+    """A paused item was never read, so there is no stored draft for the record to describe."""
+    with pytest.raises(ValidationError, match="describes a stored draft"):
+        BatchItemResult(
+            content_address=_A,
+            identity=batch_item_identity(content_address=_A, direction=InvoiceKind.RECEIVED),
+            direction=InvoiceKind.RECEIVED,
+            status="paused",
+            label_reading_fallback=_busy_fallback(),
+        )
+
+
+def test_a_refused_row_cannot_claim_a_degraded_reading() -> None:
+    """A refused item stored no draft; its verdict is the whole account of it."""
+    with pytest.raises(ValidationError, match="describes a stored draft"):
+        BatchItemResult(
+            content_address=_A,
+            identity=batch_item_identity(content_address=_A, direction=InvoiceKind.RECEIVED),
+            direction=InvoiceKind.RECEIVED,
+            status="refused",
+            refusal_code="not_readable",
+            refusal_verdict=_reader_unavailable_verdict(),
+            label_reading_fallback=_busy_fallback(),
+        )

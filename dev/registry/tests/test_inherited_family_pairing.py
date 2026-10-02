@@ -15,6 +15,7 @@ real validator function over the definition it produces.
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import Final
 
@@ -281,3 +282,105 @@ def test_a_scoped_family_the_edition_states_itself_needs_no_assertion(tmp_path: 
     successor = load_modelo_directory(modelo_dir).revisions["2025"]
 
     assert [str(reference.id) for reference in successor.workbook_parity_refs] == ["referencia-libro-2025"]
+
+
+_EXPORT_LINK: Final = (
+    'id = "enlace-exportacion"\n'
+    'surface = "export"\n'
+    'consumer = "cadrumo.application.filing.export_draft"\n'
+    "requires_snapshot = true\n"
+    f'legal_refs = ["{_ARTICLE}"]\n'
+    f'source_refs = ["{_SOURCE}"]\n'
+)
+
+_EXPORT_LAYOUT: Final = f'id = "fichero-boe"\nlegal_refs = ["{_ARTICLE}"]\nsource_refs = ["{_SOURCE}"]\n'
+
+
+def _owed_layout_modelo(tmp_path: Path, *, cause: str) -> Path:
+    """A predecessor carrying an export layout and its link, and a successor clearing the layout with ``cause``.
+
+    The successor inherits the export link and states no layout of its own:
+    the state a delta edition is in while its generated tree is still owed.
+    """
+    modelo_dir = tmp_path / _MODELO_ID
+    modelo_dir.mkdir()
+    _write_standard_manifest(modelo_dir, "Test")
+    clearance = (
+        f'cleared_families = [{{ family = "export_layouts", cause = "{cause}", '
+        'reason = "This edition generates its own layout from its record design." }]\n'
+    )
+    _write_edition(modelo_dir, "2024", year=2024)
+    _write_edition(modelo_dir, "2025", year=2025, extra='predecessor = "2024"\n' + clearance)
+    predecessor_dir = modelo_dir / "revisions" / "2024"
+    shutil.rmtree(predecessor_dir / "application_links")
+    _write_section(predecessor_dir, "2024", "application_links", (_PORTAL_LINK, _EXPORT_LINK))
+    _write_section(predecessor_dir, "2024", "export_layouts", (_EXPORT_LAYOUT,))
+    return modelo_dir
+
+
+def test_a_scoped_layout_owed_by_its_edition_keeps_the_inherited_export_link(tmp_path: Path) -> None:
+    """A delta edition whose own layout is still to be generated is not a pair that came apart.
+
+    The layout is a scoped family: inheritance never carries it, and the
+    clearance states the edition's own layout is not yet authored. The export
+    link must survive, because the generated candidate that publishes the
+    tree needs it; refusing it here left such an edition no publishable state.
+    """
+    definition = load_modelo_directory(_owed_layout_modelo(tmp_path, cause="not_authored_for_this_edition"))
+
+    successor = definition.revisions["2025"]
+    assert successor.export_layouts == ()
+    assert "export" in {link.surface for link in successor.application_links}
+    assert inherited_family_pairing_failures(definition) == ()
+
+
+def test_a_layout_the_official_structure_withdraws_still_breaks_the_pair(tmp_path: Path) -> None:
+    """Detector teeth: the same edge is refused when the clearance says the document withdrew the layout."""
+    definition = load_modelo_directory(_owed_layout_modelo(tmp_path, cause="official_structure_withdraws"))
+
+    (failure,) = inherited_family_pairing_failures(definition)
+    assert "export_layouts" in failure
+    assert "'export'" in failure
+
+
+_OWN_EXPORT_LAYOUT: Final = f'id = "fichero-2025"\nlegal_refs = ["{_ARTICLE}"]\nsource_refs = ["{_SOURCE}"]\n'
+
+
+def _state_own_layout(modelo_dir: Path) -> None:
+    """Give the successor the layout generated from its own design, as publishing its tree does."""
+    _write_section(modelo_dir / "revisions" / "2025", "2025", "export_layouts", (_OWN_EXPORT_LAYOUT,))
+
+
+def test_a_clearance_left_beside_the_layout_it_owed_is_refused(tmp_path: Path) -> None:
+    """Detector teeth: once the edition states its own layout, the owed clearance contradicts it.
+
+    The edition still loads -- publishing a generated tree leaves the clearance
+    it was staged under in place -- but the validator names the leftover so it
+    is retired before the authority is compiled.
+    """
+    modelo_dir = _owed_layout_modelo(tmp_path, cause="not_authored_for_this_edition")
+    _state_own_layout(modelo_dir)
+    definition = load_modelo_directory(modelo_dir)
+
+    assert [str(layout.id) for layout in definition.revisions["2025"].export_layouts] == ["fichero-2025"]
+    (failure,) = inherited_family_pairing_failures(definition)
+    assert "clears scoped family 'export_layouts'" in failure
+    assert "not_authored_for_this_edition" in failure
+
+
+def test_the_stated_layout_without_its_clearance_is_accepted(tmp_path: Path) -> None:
+    """The normal path: with the clearance retired, the edition's own layout stands alone."""
+    modelo_dir = _owed_layout_modelo(tmp_path, cause="not_authored_for_this_edition")
+    _state_own_layout(modelo_dir)
+    manifest = modelo_dir / "revisions" / "2025" / "revision.toml"
+    lines = manifest.read_text("utf-8").splitlines(keepends=True)
+    manifest.write_text(
+        "".join(line for line in lines if not line.startswith("cleared_families")),
+        encoding="utf-8",
+        newline="\n",
+    )
+    definition = load_modelo_directory(modelo_dir)
+
+    assert definition.revisions["2025"].cleared_families == ()
+    assert [str(layout.id) for layout in definition.revisions["2025"].export_layouts] == ["fichero-2025"]
+    assert inherited_family_pairing_failures(definition) == ()

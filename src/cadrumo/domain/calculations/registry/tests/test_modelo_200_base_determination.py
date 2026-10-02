@@ -44,7 +44,9 @@ from .published_authority import published_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
-_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
+)
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
     "DP200013:00417",
     surface="_M200_CORRECCIONES_AUMENTO_CASILLA",

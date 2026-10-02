@@ -229,7 +229,10 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
         ],
     )
     assert one_p.exit_code == 0, one_p.output
-    assert "binding_count\t0" in one_p.output
+    # The first installment has no earlier installment to relate to; only the
+    # taxpayer's prior-twelve-month turnover, an input every year requires, is missing.
+    assert "binding_count\t1" in one_p.output
+    assert "modelo-202-incn-prior-12-months" in one_p.output
     assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
 
     two_p = invoke_cached_cli(

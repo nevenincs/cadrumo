@@ -54,7 +54,10 @@ from typing import TYPE_CHECKING
 from cadrumo.adapters.persistence.storage.master_key.live_sessions import close_all_live_bucket_sessions
 from cadrumo.core.config_state_root import FormerProductStateError
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority,
+    release_bundled_indexed_authority,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 
@@ -1379,7 +1382,20 @@ def _run_server(
         async with stdio_server() as (read_stream, write_stream):
             await server.run(read_stream, write_stream, server_initialization_options(server))
 
+    _serve_until_orderly_shutdown(partial(anyio.run, _amain))
+
+
+def _serve_until_orderly_shutdown(serve_transport: Callable[[], object]) -> None:
+    """Serve until the transport returns, then release the shared registry authority.
+
+    The watchdog is disarmed however the transport ends. The release follows
+    only an orderly return -- the client closed stdin and the loop wound down --
+    so a transport failure propagates past it untouched and a release can never
+    stand in for the error that ended the server. A watchdog reap is an
+    ``os._exit`` and reaches neither.
+    """
     try:
-        anyio.run(_amain)
+        serve_transport()
     finally:
         disarm_stdio_lifetime_watchdog()
+    release_bundled_indexed_authority()

@@ -54,16 +54,30 @@ from .profile_schema_support import committed_supported_filing_years
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = committed_supported_filing_years()
+# The Art. 81.2 guardería profile bindings the fixture supplies beside the
+# maternidad binding.
+_FIXTURE_GUARDERIA_BINDINGS = frozenset(
+    {
+        "renta-profile-guarderia-gastos-reales",
+        "renta-profile-incremento-guarderia",
+        "renta-profile-cotizaciones-ss-madre",
+        "renta-profile-descendientes-guarderia",
+    }
+)
 # The exercise whose state and Cataluna scales, minimos and age supplements the
 # expected cuotas below are computed from: the newest Modelo 100 edition whose AEAT
 # Renta manual prints the Cataluna scale the expected cuotas use and whose declared
-# bindings are the ones the fixture supplies (it still carries the maternidad binding).
+# bindings are the ones the fixture supplies (the maternidad and guardería bindings).
 _TARIFF_EXERCISE = max(
     set(manual_editions_printing("renta", "17.707,20", "33.007,20"))
     & {
         revision.valid_from.year
         for revision in authored_revisions_where(
-            "100", lambda revision: set(_m100_2024_deduccion_maternidad_bindings()) <= {b.id for b in revision.bindings}
+            "100",
+            lambda revision: (
+                set(_m100_2024_deduccion_maternidad_bindings()) | _FIXTURE_GUARDERIA_BINDINGS
+                <= {b.id for b in revision.bindings}
+            ),
         )
     }
 )

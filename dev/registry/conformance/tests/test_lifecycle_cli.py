@@ -104,7 +104,7 @@ def test_target_mutation_reports_follow_up_currentness_and_publication(monkeypat
 
     result = CliRunner().invoke(
         pipeline_cli.app,
-        ["publish-target", "296", "2024-y-siguientes", "aeat-dr-296-2024", "2024", "0A"],
+        ["publish-target", "296", "2024-2025", "aeat-dr-296-2024", "2024", "0A"],
     )
 
     assert result.exit_code == 0, result.output
@@ -182,7 +182,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
             SimpleNamespace(
                 id="296",
                 revisions={
-                    "2024-y-siguientes": SimpleNamespace(
+                    "2024-2025": SimpleNamespace(
                         bindings=(),
                         casillas=(),
                         formulas=(),
@@ -213,7 +213,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
             (
                 generated_tree_state.GeneratedTreeState(
                     "296",
-                    "2024-y-siguientes",
+                    "2024-2025",
                     "reproducible",
                     (),
                     (),

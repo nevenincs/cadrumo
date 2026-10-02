@@ -389,7 +389,8 @@ def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> 
     )
     assert body is not None, "no justfile line carries the test-unit body; the delegated lane has no home"
     assert (
-        "-m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service'"
+        "-m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service"
+        " and not private_ingest_corpus'"
     ) in body
     assert "--durations=" in body, "the durations override the CI step passes must reach the underlying pytest call"
 

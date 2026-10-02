@@ -308,8 +308,5 @@ selector = {revision = "2024", id = "modelo-189-export"}
 fields = {consumer = "cadrumo.application.filing.export_draft"}
 sequence_removals = {legal_refs = [1, 2], source_refs = [0, 1, 2, 4]}
 [[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024", id = "modelo-189-2024-0a"}
-[[revisions."2025".family_removals]]
 family = "workbook_parity_refs"
 selector = {revision = "2024", id = "modelo-189-dr-pdf"}

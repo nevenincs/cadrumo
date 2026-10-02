@@ -32,8 +32,8 @@ readable from the body without executing either shell:
   platform only;
 * the ``just`` recipes each side invokes, because a pair that delegates
   differently runs different work regardless of what its own lines say;
-* the pytest options, which exist because two live pairs -- ``test-coverage``
-  and ``doctor-python`` -- carry none of the four above, and a pair the
+* the pytest options, which exist because pairs such as ``test-coverage``
+  carry none of the four above, and a pair the
   reader takes nothing from passes while asserting nothing. That is the
   precise failure this file was written to name in another test, so it has
   to be refused here too; ``test_the_gate_can_say_something_about_every_pair

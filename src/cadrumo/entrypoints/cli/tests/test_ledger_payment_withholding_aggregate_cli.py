@@ -271,7 +271,7 @@ def test_ledger_payroll_capture_refuses_an_unknown_transaction(tmp_path: Path) -
 
 
 def test_ledger_payroll_capture_refuses_a_second_transport_and_other_modelos(tmp_path: Path) -> None:
-    """The payroll flag cannot share a command with invoice or hand-typed rows, nor leave Modelo 111."""
+    """The payroll flag cannot share a command with invoice evidence or a second payment, nor leave Modelo 111."""
     _prepare_cli_directories(tmp_path)
     with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 ledger payroll") as profile:
         _seed_ready_profile(profile.storage_root)
@@ -291,27 +291,17 @@ def test_ledger_payroll_capture_refuses_a_second_transport_and_other_modelos(tmp
             allocated_settlement=Decimal("106.00"),
             idempotency_key="invoice-capture",
         ).model_dump_json()
-        manual_row = json.dumps(
-            {
-                "source_kind": "ledger_transaction",
-                "source_object_id": transaction.transaction_id,
-                "perceptor_nif": _EMPLOYEE_NIF,
-                "scheme": "rendimientos_trabajo",
-                "taxable_base": "2400.00",
-                "retencion_amount": "360.00",
-                "accrued_on": _PAID_ON.isoformat(),
-            }
-        )
 
         refusals = (
             _aggregate("111", "--ledger-payment-withholding", payload, "--received-invoice-retencion", invoice_payload),
-            _aggregate("111", "--ledger-payment-withholding", payload, "--retencion-observation", manual_row),
             _aggregate("111", "--ledger-payment-withholding", payload, "--ledger-payment-withholding", payload),
             _aggregate("115", "--ledger-payment-withholding", payload),
         )
 
-        assert [code for code, _output in refusals] == [2, 2, 2, 2], refusals
+        assert [code for code, _output in refusals] == [2, 2, 2], refusals
         assert {json.loads(output)["error"]["code"] for _code, output in refusals} == {"REFUSED_CLI_BOUNDARY"}
+        exclusive_message = json.loads(refusals[0][1])["error"]["message"]
+        assert "--received-invoice-retencion" in exclusive_message, exclusive_message
         assert _stored_q1_retenciones() == ()
 
 

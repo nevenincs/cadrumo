@@ -21,7 +21,7 @@
         "result": {
           "code": "303",
           "filing_year": null,
-          "formula_count": 33,
+          "formula_count": 39,
           "operation": "modelo.formulas",
           "period": "1T",
           "revision": "2026-y-siguientes",
@@ -29,22 +29,156 @@
             {
               "expression": {
                 "args": [
-                  {"args":[],"binding":null,"casilla_id":"iva.repercutido.general","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"iva.repercutido.reducido","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"iva.repercutido.super-reducido","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"iva.repercutido.reducido.transitorio","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"iva.repercutido.super-reducido.transitorio","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"iva.autorepercutido.intracomunitaria","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"iva.autorepercutido.interior.devengado","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"iva.autoconsumo.promotor.cuota","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"18","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"21","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"24","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"158","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"170","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"26","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"15","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},
-                  {"args":[],"binding":null,"casilla_id":"152","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null}
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.cuota-devengada.general",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.cuota-devengada.reducido",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.cuota-devengada.super-reducido",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.repercutido.reducido.transitorio",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.repercutido.super-reducido.transitorio",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.autorepercutido.intracomunitaria",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.autorepercutido.interior.devengado",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "18",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "21",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "24",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "158",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "170",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "26",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "15",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "152",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  }
                 ],
                 "binding": null,
                 "casilla_id": null,
@@ -57,14 +191,13 @@
               "formula_id": "modelo-303-iva-cuota-devengada-total",
               "input_bindings": [],
               "input_casilla_ids": [
-                "iva.repercutido.general",
-                "iva.repercutido.reducido",
-                "iva.repercutido.super-reducido",
+                "iva.cuota-devengada.general",
+                "iva.cuota-devengada.reducido",
+                "iva.cuota-devengada.super-reducido",
                 "iva.repercutido.reducido.transitorio",
                 "iva.repercutido.super-reducido.transitorio",
                 "iva.autorepercutido.intracomunitaria",
                 "iva.autorepercutido.interior.devengado",
-                "iva.autoconsumo.promotor.cuota",
                 "18",
                 "21",
                 "24",
@@ -1079,12 +1212,371 @@
             {"expression":{"args":[],"binding":null,"casilla_id":"iva.autorepercutido.interior.devengado","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-13-projection","input_bindings":[],"input_casilla_ids":["iva.autorepercutido.interior.devengado"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"13"},
             {"expression":{"args":[{"args":[],"binding":null,"casilla_id":"iva.resultado-regimen-general","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},{"args":[],"binding":null,"casilla_id":"58","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},{"args":[],"binding":null,"casilla_id":"76","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null}],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":null,"op":"add","parameter":null},"formula_id":"modelo-303-iva-suma-resultados","input_bindings":[],"input_casilla_ids":["iva.resultado-regimen-general","58","76"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-92","ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71"],"source_refs":["aeat-dr-303-2024-early","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"target_casilla_id":"64"},
             {"expression":{"args":[{"args":[{"args":[],"binding":null,"casilla_id":"64","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},{"args":[],"binding":null,"casilla_id":"65","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null}],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":null,"op":"multiply","parameter":null},{"args":[],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":"100","op":null,"parameter":null}],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":null,"op":"divide","parameter":null},"formula_id":"modelo-303-iva-atribuible-estado","input_bindings":[],"input_casilla_ids":["64","65"],"input_parameters":[],"input_relations":[],"legal_refs":["rd-1624-1992:art-71"],"source_refs":["aeat-dr-303-2024-early","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"target_casilla_id":"66"},
-            {"expression":{"args":[{"args":[],"binding":null,"casilla_id":"iva.autoconsumo.promotor.base","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},{"args":[],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":"0.21","op":null,"parameter":null}],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":null,"op":"multiply","parameter":null},"formula_id":"modelo-303-autoconsumo-promotor-cuota","input_bindings":[],"input_casilla_ids":["iva.autoconsumo.promotor.base"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-90","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"target_casilla_id":"iva.autoconsumo.promotor.cuota"},
-            {"expression":{"args":[],"binding":null,"casilla_id":"iva.repercutido.general","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-09-projection","input_bindings":[],"input_casilla_ids":["iva.repercutido.general"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"09"},
-            {"expression":{"args":[],"binding":null,"casilla_id":"iva.repercutido.reducido","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-06-projection","input_bindings":[],"input_casilla_ids":["iva.repercutido.reducido"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"06"},
-            {"expression":{"args":[],"binding":null,"casilla_id":"iva.repercutido.super-reducido","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-03-projection","input_bindings":[],"input_casilla_ids":["iva.repercutido.super-reducido"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"03"},
             {"expression":{"args":[],"binding":null,"casilla_id":"iva.repercutido.reducido.transitorio","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-155-projection","input_bindings":[],"input_casilla_ids":["iva.repercutido.reducido.transitorio"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"155"},
             {"expression":{"args":[],"binding":null,"casilla_id":"iva.autorepercutido.intracomunitaria.devengado.base","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-10-projection","input_bindings":[],"input_casilla_ids":["iva.autorepercutido.intracomunitaria.devengado.base"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-13","ley-37-1992:art-15","ley-37-1992:art-69","ley-37-1992:art-70","ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"10"},
+            {"expression":{"args":[{"args":[],"binding":null,"casilla_id":"iva.repercutido.super-reducido.base","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},{"args":[],"binding":null,"casilla_id":"iva.autoconsumo.promotor.super-reducido.base","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null}],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":null,"op":"add","parameter":null},"formula_id":"modelo-303-iva-devengado-super-reducido-base","input_bindings":[],"input_casilla_ids":["iva.repercutido.super-reducido.base","iva.autoconsumo.promotor.super-reducido.base"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"01"},
+            {
+              "expression": {
+                "args": [
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.repercutido.super-reducido",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [
+                      {
+                        "args": [
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": "iva.autoconsumo.promotor.super-reducido.base",
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": null
+                          },
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": null,
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": "m303-dr303-02-tipo-porcentaje"
+                          }
+                        ],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": "multiply",
+                        "parameter": null
+                      },
+                      {
+                        "args": [],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": "100",
+                        "op": null,
+                        "parameter": null
+                      }
+                    ],
+                    "binding": null,
+                    "casilla_id": null,
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": "divide",
+                    "parameter": null
+                  }
+                ],
+                "binding": null,
+                "casilla_id": null,
+                "date_binding": null,
+                "dispatch_table": null,
+                "literal": null,
+                "op": "add",
+                "parameter": null
+              },
+              "formula_id": "modelo-303-iva-cuota-devengada-super-reducido",
+              "input_bindings": [],
+              "input_casilla_ids": [
+                "iva.repercutido.super-reducido",
+                "iva.autoconsumo.promotor.super-reducido.base"
+              ],
+              "input_parameters": [
+                "m303-dr303-02-tipo-porcentaje"
+              ],
+              "input_relations": [],
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "source_refs": [
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "target_casilla_id": "iva.cuota-devengada.super-reducido"
+            },
+            {"expression":{"args":[{"args":[],"binding":null,"casilla_id":"iva.repercutido.reducido.base","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},{"args":[],"binding":null,"casilla_id":"iva.autoconsumo.promotor.reducido.base","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null}],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":null,"op":"add","parameter":null},"formula_id":"modelo-303-iva-devengado-reducido-base","input_bindings":[],"input_casilla_ids":["iva.repercutido.reducido.base","iva.autoconsumo.promotor.reducido.base"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"04"},
+            {
+              "expression": {
+                "args": [
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.repercutido.reducido",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [
+                      {
+                        "args": [
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": "iva.autoconsumo.promotor.reducido.base",
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": null
+                          },
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": null,
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": "m303-dr303-05-tipo-porcentaje"
+                          }
+                        ],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": "multiply",
+                        "parameter": null
+                      },
+                      {
+                        "args": [],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": "100",
+                        "op": null,
+                        "parameter": null
+                      }
+                    ],
+                    "binding": null,
+                    "casilla_id": null,
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": "divide",
+                    "parameter": null
+                  }
+                ],
+                "binding": null,
+                "casilla_id": null,
+                "date_binding": null,
+                "dispatch_table": null,
+                "literal": null,
+                "op": "add",
+                "parameter": null
+              },
+              "formula_id": "modelo-303-iva-cuota-devengada-reducido",
+              "input_bindings": [],
+              "input_casilla_ids": [
+                "iva.repercutido.reducido",
+                "iva.autoconsumo.promotor.reducido.base"
+              ],
+              "input_parameters": [
+                "m303-dr303-05-tipo-porcentaje"
+              ],
+              "input_relations": [],
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "source_refs": [
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "target_casilla_id": "iva.cuota-devengada.reducido"
+            },
+            {"expression":{"args":[{"args":[],"binding":null,"casilla_id":"iva.repercutido.general.base","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},{"args":[],"binding":null,"casilla_id":"iva.autoconsumo.promotor.general.base","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null}],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":null,"op":"add","parameter":null},"formula_id":"modelo-303-iva-devengado-general-base","input_bindings":[],"input_casilla_ids":["iva.repercutido.general.base","iva.autoconsumo.promotor.general.base"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-9","ley-37-1992:art-79","ley-37-1992:art-88","ley-37-1992:art-90","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"07"},
+            {
+              "expression": {
+                "args": [
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.repercutido.general",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [
+                      {
+                        "args": [
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": "iva.autoconsumo.promotor.general.base",
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": null
+                          },
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": null,
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": "m303-dr303-08-tipo-porcentaje"
+                          }
+                        ],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": null,
+                        "op": "multiply",
+                        "parameter": null
+                      },
+                      {
+                        "args": [],
+                        "binding": null,
+                        "casilla_id": null,
+                        "date_binding": null,
+                        "dispatch_table": null,
+                        "literal": "100",
+                        "op": null,
+                        "parameter": null
+                      }
+                    ],
+                    "binding": null,
+                    "casilla_id": null,
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": "divide",
+                    "parameter": null
+                  }
+                ],
+                "binding": null,
+                "casilla_id": null,
+                "date_binding": null,
+                "dispatch_table": null,
+                "literal": null,
+                "op": "add",
+                "parameter": null
+              },
+              "formula_id": "modelo-303-iva-cuota-devengada-general",
+              "input_bindings": [],
+              "input_casilla_ids": [
+                "iva.repercutido.general",
+                "iva.autoconsumo.promotor.general.base"
+              ],
+              "input_parameters": [
+                "m303-dr303-08-tipo-porcentaje"
+              ],
+              "input_relations": [],
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "source_refs": [
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "target_casilla_id": "iva.cuota-devengada.general"
+            },
+            {
+              "expression": {
+                "args": [
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.autoconsumo.promotor.super-reducido.base",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.autoconsumo.promotor.reducido.base",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.autoconsumo.promotor.general.base",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null
+                  }
+                ],
+                "binding": null,
+                "casilla_id": null,
+                "date_binding": null,
+                "dispatch_table": null,
+                "literal": null,
+                "op": "add",
+                "parameter": null
+              },
+              "formula_id": "modelo-303-autoconsumo-promotor-base-por-tipo",
+              "input_bindings": [],
+              "input_casilla_ids": [
+                "iva.autoconsumo.promotor.super-reducido.base",
+                "iva.autoconsumo.promotor.reducido.base",
+                "iva.autoconsumo.promotor.general.base"
+              ],
+              "input_parameters": [],
+              "input_relations": [],
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "source_refs": [
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "target_casilla_id": "iva.autoconsumo.promotor.base.por-tipo"
+            },
+            {"expression":{"args":[],"binding":null,"casilla_id":"iva.cuota-devengada.general","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-09-projection","input_bindings":[],"input_casilla_ids":["iva.cuota-devengada.general"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"09"},
+            {"expression":{"args":[],"binding":null,"casilla_id":"iva.cuota-devengada.reducido","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-06-projection","input_bindings":[],"input_casilla_ids":["iva.cuota-devengada.reducido"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"06"},
+            {"expression":{"args":[],"binding":null,"casilla_id":"iva.cuota-devengada.super-reducido","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-03-projection","input_bindings":[],"input_casilla_ids":["iva.cuota-devengada.super-reducido"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"03"},
             {"expression":{"args":[],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":"m303-dr303-154-transitional-rate-percent"},"formula_id":"modelo-303-dr303-154-rate","input_bindings":[],"input_casilla_ids":[],"input_parameters":["m303-dr303-154-transitional-rate-percent"],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure"],"target_casilla_id":"154"},
             {"expression":{"args":[],"binding":null,"casilla_id":"iva.repercutido.super-reducido.transitorio","date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":null},"formula_id":"modelo-303-dr303-167-projection","input_bindings":[],"input_casilla_ids":["iva.repercutido.super-reducido.transitorio"],"input_parameters":[],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-late","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"target_casilla_id":"167"},
             {"expression":{"args":[],"binding":null,"casilla_id":null,"date_binding":null,"dispatch_table":null,"literal":null,"op":null,"parameter":"m303-dr303-166-transitional-rate-percent"},"formula_id":"modelo-303-dr303-166-rate","input_bindings":[],"input_casilla_ids":[],"input_parameters":["m303-dr303-166-transitional-rate-percent"],"input_relations":[],"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"source_refs":["aeat-dr-303-2024-late","aeat-modelo-303-procedure"],"target_casilla_id":"166"}

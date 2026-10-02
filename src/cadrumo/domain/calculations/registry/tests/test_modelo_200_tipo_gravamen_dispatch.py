@@ -50,7 +50,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # art. 101 ERD 24 % -- for the first exercise the published provision is in force.
 _DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
-_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
+)
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
     "DP200013:00417",
     surface="_M200_CORRECCIONES_AUMENTO_CASILLA",

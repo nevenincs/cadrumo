@@ -871,6 +871,7 @@ __all__ = [
     "validate_calculation_revision_id",
     "validate_casilla_key",
     "validate_relation_key",
+    "validate_trusted_public_key",
     "validate_work_unit_id",
     "work_calculate_input_bundle_from_cli",
     "work_candidate_lines",

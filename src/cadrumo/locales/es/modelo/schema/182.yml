@@ -34,6 +34,9 @@ modelo:
         title: Donativos, donaciones y aportaciones recibidas y disposiciones realizadas
           (informativa anual)
       revision:
+        2022-2023:
+          field:
+            label: Modelo 182, ejercicios 2022 y 2023
         '2024':
           field:
             label: Modelo 182, ejercicio 2024

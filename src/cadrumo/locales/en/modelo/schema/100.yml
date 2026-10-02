@@ -8035,6 +8035,9 @@ modelo:
             '1916':
               label: Increase for expenses in authorised nurseries or early years
                 education centres (amounts not applied in tax year 2021)
+            AJ:
+              label: Young-farmers reduction (sixth additional provision of the Tax
+                Law) (Yes/No)
             ANOASDLG:
               label: Ascendant's date of birth
             APENOMDLG:
@@ -8096,6 +8099,13 @@ modelo:
               label: Autonomous Community of residence
             ZRUE2:
               label: EU or EEA country of the spouse
+            eo-agraria-reduccion-irregularidad-base:
+              label: Net income from agricultural, livestock, or forestry activity
+                with a generation period exceeding two years, or classed by regulation
+                as obtained in a markedly irregular manner over time, imputed to this
+                single tax period (the base to which the 30% reduction of article
+                32.1 of the Tax Law applies; amount declared by the filer - see box
+                [1554])
           construct:
             renta-dependent-modelos:
               field:
@@ -17569,9 +17579,6 @@ modelo:
               label: 'Professional licence number / Personal numeric code of the doctor:'
             '2248':
               label: For a diagnosed coeliac condition
-            AJ:
-              label: Young-farmers reduction (sixth additional provision of the Tax
-                Law) (Yes/No)
             CONVASDLG:
               label: Ascendant's cohabiting descendants
             DECFAL:
@@ -17611,13 +17618,9 @@ modelo:
             base-liq-neg-general-2024-aplicada-maxima:
               label: 'Negative general net taxable base, FY 2024: maximum applicable
                 offset (limit under art. 50.3 LIRPF) [internal]'
-            eo-agraria-reduccion-irregularidad-base:
-              label: Net income from agricultural, livestock, or forestry activity
-                with a generation period exceeding two years, or classed by regulation
-                as obtained in a markedly irregular manner over time, imputed to this
-                single tax period (the base to which the 30% reduction of article
-                32.1 of the Tax Law applies; amount declared by the filer - see box
-                [1554])
+            trabajo-mar-renta-exenta:
+              label: Exempt employment income of maritime workers (art. 7.p) LIRPF
+                or Law 19/1994) [internal]
           construct:
             renta-dependent-modelos:
               field:

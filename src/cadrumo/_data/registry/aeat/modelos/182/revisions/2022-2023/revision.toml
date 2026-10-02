@@ -1,0 +1,46 @@
+[revisions."2022-2023"]
+application_link_source_refs = ["enrolled-modelo-182-procedure"]
+binding_source_refs = ["enrolled-modelo-182-procedure"]
+authority_grade = "applicability"
+casilla_source_refs = ["aeat-dr-182-2021-2023", "enrolled-modelo-182-procedure"]
+# Modelo 182 for ejercicios 2022 and 2023, presented in enero 2023 and enero
+# 2024, and the modelo's storage baseline: the 2024 edition stores only its
+# differences against it.
+#
+# WHICH DESIGN. aeat-dr-182-2021-2023 is AEAT's design as amended by Orden
+# HFP/1351/2021, whose disposicion final unica applies it first to the 2021
+# declarations. The next amendment of the orden's anexo II is Orden
+# HAC/1504/2024, first applicable to ejercicio 2024, so this design governs both
+# years.
+#
+# WHAT DIFFERS FROM 2024. Nothing this edition models. The design's position
+# lines equal those of aeat-dr-182-2024 line for line: the same records, fields,
+# positions and widths, including every field the seven casillas and five donor
+# row bindings stand for (tipo 1 5-8; tipo 2 18-26, 36-75, 79-83, 84-96 and 132)
+# and the RECURRENCIA DONATIVOS clave test, which reads the same in both. The one
+# textual difference is the 150 euros named in the % DE DEDUCCION description,
+# which Orden HAC/1504/2024 art. quinto raises to 250 euros; no member here
+# carries that amount. What this edition states of its own is its design, the
+# orden that fixed it and one deadline window per ejercicio.
+#
+# Grade: applicability, as the 2024 edition, for the same reason -- the donor
+# bindings rest on the orden excerpt, and no instrucciones source for these
+# ejercicios is held.
+valid_from = 2022-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2022, year_to = 2023, periods = ["0A"] }
+legal_refs = [
+    "orden-eha-3021-2007:art-1",
+    "orden-eha-3021-2007:art-5",
+    "orden-hfp-1351-2021:art-cuarto",
+    "orden-hfp-1351-2021:df-unica",
+    "ley-35-2006:art-68.3",
+    "ley-58-2003:art-93",
+]
+orden_aplicabilidad = ["orden-eha-3021-2007:art-1"]
+source_refs = [
+    "aeat-dr-182-2021-2023",
+    "enrolled-modelo-182-procedure",
+    "enrolled-modelo-182-layout",
+]
+review_status = "pending_review"

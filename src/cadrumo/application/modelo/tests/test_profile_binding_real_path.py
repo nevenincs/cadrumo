@@ -234,6 +234,10 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
       they are covered by test_repeating_collection_selectors_yield_known_alias.
     - The taxpayer death-date binding (0018) is intentionally absent from the
       fixture and is covered by test_absent_fact_resolves_to_none_anti_tautology.
+    - The Art. 81.1 maternidad binding (casilla 0611): its fact is derived only by
+      the calculate-path maternity injector, which this manual-injection pin does
+      not run; its resolution is covered by test_maternidad_alta_posterior_resolution
+      and test_maternidad_cotizaciones_ceiling.
     """
     schema = published_profile_schema()
     record = _full_m100_profile()
@@ -251,13 +255,13 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     inject_derived_anualidades_eligibility_facts(fact_index, snapshot, operation=authority_operation)
     inject_derived_minimo_descendientes_facts(fact_index, snapshot, operation=authority_operation)
 
-    # Deliberately absent binding — tested separately.
-    absent = "renta-profile-taxpayer-death-date"
+    # Deliberately absent or calculate-path-derived bindings — tested separately.
+    absent = {"renta-profile-taxpayer-death-date", "renta-profile-deduccion-maternidad"}
 
     profile_bindings = _profile_bindings()
     for binding in profile_bindings:
         binding_id = binding.id
-        if binding_id == absent:
+        if binding_id in absent:
             continue
         selector = binding.provider
         assert isinstance(selector, ProfileProvider), binding_id

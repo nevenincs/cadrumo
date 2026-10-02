@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#fu-200-row-model'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:72abb37dcbfe5f070bb5fb81776c063c7234689c650e8bb1208e2200848476f5'
+body_hash: 'sha256:82974e7ef0eaf65df0f4e1fba3c07a2163dc6a0caa3c7c1a28fb9c0b7ff92d1f'
 related:
-  - '[[2026-05-27-fu-200-row-model-m349-m347-task-224-exec]]'
   - '[[2026-06-04-fu-200-row-model-adr]]'
   - '[[2026-06-04-fu-200-row-model-research]]'
 ---
@@ -22,10 +21,6 @@ Auto-generated index of all documents tagged with `#fu-200-row-model`.
 ### adr
 
 - `2026-06-04-fu-200-row-model-adr` - `fu-200-row-model` adr: `warning closeout authority alignment` | (**status:** `accepted`)
-
-### exec
-
-- `2026-05-27-fu-200-row-model-m349-m347-task-224-exec` - FU-#200 — extend ModeloDetailRow union: M349 operador + M347 contraparte (Task #224)
 
 ### research
 

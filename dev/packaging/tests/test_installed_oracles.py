@@ -36,9 +36,10 @@ from dev.source_tree import repository_files, snapshot
 from .._distribution_names import normalise_distribution_name
 from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
 from ..hashing import sha256_path
-from ..installed_mcp_oracle import InstalledMcpOracleError, run_installed_mcp_oracle
+from ..installed_mcp_oracle import InstalledMcpOracleError, isolated_mcp_environment, run_installed_mcp_oracle
 from ..installed_tax_oracle import (
     InstalledTaxOracleError,
+    isolated_product_environment,
     path_without_product_executables,
     run_installed_tax_oracle,
 )
@@ -254,6 +255,27 @@ print(json.dumps({
     "logical_generation": selected.logical_generation,
 }, sort_keys=True))
 """
+_ORACLE_AUTHORITY_PROBE = """
+import hashlib
+import json
+
+from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
+
+descriptor_path = bundled_authority_descriptor_path().resolve(strict=True)
+selected = AuthorityDescriptor.read(descriptor_path)
+database = descriptor_path.with_name(selected.database).resolve(strict=True)
+print(json.dumps({
+    "descriptor": str(descriptor_path),
+    "descriptor_sha256": hashlib.sha256(descriptor_path.read_bytes()).hexdigest(),
+    "database": database.name,
+    "database_sha256": hashlib.sha256(database.read_bytes()).hexdigest(),
+    "logical_generation": selected.logical_generation,
+}, sort_keys=True))
+"""
+#: One JSON-RPC message is one stdout line, and the tools/list answer alone is
+#: larger than asyncio's 64 KiB default line limit.
+_STDIO_LINE_LIMIT = 16 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -368,6 +390,41 @@ def _installed_authority_resource(
         database,
         str(observed["database_sha256"]),
     )
+
+
+def _oracle_authority_generation(
+    oracle: str,
+    venv: Path,
+    *,
+    environment: dict[str, str],
+    cwd: Path,
+    descriptor_sha256: str,
+    database_sha256: str,
+) -> dict[str, str]:
+    """Name the authority generation one oracle run read, and pin it to the expected pair.
+
+    The installed commands do not print the generation they consumed, so the
+    installation's own interpreter resolves it through the product's descriptor
+    selector under the exact environment the oracle ran with -- the same
+    selector, files and variables the oracle's commands resolved. The identity
+    goes to the run log and back to the caller for retained evidence, and a
+    generation other than the expected one fails with both identities named.
+    """
+    observed = json.loads(
+        run_checked(
+            [str(venv_python_path(venv)), "-I", "-c", _ORACLE_AUTHORITY_PROBE],
+            cwd=cwd,
+            env=environment,
+        ).stdout
+    )
+    generation = {"oracle": oracle, **{str(key): str(value) for key, value in observed.items()}}
+    print("installed-oracle-authority=" + json.dumps(generation, sort_keys=True))
+    assert (generation["descriptor_sha256"], generation["database_sha256"]) == (descriptor_sha256, database_sha256), (
+        f"the {oracle} oracle read authority generation {generation['logical_generation']} "
+        f"(descriptor sha256 {generation['descriptor_sha256']}, database {generation['database']}), "
+        f"not the expected pair (descriptor sha256 {descriptor_sha256}, database sha256 {database_sha256})"
+    )
+    return generation
 
 
 def _assert_no_durable_calculation_work(storage_root: Path) -> None:
@@ -741,17 +798,37 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
         "modelo.work.observations": expected_cli_sha256,
     }
     assert any(call.command_key == "modelo.work.calculate" for call in mcp_evidence.calls)
+    cli_authority = _oracle_authority_generation(
+        "cli",
+        cohort.venv,
+        environment=isolated_product_environment(cohort.work_dir / "cli-state"),
+        cwd=execution_root / "cli",
+        descriptor_sha256=cohort.authority_descriptor_sha256,
+        database_sha256=cohort.authority_database_sha256,
+    )
+    mcp_authority = _oracle_authority_generation(
+        "mcp",
+        cohort.venv,
+        environment=isolated_mcp_environment(cohort.work_dir / "mcp-state"),
+        cwd=execution_root / "mcp",
+        descriptor_sha256=cohort.authority_descriptor_sha256,
+        database_sha256=cohort.authority_database_sha256,
+    )
 
     _write_evidence(
         cohort.evidence_path,
         {
             "artifact_sha256": cohort.artifact_sha256,
             "cli_oracle": cli_evidence.to_jsonable(),
+            "cli_oracle_authority": cli_authority,
             "mcp_oracle": mcp_evidence.to_jsonable(),
+            "mcp_oracle_authority": mcp_authority,
             "source_digest": cohort.source_digest,
         },
     )
     retained = json.loads(cohort.evidence_path.read_text(encoding="utf-8"))
+    assert retained["cli_oracle_authority"] == cli_authority
+    assert retained["mcp_oracle_authority"] == mcp_authority
     assert retained["mcp_oracle"]["invoked_cli_sha256"] == expected_cli_sha256
     assert retained["mcp_oracle"]["invoked_cli_sha256_by_command"] == {
         "modelo.work.calculate": expected_cli_sha256,
@@ -790,6 +867,22 @@ def test_installed_cli_and_mcp_refuse_an_unusable_authority_before_durable_work(
         timeout_seconds=240.0,
     )
     assert baseline_cli.target_value == baseline_mcp.target_value == "23000.00"
+    _oracle_authority_generation(
+        "cli-baseline",
+        installation.venv,
+        environment=isolated_product_environment(installation.root / "cli-baseline-state"),
+        cwd=installation.root / "cli-baseline",
+        descriptor_sha256=installation.authority_descriptor_sha256,
+        database_sha256=installation.authority_database_sha256,
+    )
+    _oracle_authority_generation(
+        "mcp-baseline",
+        installation.venv,
+        environment=isolated_mcp_environment(installation.root / "mcp-baseline-state"),
+        cwd=installation.root / "mcp-baseline",
+        descriptor_sha256=installation.authority_descriptor_sha256,
+        database_sha256=installation.authority_database_sha256,
+    )
     if damage == "missing":
         installation.authority_database.unlink()
         assert not installation.authority_database.exists()
@@ -899,6 +992,26 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
         cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo"],
         timeout_seconds=240.0,
     )
+    for oracle, environment, cwd in (
+        (
+            "cli-before",
+            isolated_product_environment(cohort.work_dir / "source-isolation-cli-before-state"),
+            execution_root / "cli-before",
+        ),
+        (
+            "mcp-before",
+            isolated_mcp_environment(cohort.work_dir / "source-isolation-mcp-before-state"),
+            execution_root / "mcp-before",
+        ),
+    ):
+        _oracle_authority_generation(
+            oracle,
+            cohort.venv,
+            environment=environment,
+            cwd=cwd,
+            descriptor_sha256=installed_descriptor_digest,
+            database_sha256=installed_database_digest,
+        )
 
     original = authored.read_bytes()
     try:
@@ -927,6 +1040,26 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
             cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo"],
             timeout_seconds=240.0,
         )
+        for oracle, environment, cwd in (
+            (
+                "cli-after",
+                isolated_product_environment(cohort.work_dir / "source-isolation-cli-after-state"),
+                execution_root / "cli-after",
+            ),
+            (
+                "mcp-after",
+                isolated_mcp_environment(cohort.work_dir / "source-isolation-mcp-after-state"),
+                execution_root / "mcp-after",
+            ),
+        ):
+            _oracle_authority_generation(
+                oracle,
+                cohort.venv,
+                environment=environment,
+                cwd=cwd,
+                descriptor_sha256=installed_descriptor_digest,
+                database_sha256=installed_database_digest,
+            )
     finally:
         authored.write_bytes(original)
 
@@ -945,7 +1078,6 @@ def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort
     never sit in a passing distribution-evidence record).
     """
     from ..acquire_common import capture_owned_server_launch
-    from ..installed_mcp_oracle import isolated_mcp_environment
 
     work = installed_cohort.work_dir / "owned-launch-capture"
     work.mkdir()
@@ -967,9 +1099,8 @@ def _retired_state_environment(base: Path, venv: Path) -> dict[str, str]:
     """A per-OS platform-data root whose retired ``aeat`` state triggers the refusal.
 
     Mirrors the ``smoke_mcpb`` hostile-platform fixture: the resolver refuses on
-    the retired directory's existence alone, and refusal fires only in INSTALLED
-    run mode - which this file's wheel-installed cohort guarantees, unlike an
-    editable checkout whose resolver never inspects the platform data dir.
+    the retired directory's existence alone, whenever no explicit storage root
+    is configured, so this environment carries none of the ``CADRUMO_`` settings.
 
     The search path is the one a client of this installation has: the cohort's
     own scripts directory first, then the inherited entries with every other
@@ -1023,6 +1154,7 @@ async def _drive_mcp_server(
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        limit=_STDIO_LINE_LIMIT,
     )
     assert process.stdin is not None
     assert process.stdout is not None

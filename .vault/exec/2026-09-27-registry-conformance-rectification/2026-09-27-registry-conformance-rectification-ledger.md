@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-conformance-rectification'
 date: '2026-09-27'
-modified: '2026-09-27'
+modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:27681c8ccbcc0449f333f4406b1baa19d914a992f8bbed778fa64587b5882871'
+body_hash: 'sha256:d70954ef46e4ac106a812ebf37cb3f4b5115bc1118dae442e7711ad827c9cee7'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -150,6 +150,1664 @@ related:
 - `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/parameters/0001-declarations.toml`
 - `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/revision.toml`
 - `S11` `verify:` `pytest dev/registry/tests/test_parameter_rows_stay_open_across_editions.py` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_180_type2_rows_across_supported_years.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/application_links/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/bindings/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/bindings/0002-type2-row-bindings.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/casillas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/constructs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/export_layouts/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/extraction_profiles/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/live_cross_references/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/application_links/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/bindings/0001-type2-row-bindings.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/extraction_profiles/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/identifier_evolutions/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/live_cross_references/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/revision.toml`
+- `S11` `verify:` `edition_delta_migration 180 proof, apply, no-op; inspect_authoring_candidate publication_valid; pytest 180/123 set 331 passed` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_182_donor_surface_across_editions.py`
+- `S11` `A` `dev/registry/tests/test_modelo_184_filing_surface_across_supported_years.py`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/bindings/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/constructs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/bindings/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/constructs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/revision.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/applicability/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/application_links/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/bindings/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/casillas/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/constructs/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/extraction_profiles/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/filing_schedules/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/live_cross_references/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/applicability/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/application_links/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/bindings/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/extraction_profiles/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/filing_schedules/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/live_cross_references/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/revision.toml`
+- `S11` `verify:` `edition_delta_migration 184/182 proof and drop-restatement no-op; inspect_authoring_candidate publication_valid; pytest 184/182 set 925 passed, 4 failed on host keyring (WinVaultKeyring 1312), identical on untouched 349` -> `pass`
+- `S11` `M` `dev/registry/tests/test_edition_delta_migration.py`
+- `S11` `M` `dev/registry/tests/test_ledger_iva_aggregation_binding_exports_recargo.py`
+- `S11` `M` `dev/registry/tests/test_modelo_303_aic_box_10_base_projection.py`
+- `S11` `A` `dev/registry/tests/test_modelo_303_boxes_from_support_floor.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/bindings/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/completeness_manifest/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/constructs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/formulas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/bindings/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/casillas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/formulas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/verification_predicates/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry_bindings.py`
+- `S11` `verify:` `303 converter proof twice no-op; inspect_authoring_candidate publication_valid 0 findings; dev/registry 1764 passed with failures classified; delta migration tests 19 passed after pilot fix` -> `pass`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/bindings/0002-type2-row-bindings.toml`
+- `S11` `verify:` `180 converter fingerprint unchanged; test_committed_authored_sections_are_consolidated` -> `pass`
+- `S11` `verify:` `registry_collapse_verification --modelo 180, 184, 182, 303 (equivalence, facts, indexed, cache, publication_readiness passed; 0 findings)` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_131_edition_surfaces_across_supported_years.py`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/applicability/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/application_links/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/bindings/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/completeness_manifest/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/dependency_classifications/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/export_layouts/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/extraction_profiles/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/filing_schedules/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/formulas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/live_cross_references/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/verification_expectations/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/verification_predicates/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/workbook_parity_refs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S11` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S11` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S11` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S11` `verify:` `131 hydration all families and labels unchanged; converter proof no-op; inspect_authoring_candidate publication_valid; published 6ce4c1b8; pytest 131 set 1226 passed` -> `pass`
+- `S11` `verify:` `registry_collapse_verification --modelo 131 (equivalence, facts, indexed, cache, publication_readiness passed; 0 findings)` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_202_incn_binding_across_supported_years.py`
+- `S11` `A` `dev/registry/tests/test_modelo_222_modalidad_cuota_rate_row.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/bindings/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/bindings/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/application_links/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/completeness_manifest/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/constructs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/formulas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/verification_expectations/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/workbook_parity_refs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_export_verb.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_registry_bindings_surface.py`
+- `S11` `verify:` `202/222 converter proof, apply and no-op; inspect_authoring_candidate publication_valid; dev 302 passed; entrypoint and lane tests 59 passed` -> `pass`
+- `S14` `M` `dev/registry/pipeline/authority_publication.py`
+- `S14` `M` `src/cadrumo/core/config.py`
+- `S14` `A` `src/cadrumo/core/tests/test_configured_authority_root.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S14` `A` `src/cadrumo/entrypoints/cli/tests/test_command_surface_beside_retired_state.py`
+- `S14` `verify:` `core tests and authority subsystems 1399 passed; release lane test_installed_mcp_server_serves_when_storage_root_refuses passed` -> `pass`
+- `S15` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S15` `verify:` `grounded CLI and MCP oracle test reports and asserts the consumed generation (6ce4c1b8)` -> `pass`
+- `S21` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_payment_capital_withholding_aggregate_cli.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_payment_withholding_aggregate_cli.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_typed_observations.py`
+- `S21` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S21` `M` `src/cadrumo/locales/en/cli.yml`
+- `S21` `M` `src/cadrumo/locales/es/cli.yml`
+- `S21` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S21` `verify:` `CLI lane 5459 passed (1 pre-existing boundary failure at HEAD); CLI reference regenerated without the option` -> `pass`
+- `S22` `M` `src/cadrumo/application/aggregation/invoice_retencion.py`
+- `S22` `A` `src/cadrumo/application/aggregation/tests/test_invoice_withholding_capture_defects.py`
+- `S22` `M` `src/cadrumo/core/errors/registry/_application_part3a1.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/tests/test_invoice_retencion_aggregate_cli.py`
+- `S22` `M` `src/cadrumo/locales/ca/common.yml`
+- `S22` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S22` `M` `src/cadrumo/locales/en/common.yml`
+- `S22` `M` `src/cadrumo/locales/en/errors.yml`
+- `S22` `M` `src/cadrumo/locales/es/common.yml`
+- `S22` `M` `src/cadrumo/locales/es/errors.yml`
+- `S22` `M` `src/cadrumo/locales/hu/common.yml`
+- `S22` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S22` `verify:` `aggregation, TUI withholding and core errors 1210 passed; two-defect CLI test en and es; check-symbol-usage finding for project_received_invoice_retencion gone` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_296_edition_design_citations_across_supported_years.py`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/applicability/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/application_links/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/bindings/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/completeness_manifest/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/dependency_classifications/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/filing_schedules/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/projection_endpoints/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/verification_expectations/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/verification_predicates/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/workbook_parity_refs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2011-julio-2015/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/revision.toml`
+- `S11` `verify:` `296 converter proof, apply and no-op; candidate inspection publication_valid for 308, 216, 296, 604; hydration and 1612 locale labels unchanged; pytest 485 passed` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_220_liquidacion_iii_across_editions.py`
+- `S11` `A` `dev/registry/tests/test_modelo_322_490_design_boxes_across_editions.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/casillas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/casillas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/application_links/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export_layouts/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/workbook_parity_refs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/locales/ca/modelo/schema/220.yml`
+- `S11` `M` `src/cadrumo/locales/ca/modelo/schema/490.yml`
+- `S11` `M` `src/cadrumo/locales/en/modelo/schema/220.yml`
+- `S11` `M` `src/cadrumo/locales/en/modelo/schema/490.yml`
+- `S11` `M` `src/cadrumo/locales/es/modelo/schema/220.yml`
+- `S11` `M` `src/cadrumo/locales/es/modelo/schema/490.yml`
+- `S11` `M` `src/cadrumo/locales/hu/modelo/schema/220.yml`
+- `S11` `M` `src/cadrumo/locales/hu/modelo/schema/490.yml`
+- `S11` `verify:` `220/322/490 hydration and 4-locale labels unchanged except the intended 220 move; 490 converter proof, apply, no-op; candidate inspection publication_valid; runtime 184 passed, dev 455 passed (10 failures in resident search golden queries)` -> `pass`
+- `S30` `M` `dev/test_runs/command.py`
+- `S30` `M` `dev/test_runs/tests/test_command.py`
+- `S30` `verify:` `runner keeps a 300000-character line whole where HEAD raised; just check-locales completes (existing findings reported)` -> `pass`
+- `S24` `M` `.github/workflows/release.yml`
+- `S24` `M` `dev/ci/tests/test_ci_workflow.py`
+- `S24` `M` `dev/ingest_harness/_driver.py`
+- `S24` `M` `dev/ingest_harness/_key.py`
+- `S24` `M` `dev/ingest_harness/tests/test_corpus_anchors.py`
+- `S24` `A` `dev/ingest_harness/tests/test_corpus_recipe_refusal.py`
+- `S24` `A` `dev/ingest_harness/tests/test_corpus_root.py`
+- `S24` `M` `dev/ingest_harness/tests/test_driver.py`
+- `S24` `M` `dev/ingest_harness/tests/test_field_mapping.py`
+- `S24` `M` `dev/ingest_harness/tests/test_scoring.py`
+- `S24` `M` `dev/ingest_harness/tests/test_tabular_truth.py`
+- `S24` `M` `dev/tests/test_lane_reachability.py`
+- `S24` `M` `justfile`
+- `S24` `M` `pyproject.toml`
+- `S24` `M` `src/cadrumo/tests/README.md`
+- `S24` `verify:` `test-ingest-corpus 71 passed with the corpus configured, 10 failed and 61 errored unset, no skips; lane reachability and CI workflow contracts pass` -> `pass`
+- `S16` `M` `dev/test_runs/logging.py`
+- `S16` `M` `dev/test_runs/paths.py`
+- `S16` `M` `dev/test_runs/reaper.py`
+- `S16` `A` `dev/test_runs/tests/failing_probe.py`
+- `S16` `M` `dev/test_runs/tests/test_logging.py`
+- `S16` `M` `dev/test_runs/tests/test_paths.py`
+- `S16` `verify:` `passing run removes scratch and failing run keeps it (live); reaper reclaims kept folders; 218 lane tests passed` -> `pass`
+- `S31` `M` `src/cadrumo/entrypoints/cli/_modelo_cli_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`
+- `S31` `verify:` `test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_support and work report tests 34 passed; pattern introduced by d91cd929a5` -> `pass`
+- `S29` `M` `src/cadrumo/application/aggregation/modelo_bindings_retenciones.py`
+- `S29` `M` `src/cadrumo/application/aggregation/service.py`
+- `S29` `M` `src/cadrumo/application/aggregation/withholding_source.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/modelo_aux_payloads.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_aggregate_annual_withholding_rows.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/tests/test_withholding_evidence_cli.py`
+- `S29` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S29` `M` `src/cadrumo/locales/en/cli.yml`
+- `S29` `M` `src/cadrumo/locales/es/cli.yml`
+- `S29` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S29` `verify:` `report and calculation parity for 180, 190 and 193 on real stores and resolvers; empty store warns, stored zero counts; 1239 aggregation and CLI tests passed` -> `pass`
+- `S16` `M` `conftest.py`
+- `S16` `A` `dev/test_runs/tests/authority_probe.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S16` `A` `src/cadrumo/domain/calculations/registry/tests/shared_authority_isolation.py`
+- `S16` `A` `src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_release.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_launcher_entry_point.py`
+- `S16` `M` `src/cadrumo_harness/mcp/server.py`
+- `S16` `A` `src/cadrumo_harness/mcp/tests/test_server_shutdown_release.py`
+- `S16` `verify:` `passing -n0 and -n 2 runs log SCRATCH REMOVED on Windows, failing run keeps its folder; MCP and TUI host release tests; check-symbol-usage and check-export-consumption only the pre-existing text_fold finding, module reachability and import boundaries clean` -> `pass`
+- `S36` `M` `src/cadrumo/application/aggregation/service.py`
+- `S36` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S36` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S36` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
+- `S36` `D` `src/cadrumo/entrypoints/cli/tests/test_modelo_190_clave_breakdown.py`
+- `S36` `D` `src/cadrumo/entrypoints/cli/tests/test_withholding_producer.py`
+- `S36` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S36` `M` `src/cadrumo/locales/en/cli.yml`
+- `S36` `M` `src/cadrumo/locales/es/cli.yml`
+- `S36` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S36` `verify:` `S36 suites 62 passed; CLI reference regenerated without the option` -> `pass`
+- `S23` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S23` `M` `src/cadrumo/application/ledger/invoice_draft_extraction_ports.py`
+- `S23` `M` `src/cadrumo/application/ledger/invoice_draft_records.py`
+- `S23` `M` `src/cadrumo/application/ledger/tests/test_invoice_label_reader.py`
+- `S23` `M` `src/cadrumo/core/errors/registry/_application_part3a2.py`
+- `S23` `M` `src/cadrumo/entrypoints/cli/_evidence_field_notices.py`
+- `S23` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`
+- `S23` `M` `src/cadrumo/entrypoints/cli/tests/ledger_ux_support.py`
+- `S23` `M` `src/cadrumo/entrypoints/cli/tests/test_evidence_field_notices.py`
+- `S23` `A` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py`
+- `S23` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S23` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S23` `M` `src/cadrumo/locales/en/errors.yml`
+- `S23` `M` `src/cadrumo/locales/es/errors.yml`
+- `S23` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S23` `verify:` `application ledger, composition and core errors 1134 passed; label-reading CLI 6 passed; detector proves no load request on refusal` -> `pass`
+- `S18` `M` `dev/registry/tests/test_activity_asset_authority_across_supported_years.py`
+- `S18` `M` `dev/registry/tests/test_activity_asset_schedule_authority_resolution.py`
+- `S18` `M` `src/cadrumo/application/calculations/actividad_asset_schedule.py`
+- `S18` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`
+- `S18` `M` `src/cadrumo/domain/renta/actividad_asset/errors.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`
+- `S18` `A` `src/cadrumo/entrypoints/cli/tests/test_actividad_asset_accelerated_da18_cli.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S18` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S18` `M` `src/cadrumo/locales/en/errors.yml`
+- `S18` `M` `src/cadrumo/locales/es/errors.yml`
+- `S18` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S18` `verify:` `2023 DA 18 claim refused with REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED at domain and CLI, 2024 still admitted, 2022 and unrelated methods keep the generic token; 189 tests passed; import boundaries clean` -> `pass`
+- `S17` `M` `dev/registry/analysis/legal_citation_period_ledger.toml`
+- `S17` `M` `dev/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S17` `A` `dev/registry/tests/test_modelo_100_late_authoring_rulings.py`
+- `S17` `M` `dev/registry/tests/test_modelo_100_tarifa_real.py`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-32-2015.html`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-32-2015.html.extracted.json`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-32-2015.html.extracted.md`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-1.html`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-1.html.extracted.json`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-1.html.extracted.md`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-8.html`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-8.html.extracted.json`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-8.html.extracted.md`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1335-2021-da-1.html`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1335-2021-da-1.html.extracted.json`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1335-2021-da-1.html.extracted.md`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/xml/real-decreto-ley-18-2022-art-22.xml`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/xml/real-decreto-ley-8-2023-art-18.xml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/constructs/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/parameters/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/bindings/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/formulas/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/parameters/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/parameters/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_source_mesh_profile_live.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_profile_binding_real_path.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/_modelo_100_registry_support.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_estimacion_directa_binding.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_minimo_contribuyente_age_increment.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_ahorro_base_chain.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_anualidades_separate_escala_multiyear.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_indices_correctores.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_reducciones_fase_4a.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_rendimiento_base.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_tarifa_real.py`
+- `S17` `M` `src/cadrumo/domain/user_profile/tests/test_registry_contract.py`
+- `S17` `verify:` `candidate inspection publication_valid; converter no-op; source registry gates 806 passed; runtime 1580 passed then remaining fixed; count pin, profile real path, maternity and source mesh tests 83 passed` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_165_design_surface_across_supported_years.py`
+- `S11` `A` `dev/registry/tests/test_modelo_210_payer_mode_parameter_across_supported_years.py`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/application_links/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/casillas/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/export_layouts/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/revision.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/workbook_parity_refs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/application_links/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/export_layouts/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/workbook_parity_refs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2023/parameters/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/locales/ca/modelo/schema/165.yml`
+- `S11` `M` `src/cadrumo/locales/en/modelo/schema/165.yml`
+- `S11` `M` `src/cadrumo/locales/es/modelo/schema/165.yml`
+- `S11` `M` `src/cadrumo/locales/hu/modelo/schema/165.yml`
+- `S11` `verify:` `165 and 210 candidate inspection publication_valid; 419 dev tests and 59 runtime tests passed` -> `pass`
+- `S11` `verify:` `registry_collapse_verification --modelo 202 against published 0b6bfacc (complete, rollout complete, 0 findings)` -> `pass`
+- `S37` `M` `src/cadrumo/adapters/persistence/storage/tests/test_extraction_draft_store.py`
+- `S37` `M` `src/cadrumo/application/ledger/batch_ingest.py`
+- `S37` `M` `src/cadrumo/application/ledger/extraction_draft_store.py`
+- `S37` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S37` `M` `src/cadrumo/application/ledger/invoice_draft_extraction_ports.py`
+- `S37` `M` `src/cadrumo/application/ledger/invoice_draft_records.py`
+- `S37` `M` `src/cadrumo/application/ledger/tests/test_batch_ingest.py`
+- `S37` `M` `src/cadrumo/application/ledger/tests/test_invoice_label_reader.py`
+- `S37` `M` `src/cadrumo/core/errors/registry/_application_part3a2.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/_evidence_field_notices.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_batch_cli.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_batch_payloads.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/tests/test_evidence_field_notices.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py`
+- `S37` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S37` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_evidence_draft_label_reading.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/ledger_doors.py`
+- `S37` `A` `src/cadrumo/entrypoints/tui/tests/test_ledger_evidence_draft_row.py`
+- `S37` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S37` `M` `src/cadrumo/locales/ca/common.yml`
+- `S37` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S37` `M` `src/cadrumo/locales/en/cli.yml`
+- `S37` `M` `src/cadrumo/locales/en/common.yml`
+- `S37` `M` `src/cadrumo/locales/en/errors.yml`
+- `S37` `M` `src/cadrumo/locales/es/cli.yml`
+- `S37` `M` `src/cadrumo/locales/es/common.yml`
+- `S37` `M` `src/cadrumo/locales/es/errors.yml`
+- `S37` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S37` `M` `src/cadrumo/locales/hu/common.yml`
+- `S37` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S37` `verify:` `busy refusal degrades with its own notice, required read still refuses; degradation persisted through the encrypted draft store and shown in batch and TUI; old-shape draft round trip; 1063 focused passed (23 locale failures from other lanes and missing spelling dictionaries)` -> `pass`
+- `S38` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S38` `verify:` `aggregate help describes only live options in four locales; six replacement characters restored, code parses identically` -> `pass`
+- `S18` `verify:` `product-identity audit assertions pass for the reworded message; DA 18 CLI test passes` -> `pass`
+- `S39` `M` `dev/registry/analysis/legal_citation_period_ledger.toml`
+- `S39` `M` `dev/registry/tests/_modelo_100_registry_support.py`
+- `S39` `M` `dev/registry/tests/test_modelo_100_deferred_semantic_rows.py`
+- `S39` `A` `dev/registry/tests/test_modelo_100_minimo_contribuyente_autonomico.py`
+- `S39` `A` `dev/registry/tests/test_modelo_100_modelo_131_relations.py`
+- `S39` `M` `dev/registry/tests/test_modelo_100_registry_quota_legal_refs.py`
+- `S39` `M` `dev/registry/tests/test_modelo_100_registry_roles_objective_estimation.py`
+- `S39` `M` `dev/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/casillas/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/extraction_profiles/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/revision.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/parameters/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/_modelo_100_registry_support.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_estimacion_directa_binding.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_m100_final_settlement_chain_manual_anchor.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_m100_rental_reduccion_art23_2.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_minimo_contribuyente_age_increment.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_ahorro_base_chain.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_anualidades_separate_escala_multiyear.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_indices_correctores.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_reducciones_fase_4a.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_rendimiento_base.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_settlement_chain.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_tarifa_real.py`
+- `S39` `D` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_modulos_fold_in_live.py`
+- `S39` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_pagos_fold_in_live.py`
+- `S39` `verify:` `isolated-copy inspection and converter no-op; live inspection valid; Modelo 100 dev tests 2049 passed then remaining 17 passed; published 5ea36a5e; 1642 runtime tests passed (2 failures in other lanes' modelos)` -> `pass`
+- `S26` `A` `dev/registry/tests/test_modelo_131_modulos_rows_open_past_horizon.py`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/revision.toml`
+- `S26` `verify:` `hydration: only 289 2026 rows open; isolated and live inspection valid; converter no-op; published f1704f74; 2027 1T computes where it was refused; 131 tests 1221 passed with the remainder in other lanes' modelos` -> `pass`
+- `S20` `M` `dev/registry/mappings/modelo_200/2024/0033-dp200022.toml`
+- `S20` `M` `dev/registry/tests/test_m200_semantic_casilla_candidates.py`
+- `S20` `A` `dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/constructs/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/formulas/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/revision.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml`
+- `S20` `M` `src/cadrumo/locales/ca/modelo/schema/200.yml`
+- `S20` `M` `src/cadrumo/locales/en/modelo/schema/200.yml`
+- `S20` `M` `src/cadrumo/locales/es/modelo/schema/200.yml`
+- `S20` `M` `src/cadrumo/locales/hu/modelo/schema/200.yml`
+- `S20` `verify:` `isolated and live inspection 0 findings; converter no-op for 200; 2025 row order proven identical with 196 positions; runtime 392 passed` -> `pass`
+- `S19` `A` `dev/registry/tests/test_modelo_210_inception_statement.py`
+- `S19` `M` `dev/registry/tests/test_modelo_216_registry.py`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/210/manifest.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/216/manifest.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/applicability/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/application_links/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/casillas/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/constructs/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/deadline_windows/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/filing_schedules/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/revision.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/workbook_parity_refs/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/casillas/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/216.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/216.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/216.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/216.yml`
+- `S19` `verify:` `216 2020-2023 applicability edition resolves 2022 and 2023; 210 earliest year corrected; converter no-op` -> `pass`
+- `S19` `M` `dev/acceptance/iva/tests/journey_year_support.py`
+- `S19` `M` `dev/acceptance/iva/tests/test_filing_year.py`
+- `S19` `M` `dev/registry/analysis/casilla_lineage_rulings.toml`
+- `S19` `M` `dev/registry/analysis/tests/test_registry_status_export_placement.py`
+- `S19` `M` `dev/registry/compiler/tests/test_export_field_placement.py`
+- `S19` `M` `dev/registry/conformance/tests/test_lifecycle_cli.py`
+- `S19` `M` `dev/registry/edition_export_scenarios.py`
+- `S19` `A` `dev/registry/mappings/modelo_222/2019/0001-records.toml`
+- `S19` `A` `dev/registry/mappings/modelo_222/2019/0002-pagina01.toml`
+- `S19` `A` `dev/registry/mappings/modelo_222/2019/0003-pagina02.toml`
+- `S19` `M` `dev/registry/pipeline/tests/test_generated_export_trees.py`
+- `S19` `A` `dev/registry/render_profiles/modelo_222/2019/0001-numeric-representation.toml`
+- `S19` `M` `dev/registry/tests/test_edition_export_scenario_periods.py`
+- `S19` `A` `dev/registry/tests/test_modelo_222_2022_edition.py`
+- `S19` `A` `dev/registry/tests/test_modelo_296_2022_and_2026_editions.py`
+- `S19` `M` `dev/registry/tests/test_modelo_296_edition_design_citations_across_supported_years.py`
+- `S19` `M` `dev/registry/tests/test_modelo_296_registry.py`
+- `S19` `A` `dev/registry/tests/test_modelo_353_january_2026_edition.py`
+- `S19` `A` `dev/registry/tests/test_modelo_390_2026_edition.py`
+- `S19` `M` `dev/registry/tests/test_modelo_390_box_34_47_disclosure_split.py`
+- `S19` `M` `dev/registry/tests/test_render_check.py`
+- `S19` `M` `dev/registry/tests/test_support_matrix.py`
+- `S19` `M` `dev/registry/tests/test_temporal.py`
+- `S19` `M` `dev/registry/tests/test_temporal_site_agreement.py`
+- `S19` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/historical_exclusions.json`
+- `S19` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/manifest.json`
+- `S19` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx`
+- `S19` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx.extracted.json`
+- `S19` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx.extracted.md`
+- `S19` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/manifest.json`
+- `S19` `A` `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf`
+- `S19` `M` `src/cadrumo/_data/corpus/normatives/pdf/PROVENANCE.md`
+- `S19` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf`
+- `S19` `A` `src/cadrumo/_data/corpus/normatives/xml/boe-a-2008-18497-ai-3-redaction-20211204.xml`
+- `S19` `A` `src/cadrumo/_data/corpus/normatives/xml/boe-a-2008-18497-ai-3-redaction-20260624.xml`
+- `S19` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf.corpus_text.json`
+- `S19` `A` `src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf.corpus_text.json`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/facts/2025/mapping/0096-2025-modelo-296-detail-collection-mapping.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/legal/irnr.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/222/manifest.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/0000-export-layout.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/0001-record-m222-page-01.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/0002-record-m222-page-02.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/_generation.provenance.json`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/casillas/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/parameters/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/296/manifest.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/projection_endpoints/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/verification_expectations/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/deadline_windows/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0000-export-layout.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0001-record-m296-declarante.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0002-record-m296-perceptor.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0003-record-m296-perceptor-intereses.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0004-record-m296-anexo-a-pagos.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0005-record-m296-anexo-b-certificados.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/_generation.provenance.json`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/projection_endpoints/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/revision.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/deadline_windows/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0000-export-layout.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0001-record-m296-declarante.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0002-record-m296-perceptor.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0003-record-m296-perceptor-intereses.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0004-record-m296-anexo-a-pagos.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0005-record-m296-anexo-b-certificados.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/_generation.provenance.json`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/projection_endpoints/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/revision.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2026-y-siguientes/deadline_windows/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2026-y-siguientes/revision.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/applicability/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/application_links/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/bindings/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/casillas/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/completeness_manifest/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/constructs/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/deadline_windows/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/dependency_classifications/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/0000-export-layout.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/0001-record-m353-declaracion.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/0002-record-m353-declaracion.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/_generation.provenance.json`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/filing_schedules/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/formulas/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/live_cross_references/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/revision.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/verification_expectations/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/verification_predicates/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/workbook_parity_refs/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/applicability/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/application_links/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/bindings/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/casillas/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/completeness_manifest/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/constructs/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/deadline_windows/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/dependency_classifications/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/0000-export-layout.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/0001-record-m353-declaracion.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/0002-record-m353-declaracion.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/_generation.provenance.json`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/filing_schedules/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/formulas/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/live_cross_references/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/revision.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/verification_expectations/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/verification_predicates/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/workbook_parity_refs/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/revision.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2026/casillas/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2026/revision.toml`
+- `S19` `M` `src/cadrumo/adapters/outbound/llm/tests/test_invoice_field_anchors.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/profile/tests/test_cross_period_clean_state.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S19` `M` `src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_compensation_provenance_population.py`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/222.yml`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/296.yml`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/353.yml`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/390.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/222.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/296.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/353.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/390.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/222.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/296.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/353.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/390.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/222.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/296.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/353.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/390.yml`
+- `S19` `verify:` `222/2022, 296/2022, 296/2026, 353/2026-01 and 390/2026 applied with 0 inspection findings; generated trees reproduce; runtime snapshots at each grade refuse nothing; converter refuses the forward baselines of 222 and 296 (P05.S49)` -> `pass`
+- `S41` `A` `dev/registry/tests/test_modelo_151_165_180_filing_windows_across_supported_years.py`
+- `S41` `A` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/deadline_windows/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/revision.toml`
+- `S41` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/application_links/0001-declarations.toml`
+- `S41` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/filing_schedules/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/revision.toml`
+- `S41` `A` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2016-2022/deadline_windows/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2016-2022/revision.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/revision.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/deadline_windows/0001-declarations.toml`
+- `S41` `verify:` `staged and live inspection 0 findings; converter no-op for 151 and 180; published; focused 90 passed with three shared tests depending on the closed gaps (P05.S51)` -> `pass`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2021.html`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2021.html.extracted.json`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2021.html.extracted.md`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml`
+- `S42` `verify:` `catalogue entry ley-35-2006:art-93-ahorro-2021 inspected clean` -> `pass`
+- `S47` `M` `dev/registry/tests/_modelo_100_registry_support.py`
+- `S47` `A` `dev/registry/tests/test_modelo_100_cuota_autonomica_minimo.py`
+- `S47` `A` `dev/registry/tests/test_modelo_100_exempt_income_and_attributed_yield.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_minimo_contribuyente_autonomico.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_registry_constructs.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_settlement_chain.py`
+- `S47` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-dependencies.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/andalucia-ley-5-2021-art-23-bis.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/andalucia-ley-5-2021-art-23-bis.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/andalucia-ley-5-2021-art-23-bis.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/asturias-dl-2-2014-art-2-bis.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/asturias-dl-2-2014-art-2-bis.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/asturias-dl-2-2014-art-2-bis.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/baleares-dl-1-2014-art-2.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/baleares-dl-1-2014-art-2.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/baleares-dl-1-2014-art-2.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/canarias-dl-1-2009-art-18-quater.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/canarias-dl-1-2009-art-18-quater.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/canarias-dl-1-2009-art-18-quater.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/galicia-dl-1-2011-art-4-bis.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/galicia-dl-1-2011-art-4-bis.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/galicia-dl-1-2011-art-4-bis.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/valenciana-ley-13-1997-art-2-bis.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/valenciana-ley-13-1997-art-2-bis.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/valenciana-ley-13-1997-art-2-bis.html.extracted.md`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/legal/irpf-autonomica-minimos.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/parameters/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/parameters/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/bindings/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/constructs/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/dependency_classifications/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S47` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py`
+- `S47` `M` `src/cadrumo/adapters/persistence/profile/tests/test_workspace.py`
+- `S47` `M` `src/cadrumo/application/calculations/tests/test_maritime_exemption_service.py`
+- `S47` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_deduccion_madrid_nacimiento_adopcion.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_estimacion_directa_binding.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_minimo_contribuyente_age_increment.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_ahorro_base_chain.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_indices_correctores.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_reducciones_fase_4a.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_rendimiento_base.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_settlement_chain.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_reduccion_art_84_conjunta.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_renta_chain_behaviour.py`
+- `S47` `M` `src/cadrumo/domain/renta/maritime_exemption.py`
+- `S47` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_100_m190_retenciones_cli.py`
+- `S47` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_withdrawn_m131_fold_stored_revision.py`
+- `S47` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S47` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S47` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S47` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S47` `verify:` `0525 moved off by the maritime formula, 184 relation withdrawn, stored revisions with the withdrawn 131 relation proven through the encrypted store; detector test failed 3/3 before` -> `pass`
+- `S48` `verify:` `0531 reads 0523 in every edition; 0512 computed from 2022 with law-grounded dates; manual Valencia example reproduces in every edition; publish-if-stale current, runtime 1570 passed` -> `pass`
+- `S11` `verify:` `merge 6e46559590 of origin/main PR 704: candidate inspection 0 findings; converter proofs clean for 100, 130, 131, 303, 341, 390; republished dfa0ef6e; check-registry-gate valid, runtime-load and integrity passed; runtime adoption tests 11 passed` -> `pass`
+- `S51` `M` `dev/registry/tests/test_modelo_capability.py`
+- `S51` `M` `src/cadrumo/application/overview/tests/test_calendar.py`
+- `S51` `M` `src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py`
+- `S51` `A` `src/cadrumo/domain/deadlines/tests/withdrawn_deadline_window_authority.py`
+- `S51` `M` `dev/registry/tests/test_modelo_capability.py`
+- `S51` `M` `src/cadrumo/domain/deadlines/tests/withdrawn_deadline_window_authority.py`
+- `S51` `verify:` `three tests pass on synthetic withdrawn windows and fail against a borrowing resolver or a silent screen` -> `pass`
+- `S46` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py`
+- `S46` `A` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_review_label_reading_cli.py`
+- `S46` `verify:` `review view shows the stored degradation for each cause in text and JSON, none for full or old-shape drafts; CLI suite 5494 passed with one failure in modelo requires (P05.S56)` -> `pass`
+- `S32` `M` `dev/registry/compiler/loader.py`
+- `S32` `M` `dev/registry/compiler/loader_materialisation.py`
+- `S32` `M` `dev/registry/compiler/validate_inherited_family_pairing.py`
+- `S32` `M` `dev/registry/edition_delta_migration.py`
+- `S32` `M` `dev/registry/edition_family_delta.py`
+- `S32` `A` `dev/registry/pipeline/tests/test_target_currentness_grade.py`
+- `S32` `M` `dev/registry/tests/test_edition_delta_migration.py`
+- `S32` `M` `dev/registry/tests/test_edition_delta_migration_assessment.py`
+- `S32` `A` `dev/registry/tests/test_edition_family_delta.py`
+- `S32` `M` `dev/registry/tests/test_inherited_family_pairing.py`
+- `S32` `M` `dev/registry/tests/test_keyed_family_storage_delta.py`
+- `S32` `M` `dev/registry/compiler/_validate_revision_sections.py`
+- `S32` `A` `dev/registry/compiler/tests/test_bracket_coverage_support_floor.py`
+- `S32` `M` `dev/registry/compiler/validate_parameter_temporal.py`
+- `S32` `M` `dev/registry/compiler/validate_revision_closure.py`
+- `S32` `M` `dev/registry/compiler/validator.py`
+- `S32` `M` `dev/registry/pipeline/cli.py`
+- `S32` `M` `dev/registry/edition_export_scenarios.py`
+- `S32` `M` `dev/registry/tests/test_edition_export_scenario_periods.py`
+- `S32` `verify:` `ten fixes each with defect and normal-path tests, focused 75 passed; dev/registry lane 6851 passed with 15 failures in other steps' data (P05.S54, P05.S56); hydrated digests of all 58 modelos unchanged by the loader window rule` -> `pass`
+- `S42` `M` `dev/registry/mappings/modelo_151/2015/0009-pagina08.toml`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2015.html`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2015.html.extracted.json`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2015.html.extracted.md`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/completeness_manifest/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/constructs/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0012-record-m151-page-08.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/_generation.provenance.json`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/formulas/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/parameters/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/verification_expectations/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/verification_predicates/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
+- `S42` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/formulas/0001-declarations.toml`
+- `S42` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/identifier_evolutions/0001-declarations.toml`
+- `S42` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/parameters/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/revision.toml`
+- `S42` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/verification_predicates/0001-declarations.toml`
+- `S42` `A` `src/cadrumo/application/calculations/tests/test_modelo_151_ahorro_cuota_across_supported_years.py`
+- `S42` `A` `src/cadrumo/application/filing/tests/test_modelo_151_ahorro_export.py`
+- `S42` `M` `src/cadrumo/application/modelo/tests/test_modelo_151_ahorro_cuota_advisory_predicate.py`
+- `S42` `M` `src/cadrumo/locales/ca/modelo/schema/151.yml`
+- `S42` `M` `src/cadrumo/locales/en/modelo/schema/151.yml`
+- `S42` `M` `src/cadrumo/locales/es/modelo/schema/151.yml`
+- `S42` `M` `src/cadrumo/locales/hu/modelo/schema/151.yml`
+- `S42` `verify:` `ahorro chain at 2015-2022, boxes 18/20 export computed cuota, target-current both editions, 151 runtime and dev sets 439 passed with 13 failures outside 151; published 0eb8a732` -> `pass`
+- `S26` `M` `dev/registry/tests/test_modelo_131_edition_surfaces_across_supported_years.py`
+- `S26` `A` `dev/registry/tests/test_modelo_131_modulos_engine_ordenes_2022_2023.py`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/casillas/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/completeness_manifest/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/constructs/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/formulas/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/parameters/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/verification_predicates/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/casillas/0001-declarations.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/formulas/0001-declarations.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/parameters/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/revision.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/verification_predicates/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/domain/calculations/registry/tests/test_committed_registry.py`
+- `S26` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine_orden_hfp_1359_backfill.py`
+- `S26` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S26` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S26` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S26` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S26` `M` `dev/registry/tests/test_delta_minimality.py`
+- `S26` `M` `dev/registry/tests/test_modelo_131_modulos_rows_open_past_horizon.py`
+- `S26` `verify:` `engine in the 2019-2023 root from Orden HFP/1335/2021 and HFP/1172/2022, reduction 5/15/10 percent per period; manual cafe-bar examples 2022 (within one cent) and 2023 exact; isolated and live inspection valid; published da8ef5bf; 131 set 42 passed with one Modelo 100 failure outside the step` -> `pass`
+- `S56` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S56` `M` `dev/registry/compiler/validate_inherited_family_pairing.py`
+- `S56` `M` `dev/registry/conformance/tests/test_catalogue_verification_coverage.py`
+- `S56` `M` `dev/registry/pipeline/tests/test_delta_target_publication.py`
+- `S56` `M` `dev/registry/tests/_revision_span_boundary_support.py`
+- `S56` `M` `dev/registry/tests/test_inherited_family_pairing.py`
+- `S56` `M` `dev/registry/tests/test_irreducible_year_only_selection_refusals.py`
+- `S56` `M` `dev/registry/tests/test_mid_year_design_claim.py`
+- `S56` `M` `dev/registry/tests/test_modelo_216_registry.py`
+- `S56` `M` `dev/registry/tests/test_modelo_308_490_lineage.py`
+- `S56` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/casillas/0001-declarations.toml`
+- `S56` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/constructs/0001-declarations.toml`
+- `S56` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/revision.toml`
+- `S56` `A` `src/cadrumo/application/modelo/tests/test_data_inventory_alternate_bindings.py`
+- `S56` `M` `src/cadrumo/core/registry_token.py`
+- `S56` `M` `src/cadrumo/core/tests/test_registry_token.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_requires_data_inventory.py`
+- `S56` `M` `src/cadrumo/locales/ca/modelo/schema/216.yml`
+- `S56` `M` `src/cadrumo/locales/en/modelo/schema/216.yml`
+- `S56` `M` `src/cadrumo/locales/es/modelo/schema/216.yml`
+- `S56` `M` `src/cadrumo/locales/hu/modelo/schema/216.yml`
+- `S56` `M` `dev/registry/tests/test_runtime_projection_bundled_coordinates.py`
+- `S56` `M` `dev/registry/tests/test_unsupported_design_span_policy.py`
+- `S56` `verify:` `216 window citation and grammar chains, 353 per-year periods and edge-year design claim, 100 lineage row, 200 00417 grounded, requires on a live 202 relation plus synthetic alternates, scoped clearance beside stated members refused with teeth, registry token deep copy; dev/registry 6900 passed with failures only in other steps; gated commit d160cff662 27 passed` -> `pass`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/verification_expectations/0001-declarations.toml`
+- `S26` `verify:` `six engine casillas enrolled at the root, 2024-2026 hydration byte-identical; both enrolment gates and 131 set 1347 passed; published 01e2251c; gated commit 2fe0df665e` -> `pass`
+- `S42` `M` `src/cadrumo/domain/calculations/registry/snapshot.py`
+- `S42` `M` `src/cadrumo/domain/calculations/registry/tests/test_legal_window_historical_carrier.py`
+- `S42` `A` `src/cadrumo/application/calculations/tests/test_modelo_151_general_escala_by_year.py`
+- `S42` `verify:` `bracket rows defend their citation on the bracket axis with five detector cases; general top rate 47 percent 2015 (DA 31), 45 percent 2016-2020, 47 percent from 2021; snapshot 46 passed, runtime 151 set 185 passed; gated commit 25458ce91e` -> `pass`
+- `S56` `M` `src/cadrumo/application/calculations/tests/test_relation_prefill_not_applicable_registry_grounding.py`
+- `S56` `M` `src/cadrumo/application/calculations/relation_prefill.py`
+- `S56` `verify:` `record-design gate exempts only an edition below filing grade with no hydrated layout from citing a design, cited designs still checked, four detector cases; payer-filed guard proven per supported year without a count; 31 passed; gated commit cefe958f53` -> `pass`
+- `S54` `M` `dev/registry/tests/_modelo_303_registry_support.py`
+- `S54` `M` `dev/registry/tests/test_m303_regimen_general_manual_worked_example.py`
+- `S54` `M` `dev/registry/tests/test_modelo_303_boxes_from_support_floor.py`
+- `S54` `M` `dev/registry/tests/test_modelo_303_registry_autoconsumo.py`
+- `S54` `M` `dev/registry/tests/test_modelo_303_result_chain_year_parity.py`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/completeness_manifest/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/constructs/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/formulas/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/parameters/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/formulas/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/verification_predicates/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/revision.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/revision.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/revision.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/revision.toml`
+- `S54` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_m303_primitive_anti_tautology.py`
+- `S54` `M` `src/cadrumo/domain/calculations/registry/tests/_modelo_303_registry_support.py`
+- `S54` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry_autoconsumo.py`
+- `S54` `M` `src/cadrumo/locales/ca/modelo/schema/303.yml`
+- `S54` `M` `src/cadrumo/locales/en/modelo/schema/303.yml`
+- `S54` `M` `src/cadrumo/locales/es/modelo/schema/303.yml`
+- `S54` `M` `src/cadrumo/locales/hu/modelo/schema/303.yml`
+- `S54` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_official_box_under_declaration.py`
+- `S54` `verify:` `autoconsumo declared at 2022 in the rate rows of LIVA art. 91.Dos, 91.Uno.1.7 and 90.Uno, box 27 sums only printed boxes in every edition; restored box 27 detector passes; converter proof, apply and no-op; inspection valid; dev 527 passed and runtime 188 passed with failures only in spelling dictionaries, 296 labels and pre-existing 303 intracom routing; gated commit 5e08554505` -> `pass`
+- `S53` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S53` `A` `dev/registry/tests/test_modelo_303_internal_carrier_lineage.py`
+- `S53` `M` `src/cadrumo/application/calculations/tests/test_modelo_303_special_case_casilla_routing.py`
+- `S53` `M` `src/cadrumo/application/aggregation/tests/test_m303_transitional_rate_rung_allocation.py`
+- `S53` `M` `src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py`
+- `S53` `verify:` `two 2023 carriers continue their 2022 rows as grounded on both designs' printed rows, with a shifted-citation detector; continuity gates 168 passed; 303 set 904 passed then the two routing follow-ups; inspection valid, converter no-op; published 1d9d21a9` -> `pass`
+- `S25` `M` `dev/registry/tests/test_modelo_190_registry.py`
+- `S25` `M` `dev/registry/tests/test_modelo_193_registry.py`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/bindings/0001-declarations.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/revision.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/bindings/0001-declarations.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/revision.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/bindings/0001-declarations.toml`
+- `S25` `D` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/dependency_classifications/0001-declarations.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/revision.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/bindings/0001-declarations.toml`
+- `S25` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/dependency_classifications/0001-declarations.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/revision.toml`
+- `S25` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/export_layouts/0001-declarations.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/revision.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/bindings/0001-declarations.toml`
+- `S25` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/export_layouts/0001-declarations.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/revision.toml`
+- `S25` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/export_layouts/0001-declarations.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`
+- `S25` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_verification_chain_m193.py`
+- `S25` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S25` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_190_193_round_trip.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_annual_reconciliations_fold_in_live.py`
+- `S25` `verify:` `193 counts type-2 records in every supported year (design positions 136-144 per year); 190 2024 totals its own records with the 111 fold at 2025 for want of 2024 instructions; inspection valid; 193 converter apply and no-op; published deaca902; gated commit 62f2ce2aa6` -> `pass`
+- `S27` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/dependency_classifications/0001-declarations.toml`
+- `S27` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/export_layouts/0001-declarations.toml`
+- `S27` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/export_layouts/0001-declarations.toml`
+- `S27` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/export_layouts/0001-declarations.toml`
+- `S27` `D` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/dependency_classifications/0001-declarations.toml`
+- `S27` `M` `dev/registry/tests/test_modelo_202_registry.py`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/bindings/0001-declarations.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/revision.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/bindings/0001-declarations.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/revision.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/bindings/0001-declarations.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/revision.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/bindings/0001-declarations.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/revision.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/revision.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/bindings/0001-declarations.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/revision.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/bindings/0001-declarations.toml`
+- `S27` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py`
+- `S27` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_202_modality_lifecycle.py`
+- `S27` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_202_sociedades_fold_in_live.py`
+- `S27` `verify:` `art. 40.2 base reads 00599 (cuota net of deducciones, bonificaciones, retenciones and ingresos a cuenta) per the 2018-2022, 2023-2024 and current instructions and the Sociedades manual example; 202 converter no-op; gated commit 62f2ce2aa6` -> `pass`
+- `S34` `A` `dev/registry/tests/test_modelo_210_rate_rows_open_across_editions.py`
+- `S34` `M` `dev/registry/tests/test_modelo_220_liquidacion_iii_across_editions.py`
+- `S34` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2024/revision.toml`
+- `S34` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/revision.toml`
+- `S34` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/casillas/0001-declarations.toml`
+- `S34` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/revision.toml`
+- `S34` `M` `src/cadrumo/locales/ca/modelo/schema/220.yml`
+- `S34` `M` `src/cadrumo/locales/en/modelo/schema/220.yml`
+- `S34` `M` `src/cadrumo/locales/es/modelo/schema/220.yml`
+- `S34` `M` `src/cadrumo/locales/hu/modelo/schema/220.yml`
+- `S34` `verify:` `220 2025 pair 02796 and 02797 withdrawn with its labels; neither edition declares a box whose design caption repeats another's, with a detector case; inspection valid; converter no-op; published 1e0ef629; runtime 584 passed; gated commit fa301fc667` -> `pass`
+- `S49` `M` `dev/registry/tests/test_modelo_222_2022_edition.py`
+- `S49` `A` `dev/registry/tests/test_modelo_222_296_storage_baseline_at_support_floor.py`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/application_links/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/casillas/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/completeness_manifest/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/constructs/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/deadline_windows/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/formulas/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/parameters/0001-declarations.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/revision.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/workbook_parity_refs/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/application_links/0001-declarations.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/casillas/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/completeness_manifest/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/constructs/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/formulas/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/parameters/0001-declarations.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/revision.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/verification_expectations/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/workbook_parity_refs/0001-declarations.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2024/revision.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/revision.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/applicability/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/application_links/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/casillas/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/completeness_manifest/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/constructs/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/deadline_windows/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/filing_schedules/0001-declarations.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/revision.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S49` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/workbook_parity_refs/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/applicability/0001-declarations.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/application_links/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/casillas/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/completeness_manifest/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/constructs/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/deadline_windows/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/filing_schedules/0001-declarations.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/revision.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/verification_expectations/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/verification_predicates/0001-declarations.toml`
+- `S49` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/workbook_parity_refs/0001-declarations.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/revision.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2026-y-siguientes/revision.toml`
+- `S49` `M` `src/cadrumo/locales/ca/modelo/schema/296.yml`
+- `S49` `M` `src/cadrumo/locales/en/modelo/schema/296.yml`
+- `S49` `M` `src/cadrumo/locales/es/modelo/schema/296.yml`
+- `S49` `M` `src/cadrumo/locales/hu/modelo/schema/296.yml`
+- `S49` `verify:` `222 and 296 rooted at 2022 with 2023 stored as deltas; hydration identical in every edition; inspection 0 findings; converter apply and no-op; published 36d19143; 428 passed including the open-row gate and the Spanish label test; gated commit c0e5a9b8c3` -> `pass`
+- `S33` `A` `dev/registry/tests/test_modelo_604_308_construct_membership.py`
+- `S33` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/revision.toml`
+- `S33` `D` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/application_links/0001-declarations.toml`
+- `S33` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/casillas/0001-declarations.toml`
+- `S33` `D` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/constructs/0001-declarations.toml`
+- `S33` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/revision.toml`
+- `S33` `verify:` `604 construct carries all 36 windows, link and layout; 308 construct all 46 casillas per design lines 39-88, link and layout; detector case; 604 root stored over 2021-2023 (122 to 76 stated); inspection 0 findings; gated commit 44a93ccbd6` -> `pass`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/revision.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/revision.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/applicability/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/application_links/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/filing_schedules/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2022/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2022/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2023/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2023/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2024/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2024/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2025/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2025/revision.toml`
+- `S55` `verify:` `stated layouts per edition for 123, 131, 270, 490, 714 with hydration identical; 216 root stored over 2020-2023 (56 to 52 stated); 714 escala and conjunto limits open from 2021; converter apply and no-op for each; dev 882 and runtime 1442 passed; gated commit 44a93ccbd6` -> `pass`
+- `S28` `M` `dev/registry/tests/test_ledger_iva_aggregation_binding_exports_recargo.py`
+- `S28` `A` `dev/registry/tests/test_modelo_100_escala_rows_stay_open_across_editions.py`
+- `S28` `A` `dev/registry/tests/test_modelo_303_parameter_rows_stay_open_across_editions.py`
+- `S28` `M` `dev/registry/tests/test_parameter_rows_stay_open_across_editions.py`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/revision.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/revision.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/revision.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/revision.toml`
+- `S28` `A` `dev/registry/tests/test_modelo_210_rate_rows_open_across_editions.py`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2024/revision.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/revision.toml`
+- `S28` `verify:` `gate reports restated-unchanged and re-keyed open rows with detector cases and no report for a genuine change; 210's six rate rows open from 2023 (fa301fc667); 100 escalas and 303 rows keep unchanged brackets open with hydrated values equal at 8033 points; 222 and 714 rows cleared by their lanes; gate green registry-wide, 1876 runtime passed; gated commit adf4e6a01e` -> `pass`
+- `S55` `M` `dev/registry/analysis/legal_citation_period_ledger.toml`
+- `S55` `M` `dev/registry/edition_export_scenarios.py`
+- `S55` `M` `dev/registry/tests/test_casilla_legal_citation_period_gate.py`
+- `S55` `A` `dev/registry/tests/test_edition_export_scenario_row_total_inputs.py`
+- `S55` `M` `dev/registry/tests/test_modelo_190_registry.py`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/revision.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/application_links/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/0001-declarations.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/extraction_profiles/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/revision.toml`
+- `S55` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-190/SKILL.md`
+- `S55` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-190/reference/casillas.md`
+- `S55` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-193/SKILL.md`
+- `S55` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-193/reference/casillas.md`
+- `S55` `verify:` `export scenarios supply the row totals each selected edition declares, detector fails the old year bound; 190 layouts stated per edition, apply and no-op; 190 2024 cites Orden HAC/1432/2024 and the 2024 design, 2025 hydration identical; 1362 passed; published bb0c1ee4; gated commit 651ab33ea2` -> `pass`
+- `S40` `M` `dev/registry/tests/test_modelo_184_filing_surface_across_supported_years.py`
+- `S40` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/bindings/0001-declarations.toml`
+- `S40` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/revision.toml`
+- `S40` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/bindings/0001-declarations.toml`
+- `S40` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/revision.toml`
+- `S40` `verify:` `reduccion binding stated at 2022 (Orden HAP/2250/2015 socio positions 109-119), 2023-2024 keys only its refs; only 2022 hydration changes; inspection valid; converter no-op; dev 647 passed; gated commit 14ecb6cae1` -> `pass`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/revision.toml`
+- `S35` `verify:` `184/2022, 182/2024, 220/2024, 220/2025, 165/2023-2025 and 216/2020-2023 re-reviewed and stamped agent_reviewed through the conformance stamp command, each text stating only what was checked; stamp output equal to its scratch preview; published bb0c1ee4 carries all six; gated commit 14ecb6cae1` -> `pass`
+- `S55` `M` `dev/registry/edition_delta_migration.py`
+- `S55` `A` `dev/registry/tests/test_edition_delta_explicit_empty_override.py`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/application_links/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/casillas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/constructs/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/revision.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/application_links/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/bindings/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/casillas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/completeness_manifest/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/constructs/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/filing_schedules/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/formulas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/live_cross_references/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/revision.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/verification_expectations/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/verification_predicates/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/workbook_parity_refs/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/application_links/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/bindings/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/casillas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/completeness_manifest/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/constructs/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/filing_schedules/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/formulas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/live_cross_references/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/revision.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/verification_expectations/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/verification_predicates/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/workbook_parity_refs/0001-declarations.toml`
+- `S55` `verify:` `assessor compares only the leaves a baseline states, detector teeth refuse a pruned explicit empty; registry-wide assessment differs only in 309's finding; 309 roots stored over predecessors (55/59/62 to 13/4/3 stated casillas), apply and no-op, inspection 0 findings; 133 passed; gated commit 8777087d6e` -> `pass`
+- `S28` `M` `dev/registry/tests/test_bracket_accumulated_cuota_continuity.py`
+- `S28` `verify:` `rows compare by typed value with representation-restatement and re-key detectors; each in-force bracket table read per change date and checked whole with a broken-seam detector; no registry finding; 18 passed; gated commit 9bcb7b1826` -> `pass`
+- `S50` `A` `dev/registry/tests/test_modelo_200_edition_provenance.py`
+- `S50` `M` `dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-7-2024-art-6.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-7-2024-art-6.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-7-2024-art-6.html.extracted.md`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026-art-1.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026-art-1.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026-art-1.html.extracted.md`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/application_links/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/completeness_manifest/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/constructs/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/parameters/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/verification_expectations/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/workbook_parity_refs/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml`
+- `S50` `M` `src/cadrumo/locales/ca/modelo/schema/200.yml`
+- `S50` `M` `src/cadrumo/locales/en/modelo/schema/200.yml`
+- `S50` `M` `src/cadrumo/locales/es/modelo/schema/200.yml`
+- `S50` `M` `src/cadrumo/locales/hu/modelo/schema/200.yml`
+- `S50` `verify:` `2024 members cite the 2024 design; 00081 and 00082 grounded label evolutions under Ley 7/2024 art. 6; 03312 and the misfiled 2024 cohort rows follow their design and cohort; Ley 7/2024 art. 6 and Orden HAC/529/2026 art. 1 catalogued; provenance tests with detector cases; inspection 0 findings; published 364b40b4; gated commit 902eb59eb7` -> `pass`
+- `S44` `A` `dev/registry/tests/test_declared_inception_gate.py`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/modelo_inception.py`
+- `S44` `M` `src/cadrumo/domain/calculations/registry/temporal.py`
+- `S44` `A` `src/cadrumo/domain/calculations/registry/tests/test_declared_inception_runtime_gate.py`
+- `S44` `verify:` `declared inception refuses every earlier year in all selectors with the existing refusal, detector fails with the gate disabled; unauthored-debt years still project; registry-wide agreement test; src registry 2193 and dev 1310 passed with one pre-existing Modelo 100 scenario failure; published 5bc192ba; runtime adoption 12 passed; gated commit c3a09ba5ab` -> `pass`
+- `S45` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S45` `M` `dev/registry/conformance/tests/test_catalogue_verification_coverage.py`
+- `S45` `M` `dev/registry/conformance/tests/test_construct_evidence.py`
+- `S45` `A` `dev/registry/tests/test_modelo_036_pre_april_2023_edition.py`
+- `S45` `A` `dev/registry/tests/test_modelo_038_pre_june_2024_edition.py`
+- `S45` `A` `dev/registry/tests/test_modelo_182_2022_2023_edition.py`
+- `S45` `M` `dev/registry/tests/test_modelo_182_donor_surface_across_editions.py`
+- `S45` `A` `dev/registry/tests/test_modelo_189_2022_edition.py`
+- `S45` `A` `dev/registry/tests/test_modelo_210_january_to_may_2022_design.py`
+- `S45` `M` `dev/registry/tests/test_temporal_coverage.py`
+- `S45` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/historical_exclusions.json`
+- `S45` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/manifest.json`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_038/files/02-038-orden-hac-66-2002-de-15-de-enero-actualizado-a-18-01-2012.pdf.extracted.json`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_038/files/02-038-orden-hac-66-2002-de-15-de-enero-actualizado-a-18-01-2012.pdf.extracted.md`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf.extracted.json`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf.extracted.md`
+- `S45` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/manifest.json`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf.extracted.json`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf.extracted.md`
+- `S45` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/manifest.json`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_210/files/03-210-orden-eha-3316-2010-devengos-entre-01-01-2022-y-01-06-2022.xls`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_210/files/03-210-orden-eha-3316-2010-devengos-entre-01-01-2022-y-01-06-2022.xls.extracted.json`
+- `S45` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_210/files/03-210-orden-eha-3316-2010-devengos-entre-01-01-2022-y-01-06-2022.xls.extracted.md`
+- `S45` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_210/manifest.json`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-495-2024.html`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-495-2024.html.extracted.json`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-495-2024.html.extracted.md`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-381-2023.html`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-381-2023.html.extracted.json`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-381-2023.html.extracted.md`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-523-2023.html`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-523-2023.html.extracted.json`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-523-2023.html.extracted.md`
+- `S45` `A` `src/cadrumo/_data/corpus/normatives/xml/orden-hfp-115-2022-df-primera.xml`
+- `S45` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/03-182-orden-eha-3021-2007-actualizado-por-orden-hfp-1351-2021-de-1-de-diciembre.pdf.corpus_text.json`
+- `S45` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-actualizada-por-la-orden-hfp-115-2022-de-23-de-febrero.pdf.corpus_text.json`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/legal/censo.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/legal/irnr.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-038.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-182.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-189.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2022-hasta-2023-04-24/application_links/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2022-hasta-2023-04-24/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2022-hasta-2023-04-24/revision.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2023-hasta-2025-02-02/application_links/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2023-hasta-2025-02-02/casillas/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2023-hasta-2025-02-02/revision.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2022-hasta-2024-05/application_links/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2022-hasta-2024-05/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2022-hasta-2024-05/constructs/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2022-hasta-2024-05/deadline_windows/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2022-hasta-2024-05/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2022-hasta-2024-05/workbook_parity_refs/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2024-desde-06/application_links/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2024-desde-06/casillas/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2024-desde-06/constructs/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2024-desde-06/revision.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2024-desde-06/workbook_parity_refs/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2025-y-siguientes/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2022-2023/application_links/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2022-2023/bindings/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2022-2023/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2022-2023/constructs/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2022-2023/deadline_windows/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2022-2023/filing_schedules/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2022-2023/revision.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/application_links/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/bindings/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/casillas/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/constructs/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/filing_schedules/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/revision.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/application_links/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/constructs/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/deadline_windows/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/export_layouts/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/filing_schedules/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/workbook_parity_refs/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/application_links/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/casillas/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/constructs/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/deadline_windows/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/filing_schedules/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/revision.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/workbook_parity_refs/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2025/revision.toml`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_revision_directory_view.py`
+- `S45` `M` `src/cadrumo/locales/ca/modelo/schema/036.yml`
+- `S45` `M` `src/cadrumo/locales/ca/modelo/schema/038.yml`
+- `S45` `M` `src/cadrumo/locales/ca/modelo/schema/182.yml`
+- `S45` `M` `src/cadrumo/locales/ca/modelo/schema/189.yml`
+- `S45` `M` `src/cadrumo/locales/en/modelo/schema/036.yml`
+- `S45` `M` `src/cadrumo/locales/en/modelo/schema/038.yml`
+- `S45` `M` `src/cadrumo/locales/en/modelo/schema/182.yml`
+- `S45` `M` `src/cadrumo/locales/en/modelo/schema/189.yml`
+- `S45` `M` `src/cadrumo/locales/es/modelo/schema/036.yml`
+- `S45` `M` `src/cadrumo/locales/es/modelo/schema/038.yml`
+- `S45` `M` `src/cadrumo/locales/es/modelo/schema/182.yml`
+- `S45` `M` `src/cadrumo/locales/es/modelo/schema/189.yml`
+- `S45` `M` `src/cadrumo/locales/hu/modelo/schema/036.yml`
+- `S45` `M` `src/cadrumo/locales/hu/modelo/schema/038.yml`
+- `S45` `M` `src/cadrumo/locales/hu/modelo/schema/182.yml`
+- `S45` `M` `src/cadrumo/locales/hu/modelo/schema/189.yml`
+- `S45` `verify:` `036 to 2023-04-24 (v35, Orden HFP/381/2023), 038 to 2024-05 (2012 design, Orden HAC/646/2024 DF unica), 182 2022-2023 (Orden HFP/1351/2021 design) and 189 2022 authored as roots at applicability grade with later editions as deltas; 210 Jan-May 2022 design captured, projection proven byte-equal; converter proof, apply and no-op each; inspection 0 findings; published 28180b5e; 1181 runtime passed; gated commit 62dc742fab 88 passed` -> `pass`
+- `S44` `M` `src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml`
+- `S44` `M` `src/cadrumo/_data/registry/aeat/modelos/038/manifest.toml`
+- `S44` `M` `src/cadrumo/_data/registry/aeat/modelos/182/manifest.toml`
+- `S44` `M` `src/cadrumo/_data/registry/aeat/modelos/189/manifest.toml`
+- `S44` `M` `src/cadrumo/_data/registry/aeat/modelos/210/manifest.toml`
+- `S44` `verify:` `036, 038, 182 and 189 earliest-authored statements follow the new roots and 210's reason names projection for January to May 2022; registry-wide agreement test passes; commit 62dc742fab` -> `pass`
+- `S44` `M` `dev/registry/supported_filing_years.py`
+- `S44` `M` `dev/registry/tests/test_modelo_216_registry.py`
+- `S44` `M` `dev/registry/tests/test_modelo_296_2022_and_2026_editions.py`
+- `S44` `A` `dev/registry/tests/test_supported_filing_years_inception.py`
+- `S44` `verify:` `supported filing-year audit skips years before a declared inception, an undeclared copy lists them again; 216 and 296 duplicate inception tests dropped; 25 passed; gated commit 370c674e48` -> `pass`
+- `S43` `A` `dev/registry/tests/test_modelo_100_eo_agraria_engine_ordenes_2022_2024.py`
+- `S43` `M` `dev/registry/tests/test_modelo_100_escala_rows_stay_open_across_editions.py`
+- `S43` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-348-2024.html`
+- `S43` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-348-2024.html.extracted.json`
+- `S43` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-348-2024.html.extracted.md`
+- `S43` `A` `src/cadrumo/_data/corpus/normatives/xml/orden-hfp-405-2023-art-2.xml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/parameters/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/verification_predicates/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
+- `S43` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S43` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S43` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S43` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S43` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S43` `verify:` `agraria engine stated at 2022 with per-year ordenes, minorado and jovenes bases per each orden, reduccion 25/15/5 percent grounded in Ordenes HFP/405/2023, HAC/348/2024 and HFP/1359/2023; inspection 0 findings; converter no-op; dev 568 and runtime 362 passed then the two scenario items fixed; gated commit 3293259c99` -> `pass`
+- `S44` `D` `dev/registry/tests/test_modelo_210_inception_statement.py`
+- `S44` `verify:` `registry-wide declared-inception agreement test passes without the 210 copy` -> `pass`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0002-dp200001.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0013-dp200010.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0014-dp200011.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0052-dp200032.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0053-dp200033.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0061-dp200041.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0062-dp200042.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0063-dp200043.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0013-dp200010.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0014-dp200011.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0054-dp200032.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0055-dp200033.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0063-dp200041.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0064-dp200042.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0065-dp200043.toml`
+- `S50` `A` `dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0019-record-m200-page-010.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0022-record-m200-page-011.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0109-record-m200-page-032.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0110-record-m200-page-032.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0112-record-m200-page-033.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0120-record-m200-page-041.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0121-record-m200-page-042.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0122-record-m200-page-042.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0124-record-m200-page-043.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0125-record-m200-page-043.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S50` `verify:` `45 equity-statement cells per edition carry their own sheet-scoped casillas from their design lines, absent input exports the zero fill, a remapped cell is caught; 27 echo cells kept; 2025 target republished and current; inspection 0 findings; dev 388 and runtime 104 passed; gated commit db50af829c` -> `pass`
+- `S45` `M` `dev/registry/tests/test_modelo_220_222_registry.py`
+- `S45` `A` `dev/registry/tests/test_modelo_220_editions_follow_their_own_designs.py`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/application_links/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/constructs/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/deadline_windows/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/workbook_parity_refs/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2023/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2023/revision.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/application_links/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/casillas/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/constructs/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/deadline_windows/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/workbook_parity_refs/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/locales/ca/modelo/schema/220.yml`
+- `S45` `M` `src/cadrumo/locales/en/modelo/schema/220.yml`
+- `S45` `M` `src/cadrumo/locales/es/modelo/schema/220.yml`
+- `S45` `M` `src/cadrumo/locales/hu/modelo/schema/220.yml`
+- `S45` `verify:` `220 2022 (Orden HFP/523/2023) and 2023 (Orden HAC/495/2024) authored at applicability grade, 2022 root with 2023 and 2024 as deltas; boxes declared only where each design prints them; 292 and 299 grounded continuity links; 2024 and 2025 hydration unchanged but for lineage fields; converter apply and no-op; inspection 0 findings; published 7c64f26a; 331 passed; gated commit 547c7cc6cd` -> `pass`
+- `S45` `verify:` `88 duplicate 036 label keys removed, 648 resolved labels unchanged; stores-once catalogue test and 036 tests pass; gated commit da57748dfd` -> `pass`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/applicability/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/application_links/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/deadline_windows/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/filing_schedules/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/workbook_parity_refs/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/casillas/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/revision.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/application_links/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/applicability/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/deadline_windows/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/filing_schedules/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/workbook_parity_refs/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/locales/ca/modelo/schema/200.yml`
+- `S45` `M` `src/cadrumo/locales/en/modelo/schema/200.yml`
+- `S45` `M` `src/cadrumo/locales/es/modelo/schema/200.yml`
+- `S45` `M` `src/cadrumo/locales/hu/modelo/schema/200.yml`
+- `S45` `M` `dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py`
+- `S45` `A` `dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py`
+- `S45` `M` `dev/registry/tests/test_modelo_200_registry.py`
+- `S45` `verify:` `inspect_authoring_candidate publication_valid` -> `pass`
+- `S45` `verify:` `edition_delta_migration 200 proof/apply/no-op/drop-restatement` -> `pass`
+- `S45` `verify:` `pytest modelo-200 design, catalogue, lineage and coverage gates (189)` -> `pass`
+- `S45` `by:` `lane-p05-p`
+- `S45` `M` `dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py`
+- `S45` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_ejemplo1_tributacion_minima_manual_worked_example.py`
+- `S45` `verify:` `pytest named modelo-200 set plus gates (151 files)` -> `fail`
+- `S50` `M` `dev/registry/tests/test_casilla_keying_convention.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/test_borrador_binding.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/test_local_observation_error_registry.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/test_result_disposition_resolution.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_casilla_keying_convention.py`
+- `S50` `verify:` `ambiguity refusals for 00562 and 00599 expect the registry's full candidate set; 6 passed; gated commit 7fe0975ea6` -> `pass`
+- `S45` `M` `dev/registry/tests/test_modelo_202_registry.py`
+- `S45` `M` `dev/registry/tests/test_referential_integrity_part2.py`
+- `S45` `M` `dev/registry/tests/test_semantic_role.py`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations_modelo_202_200.py`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/tests/_cross_dependency_calculation_support.py`
+- `S45` `verify:` `pytest named modelo-200 set plus gates (151 files): 1955 passed, 1 failed (pinned conformance vector, db50af829c), 9 installed-oracle environment errors` -> `fail`
+- `S45` `verify:` `200 2022 (Orden HFP/523/2023) and 2023 (Orden HAC/495/2024) authored at applicability grade, 2022 root with 2023 and 2024 as deltas, boxes declared only where each design prints them with the same caption, type and sheet, every later row stating its absence origin; 2024 and 2025 hydration unchanged but for lineage claims; converter apply, no-op and drop-restatement; inspection 0 findings; published b50f34f6; 1955 passed; gated commit bed4a8ff44 212 passed` -> `pass`
+- `S50` `M` `dev/registry/conformance_vectors/modelo_200_2025_y_siguientes.toml`
+- `S50` `verify:` `conformance pin refreshed to the reviewed manifest digest of db50af829c (sha256 of the committed provenance manifest); pin tests 4 passed; commit 6ffafe355e` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_222_root_storage_reuse.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
+- `S11` `verify:` `registry-wide collapse verifier at 07:00: inputs stable, no live mutation, equivalence, facts, indexed (3477 coordinates), cache and publication readiness passed, 57 of 58 modelos minimal; 222's 2025 root then stored over 2024 (382 redundant overrides and 69 duplications to 0), hydration identical, apply and no-op with minimality passed, published 9fb6b44c, 248 passed; gated commit c31b57f8e4` -> `pass`
+- `S11` `M` `dev/registry/edition_delta_migration.py`
+- `S11` `M` `dev/registry/edition_family_delta.py`
+- `S11` `A` `dev/registry/tests/test_casilla_record_order.py`
+- `S11` `A` `dev/registry/tests/test_edition_delta_declared_order.py`
+- `S11` `M` `dev/registry/tests/test_edition_delta_migration_assessment.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S11` `verify:` `converter proves contract-defined member order with declared-order restorations and refusals, detector fails a misplaced stated row; 58-modelo converter sweep passed; 165 and 100/2025 order restored; converter suite 169 and modelo set 226 passed; published fcf7dc61; gated commit 969ecc57b6` -> `pass`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml`
+- `S11` `verify:` `Modelo 100 2024/2025 identity fields and Modelo 200 2025 boxes 03599-03646 hydrate in their pre-regression order with content identical; converter proofs for 100 and 200 unchanged and minimal; inspection 0 findings; published 2e106bda; 226 passed; gated commit b7c49338dd 32 passed` -> `pass`
+- `S11` `verify:` `registry_collapse_verification all 58 modelos complete; stable inputs; no live mutation; zero redundant overrides and coverage gaps; equivalence facts indexed cache publication readiness pass (codex-registry-collapse-20261001-084031.log, source abdd49ca, generation 2e106bda)` -> `pass`
+- `S52` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S52` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-catalogue.json`
+- `S52` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-catalogue.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-100/modelo-100-inspect-inputs.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S52` `M` `docs/_sequences/how-to/profile-setup/profile-setup-delete.json`
+- `S52` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S52` `verify:` `just docs-generate-sequences` -> `pass`
+- `S52` `verify:` `just docs-sequences-check; final fbeff3c9 generation, codex-final-docs-replay-20261001-102842.log` -> `pass`
+- `S50` `M` `dev/agent_eval/tests/test_under_declaration_golden.py`
+- `S50` `M` `dev/packaging/installed_tax_oracle.py`
+- `S50` `M` `dev/registry/edition_export_scenarios.py`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0015-dp200012.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0017-dp200014.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0021-dp200016.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0002-dp200001.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0015-dp200012.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0017-dp200014.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0021-dp200016.toml`
+- `S50` `M` `dev/registry/pipeline/source_defects.py`
+- `S50` `M` `dev/registry/tests/test_modelo_200_registry.py`
+- `S50` `M` `dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py`
+- `S50` `M` `dev/registry/tests/test_pinned_conformance_vector.py`
+- `S50` `M` `dev/registry/tests/test_semantic_role.py`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/casillas/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/revision.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/formulas/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/revision.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/verification_predicates/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0001-record-m200-page-001.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0024-record-m200-page-012.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0028-record-m200-page-014.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0038-record-m200-page-016.toml`
+- `S50` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_200_bin_carry_forward_continuity.py`
+- `S50` `M` `src/cadrumo/application/aggregation/tests/test_ledger_filing_evidence.py`
+- `S50` `M` `src/cadrumo/application/aggregation/tests/test_ledger_filing_snapshot.py`
+- `S50` `M` `src/cadrumo/application/filing/tests/test_decimal_inputs_routing.py`
+- `S50` `M` `src/cadrumo/application/modelo/_calculation_preparation.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/test_verification_substance_advisory.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/verification_substance_fixtures.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations_modelo_202_200.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_base_determination.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_temporal_coverage.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py`
+- `S50` `M` `src/cadrumo/entrypoints/cli/tests/test_calculate_boundary_fault_attribution.py`
+- `S50` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_200_stored_calculation_drift_cli.py`
+- `S50` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py`
+- `S50` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_accounting_input_guard.py`
+- `S50` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_ejemplo1_tributacion_minima_manual_worked_example.py`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/casillas/0002-independent-concepts.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0002-independent-concepts.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/`
+- `S50` `A` `.vault/research/2026-10-01-registry-conformance-rectification-remaining-issues-research.md`
+- `S50` `A` `.vault/audit/2026-10-01-registry-conformance-rectification-audit.md`
+- `S50` `verify:` `Modelo 200 canonical semantic joins and generated target validation at retained grades; both targets transactional publication and currentness, codex-m200-final-publication-20261001-095907.log` -> `pass`
+- `S50` `verify:` `Modelo 200 delta proof complete already minimal; equivalent; zero redundant overrides, duplicate shapes or blocked revisions; codex-m200-delta-proof-20261001-095745.log` -> `pass`
+- `S50` `verify:` `Published-byte independence module 23 passed against fbeff3c9; codex-m200-runtime-regressions-20261001-101801.log` -> `pass`
+- `S50` `verify:` `Shipped casilla catalogue gate 14 passed; codex-m200-locale-gate-20261001-102414.log` -> `pass`
+- `S50` `M` `src/cadrumo/_data/corpus/manual_oracles/modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json`
+- `S50` `verify:` `Fresh Modelo 200 collapse complete; stable inputs; no live mutation; zero redundancy duplication and coverage gaps; equivalence temporal indexed facts cache publication readiness pass; generation fbeff3c9; codex-m200-collapse-20261001-103507.log` -> `pass`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/casillas/0002-independent-concepts.toml`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0002-independent-concepts.toml`
+- `S50` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S50` `M` `dev/registry/pipeline/tests/_generated_tree_test_support.py`
+- `S50` `M` `dev/registry/pipeline/tests/test_generated_tree_cli.py`
+- `S50` `M` `dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py`
+- `S50` `A` `dev/registry/conformance/modelo_200_echoes.py`
+- `S50` `verify:` `Isolated and installed acceptance candidate preserves all typed content and order except three officially evidenced first-appearance stamps; codex-m200-acceptance-source-20261001-121540.log` -> `pass`
+- `S50` `verify:` `Full authority publication before pytest, logical generation a5b486f5643d41213afedaf47c2cabd72eff5c02f0939149537921b234fea530; both generated targets reproduce CURRENT; codex-m200-acceptance-final-20261001-122516.log` -> `pass`
+- `S50` `verify:` `Fresh generic Modelo 200 proof/apply/no-op at stable source b527f576; complete/equivalent/minimal; zero redundant overrides, unresolved duplication or blocked revisions; acceptance-proof, acceptance-apply and acceptance-noop report directories` -> `pass`
+- `S50` `verify:` `Full just test-registry on preceding d78a46a3 source; 9592 passed, 13 failed, zero errors; complete four lanes; run 20261001T094940.047212Z-test-registry-49916-b51e1f8d` -> `fail`
+- `S50` `verify:` `Installed package oracles; one passed and nine setup errors; locked pikepdf macos-arm64 wheel requires 15.0 above declared 14.0; run 20261001T094708.856487Z-pytest-75328-c363f9e0` -> `fail`
+- `S50` `M` `dev/registry/pipeline/tests/test_generated_export_trees.py`
+- `S50` `M` `.agents/skills/aeat-authority-registry-authoring/references/authoring-commands.md`
+- `S50` `verify:` `Republication before replacement pytest after concurrent main compiler/dependency merge; logical generation a5b486f5643d41213afedaf47c2cabd72eff5c02f0939149537921b234fea530; codex-m200-acceptance-retry-20261001-125726.log` -> `pass`
+- `S50` `verify:` `Generated-tree reproduction/check/refusal gate for metadata-selected M200 and M222 cases; 12 passed, 72 deselected; pytest run 20261001T110219.324733Z-pytest-6608-4a35b546` -> `pass`
+- `S50` `verify:` `Real published store admission and static runtime boundary; 12 passed; pytest run 20261001T110417.180211Z-pytest-34600-05d1ba57` -> `pass`
+- `S50` `verify:` `Full style, format and three-checker three-platform type gates; codex-m200-acceptance-retry-20261001-125726.log` -> `pass`
+- `S50` `verify:` `check-registry, check-bindings and check-registry-gate; a5b486f5 current, both targets current; exact same 33 binding finding keys and severities, zero introduced or resolved keys; binding-baseline-comparison.json` -> `pass`
+- `S51` `M` `src/cadrumo/application/calculations/tests/test_dependency_treatment_survives_the_resolver_join.py`
+- `S51` `M` `dev/registry/tests/test_revision_selection_probe.py`
+- `S51` `M` `dev/registry/tests/test_modelo_036_pre_april_2023_edition.py`
+- `S51` `M` `dev/registry/tests/test_modelo_038_pre_june_2024_edition.py`
+- `S51` `M` `dev/registry/tests/test_modelo_182_2022_2023_edition.py`
+- `S51` `M` `dev/registry/tests/test_modelo_189_2022_edition.py`
+- `S51` `M` `dev/registry/tests/test_modelo_210_january_to_may_2022_design.py`
+- `S51` `M` `dev/registry/conformance/tests/test_catalogue_verification_coverage.py`
+- `S51` `verify:` `Canonical legal-derived resolver-treatment and ambiguity detectors included in 304-pass focused acceptance; published a5b486f5 before pytest; run 20261001T103012.755956Z-pytest-37512-9b9dabed; sole failure belonged to generated-tree grade fixture` -> `pass`
+- `S51` `verify:` `Historical edition and catalogue coverage checks; 29 passed; run 20261001T110108.550069Z-pytest-66984-4f0a1e2b` -> `pass`
+- `S51` `verify:` `Final M038 exhaustive legal-window selection and exact outside-support-envelope refusal; one passed; run 20261001T111614.668870Z-pytest-7012-342b629e` -> `pass`
+- `S51` `verify:` `Final full three-checker, three-platform type gate and focused ruff style/format; codex-m200-acceptance-collapse-ready-20261001-131613.log` -> `pass`
+- `S52` `verify:` `Goldens regenerated through owning CLI; supported Modelo 130 relation retained; codex-final-docs-replay-20261001-102842.log` -> `pass`
+- `S52` `verify:` `Full docs sequence replay after corrected a5b486f5 publication and concurrent main merge; cli-sequence goldens clean; codex-m200-acceptance-retry-20261001-125726.log` -> `pass`
+- `S50` `verify:` `Final Modelo 200 collapse; stable inputs, no live mutation, four editions equivalent/minimal, zero redundancy/repeated values/gaps, governed facts/indexed/cache/invalidation/publication readiness passed; 159 indexed revisions and 3477 temporal/capability coordinates; acceptance-collapse/summary.json; codex-m200-acceptance-collapse-ready-20261001-131613.log` -> `pass`
+- `S50` `verify:` `Feature vault check all; structure, metadata, links, body, execution mapping and all other applicable lanes clean` -> `pass`
+- `S50` `verify:` `Fresh requested Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-repair-01-10-2026-6ad7ab369bcf4d3d883bd8e7f21ae2a0\publish_final.py; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested uv run --no-sync python -m dev.registry.analysis.screens; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested just check-registry; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested just check-bindings; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested just check-registry-gate; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested just test-registry; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `fail`
+- `S50` `verify:` `Fresh shipped-casilla catalogue; fresh-registry-supplement.json` -> `pass`
+- `S50` `verify:` `Fresh binding finding keys and severities match all 33 merged-baseline warnings; zero differences, zero errors or limitations; fresh-binding-baseline-comparison.json` -> `pass`
+- `S50` `M` `dev/registry/edition_delta_migration.py`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0018-dp200014b.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0018-dp200014b.toml`
+- `S50` `M` `dev/registry/tests/test_edition_delta_declared_order.py`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0000-export-layout.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0001-record-m200-page-001.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0030-record-m200-page-014b.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/_generation.provenance.json`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0000-export-layout.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0030-record-m200-page-014b.toml`
+- `S50` `A` `dev/registry/casilla_order_review.py`
+- `S50` `A` `dev/registry/tests/test_casilla_order_review.py`
+- `S50` `M` `.vault/audit/2026-10-01-registry-conformance-rectification-audit.md`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py` -> `fail`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/pipeline/tests/test_generated_tree_cli.py dev/registry/pipeline/tests/test_generated_export_trees.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
+- `S50` `verify:` `just check-registry` -> `pass`
+- `S50` `verify:` `just check-bindings` -> `pass`
+- `S50` `verify:` `just check-registry-gate` -> `pass`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `just docs-sequences-check` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\check_order_tool.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_casilla_order_review.py dev/registry/tests/test_edition_delta_declared_order.py` -> `pass`
+- `S50` `verify:` `just check-registry` -> `pass`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\final-collapse` -> `pass`
+- `S50` `verify:` `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\delta-proof` -> `pass`
+- `S50` `M` `dev/locales/modelo_casilla_catalogue.py`
+- `S50` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/legal/irnr.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/casillas/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0002-record-m200-page-001.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0029-record-m200-page-014b.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0002-record-m200-page-001.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0029-record-m200-page-014b.toml`
+- `S50` `verify:` `combined registry-runtime pytest 218 passed 3 failed` -> `fail`
+- `S50` `verify:` `corrected reused-number catalogue-authoring and shipped-catalogue pytest` -> `pass`
+- `S50` `verify:` `just check-registry authority a9765727` -> `pass`
+- `S50` `verify:` `just check-bindings unchanged 33 warning findings` -> `pass`
+- `S50` `verify:` `just check-registry-gate authority a9765727` -> `pass`
+- `S50` `verify:` `just check-style corrected tests` -> `pass`
+- `S50` `verify:` `just check-format corrected tests` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types corrected tests` -> `pass`
+- `S50` `verify:` `just docs-sequences-check` -> `pass`
+- `S50` `verify:` `final accepted-source Modelo 200 delta proof no-op` -> `pass`
+- `S50` `verify:` `stable scoped Modelo 200 collapse parity and readiness` -> `pass`
+- `S50` `verify:` `final live inspection retained content and order` -> `pass`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0011-dp200008.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0059-dp200039.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0068-dp200048.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0073-dp200053.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0074-dp200054.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0011-dp200008.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0061-dp200039.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0070-dp200048.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0075-dp200053.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0076-dp200054.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0016-record-m200-page-008.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0024-record-m200-page-012.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0025-record-m200-page-012.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0109-record-m200-page-033.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0110-record-m200-page-033.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0116-record-m200-page-039.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0128-record-m200-page-048.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0133-record-m200-page-053.toml`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0134-record-m200-page-053.toml`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0135-record-m200-page-054.toml`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0136-record-m200-page-did.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0016-record-m200-page-008.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0025-record-m200-page-012.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0111-record-m200-page-033.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0118-record-m200-page-039.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0130-record-m200-page-048.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0135-record-m200-page-053.toml`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0136-record-m200-page-053.toml`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0137-record-m200-page-054.toml`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0138-record-m200-page-did.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0134-record-m200-page-054.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0135-record-m200-page-did.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0136-record-m200-page-054.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0137-record-m200-page-did.toml`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
+- `S50` `verify:` `just check-registry` -> `pass`
+- `S50` `verify:` `just check-bindings` -> `pass`
+- `S50` `verify:` `just check-registry-gate` -> `pass`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\prove_delta.py live` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `git diff --check` -> `pass`
+- `S50` `verify:` `isolated delta proof apply no-op cycle` -> `pass`
+- `S50` `verify:` `complete coupled target publication before guarded source installation` -> `pass`
+- `S50` `verify:` `canonical locale proposal preflight and authoring` -> `pass`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0107-record-m200-page-032.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0108-record-m200-page-032.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0134-record-m200-page-054.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0136-record-m200-page-054.toml`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-12-full.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-12-full.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-12-full.html.extracted.md`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/corpus/tests/test_extract_boe_article.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
+- `S50` `verify:` `just check-registry` -> `pass`
+- `S50` `verify:` `just check-bindings` -> `pass`
+- `S50` `verify:` `just check-registry-gate` -> `pass`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\prove_delta.py live` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `git diff --check` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_legal_anchor_verification_ratchet.py dev/registry/tests/test_legal_required_text_reaches_the_provision.py` -> `pass`
+- `S50` `verify:` `isolated delta proof apply no-op cycle` -> `pass`
+- `S50` `verify:` `full isolated legal/corpus validation and guarded enrollment` -> `pass`
+- `S50` `verify:` `canonical coupled target publication and locale preflight before source adoption` -> `pass`
+- `S50` `M` `.gitattributes`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/corpus/tests/test_extract_boe_article.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
+- `S50` `verify:` `just check-registry` -> `pass`
+- `S50` `verify:` `just check-bindings` -> `pass`
+- `S50` `verify:` `just check-registry-gate` -> `pass`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\prove_delta.py live` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `git diff --check` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_legal_anchor_verification_ratchet.py dev/registry/tests/test_legal_required_text_reaches_the_provision.py` -> `pass`
+- `S50` `verify:` `isolated delta proof apply no-op cycle` -> `pass`
+- `S50` `verify:` `full isolated legal/corpus validation and guarded enrollment` -> `pass`
+- `S50` `verify:` `canonical coupled target publication and locale preflight before source adoption` -> `pass`
+- `S50` `verify:` `git check-attr whitespace normative HTML and code/sidecar controls` -> `pass`
+- `S50` `verify:` `git diff --cached --check` -> `pass`
+- `S50` `M` `dev/corpus/fetch_boe_normative.py`
+- `S50` `M` `dev/tests/test_fetch_boe_normative.py`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/tests/test_fetch_boe_normative.py dev/tests/test_fetch_boe_article.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync ruff check dev/corpus/fetch_boe_normative.py dev/tests/test_fetch_boe_normative.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync ruff format --check dev/corpus/fetch_boe_normative.py dev/tests/test_fetch_boe_normative.py` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `canonical prospective BOE HTTP capture with explicit destination_root` -> `pass`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0016-dp200013.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0025-dp200018b.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0016-dp200013.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0026-dp200018b.toml`
+- `S50` `M` `dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-11-2020-da-76.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-11-2020-da-76.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-11-2020-da-76.html.extracted.md`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-36-full.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-36-full.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-36-full.html.extracted.md`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/casilla_continuidad_evolutions/0002-p05-s50-0309-0316.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casilla_continuidad_evolutions/0002-p05-s50-0309-0316.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0026-record-m200-page-013.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0027-record-m200-page-013.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0050-record-m200-page-018b.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/casilla_continuidad_evolutions/0002-p05-s50-0309-0316.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0026-record-m200-page-013.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0051-record-m200-page-018b.toml`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/locales/tests/test_modelo_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/corpus/tests/test_extract_boe_article.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/registry/tests/test_legal_article_anchor_grounding.py dev/registry/tests/test_legal_required_text_reaches_the_provision.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `fail`
+- `S50` `verify:` `just check-registry` -> `pass`
+- `S50` `verify:` `just check-bindings` -> `pass`
+- `S50` `verify:` `just check-registry-gate` -> `pass`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\prove_delta.py live noop` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `git diff --check` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py` -> `pass`
+- `S50` `verify:` `binding warning identity/severity baseline comparison` -> `pass`
+- `S50` `M` `.github/ci-contract-allow.txt`
+- `S50` `M` `dev/packaging/lane_verification_core.py`
+- `S50` `M` `dev/quality/metadata/import_load_targets.json`
+- `S50` `M` `dev/registry/tests/test_edition_delta_explicit_empty_override.py`
+- `S50` `M` `pyproject.toml`
+- `S50` `M` `src/cadrumo/application/calculations/tests/test_dependency_treatment_survives_the_resolver_join.py`
+- `S50` `M` `src/cadrumo/core/tests/test_text_fold.py`
+- `S50` `M` `src/cadrumo/core/text_fold.py`
+- `S50` `M` `uv.lock`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `just check-import-boundaries` -> `pass`
+- `S50` `verify:` `uv lock --check` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-gate-contracts` -> `pass`
+- `S50` `verify:` `just check-dependency-declarations` -> `pass`
+- `S50` `verify:` `dependency_surface --json` -> `pass`
+- `S50` `verify:` `focused delta-resolver-text-fold-packaging pytest 55 cases` -> `pass`
 
 ## Notes
 
@@ -162,3 +1820,98 @@ related:
 - `S02` Registry-wide the fix brings 22 storage-rooted editions across 11 modelos into assessment; none currently states a droppable restatement, so no registry source changes.
 - `S12` The ruling list is returned to the operator in the session report rather than persisted, as the brief directs.
 - `S11` Partial: closed-window re-keying only. Late authoring in 180, 303, 131, 193, 190, 184, 123, 202, 222, 151, 182, 210, 390 and the low items, and the whole-family restatements under explicit roots, remain open; Modelo 200's 2024 rows in its 2025-y-siguientes edition are returned for ruling.
+- `S11` 180 type-2 surface authored at 2019-2022 (2014 design governs 2022); 2022 perceptor count now counts type-2 records per that design; 123, 190 and 193 candidates all genuinely new on later designs, no change
+- `S11` 184 filing surface authored at 2022 (2023 design differs only by two HFP/1284/2023 fields); 182 donor bindings and construct at 2024; modelo-184-member-row-reduccion held on 2023-2024 until the legal catalogue carries 2022 redactions of ley-35-2006 arts 23 and 32; 184/2022 and 182/2024 review text awaits re-review
+- `S11` 303 2022 carries printed-box projections, results, bindings and predicates; 2023 transitional rates, simplified-regime endpoints and later boxes kept as genuinely new; box 69 omits 108 from 2024 (separate grounding needed); m349 reconciliation years, gated total-cuota at 2022 and casilla 18 rate for 2022 left for ruling
+- `S11` 131/2026 explicit root reuses 2025 storage (192 to 10 stated members); late-authoring candidates genuinely new or unevidenced; 2022-2023 modulos engine blocked on legal catalogue entries (orden-hfp-1335-2021 and orden-hfp-1172-2022 DA and Anexo II instructions) owned by P05.S17; 2026 parameter rows close at 2026-12-31 and are restated
+- `S11` 202 INCN binding authored at 2019-2022 (every design prints the 6M flag); cuota-base relation kept at 2025 because its source box sits on DP200014 before 2023; 222/2025 root reuses 2024 non-structural families; its 18% modality row inherits the open 2023 row
+- `S11` 296/2024 root reuses 2023 storage (124 to 56 stated); 308 roots already stored by baseline, stale cause tokens dropped as false; 604 root reason corrected, storage reuse deferred to the converter fix; 216 unchanged; all late-authoring candidates genuinely new
+- `S11` 220 T22009001 34 boxes authored at 2024 (identical 2024 and 2025 layout); 490/2023 root reuses 2022-2t-4t storage (386 to 33 casillas stated); 322 and 490 2022 roots already reused storage, reasons corrected and positions pruned; 220 boxes 02796 and 02797 left for P05.S34
+- `S16` a passing -n0 run that opens the authority leaves the frozen sqlite snapshot on Windows until the reader closes; closing it at session end is the remaining S16 work
+- `S29` invoice refusal names 111 and 115, since 123 already refuses invoice evidence; --withholding-observation is equally unpersisted and is removed under ruling 14's precedent (P05.S36)
+- `S23` busy refusal and persistence of the degradation fact for batch and TUI follow in P05.S37
+- `S17` moved: 0245-0247 marriage members to 2022, maternity 0611 to 2023 and 2025, guardería cap to 2022; restored 0604 refs; amending-law refs per incentive year; kept with evidence: 193 relation (other branch owns 0597), 0613, 0150, 0512, 184 and 190 relations, Madrid, maritime; ruling 8: product cannot represent a shortened period, documented only; my corrections: count pin 23 to 25, a phantom covering-test reference, maternity in the source mesh expected set
+- `S11` 165 2023 design authored at 2023-2025 (Orden HFP/1284/2023 applies from ejercicio 2023) with storage reuse; 210 payer-mode parameter opens at 2023; 151 and 390 candidates genuinely new; 165 converter apply blocked by the export scenario table rendering below the floor (P05.S32)
+- `S11` Correction to the preceding 202 verify row: the run reported complete=True with `registry_rollout=incomplete,` not rollout complete; `registry_rollout` is the registry-wide collapse state, which stays incomplete while other modelos are still being rectified
+- `S11` 210 verification against 0b6bfacc: equivalence, facts, indexed (3307 coordinates), cache and publication readiness passed, but `inputs_stable=False` because a concurrent lane captured corpus evidence mid-run, so the run is not certifying; the verification round is suspended while lanes write and runs once over every touched modelo when they finish
+- `S18` the S18 message named the product, which the locale audit reserves for a closed set of keys
+- `S39` landed: 131 relation into 1481 withdrawn, 0512 regional minimo with age increments for 2024 and 2025, art. 32 re-cited with 170 evolutions, constant renamed; confirmed but blocked on code and shared tests: 0525 maritime and 1577 relation (P05.S47); found: 0531 uses 0521 where every dictionary says 0523 (P05.S48); first partial apply broke validity and was reverted with git show, then landed in one validated step
+- `S26` modulos engine for 2022 and 2023 is grounded but blocked by `validate_bracket_table_temporal_coverage` requiring coverage from 2019, below the floor; ruled to clamp it at the support floor in P05.S32, then author the engine in the root
+- `S20` 17 rows moved to 2024 (00082 with a `label_evolved` evolution), 03627-03629 to 2025, 01176/03352/03353 declared in 2024; provenance re-grounded; remaining debt in P05.S50
+- `S19` 714, 721 and 100/2026 need no edit; 036, 038, 182, 189, 200 and 220 back-years and 210 January to May 2022 await captures (P05.S45); the docs readiness golden is regenerated after the Modelo 100 lane lands
+- `S41` 151 payment cutoff left undeclared: Orden HAP/2783/2015 art. 4.2 says 25 June while the 2023 calendar says 27 June
+- `S42` authoring staged, blocked on the below-floor coverage validator (P05.S32) and the 2015 export mapping of boxes 18 and 20
+- `S47` committed by the automatic checkpoint 084ce12d44, not by the orchestrator; rows cover both S47 and S48 files; DA 20 progressivity is never applied by any formula, left as a finding
+- `S48` Baleares mayores de 65 minimo not modelled; madrid-dl-1-2010 catalogue entry needs re-grounding
+- `S11` 303 boxes 03, 06 and 09 revert to per-year keying on the 2022 design's free rate field; box 10's 2022 projection kept; an unattributed working-tree edit removing the 303 bindings test's 120 and 122 expectations was left out of the merge
+- `S30` main's 66402446 fixed the same defect; the merge keeps main's reader as the single definition and this branch's extra test cases
+- `S31` main's 8f4b8306 moved the same check; the merge keeps main's validator as the single definition
+- `S32` converter now proposes stated layouts for 123, 131, 190, 193, 270, 490 and 714 and flags roots 216, 309 and 604 as not minimal (P05.S55); forward storage baselines stay refused
+- `S42` committed by the automatic checkpoint 16c8b7cae8, not by the orchestrator
+- `S42` 2015 general top rate is 47 percent (DA 31), only 2016-2020 is 45; the 2015-2020 scale awaits the snapshot legal-window exemption for bracket rows (lane S42c)
+- `S42` a first publish db4b432c left 151 unfileable from 2023 for about 12 minutes through an inherited ahorro-2021 citation, removed by a sequence removal and republished
+- `S26` registry and locale files committed by the automatic checkpoint 16c8b7cae8; the converter still proposes per-edition export layouts and 2026 position changes on HEAD as before this step (P05.S33, P05.S55), so no fresh no-op run
+- `S26` Anexo I agricultural reduction increases (Orden HFP/405/2023, HAC/348/2024) are not modelled; 131 routes agriculture through boxes 05 and 06
+- `S56` most files committed by the automatic checkpoint 16c8b7cae8; the leftover-clearance refusal sits at authority compilation, not the loader, because publishing a generated tree keeps the clearance it was staged under and reloads the modelo
+- `S56` 216 rows 07, 10, 16 and 19 stay without continuity: the pre-2024 form and instructions are not held (P05.S35)
+- `S56` the 353 fix exposed 390/2026 in the record-design matrix gate and a Modelo 100 payer-filed-source floor test; both go to a follow-up lane under this step
+- `S26` reopened fix after close: the engine move left its computed casillas enrolled only by the 2024 override, found by the S56 full dev/registry run
+- `S42` the step's 2015-2020 at 45 percent holds only for 2016-2020; 2015 is 47 percent under DA 31.1.f
+- `S42` ahorro rows before 2021 are not authored; those years are below the support floor and refuse
+- `S56` Modelo 100's payer-side dependency classifications were deleted by the accepted export-parity withholding-sources decision (PR 704), so the test floor of two was a count, not a restoration target
+- `S54` most files committed by the automatic checkpoint 16c8b7cae8
+- `S54` the rate-less profile key and CLI option --autoconsumo-promotor-base now refuse until the base is split by rate row; a per-rate profile or CLI input is an interface change returned to the operator
+- `S54` the accepted m390 annual autoconsumo source decision still states a 21 percent multiplication in its consequences; amending it is returned to the operator
+- `S53` only two carriers remain: P05.S54 removed iva.autoconsumo.promotor.cuota from every edition
+- `S53` the intracom routing failures were a fixture binding the whole cuota but not its devengado and deducible legs, not registry data
+- `S25` the 190 to 111 relation was not moot: PR 704 removed Modelo 100's payer-side sources, not 190's fold
+- `S25` the 2025 Modelo 190 instructions define boxes 02 and 03 as sums over every record, not a 111 fold; the 2025 relation's grounding is returned to the operator
+- `S27` correction: the S27 rows logged from commit 62f2ce2aa6 also list Modelo 190 and 193 paths through an over-broad path pattern; S27's own files are the 202 2025-y-siguientes bindings and the four 202 tests, and the 190 and 193 paths belong to S25
+- `S34` the 210 rows in this commit belong to P05.S28; the 2025 Modelo 220 review text still counts the withdrawn pair (P05.S35)
+- `S49` 222's converter no-op still exits 1 for the 69 casillas its 2025-y-siguientes explicit root keeps stated and the existing 2024 and 2025 export readiness gates, unchanged by this step
+- `S33` 604/2021-2023's construct still names no windows or deadline link; outside the step's named scope
+- `S55` the 604 root rows in the same commit are logged under P05.S33; 309 awaits the converter's explicit-empty lift fix; 190 awaits the export-scenario fix
+- `S28` the gate compares values by representation, so a numeric restatement such as 12450.00 for 12450 escapes it; the accumulated-cuota gate groups rows by window and no longer sees the seam between inherited and re-keyed rungs; both go to a follow-up
+- `S55` the 190 2024 provenance correction rides here under the ruling that provenance errors in an edition being restructured are corrected with it
+- `S40` 184/2023-2024 can cite only art. 23's 2024 redaction for ejercicio 2023, because the edition's devengo check reads its 2024-12-31 end; the citation predates this step
+- `S35` 216/2020-2023's stamp rode in 44a93ccbd6 with the P05.S55 216 root work
+- `S35` 216 rows 07, 10, 16 and 19 recorded not adjudicable: the pre-2024 form and instructions are not held; they stay without continuity
+- `S35` the replaced review texts' unrechecked findings survive only in git history and fragment comments
+- `S50` about 50 reused-number cells in the 2025 filing-grade export receive liquidacion values of other concepts (insurer and Banco de Espana equity statements, DP200010:00592, DP200011:00599); declaring them needs the 200 mappings and a target republish, assigned to a follow-up lane
+- `S50` about 124 retired 2024-only rows keep placeholder LIS references; the 2024 review comment still names the 2025 design
+- `S44` the 036, 038, 182, 189 and 210 manifest inception statements follow P05.S45's new editions and commit with them
+- `S45` Modelo 200 and 220 cells go to their own lanes; 220's 2022 and 2023 texts and approving ordenes are captured
+- `S45` the four new editions stay `pending_review;` 189/2022 can reach filing grade once reviewed
+- `S45` selecting Modelo 036 for 2023 now needs a date, refused as ambiguous otherwise, grounded in the orden's 25 April entry into force
+- `S45` 22 Modelo 036 rows never linked in any edition are recorded as named `not_examined` lineage debt
+- `S43` the six Modelo 100 lineage-ledger rows of this step were swept into commit 62dc742fab by a concurrent stage; between that commit and 3293259c99 the ledger named rows the tree did not yet hold
+- `S43` Madrid birth deduction years not authored: the facts entry carries only 2025 and no 2022 or 2023 autonomic manual is held
+- `S43` for 2023 the engine applies 15 percent per Orden HAC/348/2024 art. 2 and the manual's chapter text while the manual's worked example uses 10 percent; returned to the operator
+- `S50` three cells printing 00501 and 00573 still export those boxes until the two ids are sheet-scoped, which touches about 40 files; returned to the operator
+- `S50` about 1900 cells per edition of the 2025 filing export are filled from an unprefixed casilla whose design text differs (text comparison, some false positives), 130 of them on liquidacion sheets; list in the lane scratch `masked_debt.tsv;` returned to the operator
+- `S50` the 2024 export target has never published: its f0089 sign defect and 180 undeclared mapping ids block it
+- `S45` legal/is.toml in this commit also carries the lane writing Modelo 200's 2022 and 2023 catalogue entries for the same two ordenes
+- `S45` undeclared 220 debt (328 rows in 2022, 258 in 2023, old T22007000 layout, pages 15A, 15B and 16) is recorded as 3185 named `not_examined` ledger rows
+- `S45` the 2022 design sidecar renders sheet T22001000 empty although the IR reads its 88 fields
+- `S45` regression of 62dc742fab found by the 220 lane: its gate had not included the shipped catalogue test
+- `S45` Modelo 200 2022 and 2023 editions declare 2477 and 2745 of the 2024 edition's 3407 rows where their own designs print the same caption; the remaining 930 and 662 rows are recorded debt, each 2024/2023 row new to its edition carrying an absence origin with design-line evidence.
+- `S45` 12 failures and 9 errors remain outside lane-p05-p's files: 7 from the db50af829c equity-statement rows and unrefreshed export pin, 9 installed-oracle errors from a missing pikepdf macos-arm64 wheel, and 5 shared tests (202 registry, referential integrity part 2, semantic role inventory, two cross-dependency calculation tests) that assume every Modelo 200 edition calculates; reported to the orchestrator.
+- `S50` regressions of db50af829c, whose gate had not included the shared ambiguity tests
+- `S45` 200 2022 and 2023 now refuse calculation, as ruled; Modelo 202's prior-year read of those years refuses too, where it silently used the 2024 engine before; returned to the operator
+- `S45` undeclared 200 debt: 930 rows for 2022 and 665 for 2023, listed in the lane scratch debt2022.tsv and debt2023.tsv
+- `S11` the converter's equivalence proof does not compare sequence order, so rows stated over a baseline land at the edition's end; 222 declares positions; an order-aware proof and a registry-wide reorder sweep run before the closing verifier round
+- `S11` history sweep found order regressions from db50af829c (200/2025) and 3293259c99 (100 identity fields); their previously committed order is restored next
+- `S11` positions are absolute indexes, so a baseline edit can still shift later editions invisibly; anchored positions are a schema decision for the operator
+- `S50` Six independently evidenced collisions repaired with sheet-qualified homes, floor-authored equity members and later adjustment additions. The initial focused run had six failures: envelope-relative byte helper and locale segment consistency; both repaired and affected gates passed. Larger mapping candidates remain unadjudicated; S50 stays open. Consumer sweep and final acceptance runs pending.
+- `S50` The complete registry run exposed introduced packing and first-appearance omissions, spent bootstrap metadata and stale test assumptions. Corrective source and test changes preserve grounded assertions and legal-derived year cases. Later acceptance results remain pending; the literal legal-anchor ratchet and installed package setup failure remain visible. S50 stays open for the larger semantic worklist.
+- `S50` The 304-pass focused run had one stale filing-grade expectation for the newly published calculation-grade target. The corrected gate derives capability refusals from canonical authority and continues to require full check-mode success for every filing-grade target. The whole-catalogue literal anchor ratchet and installed-package setup failure remain visible. Larger mapping adjudication remains open.
+- `S51` Historical tests had eleven real type diagnostics. Actual support, fixed-width fields, corpus text and revision bounds are now asserted before use. The new below-floor test initially expected the absent-revision error and then exposed a missing retained import; both corrections passed before the collapse started. No support range, capability or production relation was changed to satisfy the tests.
+- `S50` The complete scoped proof verifies this installed six-concept correction while the larger S50 mapping inventory remains open. Active authority is a5b486f5; the isolated indexed witness is not substituted for the active descriptor. Candidate, installed source, publication and development runtime pass; installed-package adoption remains unverified after the real wheelhouse setup failure. The concurrent main merge prevents an isolated commit; its staged files remain untouched.
+- `S50` Fresh user-requested verification completed after authority republication, under the shared serial lock. Full test-registry result and all lane identities are retained in fresh-registry-verification-receipt.json and its linked run logs. Lifecycle health retains three partial lanes, 119 owner-excluded targets and 120 export gaps. Advisory declaration/corpus screen rows retain their own denominators and are not a gate verdict. The main merge is now committed at 93b6999f44; prior merge-in-progress notes describe an earlier state. S50 remains open for the larger mapping inventory; installed-package adoption was not re-run by this registry suite.
+- `S50` S50 remains open for other semantic mapping candidates and declaration debt. The introduced locale segment failure was corrected and its affected checks pass. Installed-package adoption and the previously recorded whole-catalogue literal-anchor failure remain unresolved; their suites were not repeated by this bounded repair.
+- `S50` S50 remains open for other mapping candidates and declaration debt. The three initial test failures were corrected and affected checks pass. Coupled target post-cutover refusal was recovered through the canonical publication journal; no intermediate pytest ran. Installed-package adoption remains unverified. The legal-anchor ratchet now passes without a ceiling change.
+- `S50` S50 remains open for the remaining semantic mapping and declaration inventory. Isolated construct legal-closure and locale preflight refusals were corrected before live installation; no intermediate pytest ran. Installed-package adoption remains unverified.
+- `S50` S50 remains open for the remaining semantic inventory. Isolated retained-order refusal was corrected; no pytest ran on intermediate registry inputs. Installed-package adoption remains unverified.
+- `S50` S50 continues. Prospective corpus artifacts remain isolated; registry inputs and published authority are unchanged. The temporary caller plural-wording assertion was corrected against actual operative text.
+- `S50` S50 remains open for the wider mapping/declaration inventory. One stale literal-caption assertion was corrected through grounded official evolution paths and isolated negative tests; only the affected module was repeated. Authority was published before pytest. Installed-package adoption remains unverified.
+- `S50` User-authorized all-changes checkpoint. S50 remains open. Canonical setup-python exited 6: shared MCP/RAG processes hold the environment; installed parser 1.6.1 has not adopted locked 1.20.0. All requested checks pass on the current environment; no substantive registry edit or authority-generation change.

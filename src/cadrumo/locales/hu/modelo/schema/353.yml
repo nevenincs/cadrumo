@@ -42,7 +42,7 @@ modelo:
           Havi önbevallás.
         title: IVA. Cégcsoport. Összesített nyomtatvány. Havi önbevallás
       revision:
-        2021-2025:
+        2021-hasta-2026-01:
           casilla:
             '01':
               label: Teljes eredmény (a szervezetek eredményeinek összege)
@@ -62,7 +62,8 @@ modelo:
               label: Korábbi időszakokból származó, későbbi időszakokra fennmaradó
                 beszámítandó összegek ([02] - [08])
           field:
-            label: 353-as modelo, 2008-2025 adóévek (EHA/3434/2007 rendelet)
+            label: 353-as modelo, 2021-2025. adóévek és 2026. január (EHA/3434/2007
+              rendelet)
         2026-desde-02:
           casilla:
             '01':

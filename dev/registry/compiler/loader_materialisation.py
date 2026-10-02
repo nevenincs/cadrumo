@@ -209,7 +209,6 @@ def inherit_keyed_family(
     revision_id: str,
     predecessor_id: str,
     predecessor: Mapping[str, object],
-    storage_only: bool,
     family: _KeyedFamily,
     inherited: tuple[object, ...],
     inherited_casillas: tuple[object, ...],
@@ -224,6 +223,14 @@ def inherit_keyed_family(
     appended after the inherited members, in stated order. The resulting order
     is therefore the predecessor's order with supersessions in place and new
     members after, exactly as the casilla merge defines it.
+
+    A period-scoped member whose own filing period the successor does not file
+    is not inherited, whether the edge is a named predecessor or a storage
+    baseline. A storage baseline reuses payload; it cannot make another
+    period's deadline this edition's, and no valid tree could hold one, since
+    the window would then be owned twice. The scope is judged after the
+    edition's storage patches, so a member an override moves into the
+    successor's period is kept.
 
     Refused, because each would otherwise resolve to a guess: a member carrying
     no identity at all, which cannot be superseded or inherited deterministically;
@@ -290,7 +297,7 @@ def inherit_keyed_family(
             )
         if identity in retired:
             continue
-        if family.period_scoped and not storage_only and not _selector_covers(successor.get("period_selector"), member):
+        if family.period_scoped and not selector_covers(successor.get("period_selector"), member):
             continue
         if identity in superseders:
             if identity not in patched:
@@ -681,7 +688,7 @@ def _selector_periods_for_year(table: Mapping[str, object], year: object) -> obj
     return table.get("periods")
 
 
-def _selector_covers(selector: object, member: object) -> bool:
+def selector_covers(selector: object, member: object) -> bool:
     """Whether an edition's ``period_selector`` covers this member's own filing period.
 
     A period-scoped family states one member per filing period, so a
@@ -1184,7 +1191,6 @@ def _materialise_revision(
                     revision_id=revision_id,
                     predecessor_id=family_baseline_id,
                     predecessor=family_predecessor.table,
-                    storage_only=predecessor_id is None,
                     family=family,
                     inherited=_raw_keyed_members(source_path, family_baseline_id, family_predecessor.table, family),
                     inherited_casillas=_raw_casilla_rows(source_path, family_baseline_id, family_predecessor.table),

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-11-2020-da-76.html",
+  "source_sha256": "51fc681b1d6eff53a91b51f7f44fcfe6e13255115376da7349cd2552813cd54d",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Uno. El programa «Centenario del Rugby en España y de la Unió Esportiva Santboiana» tendrá la consideración de acontecimiento de excepcional interés público a los efectos de lo dispuesto en el artículo 27 de la Ley 49/2002, de 23 de diciembre, de régimen fiscal de las entidades sin fines lucrativos y de los incentivos fiscales al mecenazgo.\nDos. La duración del programa de apoyo a este acontecimiento abarcará desde la fecha de entrada en vigor de esta ley hasta el 31 de diciembre de 2023.\nTres. La certificación de la adecuación de los gastos realizados a los objetivos y planes del programa se efectuará en conformidad con lo dispuesto en la citada Ley 49/2002.\nCuatro. Las actuaciones a realizar serán las que aseguren el adecuado desarrollo del acontecimiento. El desarrollo y concreción en planes y programas de actividades específicas se realizará por el órgano competente de conformidad con lo dispuesto en la citada Ley 49/2002.\nCinco. Los beneficios fiscales de este programa serán los máximos establecidos en el artículo 27.3 de la Ley 49/2002.",
+      "title": "Disposición adicional septuagésima sexta. Beneficios fiscales aplicables al «Centenario del Rugby en España y de la Unió Esportiva Santboiana».",
+      "section": "Disposición adicional septuagésima sexta. Beneficios fiscales aplicables al «Centenario del Rugby en España y de la Unió Esportiva Santboiana».",
+      "anchor": "#da-77"
+    }
+  ]
+}

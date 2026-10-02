@@ -23,11 +23,11 @@ modelo:
             label: General taxable base (impatriate regime, excluding the savings-income
               part under TRLIRNR art. 25.1.f)
           impatriado-cuota-integra-ahorro:
-            label: 'Gross savings tax liability (art. 93.2.e.2º scale: 19/21/23/27/30
-              on the savings taxable base, wording in force per Ley 7/2024)'
+            label: Gross savings tax liability (LIRPF art. 93.2.e).2º scale on the
+              savings taxable base, in the wording applicable to each tax year)
           impatriado-cuota-integra-general:
-            label: 'Gross general tax liability (art. 93.2.e.1º scale: 24% up to EUR
-              600,000, 47% on the excess)'
+            label: 'Gross general tax liability (LIRPF art. 93.2.e).1º scale: 24%
+              up to EUR 600,000 and the tax year''s top rate on the excess)'
           impatriado-retenciones:
             label: Withholdings and advance payments (payments on account, art. 93.2.f)
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12:
@@ -1150,9 +1150,9 @@ modelo:
             x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
               label: Transfer value [2]
           field:
-            label: Form 151, tax years 2015 to 2022 (inbound expatriate regime, flat
-              24/47 general scale following Law 26/2014; the savings component is
-              not modelled in this revision)
+            label: Form 151, tax years 2015 to 2022 (inbound expatriate regime; general
+              scale of art. 93.2.e).1º and savings scale of art. 93.2.e).2º in the
+              wording applicable to each tax year)
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

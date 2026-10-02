@@ -689,7 +689,7 @@ def _substantive_legal_window_failure(
 def _parameter_value_governed_spans(
     revision: ModeloRevision,
 ) -> dict[str, tuple[tuple[date, date | None, str], ...]]:
-    """Map every parameter-cited legal ref to the windows its dated values defend.
+    """Map every parameter-cited legal ref to the windows its dated rows defend.
 
     The legal-side twin of :func:`_deadline_window_source_spans`, and it exists
     for the same reason. A revision that carries HISTORICAL values legitimately
@@ -708,6 +708,14 @@ def _parameter_value_governed_spans(
     parameter level, so every value of a parameter earns the parameter's refs.
     The axis travels with the window because not every axis fixes applicable law.
 
+    A bracket row of a ``bracket_table`` is dated the same way: the resolver
+    selects the rows live on the parameter's ``bracket_axis`` date, so a row's
+    own window is exactly where it can apply. A scale whose top rate changed by
+    year -- one provision per year's wording -- carries each wording's rows in
+    the same revision, and each row window defends that wording's citation on
+    the parameter's ``bracket_axis``. Keyed bracket rows declare no axis, so
+    they carry no span and their citations stay on the revision window.
+
     Returns:
         Legal ref id mapped to its carried ``(valid_from, valid_to, date_axis)``
         triples.
@@ -715,6 +723,9 @@ def _parameter_value_governed_spans(
     spans: dict[str, list[tuple[date, date | None, str]]] = {}
     for parameter in revision.parameters:
         carried = tuple((value.valid_from, value.valid_to, str(value.date_axis)) for value in parameter.values)
+        if parameter.bracket_axis is not None:
+            bracket_axis = str(parameter.bracket_axis)
+            carried += tuple((row.valid_from, row.valid_to, bracket_axis) for row in parameter.brackets)
         if not carried:
             continue
         for legal_id in parameter.legal_refs:

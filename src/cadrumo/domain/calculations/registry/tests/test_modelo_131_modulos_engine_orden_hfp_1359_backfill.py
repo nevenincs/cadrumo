@@ -306,13 +306,17 @@ class TestHfp1359OrdenDateAxisBoundaries:
         following = select_revision(modelo_131, filing_year=successor, period="1T", on=date(successor, 1, 1))
         assert following.id == str(successor)
 
-    def test_hfp_1359_orden_coefficient_parameters_begin_with_its_calendar_year(self) -> None:
-        """Orden HFP/1359/2023's figures start on its exercise's first day and cover the whole exercise.
+    def test_hfp_1359_orden_coefficient_parameters_cover_its_calendar_year(self) -> None:
+        """Orden HFP/1359/2023's figures are in force on every day of its exercise.
 
-        A figure the next Orden restates unchanged runs open rather than closing
-        at year end, so the end of the row is not this Orden's to fix.
+        A figure an earlier Orden already fixed at the same amount runs open from
+        that Orden's exercise, and a figure the next Orden restates unchanged runs
+        open past this one, so neither end of an unchanged row is this Orden's to
+        fix. The reducción general differs from the previous exercise's rate, so
+        the row this Orden fixes starts on its exercise's first day.
         """
         exercise = _ORDEN_HFP_1359_2023_EXERCISE
+        first_day, last_day = date(exercise, 1, 1), date(exercise, 12, 31)
         snapshot = published_snapshot(
             "131", filing_year=_ORDEN_HFP_1359_2023_EXERCISE, period="1T", grade=RegistryAuthorityGrade.CALCULATION
         )
@@ -322,9 +326,17 @@ class TestHfp1359OrdenDateAxisBoundaries:
         reduccion_general = next(
             parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-reduccion-general"
         )
-        for row in (*coeficientes.keyed_brackets, *reduccion_general.values):
-            assert row.valid_from == date(exercise, 1, 1)
-            assert row.valid_to is None or row.valid_to >= date(exercise, 12, 31)
+        in_force = [
+            row
+            for row in (*coeficientes.keyed_brackets, *reduccion_general.values)
+            if row.valid_from <= last_day and (row.valid_to is None or row.valid_to >= first_day)
+        ]
+        assert in_force
+        for row in in_force:
+            assert row.valid_from <= first_day
+            assert row.valid_to is None or row.valid_to >= last_day
+        (reduccion_row,) = [row for row in reduccion_general.values if row in in_force]
+        assert reduccion_row.valid_from == first_day
 
     def test_hfp_1359_and_hac_1347_orden_coefficient_tables_are_in_force_across_each_year(self) -> None:
         """The two Ordenes' revisions share the coefficient parameter's identity,

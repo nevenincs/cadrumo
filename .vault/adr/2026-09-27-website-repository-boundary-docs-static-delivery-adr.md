@@ -5,9 +5,10 @@ tags:
 date: '2026-09-27'
 related:
   - "[[2026-09-23-website-repository-boundary-docs-cloudflare-delivery-adr]]"
+  - '[[2026-10-01-website-repository-boundary-static-delivery-grounding-reference]]'
 supersedes:
   - '2026-09-23-website-repository-boundary-docs-cloudflare-delivery-adr'
-modified: '2026-09-27'
+modified: '2026-09-30'
 body_schema: 'body-v2'
 body_hash: 'sha256:85ca5c8a30827b9854a30513cc00571e229041e493e94575aec8b8a5baaf99e6'
 ---
