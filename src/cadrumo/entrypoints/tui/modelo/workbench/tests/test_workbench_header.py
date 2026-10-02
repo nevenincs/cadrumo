@@ -38,6 +38,7 @@ from ..header import (
     status_line,
 )
 from ..screen import ModeloWorkbenchScreen
+from ..wording import modelo_number, period_words
 from .declaration_states import recorded_as_filed, with_deadline, with_findings, with_result
 from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
@@ -299,6 +300,36 @@ async def test_the_header_fits_every_width_and_keeps_the_result(width: int) -> N
     else:
         assert parts["#wb-header"] == "Modelo 130 · 1st quarter 2026"
     assert "▲ blocking: 1" in parts["#wb-chips"] or width < 100
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+@pytest.mark.parametrize("width", [80, 120])
+@pytest.mark.parametrize("theme", ["dark", "light"])
+async def test_complete_identity_and_deadline_remain_painted(language: OutputLanguage, width: int, theme: str) -> None:
+    form = with_deadline(synthetic_form(), days_left=5)
+    with override_settings(cadrumo_output_language=language.value):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(width, 24)) as pilot:
+            app.theme = "cadrumo-" + theme
+            await _settle(pilot)
+            header = screen.query_one("#wb-header", Static)
+            deadline = screen.query_one("#wb-deadline", Static)
+            painted = "\n".join(header.render_line(row).text for row in range(header.size.height))
+            assert modelo_number(str(form.modelo)) in painted
+            assert period_words(form.period) in painted
+            deadline_words = str(deadline.render())
+            painted_deadline = "\n".join(deadline.render_line(row).text for row in range(deadline.size.height))
+            assert deadline_words in painted_deadline
+            assert header.region.right <= width and deadline.region.right <= width
+            if language is OutputLanguage.EN:
+                assert not screen.has_class("-identity-stacked")
+            if screen.has_class("-identity-stacked"):
+                assert deadline.region.y > header.region.y
+            else:
+                assert deadline.region.y == header.region.y
+            app.exit(None)
 
 
 _HEADER_WIDGETS = ("#wb-header", "#wb-deadline", "#wb-result", "#wb-stale", "#wb-chips", "#wb-stepper", "#wb-next")

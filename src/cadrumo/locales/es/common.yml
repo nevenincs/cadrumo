@@ -2536,8 +2536,8 @@ tui:
         check: Conviene revisarlo
         info: Para tu información
       loading: Cargando la declaración…
-      modelo_number: Modelo {modelo}
-      modelo_title: Modelo {modelo} · {title}
+      modelo_number: "Modelo {modelo}"
+      modelo_title: "Modelo {modelo} · {title}"
       next:
         apply: 'Revisa y aplica tus cambios (sin aplicar: {count})'
         calculate: Calcula la declaración

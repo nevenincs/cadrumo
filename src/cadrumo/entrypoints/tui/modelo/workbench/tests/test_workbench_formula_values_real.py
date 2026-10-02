@@ -197,8 +197,9 @@ async def test_blocked_small_workbench_keeps_help_reachable_and_the_hungarian_qu
                 deadline = deadline_view(undated, language, recorded=False, width=80)
                 assert deadline is not None
                 name = fit_identity(undated, language, deadline, 80)
-                assert "I. negyedév" in name
-                assert cell_len(name) + 3 + cell_len(deadline.text) <= 80
+                assert "I. negyedév" in name.text
+                assert not name.stacked
+                assert cell_len(name.text) + 3 + cell_len(deadline.text) <= 80
             await pilot.press("question_mark")
             await pilot.pause()
             band = screen.query_one("#wb-help", Static)

@@ -2527,8 +2527,8 @@ tui:
         check: Érdemes átnézni
         info: Tájékoztatásul
       loading: A bevallás betöltése…
-      modelo_number: Modelo {modelo}
-      modelo_title: Modelo {modelo} · {title}
+      modelo_number: "Modelo {modelo}"
+      modelo_title: "Modelo {modelo} · {title}"
       next:
         apply: 'Nézze át és alkalmazza a módosításait (még nem alkalmazva: {count})'
         calculate: Számítsa ki a bevallást

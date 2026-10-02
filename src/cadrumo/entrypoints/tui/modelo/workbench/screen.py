@@ -374,6 +374,18 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             color: $secondary;
             text-style: none;
         }
+        ModeloWorkbenchScreen.-identity-stacked #wb-identity {
+            layout: vertical;
+            height: auto;
+        }
+        ModeloWorkbenchScreen.-identity-stacked #wb-header,
+        ModeloWorkbenchScreen.-identity-stacked #wb-deadline {
+            width: 100%;
+            height: auto;
+        }
+        ModeloWorkbenchScreen.-identity-stacked #wb-deadline {
+            padding: $cadrumo-space-0;
+        }
         ModeloWorkbenchScreen #wb-status {
             height: auto;
             padding: $cadrumo-space-0 $cadrumo-gutter;
@@ -943,7 +955,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         width = max(self._width() - _GUTTERS, 1)
         recorded = self.recorded
         deadline = deadline_view(form, self._language, recorded=recorded, width=width)
-        self.query_one("#wb-header", Static).update(fit_identity(form, self._language, deadline, width))
+        identity = fit_identity(form, self._language, deadline, width)
+        self.set_class(identity.stacked, "-identity-stacked")
+        self.query_one("#wb-header", Static).update(identity.text)
         deadline_widget = self.query_one("#wb-deadline", Static)
         deadline_widget.display = deadline is not None
         deadline_widget.update("" if deadline is None else deadline.text)

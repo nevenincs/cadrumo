@@ -534,13 +534,24 @@ def fit_result_line(
     return below
 
 
-def fit_identity(form: ModeloWorkForm, language: OutputLanguage, deadline: DeadlineView | None, width: int) -> str:
-    """The declaration's name at ``width``: with the modelo's title when it fits beside the deadline."""
+@dataclass(frozen=True, slots=True)
+class IdentityLine:
+    """The complete declaration identity, with the deadline below when they cannot share a line."""
+
+    text: str
+    stacked: bool = False
+
+
+def fit_identity(
+    form: ModeloWorkForm, language: OutputLanguage, deadline: DeadlineView | None, width: int
+) -> IdentityLine:
+    """Keep the Modelo, worded period and year; the descriptive title gives way before a second line."""
     full = identity_text(form, language, short=False)
     beside = cell_len(deadline.text) + len(_PART_GAP) if deadline is not None else 0
     if cell_len(full) + beside <= width:
-        return full
-    return identity_text(form, language, short=True)
+        return IdentityLine(full)
+    short = identity_text(form, language, short=True)
+    return IdentityLine(short, stacked=cell_len(short) + beside > width)
 
 
 @dataclass(frozen=True, slots=True)
