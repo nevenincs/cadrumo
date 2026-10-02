@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:110eeba5b81d717d224ec6ec7da1ffa70c90bc3f8e290b52a7c47d7aea4db482'
+body_hash: 'sha256:30361c4148b8a8f652418d03dee1b220ba0b9bba68a9774b66277b4ebcafd8d6'
 related:
   - "[[2026-10-02-auth-frontend-uniformity-plan]]"
 ---
@@ -46,7 +46,20 @@ related:
 - `S02` `verify:` `scoped Ruff lint and format (12 paths)` -> `pass`
 - `S02` `verify:` `scoped ty (12 paths)` -> `pass`
 - `S02` `by:` `Codex`
+- `S02` `M` `src/cadrumo/application/auth/configuration_submission.py`
+- `S02` `M` `src/cadrumo/entrypoints/auth_configuration.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/tests/test_auth_frontend_uniformity.py`
+- `S02` `M` `src/cadrumo/core/errors/hierarchy.py`
+- `S02` `M` `src/cadrumo/core/errors/error_codes.py`
+- `S02` `M` `src/cadrumo/core/errors/registry/_core.py`
+- `S02` `A` `src/cadrumo/core/errors/tests/test_public_error_projection.py`
+- `S02` `A` `.vault/audit/2026-10-02-auth-frontend-uniformity-audit.md`
+- `S02` `verify:` `core error contracts and frontend auth integration (61 passing; one profile-switch verification fixture corrected)` -> `pass`
+- `S02` `verify:` `corrected profile-switch refusal test (20261002T082549.846008Z-pytest-90368-1642040d; 1 passed)` -> `pass`
+- `S02` `verify:` `scoped Ruff lint and format (9 paths)` -> `pass`
+- `S02` `verify:` `scoped ty (9 paths)` -> `pass`
 
 ## Notes
 
 - `S02` CLI and installed TUI auth selection use the same registered request, public observation, result projector and failure metadata. TUI reuses its running graph. Repeated configuration reports NONE effect. Safe public result omits paths, identities and localized prose. New CLI route option uses the same closed schema. Sensitive typed inputs are masked. Test log 20261002T080150.404448Z-pytest-79772-2965d6ec.
+- `S02` Integrated review reopened S02 for exact displayed-profile subject binding and preserving the public failure taxonomy. Both corrected. The preceding 62-test run had 61 passing and one failure only in reading the original profile after a switch; that test now reauthenticates before checking unchanged facts and passed separately. Core error registry/envelope/inventory checks remain applicable and passed. Public failure code/category/retryability/runbook are retained, with only validated opaque diagnostic references.

@@ -150,6 +150,7 @@ def auth_configure(
     """Configure the active authentication provider."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operation_definitions import AuthConfigureOperationRequest
+    from ....core.bucket_pointer import require_active_bucket_id
     from ...auth_configuration import run_auth_configuration
     from ..state_projection_support import authority_operation
 
@@ -163,7 +164,11 @@ def auth_configure(
         },
         strict=False,
     )
-    result = run_auth_configuration(request, operation=authority_operation(ctx))
+    result = run_auth_configuration(
+        request,
+        profile_id=require_active_bucket_id(),
+        operation=authority_operation(ctx),
+    )
     from ..config_payloads import AuthConfigurePayload as _AuthConfigurePayload
 
     configure_result = result

@@ -155,6 +155,7 @@ def compose_authenticated_account_inputs(
                         expected_profile_revision=expected_revision,
                         expected_profile_digest=expected_content_digest,
                     ),
+                    profile_id=profile_id,
                     operation=operation,
                     services=operation_runtime.services if operation_runtime is not None else None,
                     event_loop=operation_runtime.event_loop if operation_runtime is not None else None,

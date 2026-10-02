@@ -323,6 +323,10 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
                 f"even after deferred-bind drain; ensure it is declared in the error-code registry.",
             )
         code = resolved
+    from .hierarchy import PublicErrorProjectionError
+
+    if isinstance(error, PublicErrorProjectionError):
+        return get_registered_error_code_by_code(error.public_error_code)
     return code
 
 

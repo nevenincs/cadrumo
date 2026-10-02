@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 def run_auth_configuration(
     request: AuthConfigureOperationRequest,
     *,
+    profile_id: str,
     operation: PinnedAuthorityOperation,
     services: OperationComposedServices | None = None,
     event_loop: asyncio.AbstractEventLoop | None = None,
@@ -31,14 +32,14 @@ def run_auth_configuration(
         if event_loop is None or not event_loop.is_running():
             raise ValueError("authentication configuration requires the composed graph's running loop")
         return asyncio.run_coroutine_threadsafe(
-            submit_auth_configuration(request, services=services),
+            submit_auth_configuration(request, profile_id=profile_id, services=services),
             event_loop,
         ).result()
 
     async def run() -> AuthConfigurePublicResultV1:
         composed = compose_operation_dependencies(authority_operation=operation)
         try:
-            return await submit_auth_configuration(request, services=composed)
+            return await submit_auth_configuration(request, profile_id=profile_id, services=composed)
         finally:
             await composed.shutdown()
 
