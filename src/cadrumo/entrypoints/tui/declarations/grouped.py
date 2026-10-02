@@ -75,9 +75,9 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
     @override
     def compose(self) -> ComposeResult:
         yield Static(tr("tui.declarations.list.title"), classes="cadrumo-banner", markup=False)
+        yield Input(placeholder=tr("tui.declarations.list.search.hint"), id="declarations-search")
+        yield Static(id="declarations-list-context", classes="cadrumo-heading", markup=False)
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
-            yield Input(placeholder=tr("tui.declarations.list.search.hint"), id="declarations-search")
-            yield Static(id="declarations-list-context", classes="cadrumo-heading", markup=False)
             yield ContentDataTable(id="declarations-list", cursor_type="row")
             yield Static(id="declarations-empty", markup=False)
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)

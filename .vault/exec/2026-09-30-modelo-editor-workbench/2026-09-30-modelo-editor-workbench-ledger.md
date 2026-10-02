@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce74dab693c8b11811a3c50cc513730671d7b0d1c8f8541ff09148b614f77731'
+body_hash: 'sha256:53cf8d6d179630771495832b06c6465dda5ad83418ae59b3662329a3e374f44b'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1767,6 +1767,19 @@ related:
 - `S58` `verify:` `23 owning dev.docs.sequences refresh commands (modelo-sequences-final-20261002/manifest.json)` -> `pass`
 - `S58` `verify:` `23 recorded sequences semantic review preserves argv/kind/exit_code/captures` -> `pass`
 - `S58` `verify:` `just docs-sequences-check initial integrated output (23 stale goldens)` -> `fail`
+- `S27` `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_acceptance.py`
+- `S27` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/tests/test_workbench_acceptance.py -q -n4 -m integration (20261002T012439.476923Z; 192 passed)` -> `pass`
+- `S27` `by:` `vaultspec-execute`
+- `S58` `verify:` `just docs-sequences-check final (285 sequences across34pages; cli-sequence goldens clean)` -> `pass`
+- `S56` `M` `src/cadrumo/entrypoints/tui/declarations/grouped.py`
+- `S56` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_workspace.py`
+- `S56` `M` `.vault/audit/2026-09-30-modelo-editor-workbench-audit.md`
+- `S56` `verify:` `frozen a9439772ab P08 render 4locales 4surfaces 2sizes 2themes (64frames)` -> `pass`
+- `S56` `verify:` `P08 independent29image review (medium initialscroll finding corrected; post-fix captures pending)` -> `pass`
+- `S56` `verify:` `uv run --no-sync pytest workspace-picker-external-details-installed-create owning suite (20261002T013428.382326Z; 74passed)` -> `pass`
+- `S56` `verify:` `uv run --no-sync ruff check and format-check grouped.py and workspace tests` -> `pass`
+- `S56` `verify:` `uv run --no-sync ty check grouped.py and workspace tests` -> `pass`
+- `S56` `by:` `vaultspec-execute`
 
 ## Notes
 
@@ -1874,3 +1887,6 @@ related:
 - `S30` The actual broad unit exit1 is preserved; its sole WinError5 pointer contention failure touches files unchanged from82b7844265. The real owning read/write race plus permanent-refusal suite passes4 after contention clears, no timeout/production/detector change. Source batch has independent PASS with no critical/high; final exact acceptance matrix and frozen captures still pending.
 - `S30` Removed the unused renewal facade; live apply renewal remains and real production edits pass. Exact192-case es/en/ca/hu ×80x24/120x36/160x48 ×dark/light acceptance matrix now exercises tokens, actual sources/help opening, focus and abandoned-value privacy; owning run still pending at this code checkpoint.
 - `S58` Canonical targeted refresh changes only approved notice wording, empty AEAT concern fields, override check-level, grounded 303 surcharge text, and corrected ledger-membership facts/verification-report digest. Complete original bytes and per-path deltas retained C:/Users/hello/AppData/Local/Temp/modelo-sequences-final-20261002; no new masks/assertion/command changes. Final whole read-only sequence gate is running; current goldens stable for frozen captures.
+- `S27` Current exact acceptance matrix covers4locales ×80x24/120x36/160x48 ×both themes. 144 workbench/sources/help token cases overreal130/303; 24focusrestore and24cancel/discard/logprivacy/unchangedstoredform cases. This current proof replaces the old ordinary-size-only coverage without weakening assertions.
+- `S58` Final whole gate exits0;25non-blocking advisories remain21oversizedreaderframes+4unusedcaptures, no divergence. Sourcegoldens unchangedafterstablehandoff; semanticdiff/currentSHAreceipts C:/Users/hello/AppData/Local/Temp/modelo-sequences-final-20261002/handoff.json.
+- `S56` New16actualgeometrycases provevisiblefixedsearch/context inall4locales small/medium boththemes withone scrolling owner and '/' focus. Original64-frame actualfindingprovenance preserved. Requiredcorrected-sourcefresh64andfinal712 capture/reviewremainpending; S56staysopen.

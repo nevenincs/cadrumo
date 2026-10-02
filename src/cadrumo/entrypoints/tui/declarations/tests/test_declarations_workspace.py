@@ -15,6 +15,7 @@ from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.pilot import Pilot
 from textual.screen import Screen
+from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input, Static
 
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
@@ -77,6 +78,7 @@ from ..routes import (
     declarations_screen_factory,
     resolve_declarations_screen,
 )
+from .portfolio_fixtures import portfolio_projection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -764,6 +766,60 @@ class _Root(App[None]):
     @override
     def compose(self) -> ComposeResult:
         yield Static("root", id="root")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", tuple(OutputLanguage))
+@pytest.mark.parametrize("theme", ("cadrumo-dark", "cadrumo-light"))
+@pytest.mark.parametrize("size", ((80, 24), (120, 40)))
+async def test_initial_grouped_controls_remain_visible_above_the_scrolling_attention_rows(
+    locale: OutputLanguage, theme: str, size: tuple[int, int]
+) -> None:
+    from .....core.config import override_settings
+
+    workspace, calendar = portfolio_projection()
+    controller = _controller(workspace)
+    controller.calendar_projection = calendar
+    with override_settings(cadrumo_output_language=locale.value):
+        screen = DeclarationsOverviewScreen(controller)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=size) as pilot:
+            app.theme = theme
+            await pilot.pause()
+            search = screen.query_one("#declarations-search", Input)
+            context = screen.query_one("#declarations-list-context", Static)
+            page = screen.query_one("#declarations-page", VerticalScroll)
+            table = screen.query_one("#declarations-list", DataTable)
+            assert app.focused is table
+            assert table.ordered_rows[table.cursor_row].key.value == "group:attention"
+            assert table.region.y >= page.region.y
+            assert table.region.y + table.header_height < page.region.bottom
+            for control in (search, context):
+                assert control.visible and control.display
+                assert screen.region.contains_region(control.region)
+                assert control.region.y >= screen.query_one(".cadrumo-banner", Static).region.bottom
+                assert control.region.bottom <= page.region.y
+            initial_regions = (search.region, context.region)
+            assert declarations_copy("tui.declarations.list.filter.all") in str(context.render())
+            assert declarations_copy("tui.declarations.list.sort.deadline") in str(context.render())
+            assert page.max_scroll_y > 0
+            page.scroll_end(animate=False)
+            await pilot.pause()
+            assert page.scroll_y > 0
+            assert (search.region, context.region) == initial_regions
+            assert screen.region.contains_region(search.region)
+            assert screen.region.contains_region(context.region)
+            await pilot.press("/")
+            await pilot.pause()
+            assert app.focused is search
+            assert (search.region, context.region) == initial_regions
+            assert geometry_band(app, size[0]) == []
+            owners = tuple(
+                widget
+                for widget in screen.walk_children()
+                if isinstance(widget, Widget) and widget.display and widget.show_vertical_scrollbar
+            )
+            assert owners == (page,)
 
 
 @pytest.mark.asyncio
