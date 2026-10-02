@@ -31,6 +31,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "signing_keypair_capability_factory": lambda *args, **kwargs: None,
     "calculation_summary_pdf_writer": lambda *args, **kwargs: b"",
     "operator_scope_ports": object(),
+    "prerequisite_observer": None,
 }
 
 

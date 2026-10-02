@@ -321,6 +321,10 @@ class FakeActions:
         self.applied.append(changes)
         raise RuntimeError("no operation service in this test")
 
+    def take_apply_prerequisite(self) -> None:
+        """The fake failed service has no private calculation prerequisite."""
+        return None
+
     def calculation_evidence(self) -> WorkbenchCalculationEvidence | None:
         """Return the evidence the next calculation asks for, as the test set it."""
         return self.evidence

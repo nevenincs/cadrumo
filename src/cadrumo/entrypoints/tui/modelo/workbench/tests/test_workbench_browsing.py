@@ -16,7 +16,12 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Input, OptionList, Static
 
-from ......application.modelo.work_form_models import ModeloFormText, ModeloFormTextDisclosure, ModeloWorkForm
+from ......application.modelo.work_form_models import (
+    ModeloFormFieldBlock,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+    ModeloWorkForm,
+)
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList, CasillaListEntry
@@ -101,6 +106,31 @@ def test_a_section_is_named_by_its_heading_its_official_heading_its_boxes_or_its
 
 def test_search_folds_case_and_accents() -> None:
     assert folded("Liquidación ÚNICA") == "liquidacion unica"
+
+
+@pytest.mark.parametrize(
+    ("boxes", "expected"),
+    [
+        (("1735", "1388", "1857"), "Boxes 1388 to 1857"),
+        (("009", "001", "0005"), "Boxes 001 to 009"),
+        (("0168", "0168", "0168"), "Box 0168"),
+        (("D1", "B2", "A3"), "Page 1, part 1"),
+        (("001", "A1", "003"), "Page 1, part 1"),
+    ],
+)
+def test_fallback_section_ranges_use_printed_bounds_instead_of_reading_order(
+    boxes: tuple[str, ...], expected: str
+) -> None:
+    technical = ModeloFormText(text="technical", disclosure=ModeloFormTextDisclosure.TECHNICAL)
+    section = _with_headings(technical, technical).pages[0].sections[0]
+    blocks = []
+    for block, box in zip(section.blocks, boxes, strict=True):
+        assert isinstance(block, ModeloFormFieldBlock)
+        blocks.append(block.model_copy(update={"field": block.field.model_copy(update={"box": box})}))
+    section = section.model_copy(update={"blocks": tuple(blocks)})
+    with override_settings(cadrumo_output_language="en"):
+        title = section_title(section, page_number=1, part_number=1)
+    assert title.text == expected and title.disclosure is ModeloFormTextDisclosure.LOCALIZED
 
 
 @pytest.mark.asyncio
@@ -258,3 +288,24 @@ async def test_a_narrow_terminal_keeps_the_page_section_and_counts_in_a_breadcru
 
     assert shown
     assert text == "page 2 of 3 · Resultado · III. Total liquidación · !1"
+
+
+@pytest.mark.asyncio
+async def test_a_sorted_jump_names_the_targets_page_without_changing_the_remembered_form_page() -> None:
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await _settle(pilot)
+            await pilot.press("right_square_bracket")
+            await _settle(pilot)
+            remembered = screen._page_index
+            assert remembered > 0
+            await pilot.press("o", "g", "0", "7", "enter")
+            await _settle(pilot)
+            crumb = str(screen.query_one("#wb-crumb", Static).render())
+            assert _cursor(screen) == "07"
+            assert screen.box_order is SortOrder.BOX and screen._page_index == remembered
+            assert "page 1 of 3" in crumb and "Liquidación" in crumb
+            assert "sorted by box number" in crumb
+            app.exit(None)

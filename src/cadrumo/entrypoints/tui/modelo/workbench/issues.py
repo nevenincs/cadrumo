@@ -273,6 +273,8 @@ class IssueLine:
     from_calculation: bool = False
     #: Whether calculating again is what puts this right, so ``c`` does it from the list.
     recalculates: bool = False
+    #: Whether this action inspects the named box through Enter, rather than opening its source area.
+    action_targets_box: bool = False
 
     @property
     def blocking(self) -> bool:
@@ -636,10 +638,12 @@ def title_text(counts: Mapping[IssueLevel, int], *, recorded: bool = False) -> s
     return f"{title}   {chips}" if chips else title
 
 
-def verdict_text(form: ModeloWorkForm) -> str:
+def verdict_text(form: ModeloWorkForm, *, changes_unapplied: bool = False) -> str:
     """Say what the last check concluded, or that the declaration has not been checked."""
     if form.verification is None:
         return tr("tui.modelo.workbench.issues.verdict.none")
+    if changes_unapplied and form.verification is VerificationCompletenessStatus.COMPLETE:
+        return tr("tui.modelo.workbench.issues.verdict.saved_with_changes")
     return tr(_VERDICT_LOCALE_KEYS[form.verification])
 
 
@@ -655,7 +659,7 @@ def _paragraph(text: str, style: str = "") -> Text | None:
 def _issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> RenderableType:
     action = None if line.level is IssueLevel.INFO else _action_with_key(line)
     return _entry(
-        _paragraph(line.where, "bold"),
+        _paragraph(f"[{line.box}] {line.where}" if line.action_targets_box and line.box != "·" else line.where, "bold"),
         _paragraph(line.message),
         _paragraph(action or "", "italic"),
         _paragraph(line.detail) if expanded else None,
@@ -667,6 +671,8 @@ def _action_with_key(line: IssueLine) -> str:
     """What to do, with the key that does it from this list where there is one."""
     if line.recalculates:
         return f"{line.action} [{_CALCULATE_KEY}]"
+    if line.action_targets_box and line.key is not None:
+        return f"{line.action} [Enter]"
     if line.area is not None:
         return f"{line.action} [{_OPEN_AREA_KEY}]"
     return line.action
@@ -789,7 +795,14 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         Binding("b", "confirm_scope", "", show=False),
     ]
 
-    def __init__(self, form: ModeloWorkForm, *, status_line: StatusLine | None = None) -> None:
+    def __init__(
+        self,
+        form: ModeloWorkForm,
+        *,
+        status_line: StatusLine | None = None,
+        additional_lines: tuple[IssueLine, ...] = (),
+        changes_unapplied: bool = False,
+    ) -> None:
         """Hold the form whose findings and missing and assumed values are listed.
 
         ``status_line`` is shown above everything else when given, so the
@@ -799,8 +812,9 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         super().__init__()
         self._form = form
         self._status_line = status_line
+        self._changes_unapplied = changes_unapplied
         self._recorded = form.filing is not None
-        self._lines = issue_lines(form)
+        self._lines = (*additional_lines, *issue_lines(form))
         self._unentered = {boxes.level: boxes for boxes in unentered_levels(form)}
         self._expanded: set[int] = set()
         self._technical: set[int] = set()
@@ -812,7 +826,9 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
                 yield StatusBar(self._status_line, id="issues-status")
             title = title_text(level_counts(self._lines, tuple(self._unentered.values())), recorded=self._recorded)
             yield Static(levels_marked(title), id="issues-title", markup=False)
-            yield Static(verdict_text(self._form), id="issues-verdict", markup=False)
+            yield Static(
+                verdict_text(self._form, changes_unapplied=self._changes_unapplied), id="issues-verdict", markup=False
+            )
             yield _IssueList(*self._options(), id="issues-list")
             with Horizontal(id="issues-actions"):
                 yield Button(tr("tui.modelo.workbench.result_diff.close"), id="issues-close", variant="primary")

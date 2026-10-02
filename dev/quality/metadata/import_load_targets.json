@@ -831,6 +831,7 @@
         "cadrumo.application.modelo.edit_parsing",
         "cadrumo.application.modelo.edit_preflight",
         "cadrumo.application.modelo.edit_receipt_ports",
+        "cadrumo.application.modelo.edit_refusal_projection",
         "cadrumo.application.modelo.edit_services",
         "cadrumo.application.modelo.edit_value_grammar",
         "cadrumo.application.modelo.export",

@@ -45,6 +45,7 @@ from ...core.i18n.render import output_language as active_output_language
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
+from ...core.logging import get_logger
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
@@ -122,6 +123,7 @@ from .edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditDetailRowAddressV1,
     ModeloEditDetailRowIntentKind,
+    ModeloEditDomainRefusalV1,
     ModeloEditExecutionNoEffectV1,
     ModeloEditPermittedSurfaceEntryV1,
     ModeloEditRowAddressV1,
@@ -136,6 +138,7 @@ from .edit_models import (
     ModeloScalarEditIntentV1,
 )
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditPrerequisiteObserver
 from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
 from .edit_value_grammar import MONEY_OPERAND_MAXIMUM, ModeloEditValueGrammarV1
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
@@ -2418,10 +2421,12 @@ class ModeloEditApplyExecutor:
         *,
         calculation_action_ports_factory: CalculationActionPortsFactory,
         receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
+        prerequisite_observer: ModeloEditPrerequisiteObserver | None = None,
     ) -> None:
         """Bind the calculation authorities supplied by the composition root."""
         self._calculation_action_ports_factory = calculation_action_ports_factory
         self._receipt_repository_factory = receipt_repository_factory
+        self._prerequisite_observer = prerequisite_observer
 
     async def execute(
         self,
@@ -2467,6 +2472,29 @@ class ModeloEditApplyExecutor:
             # of that -- distinct from the UNKNOWN carried while the outcome
             # was still open -- recorded before the refusal settles it.
             await context.events.effect(OperationEffect.NONE)
+            refusal = outcome.refusal
+            observer = self._prerequisite_observer
+            if (
+                observer is not None
+                and isinstance(refusal, ModeloEditDomainRefusalV1)
+                and isinstance(refusal.address, ModeloEditScalarAddressV1)
+                and "calculation_source_unresolved" in refusal.facts
+            ):
+                # Private, one-session diagnostics never enter the operation
+                # record. Delivery cannot change the truthful NONE/refusal.
+                try:
+                    observer(
+                        ModeloEditCalculationPrerequisiteV1(
+                            operation_id=str(context.identity.operation_id),
+                            work_unit_id=str(baseline.work_unit_id),
+                            baseline_id=str(baseline.baseline_id),
+                            calculation_revision_id=baseline.current_calculation_revision_id,
+                            casilla_id=refusal.address.casilla_id,
+                            binding_ids=refusal.evidence,
+                        )
+                    )
+                except Exception:
+                    get_logger(__name__).warning("private edit diagnostic delivery was unavailable")
             raise modelo_edit_refusal_error(outcome.refusal)
         await context.events.effect(OperationEffect.UPDATED)
         return str(outcome.receipt.receipt_id)
@@ -2476,6 +2504,7 @@ def build_modelo_edit_apply_definition(
     *,
     calculation_action_ports_factory: CalculationActionPortsFactory,
     receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
+    prerequisite_observer: ModeloEditPrerequisiteObserver | None = None,
 ) -> OperationDefinition:
     """Bind the Edit Contract's guarded apply path to its registered operation contract."""
 
@@ -2483,6 +2512,7 @@ def build_modelo_edit_apply_definition(
         return ModeloEditApplyExecutor(
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
+            prerequisite_observer=prerequisite_observer,
         )
 
     return OperationDefinition(
@@ -2672,6 +2702,7 @@ def build_modelo_lifecycle_operation_definitions(
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
     receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory,
+    edit_prerequisite_observer: ModeloEditPrerequisiteObserver | None = None,
 ) -> tuple[OperationDefinition, ...]:
     """Return the one canonical modelo lifecycle operation population.
 
@@ -2687,6 +2718,7 @@ def build_modelo_lifecycle_operation_definitions(
         build_modelo_edit_apply_definition(
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
+            prerequisite_observer=edit_prerequisite_observer,
         ),
         build_modelo_export_definition(
             export_ports_factory=export_ports_factory,

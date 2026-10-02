@@ -48,6 +48,8 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.secure_object_write import SecureObjectWrite
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
@@ -135,12 +137,14 @@ def _domain_refusal(
     condition: str,
     address: ModeloEditAddressV1 | None = None,
     facts: tuple[str, ...] = (),
+    evidence: tuple[str, ...] = (),
 ) -> ModeloEditExecutionNoEffectV1:
     return ModeloEditExecutionNoEffectV1(
         refusal=ModeloEditDomainRefusalV1(
             code=code,
             address=address,
             facts=facts,
+            evidence=evidence,
             responsible_owner=_RESPONSIBLE_OWNER,
             reconsideration_condition=condition,
         )
@@ -420,9 +424,38 @@ def _capture_edit_receipt(
     return (receipt_repository.to_secure_object_write(receipt),)
 
 
-def _pre_effect_refusal(error: BaseException) -> ModeloEditExecutionNoEffectV1:
+def _pre_effect_refusal(
+    error: BaseException, *, revision: ModeloRevision | None = None
+) -> ModeloEditExecutionNoEffectV1:
     """Translate a precondition the calculation refused before persisting into a typed refusal."""
     code = get_registered_error_code(error).code
+    if (
+        isinstance(error, RegistryValidationError)
+        and error.translated_message == "errors.calc.bound_casilla_binding_value_missing"
+        and revision is not None
+        and error.context is not None
+    ):
+        # Only this closed producer identifies an unresolved bound source.
+        # Its context is validated against the actual revision, never parsed
+        # from the exception's sentence or rendered directly to the filer.
+        casilla = next((item for item in revision.casillas if item.id == error.context.get("casilla_id")), None)
+        raw = error.context.get("binding_id")
+        binding_ids = tuple(raw.split(",")) if isinstance(raw, str) else ()
+        declared = {str(binding.id) for binding in revision.bindings}
+        if (
+            casilla is not None
+            and 0 < len(binding_ids) <= 16
+            and len(set(binding_ids)) == len(binding_ids)
+            and set(binding_ids) <= declared
+            and set(binding_ids) <= set(bound_casilla_binding_ids(casilla))
+        ):
+            return _domain_refusal(
+                ModeloEditRefusalCode.VALIDATION_FAILED,
+                address=ModeloEditScalarAddressV1(casilla_id=casilla.id),
+                facts=(code, "calculation_source_unresolved"),
+                evidence=binding_ids,
+                condition="inspect the source required by this failed recalculation before resubmitting",
+            )
     if isinstance(error, ModeloClearedCasillaSourceFedError):
         return _domain_refusal(
             ModeloEditRefusalCode.DISALLOWED_INTENT,
@@ -506,7 +539,7 @@ def _execute_modelo_edit(
     except _PRE_EFFECT_REFUSALS as refused:
         if captured_receipt:
             raise
-        return _pre_effect_refusal(refused)
+        return _pre_effect_refusal(refused, revision=prepared.revision)
     if not captured_receipt:
         raise ModeloError("the calculation boundary resolved no revision id for the applied edit")
     return ModeloEditExecutionUpdatedV1(receipt=captured_receipt[0])

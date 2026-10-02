@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import replace
 from functools import partial
 from typing import TYPE_CHECKING, ClassVar, Final, override
 from weakref import WeakSet
@@ -104,6 +105,7 @@ from .editor import (
     EditorDecision,
     EditorOutcome,
     affects_text,
+    open_area_target,
     read_only_reason,
 )
 from .export import WorkbenchExportScreen
@@ -123,7 +125,15 @@ from .header import (
     result_view,
     status_line,
 )
-from .issues import CalculateAgain, ConfirmAssumedValues, IssuesChoice, WorkbenchIssuesScreen, blocks_marked
+from .issues import (
+    CalculateAgain,
+    ConfirmAssumedValues,
+    IssueLevel,
+    IssueLine,
+    IssuesChoice,
+    WorkbenchIssuesScreen,
+    blocks_marked,
+)
 from .keys import describe_bindings
 from .legend import first_open_text, legend_panel, mark_for_glyph, more_text, on_screen_text
 from .navigator import (
@@ -146,6 +156,7 @@ from .page_items import (
 from .ports import (
     ModeloWorkbenchActionsV1,
     ModeloWorkbenchReaderV1,
+    WorkbenchApplyPrerequisite,
     WorkbenchChangeKind,
     WorkbenchExportRequest,
     WorkbenchPreflight,
@@ -164,7 +175,14 @@ from .review import EditReviewScreen, ReviewDecision, ReviewNote, UnattributedBo
 from .search import SearchMode, WorkbenchSearchPanel, search_entries
 from .session import Rebase, StagedChange, StageRefusal, WorkbenchEditSession
 from .sorting import SORT_LOCALE_KEYS, SortOrder, next_order, sorted_items
-from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSourcesScreen, surface_target
+from .sources import (
+    GoToCasilla,
+    OpenSourceSurface,
+    SourcesChoice,
+    WorkbenchSourcesScreen,
+    earlier_filing_text,
+    surface_target,
+)
 from .vocabulary import (
     ATTENTION_MARKS,
     HERE_MARK,
@@ -604,6 +622,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._actions = actions
         self._navigate = navigate
         self._operation_in_flight = False
+        self._apply_prerequisite: WorkbenchApplyPrerequisite | None = None
         self._load: ModeloWorkFormLoadV1 | None = None
         self._pages: tuple[WorkbenchPage, ...] = ()
         self._inapplicable: frozenset[str] = frozenset()
@@ -1012,7 +1031,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self.query_one("#wb-stepper", Static).update(stepper)
         self._drawn["stepper"] = stepper_marks(progress)
         key = _FINDINGS_KEY if progress.findings_lead else _NEXT_KEYS[progress.next_action]
-        action = next_action_text(progress, self._language)
+        action = (
+            tr("tui.modelo.workbench.apply_prerequisite.next")
+            if self._active_apply_prerequisite() is not None
+            else next_action_text(progress, self._language)
+        )
         self._next_words = f"{action} [{key}]" if key else action
         width = max(self._width() - _GUTTERS, 1)
         line = fit_next_line(action, key, width)
@@ -1059,15 +1082,20 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if form is None or not self._pages or not self.has_class("-narrow"):
             return
         entry = self.query_one(CasillaList).highlighted
-        page = self._pages[self._page_index]
+        current = self._page_index
+        if self._sort is not SortOrder.FORM and entry is not None:
+            target_page = page_of(self._pages, entry.key)
+            if target_page is not None:
+                current = target_page
+        page = self._pages[current]
         section = None if entry is None else section_of(page, entry.key)
         line, marks = breadcrumb(
             self._pages,
-            current=self._page_index,
+            current=current,
             section=section,
             checked=checked_boxes(form),
             show_attention=not self.recorded,
-            not_applying=None if self._applies(self._page_index) else self._not_applying_text(),
+            not_applying=None if self._applies(current) else self._not_applying_text(),
         )
         # The page title line is hidden here, so the crumb names a filter or an order that is not the default.
         for note in self._listing_notes(name_every_filter=False):
@@ -1295,11 +1323,16 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             if reason is not None:
                 parts.append(reason)
             return " · ".join(parts)
-        state = origin_text(field, aeat_imported=aeat_imported_on(self.form), language=self._language)
+        parts = (
+            []
+            if entry.staged_replaces_absence
+            else [origin_text(field, aeat_imported=aeat_imported_on(self.form), language=self._language)]
+        )
         attention = entry.attention
         if attention is not None:
-            state = f"{state} · {ATTENTION_MARKS[attention].glyph} {tr(attention_words_key(attention))}"
-        return f"{state} · {editability_text(field)}"
+            parts.append(f"{ATTENTION_MARKS[attention].glyph} {tr(attention_words_key(attention))}")
+        parts.append(editability_text(field))
+        return " · ".join(parts)
 
     def _said_by_origin(self, field: ModeloFormField) -> frozenset[str]:
         """The sources' sentences the origin words already say: those of the kind of place they name."""
@@ -1649,6 +1682,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             status_line=None if docked else self._status_line(),
             recorded=recorded,
             aeat_imported=aeat_imported_on(self.form),
+            staged=next((change for change in self._session.changes if change.key == entry.key), None),
         )
         if isinstance(editor, CasillaEditorPanel):
             self._dock(entry, editor)
@@ -1882,6 +1916,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if self._sort is not SortOrder.FORM:
             if casilla_list.focus_address(key):
                 casilla_list.focus()
+                self.call_after_refresh(casilla_list.reveal_highlighted)
                 return
             self._sort = SortOrder.FORM
         index = page_of(self._pages, key)
@@ -1893,6 +1928,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             self._render_page()
             casilla_list.focus_address(key)
         casilla_list.focus()
+        self.call_after_refresh(casilla_list.reveal_highlighted)
 
     def _open_surface(self, choice: OpenSourceSurface) -> None:
         navigate = self._navigate
@@ -2139,13 +2175,90 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             elif choice is not None:
                 self._go_to(choice)
 
-        self.app.push_screen(WorkbenchIssuesScreen(form, status_line=self._status_line()), closed)
+        prerequisite = self._apply_prerequisite_line()
+        self.app.push_screen(
+            WorkbenchIssuesScreen(
+                form,
+                status_line=self._status_line(),
+                additional_lines=() if prerequisite is None else (prerequisite,),
+                changes_unapplied=self._session.dirty,
+            ),
+            closed,
+        )
+
+    def _active_apply_prerequisite(self) -> WorkbenchApplyPrerequisite | None:
+        """Keep the diagnostic only while the failed calculation and unresolved intent still match."""
+        prerequisite = self._apply_prerequisite
+        form = self.form
+        if prerequisite is None:
+            return None
+        key = address_key(prerequisite.address)
+        if (
+            form is None
+            or self.recorded
+            or not self._session.dirty
+            or prerequisite.calculation_revision_id != form.calculation_revision_id
+            or not any(field.address == prerequisite.address for field in form.fields())
+            or any(change.key == key for change in self._session.changes)
+        ):
+            self._apply_prerequisite = None
+            return None
+        return prerequisite
+
+    def _apply_prerequisite_line(self) -> IssueLine | None:
+        """Name this failed calculation's source without relabeling the saved value as missing."""
+        prerequisite = self._active_apply_prerequisite()
+        form = self.form
+        if prerequisite is None or form is None:
+            return None
+        field = next(field for field in form.fields() if field.address == prerequisite.address)
+        source = field.source
+        filings = () if source is None else source.earlier_filings
+        message = tr(
+            "tui.modelo.workbench.apply_prerequisite.earlier"
+            if filings
+            else "tui.modelo.workbench.apply_prerequisite.what"
+        )
+        if not form.operator_entries_known:
+            message += "\n" + tr("tui.modelo.workbench.apply_prerequisite.legacy")
+        if filings:
+            message += "\n" + earlier_filing_text(filings)
+        if prerequisite.source_boxes:
+            message += "\n" + tr(
+                "tui.modelo.workbench.apply_prerequisite.source_boxes",
+                boxes=", ".join(f"[{box}]" for box in prerequisite.source_boxes),
+            )
+        return IssueLine(
+            level=IssueLevel.BLOCKS,
+            box=field.box or "·",
+            where=field.label.text,
+            message=message,
+            action=tr("tui.modelo.workbench.apply_prerequisite.action"),
+            detail="",
+            technical="",
+            key=address_key(field.address),
+            area=open_area_target(field),
+            action_targets_box=True,
+        )
+
+    def _state_apply_prerequisite(self) -> bool:
+        line = self._apply_prerequisite_line()
+        if line is None:
+            return False
+        self._notice(tr("tui.modelo.workbench.apply_prerequisite.notice", box=f"[{line.box}]"))
+        self._render_progress()
+        return True
 
     def _progress(self, load: ModeloWorkFormLoadV1) -> WorkbenchProgress:
         """Where the declaration stands now, with the changes staged here."""
-        return workbench_progress(
+        progress = workbench_progress(
             load.form, staged=len(self._session.changes), verified=load.verified, filed=self.recorded
         )
+        if self._active_apply_prerequisite() is not None:
+            return replace(
+                progress, next_action=NextAction.RESOLVE, count=1, blocking=progress.blocking + 1, findings_lead=True
+            )
+        return progress
 
     def _file_out_of_date(self) -> bool:
         """Refuse to record the filing while the latest file was made from an earlier calculation, and say so.
@@ -2265,17 +2378,23 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if not isinstance(outcome, OperationModalSettledOutcomeV1):
             return
         condition = outcome.view_model.projection.terminal_condition
+        prerequisite = (
+            self._actions.take_apply_prerequisite() if applies_changes and self._actions is not None else None
+        )
         if condition is not OperationTerminalCondition.SUCCEEDED:
+            self._apply_prerequisite = prerequisite if condition is OperationTerminalCondition.REFUSED else None
             explanation = (
                 public_refusal_explanation(outcome.view_model.receipt_ref)
                 if outcome.view_model.receipt_kind == "refusal"
                 else None
             )
             message = tr("tui.modelo.workbench.operation.not_done")
-            self._notice(message if explanation is None else f"{message} {explanation}")
+            if not self._state_apply_prerequisite():
+                self._notice(message if explanation is None else f"{message} {explanation}")
             if applies_changes:
-                self.run_worker(self._rebase, group="workbench-read", exclusive=True)
+                self.run_worker(self._read_refused_apply, group="workbench-read", exclusive=True)
             return
+        self._apply_prerequisite = None
         yours = frozenset(change.key for change in self._session.changes) if applies_changes else frozenset()
         if applies_changes:
             self._session.discard()
@@ -2296,6 +2415,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             group="workbench-read",
             exclusive=True,
         )
+
+    async def _read_refused_apply(self) -> None:
+        """Refresh without replacing a still-applicable named refusal with a bare retry message."""
+        await self._rebase()
+        self._state_apply_prerequisite()
 
     async def _read_after(
         self, before: ModeloWorkFormLoadV1 | None, yours: frozenset[AddressKey], reporting: str | None = None

@@ -52,6 +52,7 @@ from ..application.local_reader_operation import (
 from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
 from ..application.modelo.calculation_action_ports import CalculationActionPortsFactory
 from ..application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from ..application.modelo.edit_refusal_projection import ModeloEditPrerequisiteObserver
 from ..application.modelo.export_ports import ModeloExportPortsFactory
 from ..application.modelo.filing_action_ports import FilingActionPortsFactory
 from ..application.modelo.operation_definitions import (
@@ -200,6 +201,7 @@ def build_production_operation_registry(
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
     operator_scope_ports: OperatorScopePorts | None = None,
+    edit_prerequisite_observer: ModeloEditPrerequisiteObserver | None = None,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
@@ -229,6 +231,7 @@ def build_production_operation_registry(
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,
         receipt_repository_factory=modelo_edit_receipt_repository_factory,
         verification_repository_bundle_factory=verification_repository_bundle_factory,
+        edit_prerequisite_observer=edit_prerequisite_observer,
     )
     resolved_google_export_definition = (
         google_export_definition
@@ -301,6 +304,7 @@ def compose_operation_dependencies(
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
     operator_scope_ports: OperatorScopePorts | None = None,
+    edit_prerequisite_observer: ModeloEditPrerequisiteObserver | None = None,
 ) -> OperationComposedServices:
     """Compose the immutable production registry and all public services.
 
@@ -325,6 +329,7 @@ def compose_operation_dependencies(
         modelo_edit_receipt_repository_factory=modelo_edit_receipt_repository_factory,
         verification_repository_bundle_factory=verification_repository_bundle_factory,
         operator_scope_ports=resolved_operator_scope_ports,
+        edit_prerequisite_observer=edit_prerequisite_observer,
     )
     journal = OperationJournalRepository(storage_root=storage_root)
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)

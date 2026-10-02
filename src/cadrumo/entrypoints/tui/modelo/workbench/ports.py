@@ -112,6 +112,15 @@ class WorkbenchPreflight:
 
 
 @dataclass(frozen=True, slots=True)
+class WorkbenchApplyPrerequisite:
+    """A failed Apply's named source, without changing the saved form's values."""
+
+    address: ModeloFormAddressV1
+    calculation_revision_id: str | None
+    source_boxes: tuple[CasillaId, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class WorkbenchCalculationEvidence:
     """What a calculation must first ask the filer: the ordinary Modelo 303 filing answers."""
 
@@ -154,6 +163,10 @@ class ModeloWorkbenchActionsV1(Protocol):
         """Submit the staged changes and recalculate, through the supervised operation."""
         ...
 
+    def take_apply_prerequisite(self) -> WorkbenchApplyPrerequisite | None:
+        """Consume this Apply's private diagnostic after it settles, including failed/canceled context."""
+        ...
+
     def calculation_evidence(self) -> WorkbenchCalculationEvidence | None:
         """What the next calculation must first ask the filer, or ``None`` when it asks nothing."""
         ...
@@ -190,6 +203,7 @@ class ModeloWorkbenchActionsV1(Protocol):
 __all__ = [
     "ModeloWorkbenchActionsV1",
     "ModeloWorkbenchReaderV1",
+    "WorkbenchApplyPrerequisite",
     "WorkbenchCalculationEvidence",
     "WorkbenchChange",
     "WorkbenchChangeKind",

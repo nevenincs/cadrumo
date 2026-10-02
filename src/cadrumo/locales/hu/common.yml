@@ -2250,6 +2250,7 @@ tui:
           new_value: Új érték
           now: Jelenleg
           where_from: Honnan származik
+          saved_value: Mentett érték
         can_change:
           calculated: Nem. A Cadrumo más rovatokból számítja ki. Inkább azokat a rovatokat
             módosítsd.
@@ -2798,6 +2799,11 @@ tui:
       value:
         not_applicable: nem alk.
       was: 'korábban: {value}'
+      apply_prerequisite:
+        earlier: Ehhez az újraszámításhoz egy korábbi bevallás értéke nem érhető el.
+        legacy: Ez a régebbi számítás nem tudja újra használni az összes eredeti értéket.
+        source_boxes: 'Korábbi forrásrovatok: {boxes}'
+        what: Ehhez az újraszámításhoz ennek a rovatnak a forrásértéke nem érhető el.
   root:
     account:
       appearance: Megjelenés

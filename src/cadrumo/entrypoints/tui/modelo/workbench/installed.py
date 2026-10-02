@@ -85,6 +85,7 @@ from .....core.i18n.render import output_language, tr
 from .....core.identity.bucket import BucketId
 from .....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from .....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from .....domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -96,6 +97,7 @@ from ..lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLi
 from ..m303_evidence import OrdinaryM303FilingEvidenceSubmission
 from .export import offered_export_artefacts
 from .ports import (
+    WorkbenchApplyPrerequisite,
     WorkbenchCalculationEvidence,
     WorkbenchChange,
     WorkbenchChangeKind,
@@ -205,6 +207,7 @@ class InstalledModeloWorkbench:
         self._state: _ReadState | None = None
         self._snapshots: dict[str, RegistrySnapshot] = {}
         self._tax_id_format = runtime_tax_id_format(authority=operation)
+        self._apply_operation: tuple[str, ModeloWorkspaceLifecycleDoor] | None = None
 
     # -- reading -------------------------------------------------------------
 
@@ -351,7 +354,54 @@ class InstalledModeloWorkbench:
     async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationController:
         """Submit the staged changes as typed intents against the admitted baseline."""
         scalar, binding = _intents(changes)
-        return await self._door().apply_edits(baseline=self._baseline(), scalar_intents=scalar, binding_intents=binding)
+        door = self._door()
+        controller = await door.apply_edits(baseline=self._baseline(), scalar_intents=scalar, binding_intents=binding)
+        self._apply_operation = None if door.edit_refusals is None else (str(controller.operation_id), door)
+        return controller
+
+    def take_apply_prerequisite(self) -> WorkbenchApplyPrerequisite | None:
+        """Read only this operation's validated source against the current installed coordinate."""
+        pending, self._apply_operation = self._apply_operation, None
+        state = self._state
+        if pending is None:
+            return None
+        operation_id, door = pending
+        store = door.edit_refusals
+        if store is None:
+            return None
+        prerequisite = store.take(
+            operation_id,
+            work_unit_id=str(self._declaration.work_unit_id),
+            calculation_revision_id=None if state is None else state.calculation_revision_id,
+        )
+        if prerequisite is None or state is None:
+            return None
+        snapshot = modelo_form_snapshot(
+            self._operation,
+            self._declaration.modelo,
+            self._declaration.filing_year,
+            self._declaration.period,
+            state.registry_revision_id,
+        )
+        providers = (
+            binding.provider for binding in snapshot.revision.bindings if binding.id in prerequisite.binding_ids
+        )
+        boxes = tuple(
+            dict.fromkeys(
+                box
+                for provider in providers
+                if isinstance(provider, PreviousFilingProvider)
+                for box in (
+                    *provider.source_casilla_ids,
+                    *((provider.source_casilla_id,) if provider.source_casilla_id else ()),
+                )
+            )
+        )
+        return WorkbenchApplyPrerequisite(
+            address=ModeloFormCasillaAddressV1(casilla_id=prerequisite.casilla_id),
+            calculation_revision_id=prerequisite.calculation_revision_id,
+            source_boxes=boxes,
+        )
 
     # -- lifecycle -----------------------------------------------------------
 

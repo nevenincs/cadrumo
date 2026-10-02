@@ -208,6 +208,8 @@ class CasillaListEntry:
     label: str | None = None
     staged_text: str | None = None
     previous_text: str | None = None
+    #: A concrete staged SET must not inherit its saved original's absence qualifier.
+    staged_concrete_value: bool = False
     #: The one rate box of an official row, which prints the rate the row's base is taxed at.
     rate_of_row: bool = False
     #: On a row's rate box, whether the row's base holds no amount; ``None`` where no base box is known.
@@ -248,14 +250,22 @@ class CasillaListEntry:
     @property
     def origin_mark(self) -> str:
         """The origin glyph the row draws; a recorded declaration draws no to-do mark, only its words."""
-        if self.recorded and self.field.origin in ASKS_FOR_A_VALUE:
+        if self.staged_replaces_absence or (self.recorded and self.field.origin in ASKS_FOR_A_VALUE):
             return " "
         return origin_glyph(self.field)
 
     @property
     def origin_words(self) -> str:
         """The origin in words, as the row and the box panel say it; a recorded declaration asks nothing."""
-        return origin_words(self.field, recorded=self.recorded)
+        return "" if self.staged_replaces_absence else origin_words(self.field, recorded=self.recorded)
+
+    @property
+    def staged_replaces_absence(self) -> bool:
+        """Whether a concrete staged value supersedes only the saved empty/missing qualifier."""
+        return self.staged_concrete_value and self.field.origin in {
+            ModeloFormOrigin.OPTIONAL_EMPTY,
+            ModeloFormOrigin.NEEDS_INPUT,
+        }
 
     @property
     def origin_role(self) -> ColourRole:
@@ -1097,6 +1107,11 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._starts = starts
         self._heights = heights
         self.virtual_size = Size(width, line)
+        if self.is_mounted:
+            # A newly visible scrollbar changes content width without changing
+            # this widget's size. Reveal against the resulting wrapped rows,
+            # after scrolling has become available for the new virtual size.
+            self.call_after_refresh(self.reveal_highlighted)
 
     def on_resize(self, event: events.Resize) -> None:
         """Lay the lines out again for the new width and keep the cursor in view."""
@@ -1308,6 +1323,12 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             self.scroll_to(y=max(top - 1, 0), animate=False)
         elif bottom + following > view_top + view_height:
             self.scroll_to(y=bottom + following - view_height, animate=False)
+
+    def reveal_highlighted(self) -> None:
+        """Reveal the current field again after its surrounding layout has settled."""
+        self._layout()
+        self._scroll_to_cursor()
+        self.refresh()
 
     def keep_following(self, lines: int) -> None:
         """Keep ``lines`` rows after the cursor's field in view whenever the list scrolls down to it, or ``0`` for none.

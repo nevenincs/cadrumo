@@ -2259,6 +2259,7 @@ tui:
           new_value: Nou valor
           now: Ara
           where_from: D'on surt
+          saved_value: Valor desat
         can_change:
           calculated: No. Cadrumo ho calcula a partir d'altres caselles. Canvia aquelles
             caselles.
@@ -2434,6 +2435,7 @@ tui:
           incomplete: 'La comprovació no és completa: falten dades que la declaració
             necessita.'
           none: La declaració encara no s'ha comprovat.
+          saved_with_changes: El càlcul desat ha superat la comprovació; els teus canvis no s'han aplicat.
         what_to_do: 'Què cal fer: {action}'
         where:
           declaration: Tota la declaració
@@ -2803,6 +2805,14 @@ tui:
       value:
         not_applicable: no s'aplica
       was: 'abans: {value}'
+      apply_prerequisite:
+        action: Revisa aquesta casella i el seu origen abans de tornar a aplicar.
+        earlier: Per a aquest recàlcul, no està disponible el valor d’una declaració anterior.
+        legacy: Aquest càlcul anterior no pot reutilitzar tots els valors introduïts.
+        next: Revisa l’origen del càlcul
+        notice: 'No s’ha aplicat; canvis conservats. {box}: revisa’n l’origen a Incidències [i].'
+        source_boxes: 'Caselles d’origen anteriors: {boxes}'
+        what: Per a aquest recàlcul, el valor d’origen d’aquesta casella no està disponible.
   root:
     account:
       appearance: Aparença

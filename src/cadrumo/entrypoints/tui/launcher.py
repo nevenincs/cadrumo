@@ -10,6 +10,7 @@ from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...application.modelo.edit_refusal_projection import ModeloEditRefusalProjectionStore
 from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ...application.workbench_generation import (
@@ -95,6 +96,7 @@ class TuiOperationCompositionV1:
     authority_operation: PinnedAuthorityOperation
     event_loop: asyncio.AbstractEventLoop | None = None
     """The loop the session's screens read shared state on; captures publish to it."""
+    edit_refusals: ModeloEditRefusalProjectionStore | None = None
 
     def __post_init__(self) -> None:
         """Refuse a public inventory detached from the composed service graph."""
@@ -1199,6 +1201,7 @@ def _modelo_lifecycle_door(
         edit_admission=admit_edit,
         edit_renewal=renew_edit,
         edit_preflight=preflight_edit,
+        edit_refusals=operation_runtime.edit_refusals,
         m303_exonerado_390_attestation_admission=admit_attestation,
         asks_modelo_390=str(target.modelo) == "303"
         and modelo_390_question_asked(target.period, operation=operation_runtime.authority_operation),
@@ -1485,9 +1488,11 @@ async def operation_services_scope() -> AsyncGenerator[TuiOperationCompositionV1
     from ..operation_composition import compose_operation_dependencies
 
     with bundled_indexed_authority().operation() as authority_operation:
+        edit_refusals = ModeloEditRefusalProjectionStore()
         services = compose_operation_dependencies(
             authority_operation=authority_operation,
             operator_scope_ports=build_operator_scope_ports(),
+            edit_prerequisite_observer=edit_refusals.observe,
         )
         try:
             yield TuiOperationCompositionV1(
@@ -1495,9 +1500,13 @@ async def operation_services_scope() -> AsyncGenerator[TuiOperationCompositionV1
                 public_contracts=services.public_contracts,
                 authority_operation=authority_operation,
                 event_loop=asyncio.get_running_loop(),
+                edit_refusals=edit_refusals,
             )
         finally:
-            await services.shutdown()
+            try:
+                await services.shutdown()
+            finally:
+                edit_refusals.clear()
 
 
 def compose_installed_workbench_search(

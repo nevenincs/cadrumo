@@ -35,6 +35,7 @@ from ....application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from ....application.modelo.edit_refusal_projection import ModeloEditRefusalProjectionStore
 from ....application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
 )
@@ -96,6 +97,8 @@ class ModeloWorkspaceLifecycleDoor:
     ) = None
     #: Whether this work unit's Modelo 303 period asks the Modelo 390 exemption, resolved under the pinned authority.
     asks_modelo_390: bool = False
+    #: Private one-session delivery of a failed calculation's named prerequisite.
+    edit_refusals: ModeloEditRefusalProjectionStore | None = None
 
     async def calculate(
         self,
@@ -184,15 +187,16 @@ class ModeloWorkspaceLifecycleDoor:
         if isinstance(renewal, ModeloEditRefusedV1):
             raise modelo_edit_refusal_error(renewal.refusal)
         submission = _edit_submission(renewal.baseline, scalar_intents=scalar_intents, binding_intents=binding_intents)
-        return await self._submit(
-            OperationRequest(
-                definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
-                subject_ref=self.work_unit_id,
-                payload=ModeloEditApplyOperationRequestV1(
-                    submission=ModeloEditApplySubmissionV1.from_submission(submission)
-                ),
-            )
+        request = OperationRequest(
+            definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+            subject_ref=self.work_unit_id,
+            payload=ModeloEditApplyOperationRequestV1(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission)
+            ),
         )
+        if self.edit_refusals is None:
+            return await self._submit(request)
+        return await self._submit(request, edit_baseline=renewal.baseline)
 
     async def verify(self) -> OperationController:
         """Verify the selected current calculation or refuse when none is present."""
@@ -303,9 +307,13 @@ class ModeloWorkspaceLifecycleDoor:
             )
         return self.calculation_revision_id
 
-    async def _submit(self, request: OperationRequest[BaseModel]) -> OperationController:
+    async def _submit(
+        self, request: OperationRequest[BaseModel], *, edit_baseline: ModeloEditBaselineV1 | None = None
+    ) -> OperationController:
         submission = await self.services.submission.submit(request, actor_ref=_ACTOR_REF)
         controller = OperationController(services=self.services, submission=submission, actor_ref=_ACTOR_REF)
+        if edit_baseline is not None and self.edit_refusals is not None:
+            self.edit_refusals.expect(str(controller.operation_id), edit_baseline)
         await controller.start()
         return controller
 

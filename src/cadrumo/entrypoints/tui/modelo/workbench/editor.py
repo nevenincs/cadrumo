@@ -57,7 +57,7 @@ from textual.widgets import Button, Input, Static
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1, ModeloHelpBoxV1
 from .....application.modelo.edit_parsing import MAX_EDIT_LEXEME_LENGTH
 from .....application.modelo.source_policy import SourceFamily, SourceSurface, source_policy
-from .....application.modelo.value_presentation import LOCALE_NUMBER_FORMATS
+from .....application.modelo.value_presentation import LOCALE_NUMBER_FORMATS, format_casilla_value
 from .....application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
@@ -91,6 +91,7 @@ from .wording import period_words
 
 if TYPE_CHECKING:
     from .header import ResultView, StatusLine
+    from .session import StagedChange
 
 type Parser = Callable[[ModeloFormField, str, OutputLanguage], WorkbenchParseOutcome]
 
@@ -468,6 +469,7 @@ class CasillaEditorPanel(Vertical):
         status_line: StatusLine | None = None,
         recorded: bool = False,
         aeat_imported: date | None = None,
+        staged: StagedChange | None = None,
     ) -> None:
         """Bind the field, the parser, which of clear and restore it allows, and what a change to it reaches.
 
@@ -484,6 +486,7 @@ class CasillaEditorPanel(Vertical):
         """
         super().__init__(id="editor-panel")
         self._field = field
+        self._staged = staged
         self._recorded = recorded
         self._aeat_imported = aeat_imported
         self._parse = parse
@@ -498,11 +501,17 @@ class CasillaEditorPanel(Vertical):
         self._open_area = open_area_target(field) if read_only_reason is not None else None
         self._parsed: WorkbenchParsed | None = None
         self._decided = False
-        self._prefill = (
-            confirm_lexeme(field.value, language)
-            if read_only_reason is None and field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
-            else None
-        )
+        self._prefill = None
+        if read_only_reason is None:
+            if staged is not None:
+                if staged.kind is WorkbenchChangeKind.SET and staged.value is not None:
+                    self._prefill = (
+                        format_casilla_value(staged.value, data_type=field.data_type, language=language)
+                        if isinstance(staged.value, bool)
+                        else confirm_lexeme(staged.value, language)
+                    )
+            elif field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM:
+                self._prefill = confirm_lexeme(field.value, language)
 
     @property
     def field(self) -> ModeloFormField:
@@ -520,6 +529,8 @@ class CasillaEditorPanel(Vertical):
         return self._open_area
 
     def _current(self) -> str:
+        if self._staged is not None:
+            return self._staged.text
         return value_text(CasillaListEntry(self._field, recorded=self._recorded), self._language)
 
     @staticmethod
@@ -533,6 +544,12 @@ class CasillaEditorPanel(Vertical):
 
     def _now_text(self) -> str:
         """What the box holds and who put it there; a box holding nothing says only that, once, in its origin words."""
+        if self._staged is not None:
+            return f"{self._staged.text} · Δ {tr('tui.modelo.workbench.attention.staged')}"
+        return self._saved_text()
+
+    def _saved_text(self) -> str:
+        """The saved value and its original provenance, distinct from the current draft."""
         field = self._field
         origin = origin_text(field, recorded=self._recorded, aeat_imported=self._aeat_imported, language=self._language)
         held = stated_value_text(CasillaListEntry(field, recorded=self._recorded), self._language)
@@ -545,6 +562,10 @@ class CasillaEditorPanel(Vertical):
             self._block("editor-asks", "tui.modelo.workbench.editor.block.asks", asks),
             self._block("editor-now", "tui.modelo.workbench.editor.block.now", self._now_text()),
         ]
+        if self._staged is not None:
+            blocks.append(
+                self._block("editor-saved", "tui.modelo.workbench.editor.block.saved_value", self._saved_text())
+            )
         if self._calculation is not None:
             blocks.append(
                 self._block("editor-calculation", "tui.modelo.workbench.editor.block.calculation", self._calculation)
@@ -650,7 +671,7 @@ class CasillaEditorPanel(Vertical):
         return " ".join(parts)
 
     def _confirming(self, lexeme: str) -> bool:
-        return self._prefill is not None and lexeme == self._prefill
+        return self._staged is None and self._prefill is not None and lexeme == self._prefill
 
     def _allow_keep(self, allowed: bool) -> None:
         for button_id in ("#editor-save", "#editor-save-next"):
@@ -792,6 +813,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         status_line: StatusLine | None = None,
         recorded: bool = False,
         aeat_imported: date | None = None,
+        staged: StagedChange | None = None,
     ) -> None:
         """Build the panel the dialog holds; the arguments are the panel's own."""
         super().__init__()
@@ -808,6 +830,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
             status_line=status_line,
             recorded=recorded,
             aeat_imported=aeat_imported,
+            staged=staged,
         )
 
     @property

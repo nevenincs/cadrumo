@@ -103,11 +103,11 @@ def section_title(section: ModeloFormSection, *, page_number: int, part_number: 
     official = section.official_heading
     if official and not looks_like_identifier(official):
         return ModeloFormText(text=official, disclosure=ModeloFormTextDisclosure.OFFICIAL_SPANISH)
-    boxes = [field.box for field in section_fields(section) if field.box]
+    boxes = list(dict.fromkeys(field.box for field in section_fields(section) if field.box))
     if len(boxes) == 1:
         text = tr("tui.modelo.workbench.section.box", box=boxes[0])
-    elif boxes:
-        text = tr("tui.modelo.workbench.section.boxes", first=boxes[0], last=boxes[-1])
+    elif boxes and all(box.isascii() and box.isdecimal() for box in boxes):
+        text = tr("tui.modelo.workbench.section.boxes", first=min(boxes, key=int), last=max(boxes, key=int))
     else:
         text = tr("tui.modelo.workbench.section.part", page=page_number, part=part_number)
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.LOCALIZED)

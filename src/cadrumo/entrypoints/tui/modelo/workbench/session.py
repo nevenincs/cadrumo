@@ -129,7 +129,11 @@ class WorkbenchEditSession:
     def display(self) -> dict[AddressKey, StagedDisplay]:
         """How each staged change reads on its line."""
         return {
-            key: StagedDisplay(text=change.text, previous_text=change.previous_text)
+            key: StagedDisplay(
+                text=change.text,
+                previous_text=change.previous_text,
+                concrete_value=change.kind is WorkbenchChangeKind.SET and change.value is not None,
+            )
             for key, change in self._changes.items()
         }
 

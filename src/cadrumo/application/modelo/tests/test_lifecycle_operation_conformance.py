@@ -50,6 +50,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "calculation_action_ports_factory": lambda **_: None,
     "attachment_store_factory": lambda _bucket_id: None,
     "receipt_repository_factory": lambda **_: None,
+    "prerequisite_observer": None,
     "signing_keypair_capability_factory": lambda **_: None,
     "calculation_summary_pdf_writer": lambda _request, /, **_: b"",
 }

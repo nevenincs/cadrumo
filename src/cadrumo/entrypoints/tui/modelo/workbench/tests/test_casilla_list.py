@@ -109,6 +109,37 @@ def _screen_lines(widget: CasillaList) -> list[str]:
 
 
 @pytest.mark.asyncio
+async def test_replacing_a_short_list_reveals_the_target_after_scrollbar_wrapping() -> None:
+    items = tuple(
+        CasillaListEntry(
+            _field(
+                str(index),
+                "2024-es adóév: Az időszak elején alkalmazásra váró összeg",
+                ModeloFormOrigin.IMPORTED,
+                Decimal(0),
+            )
+        )
+        for index in range(100)
+    )
+    app = _ListHarness(_ITEMS[:2], OutputLanguage.HU)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        listing = app.query_one(CasillaList)
+        assert not listing.show_vertical_scrollbar
+        listing.set_items(items, language=OutputLanguage.HU)
+        assert listing.focus_address(items[90].key)
+        await pilot.pause()
+        assert listing.show_vertical_scrollbar
+        assert listing.highlighted is not None and listing.highlighted.key == items[90].key
+        assert "[90]" in "\n".join(_screen_lines(listing))
+        listing.scroll_to(y=0, animate=False)
+        await pilot.pause()
+        assert listing.scroll_y == 0
+        assert "[90]" not in "\n".join(_screen_lines(listing))
+        app.exit(None)
+
+
+@pytest.mark.asyncio
 async def test_values_read_in_the_filers_language_and_absence_is_spoken() -> None:
     with override_settings(cadrumo_output_language="es"):
         app = _ListHarness(_ITEMS, OutputLanguage.ES)

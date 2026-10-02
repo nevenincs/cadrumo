@@ -5,40 +5,14 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5569fc5de7c13c2806e275f2f9fd31d4c8c61631f879ea8b30ce6d2ed7363d6f'
+body_hash: 'sha256:2f529f9c9e1e9619acc3deff900b99293ccc41c8bb9c42eb272a7349f41f78ea'
 related:
   - "[[2026-10-02-modelo-filing-ux-followup-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `modelo-filing-ux-followup` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `src/cadrumo/application/modelo/declarations_list.py`
 - `S01` `M` `src/cadrumo/application/modelo/tests/test_declarations_list.py`
@@ -109,6 +83,50 @@ related:
 - `S05` `verify:` `s05 format lint configured types` -> `pass`
 - `S05` `verify:` `principal corrected-header external-detail 24-frame identity/action review` -> `pass`
 - `S05` `by:` `vaultspec-high-executor`
+- `S05` `M` `src/cadrumo/locales/es/common.yml`
+- `S05` `M` `src/cadrumo/locales/en/common.yml`
+- `S05` `M` `src/cadrumo/locales/hu/common.yml`
+- `S05` `verify:` `independent actual S05 parent-to-commit semantic leaf comparison` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/_edit_execution.py`
+- `S06` `A` `src/cadrumo/application/modelo/edit_refusal_projection.py`
+- `S06` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S06` `A` `src/cadrumo/application/modelo/tests/test_edit_refusal_projection.py`
+- `S06` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/ports.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/workbench_fixture.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_list.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_browsing.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_apply_prerequisite.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_operation_composition.py`
+- `S06` `M` `dev/quality/metadata/import_load_targets.json`
+- `S06` `M` `src/cadrumo/locales/es/common.yml`
+- `S06` `M` `src/cadrumo/locales/en/common.yml`
+- `S06` `M` `src/cadrumo/locales/ca/common.yml`
+- `S06` `M` `src/cadrumo/locales/hu/common.yml`
+- `S06` `verify:` `s06-app-unit-corrected 73 cases` -> `pass`
+- `S06` `verify:` `s06-observer-resilience-corrected 11 cases` -> `pass`
+- `S06` `verify:` `s06-installed-edits-corrected 8 cases` -> `pass`
+- `S06` `verify:` `s06-s07-ui-final 81 cases` -> `pass`
+- `S06` `verify:` `s06-existing-editor-consumers 141 cases` -> `pass`
+- `S06` `verify:` `s06-scroll-breadcrumb-corrected 30 cases` -> `pass`
+- `S06` `verify:` `s06-navigator-ranges-final 35 cases` -> `pass`
+- `S06` `verify:` `s04-final configured format lint types 31 explicit Python paths` -> `pass`
+- `S06` `verify:` `s04-final-scoped-catalogue 38 keys 152 character and cell measurements` -> `pass`
+- `S06` `verify:` `s04-import-gate-coherent-final 15 contracts and 3001 loaded modules` -> `pass`
+- `S06` `verify:` `principal final recovery24 PNG/text current-copy and color review` -> `pass`
+- `S06` `verify:` `s04-locale-inventory-owned-final global census` -> `fail`
+- `S06` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -116,3 +134,5 @@ related:
 - `S02` Live localized strict builds refused unrelated auth config.logout sequences; corrected frozen admitted-source builds pass. Native Hungarian human review remains release-pending. Foreign live informal-register overlap on two HU leaves is preserved and excluded from this Step's staged leaf delta; frozen accepted copy is evidence-versioned.
 - `S03` The initial scratch footer run was repaired to preserve fieldless Help plus actual named Next, worded Scroll and Back within 80 columns. Later narrow header findings belong S05; original footer captures are applicability evidence for this bounded action surface.
 - `S05` Initial return-contract consumer and wide test expectation were corrected before final checks. Native24 establishes identity, geometry and actions; `NO_COLOR` discovery excludes its severity-color acceptance, separately re-established in final correction captures.
+- `S05` Private-index header composition also normalized quotation of the same two owned proper-name leaves in ES/EN/HU without changing their values; actual touched paths are now explicit. Subsequent composition skips already matching values to avoid such syntax-only normalization.
+- `S06` Actual Modelo100 Apply remains an explained legacy-replay source refusal with unchanged saved1388 imported0 and retained0168 Yes; successful persistence, export wire and filing are unclaimed. The native40 source/24frames are immutable. Global census exit1 is classified in work/UX5-checks/s04-locale-inventory-final-disposition.json:25190 catalogue-only keys plus six inherited inventory/tool conditions and one missing frozen gettext source-manifest; required30040/30040, missing/repair/review/placeholder/discovery defects0. Earlier `NO_COLOR` and failed route/harness attempts remain evidence. Current shared register edits, including HU overlaps, are preserved and excluded from owned staged cells; native human HU review remains pending.

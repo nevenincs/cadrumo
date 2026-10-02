@@ -138,6 +138,8 @@ class StagedDisplay:
 
     text: str
     previous_text: str
+    #: A typed SET, including False/0, rather than a clear or restore label.
+    concrete_value: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -264,6 +266,7 @@ def _entry(
         label=label,
         staged_text=None if change is None else change.text,
         previous_text=None if change is None else change.previous_text,
+        staged_concrete_value=False if change is None else change.concrete_value,
         rate_of_row=rate_of_row,
         row_base_empty=row_base_empty if rate_of_row else None,
         recorded=page.recorded,
