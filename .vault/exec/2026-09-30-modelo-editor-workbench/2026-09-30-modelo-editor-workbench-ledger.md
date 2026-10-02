@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:dc8c28312a5641f10b6774131d94e93b1c336e4ff785389e4eab465bdf13aab8'
+body_hash: 'sha256:5d0a1351a926b99a0c502398cd12f1af4a474b7453986e24952b0a1e88cf2b40'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1835,6 +1835,12 @@ related:
 - `S30` `verify:` `owning import driver frozen workbench candidate (20261002T034217.415427Z; 2998 modules, 15 contracts, zero debt)` -> `pass`
 - `S30` `verify:` `just check-code pre-correction aggregate (8 pass; import inventory plus three baseline constituents failed)` -> `fail`
 - `S30` `verify:` `just check-locales (20261002T031435.942733Z; 19 identical baseline inventory issues)` -> `fail`
+- `S17` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_records_real.py`
+- `S17` `verify:` `real installed known-empty populated unknown and resolver suite (20261002T035511.642247Z; 38 tests)` -> `pass`
+- `S17` `verify:` `real grid and record-finding navigation suite (20261002T035707.515420Z; 25 tests)` -> `pass`
+- `S17` `verify:` `Ruff check format-check ty and diff-check two known-empty correction paths` -> `pass`
+- `S17` `verify:` `final frozen corrected owning import driver (20261002T035828.750226Z; 2998 modules, 15 contracts, zero debt)` -> `pass`
 
 ## Notes
 
@@ -1953,3 +1959,4 @@ related:
 - `S17` Source correction verified and closed; immutable before-fix 712 capture remains failure evidence. S50/S30 still require corrected frozen integrated capture and final broad gates.
 - `S17` Closed root-confirmed no-cursor keyboard trap; prior programmatic scroll proof did not cover keyboard reachability. Initial a7 frozen run intentionally terminated and retained; final capture and stable-tree broad gates remain S50/S30.
 - `S30` S30 remains open pending final S50 capture/review. Actual broad TUI, static aggregate and locale baseline failures retained; focused passes do not rewrite aggregate exits. Concurrent profile UX work is outside the frozen candidate and preserved. Late approval of the already withdrawn publication proposal acknowledged; existing accepted publication completed without it.
+- `S17` Only known-empty `_record_items` behavior changes. Final source/input hashes and full actual native receipts are in s17-known-empty-verification-receipt.json and known-empty-{render,imports}-execution.json under C temp root. S50 owns current affected-scenario visual review/installation; unrelated profile UX work preserved.

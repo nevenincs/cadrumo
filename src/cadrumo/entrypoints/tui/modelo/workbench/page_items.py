@@ -366,22 +366,19 @@ def _grid_items(
 
 
 def _record_items(block: ModeloFormRepeatingBlock) -> list[CasillaListItem]:
-    """A repeating group's records, read-only, or a plain statement that their number is not known."""
+    """Keep a known table, including an empty one, or state that its record count is unknown."""
     if not block.rows_known:
         return [CasillaListNote(tr(_RECORDS_UNKNOWN_KEY), indent=2, column_casilla_ids=block.column_casilla_ids)]
-    items: list[CasillaListItem] = [CasillaListHeading(tr(_RECORDS_KEY, count=len(block.rows)), level=1)]
-    if block.rows:
-        headings = _column_headings(block.columns, ())
-        items.append(
-            CasillaListRecords(
-                headings=headings,
-                data_types=block.column_data_types,
-                rows=block.rows,
-                column_casilla_ids=block.column_casilla_ids,
-            )
-        )
-        items.append(CasillaListNote(tr(_RECORDS_READ_ONLY_KEY), indent=2))
-    return items
+    return [
+        CasillaListHeading(tr(_RECORDS_KEY, count=len(block.rows)), level=1),
+        CasillaListRecords(
+            headings=_column_headings(block.columns, ()),
+            data_types=block.column_data_types,
+            rows=block.rows,
+            column_casilla_ids=block.column_casilla_ids,
+        ),
+        CasillaListNote(tr(_RECORDS_READ_ONLY_KEY), indent=2),
+    ]
 
 
 def section_counts(

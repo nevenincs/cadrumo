@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:25e1f68a3993293308765b7645475b5eedb2ce17049045cf6b32711b9159c11d'
+body_hash: 'sha256:cd1f9f9387af71b29cba01b2aa38abb4003b0ad4cd5f485e9f95b1c1a0d32188'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -584,6 +584,24 @@ The current check-locales run 20261002T031435.942733Z-check-locales-81092-8f8755
 ### superseded-publication-approval | low | late approval acknowledged after proposal withdrawal
 
 The operator's approval reply arrived after the proposed grouped export/form-layout source transaction had already been withdrawn and recorded rejected. The existing accepted separate source owners and complete atomic authority publication had successfully finished S62 without that transaction. Root acknowledged the late reply and explained that no further publication amendment is needed for the completed approved work. The rejection remains a historical withdrawal, not a new implemented journal or change to accepted authority boundaries.
+
+### final-frozen-workbench-capture | low | complete current product capture preserved with exact review coverage
+
+The immutable keyboard-corrected 5f721a1d2e snapshot completes all nine selected sequence journeys and 712 frames, exit 0. Every golden matches; there are zero capture failures, skipped frames and missing-glyph frames. TUI source fingerprints start/end both ee2fbd7eac0cb13ad297ab28bd73e830f971a6851a23fbb10dc73c7148f1f43c; whole source/authority digest start/end both cdc3f115164da407d4bf516c1ac2b6052540fdbdd2d3c22b2fc3f8419efdb2d2. Commands, import roots and descriptor/database hashes are in keyboard-sequences-execution.json and keyboard-source-snapshot/frozen-receipt.json under C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001. This corpus is English despite its es selector; four-language acceptance is supplied by the exact 192-case matrix and record-specific real keyboard matrix, not falsely attributed to every PNG.
+
+Independent record review inspected 13 actual PNGs with matching manifest hashes, including all eight complete Modelo 349 record-page size/theme combinations. Summary operators2 and 8,000 EUR match both detail rows, 5,000 plus 3,000; all seven columns survive compact/wide rendering. Root additionally viewed eleven current PNGs spanning the negative 130 case, 100, 130, 303, 349 and 390. The unchanged 82 advisory geometry readings classify as 36 independent bounded sibling-pane readings and 46 hidden-underlying-pane detections; no overflow or detector relaxation is involved. Independent filing review inspected 20 actual blocked/incomplete PNGs and their text. Blocked and incomplete 303 workflows pass; the known-empty 349 guidance issue below remains open. The capture's inventory also reports 55 interfaces outside the selected sequence corpus; these are not claimed rendered. S50/S30 remain PENDING correction and affected-scenario review.
+
+### known-empty-record-guidance | medium | zero saved rows were incorrectly explained as a filter-empty view
+
+In the final incomplete-report Modelo 349 next-page frames, the ALL view shows Detail rows0 and five table requirements but says Nothing on this page for this filter and redirects to Declarant record; help says there are no boxes. This does not lose saved rows. page_items._record_items emits only a heading for a known-empty repeating block, losing its typed column locator and read-only source guidance; the existing screen content/help branches correctly recognize a records container. S17 is reopened for the generic zero-row container correction and real installed acceptance. The complete 712-frame capture is preserved with this actual medium finding. Required new evidence is the affected full 80-frame scenario from corrected frozen source, plus owning empty/unknown/populated and keyboard proofs. Other 632 sequence frames may be reused only with explicit unchanged-behavior/input applicability, without claiming a uniformly rerendered 712-frame fingerprint.
+
+### known-empty-record-correction | low | source guidance and finding navigation retained at zero rows
+
+S17 now keeps the exact typed CasillaListRecords container for every known repeating table, including zero rows, followed by the existing four-language read-only/source guidance. Unknown rows retain their distinct note. Populated tables construct the same items as before; screen content/help and column locators already support this container. No field becomes editable and no application, registry, authority, schema, calculation identity or catalogue changes.
+
+All 38 owning real cases pass, exit 0, run 20261002T035511.642247Z-pytest-51848-f6714352: 22 existing proofs and 16 new known-empty cases in es/en/ca/hu, 80x24/120x40, dark/light. Each creates a real empty calculation and persisted verification, proves truthful count0/source guidance, no filter-empty/no-box/unknown/not-applicable claim, no edit, bounded geometry, and keyboard Issues/Enter navigation from another page to the exact country-column table. The 24 existing grids plus unknown-record column-navigation case also pass, exit 0, run 20261002T035707.515420Z-pytest-37048-77d7b3bd. Narrow Ruff, formatting, ty and diff checks pass. Root reviewed the complete two-path diff and actual native receipts in s17-known-empty-verification-receipt.json under the C temp root.
+
+The final owning import driver passes on the exact frozen corrected candidate, run 20261002T035828.750226Z-check-import-boundaries-12772-5f02bbec: 15 contracts, 2,998 loaded modules, zero unapproved edge or debt. Both new render and import checks retain identical whole source/authority digests before/after: 57b27379d6b8286b08d04f599132389c42826d72749f5544c0fc0ea11baf38bf. Candidate inputs are rooted at cc9f4ab46a plus the exact two-path correction, excluding concurrent profile UX edits; their hashes match the owning proof. The affected complete 80-frame scenario rendered successfully with all goldens matching, no failure/skip/glyph issue or source drift. Its independent visual verdict and served installation belong to S50; S17 source correction is verified and closed.
 
 ## Recommendations
 

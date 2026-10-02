@@ -14,10 +14,13 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from textual.widgets import Static
+from textual.widgets import OptionList, Static
 
 from ......adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ......adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ......adapters.persistence.profile.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from ......adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ......application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
@@ -25,13 +28,16 @@ from ......application.modelo.calculation_actions import (
 )
 from ......application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from ......application.modelo.value_presentation import format_casilla_value
+from ......application.modelo.verification_actions import verify_modelo_revision
 from ......application.modelo.work_form_models import ModeloFormRepeatingBlock
 from ......application.operations.composition import OperationComposedServices
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
+from ......domain.deadlines.models import IVARegime, TaxpayerProfile
 from ......domain.invoices.tests.catalogue_support import build_invoice_catalogue
+from ......tests.env_scope import ready_clave_settings
 from .....tests.modelo_349_invoice_facts import (
     M349_EXPECTED_IMPORTE,
     M349_EXPECTED_OPERADORES,
@@ -39,12 +45,18 @@ from .....tests.modelo_349_invoice_facts import (
     intra_community_invoice,
 )
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
+from .....tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from ....components.host import ScreenHostApp
 from ....components.theme import install_cadrumo_themes
 from ...lifecycle import ModeloWorkspaceLifecycleDoor
 from ..casilla_list import CasillaList, CasillaListEntry
 from ..grid import CasillaListRecords
 from ..installed import InstalledModeloWorkbench, WorkbenchRepositories
+from ..issues import WorkbenchIssuesScreen, issue_lines
+from ..page_items import page_of, workbench_pages
 from ..screen import ModeloWorkbenchScreen
 from ..wording import does_not_apply_text
 
@@ -268,3 +280,99 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             await pilot.pause()
             assert listing.scroll_y == listing.max_scroll_y
             assert screen.form is not None and screen.form.calculation_revision_id == calculated.calculation_revision_id
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+@pytest.mark.parametrize("size", ((80, 24), (120, 40)))
+@pytest.mark.parametrize("appearance", ("dark", "light"))
+async def test_installed_known_empty_records_keep_source_guidance_and_column_finding_navigation(
+    m349_work: SeededOperatorWork,
+    language: OutputLanguage,
+    size: tuple[int, int],
+    appearance: str,
+) -> None:
+    unit = m349_work.work_unit
+    m349_work.ports.invoice_repository.save(build_invoice_catalogue(()))
+    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        unit.work_unit_id, ports=m349_work.ports, clock=SEEDED_AT
+    )
+    assert not result.revision.detail_rows and "detail_rows" in result.revision.model_fields_set
+    report = verify_modelo_revision(
+        result.revision.calculation_revision_id,
+        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+        verification_repositories=build_test_verification_repository_bundle(),
+        actor="operator:test",
+        workflow_profile=TaxpayerProfile(
+            tax_id="12345678Z", iva_regime=IVARegime("GENERAL"), does_intracomunitario=True
+        ),
+        settings=ready_clave_settings("12345678Z"),
+        operator_scope_ports=build_inward_operator_scope_ports_for_active_route(),
+        operation=m349_work.operation,
+        clock=SEEDED_AT,
+    )
+    column = "op.codigo-pais"
+    key = ("casilla", column)
+    assert any(finding.casilla_id == column for finding in report.findings)
+    with override_settings(cadrumo_output_language=language.value):
+        screen = ModeloWorkbenchScreen(_installed(m349_work))
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=size) as pilot:
+            install_cadrumo_themes(app, appearance=appearance)
+            await app.workers.wait_for_complete()
+            await pilot.pause()
+            assert screen.form is not None
+            pages = workbench_pages(screen.form)
+            target = page_of(pages, key)
+            assert target is not None
+            for _ in range((target - screen._page_index) % len(pages)):
+                await pilot.press("]")
+            await pilot.pause()
+            listing = screen.query_one(CasillaList)
+            records = [item for item in listing.items if isinstance(item, CasillaListRecords)]
+            assert len(records) == 1 and not records[0].rows and column in records[0].column_casilla_ids
+            assert not any(isinstance(item, CasillaListEntry) for item in listing.items)
+            assert listing.highlighted is None
+            count_text = tr("tui.modelo.workbench.repeating", count=0)
+            body = "\n".join(listing.render_line(y).text for y in range(listing.size.height))
+            assert count_text in body
+            for selector in ("#wb-page", "#wb-crumb"):
+                heading = str(screen.query_one(selector, Static).render())
+                assert tr("tui.modelo.workbench.filter.empty") not in heading
+                assert tr("tui.modelo.workbench.filter.empty_next", page="") not in heading
+                assert does_not_apply_text(unit.period) not in heading
+            help_text = str(screen.query_one("#wb-help", Static).render())
+            assert tr("tui.modelo.workbench.grid.records_read_only") in help_text
+            assert tr("tui.modelo.workbench.help.empty") not in help_text
+            assert tr("tui.modelo.workbench.grid.records_unknown") not in help_text
+            assert app.focused is listing
+            assert listing.focus_address(key) and listing.highlighted is None
+            assert not listing.show_horizontal_scrollbar
+            assert listing.region.right <= size[0] and listing.region.bottom <= size[1]
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.screen is screen
+
+            # A real persisted check's column finding must return here from a different page.
+            lines = issue_lines(screen.form)
+            line_index = next(index for index, line in enumerate(lines) if line.in_records and line.key == key)
+            await pilot.press("]", "i")
+            await pilot.pause()
+            assert isinstance(app.screen, WorkbenchIssuesScreen)
+            options = app.screen.query_one(OptionList)
+            option_index = options.get_option_index(f"issue-{line_index}")
+            await pilot.press("home")
+            for _ in range(options.option_count):
+                if options.highlighted == option_index:
+                    break
+                await pilot.press("down")
+            assert options.highlighted == option_index
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.screen is screen and app.focused is listing
+            assert screen._page_index == target and listing.highlighted is None
+            assert listing.focus_address(key)
+            body = "\n".join(listing.render_line(y).text for y in range(listing.size.height))
+            assert count_text in body
+            assert screen.form.calculation_revision_id == result.revision.calculation_revision_id
