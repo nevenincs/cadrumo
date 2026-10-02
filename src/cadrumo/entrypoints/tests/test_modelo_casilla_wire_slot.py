@@ -1,4 +1,4 @@
-"""One typed wire slot keeps the casilla address that admitted editing and export own."""
+"""One wire slot is edited, recalculated and exported through the casilla that owns it."""
 
 from __future__ import annotations
 
@@ -21,13 +21,11 @@ from ...application.modelo.work_form_service import load_modelo_work_form
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
-from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from .modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CASILLA = "decl.solicitante.nace-1"
-_BINDING = "modelo-360.page_01.actividad-nace-1-codigo"
 
 
 def _form(work: SeededOperatorWork) -> ModeloWorkForm:
@@ -49,13 +47,10 @@ def _form(work: SeededOperatorWork) -> ModeloWorkForm:
     ).form
 
 
-def test_the_exact_nace_slot_keeps_its_admitted_casilla_write_address(tmp_path: Path) -> None:
+def test_the_nace_slot_is_written_through_its_casilla(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path, modelo="360", filing_year=2025, period_code="AD-HOC") as work:
         form = _form(work)
-        assert {address_key(field.address) for field in form.fields()} & {
-            ("casilla", _CASILLA),
-            ("binding", _BINDING),
-        } == {("casilla", _CASILLA)}
+        assert ("casilla", _CASILLA) in {address_key(field.address) for field in form.fields()}
         casilla = next(field for field in form.fields() if address_key(field.address) == ("casilla", _CASILLA))
         assert casilla.editability is ModeloFormEditability.EDITABLE_VALUE
         applied = work.apply(
@@ -70,14 +65,12 @@ def test_the_exact_nace_slot_keeps_its_admitted_casilla_write_address(tmp_path: 
         assert applied.refusal is None, applied.refusal
         head = work.require_head()
         assert head.input_values_by_casilla_id[_CASILLA] == "12345"
-        assert _BINDING not in head.binding_overrides
         updated = _form(work)
         field = next(field for field in updated.fields() if address_key(field.address) == ("casilla", _CASILLA))
         assert field.value == "12345"
         assert field.origin is ModeloFormOrigin.ENTERED
         recalculated = work.recalculate()
         assert recalculated.input_values_by_casilla_id[_CASILLA] == "12345"
-        assert _BINDING not in recalculated.binding_overrides
         assert (
             next(field for field in _form(work).fields() if address_key(field.address) == ("casilla", _CASILLA)).value
             == "12345"
@@ -101,13 +94,7 @@ def test_the_exact_nace_slot_keeps_its_admitted_casilla_write_address(tmp_path: 
             if record.record_type == "page_01"
         )
         wire = next(field for field in record.fields if field.casilla_id == _CASILLA)
-        binding = next(binding for binding in snapshot.revision.bindings if binding.id == _BINDING)
-        assert isinstance(binding.provider, ManualInputProvider)
-        assert (
-            (binding.provider.record, binding.provider.offset, binding.provider.length)
-            == (record.record_type, wire.offset, wire.length)
-            == ("page_01", 799, 5)
-        )
+        assert (record.record_type, wire.offset, wire.length) == ("page_01", 799, 5)
         assert wire.kind is CasillaFieldKind.CASILLA
         assert wire.binding is None
         value = next(value for value in draft.values if value.casilla_id == _CASILLA)

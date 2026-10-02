@@ -521,8 +521,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f044"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-1-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -533,8 +533,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f045"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-1-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -545,8 +545,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f046"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-1-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -557,8 +557,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f047"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-2-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -569,8 +569,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f048"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-2-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -581,8 +581,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f049"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-2-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -593,8 +593,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f050"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-3-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -605,8 +605,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f051"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-3-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -617,8 +617,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f052"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-3-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -629,8 +629,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f053"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-4-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -641,8 +641,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f054"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-4-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -653,8 +653,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f055"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-4-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -665,8 +665,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f056"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-5-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -677,8 +677,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f057"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-5-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -689,8 +689,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f058"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-5-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -701,8 +701,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f059"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-6-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -713,8 +713,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f060"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-6-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -725,8 +725,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f061"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-6-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -737,8 +737,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f062"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-7-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -749,8 +749,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f063"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-7-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -761,8 +761,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f064"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-7-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -773,8 +773,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f065"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-8-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -785,8 +785,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f066"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-8-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -797,8 +797,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f067"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-8-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -809,8 +809,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f068"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-9-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -821,8 +821,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f069"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-9-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -833,8 +833,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f070"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-9-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -845,8 +845,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f071"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-10-codigo"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -857,8 +857,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f072"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-10-idioma"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-idioma-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -869,8 +869,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f073"
-kind = "binding"
-binding = "modelo-360.page_01.actividad-nace-10-descripcion"
+kind = "casilla"
+casilla_id = "decl.solicitante.nace-descripcion-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1409,8 +1409,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f118"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-1-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1432,8 +1432,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f120"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-1-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1455,8 +1455,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f122"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-2-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1478,8 +1478,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f124"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-2-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1501,8 +1501,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f126"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-3-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1524,8 +1524,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f128"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-3-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1547,8 +1547,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f130"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-4-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1570,8 +1570,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f132"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-4-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1593,8 +1593,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f134"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-5-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1616,8 +1616,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f136"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-5-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1639,8 +1639,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f138"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-6-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1662,8 +1662,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f140"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-6-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1685,8 +1685,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f142"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-7-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1708,8 +1708,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f144"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-7-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1731,8 +1731,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f146"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-8-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1754,8 +1754,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f148"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-8-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1777,8 +1777,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f150"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-9-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1800,8 +1800,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f152"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-9-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1823,8 +1823,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f154"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-10-numero-registro"
+kind = "casilla"
+casilla_id = "decl.anexo-registro-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1846,8 +1846,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m360-2010.pagina01.f156"
-kind = "binding"
-binding = "modelo-360.page_01.anexo-10-descripcion"
+kind = "casilla"
+casilla_id = "decl.anexo-descripcion-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]

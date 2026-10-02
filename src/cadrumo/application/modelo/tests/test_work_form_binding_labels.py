@@ -13,17 +13,13 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.schema_base import CasillaDataType
-from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
 from ..work_form_models import (
     ModeloFormBindingAddressV1,
-    ModeloFormCasillaAddressV1,
     ModeloFormField,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
-    address_key,
 )
 from ..work_form_service import modelo_form_snapshot
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
@@ -122,100 +118,6 @@ def test_catalogue_names_reach_inputs_that_feed_no_box(
         assert field.label.text == lookup_translation(key, locale=language.value)
         assert field.label.disclosure is ModeloFormTextDisclosure.LOCALIZED
         assert str(field.address.binding_id) not in field.label.text
-
-
-@pytest.mark.parametrize("language", tuple(OutputLanguage))
-def test_an_exact_duplicate_wire_input_keeps_one_named_casilla_address(
-    operation: PinnedAuthorityOperation,
-    language: OutputLanguage,
-) -> None:
-    fields = list(_form(operation, "360", 2025, "AD-HOC", language).fields())
-    field = next(
-        field
-        for field in fields
-        if isinstance(field.address, ModeloFormCasillaAddressV1)
-        and str(field.address.casilla_id) == "decl.solicitante.nace-1"
-    )
-    casilla = next(
-        casilla
-        for casilla in operation.revision("360", "2010-y-siguientes").casillas
-        if str(casilla.id) == "decl.solicitante.nace-1"
-    )
-    assert field.label.text == resolve_modelo_localization(casilla.localization_keys, locale=language.value)
-    assert field.label.disclosure is ModeloFormTextDisclosure.LOCALIZED
-    assert not any(
-        address_key(item.address) == ("binding", "modelo-360.page_01.actividad-nace-1-codigo") for item in fields
-    )
-
-
-@pytest.mark.parametrize(
-    "axis,value", [("length", 4), ("offset", 800), ("record", "another-record"), ("data_type", CasillaDataType.INTEGER)]
-)
-def test_a_binding_without_the_exact_wire_identity_keeps_its_own_input(
-    operation: PinnedAuthorityOperation, axis: str, value: int | str
-) -> None:
-    binding_id = "modelo-360.page_01.actividad-nace-1-codigo"
-
-    def change_coordinate(snapshot: RegistrySnapshot) -> RegistrySnapshot:
-        bindings = tuple(
-            binding.model_copy(update={"provider": binding.provider.model_copy(update={axis: value})})
-            if str(binding.id) == binding_id
-            else binding
-            for binding in snapshot.revision.bindings
-        )
-        return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"bindings": bindings})})
-
-    form = _form(operation, "360", 2025, "AD-HOC", OutputLanguage.EN, adjust=change_coordinate)
-    assert {address_key(field.address) for field in form.fields()} >= {
-        ("casilla", "decl.solicitante.nace-1"),
-        ("binding", binding_id),
-    }
-
-
-def test_a_record_alias_with_two_typed_owners_keeps_the_binding_input(operation: PinnedAuthorityOperation) -> None:
-    def make_record_ambiguous(snapshot: RegistrySnapshot) -> RegistrySnapshot:
-        layouts = tuple(
-            layout.model_copy(
-                update={
-                    "records": (
-                        *layout.records,
-                        next(record for record in layout.records if record.record_type == "page_01").model_copy(
-                            update={"id": "another-page-01"}
-                        ),
-                    )
-                }
-            )
-            for layout in snapshot.revision.export_layouts
-        )
-        return snapshot.model_copy(
-            update={"revision": snapshot.revision.model_copy(update={"export_layouts": layouts})}
-        )
-
-    form = _form(operation, "360", 2025, "AD-HOC", OutputLanguage.EN, adjust=make_record_ambiguous)
-    assert any(
-        address_key(field.address) == ("binding", "modelo-360.page_01.actividad-nace-1-codigo")
-        for field in form.fields()
-    )
-
-
-def test_an_exact_wire_binding_with_an_independent_consumer_keeps_its_input(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    binding_id = "modelo-360.page_01.actividad-nace-1-codigo"
-
-    def add_consumer(snapshot: RegistrySnapshot) -> RegistrySnapshot:
-        binding = next(binding for binding in snapshot.revision.bindings if str(binding.id) == binding_id)
-        casillas = tuple(
-            casilla.model_copy(update={"input_kind": InputKind.BOUND, "binding": binding.id})
-            if str(casilla.id) == "decl.solicitante.nace-2"
-            else casilla
-            for casilla in snapshot.revision.casillas
-        )
-        assert any(str(casilla.id) == "decl.solicitante.nace-2" for casilla in casillas)
-        return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"casillas": casillas})})
-
-    form = _form(operation, "360", 2025, "AD-HOC", OutputLanguage.EN, adjust=add_consumer)
-    assert any(address_key(field.address) == ("binding", binding_id) for field in form.fields())
 
 
 def test_a_binding_inputs_printed_code_is_in_the_box_slot(

@@ -65,8 +65,6 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, tr
-from ...domain.calculations.export_field_kind import CasillaFieldKind
-from ...domain.calculations.registry.binding_targets import binding_consumers
 from ...domain.calculations.registry.export_field_casilla import (
     export_field_casilla_id,
     layout_fields_in_emission_order,
@@ -322,69 +320,12 @@ class _FormContext:
                 self.fed_casillas.setdefault(ref, set()).add(str(row.casilla_id))
         self.placed_boxes: dict[str, str] = {}
         self.casillas_by_export_position: dict[tuple[str, int], set[str]] = {}
-        wire_owners: dict[tuple[str, int, int], set[tuple[str, str, str, str, str]]] = {}
         for export_layout in snapshot.revision.export_layouts:
             for record, field in layout_fields_in_emission_order(export_layout):
                 target = export_field_casilla_id(record, field, bindings=self.bindings)
                 if target is not None and field.offset is not None:
                     for coordinate in (str(record.id), record.record_type):
                         self.casillas_by_export_position.setdefault((coordinate, field.offset), set()).add(str(target))
-                        if (
-                            field.kind is CasillaFieldKind.CASILLA
-                            and field.length is not None
-                            and record.repeat is None
-                            and record.binding_record is None
-                        ):
-                            wire_owners.setdefault((coordinate, field.offset, field.length), set()).add(
-                                (
-                                    str(export_layout.id),
-                                    str(record.id),
-                                    str(field.id),
-                                    str(target),
-                                    str(field.data_type),
-                                )
-                            )
-        consumers = binding_consumers(snapshot.revision)
-        self.casilla_owned_bindings: frozenset[str] = frozenset(
-            str(binding.id)
-            for binding in snapshot.revision.bindings
-            if not consumers[binding.id] and _manual_binding_has_casilla_wire_owner(binding, self.casillas, wire_owners)
-        )
-
-
-def _manual_binding_has_casilla_wire_owner(
-    binding: BindingDefinition,
-    casillas: dict[str, CasillaDefinition],
-    wire_owners: dict[tuple[str, int, int], set[tuple[str, str, str, str, str]]],
-) -> bool:
-    """An exact unique scalar wire slot already takes its value from a manual casilla.
-
-    The casilla export endpoint owns both the visible value and the write
-    address. Matching labels, nearby offsets and provider-casilla conversions
-    establish no such identity, and retain their separate binding inputs.
-    Its caller also preserves inputs with independent typed consumers.
-    """
-    provider = binding.provider
-    if (
-        not isinstance(provider, ManualInputProvider)
-        or provider.record is None
-        or provider.offset is None
-        or provider.length is None
-    ):
-        return False
-    owners = wire_owners.get((provider.record, provider.offset, provider.length), set())
-    if len(owners) != 1:
-        return False
-    _, _, _, casilla_id, wire_type = next(iter(owners))
-    casilla = casillas.get(casilla_id)
-    return (
-        casilla is not None
-        and casilla.input_kind is InputKind.MANUAL
-        and casilla.binding is None
-        and not casilla.alternate_bindings
-        and str(casilla.data_type) == str(provider.data_type) == wire_type
-        and str(binding.value.data_type) == wire_type
-    )
 
 
 def _surface_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
@@ -1039,11 +980,9 @@ class _LayoutWalk:
             }
         )
 
-    def page(self, page: FormPageDefinition) -> ModeloFormPage | None:
+    def page(self, page: FormPageDefinition) -> ModeloFormPage:
         language = self.context.language
-        sections = tuple(shown for section in page.sections if (shown := self.section(page.id, section)) is not None)
-        if not sections:
-            return None
+        sections = tuple(self.section(page.id, section) for section in page.sections)
         return ModeloFormPage(
             id=page.id,
             heading=_heading(page.heading_key, page.official_heading, page.official_ref or page.id, language),
@@ -1056,10 +995,8 @@ class _LayoutWalk:
             ),
         )
 
-    def section(self, page_id: str, section: FormSectionDefinition) -> ModeloFormSection | None:
-        blocks = tuple(shown for block in section.blocks if (shown := self.block(block)) is not None)
-        if not blocks:
-            return None
+    def section(self, page_id: str, section: FormSectionDefinition) -> ModeloFormSection:
+        blocks = tuple(self.block(block) for block in section.blocks)
         form_section = ModeloFormSection(
             id=f"{page_id}.{section.id}",
             heading=_heading(section.heading_key, section.official_heading, section.id, self.context.language),
@@ -1073,11 +1010,9 @@ class _LayoutWalk:
 
     def block(
         self, block: FormFieldBlock | FormGridBlock | FormRepeatingGroupBlock | FormBindingInputsBlock
-    ) -> ModeloFormBlock | None:
+    ) -> ModeloFormBlock:
         language = self.context.language
         if isinstance(block, FormFieldBlock):
-            if block.binding_id is not None and str(block.binding_id) in self.context.casilla_owned_bindings:
-                return None
             field = (
                 self.casilla(
                     str(block.casilla_id),
@@ -1112,12 +1047,9 @@ class _LayoutWalk:
             return ModeloFormGridBlock(id=block.id, columns=columns, rows=_with_printed_rates(rows))
         if isinstance(block, FormRepeatingGroupBlock):
             return self.repeating(block)
-        fields = tuple(
-            _binding_field(str(binding_id), self.context)
-            for binding_id in block.binding_ids
-            if str(binding_id) not in self.context.casilla_owned_bindings
+        return ModeloFormBindingInputsBlock(
+            id=block.id, fields=tuple(_binding_field(str(binding_id), self.context) for binding_id in block.binding_ids)
         )
-        return ModeloFormBindingInputsBlock(id=block.id, fields=fields) if fields else None
 
     def cell(
         self,
@@ -1130,8 +1062,6 @@ class _LayoutWalk:
         if kind is FormCellKind.CASILLA and casilla_id is not None:
             return ModeloFormGridCell(kind=kind, field=self.casilla(str(casilla_id)))
         if kind is FormCellKind.BINDING_INPUT and binding_id is not None:
-            if str(binding_id) in self.context.casilla_owned_bindings:
-                return ModeloFormGridCell(kind=FormCellKind.BLANK)
             return ModeloFormGridCell(kind=kind, field=_binding_field(str(binding_id), self.context))
         if kind is FormCellKind.DESIGN_CONSTANT and casilla_id is not None:
             return ModeloFormGridCell(
@@ -1263,7 +1193,7 @@ def build_modelo_work_form(
         if placement.box_number is not None
     }
     walk = _LayoutWalk(layout, context)
-    pages = tuple(shown for page in layout.pages if (shown := walk.page(page)) is not None)
+    pages = tuple(walk.page(page) for page in layout.pages)
     working: list[ModeloFormField] = []
     unplaced: list[ModeloFormUnplacedField] = []
     for placement in layout.placements:

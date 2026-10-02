@@ -31,8 +31,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f003"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-numero-de-operacion"
+kind = "casilla"
+casilla_id = "decl.op1-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -54,8 +54,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f005"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-tipo-de-operacion"
+kind = "casilla"
+casilla_id = "decl.op1-tipo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -66,8 +66,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f006"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-numero-factura-o-doc-importacion"
+kind = "casilla"
+casilla_id = "decl.op1-factura"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -78,8 +78,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f007"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-fecha-de-emision-factura-o-doc-importacion"
+kind = "casilla"
+casilla_id = "decl.op1-fecha"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -90,8 +90,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f008"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -102,8 +102,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f009"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -114,8 +114,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f010"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -126,8 +126,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f011"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo-2"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -138,8 +138,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f012"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -150,8 +150,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f013"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion-2"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -162,8 +162,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f014"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo-3"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -174,8 +174,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f015"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -186,8 +186,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f016"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion-3"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -198,8 +198,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f017"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo-4"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -210,8 +210,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f018"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -222,8 +222,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f019"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion-4"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -234,8 +234,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f020"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo-5"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -246,8 +246,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f021"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -258,8 +258,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f022"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion-5"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -270,8 +270,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f023"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo-6"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -282,8 +282,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f024"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -294,8 +294,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f025"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion-6"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -306,8 +306,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f026"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo-7"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -318,8 +318,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f027"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -330,8 +330,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f028"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion-7"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -342,8 +342,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f029"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo-8"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -354,8 +354,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f030"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -366,8 +366,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f031"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion-8"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -378,8 +378,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f032"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo-9"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -390,8 +390,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f033"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -402,8 +402,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f034"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion-9"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -414,8 +414,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f035"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-codigo-10"
+kind = "casilla"
+casilla_id = "decl.op1-codigo-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -426,8 +426,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f036"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
+kind = "casilla"
+casilla_id = "decl.op1-idioma-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -438,8 +438,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f037"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-bienes-y-servicios-adquiridos-descripcion-10"
+kind = "casilla"
+casilla_id = "decl.op1-descripcion-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -450,8 +450,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f038"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-base-imponible"
+kind = "casilla"
+casilla_id = "decl.op1-base"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -462,8 +462,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f039"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-cuota-iva"
+kind = "casilla"
+casilla_id = "decl.op1-cuota"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -474,8 +474,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f040"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-prorrata"
+kind = "casilla"
+casilla_id = "decl.op1-prorrata"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -486,8 +486,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f041"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-importe-solicitado-a-devolver"
+kind = "casilla"
+casilla_id = "decl.op1-importe"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -498,8 +498,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f042"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-divisa"
+kind = "casilla"
+casilla_id = "decl.op1-divisa"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -510,8 +510,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f043"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-indicador-de-simplificada"
+kind = "casilla"
+casilla_id = "decl.op1-simplificada"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -522,8 +522,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f044"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-datos-del-proveeedor-de-bienes-prestador-de"
+kind = "casilla"
+casilla_id = "decl.op1-proveedor-pais-nvat"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -534,8 +534,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f045"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-2"
+kind = "casilla"
+casilla_id = "decl.op1-proveedor-nvat"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -546,8 +546,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f046"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-3"
+kind = "casilla"
+casilla_id = "decl.op1-proveedor-pais-referencia"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -558,8 +558,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f047"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-4"
+kind = "casilla"
+casilla_id = "decl.op1-proveedor-referencia-fiscal"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -570,8 +570,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f048"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-5"
+kind = "casilla"
+casilla_id = "decl.op1-proveedor-nombre"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -582,8 +582,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f049"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-6"
+kind = "casilla"
+casilla_id = "decl.op1-proveedor-direccion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -594,8 +594,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f050"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-7"
+kind = "casilla"
+casilla_id = "decl.op1-proveedor-telefono"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -606,8 +606,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f051"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-8"
+kind = "casilla"
+casilla_id = "decl.op1-proveedor-pais"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -618,8 +618,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f052"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-numero-de-operacion"
+kind = "casilla"
+casilla_id = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -641,8 +641,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f054"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-tipo-de-operacion"
+kind = "casilla"
+casilla_id = "decl.op2-tipo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -653,8 +653,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f055"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-numero-factura-o-doc-importacion"
+kind = "casilla"
+casilla_id = "decl.op2-factura"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -665,8 +665,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f056"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-fecha-de-emision-factura-o-doc-importacion"
+kind = "casilla"
+casilla_id = "decl.op2-fecha"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -677,8 +677,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f057"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -689,8 +689,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f058"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -701,8 +701,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f059"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-1"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -713,8 +713,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f060"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo-2"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -725,8 +725,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f061"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -737,8 +737,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f062"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion-2"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -749,8 +749,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f063"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo-3"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -761,8 +761,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f064"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -773,8 +773,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f065"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion-3"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -785,8 +785,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f066"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo-4"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -797,8 +797,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f067"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -809,8 +809,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f068"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion-4"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -821,8 +821,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f069"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo-5"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -833,8 +833,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f070"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -845,8 +845,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f071"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion-5"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -857,8 +857,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f072"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo-6"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -869,8 +869,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f073"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -881,8 +881,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f074"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion-6"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -893,8 +893,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f075"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo-7"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -905,8 +905,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f076"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -917,8 +917,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f077"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion-7"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -929,8 +929,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f078"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo-8"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -941,8 +941,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f079"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -953,8 +953,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f080"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion-8"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -965,8 +965,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f081"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo-9"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -977,8 +977,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f082"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -989,8 +989,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f083"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion-9"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1001,8 +1001,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f084"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-codigo-10"
+kind = "casilla"
+casilla_id = "decl.op2-codigo-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1013,8 +1013,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f085"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
+kind = "casilla"
+casilla_id = "decl.op2-idioma-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1025,8 +1025,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f086"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-bienes-y-servicios-adquiridos-descripcion-10"
+kind = "casilla"
+casilla_id = "decl.op2-descripcion-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1037,8 +1037,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f087"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-base-imponible"
+kind = "casilla"
+casilla_id = "decl.op2-base"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1049,8 +1049,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f088"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-cuota-iva"
+kind = "casilla"
+casilla_id = "decl.op2-cuota"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1061,8 +1061,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f089"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-prorrata"
+kind = "casilla"
+casilla_id = "decl.op2-prorrata"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1073,8 +1073,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f090"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-importe-solicitado-a-devolver"
+kind = "casilla"
+casilla_id = "decl.op2-importe"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1085,8 +1085,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f091"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-divisa"
+kind = "casilla"
+casilla_id = "decl.op2-divisa"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1097,8 +1097,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f092"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-indicador-de-simplificada"
+kind = "casilla"
+casilla_id = "decl.op2-simplificada"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1109,8 +1109,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f093"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-datos-del-proveeedor-de-bienes-prestador-de"
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-pais-nvat"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1121,8 +1121,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f094"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-2"
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-nvat"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1133,8 +1133,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f095"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-3"
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-pais-referencia"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1145,8 +1145,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f096"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-4"
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-referencia-fiscal"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1157,8 +1157,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f097"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-5"
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-nombre"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1169,8 +1169,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f098"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-6"
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-direccion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1181,8 +1181,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f099"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-7"
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-telefono"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1193,8 +1193,8 @@ record_identity = "Pág. 2"
 
 [[entries]]
 export_field_id = "m360-2010.pagina02.f100"
-kind = "binding"
-binding = "modelo-360.page_02.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-8"
+kind = "casilla"
+casilla_id = "decl.op2-proveedor-pais"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
