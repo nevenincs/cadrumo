@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "816c5fad9901be36d9a0950ff230b3bd7043da5d0befe0778f12a813e070bfaa"
+source_state_digest = "fea6e0886bbdff07b1d85b5419682d7690bf4994afe409821ad61a149af7b577"
 design_sources = [
     { source_ref = "aeat-dr-100-2023-dictionary", sha256 = "a9b8d0e24878b550870666870107b66af2df3eb7d341739e59accce6f1108024" },
     { source_ref = "aeat-dr-100-2023-input-dictionary", sha256 = "183692c1a5a4785d9a04508e2ab928b25e44742ced448e19359ea7afb22c37cd" },
@@ -1942,6 +1942,7 @@ placements = [
     { casilla_id = "1993", kind = "on_form", box_number = "1993" },
     { casilla_id = "1994", kind = "on_form", box_number = "1994" },
     { casilla_id = "1995", kind = "on_form", box_number = "1995" },
+    { casilla_id = "AJ", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "ANOASDLG", kind = "working_figure" },
     { casilla_id = "APENOMDLG", kind = "working_figure" },
     { casilla_id = "APENOMDLG_ASC", kind = "working_figure" },
@@ -1972,6 +1973,7 @@ placements = [
     { casilla_id = "TIPOTRIBUTACION", kind = "working_figure" },
     { casilla_id = "ZCCAD", kind = "working_figure" },
     { casilla_id = "ZRUE2", kind = "working_figure" },
+    { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
 
 [[revisions.2023.form_layouts.pages]]

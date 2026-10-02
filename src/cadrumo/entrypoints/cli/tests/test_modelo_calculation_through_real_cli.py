@@ -235,7 +235,7 @@ def test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale(
             # Supplying 00501 = 100000 and zero corrections / reserva / BIN
             # aplicada produces 00552 = 100000 exactly. Then
             # 01330 = 00552 + 01033 - 01034 = 100000 with 01033 = 01034 = 0.
-            "--casilla", "00501=100000.00",
+            "--casilla", "DP200012:00501=100000.00",
             "--casilla", "DP200013:00417=0.00",
             "--casilla", "DP200013:00418=0.00",
             "--casilla", "01032=0.00",
@@ -607,7 +607,7 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "00501=100000.00",
+            "--casilla", "DP200012:00501=100000.00",
             "--casilla", "DP200013:00417=0.00",
             "--casilla", "DP200013:00418=0.00",
             "--casilla", "01032=0.00",

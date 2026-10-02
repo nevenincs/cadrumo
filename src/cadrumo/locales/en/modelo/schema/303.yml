@@ -231,11 +231,19 @@ modelo:
           filing-year:
             label: Self-assessment tax year
           iva-autoconsumo-promotor-base:
-            label: Tax base of the property developer's self-supply (construction
-              cost, Art. 9.1.c + Art. 79.4 LISIVA)
-          iva-autoconsumo-promotor-cuota:
-            label: IVA amount on self-supply by the property developer (21% of the
-              taxable base, Art. 9.1.c + Art. 90 LISIVA)
+            label: Total tax base of the property developer's self-supply from the
+              profile, not split by rate (construction cost, Art. 9 + Art. 79 LIVA)
+          iva-autoconsumo-promotor-base-por-tipo:
+            label: Sum of the property developer's self-supply bases declared by rate
+          iva-autoconsumo-promotor-general-base:
+            label: Tax base of the property developer's self-supply at the standard
+              rate (21%) (part of official box 07)
+          iva-autoconsumo-promotor-reducido-base:
+            label: Tax base of the property developer's self-supply at the reduced
+              rate (10%) (part of official box 04)
+          iva-autoconsumo-promotor-super-reducido-base:
+            label: Tax base of the property developer's self-supply at the super-reduced
+              rate (4%) (part of official box 01)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Add up the self-charged taxable base accrued on intra-Community
               acquisitions.
@@ -253,6 +261,15 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Taxable base of input VAT on domestic capital-goods transactions
               (part of official box 30)
+          iva-base-repercutida-general:
+            label: Taxable base of output VAT at the standard rate (21%) (part of
+              official box 07)
+          iva-base-repercutida-reducido:
+            label: Taxable base of output VAT at the reduced rate (10%) (part of official
+              box 04)
+          iva-base-repercutida-super-reducido:
+            label: Taxable base of output VAT at the super-reduced rate (4%) (part
+              of official box 01)
           iva-compensacion-aplicada-periodo:
             label: VAT credit from previous periods applied in this period
           iva-compensacion-disponible-fin-periodo:
@@ -283,6 +300,15 @@ modelo:
               art. 13 + art. 15 + art. 84.Uno.2; official boxes 10/11)
           iva-cuota-deducible-total:
             label: Total deductible VAT amount
+          iva-cuota-devengada-general:
+            label: Accrued VAT amount at the standard rate (21%), including the property
+              developer's self-supply (official box 09)
+          iva-cuota-devengada-reducido:
+            label: Accrued VAT amount at the reduced rate (10%), including the property
+              developer's self-supply (official box 06)
+          iva-cuota-devengada-super-reducido:
+            label: Accrued VAT amount at the super-reduced rate (4%), including the
+              property developer's self-supply (official box 03)
           iva-cuota-devengada-total:
             label: Total accrued VAT amount
           iva-cuota-repercutida-general:

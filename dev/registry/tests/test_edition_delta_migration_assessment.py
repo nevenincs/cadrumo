@@ -9,6 +9,7 @@ import pytest
 import dev.registry.edition_delta_migration as migration
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from dev._paths import REPO_ROOT
+from dev.registry.conformance.loader_directory_mode_support import write_standard_manifest
 from dev.registry.tests.test_restated_family_merge import _build_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -43,6 +44,14 @@ def test_typed_comparison_preserves_false_zero_absence_empty_and_array_order() -
     assert not migration._typed_equal(["a", "b"], ["b", "a"])
     assert not migration._typed_equal({"present": []}, {})
     assert migration._typed_equal({"present": [], "enabled": False}, {"present": [], "enabled": False})
+
+
+def test_typed_comparison_reads_a_tables_keys_as_fields_not_as_a_sequence() -> None:
+    """Key order is how a table was written, not what it means; member order in an array still is."""
+    assert migration._typed_equal({"enabled": False, "present": []}, {"present": [], "enabled": False})
+    assert migration._typed_equal([{"id": "a", "rate": 1}], [{"rate": 1, "id": "a"}])
+    assert not migration._typed_equal([{"id": "a"}, {"id": "b"}], [{"id": "b"}, {"id": "a"}])
+    assert not migration._typed_equal({"id": "a", "rate": 1}, {"id": "a", "rate": True})
 
 
 def test_typed_comparison_matches_an_authored_token_to_its_typed_enum() -> None:
@@ -273,11 +282,157 @@ def test_a_row_override_states_exactly_one_source_reference_form() -> None:
     stored_whole = {"id": "0001", "source_refs": ["a"]}
     stored_additions = {"id": "0001", "additional_source_refs": ["b"]}
 
-    assert migration._reconcile_row_source_removals({"additional_source_refs": ["c"]}, (), stored_whole) == (
-        "source_refs",
-    )
+    assert migration._reconcile_source_removals({"additional_source_refs": ["c"]}, (), stored_whole) == ("source_refs",)
     assert (
-        migration._reconcile_row_source_removals({"source_refs": ["c"]}, ("additional_source_refs",), stored_additions)
+        migration._reconcile_source_removals({"source_refs": ["c"]}, ("additional_source_refs",), stored_additions)
         == ()
     )
-    assert migration._reconcile_row_source_removals({"additional_source_refs": ["c"]}, (), stored_additions) == ()
+    assert migration._reconcile_source_removals({"additional_source_refs": ["c"]}, (), stored_additions) == ()
+
+
+def test_a_constraints_override_states_exactly_one_source_reference_form() -> None:
+    """The constraints table is patched as a plain table, so each displaced spelling is removed explicitly."""
+    stored_whole = {"id": "0001", "constraints": {"max_value": "9", "source_refs": ["a", "b"]}}
+    stored_additions = {"id": "0001", "constraints": {"max_value": "9", "additional_source_refs": ["b"]}}
+
+    assert migration._reconcile_source_removals(
+        {"constraints": {"additional_source_refs": ["c"]}}, (), stored_whole
+    ) == ("constraints.source_refs",)
+    assert migration._reconcile_source_removals({"constraints": {"source_refs": ["c"]}}, (), stored_additions) == (
+        "constraints.additional_source_refs",
+    )
+    assert migration._reconcile_source_removals({"constraints": {"source_refs": ["c"]}}, (), stored_whole) == ()
+    assert migration._reconcile_source_removals(
+        {"constraints": {"source_refs": ["c"]}}, ("constraints.additional_source_refs",), stored_additions
+    ) == ("constraints.additional_source_refs",)
+
+
+_ROOT_REF = "ley-58-2003:art-29"
+
+
+def _root_fixture(
+    root: Path,
+    *,
+    successor_root: str,
+    successor_number: str = "1",
+    successor_formula: str = "modelo-999-2025-cuota",
+    successor_window: tuple[str, str] = ("2025-01-01", "2025-12-31"),
+) -> Path:
+    """A 2024 edition and a 2025 edition declaring ``successor_root`` as its predecessor.
+
+    Each edition names its own formula through its own edition key, as the
+    corpus does, so a row referencing it restates the earlier row only once the
+    edition tokens are set aside.
+    """
+    modelo_dir = root / "999"
+    modelo_dir.mkdir(parents=True)
+    write_standard_manifest(modelo_dir, "Root fixture")
+    for revision_id, year, predecessor, number, formula, (valid_from, valid_to) in (
+        ("2024", 2024, "", "1", "modelo-999-2024-cuota", ("2024-01-01", "2024-12-31")),
+        ("2025", 2025, successor_root, successor_number, successor_formula, successor_window),
+    ):
+        revision_dir = modelo_dir / "revisions" / revision_id
+        for section in ("casillas", "formulas"):
+            (revision_dir / section).mkdir(parents=True)
+        (revision_dir / "revision.toml").write_text(
+            f'[revisions."{revision_id}"]\nvalid_from = {valid_from}\nvalid_to = {valid_to}\n'
+            f'period_selector = {{ years = [{year}], periods = ["0A"] }}\n'
+            f'legal_refs = ["{_ROOT_REF}"]\nsource_refs = ["aeat-manual"]\n{predecessor}',
+            encoding="utf-8",
+            newline="\n",
+        )
+        (revision_dir / "casillas" / "0001-casillas.toml").write_text(
+            f'[[revisions."{revision_id}".casillas]]\nid = "0001"\nnumber = "{number}"\n'
+            f'section = ["liquidacion"]\ndata_type = "money"\ninput_kind = "computed"\nformula = "{formula}"\n'
+            f'legal_refs = ["{_ROOT_REF}"]\nsource_refs = ["aeat-manual"]\n',
+            encoding="utf-8",
+            newline="\n",
+        )
+        (revision_dir / "formulas" / "0001-formulas.toml").write_text(
+            f'[[revisions."{revision_id}".formulas]]\nid = "{formula}"\ntarget_casilla_id = "0001"\n'
+            f'expression = {{ literal = "0" }}\nlegal_refs = ["{_ROOT_REF}"]\nsource_refs = ["aeat-manual"]\n',
+            encoding="utf-8",
+            newline="\n",
+        )
+    return modelo_dir
+
+
+_UNCAUSED_ROOT = (
+    'predecessor = { none = { reason = "Stated in full.", '
+    f'legal_refs = ["{_ROOT_REF}"], source_refs = ["aeat-manual"] }} }}\n'
+)
+_CAUSED_ROOT = (
+    'predecessor = { none = { cause = "official_structure_differs", reason = "The design differs.", '
+    f'legal_refs = ["{_ROOT_REF}"], source_refs = ["aeat-manual"] }} }}\n'
+)
+
+
+def _root_restatement(assessment: migration.MigrationAssessment) -> list[str]:
+    return [
+        field
+        for item in assessment.unresolved_duplication
+        if item.get("revision") == "2025"
+        and item.get("family") == "casillas"
+        and str(item.get("reason", "")).startswith("explicit root restates")
+        for field in _fields(item)
+    ]
+
+
+@pytest.mark.parametrize("declaration", [_UNCAUSED_ROOT, _CAUSED_ROOT], ids=["uncaused", "caused"])
+def test_an_explicit_root_restating_the_edition_before_it_is_not_minimal(tmp_path: Path, declaration: str) -> None:
+    """A root declaration decides legal continuity, not whether the payload it states is stored already.
+
+    The row differs from the one before it only by the edition key inside its
+    formula reference, which inheritance resolves to the inheriting edition's
+    own declaration, so every field it states is restatement. A root was never
+    measured, and reported minimal however much it restated.
+    """
+    assessment = migration.assess_migration_state(_root_fixture(tmp_path, successor_root=declaration))
+
+    restated = _root_restatement(assessment)
+    assert {"data_type", "formula", "input_kind", "number", "section"} <= set(restated)
+    assert not assessment.minimal
+
+
+def test_a_reference_to_another_lineage_is_a_genuine_difference_net_of_edition_tokens(tmp_path: Path) -> None:
+    """Detector teeth for the normalisation: only the edition's own key is set aside."""
+    modelo_dir = _root_fixture(
+        tmp_path, successor_root=_UNCAUSED_ROOT, successor_number="7", successor_formula="modelo-999-2025-recargo"
+    )
+
+    restated = _root_restatement(migration.assess_migration_state(modelo_dir))
+
+    assert "formula" not in restated
+    assert "number" not in restated
+    assert "section" in restated
+
+
+def test_a_root_whose_every_statement_differs_stays_minimal(tmp_path: Path) -> None:
+    """The normal path: a root with nothing to reuse from the edition before it reports clean."""
+    modelo_dir = _root_fixture(tmp_path, successor_root=_UNCAUSED_ROOT)
+    casillas = modelo_dir / "revisions" / "2025" / "casillas" / "0001-casillas.toml"
+    casillas.write_text(
+        '[[revisions."2025".casillas]]\nid = "0009"\nnumber = "9"\nsection = ["resultado"]\n'
+        'data_type = "money"\ninput_kind = "computed"\nformula = "modelo-999-2025-cuota"\n'
+        f'legal_refs = ["{_ROOT_REF}"]\nsource_refs = ["aeat-manual"]\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    formulas = modelo_dir / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+    formulas.write_text(
+        formulas.read_text(encoding="utf-8").replace('target_casilla_id = "0001"', 'target_casilla_id = "0009"'),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    assessment = migration.assess_migration_state(modelo_dir)
+
+    assert _root_restatement(assessment) == []
+    assert assessment.minimal
+
+
+def test_a_parallel_root_in_force_beside_the_edition_before_it_is_not_measured_against_it(tmp_path: Path) -> None:
+    """A variant whose validity window meets its neighbour's is not the edition after it."""
+    modelo_dir = _root_fixture(tmp_path, successor_root=_UNCAUSED_ROOT, successor_window=("2024-01-01", "2025-12-31"))
+
+    assert _root_restatement(migration.assess_migration_state(modelo_dir)) == []

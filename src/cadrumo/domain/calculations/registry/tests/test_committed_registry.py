@@ -270,31 +270,22 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
         "15",
         "saldo-negativo-fin-periodo",
     }
-    if revision_id in ("2024", "2025", "2026"):
-        # 2024, 2025, and 2026 additionally carry the estimación-objetiva
-        # módulos engine (fase 1ª rendimiento neto previo, fase 2ª
-        # rendimiento neto minorado, fase 3ª rendimiento neto de módulos,
-        # fase 4ª reducción general), a bounded first-slice computed
-        # reference figure that never substitutes for the manual casilla 01.
-        # The 2024 and 2026 revisions replicate the 2025 engine per-year
-        # roll-forward/back-fill (Orden HFP/1359/2023 and Orden
-        # HAC/1425/2025 both reproduce the same tabled coefficients as
-        # Orden HAC/1347/2024).
-        expected_entries |= {
-            "modulos-rendimiento-neto-previo",
-            "modulos-rendimiento-neto-minorado",
-            "modulos-rendimiento-neto-modulos",
-            "modulos-rendimiento-neto-actividad",
-        }
-    if revision_id in ("2024", "2025", "2026"):
-        # 2024, 2025, and 2026 additionally carry the Fase 3ª índices correctores
-        # generales (b.1, b.2, b.4) advisory-support flags, which never fire
-        # with no blank/zero declared índices (see
-        # test_modelo_131_modulos_engine.TestModulosIndicesGeneralesAdvisoryFlags).
-        expected_entries |= {
-            "modulos-pequena-dimension-ignorado-flag",
-            "modulos-temporada-inicio-actividad-conflicto-flag",
-        }
+    # Every supported year also carries the estimación-objetiva módulos engine
+    # (fase 1ª rendimiento neto previo, fase 2ª rendimiento neto minorado, fase
+    # 3ª rendimiento neto de módulos, fase 4ª reducción general), a computed
+    # reference figure that never substitutes for the manual casilla 01, each
+    # year under its own Orden de módulos, and the Fase 3ª índices correctores
+    # generales (b.1, b.2, b.4) advisory-support flags, which never fire with no
+    # declared índices (see
+    # test_modelo_131_modulos_engine.TestModulosIndicesGeneralesAdvisoryFlags).
+    expected_entries |= {
+        "modulos-rendimiento-neto-previo",
+        "modulos-rendimiento-neto-minorado",
+        "modulos-rendimiento-neto-modulos",
+        "modulos-rendimiento-neto-actividad",
+        "modulos-pequena-dimension-ignorado-flag",
+        "modulos-temporada-inicio-actividad-conflicto-flag",
+    }
     assert set(entries) == expected_entries
     assert entries["04"].operand_refs == ("03", "irpf.objective_no_base_fractional_payment_rate")
     assert entries["06"].operand_refs == ("05", "irpf.objective_agriculture_fractional_payment_rate")

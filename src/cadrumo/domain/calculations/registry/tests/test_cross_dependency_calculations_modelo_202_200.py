@@ -20,6 +20,7 @@ from ._cross_dependency_calculation_support import (
     _M202_CUOTA_BASE_CASILLA,
     _casilla_inputs,
     _observations_from_requirements,
+    source_editions_calculate,
 )
 from .authored_editions import authored_revisions
 from .published_authority import (
@@ -209,13 +210,25 @@ def _assert_pre_b2_correcciones_shape(
 def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> None:
-    # Asked at the filing year the rest of this test works in: its relation ids
-    # are the 2024 revision's own and both resolver calls below pass 2024. The
-    # coordinate said 2025 while one revision still covered both years, and the
-    # split turned that into a request the 2024 era no longer answers.
-    snapshot = registry_snapshot("200", 2024, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    # The first supported year whose Modelo 200 edition calculates and whose fold
+    # sources -- the prior year's Modelo 200 and the year's Modelo 202 -- calculate
+    # too, so every observation below is grounded in an edition that computes it.
+    # An earlier year answered by an applicability-grade edition refuses the
+    # calculation this test drives.
+    support = published_supported_filing_years()
+    assert support is not None
+    editions = {
+        year: registry_snapshot("200", year, "0A", grade=RegistryAuthorityGrade.APPLICABILITY).revision
+        for year in support.years
+    }
+    filing_year = next(
+        year
+        for year, edition in editions.items()
+        if edition.effective_authority_grade is not RegistryAuthorityGrade.APPLICABILITY
+        and source_editions_calculate(relation_source_requirements(edition, filing_year=year, period="0A"))
+    )
+    snapshot = registry_snapshot("200", filing_year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     revision = snapshot.revision
-    assert revision.id == "2024"
     relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period="0A")}
     assert relation_ids == {
         "modelo-200-pagos-fraccionados-anuales",
@@ -230,7 +243,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     assert classifications["202"].treatment == "direct_annual_settlement"
     assert classifications["200"].treatment == "factual_evidence"
 
-    requirements = relation_source_requirements(revision, filing_year=2024, period="0A")
+    requirements = relation_source_requirements(revision, filing_year=filing_year, period="0A")
     observations = _observations_from_requirements(
         requirements,
         lambda _requirement, period_index: (
@@ -245,7 +258,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     relation_values = resolve_relation_values_from_observations(
         revision,
         observations,
-        filing_year=2024,
+        filing_year=filing_year,
         period="0A",
     )
     assert set(relation_values) == relation_ids
@@ -261,7 +274,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
         snapshot,
         inputs=_casilla_inputs(
             {
-                "00501": Decimal("48000"),
+                "DP200012:00501": Decimal("48000"),
                 "DP200013:00417": Decimal("0"),
                 "DP200013:00418": Decimal("0"),
                 "01032": Decimal("0"),
@@ -276,7 +289,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(filing_year, 12, 31)},
         relation_values=relation_values,
     )
     entries = {entry.target_casilla_id: entry for entry in result.entries}

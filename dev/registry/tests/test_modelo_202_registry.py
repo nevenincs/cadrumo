@@ -8,6 +8,7 @@ from functools import lru_cache
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_temporal import FilingYearOffsetByTargetPeriod, TargetPeriods
@@ -236,7 +237,7 @@ def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_d
         if item[0].id == "modelo-202-cuota-base-ejercicio-anterior"
     )
     assert provider.source_modelo == "200"
-    assert provider.declared_source_casilla_ids == ("DP200014B:00592",)
+    assert provider.declared_source_casilla_ids == ("DP200014B:00599",)
     assert provider.relation_kind == "cross_model_output"
     assert provider.dependency_role == "direct_calculation"
     assert isinstance(provider.temporal, FilingYearOffsetByTargetPeriod)
@@ -254,6 +255,53 @@ def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_d
         (requirement,) = [item for item in requirements if item.target_bindings == (binding.id,)]
         assert requirement.filing_year == expected_source_year
         assert requirement.periods == ("0A",)
+
+
+def _expression_casilla_ids(expression: FormulaExpression) -> frozenset[str]:
+    found: set[str] = set() if expression.casilla_id is None else {expression.casilla_id}
+    for argument in expression.args:
+        found |= _expression_casilla_ids(argument)
+    return frozenset(found)
+
+
+def test_committed_modelo_202_art_40_2_base_reads_the_modelo_200_box_net_of_retenciones() -> None:
+    """Every instrucciones era defines the art. 40.2 base as the cuota minus deducciones and retenciones.
+
+    The Modelo 200 cuota liquida is net of deducciones and bonificaciones only; the
+    box the relation reads must also subtract the retenciones e ingresos a cuenta,
+    in each authored Modelo 200 edition that calculates it. An applicability-grade
+    edition computes nothing, so a relation reading it takes the filed value.
+    """
+    modelo, _catalogues = _load_modelo_202()
+    modelo_200, _ = _committed_modelo("200")
+    relation_sources: set[str] = set()
+    for revision in modelo.revisions.values():
+        for binding, provider in relation_prefill_bindings_for_period(revision):
+            if binding.id != "modelo-202-cuota-base-ejercicio-anterior":
+                continue
+            relation_sources.update(provider.declared_source_casilla_ids)
+            cited = {text for citation in binding.source_citations for text in citation.required_text}
+            assert "retenciones e ingresos a cuenta" in cited, revision.id
+    assert relation_sources == {"DP200014B:00599"}
+    calculating = [
+        revision_200
+        for revision_200 in modelo_200.revisions.values()
+        if revision_200.effective_authority_grade is not RegistryAuthorityGrade.APPLICABILITY
+    ]
+    assert calculating, "no Modelo 200 edition calculates, so this check proves nothing"
+    for revision_200 in calculating:
+        retenciones = {
+            casilla.id
+            for casilla in revision_200.casillas
+            if casilla.semantic_role == "is_retenciones_ingresos_a_cuenta"
+        }
+        assert retenciones, revision_200.id
+        formulas = {formula.target_casilla_id: formula for formula in revision_200.formulas}
+        operands = _expression_casilla_ids(formulas["DP200014B:00599"].expression)
+        assert "DP200014B:00592" in operands, revision_200.id
+        assert retenciones & operands, revision_200.id
+        # The cuota liquida alone is not net of the retenciones the base subtracts.
+        assert not retenciones & _expression_casilla_ids(formulas["DP200014B:00592"].expression), revision_200.id
 
 
 _M202_BASE_IMPONIBLE_PREVIA_ADVISORY_PREDICATE_ID = (

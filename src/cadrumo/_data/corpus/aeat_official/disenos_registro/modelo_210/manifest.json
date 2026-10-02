@@ -1,12 +1,12 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "210",
-  "retrieved_at": "2026-07-21",
+  "retrieved_at": "2026-10-01",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html"
   ],
-  "artefact_count": 3,
+  "artefact_count": 4,
   "artefacts": [
     {
       "modelo": "210",
@@ -43,6 +43,18 @@
       "bytes": 308224,
       "sha256": "dce167991abaf547f31b38d7a5e51892ff6e8bd49a27a539432ab504891a0c00",
       "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "210",
+      "title": "210 - Orden EHA/3316/2010 (Devengos entre 01-01-2022 y 01-06-2022)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_21/dr210e22.xls",
+      "stored_path": "files/03-210-orden-eha-3316-2010-devengos-entre-01-01-2022-y-01-06-2022.xls",
+      "original_filename": "dr210e22.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 308736,
+      "sha256": "a21124e3d9e8d72315032ce7471965a2324eebfa2d155a14e9860e6ce47394b3",
+      "retrieved_at": "2026-10-01"
     }
   ]
 }

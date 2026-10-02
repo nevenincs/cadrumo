@@ -65,7 +65,7 @@ _T0 = datetime(2026, 1, 14, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 14, 11, 0, tzinfo=UTC)
 _M200 = "200"
 _FILING_YEAR = 2025
-_RESULTADO_CONTABLE: CasillaId = validated_casilla_id("00501", surface="_RESULTADO_CONTABLE")
+_RESULTADO_CONTABLE: CasillaId = validated_casilla_id("DP200012:00501", surface="_RESULTADO_CONTABLE")
 _BASE_IMPONIBLE: CasillaId = validated_casilla_id("DP200014:00552", surface="_BASE_IMPONIBLE")
 _CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_CUOTA_EJERCICIO")
 

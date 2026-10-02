@@ -21,7 +21,7 @@ from .._key import CorpusKey, IngestCorpusDocument
 from .._result import HarnessRefusalError
 from .._scoring import FieldVerdict, score_emission
 
-pytestmark = [pytest.mark.integration, pytest.mark.external_tool, pytest.mark.hex_core]
+pytestmark = [pytest.mark.integration, pytest.mark.private_ingest_corpus, pytest.mark.hex_core]
 
 #: One of the two entries the S2 baseline requires to surface findings. It is a
 #: real corpus document with both a substantial scorable set and a substantial

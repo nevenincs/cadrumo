@@ -1,6 +1,6 @@
 [revisions."2011-julio-2015"]
 casilla_storage_baseline = "2009-2011-junio"
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (overlapping predecessor).", cause = "overlapping_predecessor", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2011-july"] } }
+predecessor = { none = { reason = "No legal predecessor is declared: naming 2009-2011-junio would claim that the July 2011 design continues the 2009 one, a separate continuity decision. The two editions do not overlap (2009-2011-junio ends on 2011-06-30 and this edition starts on 2011-07-01), and the payload is stored against 2009-2011-junio through casilla_storage_baseline and family_storage_baseline, with overrides stating only this edition's differences: the orden-eha-1033-2011 references, the aeat-dr-308-2011-july citations and the seeded period lineage. Storage reuse makes no continuity claim.", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2011-july"] } }
 casilla_source_refs = ["aeat-dr-308-2011-july"]
 application_link_source_refs = ["aeat-modelo-308-procedure"]
 authority_grade = "applicability"

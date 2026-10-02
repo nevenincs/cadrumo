@@ -207,7 +207,7 @@ modelo:
           Monthly self-assessment.
         title: VAT. Group of entities. Aggregate form. Monthly self-assessment
       revision:
-        2021-2025:
+        2021-hasta-2026-01:
           casilla:
             '01':
               label: Total result (sum of the entities' results)
@@ -226,7 +226,7 @@ modelo:
               label: Amounts to offset from earlier periods still pending for later
                 periods ([02] - [08])
           field:
-            label: Modelo 353 tax years 2008 to 2025 (Orden EHA/3434/2007)
+            label: Modelo 353, tax years 2021 to 2025 and January 2026 (Orden EHA/3434/2007)
         2026-desde-02:
           casilla:
             '01':

@@ -157,7 +157,7 @@ source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2
 
 [[revisions.2023-y-siguientes.casilla_overrides]]
 selector = { revision = "2019-2022", id = "decl.base-total" }
-fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], constraints = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }, form_number = "02", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], constraints = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }, legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 removed_fields = []
 
 [[revisions.2023-y-siguientes.casilla_overrides]]
@@ -177,12 +177,12 @@ removed_fields = []
 
 [[revisions.2023-y-siguientes.casilla_overrides]]
 selector = { revision = "2019-2022", id = "decl.retenciones-total" }
-fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], constraints = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }, form_number = "03", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], constraints = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }, legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 removed_fields = []
 
 [[revisions.2023-y-siguientes.casilla_overrides]]
 selector = { revision = "2019-2022", id = "decl.total-perceptores" }
-fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], form_number = "01", legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 removed_fields = []
 
 [[revisions.2023-y-siguientes.casilla_overrides]]
@@ -355,8 +355,8 @@ sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [0, 1, 3, 2]
 [[revisions.2023-y-siguientes.family_overrides]]
 family = "constructs"
 selector = {revision = "2019-2022", id = "modelo-180-annual-summary"}
-sequence_additions = {application_links = ["modelo-180-portal-cross-reference", "modelo-180-filed-declarations-observation", "modelo-180-calculation", "modelo-180-filing", "modelo-180-export", "modelo-180-extractor", "modelo-180-review", "modelo-180-approval", "modelo-180-reconciliation", "modelo-180-workflow"], legal_refs = ["orden-hfp-1284-2023:art-7"], live_cross_references = ["modelo-180-static-official", "modelo-180-filed-declarations-read"], source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure", "boe-modelo-180-2023-form"], workbook_parity_refs = ["modelo-180-dr-pdf"]}
-sequence_removals = {application_links = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], live_cross_references = [0, 1], source_refs = [0], workbook_parity_refs = [0]}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure", "boe-modelo-180-2023-form"], workbook_parity_refs = ["modelo-180-dr-pdf"]}
+sequence_removals = {source_refs = [0], workbook_parity_refs = [0]}
 sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [3, 0, 1, 4, 2, 5]}
 
 [[revisions.2023-y-siguientes.family_overrides]]
@@ -374,7 +374,6 @@ sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
 [[revisions.2023-y-siguientes.family_overrides]]
 family = "bindings"
 selector = {revision = "2019-2022", id = "modelo-180-115-perceptores-anual"}
-fields = { provider = { fact = "type2_record_count" } }
 sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
 sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
 
@@ -399,54 +398,245 @@ sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = 
 sequence_removals = {source_refs = [0]}
 sequence_order = {legal_refs = [0, 1, 2, 3, 6, 4, 5], source_refs = [1, 0, 2]}
 
-[[revisions.2023-y-siguientes.family_removals]]
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "live_cross_references"
-selector = {revision = "2019-2022", id = "modelo-180-2014-filed-declarations-read"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-filed-declarations-read"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-modelo-180-procedure"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "live_cross_references"
-selector = {revision = "2019-2022", id = "modelo-180-2014-static-official"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-static-official"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]}
+sequence_removals = {source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2019-2022", id = "modelo-180-declaracion-pdf"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 0, 2]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-approval"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-approval"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 0, 2]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-calculation"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-calculation"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [0, 2, 1]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-export"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-export"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-extractor"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-extractor"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0, 2]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-filed-declarations-observation"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-filed-declarations-observation"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-modelo-180-procedure"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-filing"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-filing"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-modelo-180-procedure", "aeat-dr-180-2023", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 2, 0, 3]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-portal-cross-reference"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-portal-cross-reference"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-modelo-180-procedure"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-reconciliation"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-reconciliation"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 0, 2]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-review"}
-
-[[revisions.2023-y-siguientes.family_removals]]
+selector = {revision = "2019-2022", id = "modelo-180-review"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 0, 2]}
+[[revisions.2023-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2019-2022", id = "modelo-180-2014-workflow"}
-
+selector = {revision = "2019-2022", id = "modelo-180-workflow"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 0, 2]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-accrual-year"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-base"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-block"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-cadastral-reference"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-complement"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-door"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-floor"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-house-number"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-locality"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-modality"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-municipality"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-municipality-code"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-name"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-nif"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-number-qualifier"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-number-type"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-portal"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-postal-code"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-property-province"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-property-situation"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-recipient-province"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-representative-nif"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-retenciones"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-staircase"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-street-name"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-street-type"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-withholding-percentage"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
 [[revisions.2023-y-siguientes.family_removals]]
 family = "deadline_windows"
 selector = {revision = "2019-2022", id = "modelo-180-2022-0a"}

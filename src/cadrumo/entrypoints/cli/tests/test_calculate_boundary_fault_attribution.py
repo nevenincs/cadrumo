@@ -101,7 +101,7 @@ def _calculate_args(work_unit_id: str) -> list[str]:
     return [
         "--format", "json",
         "app", "modelo", "work", "calculate", work_unit_id,
-        "--casilla", "00501=100000.00",
+        "--casilla", "DP200012:00501=100000.00",
         "--casilla", "DP200013:00417=0.00",
         "--casilla", "DP200013:00418=0.00",
         "--casilla", "01032=0.00",

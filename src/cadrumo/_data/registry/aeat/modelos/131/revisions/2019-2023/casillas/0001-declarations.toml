@@ -133,3 +133,210 @@ formula = "modelo-131-saldo-negativo-fin-periodo"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 export_exemption_reason = "not_in_record_design"
+
+# Estimación objetiva módulos engine for ejercicios 2022 and 2023: the
+# operator-declared epígrafe and unit counts, the declared minoración por
+# incentivos a la inversión and índices correctores generales, the two
+# incompatibility flags and the four computed phases. Each year's own Orden de
+# módulos governs it -- Orden HFP/1335/2021 for 2022 and Orden HFP/1172/2022 for
+# 2023 -- and both print the same Anexo II signos, módulos, instrucciones and
+# amounts, so the rows are one statement for the edition. The computed figure
+# is a reference that the advisory compares against the manual casilla 01; it
+# never replaces it. The 2019-2023 record design prints none of these inputs.
+[[revisions."2019-2023".casillas]]
+id = "modulos-epigrafe"
+number = "modulos-epigrafe"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "text"
+semantic_role = "irpf_pf_modulos_epigrafe_iae"
+continuidad_id = "irpf-pf-modulos-epigrafe-iae"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-1-unidades"
+number = "modulos-1-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_1_unidades"
+continuidad_id = "irpf-pf-modulos-1-unidades"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-1-unidades-anterior"
+number = "modulos-1-unidades-anterior"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_1_unidades_anterior"
+continuidad_id = "irpf-pf-modulos-1-unidades-anterior"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:instruccion-2-2-a", "orden-hfp-1172-2022:instruccion-2-2-a"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:instruccion-2-2-a", "orden-hfp-1172-2022:instruccion-2-2-a"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-2-unidades"
+number = "modulos-2-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_2_unidades"
+continuidad_id = "irpf-pf-modulos-2-unidades"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-3-unidades"
+number = "modulos-3-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_3_unidades"
+continuidad_id = "irpf-pf-modulos-3-unidades"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-4-unidades"
+number = "modulos-4-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_4_unidades"
+continuidad_id = "irpf-pf-modulos-4-unidades"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-5-unidades"
+number = "modulos-5-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_5_unidades"
+continuidad_id = "irpf-pf-modulos-5-unidades"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-6-unidades"
+number = "modulos-6-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_6_unidades"
+continuidad_id = "irpf-pf-modulos-6-unidades"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-7-unidades"
+number = "modulos-7-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_7_unidades"
+continuidad_id = "irpf-pf-modulos-7-unidades"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-minoracion-inversion"
+continuidad_id = "irpf-pf-modulos-minoracion-inversion"
+number = "modulos-minoracion-inversion"
+section = ["actividades_economicas_estimacion_objetiva"]
+semantic_role = "irpf_pf_modulos_minoracion_inversion"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:instruccion-2-2-b", "orden-hfp-1172-2022:instruccion-2-2-b"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:instruccion-2-2-b", "orden-hfp-1172-2022:instruccion-2-2-b"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-indice-pequena-dimension"
+continuidad_id = "irpf-pf-modulos-indice-pequena-dimension"
+number = "modulos-indice-pequena-dimension"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_indice_pequena_dimension"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-1"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-1"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-indice-temporada"
+continuidad_id = "irpf-pf-modulos-indice-temporada"
+number = "modulos-indice-temporada"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_indice_temporada"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-2"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-2"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-indice-inicio-actividad"
+continuidad_id = "irpf-pf-modulos-indice-inicio-actividad"
+number = "modulos-indice-inicio-actividad"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_indice_inicio_actividad"
+constraints = {sign = "non_negative", legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-4"]}
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-pequena-dimension-ignorado-flag"
+continuidad_id = "irpf-pf-modulos-pequena-dimension-ignorado-flag"
+number = "modulos-pequena-dimension-ignorado-flag"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_pequena_dimension_ignorado_flag"
+input_kind = "computed"
+formula = "modelo-131-modulos-pequena-dimension-ignorado-flag"
+internal_only = true
+legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-temporada-inicio-actividad-conflicto-flag"
+continuidad_id = "irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag"
+number = "modulos-temporada-inicio-actividad-conflicto-flag"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "decimal"
+semantic_role = "irpf_pf_modulos_temporada_inicio_actividad_conflicto_flag"
+input_kind = "computed"
+formula = "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag"
+internal_only = true
+legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-rendimiento-neto-previo"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-previo"
+number = "modulos-rendimiento-neto-previo"
+section = ["actividades_economicas_estimacion_objetiva"]
+semantic_role = "irpf_pf_modulos_rendimiento_neto_previo"
+constraints = {sign = "non_negative", legal_refs = ["ley-35-2006:art-31"]}
+input_kind = "computed"
+formula = "modelo-131-modulos-rendimiento-neto-previo"
+internal_only = true
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-rendimiento-neto-minorado"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-minorado"
+number = "modulos-rendimiento-neto-minorado"
+section = ["actividades_economicas_estimacion_objetiva"]
+semantic_role = "irpf_pf_modulos_rendimiento_neto_minorado"
+input_kind = "computed"
+formula = "modelo-131-modulos-rendimiento-neto-minorado"
+internal_only = true
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:instruccion-2-2-a", "orden-hfp-1172-2022:instruccion-2-2-a", "orden-hfp-1335-2021:instruccion-2-2-b", "orden-hfp-1172-2022:instruccion-2-2-b"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-rendimiento-neto-modulos"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-modulos"
+number = "modulos-rendimiento-neto-modulos"
+section = ["actividades_economicas_estimacion_objetiva"]
+semantic_role = "irpf_pf_modulos_rendimiento_neto_modulos"
+input_kind = "computed"
+formula = "modelo-131-modulos-rendimiento-neto-modulos"
+internal_only = true
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:instruccion-2-3-b-3", "orden-hfp-1172-2022:instruccion-2-3-b-3", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2019-2023".casillas]]
+id = "modulos-rendimiento-neto-actividad"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-actividad"
+number = "modulos-rendimiento-neto-actividad"
+section = ["actividades_economicas_estimacion_objetiva"]
+semantic_role = "irpf_pf_modulos_rendimiento_neto_actividad"
+constraints = {sign = "non_negative", legal_refs = ["ley-35-2006:art-31"]}
+input_kind = "computed"
+formula = "modelo-131-modulos-rendimiento-neto-actividad"
+internal_only = true
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:da-1", "orden-hfp-1172-2022:da-8", "orden-hfp-1172-2022:da-1"]

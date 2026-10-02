@@ -7,7 +7,7 @@ revision_id = "2024-hasta-08-y-2t"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "db10eff4cca39b45bbcb94b3980a42088a2242dc43911a95678aef0c92bd3a24"
+source_state_digest = "7596d99b71f61824488995ea1657f52ad94f49f942761a43e4dd97dbb781962a"
 design_sources = [
     { source_ref = "aeat-dr-303-2024-early", sha256 = "28dcb7194c148b02b5687c08d4fecb76f6af6fcdf0d3f7dfbac6043a1f838be9" },
 ]
@@ -184,7 +184,10 @@ placements = [
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
     { casilla_id = "decl.periodo", kind = "working_figure" },
     { casilla_id = "iva.autoconsumo.promotor.base", kind = "working_figure" },
-    { casilla_id = "iva.autoconsumo.promotor.cuota", kind = "working_figure" },
+    { casilla_id = "iva.autoconsumo.promotor.base.por-tipo", kind = "working_figure" },
+    { casilla_id = "iva.autoconsumo.promotor.general.base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "iva.autoconsumo.promotor.reducido.base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "iva.autoconsumo.promotor.super-reducido.base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "iva.autorepercutido.interior.deducible", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.interior.deducible.base", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.interior.deducible.bienes-inversion", kind = "working_figure" },
@@ -201,6 +204,9 @@ placements = [
     { casilla_id = "iva.compensacion-pendiente-periodos-posteriores", kind = "on_form", box_number = "87" },
     { casilla_id = "iva.cuota-deducible-total", kind = "working_figure" },
     { casilla_id = "iva.cuota-devengada-total", kind = "working_figure" },
+    { casilla_id = "iva.cuota-devengada.general", kind = "working_figure" },
+    { casilla_id = "iva.cuota-devengada.reducido", kind = "working_figure" },
+    { casilla_id = "iva.cuota-devengada.super-reducido", kind = "working_figure" },
     { casilla_id = "iva.prorrata-porcentaje", kind = "working_figure" },
     { casilla_id = "iva.prorrata-volumen-con-derecho", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "iva.prorrata-volumen-total", kind = "unplaced", unplaced_reason = "no_official_anchor" },
@@ -212,9 +218,12 @@ placements = [
     { casilla_id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base", kind = "working_figure" },
     { casilla_id = "iva.regularizacion-inversiones", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "iva.repercutido.general", kind = "working_figure" },
+    { casilla_id = "iva.repercutido.general.base", kind = "working_figure" },
     { casilla_id = "iva.repercutido.reducido", kind = "working_figure" },
+    { casilla_id = "iva.repercutido.reducido.base", kind = "working_figure" },
     { casilla_id = "iva.repercutido.reducido.transitorio", kind = "working_figure" },
     { casilla_id = "iva.repercutido.super-reducido", kind = "working_figure" },
+    { casilla_id = "iva.repercutido.super-reducido.base", kind = "working_figure" },
     { casilla_id = "iva.repercutido.super-reducido.transitorio", kind = "working_figure" },
     { casilla_id = "iva.resultado", kind = "on_form", box_number = "69" },
     { casilla_id = "iva.resultado-regimen-general", kind = "on_form", box_number = "46" },

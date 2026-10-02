@@ -14,10 +14,12 @@ locale catalogue follows the same discipline:
 - a translation is authored only for Spanish text that has none; Spanish text
   already translated elsewhere in the same lineage is carried, not retyped.
 
-Everything here reads the published authority and the runtime resolution rule
+The default inventory reads the published authority and the runtime resolution rule
 (:func:`~cadrumo.domain.calculations.registry.modelo_localization.modelo_localization_source`)
 through the ``cadrumo`` package only, so the check measures exactly what
-operators are served. Writes go through :class:`~dev.locales.manager.LocaleManager`.
+operators are served. Authoring may supply canonical typed candidate occurrences
+and continuity evolutions before publication. Writes go through
+:class:`~dev.locales.manager.LocaleManager`.
 """
 
 from __future__ import annotations
@@ -39,6 +41,10 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.modelo_localization import (
     encode_modelo_locale_segment,
     modelo_localization_source,
+)
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CasillaContinuidadEvolutionDefinition,
+    CasillaEvolutionKind,
 )
 
 from ._casilla_keys import is_delta_keyed_leaf, is_lineage_key
@@ -268,11 +274,21 @@ def casilla_occurrences() -> tuple[CasillaOccurrence, ...]:
     A construct is carried as an occurrence whose label chain is its title chain,
     so both delta-keyed surfaces share one resolution, collapse and audit.
     """
+    return _published_surface()[0]
+
+
+def _published_surface() -> tuple[
+    tuple[CasillaOccurrence, ...], dict[str, tuple[CasillaContinuidadEvolutionDefinition, ...]]
+]:
+    """Read occurrences and their declared evolutions from one authority operation."""
     found: list[CasillaOccurrence] = []
+    evolutions: dict[str, tuple[CasillaContinuidadEvolutionDefinition, ...]] = {}
     with bundled_indexed_authority().operation() as operation:
         for modelo_id in operation.modelo_ids():
+            model_evolutions: list[CasillaContinuidadEvolutionDefinition] = []
             for metadata in operation.modelo_directory(modelo_id).revisions:
                 revision = operation.revision(modelo_id, str(metadata.id))
+                model_evolutions.extend(revision.casilla_continuidad_evolutions)
                 found.extend(
                     CasillaOccurrence(
                         modelo=str(modelo_id),
@@ -298,7 +314,8 @@ def casilla_occurrences() -> tuple[CasillaOccurrence, ...]:
                     )
                     for construct in revision.constructs
                 )
-    return tuple(found)
+            evolutions[str(modelo_id)] = tuple(model_evolutions)
+    return tuple(found), evolutions
 
 
 type Values = dict[str, dict[str, str | None]]
@@ -1356,10 +1373,17 @@ class CollapsePlan:
 class ModeloCasillaCatalogue:
     """The casilla surface as the runtime resolves it, with delta-keyed edits."""
 
-    def __init__(self, occurrences: tuple[CasillaOccurrence, ...], values: Values) -> None:
-        """Index every key by the coordinates whose chains read it."""
+    def __init__(
+        self,
+        occurrences: tuple[CasillaOccurrence, ...],
+        values: Values,
+        *,
+        label_evolutions: Mapping[str, tuple[CasillaContinuidadEvolutionDefinition, ...]] | None = None,
+    ) -> None:
+        """Index occurrence chains and optional typed evidence for label changes."""
         self.occurrences = occurrences
         self.values = values
+        self.label_evolutions = {} if label_evolutions is None else label_evolutions
         self.locales = tuple(sorted(values))
         self.dependents: dict[str, list[tuple[int, str]]] = defaultdict(list)
         self.declared_revisions = frozenset(
@@ -1374,7 +1398,8 @@ class ModeloCasillaCatalogue:
     @classmethod
     def published(cls, locales_dir: Path = LOCALES_DIR) -> ModeloCasillaCatalogue:
         """Build the view from the published generation and the on-disk catalogue."""
-        return cls(casilla_occurrences(), load_casilla_values(locales_dir))
+        occurrences, evolutions = _published_surface()
+        return cls(occurrences, load_casilla_values(locales_dir), label_evolutions=evolutions)
 
     # -- resolution -------------------------------------------------------
 
@@ -1904,7 +1929,8 @@ class ModeloCasillaCatalogue:
         by one of the manifest's keys in its own locale, or, for a Spanish
         change, by a manifest key read through the Spanish fallback. Any other
         change means the manifest reached text it did not declare, and the
-        install is refused. Returns how many coordinates changed per locale.
+        install is refused. New inconsistent composed-segment renderings are
+        refused before cutover. Returns how many coordinates changed per locale.
 
         Raises:
             CollapseVerificationError: An install is pending, a key is not a
@@ -1946,6 +1972,19 @@ class ModeloCasillaCatalogue:
                 if source is None or source[0] not in manifest.get(source[1], {}):
                     unattributed.append(coordinate)
                 changed[locale] += 1
+            affected_locales = self.locales if SOURCE_LOCALE in manifest else tuple(manifest)
+            introduced_drift: list[tuple[str, str, tuple[str, ...]]] = []
+            for locale in affected_locales:
+                if locale == SOURCE_LOCALE:
+                    continue
+                existing = self.segment_drift(locale)
+                for segment, renderings in proof.segment_drift(locale).items():
+                    if set(renderings) - set(existing.get(segment, ())):
+                        introduced_drift.append((locale, segment, renderings))
+            if introduced_drift:
+                raise CollapseVerificationError(
+                    f"authored values introduce inconsistent composed-segment renderings: {introduced_drift[:5]}"
+                )
         except BaseException:
             _discard(pending_dir)
             raise
@@ -1981,12 +2020,50 @@ class ModeloCasillaCatalogue:
                 editions[(occurrence.modelo, occurrence.casilla)].append(index)
         split: list[str] = []
         for (modelo, casilla), members in sorted(editions.items()):
-            old = defaultdict(set)
+            old: dict[str | None, list[int]] = defaultdict(list)
             for index in members:
-                old[before.get((index, "label", SOURCE_LOCALE))].add(after.get((index, "label", SOURCE_LOCALE)))
-            if any(len(texts) > 1 for texts in old.values()):
+                old[before.get((index, "label", SOURCE_LOCALE))].append(index)
+            if any(not self._declared_label_split(modelo, group, after) for group in old.values()):
                 split.append(f"{modelo}/{casilla}")
         return tuple(split)
+
+    def _declared_label_split(self, modelo: str, members: list[int], after: Mapping[Coordinate, str | None]) -> bool:
+        """Require grounded label transitions to connect every distinct resulting text.
+
+        Editions retaining the same text share a node. This allows an unchanged
+        later edition to inherit an evidenced change without a copied evolution.
+        Revision identifiers are opaque; neither years nor filename order decide
+        whether two editions are connected.
+        """
+        texts = {after.get((index, "label", SOURCE_LOCALE)) for index in members}
+        if len(texts) <= 1:
+            return True
+        occurrences = {self.occurrences[index].revision: index for index in members}
+        links: dict[str | None, set[str | None]] = defaultdict(set)
+        for evolution in self.label_evolutions.get(modelo, ()):
+            if evolution.evolution_kind not in (
+                CasillaEvolutionKind.LABEL_EVOLVED,
+                CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED,
+            ) or not (evolution.legal_refs and evolution.source_refs):
+                continue
+            start = occurrences.get(str(evolution.from_revision))
+            end = occurrences.get(str(evolution.to_revision))
+            if start is None or end is None:
+                continue
+            if any(self.occurrences[index].continuidad_id != str(evolution.continuidad_id) for index in (start, end)):
+                continue
+            left = after.get((start, "label", SOURCE_LOCALE))
+            right = after.get((end, "label", SOURCE_LOCALE))
+            links[left].add(right)
+            links[right].add(left)
+        pending = [next(iter(texts))]
+        reached: set[str | None] = set()
+        while pending:
+            text = pending.pop()
+            if text not in reached:
+                reached.add(text)
+                pending.extend(links[text] - reached)
+        return reached == texts
 
     def _write_plan(self, plan: CollapsePlan, locales_dir: Path) -> dict[str, int]:
         manager = LocaleManager(src_dir=locales_dir, locales_dir=locales_dir)

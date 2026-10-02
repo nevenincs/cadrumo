@@ -14,6 +14,10 @@ src/cadrumo/_data/corpus/aeat_official/** -text
 # working copy was 104,069, exactly the 134 CRLF pairs git had introduced.
 src/cadrumo/_data/corpus/normatives/** -text
 
+# Captured BOE HTML retains the publisher's whitespace as part of its evidence
+# bytes; commit checks must not require changing that accepted artifact.
+src/cadrumo/_data/corpus/normatives/html/*.html -whitespace
+
 # Every corpus tree, including ones added later. The two rules above name the
 # trees that had already been bitten; this one closes the class. Corpus files
 # are byte-exact evidence whose sha256 and byte count are declared in the

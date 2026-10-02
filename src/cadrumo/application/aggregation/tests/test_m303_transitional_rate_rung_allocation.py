@@ -247,11 +247,13 @@ def test_every_rung_cuota_carrier_reaches_total_cuota_devengada() -> None:
     """A rung placed correctly still under-declares if [27] does not enumerate it.
 
     The rungs' cuota bindings write semantic carriers, and casilla [27] sums
-    those carriers -- the diseño's own printed formula for [27] lists every
-    rung's cuota box. Splitting a rate onto a new carrier and leaving the total
-    alone would move the cuota off the return entirely, which is the failure
-    narrowing a binding invites. Derived from the registry both sides, so a
-    future rung that is bound but not totalled reds this rather than shipping.
+    them, directly or through the rate row's cuota devengada that adds the
+    promotor's autoconsumo at the row's rate -- the diseño's own printed formula
+    for [27] lists every rung's cuota box. Splitting a rate onto a new carrier and
+    leaving the total alone would move the cuota off the return entirely, which
+    is the failure narrowing a binding invites. Derived from the registry both
+    sides, so a future rung that is bound but not totalled reds this rather than
+    shipping.
     """
     revision = _revision()
     carriers = {
@@ -259,15 +261,30 @@ def test_every_rung_cuota_carrier_reaches_total_cuota_devengada() -> None:
         for c in revision.casillas
         if c.binding is not None and str(c.binding).startswith("modelo-303-iva-repercutido-")
     }
-    rung_carriers = {casilla_id for binding_id, casilla_id in carriers.items() if binding_id.endswith("-cuota")}
+    rung_carriers = {str(casilla_id) for binding_id, casilla_id in carriers.items() if binding_id.endswith("-cuota")}
     assert rung_carriers, "no rung cuota carrier found -- the probe proves nothing"
 
-    total = next(f for f in revision.formulas if f.target_casilla_id == "iva.cuota-devengada-total")
-    summed = {str(arg.casilla_id) for arg in total.expression.args if arg.casilla_id is not None}
+    reached = _casillas_feeding(revision, "iva.cuota-devengada-total")
 
-    assert rung_carriers <= summed, (
-        f"rung cuota carriers missing from total cuota devengada: {sorted(rung_carriers - summed)}"
+    assert rung_carriers <= reached, (
+        f"rung cuota carriers missing from total cuota devengada: {sorted(rung_carriers - reached)}"
     )
+
+
+def _casillas_feeding(revision: ModeloRevision, target: str) -> set[str]:
+    """Every casilla ``target``'s formula reads, followed through the formulas of computed casillas."""
+    formulas = {str(formula.target_casilla_id): formula for formula in revision.formulas}
+    reached: set[str] = set()
+    pending = [formulas[target].expression]
+    while pending:
+        expression = pending.pop()
+        casilla_id = getattr(expression, "casilla_id", None)
+        if casilla_id is not None and str(casilla_id) not in reached:
+            reached.add(str(casilla_id))
+            if str(casilla_id) in formulas:
+                pending.append(formulas[str(casilla_id)].expression)
+        pending.extend(getattr(expression, "args", None) or ())
+    return reached
 
 
 def test_the_narrowed_rate_sets_are_exhaustive_against_the_rate_table() -> None:

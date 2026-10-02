@@ -47,12 +47,11 @@ from ..binding_aggregation import binding_aggregation_op
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, resolve_relation_values
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 # ── shared date contexts ──────────────────────────────────────────────────────
 _DATE_2024 = {"filing_period": date(2024, 12, 31)}
@@ -72,7 +71,7 @@ _BINDINGS_2024: dict[str, Decimal] = {
     "renta-profile-incremento-guarderia": Decimal("0"),
     "renta-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-profile-descendientes-guarderia": Decimal("0"),
-    **_M100_2024_MATERNIDAD_BINDINGS,
+    **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
     "renta-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
@@ -259,7 +258,6 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -279,6 +277,9 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         "renta-maritime-gross-navigation-income": Decimal("0"),
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
+        # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+        # neutral zero for a scenario with no descendants.
+        **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
     }
     # The reviewed edition requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.

@@ -7612,12 +7612,18 @@ selector = { revision = "2015-2022", id = "p08.devoluciones-acordadas-or-la-admi
 fields = { additional_source_refs = ["aeat-modelo-151-procedure"], id = "p10.devoluciones-acordadas-por-la-administracion-42", legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"], section = ["p10", "devoluciones_acordadas_por_la_administracion"], segmento = "M15100000" }
 removed_fields = []
 
+# The escala del ahorro is the one the 2015-2022 edition authors; its rows stay
+# open while the law leaves them unchanged. From ejercicio 2023 the Ley 31/2022
+# closes the 26 % top tranche at 200.000 and adds 27 % to 300.000 and 28 % above
+# (ley-35-2006:art-93-ahorro-2023); from 2025 the Ley 7/2024 raises the top rate
+# to 30 % (ley-35-2006:art-93-ahorro). Both redactions restate the tranches the
+# rows left open carry, so they replace the 2021-2022 citation, whose wording
+# ends before this edition starts.
 [[revisions."2025-y-siguientes".family_overrides]]
-family = "formulas"
-selector = {revision = "2015-2022", id = "modelo-151-cuota-diferencial"}
-sequence_additions = {"expression.args" = [{op = "add", args = [{casilla_id = "impatriado.cuota-integra-general"}, {casilla_id = "impatriado.cuota-integra-ahorro"}]}]}
-sequence_removals = {"expression.args" = [0]}
-sequence_order = {"expression.args" = [1, 0]}
+family = "parameters"
+selector = {revision = "2015-2022", id = "modelo-151.escala-cuota-integra-ahorro"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-93-ahorro", "ley-35-2006:art-93-ahorro-2023"], brackets = [{lower_bound = "200000", upper_bound = "300000", fixed_addition = "44880", marginal_rate = "0.27", valid_from = 2023-01-01}, {lower_bound = "300000", fixed_addition = "71880", marginal_rate = "0.28", valid_from = 2023-01-01, valid_to = 2024-12-31}, {lower_bound = "300000", fixed_addition = "71880", marginal_rate = "0.30", valid_from = 2025-01-01}]}
+sequence_removals = {legal_refs = [1]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "applicability"
@@ -7626,17 +7632,23 @@ fields = {applicable_reason = "Modelo 151: la persona física residente que ha o
 sequence_additions = {legal_refs = ["orden-hfp-1338-2023:art-2"]}
 sequence_removals = {legal_refs = [2]}
 
+# The export link is the one the 2015-2022 edition authors; from ejercicio 2023
+# it cites the successor design and the orden that approves the successor model.
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "application_links"
 selector = {revision = "2015-2022", id = "modelo-151-export"}
-sequence_additions = {source_refs = ["aeat-dr-151-2023"]}
-sequence_removals = {source_refs = [0]}
+sequence_additions = {legal_refs = ["orden-hfp-1338-2023:art-1"], source_refs = ["aeat-dr-151-2023"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
 
+# The annual filing schedule is the one the 2015-2022 edition authors. Orden
+# HFP/1338/2023 arts. 2 and 3 restate its obligados and its plazo by the same
+# remission to the general IRPF plazo, so from ejercicio 2023 only the governing
+# articles change; the annual shape, period and profile condition are inherited.
 [[revisions."2025-y-siguientes".family_overrides]]
-family = "constructs"
-selector = {revision = "2015-2022", id = "m151-impatriado-calculation"}
-sequence_additions = {formulas = ["modelo-151-cuota-integra-ahorro"]}
-sequence_order = {formulas = [0, 2, 1]}
+family = "filing_schedules"
+selector = {revision = "2015-2022", id = "modelo-151-anual"}
+sequence_additions = {legal_refs = ["orden-hfp-1338-2023:art-2", "orden-hfp-1338-2023:art-3"]}
+sequence_removals = {legal_refs = [2, 3]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "workbook_parity_refs"
@@ -7645,18 +7657,6 @@ fields = {workbook_source = "aeat-dr-151-2023"}
 sequence_additions = {source_refs = ["aeat-dr-151-2023"]}
 sequence_removals = {source_refs = [0]}
 
-[[revisions."2025-y-siguientes".family_overrides]]
-family = "verification_expectations"
-selector = {revision = "2015-2022", id = "modelo-151-calculation-verification"}
-sequence_additions = {computed_casilla_ids = ["impatriado.cuota-integra-ahorro"]}
-sequence_order = {computed_casilla_ids = [0, 2, 1]}
-
-[[revisions."2025-y-siguientes".family_overrides]]
-family = "completeness_manifest"
-selector = {revision = "2015-2022", id = "aeat-modelo-151-procedure"}
-sequence_additions = {casillas = [{casilla_id = "impatriado.base-liquidable-ahorro", number = "impatriado.base-liquidable-ahorro"}, {casilla_id = "impatriado.cuota-integra-ahorro", number = "impatriado.cuota-integra-ahorro"}]}
-sequence_order = {casillas = [0, 4, 1, 5, 2, 3]}
-
 [[revisions."2025-y-siguientes".family_removals]]
-family = "verification_predicates"
-selector = {revision = "2015-2022", id = "implies-nonzero:base-liquidable-ahorro-implica-cuota-del-ahorro"}
+family = "deadline_windows"
+selector = {revision = "2015-2022", id = "modelo-151-2022-0a"}

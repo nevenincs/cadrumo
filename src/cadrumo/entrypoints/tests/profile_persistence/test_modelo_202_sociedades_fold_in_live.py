@@ -18,9 +18,11 @@ not the direct-resolver path the existing continuity tests exercise:
   Casilla 01 ("Importe de la base") is bound by
   ``modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior``
   (``source = relation_prefill``, ``selector source_modelo = '200',
-  source_casilla_id = 'DP200014B:00592'``), fed by the cuota-base relations whose
-  ``filing_year_delta`` selects the prior M200 cuota líquida. A 2P calculate
-  folds the immediately prior M200 (filing_year_delta = -1) cuota líquida.
+  source_casilla_id = 'DP200014B:00599'``), fed by the cuota-base relations whose
+  ``filing_year_delta`` selects the prior M200 cuota del ejercicio (the cuota
+  líquida net of retenciones e ingresos a cuenta, as the art. 40.2 base is
+  defined). A 2P calculate folds the immediately prior M200 (filing_year_delta
+  = -1) cuota del ejercicio.
 
 Each source period is seeded as a filed observation through the production
 observation-persistence API
@@ -37,7 +39,7 @@ agreement holds. No mocks, stubs, skips, or xfail.
 Non-tautological: the seeded per-period c34 values are DISTINCT non-equal known
 Decimals, so an off-by-period fold, a single-period copy, a silent blank, or a
 coincidental sum cannot satisfy the cumulative assertion; the prior M200 cuota
-líquida is a manual input no formula under test produces. The expected casilla
+del ejercicio is a manual input no formula under test produces. The expected casilla
 values derive from the seeded observations via the declared aggregation ops
 (``sum`` / cross-year copy), never by re-evaluating any registry formula. A
 change in the relation's ``source_casilla_id``, ``source_periods``, or
@@ -140,14 +142,14 @@ _FILING_YEAR = 2025
 _PRIOR_M200_YEAR = 2024  # filing_year_delta = -1 from the 2025 M202 ejercicio
 
 # M202 source_casilla_id 34 is the instalment ingresado that the self-pago relations
-# read; M200 source_casilla_id DP200014B:00592 is the prior cuota líquida the
-# cuota-base relation reads.
+# read; M200 source_casilla_id DP200014B:00599 is the prior cuota del ejercicio
+# (net of retenciones e ingresos a cuenta) the cuota-base relation reads.
 _M202_PAGO_OUTPUT: CasillaId = validated_casilla_id("34", surface="_M202_PAGO_OUTPUT")
 _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
     "03",
     surface="_M202_PAGO_OUTPUT_40_2",
 )  # modalidad cuota (art. 40.2); folds alongside casilla 34
-_M200_CUOTA_LIQUIDA: CasillaId = validated_casilla_id("DP200014B:00592", surface="_M200_CUOTA_LIQUIDA")
+_M200_CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_M200_CUOTA_EJERCICIO")
 _M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
 _M202_PAGOS_ANTERIORES_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
@@ -168,7 +170,7 @@ _M202_C34_BY_PERIOD: dict[str, Decimal] = {
     "1P": Decimal("1234.00"),
     "2P": Decimal("5678.50"),
 }
-# The prior M200 cuota líquida the 2P cuota-base relation folds (a manual input;
+# The prior M200 cuota del ejercicio the 2P cuota-base relation folds (a manual input;
 # distinct from every pago value so a cross-wired fold would surface).
 _M200_PRIOR_CUOTA = Decimal("48000.00")
 
@@ -423,7 +425,7 @@ def _seed_m202_pago(*, period: str, value: Decimal, obs_repo: CalculationObserva
 
 
 def _seed_m200_prior_cuota(*, cuota: Decimal, obs_repo: CalculationObservationRepository) -> None:
-    """Persist the prior-year M200 cuota líquida (DP200014B:00592) the 2P base folds."""
+    """Persist the prior-year M200 cuota del ejercicio (DP200014B:00599) the 2P base folds."""
     obs_repo.save(
         obs_repo.prepare_observation_envelope(
             RegistryModeloObservation(
@@ -434,7 +436,7 @@ def _seed_m200_prior_cuota(*, cuota: Decimal, obs_repo: CalculationObservationRe
                     modelo=_M200,
                     filing_year=_PRIOR_M200_YEAR,
                     period="0A",
-                    casilla_values={_M200_CUOTA_LIQUIDA: cuota},
+                    casilla_values={_M200_CUOTA_EJERCICIO: cuota},
                     grade=RegistryAuthorityGrade.CALCULATION,
                 ),
             ),
@@ -449,7 +451,7 @@ def _seed_m200_prior_cuota(*, cuota: Decimal, obs_repo: CalculationObservationRe
                         modelo=_M200,
                         filing_year=_PRIOR_M200_YEAR,
                         period="0A",
-                        casilla_values={_M200_CUOTA_LIQUIDA: cuota},
+                        casilla_values={_M200_CUOTA_EJERCICIO: cuota},
                         grade=RegistryAuthorityGrade.CALCULATION,
                     ),
                 )
@@ -497,13 +499,13 @@ def test_m202_2p_folds_prior_1p_pago_and_m200_cuota_on_live_calculate(
 ) -> None:
     """E2E: M202 2P folds the prior 1P pago (casilla 30) and prior M200 cuota (casilla 01).
 
-    With a 1P M202 instalment filed (c34) and a prior-year M200 cuota líquida
+    With a 1P M202 instalment filed (c34) and a prior-year M200 cuota del ejercicio
     recorded, a live calculate of the 2P instalment draws both relation chains
     through the enrolled ``RelationPrefillSourceResolver``:
 
     - casilla 30 (pagos-fraccionados-anteriores) == the 1P pago (sum over the one
       prior period the 2P self-pago relation declares).
-    - casilla 01 (base) == the immediately prior M200 cuota líquida
+    - casilla 01 (base) == the immediately prior M200 cuota del ejercicio
       (filing_year_delta = -1 cross-model copy).
     """
     obs_repo = CalculationObservationRepository()
@@ -524,7 +526,7 @@ def test_m202_2p_folds_prior_1p_pago_and_m200_cuota_on_live_calculate(
         f"got {values[_CASILLA_PAGOS_ANTERIORES]}"
     )
     assert Decimal(values[_CASILLA_BASE]) == _M200_PRIOR_CUOTA, (
-        f"M202 2P casilla 01 must fold the prior M200 cuota líquida ({_M200_PRIOR_CUOTA}); got {values[_CASILLA_BASE]}"
+        f"M202 2P casilla 01 must fold the prior M200 cuota del ejercicio ({_M200_PRIOR_CUOTA}); got {values[_CASILLA_BASE]}"
     )
 
     # Both folds run through claimed sources: no relation_prefill diagnostic and
@@ -565,7 +567,7 @@ def test_m202_3p_cumulates_prior_1p_and_2p_pagos_on_live_calculate(
     )
     # casilla 01 still folds the prior M200 cuota (filing_year_delta = -1 holds for 3P too).
     assert Decimal(values[_CASILLA_BASE]) == _M200_PRIOR_CUOTA, (
-        f"M202 3P casilla 01 must fold the prior M200 cuota líquida ({_M200_PRIOR_CUOTA}); got {values[_CASILLA_BASE]}"
+        f"M202 3P casilla 01 must fold the prior M200 cuota del ejercicio ({_M200_PRIOR_CUOTA}); got {values[_CASILLA_BASE]}"
     )
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
     assert result.source_diagnostics == ()

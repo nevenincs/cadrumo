@@ -7,7 +7,7 @@ revision_id = "2023-2024"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "a3265f7d7ec604e6ab4a5950e3cdb0a380cf8be90ea41740ec73ed94261cc34f"
+source_state_digest = "9de42ebc26d29a4e6d55dafd297deb31f8cd0a33de644f6f072dc96f8b26cca0"
 design_sources = [
     { source_ref = "aeat-dr-202-2023", sha256 = "feca183eed1fc557950e44d043931e64b85d2858a16b06dff2c3cb8ba15aace5" },
 ]

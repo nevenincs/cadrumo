@@ -44,7 +44,7 @@ from ...domain.iva.supply_nature import SupplyNature
 from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ._date_parsing import _parse_iso_date, _parse_optional_iso_date_str
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
-from ._evidence_field_notices import field_degradation_notices
+from ._evidence_field_notices import field_degradation_notices, label_reading_fallback_notices
 from ._ledger_business_invoice_cli import catalogue_invoice_shared_fields
 from ._ledger_evidence_confirm_notices import confirm_resolution_lines, confirm_resolution_notices
 from ._ledger_evidence_review_cli import parse_finding_resolution
@@ -477,6 +477,7 @@ def _evidence_extract_notices(reference: str, draft: InvoiceDraft) -> list[Notic
         ),
     ]
     notices.extend(field_degradation_notices(draft.provenance))
+    notices.extend(label_reading_fallback_notices(draft.label_reading_fallback))
     return notices
 
 
@@ -701,6 +702,7 @@ def _evidence_confirm_notices(result: InvoiceConfirmationResult) -> list[Notice]
     # The confirm surface describes the SAME pre-override draft, so the operator
     # sees why a field they are about to accept was not corroborated.
     notices.extend(field_degradation_notices(result.draft.provenance))
+    notices.extend(label_reading_fallback_notices(result.draft.label_reading_fallback))
     # What the confirm path resolved about the operation's IVA treatment and
     # what it left open. Every one of these was computed on this call and read
     # by nobody before this line.

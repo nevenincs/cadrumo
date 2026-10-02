@@ -52,7 +52,9 @@ _FORM_BINDING = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
 _INCN_BINDING = "modelo-200-profile-incn-prior-12-months"
 _ESTADO_PCT_BINDING = "modelo-200-profile-tributacion-estado-porcentaje"
-_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
+)
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
     "DP200013:00417",
     surface="_M200_CORRECCIONES_AUMENTO_CASILLA",

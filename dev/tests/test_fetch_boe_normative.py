@@ -26,6 +26,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
+from dev.corpus import fetch_boe_normative
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     assert_boe_holds_no_consolidated_text,
@@ -77,6 +78,50 @@ def _xml_payload(name: str) -> str:
     if not path.is_file():
         pytest.fail(f"bundled XML payload {name} is missing; this module's ground truth has moved")
     return path.read_text(encoding="utf-8", errors="replace")
+
+
+def test_normative_fetch_writes_only_to_the_requested_candidate_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bundled = tmp_path / "bundled"
+    candidate = tmp_path / "candidate"
+    monkeypatch.setattr(fetch_boe_normative, "_HTML_CORPUS", bundled)
+    payload = (_CORPUS / _MULTI_BLOCK).read_bytes()
+    transport = httpx.MockTransport(lambda request: httpx.Response(HTTPStatus.OK, content=payload, request=request))
+    with httpx.Client(transport=transport) as client:
+        artifact = fetch_boe_normative.fetch_normative(
+            document_id="BOE-A-2024-12944",
+            destination_name="candidate.html",
+            destination_root=candidate,
+            client=client,
+        )
+
+    assert artifact == candidate / "candidate.html"
+    assert artifact.read_bytes() == canonical_lf_bytes(payload)
+    assert not bundled.exists()
+
+
+@pytest.mark.parametrize("name", ["../outside.html", "nested/candidate.html", "candidate.xml"])
+def test_candidate_normative_fetch_refuses_invalid_destination_before_request(tmp_path: Path, name: str) -> None:
+    requests: list[httpx.Request] = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(HTTPStatus.OK, request=request)
+
+    with (
+        httpx.Client(transport=httpx.MockTransport(respond)) as client,
+        pytest.raises(NormativeAcquisitionError, match="one filename ending"),
+    ):
+        fetch_boe_normative.fetch_normative(
+            document_id="BOE-A-2024-12944",
+            destination_name=name,
+            destination_root=tmp_path / "candidate",
+            client=client,
+        )
+
+    assert requests == []
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_the_bundled_payloads_carry_a_version_selector_at_all() -> None:

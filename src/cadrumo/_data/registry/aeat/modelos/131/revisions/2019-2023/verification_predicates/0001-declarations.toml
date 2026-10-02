@@ -76,3 +76,42 @@ predicate_id = "modelo-131-2019-2023-rendimientos-declarados-cuando-pago-fraccio
 expression = 'implies_nonzero(["02", "01"])'
 finding_kind = "ADVISORY"
 legal_refs = ["rd-439-2007:art-110"]
+
+# Módulos engine advisories for 2022 and 2023: the computed reference figure
+# diverging from the declared casilla 01, the índice de exceso on the two
+# epígrafes carrying an índice especial, and the two incompatibilities of
+# Anexo II, instrucción 2.3 (Orden HFP/1335/2021, Orden HFP/1172/2022).
+[[revisions."2019-2023".verification_predicates]]
+id = "advisory-when-computed-diverges:modulos-computed-diverges-de-c01"
+predicate_id = "modelo-131-2019-2023-modulos-computed-diverges-de-c01"
+expression = 'advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4", "orden-hfp-1335-2021:da-1", "orden-hfp-1172-2022:da-8", "orden-hfp-1172-2022:da-1"]
+
+[[revisions."2019-2023".verification_predicates]]
+id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-autotaxi"
+predicate_id = "modelo-131-2019-2023-modulos-indice-exceso-incompatible-autotaxi"
+expression = 'casilla_equals_implies_diverges(["modulos-epigrafe", "721.2", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2019-2023".verification_predicates]]
+id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-mercancias"
+predicate_id = "modelo-131-2019-2023-modulos-indice-exceso-incompatible-mercancias"
+expression = 'casilla_equals_implies_diverges(["modulos-epigrafe", "722", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2019-2023".verification_predicates]]
+id = "advisory-when-positive:modulos-pequena-dimension-ignorado-especial"
+predicate_id = "modelo-131-2019-2023-modulos-pequena-dimension-ignorado-especial"
+expression = 'advisory_when_positive(["modulos-pequena-dimension-ignorado-flag"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2019-2023".verification_predicates]]
+id = "advisory-when-positive:modulos-temporada-inicio-actividad-incompatibles"
+predicate_id = "modelo-131-2019-2023-modulos-temporada-inicio-actividad-incompatibles"
+expression = 'advisory_when_positive(["modulos-temporada-inicio-actividad-conflicto-flag"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]

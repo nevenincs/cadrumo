@@ -40,12 +40,14 @@ per-perceptor detail rows that Modelo 390 has no equivalent of.
 - The ledger for the full `filing_year` is built and classified: every
   withheld payment carries its withholding scheme, rate, and perceptor
   identity across all four quarters (`aeat app ledger check`).
-- **All four Modelo 111 quarters (`1T`, `2T`, `3T`, `4T`) for the same
-  `filing_year` are already calculated** — read each with
+- **From ejercicio 2025, all four Modelo 111 quarters (`1T`, `2T`, `3T`,
+  `4T`) for the same `filing_year` are already calculated** — read each with
   `aeat app modelo work revision <work-unit-id> --format json` before
-  starting the 190. Modelo 190 folds these four filings' casillas
+  starting the 190. From 2025 Modelo 190 folds these four filings' casillas
   02/05/08/11/14/17/20/23/26/28 into its annual totals; a missing or stale
-  quarter blocks verification (see below). Confirm the taxpayer actually
+  quarter blocks verification (see below). Up to ejercicio 2024 the totals
+  are the sums over the year's own perceptor records, as that year's record
+  design states, and no Modelo 111 quarter is read. Confirm the taxpayer actually
   files Modelo 111 on quarterly cadence via
   `aeat app overview explain 111 --year <YEAR>` before assuming it — the
   registry folds only the `1T`-`4T` quarterly tokens into Modelo 190; a
@@ -70,9 +72,10 @@ per-perceptor detail rows that Modelo 390 has no equivalent of.
 
 ## What Modelo 190 adds over the annual-informativa pattern
 
-- **Three declarante-level summary casillas**, each folding all four
-  Modelo 111 quarters via `annual_summary` relations, never re-summed by
-  hand:
+- **Three declarante-level summary casillas**, never re-summed by hand. The
+  two amounts fold the four Modelo 111 quarters via `annual_summary`
+  relations from ejercicio 2025; up to 2024 they sum the perceptor
+  records' percepciones and retenciones fields:
   - **Casilla "Número total de percepciones"** — the count of distinct
     perceptor/clave/subclave records for the year, computed directly from
     the per-perceptor withholding store (a `count_distinct` fact), not a

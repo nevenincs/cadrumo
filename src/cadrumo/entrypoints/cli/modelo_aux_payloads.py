@@ -51,7 +51,7 @@ from ._decimal_wire import NonNegativeDecimalWireText
 
 
 class WithholdingClaveBreakdownPayload(OutputSchema):
-    """One per-clave retención row of the Modelo 190 reconciliation breakdown.
+    """One per-clave retención row of an annual withholding summary's reconciliation breakdown.
 
     JSON projection of
     :class:`WithholdingClaveBreakdown`: the
@@ -60,9 +60,9 @@ class WithholdingClaveBreakdownPayload(OutputSchema):
     rendered as canonical decimal strings. Re-exported through
     :mod:`_modelo_payloads` so the
     :class:`ModeloAggregateResult`
-    envelope can carry the breakdown that lets an operator reconcile the annual
-    Modelo 190 retención totals against the per-clave figures of the individual
-    Modelo 111 quarterly filings.
+    envelope can carry the breakdown that lets an operator reconcile an annual
+    summary's retención totals, such as Modelo 190's, against the per-clave
+    figures of the periodic filings its calculation reads.
     """
 
     clave: RetencionClave

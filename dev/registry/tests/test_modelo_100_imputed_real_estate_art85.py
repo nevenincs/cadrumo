@@ -52,7 +52,6 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         values["renta-profile-has-economic-activity"] = Decimal("1")
-        values["renta-modelo-184-atribucion-actividades-economicas"] = Decimal("0")
         # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
         # facts; neutral zero when the chain under test is unrelated.
         values["renta-profile-madrid-nacimiento-adopcion-eligible-count"] = Decimal("0")
@@ -64,6 +63,9 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         values["renta-maritime-gross-navigation-income"] = Decimal("0")
         values["renta-maritime-annual-salary"] = Decimal("0")
         values["renta-maritime-qualifying-days"] = Decimal("0")
+        # The 2025 edition computes the maternity deducción as well; neutral
+        # zero for the same reason as in 2024 below.
+        values.update(_m100_2024_deduccion_maternidad_bindings())
     if year == 2024:
         values.update(
             {

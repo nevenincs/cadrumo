@@ -73,7 +73,7 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
                     # is refused by the envelope rather than answered; the
                     # revision is still authored and remains a storage baseline.
                     continue
-                for period in revision.period_selector.periods:
+                for period in revision.period_selector.periods_for_year(filing_year):
                     context = f"{modelo.id}/{revision.id}/{filing_year}/{period}"
                     expected.append(context)
                     revision_contexts.append(context)

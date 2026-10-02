@@ -361,8 +361,9 @@ def fetch_normative(
     destination_name: str,
     required_text: tuple[str, ...] = (),
     client: httpx.Client | None = None,
+    destination_root: Path | None = None,
 ) -> Path:
-    """Fetch one consolidated BOE norm and write it under the bundled corpus.
+    """Fetch one consolidated BOE norm into the requested corpus directory.
 
     Requests ``act.php`` with no version parameter, so BOE serves the text in
     force rather than one this caller guessed at, then refuses the payload
@@ -372,11 +373,13 @@ def fetch_normative(
 
     Args:
         document_id: The BOE identifier, e.g. ``BOE-A-2012-9364``.
-        destination_name: Filename under ``corpus/normatives/html/``.
+        destination_name: One filename in the selected normative HTML directory.
         required_text: Phrases that must appear in the fetched bytes -- the
             amending norm's identifier belongs here, so a payload that parses
             cleanly but is the wrong norm still refuses.
         client: Injected for testing; a real client is created when omitted.
+        destination_root: Corpus HTML directory for an isolated candidate;
+            defaults to the bundled normative HTML directory.
 
     Returns:
         The written path.
@@ -385,7 +388,9 @@ def fetch_normative(
         NormativeAcquisitionError: If the payload is not the text in force, or a
             ``required_text`` phrase is absent, or the read-back does not match.
     """
-    destination = corpus_destination(_HTML_CORPUS, destination_name, suffix=".html")
+    destination = corpus_destination(
+        _HTML_CORPUS if destination_root is None else destination_root, destination_name, suffix=".html"
+    )
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,

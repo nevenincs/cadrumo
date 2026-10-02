@@ -75,6 +75,12 @@ cli:
         batch_items_refused_message: S'han rebutjat alguns documents. La resta de
           documents de l'execució s'han completat igualment; les files rebutjades
           indiquen què s'ha trobat.
+        batch_label_reading_degraded_message: '{count} esborranys desats es basen
+          només en la lectura per etiquetes perquè no s''ha executat l''emplenament
+          del model; els camps que havia de llegir són buits en aquests esborranys,
+          no absents dels documents, i cada fila n''indica el motiu. En confirmar
+          un document es torna a llegir, de manera que aquests camps s''emplenen llavors
+          si el motiu ja s''ha resolt, o els podeu indicar vosaltres.'
         batch_pending_review_message: Alguns esborranys contenen una incidència que
           has de resoldre tu abans de crear una factura. Estan retinguts, no fallits.
         batch_progress_message: 'processat %{source}: %{status}'
@@ -220,6 +226,20 @@ cli:
         invoice_number_help: Número de factura del proveïdor
         iva_amount_help: Import d'IVA de la factura
         iva_rate_help: Tipus d'IVA aplicat com a percentatge, per exemple 21
+        label_reading_busy_refused: 'Una altra lectura local ja estava fent servir
+          la inferència d''aquest equip, de manera que no s''ha executat el model
+          de lectura. Els {count} camps que les regles d''etiquetes no han llegit
+          queden buits: {fields}. La lectura per etiquetes es manté; torneu a extreure
+          quan acabi l''altra lectura, o indiqueu vosaltres aquests camps.'
+        label_reading_headroom_refused: 'No s''ha carregat el model de lectura local:
+          aquest equip no ha mostrat marge de memòria mesurat per a ell. Els {count}
+          camps que les regles d''etiquetes no han llegit queden buits: {fields}.
+          La lectura per etiquetes es manté; allibereu memòria i torneu a extreure,
+          o indiqueu vosaltres aquests camps.'
+        label_reading_reader_unavailable: 'No s''ha pogut executar el lector semàntic
+          local ({error_type}), de manera que els {count} camps que les regles d''etiquetes
+          no han llegit queden buits: {fields}. La lectura per etiquetes es manté
+          i aquests camps queden pendents que els indiqueu.'
         list_help: Llista els justificants de factures de compra registrats
         notes_help: Notes internes sobre el justificant
         pull_actor_help: El teu nom o etiqueta.
@@ -702,20 +722,24 @@ cli:
       year_help: Exercici de presentació
     modelo:
       aggregate:
+        calculation_rows_absent: 'Model {modelo} {filing_year} {period}: no hi ha
+          files emmagatzemades per a la font {source_family} que llegeix el seu càlcul,
+          de manera que aquest informe és buit perquè falten les dades, no perquè
+          siguin zero.'
         counterpart_observation_help: Objecte JSON CounterpartObservation; repeteix
           l'opció per a diverses observacions
         foreign_asset_observation_help: Objecte JSON ForeignAssetObservation; repeteix
           l'opció per a diverses observacions
-        invoice_retencion_wrong_modelo: --received-invoice-retencion encamina cap
-          a l'emmagatzematge de retencions per perceptor; el model %{modelo} no és
-          un dels 111, 115, 123, 180, 190, 193.
+        invoice_retencion_wrong_modelo: --received-invoice-retencion només registra
+          retencions de factures rebudes per als models %{accepted_modelos}; el model
+          %{modelo} no admet retencions de factures.
         json_not_object: '{flag} ha de ser un objecte JSON.'
         json_parse_error: '{flag} ha de ser un objecte JSON; JSON no vàlid al byte
           {pos}.'
         json_validation_error: 'El valor de {flag} no és un objecte d''observació
           vàlid: {details}.'
         ledger_payment_withholding_exclusive: --ledger-payment-withholding no es pot
-          combinar amb --received-invoice-retencion ni --retencion-observation.
+          combinar amb --received-invoice-retencion.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest
           (la sol·licitud JSON que descriu un pagament): una assignació de nòmina
           (Modelo 111) o de rendiments del capital mobiliari (Modelo 123) pagada per
@@ -730,8 +754,7 @@ cli:
           Model 123; no s'admet el model %{modelo}.
         m123_ledger_payment_only: El Modelo 123 només admet retencions acreditades
           pel seu moviment de pagament dels teus registres mitjançant --ledger-payment-withholding;
-          es rebutgen les retencions de factures o introduïdes a mà i no s'ha registrat
-          res.
+          es rebutgen les retencions de factures i no s'ha registrat res.
         modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o
           720)
         period_help: 'Token de període d''agregació: 0A anual, 1T-4T trimestres, 01-12
@@ -740,11 +763,11 @@ cli:
           una assignació de retenció d''una factura rebuda, amb la seva prova de pagament
           o d''exigibilitat. Una assignació per ordre; l''scheme és un fet legal sobre
           l''activitat del perceptor i mai s''infereix de la factura.'
-        retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció
-          per a diverses observacions
-        withholding_observation_help: Observació de retenció per perceptor i clau
-          (JSON) per al recompte de percepcions del Model 190; repetible.
-      aggregate_help: Executa l'agregació per model amb observacions canòniques explícites
+      aggregate_help: Executa el servei d'agregació per model per a un model i un
+        període. Les observacions de contrapart i de béns a l'estranger es passen
+        com a opcions JSON. Els models de retencions llegeixen les files ja desades
+        per al període, després de registrar l'única assignació de retenció de factura
+        rebuda o de pagament del llibre que pot portar cada ordre.
       app_help: 'Consultar les definicions dels models: el catàleg de models tributaris
         de l''AEAT'
       audit:

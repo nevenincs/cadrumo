@@ -189,7 +189,6 @@ def inherit_keyed_family(
     revision_id: str,
     predecessor_id: str,
     predecessor: Mapping[str, object],
-    storage_only: bool,
     section: str,
     identity: str,
     identity_fields: tuple[str, ...] = (),
@@ -211,7 +210,6 @@ def inherit_keyed_family(
         revision_id=revision_id,
         predecessor_id=predecessor_id,
         predecessor=predecessor,
-        storage_only=storage_only,
         family=KeyedFamilySpec(
             section=section,
             identity=identity,

@@ -137,8 +137,6 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
             "--binding",
             "renta-modelo-100-estimacion-directa-es-normal=1",
             "--binding",
-            "renta-modelo-184-atribucion-actividades-economicas=0",
-            "--binding",
             "renta-certificado-trabajo-retenciones=4200",
             "--relation",
             "renta-modelo-130-pagos-fraccionados=0",

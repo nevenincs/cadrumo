@@ -279,7 +279,7 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(
 
 #: Resultado contable de la cuenta de pérdidas y ganancias (casilla 00501), the
 #: operand the base imponible previa (00550) is computed from.
-_M200_RESULTADO_CONTABLE: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE")
+_M200_RESULTADO_CONTABLE: CasillaId = validated_casilla_id("DP200012:00501", surface="_M200_RESULTADO_CONTABLE")
 _M200_BASE_PREVIA: CasillaId = validated_casilla_id("DP200014:00550", surface="_M200_BASE_PREVIA")
 
 

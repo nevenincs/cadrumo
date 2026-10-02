@@ -9,9 +9,10 @@ from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casi
 from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
 from ..bindings import CasillaObservation, RegistryModeloObservation
-from ..errors import NoRevisionForPeriodError
+from ..errors import NoRevisionForPeriodError, RegistrySnapshotError
 from ..relations import RegistryFoldRequirement
 from ..schema import ModeloRevision
+from ..temporal import select_revision
 from .registry_tree import bundled_registry_tree
 from .snapshot_support import build_snapshot
 
@@ -75,6 +76,34 @@ def _observations_from_requirements(
 @cache
 def _cross_dependency_registry_tree():
     return bundled_registry_tree()
+
+
+def source_editions_calculate(requirements: Iterable[RegistryFoldRequirement]) -> bool:
+    """Whether every source modelo-year a fold requires resolves to an edition that calculates.
+
+    The observations below are grounded in a calculation-grade snapshot of each
+    source, so a source year answered by an applicability-grade edition cannot be
+    observed through them; such a coordinate is not one this fixture can exercise.
+    A source year with no selectable edition keeps the grounding's own fallback.
+    """
+    modelos, catalogues = _cross_dependency_registry_tree()
+    by_id = {modelo.id: modelo for modelo in modelos}
+    for requirement in requirements:
+        modelo = by_id.get(requirement.source_modelo)
+        if modelo is None:
+            continue
+        try:
+            revision = select_revision(
+                modelo,
+                filing_year=requirement.filing_year,
+                period=requirement.periods[0],
+                support=catalogues.supported_filing_years,
+            )
+        except RegistrySnapshotError:
+            continue
+        if revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY:
+            return False
+    return True
 
 
 def _grounded_observations(

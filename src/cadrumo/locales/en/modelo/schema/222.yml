@@ -361,6 +361,9 @@ modelo:
           Instalment payment.
         title: IS instalment payment under the tax consolidation regime (groups)
       revision:
+        '2022':
+          field:
+            label: Modelo 222, tax year 2022
         '2023':
           field:
             label: Modelo 222, tax year 2023

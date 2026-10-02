@@ -1,0 +1,44 @@
+[revisions."2020-2023"]
+# aeat-dr-216-2020-2023 is AEAT's record design for ejercicios 2020 a 2023. It
+# prints the liquidacion as seven partidas without box numbers; the 2024
+# redesign that 2024-y-siguientes renders refuses a devengo year before 2024,
+# so it cannot answer these years. This edition states only what the design
+# prints. The form that numbered those partidas and the instructions tying
+# partidas 1-3 and 4-5 to their blocks are not held, so no formula, binding or
+# export layout is authored and the reach stays at applicability.
+casilla_source_refs = ["aeat-dr-216-2020-2023"]
+application_link_source_refs = ["aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023"]
+authority_grade = "applicability"
+valid_from = 2020-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2020, year_to = 2023, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-eha-3290-2008:art-1"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = [
+    "aeat-dr-216-2020-2023",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: review on 2026-09-30 of the 2020-2023 edition. VERIFIED -- DESIGN: \
+aeat-dr-216-2020-2023 prints the liquidacion as seven 17-position partidas at positions \
+109-227 with neither box numbers nor block captions \
+(02-216-ejercicios-2020-a-2023.xlsx.extracted.md:50-56); the 7 casillas state exactly \
+those partidas, their ids being the partida numbers. The 2024 redesign cannot answer these \
+years: its devengo field is 'Obligatorio' with '>= 2024' \
+(01-216-ejercicio-2024-y-siguientes.xlsx.extracted.md:47). VERIFIED -- the eight quarterly \
+deadline windows of 2022 and 2023 hydrate under Orden EHA/3290/2008 art. 4 with dates from \
+the calendario del contribuyente of the year each closes in. VERIFIED -- every legal and \
+source reference cited has a window reaching the edition. CONTINUITY -- partidas 3, 6 and \
+7 share their continuidad_id with 2024 boxes 13, 20 and 21; that claim is not \
+re-adjudicated here. NOT ADJUDICABLE, EVIDENCE ABSENT -- 2024 rows 07, 10, 16 and 19, the \
+rentas-count and base totals of blocks I and II, against partidas 1, 2, 4 and 5: the \
+pre-2024 form that numbered the partidas and any instruction tying partidas 1-3 and 4-5 to \
+a block are not held. The consolidated Orden EHA/3290/2008 carries only the note that \
+Orden HAC/56/2024 replaced its anexo I \
+(orden-eha-3290-2008-consolidada.html.extracted.md:228-231), and the design prints no \
+block caption, so those rows keep no continuity. NOT CLAIMED -- no formula, binding or \
+export layout is declared; the grade stays applicability. NOT CLAIMED -- no independent \
+AEAT oracle checked any value. No human operator has countersigned this."""
+reviewed_at = 2026-09-30

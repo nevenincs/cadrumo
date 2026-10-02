@@ -1,9 +1,9 @@
 """The ``python -m dev.init`` entry point.
 
-Usage, one form per justfile recipe::
+Initialization and its internal phase selectors::
 
     python -m dev.init all      # just setup
-    python -m dev.init python   # just setup-python
+    python -m dev.init python   # internal Python phase
     python -m dev.init tools    # just setup-repository-tools
     python -m dev.init check    # just setup-check
 
@@ -20,11 +20,11 @@ type error does not stop the markdown linter from having something true to say,
 and a developer wants the whole list in one pass.
 
 `setup` is the opposite shape, and follows the opposite rule deliberately. Its
-phases are a DEPENDENCY CHAIN that builds one artifact. ``setup-repository-tools``
+phases are a DEPENDENCY CHAIN that builds one artifact. The tooling phase
 enrolls repository tooling by running executables out of the environment
-``setup-python`` creates; it deliberately installs no Git hook and changes no
-Git configuration. Running ``setup-repository-tools`` after
-``setup-python`` failed does not produce a second independent finding - it
+the Python phase creates; it deliberately installs no Git hook and changes no
+Git configuration. Running the tooling phase after
+the Python phase failed does not produce a second independent finding - it
 produces a cascade of "command not found" that buries the one real cause, and
 it produces it slowly.
 
@@ -256,7 +256,7 @@ def _check(
         return (
             results,
             INIT_STALE,
-            [f"run `just setup` ({name}: {why})" for name, why in stale.items()],
+            [f"run `just init` ({name}: {why})" for name, why in stale.items()],
         )
     return results, OK, []
 

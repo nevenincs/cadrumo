@@ -115,10 +115,11 @@ def test_one_id_declared_on_both_input_channels_is_refused(tmp_path: Path) -> No
     """An ambiguous declaration is refused rather than resolved by ordering."""
     colliding = tmp_path / "colliding.toml"
     text = _PINNED.read_text(encoding="utf-8")
+    decimal_id = next(iter(load_pinned_conformance_document(_PINNED).inputs["decimal"]))
     colliding.write_text(
         text.replace(
             "[inputs.enum]",
-            '[inputs.enum]\n"00501" = "sl"',
+            f'[inputs.enum]\n"{decimal_id}" = "sl"',
             1,
         ),
         encoding="utf-8",

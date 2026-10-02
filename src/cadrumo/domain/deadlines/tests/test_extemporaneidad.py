@@ -34,6 +34,7 @@ from ..recargo import (
     load_recargo_bands,
     resolve_recargo_band,
 )
+from .withdrawn_deadline_window_authority import withdrawn_deadline_window_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -171,11 +172,18 @@ def test_resolve_filing_closes_on_annual_period_does_not_borrow_a_future_window(
 ) -> None:
     """An unauthored annual tax year must not resolve its successor's deadline.
 
-    The bundled registry starts Modelo 180 annual windows at tax year 2024.  A
-    work unit for the preceding tax year has no exact registry deadline, even
-    though the next year's campaign closes in the following calendar year.
+    The year is made unauthored by withdrawing its windows from the published
+    generation, so the case does not wait on a real gap that authoring closes.
+    Its successor keeps its own window, and that is the window a borrowing
+    lookup would hand back.
     """
-    assert resolve_filing_closes_on(modelo, filing_year, Period.from_year_and_code(filing_year, "0A")) is None
+    period = Period.from_year_and_code(filing_year, "0A")
+    successor = Period.from_year_and_code(filing_year + 1, "0A")
+    with withdrawn_deadline_window_operation(modelo_id=modelo, filing_year=filing_year) as withdrawn:
+        assert resolve_filing_closes_on(modelo, filing_year + 1, successor, authority=withdrawn) is not None, (
+            "the successor declares no window, so there is nothing to borrow and this proves nothing"
+        )
+        assert resolve_filing_closes_on(modelo, filing_year, period, authority=withdrawn) is None
 
 
 def test_resolve_filing_closes_on_annual_period_below_the_supported_floor_is_refused() -> None:

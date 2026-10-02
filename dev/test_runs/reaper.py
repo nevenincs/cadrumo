@@ -27,7 +27,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.tests.collection_storage_root import process_is_live
 
-from .paths import SCRATCH_PREFIX, SCRATCH_SEPARATOR
+from .paths import SCRATCH_NAME, SCRATCH_SEPARATOR
 
 PID_TRUST_CEILING_SECONDS = 24 * 60 * 60
 """Mtime silence after which a directory's PID stops being believed.
@@ -57,10 +57,6 @@ not carry a readable PID cannot be resolved against the OS. Ten minutes of
 silence is what stands in for the observation that is unavailable there. It is
 not a retention period -- it never applies to a run that finished.
 """
-
-
-_SCRATCH_NAME = re.compile(rf"{re.escape(SCRATCH_PREFIX)}{SCRATCH_SEPARATOR}\d+{SCRATCH_SEPARATOR}[0-9a-f]+")
-"""A run scratch name: prefix, owning PID, random token."""
 
 
 @dataclass(frozen=True)
@@ -129,7 +125,7 @@ def assess_scratch_directories(base: Path, *, now: float | None = None) -> tuple
         return ()
     verdicts: list[RunVerdict] = []
     for entry in entries:
-        if not _SCRATCH_NAME.fullmatch(entry.name) or is_link_like(entry) or not entry.is_dir():
+        if not SCRATCH_NAME.fullmatch(entry.name) or is_link_like(entry) or not entry.is_dir():
             continue
         verdict = _owned_verdict(entry, reference)
         if verdict is not None:

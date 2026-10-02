@@ -7,7 +7,7 @@ revision_id = "2024"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "e1879c1c54e15b21fd891eac03b888bd0ee195d925f75728c337c511da4eb0b6"
+source_state_digest = "ea8e9f05e3f25434ac06eb6a56feb7ca002de34f765a592d8112ef3832b235c0"
 placements = [
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
     { casilla_id = "decl.tipo-declaracion", kind = "working_figure" },

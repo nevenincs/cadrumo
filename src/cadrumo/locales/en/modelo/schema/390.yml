@@ -1229,6 +1229,9 @@ modelo:
           iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
             label: Specific operations - Services located in the Spanish VAT territory
               under the reverse charge [523]
+          iva-pago-cuenta-carburantes-deposito-fiscal:
+            label: Payment on account attributable to the State Administration deducted
+              in the year for supplies of petrol, diesel and biofuels
           iva-recargo-equivalencia-tipo-0-5-base:
             label: Equivalence surcharge at the 0.5% rate - Taxable base
           iva-recargo-equivalencia-tipo-1-4-base:
@@ -4545,3 +4548,7 @@ modelo:
           field:
             label: Modelo 390, tax year 2025 (Order EHA/3111/2009, amended by successive
               orders including HAP/2373/2014)
+        '2026':
+          field:
+            label: Modelo 390, tax year 2026 (Order EHA/3111/2009, amended by Order
+              HAC/27/2026)

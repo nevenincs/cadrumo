@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 # Advisory predicate unit tests
 # ---------------------------------------------------------------------------
 
-_ADVISORY_RATIO_GE = 'advisory_when_ratio_ge(["00501", "DP200014:00552", "0.70"])'
+_ADVISORY_RATIO_GE = 'advisory_when_ratio_ge(["DP200012:00501", "DP200014:00552", "0.70"])'
 _M130_ART109_PROFILE_ADVISORY = 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")'
 _AdvisoryPredicateCase = tuple[str, dict[CasillaId, Decimal], bool]
 
@@ -38,7 +38,7 @@ _ADVISORY_RATIO_GE_CASES: tuple[_AdvisoryPredicateCase, ...] = (
     ("zero-denominator", _casilla_values((_CASILLA_00501, "5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
 )
 
-_ADVISORY_IMPLIES_M200_BASE = 'implies_nonzero(["00501", "DP200014:00552"])'
+_ADVISORY_IMPLIES_M200_BASE = 'implies_nonzero(["DP200012:00501", "DP200014:00552"])'
 _ADVISORY_IMPLIES_M200_BASE_CASES: tuple[_AdvisoryPredicateCase, ...] = (
     (
         "positive-result-zero-base",
@@ -68,7 +68,7 @@ def test_advisory_when_ratio_ge_rejects_noncanonical_casilla_id_token() -> None:
     }
 
     with pytest.raises(ModeloError):
-        evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["00501", "bad key", "0.70"])', values)
+        evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["DP200012:00501", "bad key", "0.70"])', values)
 
 
 def test_advisory_implies_nonzero_cases() -> None:
@@ -162,6 +162,6 @@ def test_advisory_when_ratio_ge_refuses_a_non_finite_threshold(threshold: str, h
     reading of a threshold that cannot be evaluated.
     """
     values = _casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000"))
-    expression = f'advisory_when_ratio_ge(["00501", "DP200014:00552", "{threshold}"])'
+    expression = f'advisory_when_ratio_ge(["DP200012:00501", "DP200014:00552", "{threshold}"])'
 
     assert evaluate_advisory_predicate_fires(expression, values) is False, hazard

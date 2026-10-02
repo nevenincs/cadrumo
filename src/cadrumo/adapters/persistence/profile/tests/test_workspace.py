@@ -267,10 +267,11 @@ def test_formula_operand_references_answer_the_input_direction_not_the_output_di
     assert consuming[0].formula_id not in producing_formula_ids
 
 
-# Modelo 100 folds the Modelo 184 attributed income through a relation-prefill
+# Modelo 100 folds the Modelo 131 pagos fraccionados through a relation-prefill
 # binding; that binding is the real fold slot these endpoint rows describe.
-_RELATION_BINDING_ID = "renta-modelo-184-atribucion-actividades-economicas"
-_RELATION_SOURCE_CASILLA_ID = "tipo2.renta-atribuible-importe"
+_RELATION_BINDING_ID = "renta-modelo-131-pagos-fraccionados"
+_RELATION_SOURCE_MODELO = "131"
+_RELATION_SOURCE_CASILLA_ID = "15"
 
 
 def _relation_fold_filing_year() -> int:
@@ -279,7 +280,7 @@ def _relation_fold_filing_year() -> int:
         bindings = published_snapshot("100", filing_year=year, period="0A").revision.bindings
         if any(binding_id == _RELATION_BINDING_ID for binding_id, _provider in fold_slots(bindings)):
             return year
-    raise AssertionError("no supported filing year declares the Modelo 184 relation fold")
+    raise AssertionError("no supported filing year declares the Modelo 131 pagos fold")
 
 
 _RELATION_FILING_YEAR = _relation_fold_filing_year()
@@ -291,14 +292,19 @@ def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field
     bindings = snapshot.revision.bindings
     assert bindings  # sanity: this fixture coordinate carries a real fold slot
 
-    endpoints = relation_source_endpoints_for_casilla(bindings, _RELATION_SOURCE_CASILLA_ID, source_modelo="184")
+    endpoints = relation_source_endpoints_for_casilla(
+        bindings, _RELATION_SOURCE_CASILLA_ID, source_modelo=_RELATION_SOURCE_MODELO
+    )
 
     assert len(endpoints) == 1
     assert endpoints[0].relation_id == _RELATION_BINDING_ID
     assert endpoints[0].casilla_id == _RELATION_SOURCE_CASILLA_ID
 
     # A different casilla id must never match.
-    assert relation_source_endpoints_for_casilla(bindings, "not-the-source-casilla", source_modelo="184") == ()
+    assert (
+        relation_source_endpoints_for_casilla(bindings, "not-the-source-casilla", source_modelo=_RELATION_SOURCE_MODELO)
+        == ()
+    )
     # Nor may the same casilla id of a different modelo.
     assert relation_source_endpoints_for_casilla(bindings, _RELATION_SOURCE_CASILLA_ID, source_modelo="100") == ()
 

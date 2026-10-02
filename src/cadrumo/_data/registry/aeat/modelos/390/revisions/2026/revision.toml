@@ -1,0 +1,175 @@
+[revisions."2026"]
+predecessor = "2025"
+reviewed_against = "2025"
+casilla_source_refs = ["boe-modelo-390-2026-form"]
+# Applicability-grade edition for ejercicio 2026, authored from the form Orden
+# HAC/27/2026 approves: its articulo tercero replaces anexo I of Orden
+# EHA/3111/2009 with its own anexo IV, and its disposicion final unica, punto 2,
+# applies that form for the first time to the declaracion-resumen anual of
+# ejercicio 2026. The form is bundled as the whole BOE disposicion
+# (boe-modelo-390-2026-form, BOE-A-2026-1761, anexo IV at pages 18-26).
+#
+# WHAT THE FORM CHANGES, measured against the 2025 edition's box inventory: every
+# numbered box of the 2025 diseno is still printed, and one box is new -- [112],
+# "Pago a cuenta atribuible a la Administracion del Estado deducido en el
+# ejercicio por entregas de gasolinas, gasoleos y biocarburantes", printed in
+# apartado 7 and again in apartado 8. The form's own captions carry it into the
+# results: "Resultado de la liquidacion (84 + 659 - 85 - 112)" and "(92 + 659 -
+# 93 - 112)". The preamble states the purpose: the declaracion-resumen must be
+# presentable when the pago a cuenta of Orden HAC/1495/2025 (modelo 319) was
+# deducted during the year. Page 1 also gains a SI/NO mark for that right; this
+# registry models page-1 marks only inside the export layout, which is not
+# authored for this edition, so the mark has no member here.
+#
+# WHY APPLICABILITY AND NOT FILING. AEAT has not published the ejercicio-2026
+# diseno de registro: its record-design index for modelos 300-399 (page updated
+# 04/02/2026, read 2026-09-30) lists "390 - Ejercicio 2025" only. Without that
+# design there is no generated export layout, so the 2025 layout is NOT carried
+# into 2026 (see cleared_families): serving the replaced layout at filing grade
+# would be the silently wrong answer. Filing grade returns only when AEAT's 2026
+# design is captured and a layout is generated from it.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-09-30
+authority_grade = "applicability"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+period_selector = { years = [2026], periods = ["0A"] }
+legal_refs = [
+    "rd-1624-1992:art-71",
+    "orden-eha-3111-2009:art-1",
+    "orden-eha-3111-2009:art-8",
+    "orden-hac-27-2026:art-tercero",
+    "orden-hac-27-2026:disposicion-final-unica",
+]
+orden_aplicabilidad = [
+    "orden-eha-3111-2009:art-1",
+    "orden-hac-27-2026:art-tercero",
+]
+source_refs = [
+    "boe-modelo-390-2026-form",
+    "aeat-modelo-390-procedure",
+    "boe-modelo-390-2009-form",
+]
+family_storage_baseline = "2025"
+scoped_families = ["verification_expectations", "completeness_manifest", "export_layouts", "workbook_parity_refs"]
+
+[[revisions."2026".cleared_families]]
+family = "export_layouts"
+cause = "not_authored_for_this_edition"
+reason = "AEAT has not published the ejercicio-2026 diseno de registro for modelo 390 (its 300-399 index lists ejercicio 2025 only), so no layout can be generated for this edition, and the 2025 layout is not adopted: Orden HAC/27/2026 anexo IV adds box [112] and a page-1 mark that layout does not carry."
+
+[[revisions."2026".cleared_families]]
+family = "workbook_parity_refs"
+cause = "not_authored_for_this_edition"
+reason = "Workbook parity pairs this edition with the AEAT diseno de registro workbook that governs it; the ejercicio-2026 workbook is not published, and the 2025 workbook's parity does not speak for the 2026 form."
+
+[[revisions."2026".cleared_families]]
+family = "extraction_profiles"
+cause = "not_authored_for_this_edition"
+reason = "The declaracion PDF profile anchors on box positions of the filed 2025 form. The 2026 form adds box [112] to page 6 and a mark to page 1, and no filed 2026 declaracion exists to ground new anchors, so the 2025 anchors are not adopted."
+
+[revisions."2026".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This edition carries no export layout at all (cleared: AEAT's ejercicio-2026 diseno de registro is unpublished), and the 2025 layout it would otherwise follow declares no record with repeat = 'projection_rows' either, so there is no repeated endpoint for the family to admit."""
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form", "aeat-modelo-390-procedure"]
+
+[revisions."2026".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 390 applies none: its formulas aggregate figures already computed on the periodic autoliquidaciones, and the one new box of the 2026 form, [112], restates a pago a cuenta already made on modelo 319 rather than applying a rate of its own."""
+legal_refs = ["ley-37-1992:art-164", "rd-1624-1992:art-71", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form", "aeat-modelo-390-procedure"]
+
+# Ejercicio 2026 is filed in January 2027 under the same plazo, Orden
+# EHA/3111/2009 art. 8: the thirty first natural days of January. AEAT's 2027
+# taxpayer calendar is not published, so no weekend displacement is asserted.
+[[revisions."2026".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2025", id = "modelo-390-2025-0a"}
+replacement_id = "modelo-390-2026-0a"
+fields = {closes_on = 2027-01-30, filing_year = 2026, opens_on = 2027-01-01, period = "2026 0A"}
+
+[[revisions."2026".family_overrides]]
+family = "constructs"
+selector = {revision = "2025", id = "modelo-390-iva-resumen-anual"}
+sequence_additions = {casilla_ids = ["iva.anual.pago-cuenta-carburantes-deposito-fiscal"], deadline_windows = ["modelo-390-2026-0a"], legal_refs = ["orden-hac-27-2026:art-tercero"], source_refs = ["boe-modelo-390-2026-form"]}
+sequence_removals = {application_links = [2, 9], deadline_windows = [0], export_layouts = [0], extraction_profiles = [0], workbook_parity_refs = [0]}
+
+# Box [86] gains the new deduction exactly as the form prints it: "Resultado de
+# la liquidacion (84 + 659 - 85 - 112)".
+[[revisions."2026".family_overrides]]
+family = "formulas"
+selector = {revision = "2025", id = "modelo-390-iva-anual-resultado-liquidacion"}
+fields = {}
+sequence_additions = {"expression.args" = [{op = "add", args = [{casilla_id = "iva.anual.compensacion-cuotas-ejercicio-anterior"}, {casilla_id = "iva.anual.pago-cuenta-carburantes-deposito-fiscal"}]}], legal_refs = ["orden-hac-27-2026:art-tercero"], source_refs = ["boe-modelo-390-2026-form"]}
+sequence_removals = {"expression.args" = [1]}
+
+# The calculation closure gains [112]; the manifest is keyed to the 2026 form,
+# which prints every box it lists.
+[[revisions."2026".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2025", id = "aeat-dr-390-2025"}
+replacement_id = "boe-modelo-390-2026-form"
+sequence_additions = {casillas = [{casilla_id = "iva.anual.pago-cuenta-carburantes-deposito-fiscal", number = "112"}], source_refs = ["boe-modelo-390-2026-form"]}
+sequence_removals = {source_refs = [0]}
+
+# The export and extractor surfaces go with the families that back them: this
+# edition carries no export layout and no declaracion-PDF profile.
+[[revisions."2026".family_removals]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-390-export"}
+
+[[revisions."2026".family_removals]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-390-extractor"}
+
+[[revisions."2026".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-26-base"
+from_revision = "2025"
+to_revision = "2026"
+origin = "grounded"
+evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [691] at the 0,26 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-62-base"
+from_revision = "2025"
+to_revision = "2026"
+origin = "grounded"
+evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [665] at the 0,62 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-base"
+from_revision = "2025"
+to_revision = "2026"
+origin = "grounded"
+evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [663] at the 0 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-cuota"
+from_revision = "2025"
+to_revision = "2026"
+origin = "grounded"
+evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [664] at the 0 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-1-base"
+from_revision = "2025"
+to_revision = "2026"
+origin = "grounded"
+evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [693] at the 1 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["boe-modelo-390-2026-form"]

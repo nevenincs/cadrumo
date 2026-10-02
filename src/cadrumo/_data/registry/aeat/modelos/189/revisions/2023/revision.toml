@@ -1,4 +1,5 @@
 [revisions."2023"]
+casilla_storage_baseline = "2022"
 id = "2023"
 authority_grade = "filing"
 casilla_source_refs = ["boe-modelo-189-base-order"]
@@ -18,7 +19,8 @@ casilla_source_refs = ["boe-modelo-189-base-order"]
 # HFP/1284/2023: "será aplicable, por primera vez, a las declaraciones
 # informativas correspondientes al ejercicio 2023, que se presentarán en el
 # ejercicio 2024". Both therefore reach this edition and neither reaches
-# ejercicio 2022, which is a different epoch and is NOT authored.
+# ejercicio 2022, a different epoch authored in the 2022 edition, whose payload
+# this edition stores against and keys only the fields these ordenes changed.
 #
 # GEOMETRY, established by measurement rather than assumed. The bundled AEAT
 # Diseño de Registro aeat-dr-189-2023 (sha256
@@ -109,6 +111,8 @@ it is and is hash-pinned. NOT CLAIMED -- no independent AEAT oracle checked any 
 against a real presentacion, and no binding or formula is declared. No human operator has \
 countersigned this."""
 reviewed_at = 2026-09-12
+family_storage_baseline = "2022"
+scoped_families = ["workbook_parity_refs"]
 
 [revisions."2023".family_dispositions.live_cross_references]
 reason = """
@@ -174,3 +178,141 @@ reason = """
 A verification predicate expresses a conditional check over verification expectations. With no expectation declared in this edition there is no predicate subject. An advisory tying the declarados count to the valoracion total was considered and rejected as unsound: the design admits a zero or negative sum against a positive count, because VALORACION A 31 DE DICIEMBRE carries its own 'N' sign field, so the two disagreeing is not by itself a finding."""
 legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
 source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "codigo-pais" }
+fields = { additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284"], legal_refs = ["orden-hfp-1284-2023:art-11"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "clave-valor" }
+fields = { additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180"], legal_refs = ["orden-hfp-1180-2023:art-primero"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "valoracion" }
+fields = { additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180"], legal_refs = ["orden-hfp-1180-2023:art-primero"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "numero-valores" }
+fields = { additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284"], legal_refs = ["orden-hfp-1284-2023:art-11"], number = "tipo2.130-146" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "nominal-unitario-valores" }
+fields = { additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284"], legal_refs = ["orden-hfp-1284-2023:art-11"], number = "tipo2.147-164" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "declarante-razon-social" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "tipo-soporte" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "persona-relacion" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "numero-justificante" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "declaracion-complementaria-sustitutiva" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "numero-identificativo-anterior" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "numero-total-declarados" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "valoracion-total" }
+fields = { additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180", "aeat-dr-189-2023"], legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "representante-legal-nif" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "codigo-provincia" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "clave-mercado" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "clave-identificacion" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "identificacion-valores" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "clave-representacion" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "porcentaje-participacion" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "clave-titularidad" }
+fields = { additional_source_refs = ["aeat-dr-189-2023"] }
+removed_fields = []
+
+[[revisions."2023".family_overrides]]
+family = "constructs"
+selector = {revision = "2022", id = "modelo-189-informative"}
+sequence_additions = {deadline_windows = ["modelo-189-2023-0a"], legal_refs = ["orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"], source_refs = ["boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023"]}
+sequence_removals = {deadline_windows = [0], legal_refs = [2, 3], source_refs = [1]}
+sequence_order = {source_refs = [0, 2, 3, 4, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-189-export"}
+sequence_additions = {legal_refs = ["orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"], source_refs = ["boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023"]}
+sequence_removals = {legal_refs = [1, 2], source_refs = [1]}
+sequence_order = {source_refs = [0, 2, 3, 4, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-189-filing"}
+sequence_additions = {legal_refs = ["orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"], source_refs = ["boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284"]}
+sequence_removals = {legal_refs = [1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-189-2022-0a"}
+replacement_id = "modelo-189-2023-0a"
+fields = {closes_on = 2024-03-31, filing_year = 2023, opens_on = 2024-03-01, period = "2023 0A"}
+
+[[revisions."2023".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2022", id = "modelo-189-dr-pdf"}
+fields = {fixture_id = "modelo-189-2023-record-design-layout", workbook_source = "aeat-dr-189-2023"}
+sequence_additions = {legal_refs = ["orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"], source_refs = ["aeat-dr-189-2023"]}
+sequence_removals = {legal_refs = [1, 2], source_refs = [0]}

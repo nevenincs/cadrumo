@@ -293,7 +293,7 @@ def test_modelo_193_quarterly_aggregate_edition_sums_modelo_123_quarterly_observ
     snapshot = authority.snapshot("193", filing_year=year, period="0A")
     snapshot_123 = authority.snapshot("123", filing_year=year, period="1T")
     relation_values = _modelo_123_relation_values(snapshot, snapshot_123, year)
-    binding_values = {"modelo-193-123-perceptores-anual": Decimal("2")}
+    binding_values = {"modelo-193-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
@@ -384,6 +384,27 @@ def test_modelo_193_declarant_totals_count_and_sum_the_type_2_records() -> None:
     assert {provider.dependency_role for provider in evidence.values()} == {"factual_evidence"}
     assert set(evidence) <= set(relation_values)
     assert relation_values["modelo-193-123-base-anual"] != result.values["decl.base-total"]
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_modelo_193_perceptor_count_counts_type_2_records_in_every_supported_year() -> None:
+    """Every design states positions 136-144 as the number of type-2 records, so no year counts distinct NIFs."""
+    authority = compiled_bundled_authority()
+    support = authority.catalogues.require_supported_filing_years()
+    for year in range(support.floor, support.horizon + 1):
+        snapshot = authority.snapshot("193", filing_year=year, period="0A")
+        casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == "decl.total-perceptores")
+        binding = next(binding for binding in snapshot.revision.bindings if binding.id == casilla.binding)
+        assert binding.source == "withholding", (year, binding.id, binding.source)
+        # One holder on two type-2 records (claves A and B): a distinct-NIF count says 1.
+        observations = (
+            _perceptor_observation("a-1", base="100.00", withholding="19.00", transaction_date=date(year, 2, 1)),
+            _perceptor_observation(
+                "b-1", base="10.00", withholding="1.90", transaction_date=date(year, 4, 1), clave="B"
+            ),
+        )
+        binding_values = resolve_withholding_binding_values(snapshot.revision, observations)
+        assert binding_values[binding.id] == Decimal("2"), year
 
 
 def _value_for(data_type: str, period_index: int) -> Decimal:

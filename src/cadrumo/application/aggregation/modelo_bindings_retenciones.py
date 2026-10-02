@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.i18n.translatable import Translatable as tr
@@ -48,6 +48,9 @@ from .source_resolution_operations import (
     source_provenance_for as _provenance_for,
 )
 from .source_resolution_operations import storage_degradation_resolution
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.schema import ModeloRevision
 
 _RETENCIONES_AGGREGATORS = {
     Modelo("111").value: aggregate_retenciones_111,
@@ -109,19 +112,41 @@ class RetencionesAggregationSourceResolver:
         """Return whether this canonical retenciones dispatcher owns ``modelo``."""
         return modelo in _RETENCIONES_AGGREGATORS
 
+    def load_calculation_observations(
+        self,
+        *,
+        modelo: str,
+        period: Period,
+        revision: ModeloRevision,
+    ) -> tuple[RetencionObservation, ...] | None:
+        """Return the stored retención rows the calculation reads for ``modelo`` in ``period``.
+
+        ``None`` when ``revision`` declares no ``retenciones_aggregation``
+        binding, or declares one for a modelo with no retenciones aggregator:
+        the calculation then reads nothing from this store, which is a different
+        fact from reading an empty window. Modelo 180 reads the year's active
+        Modelo 115 windows; every other modelo reads its own window.
+
+        :meth:`resolve` and the per-modelo aggregate report both read through
+        here, so the report summarises exactly the rows the calculation
+        materialises rather than a window of its own choosing.
+        """
+        if (
+            not revision_has_binding_source(revision, "retenciones_aggregation")
+            or modelo not in _RETENCIONES_AGGREGATORS
+        ):
+            return None
+        if modelo == Modelo("180").value:
+            return self._ports.repository.load_annual_source_observations(Modelo("115").value, period.filing_year)
+        return self._ports.repository.load_observations(modelo, period)
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve the retenciones binding values for the declared modelo context."""
-        if not revision_has_binding_source(context.revision, "retenciones_aggregation"):
-            return empty_source_resolution(self.resolver_id, self.owned_sources)
-        if str(context.modelo) not in _RETENCIONES_AGGREGATORS:
-            # Defensive: a revision declares the source for a modelo with no
-            # retenciones aggregator. Resolve empty rather than guess values.
-            return empty_source_resolution(self.resolver_id, self.owned_sources)
         try:
-            observations = (
-                self._ports.repository.load_annual_source_observations("115", context.filing_year)
-                if str(context.modelo) == Modelo("180").value
-                else self._ports.repository.load_observations(str(context.modelo), context.period)
+            observations = self.load_calculation_observations(
+                modelo=str(context.modelo),
+                period=context.period,
+                revision=context.revision,
             )
         except (RetencionObservationPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
@@ -130,6 +155,8 @@ class RetencionesAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
+        if observations is None:
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
         if not observations:
             is_m115 = str(context.modelo) == Modelo("115").value
             is_m115_no_relevant_payment = is_m115 and is_m115_no_relevant_payment_period(

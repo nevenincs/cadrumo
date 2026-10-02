@@ -115,6 +115,9 @@ _CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
         # Queries the resident vaultspec-rag service, a separate product this
         # project does not install.
         "resident_service",
+        # Scores against the ingestion measurement corpus, operator data held
+        # outside the checkout that no runner holds or installs.
+        "private_ingest_corpus",
     },
 )
 

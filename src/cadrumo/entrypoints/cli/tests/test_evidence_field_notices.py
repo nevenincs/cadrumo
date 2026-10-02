@@ -20,12 +20,22 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....application.ledger.grounded_reading import verified_provenance
 from ....application.ledger.identity_roles import IdentityCandidate, resolve_counterparty_identity
-from ....application.ledger.invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ....application.ledger.invoice_draft_records import (
+    FieldAmbiguityCandidate,
+    FieldProvenance,
+    InvoiceDraft,
+    LabelReadingFallback,
+    LabelReadingFallbackCause,
+)
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from .._evidence_field_notices import DEGRADED_GROUNDING_OUTCOMES, field_degradation_notices
+from .._evidence_field_notices import (
+    DEGRADED_GROUNDING_OUTCOMES,
+    field_degradation_notices,
+    label_reading_fallback_notices,
+)
 from ._english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
@@ -480,3 +490,85 @@ def test_both_evidence_surfaces_emit_the_degradation_notices() -> None:
 
     assert extract_calls == 1, "the extract surface must emit per-field degradation notices"
     assert confirm_calls == 1, "the confirm surface must emit per-field degradation notices"
+
+
+# --- a label reading that stood without its model fill -----------------------
+
+
+def _fallback(cause: LabelReadingFallbackCause, *, failed_condition_id: str | None = None) -> LabelReadingFallback:
+    return LabelReadingFallback(
+        cause=cause,
+        unread_fields=("currency", "supplier_name"),
+        reader_error_type="ReaderFailureForTest",
+        failed_condition_id=failed_condition_id,
+    )
+
+
+def test_a_draft_whose_model_fill_ran_or_was_never_needed_raises_no_label_reading_notice() -> None:
+    assert label_reading_fallback_notices(None) == []
+
+
+def test_a_headroom_refused_fill_is_a_warning_naming_the_refusal_and_the_unread_fields() -> None:
+    fallback = _fallback(
+        LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
+        failed_condition_id="provisioning.load_headroom.measurable",
+    )
+
+    (notice,) = label_reading_fallback_notices(fallback)
+
+    assert notice.severity is NoticeSeverity.WARNING
+    assert notice.code == "ledger.evidence.label_reading.headroom_refused"
+    assert _context(notice) == {
+        "reason": "load_headroom_refused",
+        "unread_fields": "currency, supplier_name",
+        "unread_field_count": "2",
+        "reader_error_type": "ReaderFailureForTest",
+        "failed_condition_id": "provisioning.load_headroom.measurable",
+    }
+    assert "currency, supplier_name" in notice.message
+    assert "headroom" in notice.message
+    assert derive_status([notice]).value == "warning"
+
+
+def test_an_unavailable_reader_fill_is_a_warning_naming_the_failure_and_the_unread_fields() -> None:
+    (notice,) = label_reading_fallback_notices(_fallback(LabelReadingFallbackCause.READER_UNAVAILABLE))
+
+    assert notice.severity is NoticeSeverity.WARNING
+    assert notice.code == "ledger.evidence.label_reading.reader_unavailable"
+    assert _context(notice) == {
+        "reason": "reader_unavailable",
+        "unread_fields": "currency, supplier_name",
+        "unread_field_count": "2",
+        "reader_error_type": "ReaderFailureForTest",
+    }
+    assert "ReaderFailureForTest" in notice.message
+    assert "currency, supplier_name" in notice.message
+
+
+def test_a_busy_refused_fill_is_a_warning_naming_the_occupancy_and_the_unread_fields() -> None:
+    fallback = _fallback(
+        LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+        failed_condition_id="llm.local_inference.slot_available",
+    )
+
+    (notice,) = label_reading_fallback_notices(fallback)
+
+    assert notice.severity is NoticeSeverity.WARNING
+    assert notice.code == "ledger.evidence.label_reading.busy_refused"
+    assert _context(notice) == {
+        "reason": "inference_slot_busy",
+        "unread_fields": "currency, supplier_name",
+        "unread_field_count": "2",
+        "reader_error_type": "ReaderFailureForTest",
+        "failed_condition_id": "llm.local_inference.slot_available",
+    }
+    assert "currency, supplier_name" in notice.message
+    assert "headroom" not in notice.message
+    assert derive_status([notice]).value == "warning"
+
+
+def test_each_cause_asks_for_its_own_remedy_under_its_own_code() -> None:
+    """Two causes sharing a code would send an operator to restart a runtime to free memory."""
+    codes = {cause: label_reading_fallback_notices(_fallback(cause))[0].code for cause in LabelReadingFallbackCause}
+
+    assert len(set(codes.values())) == len(LabelReadingFallbackCause)

@@ -360,6 +360,9 @@ modelo:
         official_name: Modelo 222. Társasági adó. Adókonszolidációs rendszer. Részletfizetés.
         title: IS részletfizetés adókonszolidációs rendszerben (cégcsoportok)
       revision:
+        '2022':
+          field:
+            label: 222-es modelo, 2022. adóév
         '2023':
           field:
             label: 222-es modelo, 2023. adóév

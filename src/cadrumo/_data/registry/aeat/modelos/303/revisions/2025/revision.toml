@@ -79,15 +79,6 @@ source_refs = ["aeat-dr-303-2025"]
 
 [[revisions."2025".lineage_attestations]]
 family = "casillas"
-continuidad_id = "iva-autoconsumo-promotor-cuota"
-from_revision = "2024-desde-09-y-3t"
-to_revision = "2025"
-origin = "seeded"
-legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]
-
-[[revisions."2025".lineage_attestations]]
-family = "casillas"
 continuidad_id = "iva-resultado-autoliquidacion"
 from_revision = "2024-desde-09-y-3t"
 to_revision = "2025"
@@ -120,13 +111,6 @@ selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-dep-self-prior-qua
 sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
-
-[[revisions."2025".family_overrides]]
-family = "constructs"
-selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-autoliquidacion"}
-sequence_additions = {deadline_windows = ["modelo-303-2025-01-mensual", "modelo-303-2025-02-mensual", "modelo-303-2025-03-mensual", "modelo-303-2025-04-mensual", "modelo-303-2025-05-mensual", "modelo-303-2025-06-mensual", "modelo-303-2025-07-mensual", "modelo-303-2025-08-mensual", "modelo-303-2025-09-mensual", "modelo-303-2025-10-mensual", "modelo-303-2025-11-mensual", "modelo-303-2025-12-mensual", "modelo-303-2025-1t", "modelo-303-2025-2t", "modelo-303-2025-3t", "modelo-303-2025-4t"], source_refs = ["aeat-dr-303-2025", "aeat-calendario-contribuyente-2026", "boe-orden-hac-1347-2024-iva-authority"], workbook_parity_refs = ["modelo-303-dr"]}
-sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5], legal_refs = [43], source_refs = [4, 7], workbook_parity_refs = [0]}
-sequence_order = {source_refs = [0, 1, 2, 6, 3, 4, 7, 5, 8]}
 
 [[revisions."2025".family_overrides]]
 family = "parameters"
@@ -1630,14 +1614,6 @@ sequence_order = {source_refs = [2, 0, 1]}
 
 [[revisions."2025".family_overrides]]
 family = "verification_expectations"
-selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-reconcile-when-present"}
-fields = {externally_grounded_casilla_ids = ["iva.prorrata-porcentaje"]}
-sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {source_refs = [2, 0, 1]}
-
-[[revisions."2025".family_overrides]]
-family = "verification_expectations"
 selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-total-cuota-verification"}
 sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
 sequence_removals = {source_refs = [0]}
@@ -1650,31 +1626,19 @@ replacement_id = "aeat-dr-303-2025"
 sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 25, 26, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41], source_refs = [2, 0, 1]}
-
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-2024-09-mensual"}
-
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-2024-10-mensual"}
-
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-2024-11-mensual"}
-
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-2024-12-mensual"}
-
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-2024-3t"}
-
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-2024-4t"}
-
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-autoliquidacion"}
+sequence_additions = {deadline_windows = ["modelo-303-2025-01-mensual", "modelo-303-2025-02-mensual", "modelo-303-2025-03-mensual", "modelo-303-2025-04-mensual", "modelo-303-2025-05-mensual", "modelo-303-2025-06-mensual", "modelo-303-2025-07-mensual", "modelo-303-2025-08-mensual", "modelo-303-2025-09-mensual", "modelo-303-2025-10-mensual", "modelo-303-2025-11-mensual", "modelo-303-2025-12-mensual", "modelo-303-2025-1t", "modelo-303-2025-2t", "modelo-303-2025-3t", "modelo-303-2025-4t"], source_refs = ["aeat-dr-303-2025", "aeat-calendario-contribuyente-2026", "boe-orden-hac-1347-2024-iva-authority"], workbook_parity_refs = ["modelo-303-dr"]}
+sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5], legal_refs = [43], source_refs = [4, 7], workbook_parity_refs = [0]}
+sequence_order = {source_refs = [0, 1, 2, 6, 3, 4, 7, 5, 8]}
+[[revisions."2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-reconcile-when-present"}
+fields = {externally_grounded_casilla_ids = ["iva.prorrata-porcentaje"]}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
 [[revisions."2025".family_removals]]
 family = "projection_endpoints"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-dana-elegible.slot-1"}

@@ -1,10 +1,12 @@
 """E2E enrollment: Modelo 202 modalidad 40.2 prior-year cuota-base carry.
 
 The Impuesto sobre Sociedades instalment (Modelo 202) modalidad art. 40.2
-LIS computes the instalment base (casilla 01) from the cuota líquida of a
-prior Modelo 200 (IS annual) filing. The 2P (October) and 3P (December)
-instalments take the immediately prior year's M200 cuota líquida
-(``DP200014B:00592``, semantic_role ``is_cuota_liquida``); the cross-model
+LIS computes the instalment base (casilla 01) from the cuota of a prior
+Modelo 200 (IS annual) filing net of its deducciones, bonificaciones,
+retenciones and ingresos a cuenta. The 2P (October) and 3P (December)
+instalments take the immediately prior year's M200 cuota del ejercicio
+(``DP200014B:00599``, the cuota líquida minus the retenciones e ingresos a
+cuenta); the cross-model
 relation ``modelo-202-cuota-base-ejercicio-anterior`` declares
 ``filing_year_delta = -1`` for those periods and feeds the new binding
 ``modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior`` that casilla
@@ -20,10 +22,10 @@ across two distinct renta (annual) years, records each year through the
 against the cross-year claim via
 ``the cross-year behavior assertion``.
 
-Grounding (non-tautological): the prior M200 cuota líquida is a manual input
+Grounding (non-tautological): the prior M200 cuota del ejercicio is a manual input
 the test supplies (no formula under test produces it), and the assertions are
 the cross-year WIRING invariants — 2P casilla 01 equals the prior year's M200
-cuota líquida, year-isolated, and 03 = 18% of 01 − 02 — grounded in LIS art.
+cuota del ejercicio, year-isolated, and 03 = 18% of 01 − 02 — grounded in LIS art.
 40.2 and the AEAT Modelo 202 instructions, not a reproduction of a formula's
 arithmetic against itself.
 
@@ -68,10 +70,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO_200 = "200"
 _MODELO_202 = "202"
 
-#: The M200 source casilla the 40.2 base copies (cuota líquida).
+#: The M200 source casilla the 40.2 base copies (cuota del ejercicio).
 
 
-_M200_CUOTA_LIQUIDA_CASILLA: CasillaId = validated_casilla_id("DP200014B:00592")
+_M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("DP200014B:00599")
 _M202_BASE_CASILLA: CasillaId = validated_casilla_id("01")
 _M202_DEDUCCIONES_CASILLA: CasillaId = validated_casilla_id("02")
 _M202_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id("03")
@@ -111,7 +113,7 @@ def _modalidad_rate_from_snapshot(filing_year: int) -> Decimal:
 _TARGET_YEAR_N = 2026
 _TARGET_YEAR_N_PLUS_1 = 2027
 
-#: Distinct prior-year M200 cuota líquida per source year so a cross-year
+#: Distinct prior-year M200 cuota del ejercicio per source year so a cross-year
 #: contamination surfaces as a mismatch.
 _M200_CUOTA_BY_SOURCE_YEAR: dict[int, Decimal] = {
     2025: Decimal("48000.00"),
@@ -124,8 +126,8 @@ _M200_1P_NEAR_PRIOR = Decimal("99000.00")
 _CLOCK = datetime(2028, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
-def _seed_m200_cuota_liquida(*, source_year: int, cuota: Decimal, obs_repo: CalculationObservationRepository) -> None:
-    """Record a prior-year M200 cuota líquida as a filed observation."""
+def _seed_m200_cuota_ejercicio(*, source_year: int, cuota: Decimal, obs_repo: CalculationObservationRepository) -> None:
+    """Record a prior-year M200 cuota del ejercicio as a filed observation."""
     obs_repo.save(
         obs_repo.prepare_observation_envelope(
             RegistryModeloObservation(
@@ -136,7 +138,7 @@ def _seed_m200_cuota_liquida(*, source_year: int, cuota: Decimal, obs_repo: Calc
                     modelo=_MODELO_200,
                     filing_year=source_year,
                     period="0A",
-                    casilla_values={_M200_CUOTA_LIQUIDA_CASILLA: cuota},
+                    casilla_values={_M200_CUOTA_EJERCICIO_CASILLA: cuota},
                     grade=RegistryAuthorityGrade.CALCULATION,
                 ),
             ),
@@ -151,7 +153,7 @@ def _seed_m200_cuota_liquida(*, source_year: int, cuota: Decimal, obs_repo: Calc
                         modelo=_MODELO_200,
                         filing_year=source_year,
                         period="0A",
-                        casilla_values={_M200_CUOTA_LIQUIDA_CASILLA: cuota},
+                        casilla_values={_M200_CUOTA_EJERCICIO_CASILLA: cuota},
                         grade=RegistryAuthorityGrade.CALCULATION,
                     ),
                 )
@@ -254,12 +256,12 @@ def test_modelo_202_1p_base_resolves_from_two_years_back_m200_cuota(
     """1P casilla 01 auto-resolves from target year minus two, not minus one."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_liquida(
+        _seed_m200_cuota_ejercicio(
             source_year=_TARGET_YEAR_1P - 2,
             cuota=_M200_1P_SOURCE_TWO_BACK,
             obs_repo=obs_repo,
         )
-        _seed_m200_cuota_liquida(
+        _seed_m200_cuota_ejercicio(
             source_year=_TARGET_YEAR_1P - 1,
             cuota=_M200_1P_NEAR_PRIOR,
             obs_repo=obs_repo,
@@ -279,15 +281,15 @@ def test_modelo_202_1p_base_resolves_from_two_years_back_m200_cuota(
 def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """2P casilla 01 auto-resolves to the immediately prior year's M200 cuota líquida.
+    """2P casilla 01 auto-resolves to the immediately prior year's M200 cuota del ejercicio.
 
     The cross-year continuity contract: once the prior M200 is recorded, the
     2P/3P relation (filing_year_delta = -1) populates casilla 01 from that
-    prior cuota líquida — the operator does not re-key the prior-year cuota.
+    prior cuota del ejercicio — the operator does not re-key the prior-year cuota.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_liquida(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
+        _seed_m200_cuota_ejercicio(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo, operation=operation)
         result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
@@ -315,7 +317,7 @@ def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_liquida(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
+        _seed_m200_cuota_ejercicio(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo, operation=operation)
         result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
@@ -348,7 +350,7 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path, *, operation: Pin
     """End-to-end enrollment: M202 2P prior-cuota carry across two renta years.
 
     Drives the REAL M202 2P backend for two distinct target renta years
-    (2026, 2027), each sourcing the immediately prior M200 cuota líquida
+    (2026, 2027), each sourcing the immediately prior M200 cuota del ejercicio
     (2025, 2026), records each calculation through the
     ``cross-year observation`` (CALC evidence class), and cross-checks the
     recorded two-year set against the cross-year claim. Year N's M200 is
@@ -359,8 +361,8 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path, *, operation: Pin
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_liquida(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
-        _seed_m200_cuota_liquida(source_year=2026, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2026], obs_repo=obs_repo)
+        _seed_m200_cuota_ejercicio(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
+        _seed_m200_cuota_ejercicio(source_year=2026, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2026], obs_repo=obs_repo)
         # Each target year cumulates its own 1P pago (distinct per year so a
         # cross-year self-pago contamination would surface).
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
@@ -386,6 +388,6 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path, *, operation: Pin
         )
 
     # Wiring invariant: each target year's 2P base equals the immediately prior
-    # M200 cuota líquida, year-isolated.
+    # M200 cuota del ejercicio, year-isolated.
     assert result_n.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
     assert result_n1.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2026]

@@ -1,7 +1,2 @@
-[[targets]]
-modelo = "200"
-revision = "2024"
-source_ref = "aeat-dr-200-2024"
-source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
-layout_id = "generated-modelo-200-2024-fichero"
-line_ending = "crlf"
+# A target's bootstrap authorization is retired once its generated tree is published.
+targets = []

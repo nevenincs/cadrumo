@@ -126,9 +126,9 @@ def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() 
     assert window.closes_on == date(2025, 7, 25)
 
 
-# The one Modelo 220 revision that cites a bundled approving form order beside its
-# design; no successor order is bundled.
-(_M220_EVIDENCED_EXERCISE,) = (
+# The Modelo 220 revisions that cite a bundled approving form order beside their
+# design, oldest first; no order is bundled for the year after the newest.
+_M220_EVIDENCED_EXERCISES = tuple(
     revision.valid_from.year
     for revision in authored_revisions_where(
         "220",
@@ -139,16 +139,21 @@ def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() 
 )
 
 
-def test_modelo_220_evidenced_revision_sources_match_the_revision_window() -> None:
-    """The evidenced revision cites its own design and period-scoped approving order."""
+def test_modelo_220_evidenced_revisions_are_found() -> None:
+    assert _M220_EVIDENCED_EXERCISES
+
+
+@pytest.mark.parametrize("exercise", _M220_EVIDENCED_EXERCISES)
+def test_modelo_220_evidenced_revision_sources_match_the_revision_window(exercise: int) -> None:
+    """Each evidenced revision cites its own design and period-scoped approving order."""
     modelo, catalogues = _committed_modelo("220")
-    exercise = _M220_EVIDENCED_EXERCISE
     revision = modelo.revisions[str(exercise)]
     design, order = f"aeat-dr-220-{exercise}", f"boe-modelo-220-{exercise}-form"
 
     assert (revision.valid_from, revision.valid_to) == (date(exercise, 1, 1), date(exercise, 12, 31))
     assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
-    assert f"boe-modelo-220-{exercise + 1}-form" not in catalogues.sources
+    if exercise == _M220_EVIDENCED_EXERCISES[-1]:
+        assert f"boe-modelo-220-{exercise + 1}-form" not in catalogues.sources
     assert set(revision.source_refs) >= {design, order}
     for source_id in (design, order):
         source = catalogues.sources[source_id]

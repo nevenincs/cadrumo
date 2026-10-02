@@ -58,6 +58,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.invoice_draft_extraction_ports.InvoiceDraftReaderHeadroomRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_DRAFT_READER_HEADROOM",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_invoice_draft_reader_headroom_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.invoice_draft_extraction_ports.InvoiceDraftReaderBusyRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_DRAFT_READER_BUSY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_invoice_draft_reader_busy_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.llm_diagnostics_ports.LlmDiagnosticsReadError",
         ErrorCode(
             code="FAIL_LLM_DIAGNOSTICS_READ",

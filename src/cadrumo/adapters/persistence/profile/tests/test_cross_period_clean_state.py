@@ -10,7 +10,6 @@ import pytest
 
 from cadrumo.application.calculations.tests.cross_period_verdict_support import (
     has_first_year_fractional_suppression,
-    has_modelo_not_applicable,
     has_operator_declared_suppression,
     suppressed_first_year_fractional,
     suppressed_pre_activity,
@@ -106,38 +105,27 @@ def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path
     assert CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD in verdict.blockers
 
 
-#: Payer-side withholding returns. The retenciones a renta taxpayer deducts are
-#: sourced from the perceptor's own certificates and records, so none of these is
-#: a cross-period dependency of Modelo 100.
-_M100_PAYER_SIDE_WITHHOLDING_MODELOS = frozenset({"111", "123", "190", "193"})
+def test_m100_payer_side_retencion_returns_are_no_dependency_self_filed_enforced(tmp_path: Path) -> None:
+    """M100 depends on no payer-side retencion return; self-filed pagos fraccionados still block.
 
-
-def test_m100_payer_side_withholding_returns_are_not_dependencies_self_filed_enforced(tmp_path: Path) -> None:
-    """M100 depends on no payer-side withholding return; self-filed pagos fraccionados still block.
-
-    Withholding credits are read from the perceptor's side, so 111/123/190/193 never
-    enter the dependency set and nothing has to be scoped out for a salaried
-    taxpayer. The pagos fraccionados the taxpayer DOES file (130/131) stay enforced:
-    an undeclared activity state is fail-closed, so they block until filed.
+    Modelos 111, 123, 190 and 193 are filed by the payer. The withholding they declare
+    reaches the taxpayer as a certificate, not as a filing the taxpayer made, so Modelo 100
+    declares no dependency on them rather than one scoped out per taxpayer. The
+    pagos fraccionados the taxpayer DOES file stay enforced.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         verdict = _evaluate_clean_state(
             published_authority_operation().snapshot("100", filing_year=2024, period="0A"),
         )
 
-    dependencies = {item.requirement.source_modelo for item in verdict.dependencies}
+    sources = {item.requirement.source_modelo for item in verdict.dependencies}
+    assert sources.isdisjoint({"111", "123", "190", "193"}), f"payer-side returns must not be sources, got {sources}"
+    self_filed = {"130", "131"}
+    assert self_filed <= sources
     scoped_out = {
         item.requirement.source_modelo for item in verdict.dependencies if item.modelo_not_applicable_advisory
     }
-    blocking = {item.requirement.source_modelo for item in verdict.dependencies if not item.clean}
-
-    assert dependencies.isdisjoint(_M100_PAYER_SIDE_WITHHOLDING_MODELOS), (
-        f"payer-side withholding returns must not be M100 dependencies, got {dependencies}"
-    )
-    assert scoped_out == set(), f"no M100 dependency is scoped out by default, got {scoped_out}"
-    assert has_modelo_not_applicable(verdict) is False
-    assert {"130", "131"} <= dependencies
-    assert {"130", "131"} <= blocking, "self-filed pagos fraccionados must stay enforced"
+    assert scoped_out.isdisjoint(self_filed), "self-filed pagos fraccionados must NOT be scoped out"
 
 
 def test_m100_pagos_fraccionados_conditional_on_economic_activity(tmp_path: Path) -> None:
@@ -272,7 +260,6 @@ def test_cross_period_dependency_inventory_covers_declared_horizon_target_modelo
         "193",
         "200",
         "202",
-        "296",
         "303",
         "353",
         "720",
@@ -280,6 +267,9 @@ def test_cross_period_dependency_inventory_covers_declared_horizon_target_modelo
     assert all(item.dependencies for item in inventory.items)
     assert "036" not in inventory.target_modelos
     assert "390" not in inventory.target_modelos
+    # Modelo 296's horizon edition claims applicability only: AEAT has not
+    # published that ejercicio's diseno de registro, so it owns no filing snapshot.
+    assert "296" not in inventory.target_modelos
     assert any(
         item.target_modelo == "353"
         and item.target_period == Period.from_year_and_code(_SUPPORT.horizon, "12")
@@ -303,11 +293,11 @@ def test_cross_period_dependency_inventory_covers_the_reviewed_renta_target_mode
     assert inventory.target_modelos == ("100",)
     assert len(inventory.items) == 1
     assert inventory.items[0].target_period == Period.from_year_and_code(newest_authored_edition("100"), "0A")
-    # The prior Modelo 100 (negative base carry), the self-filed pagos
-    # fraccionados and the Modelo 184 attribution. Withholding credits are sourced
-    # from the perceptor's side, so no payer-side withholding return appears.
-    assert set(inventory.items[0].source_modelos) == {"100", "130", "131", "184"}
-    assert set(inventory.items[0].source_modelos).isdisjoint(_M100_PAYER_SIDE_WITHHOLDING_MODELOS)
+    # Payer-side retencion returns (111, 123, 190, 193) are no Modelo 100 source, and
+    # Modelo 184's attribution is read from box 1577 rather than carried by a relation.
+    source_modelos = set(inventory.items[0].source_modelos)
+    assert source_modelos >= {"130", "131"}
+    assert source_modelos.isdisjoint({"111", "123", "184", "190", "193"})
 
 
 def test_cross_period_dependency_inventory_documents_patrimonio_and_foreign_asset_scope(

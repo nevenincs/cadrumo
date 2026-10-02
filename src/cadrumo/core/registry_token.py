@@ -50,6 +50,19 @@ class RegistryToken(str):
         """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
+    def __copy__(self) -> Self:
+        """Return this token: it is immutable text already projected."""
+        return self
+
+    def __deepcopy__(self, memo: dict[int, object]) -> Self:
+        """Return this token rather than rebuilding it through the guarded constructor.
+
+        The default deep copy of a ``str`` subclass calls ``__new__`` with the
+        text alone, which the projection guard refuses, so every model holding
+        a projected token could not be deep-copied at all.
+        """
+        return self
+
     @property
     def value(self) -> str:
         """Return the canonical registry token text."""

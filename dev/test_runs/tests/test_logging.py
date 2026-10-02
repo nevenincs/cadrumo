@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import time
 from io import StringIO
 from pathlib import Path
 from typing import IO
@@ -15,7 +17,16 @@ import pytest
 
 from dev._paths import REPO_ROOT
 from dev.test_runs.logging import RunLog, _redirect_collection_output
-from dev.test_runs.paths import SCRATCH_PATH_BUDGET, SCRATCH_PREFIX, SCRATCH_SEPARATOR
+from dev.test_runs.paths import (
+    SCRATCH_PATH_BUDGET,
+    SCRATCH_PREFIX,
+    SCRATCH_SEPARATOR,
+    ScratchAllocation,
+    allocate_scratch_directory,
+)
+from dev.test_runs.reaper import INTERRUPTED_GRACE_SECONDS, assess_scratch_directories, reclaim_run_directories
+from dev.test_runs.tests.authority_probe import LEAK_LEASE_ENV
+from dev.test_runs.tests.failing_probe import FAILURE_MESSAGE
 from dev.test_runs.tests.setup_skip_probe import SKIP_REASON
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.serial]
@@ -40,6 +51,227 @@ class _FakeRunLog(RunLog):
 
     def __init__(self, stream: IO[str]) -> None:
         self.stream = stream
+
+
+class _FinishedRunLog(RunLog):
+    """A finished run log carrying only what ``release_scratch`` reads.
+
+    Built without the real constructor, which would repoint this process's own
+    temporary directory at a new scratch and register a second exit release.
+    """
+
+    def __init__(self, path: Path, scratch_allocation: ScratchAllocation, exit_status: int | None) -> None:
+        self.path = path
+        self.scratch_allocation = scratch_allocation
+        self.exit_status = exit_status
+
+
+def _top_level_environment() -> dict[str, str]:
+    """Return an environment in which a child pytest mints its own run rather than joining this one."""
+    environment = os.environ.copy()
+    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    return environment
+
+
+def _child_run_log(result: subprocess.CompletedProcess[str]) -> Path:
+    """Return the run log a finished child pytest controller announced."""
+    match = re.search(r"test run log: (?P<path>.+?run\.log)", result.stdout)
+    assert match is not None, result.stdout + result.stderr
+    return Path(match.group("path"))
+
+
+def _scratch_of(run_log: Path) -> Path:
+    """Return the scratch a finished child run recorded in its metadata."""
+    return Path(json.loads(run_log.with_name("run.json").read_text(encoding="utf-8"))["scratch"])
+
+
+@pytest.mark.parametrize(
+    ("exit_status", "verdict"),
+    [(0, "SCRATCH REMOVED"), (1, "SCRATCH KEPT"), (None, "SCRATCH KEPT")],
+)
+def test_the_recorded_exit_status_alone_decides_the_scratch(
+    tmp_path: Path, exit_status: int | None, verdict: str
+) -> None:
+    scratch = allocate_scratch_directory()
+    (scratch / "left-by-a-test.txt").write_text("scratch content", encoding="utf-8")
+    run_log = _FinishedRunLog(tmp_path / "run.log", ScratchAllocation.record(scratch), exit_status)
+    try:
+        line = run_log.release_scratch()
+
+        assert line.startswith(f"{verdict} {scratch}"), line
+        assert scratch.exists() is (exit_status != 0)
+        assert (tmp_path / "run.log").read_text(encoding="utf-8") == line + "\n"
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
+def test_a_refused_removal_is_recorded_in_the_run_log_and_never_raised(tmp_path: Path) -> None:
+    """A passing run whose scratch record points outside its allocation keeps that path and says why."""
+    unrelated = tmp_path / "not-a-scratch"
+    unrelated.mkdir()
+    status = unrelated.stat()
+    run_log = _FinishedRunLog(
+        tmp_path / "run.log", ScratchAllocation(unrelated, os.getpid(), (status.st_dev, status.st_ino)), 0
+    )
+
+    line = run_log.release_scratch()
+
+    assert line.startswith(f"SCRATCH NOT REMOVED {unrelated}: ScratchOwnershipError: "), line
+    assert unrelated.is_dir()
+    assert (tmp_path / "run.log").read_text(encoding="utf-8") == line + "\n"
+
+
+def test_a_passing_run_removes_its_scratch_and_leaves_its_run_log() -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/setup_skip_probe.py"],
+        cwd=REPO_ROOT,
+        env=_top_level_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+
+    assert result.returncode == pytest.ExitCode.OK, output
+    scratch = _scratch_of(run_log)
+    assert not scratch.exists(), f"a passing run left its scratch behind: {scratch}"
+    # The run's own logs sit under `.logs/test-runs`, not in the scratch, and survive it.
+    assert run_log.with_name("run.json").is_file()
+    assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
+
+
+def test_a_failing_run_keeps_its_scratch_until_the_reaper_reclaims_it() -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/failing_probe.py"],
+        cwd=REPO_ROOT,
+        env=_top_level_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+
+    assert result.returncode == pytest.ExitCode.TESTS_FAILED, output
+    assert FAILURE_MESSAGE in output
+    scratch = _scratch_of(run_log)
+    assert scratch.is_dir(), f"a failing run's scratch was not kept: {scratch}"
+    assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH KEPT {scratch}: exit=1"
+
+    # Its owner has exited, so once the grace has passed the reaper judges it reclaimable.
+    later = time.time() + INTERRUPTED_GRACE_SECONDS + 1
+    verdicts = tuple(
+        verdict for verdict in assess_scratch_directories(scratch.parent, now=later) if verdict.directory == scratch
+    )
+    assert [verdict.reclaimable for verdict in verdicts] == [True], verdicts
+    assert reclaim_run_directories(verdicts) == 1
+    assert not scratch.exists()
+
+
+def _registry_reading_environment(*, leak_lease: bool = False) -> dict[str, str]:
+    """Return an environment in which a child run freezes its own authority snapshot into its scratch."""
+    environment = _top_level_environment()
+    environment["CADRUMO_AUTHORITY_ROOT"] = str(REPO_ROOT / ".authority")
+    if leak_lease:
+        environment[LEAK_LEASE_ENV] = "1"
+    return environment
+
+
+def test_a_passing_run_that_read_the_registry_removes_its_scratch() -> None:
+    """The shared owner held the run's frozen snapshot open, which Windows will not let anything delete.
+
+    Released at session end, the snapshot and the scratch around it go with the run.
+    """
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/authority_probe.py"],
+        cwd=REPO_ROOT,
+        env=_registry_reading_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+
+    assert result.returncode == pytest.ExitCode.OK, output
+    scratch = _scratch_of(run_log)
+    assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
+    assert not scratch.exists()
+
+
+def test_a_parallel_run_that_read_the_registry_removes_its_scratch() -> None:
+    """Workers read the controller's snapshot and are gone before the controller removes it."""
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n", "2", "dev/test_runs/tests/authority_probe.py"],
+        cwd=REPO_ROOT,
+        env=_registry_reading_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+
+    assert result.returncode == pytest.ExitCode.OK, output
+    scratch = _scratch_of(run_log)
+    assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
+    assert not scratch.exists()
+
+
+def test_a_failing_run_that_read_the_registry_still_keeps_its_scratch() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-n0",
+            "dev/test_runs/tests/authority_probe.py",
+            "dev/test_runs/tests/failing_probe.py",
+        ],
+        cwd=REPO_ROOT,
+        env=_registry_reading_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+    scratch = _scratch_of(run_log)
+    try:
+        assert result.returncode == pytest.ExitCode.TESTS_FAILED, output
+        assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH KEPT {scratch}: exit=1"
+        assert scratch.is_dir()
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
+def test_a_lease_left_open_is_reported_and_leaves_the_runs_verdict_alone() -> None:
+    """A release refused under a live lease is reported, never raised, and the run still passes."""
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/authority_probe.py"],
+        cwd=REPO_ROOT,
+        env=_registry_reading_environment(leak_lease=True),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+    scratch = _scratch_of(run_log)
+    try:
+        assert result.returncode == pytest.ExitCode.OK, output
+        assert "the shared registry authority stayed open at session end" in result.stderr, output
+        assert run_log.read_text(encoding="utf-8").splitlines()[-1].startswith("SCRATCH "), output
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
 
 
 def test_collect_only_terminal_output_is_redirected_to_the_run_log(tmp_path: Path) -> None:
@@ -209,3 +441,14 @@ def test_parallel_workers_each_get_a_private_basetemp_inside_the_run(tmp_path: P
         assert basetemp.parent.name == "pytest"
         assert basetemp.parent.parent.name.startswith(f"{SCRATCH_PREFIX}{SCRATCH_SEPARATOR}")
     assert len({basetemp.parent.parent for basetemp in basetemps.values()}) == 1, f"workers split the run: {basetemps}"
+
+    # Every worker wrote into the shared scratch until its last test, so a removal
+    # by anything but the controller, after they were gone, would have failed a
+    # test above; the controller's removal then took the whole scratch.
+    (scratch,) = {basetemp.parent.parent for basetemp in basetemps.values()}
+    match = re.search(r"test run log: (?P<path>.+?run\.log)", result.stdout)
+    assert match is not None, result.stdout
+    released = Path(match.group("path")).read_text(encoding="utf-8").splitlines()[-1]
+    assert released.startswith("SCRATCH REMOVED "), released
+    assert Path(released.removeprefix("SCRATCH REMOVED ")).resolve() == scratch
+    assert not scratch.exists()

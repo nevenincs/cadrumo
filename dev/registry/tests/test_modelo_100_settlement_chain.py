@@ -45,17 +45,20 @@ Madrid CCAA, arrendamientos urbanos retenciones 1,824 EUR):
     19,004.63-35,425.68 @ 12.80% = 2,101.89 (cumul 3,841.42)
     35,425.68-57,320.40 @ 17.40%: 55,500-35,425.68 = 20,074.32 @ 17.40% = 3,492.93
     tarifa_madrid(55,500) = 7,334.35
-  tarifa_madrid(5,550) = 5,550 * 8.50% = 471.75  (mínimo contribuyente)
-  Cuota íntegra autonómica (0546) = 7,334.35 - 471.75 = 6,862.60
-  No deducciones → cuota líquida autonómica (0571) = 6,862.60
-  No incrementos  → cuota líquida autonómica incrementada (0586) = 6,862.60
+  The escala autonómica applies to casilla 0523, the Madrid mínimo del
+  contribuyente for the gravamen autonómico (5,956.65 EUR for 2024: Ley
+  13/2023, applicable from 1 January 2023; Renta 2024 manual, parte 1, p. 1205):
+  tarifa_madrid(5,956.65) = 5,956.65 * 8.50% = 506.32
+  Cuota íntegra autonómica (0546) = 7,334.35 - 506.32 = 6,828.03
+  No deducciones → cuota líquida autonómica (0571) = 6,828.03
+  No incrementos  → cuota líquida autonómica incrementada (0586) = 6,828.03
 
-  0587 = 0585 + 0586 = 7,591.00 + 6,862.60 = 14,453.60
-  0595 = 0587 (no special deductions 0588/0589/0590/0591) = 14,453.60
+  0587 = 0585 + 0586 = 7,591.00 + 6,828.03 = 14,419.03
+  0595 = 0587 (no special deductions 0588/0589/0590/0591) = 14,419.03
   0598 = 0153 (copy formula) = 1,824.00
   0609 = 0598 (all other operands zero) = 1,824.00
-  0610 = 0595 - 0609 = 14,453.60 - 1,824.00 = 12,629.60
-  0670 = 0610 (no further adjustments) = 12,629.60
+  0610 = 0595 - 0609 = 14,419.03 - 1,824.00 = 12,595.03
+  0670 = 0610 (no further adjustments) = 12,595.03
 """
 
 from __future__ import annotations
@@ -123,12 +126,12 @@ _M100_RESULTADO_DECLARACION_CASILLA: CasillaId = validated_casilla_id(
 _EXPECTED_CUOTA_LIQUIDA_ESTATAL_INCREMENTADA = Decimal("7591.00")
 
 # 0586: cuota líquida autonómica incrementada (Madrid 2024)
-#   = tarifa_madrid(55500) - tarifa_madrid(5550) = 7334.35 - 471.75 = 6862.60
-_EXPECTED_CUOTA_LIQUIDA_AUTONOMICA_INCREMENTADA = Decimal("6862.60")
+#   = tarifa_madrid(55500) - tarifa_madrid(5956.65) = 7334.35 - 506.32 = 6828.03
+_EXPECTED_CUOTA_LIQUIDA_AUTONOMICA_INCREMENTADA = Decimal("6828.03")
 
 # 0587: cuota líquida incrementada total = 0585 + 0586
 _EXPECTED_0587 = _EXPECTED_CUOTA_LIQUIDA_ESTATAL_INCREMENTADA + _EXPECTED_CUOTA_LIQUIDA_AUTONOMICA_INCREMENTADA
-# = 7591.00 + 6862.60 = 14453.60
+# = 7591.00 + 6828.03 = 14419.03
 
 # 0595: cuota resultante (no special deductions 0588/0589/0590/0591)
 _EXPECTED_0595 = _EXPECTED_0587
@@ -141,7 +144,7 @@ _EXPECTED_0609 = _RETENCIONES_ARRENDAMIENTOS
 
 # 0610: cuota diferencial = 0595 - 0609
 _EXPECTED_0610 = _EXPECTED_0595 - _EXPECTED_0609
-# = 14453.60 - 1824.00 = 12629.60
+# = 14419.03 - 1824.00 = 12595.03
 
 # 0670: resultado declaración = 0610 (no further adjustments in simple case)
 _EXPECTED_0670 = _EXPECTED_0610
@@ -216,7 +219,7 @@ def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnapsh
         f"expected {_EXPECTED_0587!r} "
         f"(0585={result.values[_M100_CUOTA_LIQUIDA_ESTATAL_INCREMENTADA_CASILLA]!r} + "
         f"0586={result.values[_M100_CUOTA_LIQUIDA_AUTONOMICA_INCREMENTADA_CASILLA]!r}). "
-        f"Oracle: LIRPF 2024 Art. 63 estatal (7591.00) + Madrid CAM 2024 autonomic (6862.60)."
+        f"Oracle: LIRPF 2024 Art. 63 estatal (7591.00) + Madrid CAM 2024 autonomic (6828.03)."
     )
 
 
@@ -257,9 +260,9 @@ def test_0610_cuota_diferencial_computed(m100_2024_snapshot: RegistrySnapshot) -
     """After contract, casilla 0610 must equal 0595 - 0609.
 
     Oracle (see module docstring):
-      0595 = 14,453.60 (cuota resultante = 0587 with no deductions)
+      0595 = 14,419.03 (cuota resultante = 0587 with no deductions)
       0609 =  1,824.00 (arrendamientos retenciones)
-      0610 = 12,629.60
+      0610 = 12,595.03
     """
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
@@ -285,7 +288,7 @@ def test_0670_resultado_declaracion_computed(m100_2024_snapshot: RegistrySnapsho
     For a simple landlord with no instalment payments (0611-0669 all zero),
     0670 = 0610.
 
-    Oracle: 0610 = 12,629.60 (derived from LIRPF 2024 + Madrid escala 2024,
+    Oracle: 0610 = 12,595.03 (derived from LIRPF 2024 + Madrid escala 2024,
     see module docstring).
     """
     result = calculate_registry_snapshot(
