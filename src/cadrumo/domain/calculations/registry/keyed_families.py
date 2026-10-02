@@ -287,13 +287,15 @@ CANONICAL_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = (
         scoped=True,
     ),
     # A generated declaration of the edition's own printed form, pinned to
-    # that edition's source digest: a predecessor's layout describes other
-    # casillas and never carries forward.
+    # that edition's source digest. Like an export layout it is a claim each
+    # edition asserts for itself, so it is scoped; its payload is stored as a
+    # delta against the family baseline, whose layout a successor's generated
+    # layout largely repeats.
     KeyedFamilySpec(
         section="form_layouts",
         identity="id",
-        inheritance=FamilyInheritanceMode.PER_EDITION,
-        restatable=False,
+        drop_eligible=True,
+        scoped=True,
     ),
     # This is not a SCHEMA_FAMILY collection, but it is a deliberate
     # per-edition holdback in migration policy and belongs in the same census.

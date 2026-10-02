@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import cache
+from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import TomlDecodeError, parse_toml
@@ -264,6 +265,8 @@ def scan_detail_row_fields() -> tuple[str, ...]:
 
 
 _FORM_LAYOUT_FRAGMENT_GLOB = "modelos/*/revisions/*/form_layouts/*.toml"
+_REVISION_MANIFEST_GLOB = "modelos/*/revisions/*/revision.toml"
+_FORM_LAYOUT_FAMILY = "form_layouts"
 
 
 def is_form_layout_heading_candidate(key: str) -> bool:
@@ -282,9 +285,14 @@ def scan_form_layout_heading_keys() -> frozenset[str]:
     the shared vocabulary) actually declares is exempt, so a stray or
     misspelled heading key still reads as extra.
 
+    A layout is stated whole in its ``form_layouts/`` fragment or keyed against
+    its family baseline, when the edition's manifest overrides state only what
+    differs. Every heading key a hydrated layout carries is stated in one of
+    those two places, so their union is the union over the hydrated layouts.
+
     Raises:
-        LocaleRegistryEnumerationError: If a committed layout fragment cannot
-            be read or parsed.
+        LocaleRegistryEnumerationError: If a committed layout fragment or
+            revision manifest cannot be read or parsed.
     """
     from dev.registry.form_layout.column_vocabulary import SHARED_COLUMN_HEADING_KEY_PREFIX, SHARED_COLUMN_KEYS
 
@@ -301,11 +309,21 @@ def scan_form_layout_heading_keys() -> frozenset[str]:
             for value in node:
                 _walk(value)
 
-    for path in sorted(root.glob(_FORM_LAYOUT_FRAGMENT_GLOB)):
+    def _read(path: Path) -> Mapping[str, object]:
         try:
-            _walk(parse_toml(path.read_text(encoding="utf-8")))
+            return parse_toml(path.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, TomlDecodeError) as exc:
             raise LocaleRegistryEnumerationError(
                 f"cannot enumerate form layout heading keys from {path}: {type(exc).__name__}: {exc}"
             ) from exc
+
+    for path in sorted(root.glob(_FORM_LAYOUT_FRAGMENT_GLOB)):
+        _walk(_read(path))
+    for path in sorted(root.glob(_REVISION_MANIFEST_GLOB)):
+        revisions = _read(path).get("revisions")
+        for revision in revisions.values() if isinstance(revisions, dict) else ():
+            overrides = revision.get("family_overrides") if isinstance(revision, dict) else None
+            for operation in overrides if isinstance(overrides, list) else ():
+                if isinstance(operation, dict) and operation.get("family") == _FORM_LAYOUT_FAMILY:
+                    _walk(operation)
     return frozenset(keys)
