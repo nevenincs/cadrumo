@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a94e952987e596aaea235d8a1e75c272d043a1a36487535c6ea1629aa32727b'
+body_hash: 'sha256:2497cf63d619d4ac0cb9adb14467cd4f262b02b6231bcd308e97c007a3f55cfb'
 related:
   - "[[2026-10-02-auth-frontend-uniformity-plan]]"
 ---
@@ -39,6 +39,14 @@ The refreshed runs are profile-auth-uniformity-2026-10-02-en with 16 authenticat
 ### persistence-boundary | low | Partial effects remain explicit at the existing custody boundaries
 
 The encrypted profile fact command and workflow configuration use their existing persistence owners under one auth mutation scope. They are not presented as one database transaction. The registered operation records UNKNOWN before execution and narrows only on a proven result; unexpected partial failures therefore remain visible for reconciliation. Profile intent remains authoritative, and retry is idempotent. No new credential lifecycle or persisted schema is introduced. Concurrent locale register edits in the shared Catalan CLI catalogue were preserved; no unrelated filing or locale edits were reverted.
+
+### capture-coherence | low | Freeze rendering inputs while concurrent TUI work continues
+
+After the original successful HTTP and live-source check, other work changed shared TUI composition and Modelo files. Subsequent live-tree refresh batches correctly refused publication when their source fingerprint changed during rendering. S03 was reopened. The shared installed operation graph was checked again and passed its focused real-worker test at 20261002T084248.277875Z-pytest-85316-bbbe1b32.
+
+The final 146 frames were regenerated from a source-only frozen copy of the then-current production package. Copy verification required equal full-package fingerprints before copying, after copying, and in the copy: bcb22e0d7398b5c824e0b176bac9acc21409a8d542e4f89d28858700286f76f1. Every renderer imported that copy explicitly; its TUI fingerprint is 59df2ffd9df7e2d0102a1f39f00f6c5596246e3e6848a4c0eb372373d2158c03. Twelve authentication/profile implementation files match the live worktree byte-for-byte. Current-source indicators for the entire TUI may subsequently change with unrelated editing; that does not turn these coherent snapshot frames into current live-tree captures. This distinction is retained in the final report.
+
+All five final manifests agree with the frozen source and contain 146 frames with zero failures, geometry findings, missing glyphs, missing artifacts or stale artifact digests. Every PNG served by the existing HTTP server was fetched again and matched its manifest hash. No production files, other work, or the running server were changed to freeze the capture. PASS remains applicable to the auth implementation and coherent visual evidence.
 
 ## Recommendations
 

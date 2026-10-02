@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:edd0204fa72fa6acc38fc6cd95e96ca2bf685f832b0cf607ff00002a7bf6c98c'
+body_hash: 'sha256:a5cb3e4f4ee26d51bb9ec0e84c6c3ea1d9ebadd827609791b0f04862c58018b5'
 related:
   - "[[2026-10-02-auth-frontend-uniformity-plan]]"
 ---
@@ -73,6 +73,10 @@ related:
 - `S03` `verify:` `existing webserver API discovery and HTTP byte/hash equality for every PNG` -> `pass`
 - `S03` `verify:` `integrated review (both high findings resolved)` -> `pass`
 - `S03` `verify:` `scoped vault check (0 errors and 0 warnings)` -> `pass`
+- `S03` `verify:` `installed TUI worker over changed shared composition (1 focused real integration test)` -> `pass`
+- `S03` `verify:` `live-source capture refresh while unrelated files changed (source guard rejection)` -> `fail`
+- `S03` `verify:` `frozen-copy coherence and auth/profile source parity (12 implementation files)` -> `pass`
+- `S03` `verify:` `146 final snapshot captures and all HTTP PNG hashes` -> `pass`
 
 ## Notes
 
@@ -80,3 +84,4 @@ related:
 - `S02` Integrated review reopened S02 for exact displayed-profile subject binding and preserving the public failure taxonomy. Both corrected. The preceding 62-test run had 61 passing and one failure only in reading the original profile after a switch; that test now reauthenticates before checking unchanged facts and passed separately. Core error registry/envelope/inventory checks remain applicable and passed. Public failure code/category/retryability/runbook are retained, with only validated opaque diagnostic references.
 - `S03` Required core error checks were the passing 49 cases in the combined run; 12 frontend cases also passed. The only failing test was corrected to reauthenticate before inspecting the original encrypted record, then passed separately. Production code did not change after those 61 passing cases. Preserve this failed invocation as history rather than reporting the entire command as passing. Final visual and HTTP evidence will be appended once every locale finishes.
 - `S03` Gallery runs: profile-auth-uniformity-2026-10-02-en and profile-setup-auth-uniformity-2026-10-02-es/en/ca/hu. ES 52 frames, other setup locales 26 each; auth 16. Both appearances; 80x24 and added 120x40 for Spanish/setup and auth. Review server http://100.84.254.21:8740 remained active. No live AEAT login.
+- `S03` Final captures use the frozen current-source copy recorded in .tmp-tui-visual-inventory/capture-snapshot.json, because unrelated shared TUI files continued changing during live-tree render batches. Those batches were rejected rather than mislabeled coherent. Final auth/profile code matches the live tree; full-TUI source-current badges may reflect later unrelated edits. The user was informed. No live worktree edits were reverted or paused.
