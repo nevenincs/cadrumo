@@ -572,7 +572,9 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
     than to a member value, and leaving it out would report the shipped key
     as an orphan.
     """
+    from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
     from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarSource
+    from cadrumo.application.modelo.declarations_list import DeclarationListGroup
     from cadrumo.application.modelo.declarations_workspace import (
         DeclarationsLifecycleKind,
         DeclarationsWorkspaceAvailability,
@@ -582,6 +584,7 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
         OverviewLocalFilingState,
         OverviewPeriodState,
     )
+    from cadrumo.application.overview.coverage import CoverageAdviceReason
     from cadrumo.domain.deadlines.models import ObligationStatus
     from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
     from cadrumo.domain.modelos.work_unit import WorkUnitState
@@ -591,6 +594,50 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
         return tuple(str(member.value) for member in enum)
 
     return (
+        FStringKeyRegistration(
+            description="tui.declarations.list.group.* (DeclarationListGroup)",
+            key_factory=lambda v: f"tui.declarations.list.group.{v}",
+            values=_values(DeclarationListGroup),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.list.advice.* (CoverageAdviceReason)",
+            key_factory=lambda v: f"tui.declarations.list.advice.{v}",
+            values=_values(CoverageAdviceReason),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.list.filter.* (grouped declarations filter choices)",
+            key_factory=lambda v: f"tui.declarations.list.filter.{v}",
+            values=("all", "attention", "this_year", "recorded", "not_started"),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.list.sort.* (grouped declarations sort choices)",
+            key_factory=lambda v: f"tui.declarations.list.sort.{v}",
+            values=("deadline", "modelo", "result", "state"),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.list.state.* (summary states plus calendar-only states)",
+            key_factory=lambda v: f"tui.declarations.list.state.{v}",
+            # Recorded/discarded rows use explicit group/work-state keys.
+            values=(
+                *(
+                    str(member.value)
+                    for member in DeclarationSummaryState
+                    if member
+                    not in {
+                        DeclarationSummaryState.RECORDED,
+                        DeclarationSummaryState.DISCARDED,
+                    }
+                ),
+                "aeat_unlinked",
+                "aeat_needs_check",
+                "not_started",
+            ),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.list.next.* (row_words conditional action choices)",
+            key_factory=lambda v: f"tui.declarations.list.next.{v}",
+            values=("open_local_draft", "create_file", "none", "continue"),
+        ),
         FStringKeyRegistration(
             description="tui.declarations.availability.* (DeclarationsWorkspaceAvailability)",
             key_factory=lambda v: f"tui.declarations.availability.{v}",

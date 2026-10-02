@@ -678,6 +678,7 @@ def _collect_verification_gate_findings(
         revision=operation.revision(work_unit.modelo, work_unit.revision_id),
         profile=work_profile,
         ports=ledger_membership_ports,
+        operation=operation,
     )
     drift_findings = ledger_drift_findings(
         target=target,

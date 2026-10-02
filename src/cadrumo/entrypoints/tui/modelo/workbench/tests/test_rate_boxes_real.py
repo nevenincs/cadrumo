@@ -54,7 +54,8 @@ from ..casilla_list import (
     row_value_text,
     value_text,
 )
-from ..page_items import WorkbenchFilter, first_attention, page_items, section_nav_text, workbench_pages
+from ..navigator import NavigatorState, navigator_rows
+from ..page_items import WorkbenchFilter, page_items, workbench_pages
 from ..vocabulary import DONE_MARK, NOT_IMPORTED_MARK, origin_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -63,9 +64,10 @@ _PERCENT = "\u00a0%"
 # 02 and 05 are fixed by the design; 166 is calculated, so the rate is its row's and not its own value.
 _GROUNDED = {"02": f"4{_PERCENT}", "05": f"10{_PERCENT}"}
 _CALCULATED_RATE = ("166", f"2{_PERCENT}")
-# 151 and 17 print zeros, the design's placeholder; 154 and 169 are rate boxes no base binding grounds;
-# 08, 157, 20 and 23 print literals whose scale nothing declares.
-_UNGROUNDED = ("08", "151", "154", "157", "169", "17", "20", "23")
+# Official numeric literals carry the reviewed two-decimal scale in the published design.
+_PRINTED = {"08": "21", "157": "1.75", "20": "1.4", "23": "5.2"}
+# 151 and 17 print zero placeholders; 154 and 169 are rate boxes no base binding grounds.
+_UNGROUNDED = ("151", "154", "169", "17")
 
 
 def _form(
@@ -190,6 +192,13 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
         assert row_value_text(stated, OutputLanguage.EN) == f"1.75{_PERCENT}"
         assert row_value_text(stated, OutputLanguage.ES) == f"1,75{_PERCENT}"
         assert rate_note(stated) == lookup_translation("tui.modelo.workbench.rate.printed_by_form", locale="en")
+        for box, rate in _PRINTED.items():
+            entry = entries[box]
+            assert entry.rate_of_row, box
+            assert entry.field.printed_rate is not None, box
+            assert entry.field.printed_rate.ratio == Decimal(rate) / 100, box
+            assert row_value_text(entry, OutputLanguage.EN) == f"{rate}{_PERCENT}", box
+            assert rate_note(entry) == lookup_translation("tui.modelo.workbench.rate.printed_by_form", locale="en")
         for box in _UNGROUNDED:
             entry = entries[box]
             assert entry.rate_of_row, box
@@ -236,7 +245,15 @@ def test_a_declaration_recorded_as_filed_marks_nothing_to_do(operation: PinnedAu
     def marks(form: ModeloWorkForm) -> str:
         pages = workbench_pages(form)
         navigator = [
-            section_nav_text(section, 60, recorded=page.recorded) for page in pages for section in page.sections
+            row.prompt.plain
+            for row in navigator_rows(
+                pages,
+                current=0,
+                state=NavigatorState(chosen={page.id: True for page in pages}),
+                checked={},
+                width=60,
+                show_attention=form.filing is None,
+            )
         ]
         headings = [
             item.text for page in pages for item in page_items(page, staged={}) if isinstance(item, CasillaListHeading)
@@ -252,11 +269,17 @@ def test_a_declaration_recorded_as_filed_marks_nothing_to_do(operation: PinnedAu
     )
     assert "◐" not in marks(filed)
     # Nothing on a filed declaration sends the filer to a missing or assumed value.
-    attention = first_attention(workbench_pages(filed))
-    if attention is not None:
-        index, found = attention
-        field = next(item for item in workbench_pages(filed)[index].fields() if address_key(item.address) == found)
-        assert field.origin not in {ModeloFormOrigin.DEFAULT_TO_CONFIRM, ModeloFormOrigin.NEEDS_INPUT}, found
+    attention_keys = {
+        item.key
+        for page in workbench_pages(filed)
+        for item in page_items(page, staged={})
+        if isinstance(item, CasillaListEntry) and item.needs_filer
+    }
+    assert not any(
+        address_key(field.address) in attention_keys
+        for field in filed.fields()
+        if field.origin in {ModeloFormOrigin.DEFAULT_TO_CONFIRM, ModeloFormOrigin.NEEDS_INPUT}
+    )
 
 
 class _ListHarness(App[None]):

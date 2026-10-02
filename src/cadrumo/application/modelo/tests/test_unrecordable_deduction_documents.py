@@ -1,15 +1,20 @@
-"""Each unrecordable deduction document is refused on its own encrypted ledger facts."""
+"""Each unrecordable deduction document is refused on its own native ledger facts.
+
+The application unit fixture supplies typed transaction rows through its read
+port. Real encrypted persistence and verification are covered by the owning
+CLI documentary-refusal integration cases.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
@@ -23,7 +28,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.verification_report import ModeloVerificationFinding
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..preconditions import ModeloPreconditionFailure
 from ..verification_actions import _append_iva_selected_scope_evidence_finding
@@ -33,6 +38,34 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _NOW = datetime(2026, 4, 2, 12, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
+
+
+@dataclass
+class _Transactions:
+    """Read-only typed unit fixture; a finding must never write the ledger."""
+
+    bucket_id: str
+    catalogue: TransactionCatalogue
+
+    def exists(self) -> bool:
+        return True
+
+    def load(self) -> TransactionCatalogue:
+        return self.catalogue
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        return TransactionCatalogue.from_transactions(
+            transaction for identity in transaction_ids if (transaction := self.catalogue.get(identity)) is not None
+        )
+
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        raise AssertionError("documentary findings read addressed transaction facts")
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        raise AssertionError("documentary findings do not run source admission")
+
+    def save(self, catalogue: TransactionCatalogue) -> None:
+        raise AssertionError("documentary findings cannot write transaction facts")
 
 
 def _transaction(provider_id: str, kind: str | None, category: str | None, *, currency: str = "EUR") -> Transaction:
@@ -116,9 +149,7 @@ def _work_and_target(
     return work, target
 
 
-def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_its_general_refusal(
-    tmp_path: Path,
-) -> None:
+def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_its_general_refusal() -> None:
     """Repeated issue refs deduplicate; missing rows and unknown deductions remain blocked."""
     transactions = (
         _transaction("intra-one", "intra_eu_current", "intra_community_acquisition_reverse_charge"),
@@ -130,25 +161,26 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
         _transaction("unknown", None, None),
         _transaction("register-owned", "investment_goods_regularisation", "domestic_general"),
     )
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        repository = TransactionCatalogueRepository(bucket_id=runtime.bucket_id, objects=runtime.repository)
-        repository.save(TransactionCatalogue.from_transactions(transactions))
-        issues = (
-            *(_issue(transaction.transaction_id) for transaction in transactions),
-            _issue(transactions[0].transaction_id),
-            _issue("f" * 64),
-            _issue(None),
-        )
-        work, target = _work_and_target(runtime.bucket_id, issues)
-        findings: list[ModeloVerificationFinding] = []
-        failures: dict[int, ModeloPreconditionFailure] = {}
-        _append_iva_selected_scope_evidence_finding(
-            work_unit=work,
-            target=target,
-            transaction_repository=repository,
-            findings=findings,
-            failures_by_finding_id=failures,
-        )
+    repository = _Transactions(
+        bucket_id="13000000-0000-4000-8000-000000000303",
+        catalogue=TransactionCatalogue.from_transactions(transactions),
+    )
+    issues = (
+        *(_issue(transaction.transaction_id) for transaction in transactions),
+        _issue(transactions[0].transaction_id),
+        _issue("f" * 64),
+        _issue(None),
+    )
+    work, target = _work_and_target(repository.bucket_id, issues)
+    findings: list[ModeloVerificationFinding] = []
+    failures: dict[int, ModeloPreconditionFailure] = {}
+    _append_iva_selected_scope_evidence_finding(
+        work_unit=work,
+        target=target,
+        transaction_repository=repository,
+        findings=findings,
+        failures_by_finding_id=failures,
+    )
     assert len(findings) == 6
     separate = {
         finding.message_facts["transaction_ids"]: finding

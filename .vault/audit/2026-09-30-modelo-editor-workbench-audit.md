@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:02bc4c69fd0cdc0434b76e048acdb673222a71d65c8db5397a53feab7ab00e77'
+body_hash: 'sha256:69fb48adebf1d9a38c8354797e7ee14a3d4b85b77ea837a8bf225672d7988e05'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -494,6 +494,16 @@ The accepted D4 amendment dated 2026-10-02 reconciles the approved P06/P08 journ
 ### final-review-remaining-evidence | medium | Current membership safety and frozen previews are still being completed
 
 The rolling review re-established ledger-drift-coverage: an added in-period sale can evade a contributor-only fingerprint check. The corrective implementation now queries only registry-declared ledger source owners and retains the sealed snapshot/hash contract; its focused added-row, empty-set, held-back and exclusion checks are in flight. No passing verdict is assigned yet. S30, S50 and S56 remain open for that correction, canonical final gates, complete current authority and fresh frozen sequence/declarations review. Registry-owned modelling questions and deliberately deferred identity decisions remain explicitly separate from approved workbench obligations.
+
+### retained-authority-membership | low | Ledger drift is evaluated within the admitted registry generation
+
+The final correction carries the caller's PinnedAuthorityOperation through every selected ledger owner and the inner invoice IVA candidate screen. A fresh subprocess admits complete generation A, holds its actual operation and encrypted ledger, then installs generation B through the authority owner. B deliberately lacks the IVA authority: its own membership is unavailable, while the retained A operation still identifies the exact applicable transaction IDs even inside B's fact scope. No persisted ledger snapshot or hash contract changes. The developer publication test and real encrypted drift, currency, IVA and Renta cases pass together: 170 tests, exit 0, run 20261002T010819.852506Z-pytest-34712-54702cfe. This resolves the current generation-pinning gap identified during integrated review.
+
+### final-gate-corrections | medium | Current broad TUI and CLI gates pass; remaining owning gates and captures are pending
+
+The canonical just test-tui recipe now selects the actual import-quality detector suite in place of retired paths: 1,848 tests passed, exit 0, run 20261002T010454.929680Z-pytest-81504-e2424eed. Its separate serial selector selected zero tests (exit 5), which the recipe explicitly reports as no declared serial TUI tests; it is not additional test evidence. Eight real documentary refusal CLI cases pass after pinning, run 20261002T010738.729742Z-pytest-57012-dbacabf4. Published-layout adoption passed all six cases against the final generation bbea0e6a55b9de2ae3f4b5f00df110ac956bb604a0b8953aeac6463623595e3b; complete authority publication and validity/runtime-load/integrity gates pass. No subsequent correction changes the compiler's interpretation of registry inputs.
+
+Current gate corrections preserve the grounded 303 rates (including 21%, 1.75% and 5.2%) and leave zero or unscaled literal placeholders unfilled. Integration tests using storage adapters moved to their outer owner; currency tests follow the current contract; dead feature-only facades were removed rather than given artificial callers. The new finite declaration locale families enrol all 31 keys and 124 ready cells. Full check-locales remains red with 19 inventoried baseline findings, including the previously accepted open reason namespaces; its current actual run is 20261002T010652.866101Z-check-locales-56640-92f6d5cd. Classification evidence is in C:/Users/hello/AppData/Local/Temp/modelo-docs-final-20261002/final-locale-findings-classification.json. Three unchanged baseline static findings are invoice_retencion.project_received_invoice_retencion, text_fold.COMBINING_MARK_UNIDATA_VERSION, and runtime-unreachable form_layout_integrity, which remains actively used by the developer compiler. The final static run also detected two new private imports in the finite-family test; the owner has corrected these and both new detector tests pass. The documentation sequence gate detected 23 stale recorded outputs, under owning review rather than masked. The final quiet unit run and the current-source frozen captures remain pending. Logs preserve initial failures and subsequent actual verdicts under C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation. Integrated verdict: PENDING.
 
 ## Recommendations
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:7766f1fe6280bf48090c185be391d809222941b8333e1bbb8703ae8277871089'
+body_hash: 'sha256:f5048a2664eb7a216a34cbcddf206103f8b011137d9d79898def3355f72f04c2'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1675,6 +1675,62 @@ related:
 - `S58` `verify:` `Chromium current localized guide review (four languages, no horizontal overflow)` -> `pass`
 - `S58` `verify:` `owning Ruff check and format check` -> `pass`
 - `S58` `by:` `vaultspec-execute`
+- `S30` `M` `dev/locales/fstring_registry.py`
+- `S30` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S30` `M` `dev/locales/tests/test_signal.py`
+- `S30` `M` `dev/quality/metadata/import_load_targets.json`
+- `S30` `M` `justfile`
+- `S30` `M` `src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva_refusal.py`
+- `S30` `M` `src/cadrumo/application/aggregation/_modelo_bindings_support.py`
+- `S30` `M` `src/cadrumo/application/aggregation/ledger_membership.py`
+- `S30` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S30` `M` `src/cadrumo/application/aggregation/oss_ioss.py`
+- `S30` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S30` `M` `src/cadrumo/application/aggregation/tests/test_currency_conversion_pipeline_parity.py`
+- `S30` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S30` `M` `src/cadrumo/application/modelo/edit_parsing.py`
+- `S30` `M` `src/cadrumo/application/modelo/source_policy.py`
+- `S30` `M` `src/cadrumo/application/modelo/tests/test_source_policy.py`
+- `S30` `M` `src/cadrumo/application/modelo/tests/test_unrecordable_deduction_documents.py`
+- `S30` `M` `src/cadrumo/application/modelo/tests/test_value_presentation.py`
+- `S30` `M` `src/cadrumo/application/modelo/tests/test_work_form_help.py`
+- `S30` `M` `src/cadrumo/application/modelo/value_presentation.py`
+- `S30` `M` `src/cadrumo/domain/iva/deduction_facts.py`
+- `S30` `M` `src/cadrumo/domain/iva/tests/test_intra_eu_self_assessed_deduction.py`
+- `S30` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_m130_negative_result_disposition.py`
+- `S30` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_draft_persistence.py`
+- `S30` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_work_form_last_export.py`
+- `S30` `M` `src/cadrumo/entrypoints/tests/test_calendar_evidence_composition.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/declarations/controller.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/legend.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_rate_boxes_real.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_help_freshness_real.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_marks.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_official_headings_real.py`
+- `S30` `A` `dev/registry/tests/test_ledger_membership_generation_pinning.py`
+- `S30` `R` `src/cadrumo/application/aggregation/tests/test_inventory_applies_to_the_filer.py` -> `src/cadrumo/application/modelo/tests/test_inventory_applies_to_the_filer.py`
+- `S30` `R` `src/cadrumo/application/modelo/tests/test_declaration_summary.py` -> `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_summary.py`
+- `S30` `R` `src/cadrumo/application/modelo/tests/test_declarations_portfolio.py` -> `src/cadrumo/entrypoints/tests/profile_persistence/test_declarations_portfolio.py`
+- `S30` `R` `src/cadrumo/entrypoints/tests/profile_persistence/_verify_ledger_drift_gate_support.py` -> `src/cadrumo/entrypoints/tests/profile_persistence/ledger_drift_support.py`
+- `S30` `verify:` `final source drift currency and genuine descriptor-switch owner suite (170 passed; 20261002T010819.852506Z-pytest-34712-54702cfe)` -> `pass`
+- `S30` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/tests/test_docstring_core_struct_links.py (6 passed; 20261002T010508.813737Z-pytest-90292-9e950886)` -> `pass`
+- `S30` `verify:` `owning cleanup unit suite (60 passed; 20261002T005539.072760Z-pytest-68316-39074c05)` -> `pass`
+- `S30` `verify:` `real official-heading integration (18 passed; 20261002T005604.709390Z-pytest-91664-6ea31db0)` -> `pass`
+- `S30` `verify:` `current help and published-rate grid suite (46 passed; 20261002T005037.296204Z-pytest-37960-6c5b29d9)` -> `pass`
+- `S30` `verify:` `relocated real declaration summary and portfolio integration (26 passed; 20261002T005749.594719Z-pytest-80784-fce3c6ca)` -> `pass`
+- `S30` `verify:` `owning boundary unit suite (10 passed; 20261002T005509.664723Z-pytest-78596-a8900556)` -> `pass`
+- `S30` `verify:` `filing draft persistence with non-declarable nonempty ledger and explicit grant control (3 passed; 20261002T010704.161297Z-pytest-51720-c306bcd7)` -> `pass`
+- `S30` `verify:` `finite declarations locale families and live producer/prefix/enum checks (6 passed)` -> `pass`
+- `S30` `verify:` `locale signal detector (49 passed; 20261002T005731.597958Z-pytest-83508-3d08df9e)` -> `pass`
+- `S30` `verify:` `owning narrow Ruff ty Basedpyright pyrefly and diff checks` -> `pass`
+- `S30` `verify:` `just generate-import-load-targets` -> `pass`
+- `S30` `verify:` `just registry-publish-authority (authority-pinned-final-publish.log; bbea0e6 generation)` -> `pass`
+- `S30` `verify:` `just test-unit (20261002T004134.217075Z-pytest-20024-ae5d42f0; 12 failed 22569 passed)` -> `fail`
+- `S30` `verify:` `just test-tui (retired test paths; 20261002T004145.090510Z-pytest-42964-070266bf)` -> `fail`
+- `S30` `verify:` `just check-code (code-final.log; 6 of 12 gates failed)` -> `fail`
+- `S30` `verify:` `just check-locales (20261002T010652.866101Z-check-locales-56640-92f6d5cd; 19 baseline inventory findings)` -> `fail`
 
 ## Notes
 
@@ -1775,3 +1831,7 @@ related:
 - `S59` Follow-up corrects five contextual Hungarian filing labels/explanations, retaining actual taxpayer-model language. A wrong glossary prefix initially created one extra leaf; the canonical remove-batch owner removed it, then set-batch corrected topic.modelos.title. Initial 404-case parity/key suite returned 402 passed and two extra-key failures; both affected cases pass after correction (20261002T001253.779211Z-pytest-3020-c9bc3cf2). No test expectation or detector changed.
 - `S30` Initial variable finding-key producer failed six live word-gate cases; corrected to explicit literal constructors without changing the detector. Initial source scope issue priority regression corrected to preserve filing-window-first refusal before business/flow ownership and currency substrate. S30 remains open for final authority refresh, canonical broad gates and current frozen render review. Accepted D4 retains preparation in the declarations picker and four workbench steps; original five-step text retained as history.
 - `S58` Full locale gate initially failed; retain 20261002T000705.246373Z-check-locales-55476-ffd1cf89 raw inventory. All 78 owned guide echoes corrected without an alphabetic-word allowlist; narrow punctuation/symbol literal handling and explicit inline keyboard code preserve refusal of copied prose. Six obsolete-ID catalogue findings and nine unrelated source echoes match exact resume baseline in modelo-docs-final-20261002/locale-finding-baseline.json. Earlier strict HTML run failed on temporary source integration import, corrected before four final exit0 builds.
+- `S30` Initial source generation test was moved to its developer owner and given its required marker; final combined 170-case run exits0. Membership now borrows the caller's pinned operation through all selected ledger owners, including the inner invoice IVA screen. No stored snapshot/hash change.
+- `S30` First broad run caught stale S62 rate oracles, old Hungarian locator wording, retired recipe paths, new finite locale families, misplaced integration tests/private imports and unused feature facades; each fixed through its owning boundary without weakening detectors. Four filesystem-scan failures arose because tests were moved while a cached source inventory was running; final canonical rerun uses quiet source.
+- `S30` The approved-draft first-read regression now uses a genuinely non-declarable personal row for its required nonempty catalogue and explicitly asserts the verification grant; an unrecorded business row is correctly refused by the new membership gate.
+- `S30` Full locale inventory is still red for proven baseline issues: six obsolete-ID catalogues, nine unrelated echoes, three ES-only draft REAGP short descriptions, absent spelling dictionaries and two accepted open reason namespaces. All new six finite families and all known required translation cells are ready. Final static/TUI/unit/sequence gates and fresh render review remain outstanding; S30 stays open.

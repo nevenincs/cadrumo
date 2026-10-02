@@ -253,11 +253,7 @@ def test_observed_at_is_the_latest_actual_artefact_capture_across_observations(
         assert outcome.value is not None
         assert len(outcome.value.filed_declaration_observations) == 2
         assert (
-            max(
-                artefact.captured_at
-                for observation in (first, second)
-                for artefact in observation.artefacts
-            )
+            max(artefact.captured_at for observation in (first, second) for artefact in observation.artefacts)
             == later_capture
         )
     assert read().state.observed_at == later_capture

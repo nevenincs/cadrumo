@@ -31,9 +31,10 @@ from ......core.external_constants import OutputLanguage
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ....components.host import ScreenHostApp
 from ...lifecycle import ModeloWorkspaceLifecycleDoor
+from ..casilla_list import CasillaListEntry
 from ..editor import CasillaEditorPanel
 from ..installed import InstalledModeloWorkbench, WorkbenchRepositories
-from ..page_items import CasillaListEntry, page_items
+from ..page_items import page_items
 from ..screen import ModeloWorkbenchScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

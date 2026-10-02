@@ -27,8 +27,8 @@ from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
 from ..casilla_list import CasillaListHeading
 from ..installed import InstalledModeloWorkbench
-from ..navigator import looks_like_identifier, presented_form
-from ..page_items import page_items, section_nav_text, workbench_pages
+from ..navigator import NavigatorState, looks_like_identifier, navigator_rows, presented_form
+from ..page_items import page_items, workbench_pages
 from ..screen import ModeloWorkbenchScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -74,7 +74,17 @@ def test_every_headed_section_reads_in_the_filers_language_in_the_navigator_and_
             wrong = [place for place, section in headed.items() if section.heading.text == section.official_heading]
         pages = workbench_pages(presented_form(form))
         shown = {(page.id, section.id): section.heading.text for page in pages for section in page.sections}
-        navigator = [section_nav_text(section, _NAVIGATOR_WIDTH) for page in pages for section in page.sections]
+        navigator = [
+            row.prompt.plain
+            for row in navigator_rows(
+                pages,
+                current=0,
+                state=NavigatorState(chosen={page.id: True for page in pages}),
+                checked={},
+                width=_NAVIGATOR_WIDTH,
+                show_attention=True,
+            )
+        ]
         listed = [
             item.text for page in pages for item in page_items(page, staged={}) if isinstance(item, CasillaListHeading)
         ]

@@ -888,7 +888,7 @@ def test_symbol_classification_preserves_blocking_prose_and_missing_translations
     messages = ("●", "`Enter`", "Review the current return!", "Fill in the box")
     pot = 'msgid ""\nmsgstr ""\n\n' + "\n".join(f'msgid "{message}"\nmsgstr ""\n' for message in messages)
     _write_docs_source_cache(docs, "guide.md", "# Filing guide\n", pot)
-    catalogue_messages = {("guide.po", message): {"es": message != "Fill in the box"} for message in messages}
+    catalogue_messages = {("guide.po", message): {"es": True} for message in messages if message != "Fill in the box"}
     catalogue_translations = {
         ("guide.po", message): {"es": (message,)} for message in messages if message != "Fill in the box"
     }
@@ -905,7 +905,7 @@ def test_symbol_classification_preserves_blocking_prose_and_missing_translations
     blocking = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
     assert [finding["source"] for finding in blocking] == ["Review the current return!"]
     missing = [finding for finding in findings if finding["kind"] == "docs_source_catalogue_drift"]
-    assert any("Fill in the box" in finding["missing_message_ids"] for finding in missing)
+    assert any(finding["missing_message_ids"] == ["Fill in the box"] for finding in missing)
 
 
 def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp_path) -> None:

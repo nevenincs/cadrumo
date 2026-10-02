@@ -26,11 +26,11 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.user_profile.values import UserProfileFact
-from ...modelo._calculation_source_staging import add_expected_missing_binding_diagnostics
-from ..inventory import InventorySourceResolver
-from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
-from .test_inventory_source import inventory_ledger
-from .withholding_filer_profile_support import withholding_work_profile
+from ...aggregation.inventory import InventorySourceResolver
+from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ...aggregation.tests.test_inventory_source import inventory_ledger
+from ...aggregation.tests.withholding_filer_profile_support import withholding_work_profile
+from .._calculation_source_staging import add_expected_missing_binding_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

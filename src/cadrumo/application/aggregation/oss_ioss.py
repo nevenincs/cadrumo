@@ -61,6 +61,7 @@ from ...domain.iva.lookup import lookup_rate
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, IvaRateKind
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
+from ._modelo_bindings_support import source_context_operation
 from .errors import AggregationValidationError
 from .invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
@@ -736,7 +737,7 @@ class OssIossLedgerSourceResolver:
                 more than one cent.
         """
         try:
-            with bundled_indexed_authority().operation() as indexed_operation:
+            with source_context_operation(context) as indexed_operation:
                 projection = (
                     project_oss_ioss_invoices_from_repositories(
                         period=context.period,

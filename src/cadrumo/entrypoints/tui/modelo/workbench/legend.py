@@ -143,11 +143,6 @@ def mark_for_glyph(glyph: str) -> WorkbenchMark:
     return _MARKS_BY_GLYPH[glyph]
 
 
-def legend_glyphs() -> frozenset[str]:
-    """Every glyph the legend explains."""
-    return frozenset(_ORDER)
-
-
 def mark_name(mark: WorkbenchMark) -> str:
     """What the legend calls a mark."""
     return tr(_NAME_LOCALE_KEYS.get(mark, mark.translation_key))
@@ -238,7 +233,6 @@ __all__ = [
     "LegendEntry",
     "LegendGroup",
     "first_open_text",
-    "legend_glyphs",
     "legend_panel",
     "mark_for_glyph",
     "mark_name",

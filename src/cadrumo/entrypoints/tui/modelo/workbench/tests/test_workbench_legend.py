@@ -18,7 +18,7 @@ from textual.widgets import Footer, OptionList, Static
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
-from ..legend import LEGEND_LOCALE_KEYS, legend_glyphs
+from ..legend import LEGEND_LOCALE_KEYS
 from ..screen import ModeloWorkbenchScreen
 from ..vocabulary import WORKBENCH_MARKS
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
@@ -64,7 +64,7 @@ def test_the_legend_explains_every_mark_the_workbench_draws_once() -> None:
     explained = [entry.mark.glyph for group in LEGEND_LOCALE_KEYS for entry in group.entries]
 
     assert len(explained) == len(set(explained))
-    assert legend_glyphs() == {mark.glyph for mark in WORKBENCH_MARKS}
+    assert set(explained) == {mark.glyph for mark in WORKBENCH_MARKS}
 
 
 @pytest.mark.asyncio

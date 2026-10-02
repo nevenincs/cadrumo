@@ -11,6 +11,8 @@ See Also:
         The selected binding/source ownership declarations.
     :class:`~cadrumo.domain.modelos.work_unit.WorkUnit`:
         The bucket and filing coordinate whose membership is queried.
+    :class:`~cadrumo.domain.calculations.registry.authority.PinnedAuthorityOperation`:
+        The caller's generation retained throughout this read-only query.
 """
 
 from __future__ import annotations
@@ -19,6 +21,9 @@ from dataclasses import dataclass
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
+from ...core.logging import get_logger
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
@@ -39,6 +44,8 @@ from .modelo_bindings import (
 from .modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
 from .oss_ioss import OssIossLedgerSourceResolver
 from .source_mesh import CalculationSourceContext, ModeloSourceResolver
+
+_log = get_logger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,8 +86,43 @@ def query_ledger_membership(
     revision: ModeloRevision,
     profile: ModeloWorkProfile,
     ports: LedgerMembershipPorts,
+    operation: PinnedAuthorityOperation,
 ) -> LedgerSourceMembership:
-    """Observe selected ledger contributors/held-back rows using saved caller modes."""
+    """Observe selected ledger contributors/held-back rows using saved caller modes.
+
+    Args:
+        target: Stored :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            whose caller modes and original membership are under verification.
+        work_unit: The filing coordinate described by
+            :class:`~cadrumo.domain.modelos.work_unit.WorkUnit`.
+        revision: Selected :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            declaring the ledger source owners to query.
+        profile: Current checked filing profile.
+        ports: Read-only capabilities for the selected ledger owners.
+        operation: Caller-retained
+            :class:`~cadrumo.domain.calculations.registry.authority.PinnedAuthorityOperation`
+            that supplies every authority fact throughout the query.
+    """
+    with validating_governed_facts(operation):
+        return _query_ledger_membership(
+            target=target,
+            work_unit=work_unit,
+            revision=revision,
+            profile=profile,
+            ports=ports,
+            operation=operation,
+        )
+
+
+def _query_ledger_membership(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    profile: ModeloWorkProfile,
+    ports: LedgerMembershipPorts,
+    operation: PinnedAuthorityOperation,
+) -> LedgerSourceMembership:
     selected = frozenset(binding.source for binding in revision.bindings) & LEDGER_BINDING_SOURCE_KINDS
     if not selected:
         return LedgerSourceMembership()
@@ -92,6 +134,7 @@ def query_ledger_membership(
         period=work_unit.period,
         revision=revision,
         profile=profile,
+        operation=operation,
         m210_official_tipo_renta_code=target.m210_official_tipo_renta_code,
         m210_gross_income_source_mode=target.m210_gross_income_source_mode,
     )
@@ -151,7 +194,8 @@ def query_ledger_membership(
                     observed.add(identity)
                 elif diagnostic.reason == "source_domain_not_ready":
                     return LedgerSourceMembership(available=False, ledger_sources_declared=True)
-    except CadrumoError:
+    except (CadrumoError, LookupError) as exc:
+        _log.debug("ledger membership unavailable error_type=%s", type(exc).__name__)
         return LedgerSourceMembership(available=False, ledger_sources_declared=True)
     return LedgerSourceMembership(
         observed_transaction_ids=tuple(sorted(observed)),

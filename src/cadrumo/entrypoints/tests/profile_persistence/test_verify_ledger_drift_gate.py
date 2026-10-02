@@ -47,7 +47,6 @@ from cadrumo.application.ledger.actions_manual import (
 )
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
-from cadrumo.application.modelo._ledger_drift_gate import ledger_drift_findings
 from cadrumo.application.modelo.profile_readiness_gate import load_modelo_work_profile
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
@@ -69,7 +68,7 @@ from cadrumo.entrypoints.adapter_composition import (
     build_ledger_membership_ports,
     build_verification_repository_bundle,
 )
-from cadrumo.entrypoints.tests.profile_persistence._verify_ledger_drift_gate_support import (
+from cadrumo.entrypoints.tests.profile_persistence.ledger_drift_support import (
     BUCKET_ID,
     TAX_ID,
     calculate_irene_revision,
@@ -227,7 +226,12 @@ def _form(repos: _Repos) -> ModeloWorkForm:
         ).form
 
 
-def _verify(revision_id: str, repos: _Repos) -> VerificationReport:
+def _verify(
+    revision_id: str,
+    repos: _Repos,
+    *,
+    verification_ports: VerificationRepositoryBundle | None = None,
+) -> VerificationReport:
     with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision(
             revision_id,
@@ -235,7 +239,7 @@ def _verify(revision_id: str, repos: _Repos) -> VerificationReport:
             actor="operator",
             workflow_profile=workflow_profile(),
             settings=ready_clave_settings(TAX_ID),
-            verification_repositories=_verification_ports(repos),
+            verification_repositories=verification_ports or _verification_ports(repos),
             clock=_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -535,16 +539,24 @@ def test_unavailable_membership_refuses_even_an_empty_draft(tmp_path: Path) -> N
             )
         revision = result[0]
         repos: _Repos = result[3:]
-        (unit,) = repos[0].load().values()
-        findings = ledger_drift_findings(
-            target=revision,
-            work_unit=unit,
-            transaction_repository=repos[-1],
-            current_membership=LedgerSourceMembership(available=False, ledger_sources_declared=True),
+        ports = _verification_ports(repos)
+        wrong_bucket = TransactionCatalogueRepository(
+            bucket_id="11111111-1111-4111-8111-111111111111",
+            objects=profile.repository,
         )
-        assert len(findings) == 1
-        assert findings[0].kind is ModeloVerificationFindingKind.STALE_CALCULATION
-        assert findings[0].message_facts["membership_available"] is False
+        ports = replace(
+            ports,
+            ledger_membership_ports=replace(
+                ports.ledger_membership_ports,
+                transaction_repository=wrong_bucket,
+            ),
+        )
+        report = _verify(revision.calculation_revision_id, repos, verification_ports=ports)
+        drift = next(
+            finding for finding in report.findings if finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION
+        )
+        assert report.granted_verificado_completo is False
+        assert drift.message_facts["membership_available"] is False
 
 
 def test_non_ledger_binding_revision_does_not_borrow_bucket_transactions(tmp_path: Path) -> None:
@@ -572,17 +584,9 @@ def test_non_ledger_binding_revision_does_not_borrow_bucket_transactions(tmp_pat
                 revision=non_ledger_revision,
                 profile=profile,
                 ports=build_ledger_membership_ports(bucket_id=BUCKET_ID, transaction_repository=repos[-1]),
+                operation=operation,
             )
         assert membership == LedgerSourceMembership()
-        assert (
-            ledger_drift_findings(
-                target=revision,
-                work_unit=unit,
-                transaction_repository=repos[-1],
-                current_membership=membership,
-            )
-            == []
-        )
 
 
 def test_an_added_sale_in_a_different_encrypted_bucket_does_not_stale_the_draft(tmp_path: Path) -> None:
@@ -591,10 +595,13 @@ def test_an_added_sale_in_a_different_encrypted_bucket_does_not_stale_the_draft(
             result = calculate_irene_revision(runtime.primary.repository, operation=operation)
         revision = result[0]
         repos: _Repos = result[3:]
-        with runtime.switch_to_secondary(), ledger_ports_for_test(
-            bucket_id=runtime.secondary.bucket_id,
-            objects=runtime.secondary.repository,
-        ) as ports:
+        with (
+            runtime.switch_to_secondary(),
+            ledger_ports_for_test(
+                bucket_id=runtime.secondary.bucket_id,
+                objects=runtime.secondary.repository,
+            ) as ports,
+        ):
             added = create_manual_transaction(
                 ManualLedgerTransactionCommand(
                     bucket_id=runtime.secondary.bucket_id,

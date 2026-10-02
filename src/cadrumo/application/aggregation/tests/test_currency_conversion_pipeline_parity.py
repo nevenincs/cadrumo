@@ -106,7 +106,7 @@ from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind, TransactionKind
 from ....domain.iva.oss import OssIossRegime
-from ....domain.iva.schema import IvaCashAccountingTreatment, IvaRateKind
+from ....domain.iva.schema import IvaRateKind
 from ....domain.renta.ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseObservation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
@@ -342,13 +342,7 @@ def test_iva_ledger_refuses_converted_row_rather_than_reading_native_substrate(
         taxable_base=Decimal("826.45"),
         iva_amount=Decimal("173.55"),
     )
-    issue = _substrate_admission_issue(
-        tx,
-        resolved_period=Period.from_year_and_code(2025, "1T"),
-        operation_date=date(2025, 2, 10),
-        cash_treatment=IvaCashAccountingTreatment("none"),
-        operation=operation,
-    )
+    issue = _substrate_admission_issue(tx)
     assert issue is not None
     assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE
 

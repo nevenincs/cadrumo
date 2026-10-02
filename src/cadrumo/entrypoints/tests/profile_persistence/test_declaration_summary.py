@@ -8,6 +8,10 @@ from decimal import Decimal
 
 import pytest
 
+from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.declaration_summary import DeclarationSummaryState, declaration_summary
+from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from ....application.modelo.work_form_models import ModeloFormResultDirection
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
@@ -23,11 +27,7 @@ from ....domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from ....domain.modelos.work_unit import WorkUnitState
-from ....entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
-from ..calculation_actions import calculate_modelo_revision
-from ..declaration_summary import DeclarationSummaryState, declaration_summary
-from ..declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
-from ..work_form_models import ModeloFormResultDirection
+from ..modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

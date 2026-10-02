@@ -14,7 +14,9 @@ from decimal import Decimal
 import pytest
 
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import lookup_translation
 from ....domain.calculations.registry.schema_base import CasillaDataType
+from ..calculation_summary_presentation import VALUE_NOT_APPLICABLE_LOCALE_KEY
 from ..edit_value_grammar import ModeloEditRatioUnit
 from ..value_presentation import (
     LOCALE_NUMBER_FORMATS,
@@ -22,8 +24,6 @@ from ..value_presentation import (
     ValuePresentationKind,
     absent_value_text,
     format_casilla_value,
-    not_applicable_value_text,
-    presentation_data_types,
     value_presentation_kind,
 )
 
@@ -36,7 +36,8 @@ _PERCENT = f"{_NBSP}%"
 
 
 def test_every_registry_data_type_and_language_has_a_presentation() -> None:
-    assert presentation_data_types() == {member.value for member in CasillaDataType}
+    for data_type in CasillaDataType:
+        assert isinstance(value_presentation_kind(data_type.value), ValuePresentationKind)
     assert set(LOCALE_NUMBER_FORMATS) == set(OutputLanguage)
 
 
@@ -151,7 +152,7 @@ def test_an_undeclared_data_type_is_refused() -> None:
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
 def test_absence_and_non_applicability_have_their_own_words(language: OutputLanguage) -> None:
     absent = absent_value_text(language)
-    not_applicable = not_applicable_value_text(language)
+    not_applicable = lookup_translation(VALUE_NOT_APPLICABLE_LOCALE_KEY, locale=language.value)
 
     assert absent
     assert not_applicable

@@ -10,24 +10,24 @@ from typing import Never
 
 import pytest
 
-from ....core.period import Period
-from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
-from ....domain.modelos.filing_record import ModeloRecordCatalogue
-from ....domain.modelos.work_unit import WorkUnitCatalogue, WorkUnitState
-from ....entrypoints.adapter_composition import build_work_lifecycle_ports
-from ....entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
-from ..action_errors import WorkUnitMutationRefusedError
-from ..calculation_actions import calculate_modelo_revision
-from ..declaration_summary import DeclarationSummaryState
-from ..declarations_portfolio import project_declarations_portfolio
-from ..declarations_workspace import (
+from ....application.modelo.action_errors import WorkUnitMutationRefusedError
+from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.declaration_summary import DeclarationSummaryState
+from ....application.modelo.declarations_portfolio import project_declarations_portfolio
+from ....application.modelo.declarations_workspace import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
 )
-from ..work_lifecycle import create_work_unit, discard_work_unit
+from ....application.modelo.work_lifecycle import create_work_unit, discard_work_unit
+from ....core.period import Period
+from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ....domain.modelos.filing_record import ModeloRecordCatalogue
+from ....domain.modelos.work_unit import WorkUnitCatalogue, WorkUnitState
+from ....entrypoints.adapter_composition import build_work_lifecycle_ports
+from ..modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _FIRST = Period.from_year_and_code(2026, "1T")

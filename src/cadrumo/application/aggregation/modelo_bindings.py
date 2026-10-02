@@ -40,7 +40,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
 from ...core.tipos_actividad import TipoActividad
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
@@ -107,6 +107,7 @@ from ._modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
     revision_has_binding_source,
+    source_context_operation,
 )
 from ._retencion_rate_advisory import (
     inferred_actividad_retencion_rate_advisory_observations,
@@ -344,7 +345,7 @@ class LedgerIvaAggregationSourceResolver:
             filing_year=context.filing_year,
             code=context.period.registry_token,
         )
-        with bundled_indexed_authority().operation() as operation:
+        with source_context_operation(context) as operation:
             try:
                 aggregation = aggregate_iva_ledger_observations_from_repositories(
                     bucket_id=context.bucket_id,
@@ -583,7 +584,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # narrows the rows first -- to the art. 110.1.c activity set, and away from
         # the subvenciones de capital and indemnizaciones that article excludes.
         target_casilla_id = _renta_income_target_casilla(context)
-        with bundled_indexed_authority().operation() as operation:
+        with source_context_operation(context) as operation:
             profile_decode_context = operation.profile_decode_context()
             activity_category_matcher = _activity_category_matcher(operation)
             employment_category_matcher = _employment_category_matcher(operation)
@@ -928,7 +929,7 @@ def _m130_retenciones_backend_inputs(
     binding_values: Mapping[BindingId, Decimal],
 ) -> dict[CasillaId, Decimal]:
     """Redirect the selected registry binding route to its declared endpoint."""
-    route = resolve_m130_retenciones_route()
+    route = resolve_m130_retenciones_route(authority=context.operation)
     if str(context.modelo) != route.modelo_id:
         return {}
     value = binding_values.get(route.binding_id)
@@ -953,7 +954,7 @@ def _resolve_impatriado_registry_declarations(
     than silently selecting a Python default.
     """
     if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
+        with source_context_operation(context) as indexed_operation:
             return _resolve_impatriado_registry_declarations(context, operation=indexed_operation)
     try:
         resolved = operation.resolve_governed_fact(
@@ -1175,7 +1176,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
             code=context.period.registry_token,
         )
         target_casilla_id = _irnr_income_target_casilla(context)
-        with bundled_indexed_authority().operation() as operation:
+        with source_context_operation(context) as operation:
             try:
                 aggregation = aggregate_irnr_income_ledger_from_repositories(
                     bucket_id=context.bucket_id,
@@ -1322,6 +1323,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 transaction_repository=self._transaction_repository,
                 profile_record=context.profile.record if context.profile is not None else None,
                 prorrata_register_repository=self._prorrata_register_repository,
+                operation=context.operation,
             )
         except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(

@@ -242,10 +242,19 @@ async def test_the_303_accrued_iva_grid_is_the_official_table_in_the_published_o
         # The cursor and level marks lead the line; the label follows them, its first line on the row's own line.
         label = _line_with(lines, _boxes(row.cells)[0][1:-1])[3:].split("[")[0].strip()
         assert label and row.heading.text.startswith(label.split(" · ")[0]), (label, row.heading.text)
-    for box, rate in {"02": "4", "05": "10", "166": "2"}.items():
-        assert f"General regime · {rate}{_NBSP}%" in _line_with(lines, box), box
+    for box, label, rate in (
+        ("02", "General regime", "4"), ("05", "General regime", "10"),
+        ("08", "General regime", "21"), ("166", "General regime", "2"),
+        ("157", "Equivalence surcharge", "1.75"),
+        ("20", "Equivalence surcharge", "1.4"), ("23", "Equivalence surcharge", "5.2"),
+    ):  # fmt: skip
+        assert f"{label} · {rate}{_NBSP}%" in _line_with(lines, box), box
     # Only a rate the design fixes stands in its cell; a rate box the calculation fills shows its own value.
-    for box, following, rate in (("02", "03", "4"), ("05", "06", "10"), ("166", "167", None)):
+    for box, following, rate in (
+        ("02", "03", "4"), ("05", "06", "10"), ("08", "09", "21"),
+        ("157", "158", "1.75"), ("20", "21", "1.4"),
+        ("23", "24", "5.2"), ("166", "167", None),
+    ):  # fmt: skip
         line = _line_with(lines, box)
         slot = line[line.index(f"[{box}]") + len(box) + 2 : line.index(f"[{following}]")]
         if rate is None:
@@ -253,7 +262,7 @@ async def test_the_303_accrued_iva_grid_is_the_official_table_in_the_published_o
         else:
             assert f"{rate}{_NBSP}%" in slot, slot
     # No rate where the design prints zeros, no base grounds one, or the design's literal declares no scale.
-    for box, following in {"151": "152", "154": "155", "17": "18", "08": "09", "157": "158", "23": "24"}.items():
+    for box, following in {"151": "152", "154": "155", "17": "18"}.items():
         line = _line_with(lines, box)
         slot = line[line.index(f"[{box}]") + len(box) + 2 : line.index(f"[{following}]")]
         assert "·" in slot and "%" not in slot, slot
@@ -273,12 +282,14 @@ async def test_at_80_columns_the_303_grid_is_stacked_with_each_row_told_apart(
     text = "\n".join(lines)
 
     assert f"General regime · 4{_NBSP}%" in text
-    assert "General regime · [07] to [09]" in text
+    assert f"General regime · 21{_NBSP}%" in text
     assert "General regime · [150] to [152]" in text
     assert "Equivalence surcharge · [168] to [170]" in text
     # Each box is its own line under the row heading, labelled by its column.
     assert "Rate %" in _line_with(lines, "02") and f"4{_NBSP}%" in _line_with(lines, "02")
-    assert "%" not in _line_with(lines, "08").replace("Rate %", "")
+    assert f"21{_NBSP}%" in _line_with(lines, "08")
+    assert f"1.75{_NBSP}%" in _line_with(lines, "157")
+    assert f"5.2{_NBSP}%" in _line_with(lines, "23")
     assert "[09]" not in _line_with(lines, "07")
     # Descriptions are off inside a stacked grid, and still on for a box outside it.
     after_07 = lines[lines.index(_line_with(lines, "07")) + 1]

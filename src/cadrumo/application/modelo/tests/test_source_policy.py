@@ -14,13 +14,13 @@ from ....application.aggregation.source_mesh import CallerOverrideDisposition, p
 from ....core.aggregation import BindingSourceKind
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
-from ..source_policy import SourceFamily, SourceOverridePolicy, SourceSurface, source_policies, source_policy
+from ..source_policy import SourceFamily, SourceOverridePolicy, SourceSurface, source_policy
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_every_source_kind_has_exactly_one_policy() -> None:
-    policies = source_policies()
+    policies = tuple(source_policy(kind) for kind in BindingSourceKind)
 
     assert [policy.source_kind for policy in policies] == list(BindingSourceKind)
 
@@ -28,12 +28,12 @@ def test_every_source_kind_has_exactly_one_policy() -> None:
 def test_locked_and_carried_policies_are_exactly_the_calculation_ladder() -> None:
     fixed_at_source = {
         policy.source_kind
-        for policy in source_policies()
+        for policy in (source_policy(kind) for kind in BindingSourceKind)
         if policy.override_policy is SourceOverridePolicy.FIX_AT_SOURCE
     }
     overridable = {
         policy.source_kind
-        for policy in source_policies()
+        for policy in (source_policy(kind) for kind in BindingSourceKind)
         if policy.override_policy is SourceOverridePolicy.OVERRIDE_WITH_REASON
     }
 
@@ -65,7 +65,7 @@ def test_the_product_owned_policies_name_their_home() -> None:
 
 def test_undecided_policies_are_the_kinds_nobody_has_classified() -> None:
     undecided = {
-        policy.source_kind for policy in source_policies() if policy.override_policy is SourceOverridePolicy.UNDECIDED
+        kind for kind in BindingSourceKind if source_policy(kind).override_policy is SourceOverridePolicy.UNDECIDED
     }
 
     assert BindingSourceKind.BORRADOR in undecided
@@ -75,6 +75,7 @@ def test_undecided_policies_are_the_kinds_nobody_has_classified() -> None:
 
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
 def test_every_source_is_nameable_in_every_language(language: OutputLanguage) -> None:
-    for policy in source_policies():
+    for kind in BindingSourceKind:
+        policy = source_policy(kind)
         assert lookup_translation(policy.label_key, locale=language.value), policy.label_key
         assert lookup_translation(policy.origin_sentence_key, locale=language.value), policy.origin_sentence_key

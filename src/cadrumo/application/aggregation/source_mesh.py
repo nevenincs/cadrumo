@@ -41,6 +41,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -479,6 +480,12 @@ class CalculationSourceContext(BaseModel):
     A resolver that needs profile facts reads them here rather than decrypting
     the record again; it is ``None`` only for contexts built outside a
     calculation command.
+
+    ``operation`` retains the caller's
+    :class:`~cadrumo.domain.calculations.registry.authority.PinnedAuthorityOperation`
+    across source admission. It is transient and excluded from serialized
+    context data; standalone resolver boundaries admit a lease only when the
+    caller has supplied none.
     """
 
     model_config = _STRICT_FROZEN
@@ -497,6 +504,8 @@ class CalculationSourceContext(BaseModel):
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None
     profile: InstanceOf[ModeloWorkProfile] | None = None
+    operation: InstanceOf[PinnedAuthorityOperation] | None = Field(default=None, exclude=True, repr=False)
+    """Caller-owned generation lease; transient and excluded from serialization."""
 
 
 #: Cap on a diagnostic's operator-facing message.

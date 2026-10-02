@@ -36,7 +36,6 @@ from .....application.modelo.work_form_models import (
     ModeloFormGridColumn,
     ModeloFormGridRow,
     ModeloFormOrigin,
-    ModeloFormPage,
     ModeloFormRepeatingBlock,
     ModeloFormSection,
     ModeloFormText,
@@ -437,17 +436,6 @@ def section_heading_text(
     return section.heading.text if mark is None else f"{mark.glyph} {section.heading.text}"
 
 
-def section_nav_text(section: ModeloFormSection, width: int, *, recorded: bool = False) -> str:
-    """Name a section in the navigator: its most severe mark, the heading cut to fit, and what is still to do."""
-    counts = section_counts(section, recorded=recorded)
-    suffix = f" ({counts.pending})" if counts.pending else ""
-    room = max(width - 2 - len(suffix), 4)
-    heading = section.heading.text
-    if len(heading) > room:
-        heading = heading[: room - 1] + "…"
-    return f"{counts.mark.glyph} {heading}{suffix}"
-
-
 def _section_items(
     section: ModeloFormSection,
     staged: Mapping[AddressKey, StagedDisplay],
@@ -518,33 +506,16 @@ def _repeating_blocks(page: WorkbenchPage) -> tuple[ModeloFormRepeatingBlock, ..
     )
 
 
-def first_attention(pages: tuple[WorkbenchPage, ...]) -> tuple[int, AddressKey] | None:
-    """Return the first field anywhere in the form that needs the filer."""
-    for index, page in enumerate(pages):
-        for field in page.fields():
-            if field_needs_filer(field, recorded=page.recorded, applies=page.applies):
-                return index, address_key(field.address)
-    return None
-
-
-def official_page(form: ModeloWorkForm, page_id: str) -> ModeloFormPage | None:
-    """Return the form page with one id, or ``None`` for the details page."""
-    return next((page for page in form.pages if page.id == page_id), None)
-
-
 __all__ = [
     "DETAILS_PAGE_ID",
     "StagedDisplay",
     "WorkbenchFilter",
     "WorkbenchPage",
-    "first_attention",
-    "official_page",
     "page_items",
     "page_of",
     "records_attention",
     "section_counts",
     "section_heading_text",
     "section_mark",
-    "section_nav_text",
     "workbench_pages",
 ]

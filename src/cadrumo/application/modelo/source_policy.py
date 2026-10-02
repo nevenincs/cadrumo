@@ -171,17 +171,11 @@ def source_policy(kind: BindingSourceKind) -> SourcePolicyV1:
     return SourcePolicyV1(source_kind=kind, family=family, override_policy=_override_policy(kind), surface=surface)
 
 
-def source_policies() -> tuple[SourcePolicyV1, ...]:
-    """Return every source kind's policy, in the enumeration's order."""
-    return tuple(source_policy(kind) for kind in BindingSourceKind)
-
-
 __all__ = [
     "SourceFamily",
     "SourceOverridePolicy",
     "SourcePolicyV1",
     "SourceSurface",
     "UnclassifiedSourceKindError",
-    "source_policies",
     "source_policy",
 ]

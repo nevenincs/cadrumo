@@ -13,9 +13,8 @@ precision it did not have. A number whose spelling this module cannot read is
 shown exactly as stored rather than guessed at.
 
 Absence is never a figure. :func:`format_casilla_value` has no arm for ``None``:
-a caller that holds no value shows :data:`VALUE_ABSENT_LOCALE_KEY` or
-:data:`VALUE_NOT_APPLICABLE_LOCALE_KEY` in words, so "nothing was entered" can
-never render as a zero.
+a caller that holds no value shows :data:`VALUE_ABSENT_LOCALE_KEY` in words,
+so "nothing was entered" can never render as a zero.
 """
 
 from __future__ import annotations
@@ -40,7 +39,6 @@ from .edit_value_grammar import ModeloEditRatioUnit
 VALUE_TRUE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_true"
 VALUE_FALSE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_false"
 VALUE_ABSENT_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_absent"
-VALUE_NOT_APPLICABLE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_not_applicable"
 
 SCREEN_MINUS_SIGN: Final[str] = "\u2212"
 """The minus sign figures carry on screen, so a negative amount reads as one."""
@@ -131,11 +129,6 @@ def value_presentation_kind(data_type: str) -> ValuePresentationKind:
         return _PRESENTATION_BY_DATA_TYPE[data_type]
     except KeyError:
         raise UnknownValuePresentationError(f"no presentation is declared for data type {data_type!r}") from None
-
-
-def presentation_data_types() -> frozenset[str]:
-    """Return every data type this module declares a presentation for."""
-    return frozenset(_PRESENTATION_BY_DATA_TYPE)
 
 
 def group_decimal_text(text: str, language: OutputLanguage, *, minus: str = "-") -> str | None:
@@ -274,17 +267,11 @@ def absent_value_text(language: OutputLanguage) -> str:
     return _catalogue_text(VALUE_ABSENT_LOCALE_KEY, language)
 
 
-def not_applicable_value_text(language: OutputLanguage) -> str:
-    """Return the words that stand in for a value that does not apply by design."""
-    return _catalogue_text(VALUE_NOT_APPLICABLE_LOCALE_KEY, language)
-
-
 __all__ = [
     "LOCALE_NUMBER_FORMATS",
     "SCREEN_MINUS_SIGN",
     "VALUE_ABSENT_LOCALE_KEY",
     "VALUE_FALSE_LOCALE_KEY",
-    "VALUE_NOT_APPLICABLE_LOCALE_KEY",
     "VALUE_TRUE_LOCALE_KEY",
     "LocaleNumberFormat",
     "UnknownValuePresentationError",
@@ -293,7 +280,5 @@ __all__ = [
     "absent_value_text",
     "format_casilla_value",
     "group_decimal_text",
-    "not_applicable_value_text",
-    "presentation_data_types",
     "value_presentation_kind",
 ]

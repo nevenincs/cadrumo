@@ -40,9 +40,9 @@ from ..navigator import NavigatorState, navigator_rows
 from ..page_items import (
     WorkbenchPage,
     page_items,
+    section_counts,
     section_heading_text,
     section_mark,
-    section_nav_text,
     workbench_pages,
 )
 from ..vocabulary import (
@@ -137,9 +137,9 @@ def test_a_section_shows_the_most_severe_thing_it_still_holds() -> None:
     assert section_mark(_section(assumed, missing)) == MISSING_MARK
     assert section_mark(_section(assumed, missing, blocked)) == BLOCKS_MARK
     with override_settings(cadrumo_output_language="en"):
-        assert section_nav_text(_section(assumed, missing, blocked), 40) == "▲ I. Activities (3)"
-        assert section_nav_text(_section(entered, assumed), 40) == "◐ I. Activities (1)"
-        assert section_nav_text(_section(entered), 40) == "✓ I. Activities"
+        assert section_counts(_section(assumed, missing, blocked)).pending == 3
+        assert section_counts(_section(entered, assumed)).pending == 1
+        assert section_counts(_section(entered)).pending == 0
         assert section_heading_text(_section(entered, missing)).startswith("! ")
 
 

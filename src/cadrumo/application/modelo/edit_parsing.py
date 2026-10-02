@@ -84,7 +84,6 @@ class _LocaleMarks:
 
 _SPACE_GROUPS: Final = frozenset({" ", chr(0x00A0), chr(0x202F)})
 """A plain, a no-break and a narrow no-break space: the ways a Hungarian number is grouped."""
-_ROMANCE_BOOLEANS: Final = {"sí": True, "si": True, "no": False}
 _LOCALE_MARKS: Final[dict[OutputLanguage, _LocaleMarks]] = {
     OutputLanguage.ES: _LocaleMarks(
         decimal=",", groups=frozenset({"."}), booleans={"sí": True, "si": True, "no": False}

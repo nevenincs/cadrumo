@@ -54,6 +54,7 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
@@ -171,6 +172,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     profile_record: UserProfileRecord | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RentaGastoLedgerAggregation:
     """Load the transaction catalogue and aggregate a cumulative expense window.
 
@@ -180,6 +182,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
     so the two filings cannot diverge on it. ``profile_record`` (a
     :class:`UserProfileRecord`) and ``prorrata_register_repository`` supply the
     profile and canonical register directly.
+    ``operation`` retains the caller's generation for the ratio lookup; the
+    ratio boundary admits its own lease only for standalone callers.
 
     Returns a :class:`RentaGastoLedgerAggregation`.
     """
@@ -199,6 +203,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
         ejercicio=period.filing_year,
         profile_record=profile_record,
         prorrata_register_repository=prorrata_register_repository,
+        operation=operation,
     )
     result = aggregate_renta_gasto_ledger(
         partition.in_window,

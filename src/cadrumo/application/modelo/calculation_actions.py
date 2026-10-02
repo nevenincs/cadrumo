@@ -820,6 +820,7 @@ def resolve_bucket_source_mesh(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         profile=profile,
+        operation=ports.operation,
     )
 
     def resolve_declared(

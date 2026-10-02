@@ -41,7 +41,6 @@ from ....core.text_fold import fold_diacritics
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
-from ....domain.modelos.work_unit import WorkUnitState
 from ..components.account_chrome import AccountChromeScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
@@ -73,7 +72,6 @@ _DESTINATION_KEYS: Final = {
     "declarations.calendar": "tui.declarations.destination.calendar",
     "declarations.modelo_workspace": "tui.declarations.destination.modelo_workspace",
 }
-_WORK_STATE_KEYS: Final = {state: f"tui.declarations.work_state.{state.value}" for state in WorkUnitState}
 _REVISION_STATE_KEYS: Final = {
     state: f"tui.declarations.revision_state.{state.value}" for state in CalculationRevisionState
 }
@@ -123,11 +121,6 @@ def timestamp_label(value: datetime) -> str:
 def calendar_date_label(value: date | None) -> str:
     """Render one non-ambiguous legal date."""
     return declarations_copy("tui.declarations.calendar.none") if value is None else value.strftime("%d/%m/%Y")
-
-
-def work_state_label(value: WorkUnitState) -> str:
-    """Render a local declaration state."""
-    return declarations_copy(_WORK_STATE_KEYS[value])
 
 
 def revision_state_label(value: CalculationRevisionState) -> str:
@@ -548,5 +541,4 @@ __all__ = [
     "revision_state_label",
     "timestamp_label",
     "work_create_refusal_message",
-    "work_state_label",
 ]

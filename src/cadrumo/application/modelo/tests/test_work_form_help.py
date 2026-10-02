@@ -47,9 +47,9 @@ def _names_only_its_box_of(text: str, modelo: str = _MODELO) -> bool:
         "Casella 03 del model 151, exercici 2025.",
         "Casella 94-94 del model 151, exercicis 2004-2015.",
         "Casella 692-708 del model 151, exercicis 2023 i posteriors.",
-        "A 151-es nyomtatvány 03. rovata, 2025. adóév.",
-        "A 151-es nyomtatvány 94-94. mezője, 2004-2015. adóév.",
-        "A 151-es nyomtatvány 692-708. mezője, 2023. és az azt követő adóévek.",
+        "A Modelo 151 nyomtatvány 03. rovata, 2025. adóév.",
+        "A Modelo 151 nyomtatvány 94-94. mezője, 2004-2015. adóév.",
+        "A Modelo 151 nyomtatvány 692-708. mezője, 2023. és az azt követő adóévek.",
         "  Box 01 of modelo 151, tax year 2025.\n",
     ],
 )
@@ -109,8 +109,8 @@ _STATED: dict[OutputLanguage, tuple[str, str]] = {
         "Dada de l'annex de transmissió d'accions o participacions d'IIC del model 151.",
     ),
     OutputLanguage.HU: (
-        "A 151-es nyomtatvány 01. rovata, 2025. adóév.",
-        "A 151-es nyomtatvány kollektív befektetési jegyek átruházásáról szóló mellékletének adata.",
+        "A Modelo 151 nyomtatvány 01. rovata, 2025. adóév.",
+        "A Modelo 151 nyomtatvány kollektív befektetési jegyek átruházásáról szóló mellékletének adata.",
     ),
 }
 """What modelo 151's catalogue states as help for one box it only locates and one it explains."""
