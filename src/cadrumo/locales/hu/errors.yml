@@ -259,8 +259,8 @@ errors:
       igazolás nélkül. Először importálja az eredeti bevallás bizonylatát.
     error_modelo_amendment_target_state: Az aktuális állapotban nem lévő bevallás
       nem módosítható; egy újabb már felváltotta.
-    error_modelo_calculation_registry_unavailable: A munkajegység modelójának, évének
-      és időszakának nyilvántartás-pillanatképe nem oldható fel.
+    error_modelo_calculation_registry_unavailable: A munkajegység Modelo nyomtatványához,
+      évéhez és időszakához tartozó nyilvántartási pillanatkép nem tölthető be.
     error_modelo_calculation_revision_not_found: A kért számítás-revízió nem található.
     error_modelo_calculation_revision_state: A kért állapotátmenet nem kompatibilis
       a számítás-revízió jelenlegi állapotával.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5a08c61307e6e76527037efb135e89c6cc0075bfa87ef02915eee414aa9fef27'
+body_hash: 'sha256:863be5635e00eda757f48a85427df39bc58d07dc5e3bac8dd5fe3274c7fd36ab'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1630,6 +1630,9 @@ related:
 - `S61` `verify:` `uv run --no-sync ruff format --check src/cadrumo/domain/iva/deduction_facts.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/preconditions.py src/cadrumo/application/modelo/work_form_models.py src/cadrumo/application/modelo/work_form.py src/cadrumo/application/modelo/finding_message_text.py src/cadrumo/domain/iva/tests/test_deduction_evidence_authority_for_row.py src/cadrumo/application/modelo/tests/test_unrecordable_deduction_documents.py src/cadrumo/application/modelo/tests/test_verification_preconditions.py src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py` -> `pass`
 - `S61` `verify:` `git diff --check -- src/cadrumo/domain/iva/deduction_facts.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/preconditions.py src/cadrumo/application/modelo/work_form_models.py src/cadrumo/application/modelo/work_form.py src/cadrumo/application/modelo/finding_message_text.py src/cadrumo/domain/iva/tests/test_deduction_evidence_authority_for_row.py src/cadrumo/application/modelo/tests/test_unrecordable_deduction_documents.py src/cadrumo/application/modelo/tests/test_verification_preconditions.py src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py` -> `pass`
 - `S61` `by:` `vaultspec-high-executor`
+- `S59` `M` `src/cadrumo/locales/hu/common.yml`
+- `S59` `verify:` `uv run --no-sync pytest -q -n0 -m unit dev/locales/tests/test_parity.py::test_codebase_to_locale_parity dev/locales/tests/test_parity.py::test_inter_locale_parity` -> `pass`
+- `S59` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1727,3 +1730,4 @@ related:
 - `S60` Current Modelo operations declare no REVIEW interaction; edit declares INPUT only. Shared review JSON is unreachable for these paths. Diagnostic/receipt references exist only at terminal settlement and the modal synchronously dismisses before the next paint. S60's current default Modelo surfaces satisfy the accepted operation/public-result contracts.
 - `S62` Final installation receipts and exact command exits are in C:/Users/hello/AppData/Local/Temp/modelo-s62-installation-sequence. Temporary reviewed disposition rows retired through their owner with other ledger content unchanged. Published generation bbea0e6a55b9de2ae3f4b5f00df110ac956bb604a0b8953aeac6463623595e3b; six real published-layout adoption cases pass. An initial default-unit selector deselected all six integration cases and is not passing evidence.
 - `S61` First focused run found fixture omissions, missing terminal-action translations and unregistered incoming printed-total fact kinds; corrected without relaxing production boundaries. Three new real CLI fixtures initially had invalid gross amounts; corrected to the owning ledger contract. Final 63 unit and 8 integration cases pass. Exact logs and preserved initial failures: C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/handoff.json. Shared compiler dependency is refreshed at the final authority gate before frozen captures.
+- `S59` Follow-up corrects five contextual Hungarian filing labels/explanations, retaining actual taxpayer-model language. A wrong glossary prefix initially created one extra leaf; the canonical remove-batch owner removed it, then set-batch corrected topic.modelos.title. Initial 404-case parity/key suite returned 402 passed and two extra-key failures; both affected cases pass after correction (20261002T001253.779211Z-pytest-3020-c9bc3cf2). No test expectation or detector changed.

@@ -640,11 +640,12 @@ filing:
     incomplete_undeclared_taxpayer: 'Az alkalmazhatóság nem határozható meg: az adózó
       típusa nincs bejelentve. Hiányzik a szervezeti típus, és adott esetben az IRPF
       jövedelemkategóriái is.'
-    incomplete_undetermined_fact: 'Ennek a modellnek az alkalmazhatósága a bejelentett
+    incomplete_undetermined_fact: 'A Modelo nyomtatvány alkalmazhatósága a bejelentett
       adózói modellből nem határozható meg: olyan tényen múlik, amelyet a profil nem
-      fejez ki egyértelműen. A modell csak akkor minősül alkalmazhatónak, ha ezt a
-      tényt kifejezetten bejelentik; egyébként nem vélelmezünk kötelezettséget.'
-    incomplete_undetermined_fact_required: 'Ehhez a modellhez szükséges tény: %{fact}.'
+      fejez ki egyértelműen. A nyomtatvány csak akkor minősül alkalmazhatónak, ha
+      ezt a tényt kifejezetten bejelentik; egyébként nem vélelmezünk kötelezettséget.'
+    incomplete_undetermined_fact_required: 'Ehhez a Modelo nyomtatványhoz szükséges
+      tény: %{fact}.'
     incomplete_undetermined_periods_missing: 'Be nem jelentett időszakok: %{periods}.'
     payer_fact:
       iva_group_dominant_entity: IVA-csoport domináns tagjaként van bejegyezve
@@ -1045,15 +1046,15 @@ topic:
       alkalmazandó (130 vs. 131).
     title: IRPF-rezsim
   iva-regime:
-    body: Az adóalanynál alkalmazandó ÁFA-rezsim. Általános, egyszerűsített, equivalencia-felár,
-      mentes, REAGP vagy REBU. Meghatározza a negyedéves 303-as és az éves 390-es
-      összesítő nyomtatványt.
+    body: 'Az adózónál alkalmazandó IVA-rezsim: általános, egyszerűsített, equivalencia-feláras,
+      mentes, REAGP vagy REBU. Meghatározza a negyedéves Modelo 303 bevallást és az
+      éves Modelo 390 összesítőt.'
     title: IVA-rezsim (ÁFA)
   modelos:
     body: Az AEAT adónyomtatványainak katalógusa (303, 130, 100, 347, 349, 111, 115,
       184 stb.). Mindegyiknek saját naptára, mezői és alkalmazhatósági szabályai vannak.
       A `aeat app modelo list` parancs felsorolja az elérhető nyomtatványokat.
-    title: Adónyomtatványok (modelók)
+    title: Adónyomtatványok (Modelo)
   pago-fraccionado:
     body: Önálló vállalkozók negyedéves IRPF-előleg-fizetése. Közvetlen becslésnél
       a Modelo 130, objektív becslésnél a Modelo 131 alkalmazandó. A számítás a negyedév
