@@ -25,6 +25,9 @@ consumed in the body:
   contract on the ``_SheetsDiscoveryBuilder`` Protocol stub
   (:mod:`cadrumo.application.storage.calc_sheets.parity_harness`). The name is
   the google API client's keyword and is part of the structural type.
+* ``prop`` — the parameter of ``append`` on the ``_CustomDocumentProperties``
+  Protocol stub (:mod:`cadrumo.adapters.outbound.workbook.calc_sheets_xlsx`).
+  The stub body is ``...``; the parameter is part of the structural type.
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
 each name once here clears the false positive while leaving every other
 occurrence of an unused name still subject to detection — this file lists
@@ -54,3 +57,8 @@ def _set_language_field(source_citation: object) -> object:
 def _sheets_discovery_build(cache_discovery: object) -> object:
     """Mirror ``_SheetsDiscoveryBuilder.__call__`` keyword contract."""
     return cache_discovery
+
+
+def _custom_document_properties_append(prop: object) -> object:
+    """Mirror ``_CustomDocumentProperties.append`` structural signature."""
+    return prop
