@@ -25,11 +25,11 @@ import pytest
 import tomlkit
 
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.errors import RegistryError
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_migration import (
-    MigrationRefusedError,
     _prove_chain,
     _prune_redundant_override_leaves,
     assess_migration_state,
@@ -159,7 +159,7 @@ def test_the_chain_proof_refuses_the_collapse_that_drops_the_explicit_empty(tmp_
     manifest_path.write_text(tomlkit.dumps(document), encoding="utf-8", newline="\n")
 
     assert _hydrated_constructs(dropped) == _hydrated_constructs(source)
-    with pytest.raises(MigrationRefusedError, match=r"the lift is not an identity"):
+    with pytest.raises(RegistryError, match=r"the lift is not an identity"):
         _prove(source, dropped)
     assert _prove(source, candidate) == _CLEAN_REPORT
 

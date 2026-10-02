@@ -32,9 +32,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
+from ....domain.calculations.registry.relation_dependency import RelationDependencyTreatment
 from ....domain.calculations.registry.relations import (
     RegistryFoldRequirement,
-    RelationDependencyTreatment,
     relation_prefill_bindings_for_period,
     relation_source_requirements,
 )

@@ -9,12 +9,14 @@ import pytest
 
 from ..text_fold import (
     COMBINING_MARK_RANGES,
-    COMBINING_MARK_UNIDATA_VERSION,
     ascii_slug,
     fold_diacritics,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+#: Unicode database shipped by the oldest supported interpreter, CPython 3.13.
+_COMBINING_MARK_UNIDATA_VERSION = "15.1.0"
 
 #: AHOM CONSONANT SIGN MEDIAL RA: ``Mn`` in Unicode 15.1, ``Mc`` from 16.0.
 _RECATEGORISED_MARK = "\U0001171e"
@@ -144,11 +146,11 @@ def test_checked_in_combining_mark_ranges_regenerate_from_their_pinned_unicode_d
     database, never an older one. On failure, replace ``COMBINING_MARK_RANGES``
     with the literal printed here.
     """
-    assert _version(unicodedata.unidata_version) >= _version(COMBINING_MARK_UNIDATA_VERSION), (
+    assert _version(unicodedata.unidata_version) >= _version(_COMBINING_MARK_UNIDATA_VERSION), (
         f"this interpreter's Unicode {unicodedata.unidata_version} predates the pinned "
-        f"{COMBINING_MARK_UNIDATA_VERSION}; the pin must be the oldest supported interpreter's database"
+        f"{_COMBINING_MARK_UNIDATA_VERSION}; the pin must be the oldest supported interpreter's database"
     )
-    if unicodedata.unidata_version != COMBINING_MARK_UNIDATA_VERSION:
+    if unicodedata.unidata_version != _COMBINING_MARK_UNIDATA_VERSION:
         return
     live = _mark_ranges_of_the_running_database()
     regenerated = "\n".join(f"    (0x{first:04X}, 0x{last:04X})," for first, last in live)

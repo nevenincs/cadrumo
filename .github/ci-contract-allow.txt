@@ -46,7 +46,7 @@ release.yml:Packaging performance contracts
 release.yml:Future-directive policy
 release.yml:Emit the prerelease runtime row
 release.yml:Emit the stable runtime smoke matrix
-release.yml:Read the interpreter pin
+release.yml:Read the release builder interpreter pin
 
 # --- pending - the release lane ------------------------------------------------
 # Cohort build, sealing, channel acquisition and publication steps, none of

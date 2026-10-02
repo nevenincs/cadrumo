@@ -5,7 +5,7 @@ tags:
 date: '2026-10-01'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d0a13546dd587dc3f966f8b72e67d82b79bf6cba88a2096c7a9977e7c0b938ae'
+body_hash: 'sha256:8e1be6463515f5e999bc5192d7bdf793f5e101b3b182e5277c89aa32e70e34dc'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
   - "[[2026-10-01-registry-conformance-rectification-remaining-issues-research]]"
@@ -147,6 +147,14 @@ The converter proof, accepted normalization and no-op pass with full typed and f
 The focused run found one stale edition assertion requiring literal caption equality despite declared label/legal evolutions. The corrected gate compares actual pinned design captions and admits only a grounded transition path citing endpoint designs and resolvable law. Its isolated missing-evolution, wrong-kind and missing-source examples refuse. The corrected module passes; unchanged passing modules are reused. Registry health, bindings/integrity, style, format, data format, types, live delta no-op and scoped collapse pass. Binding finding identities/severities exactly match the accepted baseline. The scoped collapse verifies stable inputs, no live mutation, indexed/temporal/capability parity and publication readiness. Review verdict PASS for this bounded correction; S50 remains open for the wider semantic mapping and declaration inventory.
 
 Candidate validation PASS; installed source PASS; published authority PASS at `59acf405c06949ff0b6d6463511c5f8746ba357b4ef99886402ea14d3dd1dcec`; development runtime PASS against that generation. Installed-package adoption remains unverified after the previously recorded wheelhouse setup failure. Evidence: `C:/Users/hello/AppData/Local/Temp/modelo200-0309-0316-candidate-20261002`, including official observations, legal/corpus capture and installation receipts, transport review, converter proof/apply/no-op, canonical target validation/publication, locale preflight, guarded complete installation, newline-only snapshot receipt, live-review.json, verification-results.json, corrected-test-results.json, binding-baseline-comparison.json and final-collapse/summary.json. Overall rollout remains PENDING.
+
+### all-changes-checkpoint | low | Remaining source and tooling changes pass the requested quality gates
+
+The operator requested a checkpoint of every remaining worktree change. Review covers the release workflow allowlist name, regenerated import-load metadata, direct test imports and the explicit-empty proof's actual exception boundary, removal of the unused public Unicode-version constant while retaining the pinned folding behavior, removal of the obsolete parser override, and the corresponding locked parser update. The development packaging presence assertion no longer requires the undeclared Torch package. Modelo 180's apparent binding modification has identical normalized bytes and introduces no declaration change. Compact registry declarations, filing support, capability grades and the active published generation remain unchanged.
+
+Verification coverage: Ruff lint and format pass; ty, pyrefly and strict BasedPyright pass across all three configured platforms. The canonical import aggregate passes all 15 graph contracts, complete governed module loadability and subordinate import checks, with stable source fingerprints, zero hard findings and zero architectural debt. The lockfile, data-format, CI gate-contract and dependency-declaration checks pass, as does the dependency-surface preflight. The five focused modules record 55 passes. Evidence: `C:/Users/hello/AppData/Local/Temp/registry-all-changes-quality-20261002/quality-results.json` and `supplement-results.json`, with complete linked logs. Review verdict PASS for this checkpoint's source checks.
+
+The canonical `just setup-python` synchronization was refused with exit 6 because shared Vaultspec MCP and RAG processes hold the virtualenv open; those processes were preserved. The installed parser is 1.6.1 while the accepted lock and Vaultspec RAG requirement use 1.20.0. The requested checks therefore describe the current installed development environment; adoption of the updated locked parser remains unverified until those owning sessions release the environment. The refusal is retained in the serial run `all_changes_environment-20261002-080557.log` and `.venv/init-report.json`. This checkpoint does not close S50 or the previously recorded installed-package adoption boundary.
 
 ## Recommendations
 

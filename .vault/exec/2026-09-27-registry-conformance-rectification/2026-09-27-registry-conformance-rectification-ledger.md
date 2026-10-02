@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:87f43b37897dc96cff6852df7ba601300149588d15f3323f03271b3bc2702ee9'
+body_hash: 'sha256:d70954ef46e4ac106a812ebf37cb3f4b5115bc1118dae442e7711ad827c9cee7'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1789,6 +1789,25 @@ related:
 - `S50` `verify:` `git diff --check` -> `pass`
 - `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py` -> `pass`
 - `S50` `verify:` `binding warning identity/severity baseline comparison` -> `pass`
+- `S50` `M` `.github/ci-contract-allow.txt`
+- `S50` `M` `dev/packaging/lane_verification_core.py`
+- `S50` `M` `dev/quality/metadata/import_load_targets.json`
+- `S50` `M` `dev/registry/tests/test_edition_delta_explicit_empty_override.py`
+- `S50` `M` `pyproject.toml`
+- `S50` `M` `src/cadrumo/application/calculations/tests/test_dependency_treatment_survives_the_resolver_join.py`
+- `S50` `M` `src/cadrumo/core/tests/test_text_fold.py`
+- `S50` `M` `src/cadrumo/core/text_fold.py`
+- `S50` `M` `uv.lock`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `just check-import-boundaries` -> `pass`
+- `S50` `verify:` `uv lock --check` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-gate-contracts` -> `pass`
+- `S50` `verify:` `just check-dependency-declarations` -> `pass`
+- `S50` `verify:` `dependency_surface --json` -> `pass`
+- `S50` `verify:` `focused delta-resolver-text-fold-packaging pytest 55 cases` -> `pass`
 
 ## Notes
 
@@ -1895,3 +1914,4 @@ related:
 - `S50` S50 remains open for the remaining semantic inventory. Isolated retained-order refusal was corrected; no pytest ran on intermediate registry inputs. Installed-package adoption remains unverified.
 - `S50` S50 continues. Prospective corpus artifacts remain isolated; registry inputs and published authority are unchanged. The temporary caller plural-wording assertion was corrected against actual operative text.
 - `S50` S50 remains open for the wider mapping/declaration inventory. One stale literal-caption assertion was corrected through grounded official evolution paths and isolated negative tests; only the affected module was repeated. Authority was published before pytest. Installed-package adoption remains unverified.
+- `S50` User-authorized all-changes checkpoint. S50 remains open. Canonical setup-python exited 6: shared MCP/RAG processes hold the environment; installed parser 1.6.1 has not adopted locked 1.20.0. All requested checks pass on the current environment; no substantive registry edit or authority-generation change.

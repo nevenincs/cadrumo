@@ -436,15 +436,6 @@ path = "packaging/authority/hatch_build.py"
 path = "packaging/authority/hatch_build.py"
 
 # ── uv ───────────────────────────────────────────────────────────────────────
-[tool.uv]
-# vaultspec-rag requires tree-sitter-language-pack below 1.6.2, and shared
-# Windows worktrees can keep the native parser DLL locked indefinitely. Keep the
-# resolver bound aligned with vaultspec-rag so additive installs and lock checks
-# do not select the incompatible 1.6.2 parser package.
-override-dependencies = [
-  "tree-sitter-language-pack<1.6.2",
-]
-
 # `cadrumo-data-manuals` (packaging/cadrumo_data_manuals/) and `cadrumo-data-official`
 # (packaging/cadrumo_data_official/) own NO source. Each is a project file plus a
 # hatchling build hook that force-includes a disjoint slice of the ONE corpus tree at
