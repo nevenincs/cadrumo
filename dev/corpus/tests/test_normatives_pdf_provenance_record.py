@@ -32,6 +32,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from dev.docs.preprocess.sidecar import EXTRACTED_JSON_SUFFIX, EXTRACTED_TEXT_SUFFIX
 
 from ...registry.conformance.registry_schema_support import committed_registry_tree
 
@@ -40,6 +41,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _TREE_PARTS = ("corpus", "normatives", "pdf")
 _TREE_PREFIX = "/".join(_TREE_PARTS) + "/"
 _RECORD_NAME = "PROVENANCE.md"
+#: Extracted text beside a capture is extractor output, owned and freshness-gated
+#: by ``dev.docs.preprocess``; it is neither downloaded nor typed, so it is not
+#: a payload this record classifies.
+_DERIVED_SUFFIXES = (EXTRACTED_TEXT_SUFFIX, EXTRACTED_JSON_SUFFIX)
 _CAPTURES_HEADING = "## Captures"
 _TRANSCRIPTIONS_HEADING = "## Transcriptions"
 #: The leading backticked filename and the ``Bytes`` column are all this gate
@@ -53,7 +58,13 @@ def _tree() -> Path:
 
 
 def _bundled_files() -> tuple[Path, ...]:
-    return tuple(sorted(path for path in _tree().iterdir() if path.is_file() and path.name != _RECORD_NAME))
+    return tuple(
+        sorted(
+            path
+            for path in _tree().iterdir()
+            if path.is_file() and path.name != _RECORD_NAME and not path.name.endswith(_DERIVED_SUFFIXES)
+        )
+    )
 
 
 def _bytes_column(cells: list[str]) -> int | None:

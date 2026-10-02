@@ -21,6 +21,13 @@ The bundled bytes are what the address served.
 | `boe-a-2024-27528-modelo-721-layout-amendment.pdf` | 827110 | 2026-06-28 | `boe.es/boe/dias/2024/12/31/pdfs/BOE-A-2024-27528.pdf` |
 | `boe-a-2026-1761-modelo-390-form.pdf` | 1810016 | 2026-09-30 | `boe.es/boe/dias/2026/01/26/pdfs/BOE-A-2026-1761.pdf` |
 
+A capture may carry its extracted text beside it,
+`<file>.extracted.md` and `<file>.extracted.json`: the canonical PDF
+extractor's output, one unit per page, recording the digest of the capture it
+was read from. It is derived, not a third kind of artefact, and is rewritten by
+the extractor rather than by hand. The modelo 390 form carries one: its page
+labels, apartados and printed boxes are read from it page by page.
+
 The 2003 modelo 185 PDF looks authored to
 `classify_normative_corpus_provenance`, which reads a file's own bytes for a
 `BOE-A-…` identifier or BOE structural markup and finds neither. It is
