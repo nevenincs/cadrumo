@@ -11,6 +11,8 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
+from textual.events import DescendantFocus
+from textual.geometry import Region
 from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.modelo.declaration_targets import DeclarationTarget
@@ -35,7 +37,7 @@ from .controller import (
 )
 from .external_details import ExternalFilingDetailsScreen
 from .picker import NewDeclarationPicker
-from .row_words import row_lines
+from .row_words import is_unlinked_local_draft, row_lines
 
 _FILTERS = ("all", "attention", "this_year", "recorded", "not_started")
 _SORTS = ("deadline", "modelo", "result", "state")
@@ -57,7 +59,14 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
     #declarations-links { height: auto; }
     #declarations-links Button { width: 1fr; min-width: $cadrumo-control-min-width; }
     #declarations-search { height: auto; }
+    #declarations-list-context { margin: 0; }
+    /* Reset the table's inherited default cap in the default CSS layer. */
+    #declarations-list { max-height: initial; }
+    #declarations-keys { height: auto; padding-left: $cadrumo-cell-padding; }
     #declarations-technical { height: auto; display: none; }
+    """)
+    CSS = DeclarationsWorkspaceScreen.CSS + tokenised("""
+    #declarations-list-context { margin: 0; }
     """)
 
     def __init__(
@@ -77,6 +86,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         yield Static(tr("tui.declarations.list.title"), classes="cadrumo-banner", markup=False)
         yield Input(placeholder=tr("tui.declarations.list.search.hint"), id="declarations-search")
         yield Static(id="declarations-list-context", classes="cadrumo-heading", markup=False)
+        yield Static(id="declarations-keys", markup=False)
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable(id="declarations-list", cursor_type="row")
             yield Static(id="declarations-empty", markup=False)
@@ -89,7 +99,6 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
                 yield Button(tr("tui.declarations.destination.revisions"), id="declarations-revisions")
                 yield Button(tr("tui.declarations.destination.filing_history"), id="declarations-filings")
                 yield Button(tr("tui.declarations.destination.calendar"), id="declarations-calendar")
-            yield Static(tr("tui.declarations.list.keys"), markup=False)
 
     def on_mount(self) -> None:
         """Populate the joined portfolio and restore its semantic selection."""
@@ -166,7 +175,9 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         return rows
 
     def _populate(self) -> None:
-        table = self.query_one("#declarations-list", DataTable)
+        table = self.query_one("#declarations-list", ContentDataTable)
+        # Both columns already wrap to the same declared cell budget.
+        table.fill_column = None
         selected = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value if table.row_count else None
         table.clear(columns=True)
         width = max(20, (self.size.width - 14) // 2)
@@ -178,9 +189,12 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             members = [row for row in visible if row.group is group]
             folded = not members or group in self.folded
             mark = "▹" if folded else "▿"
-            title = "\n".join(
-                wrap_words(f"{mark} {tr('tui.declarations.list.group.' + group.value)} ({len(members)})", width)
+            group_key = (
+                "tui.declarations.list.state.aeat_unlinked"
+                if group is DeclarationListGroup.AEAT_UNLINKED
+                else "tui.declarations.list.group." + group.value
             )
+            title = "\n".join(wrap_words(f"{mark} {tr(group_key)} ({len(members)})", width))
             table.add_row(
                 Text(title, style="bold"),
                 "",
@@ -204,6 +218,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
                     height=max(left_text.count("\n"), right_text.count("\n")) + 1,
                     key=row.key,
                 )
+        table.absorb_surplus_width()
         self.query_one("#declarations-list-context", Static).update(
             tr("tui.declarations.list.filter." + _FILTERS[self.filter_index])
             + " · "
@@ -213,6 +228,74 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         index = next((i for i, row in enumerate(table.ordered_rows) if row.key.value == selected), None)
         if index is not None:
             table.move_cursor(row=index)
+        self._render_keys()
+
+    def _render_keys(self) -> None:
+        """Keep supported list shortcuts and the selected Enter action visible."""
+        table = self.query_one("#declarations-list", ContentDataTable)
+        shortcuts = []
+        if self.controller.work_create_handoff is not None:
+            shortcuts.append("+ " + tr("tui.declarations.list.key.new"))
+        shortcuts.extend(
+            (
+                "/ " + tr("tui.modelo.workbench.key.search"),
+                "f " + tr("tui.modelo.workbench.key.filter"),
+                "s " + tr("tui.modelo.workbench.key.sort"),
+                "t " + tr("tui.modelo.workbench.issues.technical"),
+            )
+        )
+        enter = ""
+        if table.has_focus and table.row_count:
+            key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
+            if key is not None and key.startswith("group:"):
+                enter = "Enter " + tr("tui.declarations.list.key.toggle_group")
+            else:
+                row = next((item for item in self.rows if item.key == key), None)
+                if row is not None:
+                    if row.declaration is not None and row.state != "unreadable":
+                        if self.controller.modelo_workspace_factory is not None:
+                            enter = "Enter " + tr(
+                                "tui.declarations.list.next.open_local_draft"
+                                if is_unlinked_local_draft(row)
+                                else "tui.declarations.calendar.action.open"
+                            )
+                    elif (
+                        row.state == "not_started"
+                        and row.period is not None
+                        and self.controller.work_create_handoff is not None
+                    ):
+                        enter = "Enter " + tr("tui.declarations.list.next.start")
+                    elif row.state == "aeat_unlinked":
+                        enter = "Enter " + tr("tui.declarations.calendar.action.open")
+        self.query_one("#declarations-keys", Static).update((enter + "\n" if enter else "") + " · ".join(shortcuts))
+
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Follow semantic row selection without promising an unavailable route."""
+        if event.data_table.id == "declarations-list":
+            self._render_keys()
+            self.call_after_refresh(self._reveal_selected_row)
+
+    def _reveal_selected_row(self) -> None:
+        """Let the outer content scroll reveal the actual highlighted row."""
+        table = self.query_one("#declarations-list", ContentDataTable)
+        if not table.has_focus or not table.row_count:
+            return
+        index = table.cursor_row
+        rows = table.ordered_rows
+        header = table.header_height if table.show_header else 0
+        top = table.virtual_region.y + header + sum(row.height for row in rows[:index])
+        page = self.query_one("#declarations-page", ContentScroll)
+        page.scroll_to_region(
+            Region(table.virtual_region.x, top, table.size.width, rows[index].height),
+            animate=False,
+            x_axis=False,
+        )
+
+    def on_descendant_focus(self, event: DescendantFocus) -> None:
+        """Show Enter guidance only while the declaration table owns focus."""
+        if self.query("#declarations-keys"):
+            self._render_keys()
+            self.call_after_refresh(self._reveal_selected_row)
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Filter the immutable rows without reading storage."""

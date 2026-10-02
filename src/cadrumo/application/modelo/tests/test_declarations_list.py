@@ -136,7 +136,7 @@ def test_an_unlinked_external_filing_is_a_completed_row_with_its_own_date() -> N
 
     assert len(rows) == 1
     row = rows[0]
-    assert row.group is DeclarationListGroup.RECORDED and row.state == "aeat_unlinked"
+    assert row.group is DeclarationListGroup.AEAT_UNLINKED and row.state == "aeat_unlinked"
     assert row.declaration is None and row.calendar is calendar
     assert row.calendar.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
     assert row.deadline == date(2025, 4, 21)
@@ -154,7 +154,7 @@ def test_a_local_draft_stays_in_progress_when_that_period_is_already_filed_at_ae
     assert local.state == "draft" and local.group is DeclarationListGroup.IN_PROGRESS
     assert local.declaration is not None and local.declaration.summary is not None
     assert local.declaration.summary.result is None
-    assert external.state == "aeat_unlinked" and external.group is DeclarationListGroup.RECORDED
+    assert external.state == "aeat_unlinked" and external.group is DeclarationListGroup.AEAT_UNLINKED
 
 
 @pytest.mark.parametrize(

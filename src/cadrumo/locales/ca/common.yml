@@ -1445,6 +1445,7 @@ tui:
         recorded: Registrades com a presentades
       key:
         new: Nova declaració
+        toggle_group: Obre/tanca el grup
       keys: + Nova declaració · / Cercar · f Filtrar · s Ordenar · t Detalls tècnics
       maybe:
         help: Cadrumo no ha pogut saber pel teu perfil si l'has de presentar. Comprova-ho
@@ -1454,6 +1455,8 @@ tui:
         choose_period: Quin període?
         create: Crear i obrir
         exists: Aquesta declaració ja existeix. Obrir-la?
+        period_selection_hint: Prem Enter per triar el període; després, crea i obre
+          la declaració.
         show_all: Mostra tots els models, no només els teus
         start_confirm: Començar el {modelo} de {period}?
       next:

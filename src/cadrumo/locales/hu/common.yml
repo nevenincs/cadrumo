@@ -1443,6 +1443,7 @@ tui:
         recorded: Benyújtottként rögzítve
       key:
         new: Új bevallás
+        toggle_group: Nyissa meg/zárja be a csoportot
       keys: + Új bevallás · / Keresés · f Szűrés · s Rendezés · t Technikai részletek
       maybe:
         help: A Cadrumo a profilja alapján nem tudta eldönteni, kell-e ezt benyújtania.
@@ -1452,6 +1453,8 @@ tui:
         choose_period: Melyik időszak?
         create: Létrehozás és megnyitás
         exists: Ez a bevallás már létezik. Megnyitja?
+        period_selection_hint: Az Enterrel válasszon időszakot, majd hozza létre és
+          nyissa meg a bevallást.
         show_all: Minden nyomtatvány mutatása, nem csak az Önéi
         start_confirm: 'Elkezdi a(z) {modelo} bevallást erre az időszakra: {period}?'
       next:

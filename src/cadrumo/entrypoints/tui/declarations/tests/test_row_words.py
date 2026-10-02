@@ -55,3 +55,37 @@ def test_negative_result_keeps_its_sign_until_a_declared_direction_carries_it(
         key = "unknown" if direction is ModeloFormResultDirection.UNKNOWN else "to_refund"
         sign = "−" if direction is ModeloFormResultDirection.UNKNOWN else ""
         assert words[1] == tr("tui.modelo.workbench.header.result." + key) + " · " + sign + amount
+
+
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+@pytest.mark.parametrize(
+    ("state", "has_calculation", "expected_key"),
+    [
+        (DeclarationSummaryState.DRAFT, False, "tui.modelo.workbench.origin.not_calculated_yet"),
+        (DeclarationSummaryState.DRAFT, True, "tui.declarations.value.result_unknown"),
+        (DeclarationSummaryState.CALCULATED, True, "tui.declarations.value.result_unknown"),
+        (DeclarationSummaryState.UNREADABLE, False, "tui.declarations.value.result_unknown"),
+    ],
+)
+def test_only_proven_uncalculated_drafts_use_not_calculated_yet(
+    language: OutputLanguage, state: DeclarationSummaryState, has_calculation: bool, expected_key: str
+) -> None:
+    workspace, _ = portfolio_projection()
+    declaration = workspace.declarations[0].model_copy(
+        update={
+            "has_current_calculation": has_calculation,
+            "has_current_filing": False,
+            "summary": DeclarationSummary(state=state),
+        }
+    )
+    row = DeclarationListRow(
+        str(declaration.work_unit_id),
+        str(declaration.modelo),
+        declaration.period,
+        state.value,
+        DeclarationListGroup.IN_PROGRESS,
+        declaration=declaration,
+    )
+    with override_settings(cadrumo_output_language=language.value):
+        _, words = row_lines(row, language, can_open=True, can_create=False)
+        assert words[1] == tr(expected_key)

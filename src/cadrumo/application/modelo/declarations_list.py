@@ -23,6 +23,7 @@ class DeclarationListGroup(StrEnum):
     READY = "ready"
     NOT_STARTED = "not_started"
     RECORDED = "recorded"
+    AEAT_UNLINKED = "aeat_unlinked"
     MAYBE = "maybe"
 
 
@@ -121,7 +122,7 @@ def declaration_list_rows(
                     str(item.modelo),
                     item.period,
                     "aeat_unlinked",
-                    DeclarationListGroup.RECORDED,
+                    DeclarationListGroup.AEAT_UNLINKED,
                     calendar=item,
                 )
             )

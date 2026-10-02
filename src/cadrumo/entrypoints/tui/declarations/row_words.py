@@ -21,12 +21,9 @@ _DIRECTION_WORDS = {
 }
 
 
-def row_lines(
-    row: DeclarationListRow, language: OutputLanguage, *, can_open: bool, can_create: bool
-) -> tuple[list[str], list[str]]:
-    """Keep the declaration's own result separate from an external AEAT filing."""
-    left = [modelo_title(row.modelo, language)]
-    local_draft = (
+def is_unlinked_local_draft(row: DeclarationListRow) -> bool:
+    """Identify original local work beside confirmed external completion."""
+    return (
         row.declaration is not None
         and row.calendar is not None
         and row.calendar.aeat_submission_state is not None
@@ -36,6 +33,14 @@ def row_lines(
         and row.state in {"draft", "calculated", "checked"}
         and (row.declaration.summary is None or not row.declaration.summary.is_correction)
     )
+
+
+def row_lines(
+    row: DeclarationListRow, language: OutputLanguage, *, can_open: bool, can_create: bool
+) -> tuple[list[str], list[str]]:
+    """Keep the declaration's own result separate from an external AEAT filing."""
+    left = [modelo_title(row.modelo, language)]
+    local_draft = is_unlinked_local_draft(row)
     if row.period is not None:
         left.append(period_words(row.period))
     if row.deadline is not None and row.state != "aeat_unlinked":
@@ -70,7 +75,17 @@ def row_lines(
         else:
             right.append(tr(key) + " · " + amount)
     elif row.state not in {"not_started", "maybe", "aeat_unlinked"}:
-        right.append(tr("tui.declarations.value.result_unknown"))
+        not_calculated = (
+            row.state == "draft"
+            and row.declaration is not None
+            and not row.declaration.has_current_calculation
+            and not row.declaration.has_current_filing
+        )
+        right.append(
+            tr("tui.modelo.workbench.origin.not_calculated_yet")
+            if not_calculated
+            else tr("tui.declarations.value.result_unknown")
+        )
     if row.advice is not None:
         right.append(tr("tui.declarations.list.advice." + row.advice.value))
     if row.state == "blocked":

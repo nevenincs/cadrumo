@@ -46,6 +46,7 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
             assert tuple(row.key.value for row in table.ordered_rows) == ("130",)
             assert create.disabled and picker.selected is None
             assert not create.display
+            assert not picker.query_one("#declaration-picker-hint", Static).display
             assert str(picker.query_one("#declaration-picker-cancel", Button).label) == tr(
                 "tui.modelo.workbench.editor.cancel"
             )
@@ -64,6 +65,9 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
             assert table.row_count == 2
             assert create.disabled and picker.selected is None
             assert create.display
+            hint = picker.query_one("#declaration-picker-hint", Static)
+            assert hint.display and str(hint.render()) == tr("tui.declarations.list.new.period_selection_hint")
+            assert picker.region.contains_region(hint.region) and hint.region.bottom <= table.region.y
             assert "2025" in str(table.get_row_at(0)[0])
             assert "2025" in str(table.get_row_at(1)[0])
             await pilot.press("escape")
@@ -76,6 +80,7 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
             assert picker.selected == selected
             assert app.focused is create
             assert not create.disabled
+            assert not hint.display
             assert "2025" in str(picker.query_one("#declaration-picker-selection", Static).render())
             rendered = "\n".join(str(item.render()) for item in picker.query(Static))
             assert "tui." not in rendered

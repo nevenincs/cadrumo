@@ -1459,6 +1459,7 @@ tui:
         recorded: Registradas como presentadas
       key:
         new: Nueva declaración
+        toggle_group: Abrir/cerrar grupo
       keys: + Nueva declaración · / Buscar · f Filtrar · s Ordenar · t Detalles técnicos
       maybe:
         help: Cadrumo no ha podido saber por tu perfil si debes presentarla. Compruébalo
@@ -1468,6 +1469,8 @@ tui:
         choose_period: ¿Qué periodo?
         create: Crear y abrir
         exists: Esta declaración ya existe. ¿Abrirla?
+        period_selection_hint: Pulsa Enter para elegir el periodo; después, crea y
+          abre la declaración.
         show_all: Mostrar todos los modelos, no solo los tuyos
         start_confirm: ¿Empezar el {modelo} de {period}?
       next:

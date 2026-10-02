@@ -29,6 +29,7 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
         padding: $cadrumo-gutter-y $cadrumo-gutter;
     }
     #declaration-picker-table { height: 1fr; }
+    #declaration-picker-hint { height: auto; }
     #declaration-picker-buttons { height: auto; }
     """)
 
@@ -55,6 +56,7 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
     def compose(self) -> ComposeResult:
         with Vertical(id="declaration-picker"):
             yield Static(id="declaration-picker-title", markup=False)
+            yield Static(id="declaration-picker-hint", markup=False)
             yield DataTable(id="declaration-picker-table", cursor_type="row", zebra_stripes=True)
             yield Static(id="declaration-picker-selection", markup=False)
             with Horizontal(id="declaration-picker-buttons"):
@@ -76,6 +78,9 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
             else "tui.declarations.list.new.choose_period"
         )
         self.query_one("#declaration-picker-title", Static).update(tr(title))
+        hint = self.query_one("#declaration-picker-hint", Static)
+        hint.display = self.modelo is not None and self.selected is None and not self.confirmation
+        hint.update(tr("tui.declarations.list.new.period_selection_hint") if hint.display else "")
         self.query_one("#declaration-picker-all", Button).display = self.modelo is None and not self.confirmation
         # The first step has no filing address to create. Keep its two actions
         # within a narrow terminal even when Show all has a long translation.
@@ -120,6 +125,7 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
             self._populate()
         else:
             self.selected = self.visible_targets[int(key)]
+            self.query_one("#declaration-picker-hint", Static).display = False
             self.query_one("#declaration-picker-selection", Static).update(period_words(self.selected.period))
             self.query_one("#declaration-picker-create", Button).disabled = False
             self.query_one("#declaration-picker-create", Button).focus()
