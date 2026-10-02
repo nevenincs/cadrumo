@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import math
 import time
-from datetime import UTC, datetime
 from typing import Never
 from uuid import UUID, uuid4
 
@@ -34,6 +33,7 @@ from ...application.user_profile.automation_enrollment import (
     EnrollmentProposal,
     EnrollmentStage,
 )
+from ...core.time.clock import now
 from ..persistence.storage.custody.automation_client_credentials import (
     ClientCredentialMetadata,
     NativeClientCredentialStore,
@@ -85,7 +85,7 @@ class NativeEnrollmentClient:
         return self._receipt
 
     def _live(self) -> None:
-        if datetime.now(UTC) >= self.prepared.expires_at:
+        if now() >= self.prepared.expires_at:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
 
     @staticmethod

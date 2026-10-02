@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING, ClassVar, Literal, cast, override
 from uuid import UUID
 
@@ -25,6 +24,7 @@ from ...application.user_profile.automation_lifecycle import AutomationDenialKin
 from ...application.user_profile.automation_lifecycle_service import AutomationResumeReceipt
 from ...core.async_cleanup import await_cancellation_complete, close_async_resources
 from ...core.i18n.render import tr
+from ...core.time.clock import now
 from .components.theme import tokenised
 from .profile.automation_inventory import RuntimeAutomationInventoryScreen
 
@@ -334,7 +334,7 @@ class RuntimeAccessManagementScreen(ModalScreen[None]):
             or status.profile_id != self._profile_id
             or status.session_id != self._session_id
             or status.session_expires_at is None
-            or status.session_expires_at <= datetime.now(UTC)
+            or status.session_expires_at <= now()
             or status.denial is not None
         ):
             return False

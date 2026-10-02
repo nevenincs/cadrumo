@@ -15,7 +15,6 @@ which modelos a filer is asked about follows their declared profile facts.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
 from pathlib import Path
 from typing import Any, Final
 
@@ -925,10 +924,11 @@ def filed_pull_all_cmd(
     denominator note says what was actually measured.
     """
     from ...core.config import load_settings
+    from ...core.time.clock import today_madrid
     from .runtime_filed_history import read_filed_history_for_cli
 
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
-    read = read_filed_history_for_cli(ctx, output_root=resolved_root, limit=limit, today=date.today())
+    read = read_filed_history_for_cli(ctx, output_root=resolved_root, limit=limit, today=today_madrid())
     try:
         result, lines = _filed_pull_all_result_and_lines(read.report)
         notices = _filed_pull_all_notices(read.report, limit=limit)

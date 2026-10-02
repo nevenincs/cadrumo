@@ -21,7 +21,7 @@ from pydantic import (
 from ...core.aeat_csv import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN, FilingYear
+from ...core.filing_year import FilingYear
 from ...core.hex import HEX_PATTERN_64
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.identity.aeat_expediente import (
@@ -108,7 +108,7 @@ class JustificanteSnapshotSummaryPublicV1(BaseModel):
     model_config = _PUBLIC_CONFIG
     snapshot_id: str = Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)
     modelo: str = Field(min_length=1, max_length=16)
-    filing_year: int = Field(ge=FILING_YEAR_MIN, le=FILING_YEAR_MAX)
+    filing_year: FilingYear
     period: str = Field(min_length=1, max_length=16)
     pdf_sha256: str = Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)
     state: str = Field(min_length=1, max_length=16)
@@ -152,7 +152,7 @@ class JustificanteShowPublicResultV1(BaseModel):
     bucket_id: str = Field(min_length=1, max_length=128)
     snapshot_id: str = Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)
     modelo: str = Field(min_length=1, max_length=16)
-    filing_year: int = Field(ge=FILING_YEAR_MIN, le=FILING_YEAR_MAX)
+    filing_year: FilingYear
     period: str = Field(min_length=1, max_length=16)
     expediente_id: str = Field(
         min_length=AEAT_EXPEDIENTE_ID_MIN_LENGTH,

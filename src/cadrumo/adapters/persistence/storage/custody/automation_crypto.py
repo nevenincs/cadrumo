@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-import hashlib
 import json
 import secrets
 from typing import cast
@@ -12,7 +11,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, SecretBytes, ValidationError
 
 from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from .....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
+from .....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from ..crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import DecryptionError, EncryptionError
 
@@ -85,10 +84,10 @@ def api_key_verifier(value: SecretBytes) -> tuple[UUID, str]:
             or base64.urlsafe_b64encode(secret).rstrip(b"=") != encoded
         ):
             raise ValueError
-        verifier = hashlib.sha256(
+        verifier = sha256_hex(
             b"cadrumo.api-key-verifier/v1\x00"
             + canonical_json_bytes({"version": 1, "key_id": str(key_id), "secret": encoded.decode("ascii")})
-        ).hexdigest()
+        )
         return key_id, verifier
     except (ValueError, UnicodeError):
         raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED) from None

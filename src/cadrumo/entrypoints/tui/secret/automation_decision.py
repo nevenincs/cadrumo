@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import ClassVar, Literal, cast, override
 from uuid import UUID
 
@@ -32,6 +32,7 @@ from ....application.user_profile.automation_enrollment import AutomationReviewP
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.i18n.render import tr
 from ....core.operations import OperationEffect, OperationTerminalCondition
+from ....core.time.clock import now
 from ..components.theme import tokenised
 
 type AutomationDecision = Literal["approve", "decline"]
@@ -180,7 +181,7 @@ class RuntimeAutomationDecisionScreen(ModalScreen[AutomationDecisionUiOutcome | 
         if not self._live or self._access_lost:
             return
         expires_at = self._known_session_expires_at
-        if not self._bound_identity() or (expires_at is not None and expires_at <= datetime.now(UTC)):
+        if not self._bound_identity() or (expires_at is not None and expires_at <= now()):
             self._lose_access()
 
     async def _bound_status(self) -> bool:
@@ -201,7 +202,7 @@ class RuntimeAutomationDecisionScreen(ModalScreen[AutomationDecisionUiOutcome | 
             and status.profile_id == self._profile_id
             and status.session_id == self._session_id
             and status.session_expires_at is not None
-            and status.session_expires_at > datetime.now(UTC)
+            and status.session_expires_at > now()
             and status.denial is None
         )
         if valid:

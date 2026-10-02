@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, PositiveInt, ValidationEr
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.filing_year import FilingYear
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -286,7 +287,7 @@ class InventoryClosingAuthorityDecisionRequest(BaseModel):
 
     decision_id: str = Field(min_length=1, max_length=128)
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     authority: InventoryClosingAuthority
     physical_observation_id: str | None = Field(default=None, min_length=1, max_length=128)
     physical_observation_fingerprint: ContentDigest | None = None
@@ -326,7 +327,7 @@ class InventoryPhysicalClosingObservationRequest(BaseModel):
     observed_on: date
     as_of_date: date
     actividad_id: str = Field(min_length=1)
-    filing_year: int = Field(ge=2000, le=2099)
+    filing_year: FilingYear
     closing_value: PublicDecimal
     valuation_basis: InventoryClosingValuationBasis
     evidence: tuple[PhysicalClosingEvidence, ...] = Field(min_length=2)

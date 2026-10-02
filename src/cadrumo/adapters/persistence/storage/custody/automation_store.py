@@ -9,7 +9,6 @@ not session admission: the application must separately enforce current policy.
 from __future__ import annotations
 
 import base64
-import hashlib
 import os
 import secrets
 import sys
@@ -42,7 +41,7 @@ from .....application.user_profile.automation_lifecycle import (
     AutomationDenialReceipt,
     ProfileGlobalLockState,
 )
-from .....core.hashing import canonical_json_bytes
+from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.time.utc import UtcInstant
 from .automation_crypto import (
     MAX_CONTROL_BYTES,
@@ -116,7 +115,7 @@ class AutomationControlStore:
         if secrets_store is not None:
             self.secrets = secrets_store
         self.directory = root / ".automation-v1" / str(binding.installation_id) / str(binding.profile_id)
-        root_digest = hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()
+        root_digest = sha256_hex(str(root.resolve()).encode("utf-8"))
         self.account = f"{root_digest}/{binding.installation_id}/{binding.profile_id}"
 
     @property
@@ -257,7 +256,7 @@ class AutomationControlStore:
     def _load(self, anchor: ProtectedControlAnchor) -> tuple[AutomationRecordHeader, AutomationControlPayload]:
         witness = anchor.witness
         raw = self._read_file(f"{witness.record_id}.json")
-        if raw is None or not secrets.compare_digest(hashlib.sha256(raw).hexdigest(), witness.digest):
+        if raw is None or not secrets.compare_digest(sha256_hex(raw), witness.digest):
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
         sealed = parse_record(SealedAutomationControl, raw)
         header = sealed.header
@@ -427,9 +426,7 @@ class AutomationControlStore:
                 header=header, ciphertext=seal_automation(canonical_record(payload), control_key, self._aad(header))
             )
             raw = canonical_record(sealed)
-            witness = ControlWitness(
-                record_id=header.record_id, revision=header.revision, digest=hashlib.sha256(raw).hexdigest()
-            )
+            witness = ControlWitness(record_id=header.record_id, revision=header.revision, digest=sha256_hex(raw))
             intent = ControlPublicationIntent(
                 predecessor=None if previous is None else previous.witness,
                 successor=witness,
@@ -671,7 +668,7 @@ class AutomationControlStore:
         intent = parse_record(AutomationRetirementIntent, raw)
         if directory != root / ".automation-v1" / str(intent.installation_id) / str(intent.profile_id):
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
-        root_digest = hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()
+        root_digest = sha256_hex(str(root.resolve()).encode("utf-8"))
         account = f"{root_digest}/{intent.installation_id}/{intent.profile_id}"
         protected = secrets_store.read(CONTROL_NAMESPACE, account)
         wraps: set[UUID] = set()

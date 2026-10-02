@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 import ctypes
-import hashlib
 import math
 import sys
 import time
@@ -15,6 +14,7 @@ from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
+from ...core.hashing import sha256_hex
 from .framing import close_runtime_transport_after_failure
 
 if TYPE_CHECKING:
@@ -354,9 +354,7 @@ class WindowsRuntimeEndpoint:
             metadata = root.stat()
         except (OSError, ValueError):
             raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
-        self.storage_identity = hashlib.sha256(
-            f"{self._owner}:{metadata.st_dev}:{metadata.st_ino}".encode()
-        ).hexdigest()
+        self.storage_identity = sha256_hex(f"{self._owner}:{metadata.st_dev}:{metadata.st_ino}".encode())
         self.pipe_name = "\\\\.\\pipe\\cadrumo-runtime-" + self.storage_identity
         if worker_namespace is not None:
             self.pipe_name += "-worker-" + worker_namespace.hex

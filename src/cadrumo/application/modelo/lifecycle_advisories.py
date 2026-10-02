@@ -14,6 +14,7 @@ from typing import Literal, Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.filing_year import FilingYear
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value
 from ...domain.deadlines.models import TaxpayerProfile
@@ -46,7 +47,7 @@ class ModeloM210PlazoAdvisoryV1(BaseModel):
 
     version: Literal[1] = 1
     modelo: Literal["210"] = "210"
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: str = Field(min_length=1, max_length=16)
     resultado: str = Field(min_length=1, max_length=16)
     deadline_window_id: str = Field(min_length=1, max_length=128)
@@ -167,7 +168,7 @@ class ModeloLifecycleAdvisories(BaseModel):
     work_unit_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     calculation_revision_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: str = Field(min_length=1, max_length=16)
     m210_plazo: ModeloM210PlazoAdvisoryV1 | None = None
     m184_socio_handoffs: tuple[Modelo184SocioHandoffV1, ...] = Field(default_factory=tuple, max_length=20_000)

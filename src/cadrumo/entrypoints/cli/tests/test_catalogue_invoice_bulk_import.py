@@ -129,6 +129,18 @@ def test_import_help_keeps_file_kind_and_country_options() -> None:
 
 
 def test_missing_import_file_keeps_the_typed_clean_refusal(tmp_path: Path) -> None:
+    """A missing ``--file`` is refused by the shared argv existence contract.
+
+    The ``--file`` option declares ``ParameterConstraint(exists=True, ...)``
+    in ``_app_ledger_invoice_intake_command_specs.py``, so click rejects a
+    missing path before the command body (and its ``InvoiceValidationError``
+    handling in ``submit_invoice_import``) ever runs. Every leaf with that
+    same constraint is refused the same uniform way, re-keyed by
+    ``_terminal_errors._build_parse_time_refusal`` into a
+    ``CliRefusedBoundaryError`` (``REFUSED_CLI_BOUNDARY``) rather than a
+    domain-specific code; see ``test_missing_csv_is_refused_at_the_file_parameter``
+    in ``test_ledger_import_ux.py`` for the same contract on another import verb.
+    """
     missing = tmp_path / "does-not-exist.csv"
     result = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "invoice", "import", "--file", str(missing), "--kind", "received"]
@@ -137,4 +149,4 @@ def test_missing_import_file_keeps_the_typed_clean_refusal(tmp_path: Path) -> No
     error = require_error_document(result.output)["error"]
     assert missing.name in result.output
     assert str(tmp_path) not in result.output
-    assert error["code"] == "ERROR_INVOICE_VALIDATION"
+    assert error["code"] == "REFUSED_CLI_BOUNDARY"

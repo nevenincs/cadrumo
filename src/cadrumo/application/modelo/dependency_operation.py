@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -71,7 +72,7 @@ class ModeloDependencyRequest(CredentialFreeOperationRequest):
     """Public filing coordinates; taxpayer facts are never supplied by a client."""
 
     profile_id: UUID
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")] | None = None
     period: PublicPeriod | None = None
 
@@ -86,7 +87,7 @@ class ModeloDependencySnapshot(BaseModel):
     """Existing dependency inventory and optional private clean-state facts."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     modelo_filter: Annotated[str, Field(pattern=r"^[0-9]{3}$")] | None
     period_filter: PublicPeriod | None
     target_modelos: tuple[str, ...]

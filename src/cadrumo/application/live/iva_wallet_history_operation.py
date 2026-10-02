@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.filing_year import FilingYear
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -62,7 +63,7 @@ class IvaWalletHistoryRequest(CredentialFreeOperationRequest):
     """One exact-profile local history query."""
 
     profile_id: UUID
-    as_of_year: int | None = Field(default=None, ge=2000, le=2099)
+    as_of_year: FilingYear | None = None
 
 
 class IvaWalletHistoryRowPublic(BaseModel):

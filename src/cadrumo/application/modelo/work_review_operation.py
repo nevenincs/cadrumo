@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.casilla_id import CasillaId
+from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
@@ -265,7 +266,7 @@ class ModeloWorkReviewSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     bucket_id: BucketId
     modelo: str = Field(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
-    filing_year: int = Field(ge=1900, le=9999)
+    filing_year: FilingYear
     period: PublicPeriod
     registry_revision_id: RevisionId
     work_unit_id: WorkUnitId

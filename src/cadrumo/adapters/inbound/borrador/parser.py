@@ -16,9 +16,9 @@ projection explicitly.
 
 from __future__ import annotations
 
-from hashlib import sha256
 from pathlib import Path
 
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ..pdf.page_text_extraction import extract_pages_text_from_bytes
 from ._detect import detect_artefact_kind, detect_artefact_kind_from_pages
@@ -105,7 +105,7 @@ def parse_borrador_bytes(
     return extractor.extract_pages(
         pages,
         artefact_kind,
-        source_pdf_sha256=sha256(pdf_bytes).hexdigest(),
+        source_pdf_sha256=sha256_hex(pdf_bytes),
         extraction_profile=extraction_profile,
     )
 

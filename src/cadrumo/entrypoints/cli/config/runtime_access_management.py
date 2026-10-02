@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID
 
 import typer
@@ -22,6 +22,7 @@ from ....application.user_profile.automation_enrollment import (
 from ....application.user_profile.automation_lifecycle import AutomationDenialKind
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
+from ....core.time.clock import now
 from ..common import activate_subcommand_output_language, emit_envelope
 from ..errors import CliRefusedBoundaryError
 from ..runtime_profile_binding import require_profile_client
@@ -111,7 +112,7 @@ def profile_sessions(ctx: typer.Context, output_language: OutputLanguage | None 
         sessions = client.sessions()
     except RuntimeFrontendRefusedError as error:
         raise _refused(error) from error
-    instant = datetime.now(UTC)
+    instant = now()
     projected = tuple(
         _session_payload(item, instant=instant) for item in sorted(sessions, key=lambda item: item.session_id)
     )
