@@ -7,20 +7,20 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
-from ....core.bucket_pointer import require_active_bucket_id
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...user_profile.capsule_record import ProfileRecordConflictError
-from ...user_profile.fact_write import apply_manager_profile_field_mutation
-from ...user_profile.profile_record_repository import ProfileRecordRepository
-from ...user_profile.projections import record_to_path_values
-from ...user_profile.registration import register_profile_with_credentials
-from ...workflow.persistence import workflow_state_repository
-from ..credentials import resolve_active_provider_kind
-from ..operator import configure_operator_auth, reset_operator_auth
+from .....application.auth.credentials import resolve_active_provider_kind
+from .....application.auth.operator import configure_operator_auth, reset_operator_auth
+from .....application.user_profile.capsule_record import ProfileRecordConflictError
+from .....application.user_profile.fact_write import apply_manager_profile_field_mutation
+from .....application.user_profile.profile_record_repository import ProfileRecordRepository
+from .....application.user_profile.projections import record_to_path_values
+from .....application.user_profile.registration import register_profile_with_credentials
+from .....application.workflow.persistence import workflow_state_repository
+from .....core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from .....core.bucket_pointer import require_active_bucket_id
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ..certificate_secret_backend import build_certificate_secret_backend
+from ..operator_scope import build_operator_scope_ports
+from .secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _CREDENTIAL_INPUT = "synthetic-auth-configuration-passphrase"

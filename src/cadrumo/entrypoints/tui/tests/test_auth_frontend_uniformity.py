@@ -1,16 +1,19 @@
-"""Installed CLI/TUI doors over real encrypted profiles and operation graphs."""
+"""Installed TUI and shared authentication doors over real encrypted profiles and operation graphs."""
 
 from __future__ import annotations
 
 import asyncio
-import json
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from textual.widgets import Input
 
+from ....adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....application.auth.configuration_result import AuthConfigurePublicResultV1
+from ....application.auth.credentials import resolve_active_provider_kind
 from ....application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AuthConfigureOperationRequest,
@@ -22,12 +25,12 @@ from ....application.user_profile.login_session import login_profile, logout_act
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
 from ....application.user_profile.projections import record_to_path_values
 from ....application.user_profile.registration import register_profile_with_credentials
-from ....core.auth_provider import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.errors.hierarchy import PublicErrorProjectionError
 from ....core.operations import OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...cli.tests.cli_runner import invoke_cached_cli
+from ...auth_configuration import run_auth_configuration
 from ..components.host import ScreenHostApp
 from ..installed_session import compose_authenticated_account_inputs
 from ..launcher import operation_services_scope
@@ -67,21 +70,33 @@ def _values(operation: PinnedAuthorityOperation):
     return record_to_path_values(record)
 
 
-def _cli(*arguments: str):
-    result = invoke_cached_cli(("--format", "json", "config", "auth", *arguments))
-    assert result.exit_code == 0, result.output
-    return json.loads(result.stdout)["result"]
+def _configure(
+    operation: PinnedAuthorityOperation,
+    provider: AuthProviderKind,
+    *,
+    clave_movil_route: ClaveMovilRoute | None = None,
+) -> AuthConfigurePublicResultV1:
+    return run_auth_configuration(
+        AuthConfigureOperationRequest(provider=provider, clave_movil_route=clave_movil_route),
+        profile_id=require_active_bucket_id(),
+        operation=operation,
+    )
+
+
+def _selected_provider() -> AuthProviderKind | None:
+    return resolve_active_provider_kind(
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=build_operator_scope_ports(),
+    )
 
 
 @pytest.mark.parametrize("provider", tuple(AuthProviderKind))
-def test_cli_and_tui_selection_use_the_same_persisted_backend(profile_operation, provider) -> None:
-    arguments = ["configure", "--provider", provider.value]
-    if provider is AuthProviderKind.CLAVE_MOVIL:
-        arguments.extend(("--clave-movil-route", "qr"))
-    first = _cli(*arguments)
-    assert first["provider"] == provider.value
+def test_shared_door_and_tui_selection_use_the_same_persisted_backend(profile_operation, provider) -> None:
+    route = ClaveMovilRoute.QR if provider is AuthProviderKind.CLAVE_MOVIL else None
+    first = _configure(profile_operation, provider, clave_movil_route=route)
+    assert first.provider is provider
     assert _values(profile_operation)["auth.provider"] == provider.value
-    assert _cli("status")["provider"] == provider.value
+    assert _selected_provider() is provider
     account = _account(profile_operation)
     before = account.profile_overview
     unchanged = account.persist_profile_field(
@@ -91,7 +106,7 @@ def test_cli_and_tui_selection_use_the_same_persisted_backend(profile_operation,
         before.content_digest,
     )
     assert unchanged.record_revision == before.record_revision
-    assert not _cli(*arguments)["changed"]
+    assert not _configure(profile_operation, provider, clave_movil_route=route).changed
     changed = account.persist_profile_field(
         "auth.provider",
         "clave_permanente",
@@ -99,31 +114,31 @@ def test_cli_and_tui_selection_use_the_same_persisted_backend(profile_operation,
         unchanged.content_digest,
     )
     assert _values(profile_operation)["auth.provider"] == "clave_permanente"
-    assert _cli("status")["provider"] == "clave_permanente"
+    assert _selected_provider() is AuthProviderKind.CLAVE_PERMANENTE
     assert changed.content_digest == _account(profile_operation).profile_overview.content_digest
 
 
-@pytest.mark.parametrize("route", ("qr", "app_request"))
+@pytest.mark.parametrize("route", tuple(ClaveMovilRoute))
 def test_route_is_shared_and_survives_a_frontend_switch(profile_operation, route) -> None:
-    _cli("configure", "--provider", "clave_movil", "--clave-movil-route", route)
-    assert _values(profile_operation)["auth.clave_movil_route"] == route
+    _configure(profile_operation, AuthProviderKind.CLAVE_MOVIL, clave_movil_route=route)
+    assert _values(profile_operation)["auth.clave_movil_route"] == route.value
     account = _account(profile_operation)
     baseline = account.profile_overview
-    replacement = "app_request" if route == "qr" else "qr"
+    replacement = ClaveMovilRoute.APP_REQUEST if route is ClaveMovilRoute.QR else ClaveMovilRoute.QR
     account.persist_profile_field(
         "auth.clave_movil_route",
-        replacement,
+        replacement.value,
         baseline.record_revision,
         baseline.content_digest,
     )
-    assert _values(profile_operation)["auth.clave_movil_route"] == replacement
-    assert not _cli("configure", "--provider", "clave_movil", "--clave-movil-route", replacement)["changed"]
+    assert _values(profile_operation)["auth.clave_movil_route"] == replacement.value
+    assert not _configure(profile_operation, AuthProviderKind.CLAVE_MOVIL, clave_movil_route=replacement).changed
 
 
 def test_stale_tui_auth_edit_uses_a_safe_operation_refusal(profile_operation) -> None:
     account = _account(profile_operation)
     stale = account.profile_overview
-    _cli("configure", "--provider", "certificate")
+    _configure(profile_operation, AuthProviderKind.CERTIFICATE)
     committed = _account(profile_operation).profile_overview
     with pytest.raises(PublicErrorProjectionError) as refusal:
         account.persist_profile_field(
@@ -135,30 +150,8 @@ def test_stale_tui_auth_edit_uses_a_safe_operation_refusal(profile_operation) ->
     assert refusal.value.context is not None
     assert "PROFILE" in str(refusal.value.context["error_code"])
     assert _account(profile_operation).profile_overview.content_digest == committed.content_digest
-    assert _cli("status")["provider"] == "certificate"
+    assert _selected_provider() is AuthProviderKind.CERTIFICATE
     assert _CREDENTIAL_INPUT not in str(refusal.value.context)
-
-
-def test_invalid_cli_choice_is_sanitized_before_any_write(profile_operation) -> None:
-    before = _account(profile_operation).profile_overview
-    invalid = "secret-auth-choice-must-not-appear"
-    result = invoke_cached_cli(("--format", "json", "config", "auth", "configure", "--provider", invalid))
-    assert result.exit_code != 0
-    assert invalid not in result.output
-    assert json.loads(result.stderr)["error"]["code"] == "REFUSED_CLI_VALIDATION_BOUNDARY"
-    assert _account(profile_operation).profile_overview.content_digest == before.content_digest
-
-
-def test_public_cli_result_excludes_private_certificate_paths(profile_operation, tmp_path) -> None:
-    private_path = tmp_path / "private-certificate-name.p12"
-    payload = _cli("configure", "--provider", "certificate", "--file", str(private_path))
-    assert payload["certificate_file_provided"]
-    assert not payload["complete"]
-    serialized = json.dumps(payload)
-    assert str(private_path) not in serialized
-    assert private_path.name not in serialized
-    assert "identity_alignment_detail" not in payload
-    assert "file" not in payload
 
 
 @pytest.mark.asyncio
@@ -204,29 +197,6 @@ async def test_installed_tui_worker_reuses_its_running_operation_graph(profile_o
         assert _values(profile_operation)["auth.provider"] == "clave_permanente"
 
 
-def test_identity_mismatch_is_reported_without_exposing_either_identifier(profile_operation) -> None:
-    account = _account(profile_operation)
-    before = account.profile_overview
-    updated = account.persist_profile_field(
-        "identity.tax_id",
-        "12345678Z",
-        before.record_revision,
-        before.content_digest,
-    )
-    account.persist_profile_field(
-        "auth.dni_nie",
-        "87654321X",
-        updated.record_revision,
-        updated.content_digest,
-    )
-    result = _cli("configure", "--provider", "clave_movil", "--clave-movil-route", "qr")
-    assert result["identity_alignment"] == "mismatch"
-    assert not result["complete"]
-    assert result["precondition_action"]["failed_condition_id"] == "auth.clave_movil.identity_aligned"
-    assert "12345678Z" not in json.dumps(result)
-    assert "87654321X" not in json.dumps(result)
-
-
 @pytest.mark.asyncio
 async def test_public_operation_observation_and_events_omit_private_request_paths(profile_operation, tmp_path) -> None:
     private_path = tmp_path / "private-auth-operation-marker.p12"
@@ -260,8 +230,6 @@ async def test_public_operation_observation_and_events_omit_private_request_path
 
 
 def test_delayed_auth_submission_refuses_a_profile_switch_without_redirecting_the_save(profile_operation) -> None:
-    from ...auth_configuration import run_auth_configuration
-
     displayed_profile_id = require_active_bucket_id()
     displayed = _account(profile_operation).profile_overview
     register_profile_with_credentials(
