@@ -308,22 +308,3 @@ def test_cli_refuses_mixed_ledger_capture_inputs_before_submitting(
             counterpart_observation=["not-json"],
             ledger_payment_withholding=["not-json"],
         )
-
-
-def test_cli_refuses_retired_withholding_observation_transport_before_submission(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        aggregate_cli,
-        "run_modelo_aggregate",
-        lambda *_args, **_kwargs: pytest.fail("retired observation transport reached the profile operation"),
-    )
-
-    with pytest.raises(typer.BadParameter, match="--withholding-observation is not accepted for Modelo 100"):
-        aggregate_cli.aggregate_modelo(
-            cast(typer.Context, cast(object, None)),
-            modelo="100",
-            year=2025,
-            period="0A",
-            withholding_observation=["not-json"],
-        )

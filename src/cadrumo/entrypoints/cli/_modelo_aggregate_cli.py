@@ -13,7 +13,6 @@ from ...application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
 )
 from ...application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
-from ...application.aggregation.retenciones import RetencionObservation
 from ...application.aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
 from ...application.aggregation.withholding_filing_cadence import PERIODIC_WITHHOLDING_MODELOS
 from ...application.modelo.aggregate_operation import ModeloAggregateProjection
@@ -151,10 +150,8 @@ def _refuse_misplaced_ledger_payment_withholding(
     *,
     ledger_payment_withholding: list[str] | None,
     received_invoice_retencion: list[str] | None,
-    retencion_observation: list[str] | None,
     counterpart_observation: list[str] | None,
     foreign_asset_observation: list[str] | None,
-    withholding_observation: list[str] | None,
 ) -> None:
     """Refuse a ledger-payment capture outside its supported, exclusive input route.
 
@@ -169,10 +166,8 @@ def _refuse_misplaced_ledger_payment_withholding(
     if any(
         (
             received_invoice_retencion,
-            retencion_observation,
             counterpart_observation,
             foreign_asset_observation,
-            withholding_observation,
         )
     ):
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_exclusive"))
@@ -236,10 +231,8 @@ def aggregate_modelo(
     modelo: str,
     year: int,
     period: str,
-    retencion_observation: list[str] | None = None,
     counterpart_observation: list[str] | None = None,
     foreign_asset_observation: list[str] | None = None,
-    withholding_observation: list[str] | None = None,
     received_invoice_retencion: list[str] | None = None,
     ledger_payment_withholding: list[str] | None = None,
 ) -> None:
@@ -248,20 +241,11 @@ def aggregate_modelo(
         modelo,
         ledger_payment_withholding=ledger_payment_withholding,
         received_invoice_retencion=received_invoice_retencion,
-        retencion_observation=retencion_observation,
         counterpart_observation=counterpart_observation,
         foreign_asset_observation=foreign_asset_observation,
-        withholding_observation=withholding_observation,
     )
-    if modelo == Modelo("123").value and (retencion_observation or received_invoice_retencion):
+    if modelo == Modelo("123").value and received_invoice_retencion:
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.m123_ledger_payment_only"))
-    if modelo == Modelo("190").value and withholding_observation:
-        raise typer.BadParameter(
-            "--withholding-observation is not accepted for Modelo 190; "
-            "capture annual detail with invoice evidence on Modelo 111"
-        )
-    if withholding_observation:
-        raise typer.BadParameter(f"--withholding-observation is not accepted for Modelo {modelo}")
 
     command = PerModeloAggregationCommand(
         modelo=modelo,
@@ -270,13 +254,12 @@ def aggregate_modelo(
             if received_invoice_retencion and not ledger_payment_withholding
             else resolve_year_period(year, period, modelo=modelo)
         ),
-        retencion_observations=(
-            ()
-            if modelo in _PERIODIC_WINDOW_MODELOS
-            else _parse_typed_cli_observations(
-                retencion_observation, model=RetencionObservation, flag="--retencion-observation"
-            )
-        ),
+        # Populated by the registered operation itself from the rows already
+        # stored for the period (RetencionesAggregationSourceResolver), never
+        # from caller-supplied CLI input: a withholding-periodic modelo
+        # (111/115/123) refuses a non-empty value outright, and every other
+        # supported modelo overwrites it with the stored rows regardless.
+        retencion_observations=(),
         counterpart_observations=_parse_typed_cli_observations(
             counterpart_observation, model=CounterpartObservation, flag="--counterpart-observation"
         ),
@@ -307,10 +290,6 @@ def aggregate_modelo(
             )
         if invoice_evidence is None:
             raise typer.BadParameter("one invoice withholding allocation is required per command")
-        if retencion_observation:
-            raise typer.BadParameter(
-                f"--retencion-observation is not accepted for Modelo {modelo}; use invoice evidence"
-            )
         if not invoice_withholding_requests:
             raise typer.BadParameter("one invoice withholding allocation is required per command")
         if len(invoice_withholding_requests) > 1:
@@ -324,10 +303,6 @@ def aggregate_modelo(
         )
         aggregate_result = _invoice_capture_aggregate_result(capture.projection)
     else:
-        if modelo in _PERIODIC_WINDOW_MODELOS and retencion_observation:
-            raise typer.BadParameter(
-                f"--retencion-observation is not accepted for Modelo {modelo}; use invoice evidence"
-            )
         aggregate_projection = run_modelo_aggregate(
             ctx,
             command=command,

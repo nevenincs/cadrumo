@@ -38,6 +38,7 @@ from ..runtime_management import (
     preview_installed_runtime_stop,
     start_installed_runtime_management,
 )
+from .components.theme import tokenised
 
 type RuntimeManagementReader = Callable[[], Awaitable[RuntimeManagementSnapshot]]
 type RuntimeManagementAction = Callable[[], Awaitable[object]]
@@ -251,10 +252,16 @@ class RuntimeManagementCleanup:
 class RuntimeStopConfirmationScreen(ModalScreen[bool]):
     """Require an explicit acknowledgement of the global runtime scope."""
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     RuntimeStopConfirmationScreen { align: center middle; }
-    #runtime-stop-confirm-body { width: 65; height: auto; border: round $warning; padding: 1 2; background: $surface; }
-    """
+    #runtime-stop-confirm-body {
+        width: $cadrumo-modal-width;
+        height: auto;
+        border: $cadrumo-radius-overlay $warning;
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        background: $surface;
+    }
+    """)
 
     @override
     def compose(self) -> ComposeResult:
@@ -277,11 +284,17 @@ class RuntimeManagementScreen(ModalScreen[None]):
     """Inspect and explicitly manage the local runtime without profile proof."""
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     RuntimeManagementScreen { align: center middle; }
-    #runtime-management-body { width: 72; height: auto; border: round $accent; padding: 1 2; background: $surface; }
-    #runtime-management-status { height: 2; }
-    """
+    #runtime-management-body {
+        width: $cadrumo-modal-width;
+        height: auto;
+        border: $cadrumo-radius-overlay $accent;
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        background: $surface;
+    }
+    #runtime-management-status { height: auto; }
+    """)
 
     def __init__(
         self,

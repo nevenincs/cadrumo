@@ -32,6 +32,7 @@ from ....application.user_profile.automation_enrollment import AutomationReviewP
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.i18n.render import tr
 from ....core.operations import OperationEffect, OperationTerminalCondition
+from ..components.theme import tokenised
 
 type AutomationDecision = Literal["approve", "decline"]
 
@@ -52,11 +53,17 @@ class RuntimeAutomationDecisionScreen(ModalScreen[AutomationDecisionUiOutcome | 
     """Keep a reviewed decision and its borrowed client alive through settlement."""
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     RuntimeAutomationDecisionScreen { align: center middle; }
-    #automation-decision-body { width: 112; height: 35; border: round $accent; padding: 1 2; background: $surface; }
+    #automation-decision-body {
+        width: $cadrumo-modal-width;
+        height: $cadrumo-modal-height;
+        border: $cadrumo-radius-overlay $accent;
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        background: $surface;
+    }
     #automation-decision-consent { height: 1fr; }
-    """
+    """)
 
     def __init__(
         self,

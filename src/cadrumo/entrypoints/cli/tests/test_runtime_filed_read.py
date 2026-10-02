@@ -192,6 +192,24 @@ def test_list_submits_exact_profile_scope_and_restores_listing_rows(monkeypatch:
     assert options["result_type"] is FiledListPublicResultV1
 
 
+def test_list_accepts_the_live_session_write_a_remote_read_commits(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A read that drove an AEAT session settles ``updated``, and that is not a mismatch.
+
+    The executor combines its live-session write receipt with
+    ``OperationEffect.NONE`` before settling, so reaching the register can
+    report ``updated`` without the read having written anything of the
+    operator's. Refusing it here would fail the ordinary remote path, so the
+    negative half above uses ``unknown`` -- an extent the bridge genuinely
+    cannot trust.
+    """
+    _bind_list(monkeypatch, _list_projection(), effect=OperationEffect.UPDATED)
+
+    read = _list_read()
+
+    assert read.completion.effect is OperationEffect.UPDATED
+    assert read.projection == _list_projection()
+
+
 @pytest.mark.parametrize("mismatch", ["model", "year_range", "row_scope", "effect", "terminal", "refusal"])
 def test_list_scope_or_receipt_mismatch_refuses_correlated_operation(
     monkeypatch: pytest.MonkeyPatch,
@@ -209,7 +227,7 @@ def test_list_scope_or_receipt_mismatch_refuses_correlated_operation(
         rows = (projection.rows[0].model_copy(update={"year": 2023}),)
         projection = projection.model_copy(update={"rows": rows})
     elif mismatch == "effect":
-        effect = OperationEffect.UPDATED
+        effect = OperationEffect.UNKNOWN
     elif mismatch == "terminal":
         condition = OperationTerminalCondition.REFUSED
     elif mismatch == "refusal":

@@ -223,7 +223,9 @@ def test_retained_proof_never_authorizes_a_different_current_process(stop_fixtur
     assert fixture.task.instances.instance.stops == 0
 
 
-@pytest.mark.parametrize("guid", ["not-a-guid", "00000000-0000-0000-0000-000000000000", uuid4().hex])
+@pytest.mark.parametrize(
+    "guid", ["not-a-guid", "00000000-0000-0000-0000-000000000000", "8a56cad152364dd6a888fb364773e5b9"]
+)
 def test_preparation_refuses_missing_or_noncanonical_incarnation(stop_fixture: _StopFixture, guid: str) -> None:
     fixture = stop_fixture
     fixture.task.instances.instance.InstanceGuid = guid

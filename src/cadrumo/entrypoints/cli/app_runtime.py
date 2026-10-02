@@ -15,14 +15,14 @@ from ..runtime_management import (
     start_installed_runtime_management,
 )
 from .app_runtime_payloads import RuntimeManagerConfigResult, RuntimeStatusResult, RuntimeStopResult
-from .common import emit_envelope
+from .common import emit_envelope, emit_help_text
 from .errors import CliRefusedBoundaryError
 
 
 def runtime_root(ctx: typer.Context) -> None:
     """Show the runtime management command group when no action was selected."""
     if ctx.invoked_subcommand is None:
-        typer.echo(ctx.get_help())
+        emit_help_text(ctx)
 
 
 def runtime_status(ctx: typer.Context) -> None:

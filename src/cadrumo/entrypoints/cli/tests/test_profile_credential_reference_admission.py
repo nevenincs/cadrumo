@@ -34,39 +34,52 @@ def _context(source: ProfileSecretSourceOptions) -> typer.Context:
 
 
 @pytest.mark.parametrize(
-    ("source", "key", "reason"),
+    ("source", "key", "arguments", "reason"),
     (
         (
             ProfileSecretSourceOptions(
                 stdin=True, method=ProfileAuthenticationMethod.API_KEY, credential_reference=uuid4()
             ),
             "config_profile_view",
+            {},
             "profile_credential_ref_conflict",
         ),
         (
             ProfileSecretSourceOptions(credential_reference=uuid4()),
             "config_profile_view",
+            {},
             "profile_credential_ref_requires_api_key",
         ),
         (
             ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=uuid4()),
             "config_profile_resume",
+            {},
             "profile_credential_ref_inapplicable",
         ),
+        # A leaf that authenticates against the runtime for its ordinary mode,
+        # invoked in the local document-only mode that opens no runtime client.
+        # The posture alone is not enough: the reference is inapplicable to the
+        # invocation, not to the verb.
         (
             ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=uuid4()),
-            "config_profile_archive_export",
+            "app_modelo_work_report_verify",
+            {"document_only": True},
             "profile_credential_ref_inapplicable",
         ),
         (
             ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=uuid4()),
             "config_provision_status",
+            {},
             "profile_credential_ref_inapplicable",
         ),
     ),
 )
 def test_reference_refuses_invalid_routes_before_storage_or_secret_reads(
-    monkeypatch: pytest.MonkeyPatch, source: ProfileSecretSourceOptions, key: str, reason: str
+    monkeypatch: pytest.MonkeyPatch,
+    source: ProfileSecretSourceOptions,
+    key: str,
+    arguments: dict[str, object],
+    reason: str,
 ) -> None:
     monkeypatch.setattr(
         "cadrumo.application.provisioning.provision_cli_storage",
@@ -80,7 +93,7 @@ def test_reference_refuses_invalid_routes_before_storage_or_secret_reads(
     )
     with pytest.raises(CliRefusedBoundaryError) as caught:
         gate.preflight_parsed_leaf(
-            _context(source), graph=COMMAND_GRAPH, spec=COMMAND_GRAPH.node(key).spec, arguments={}
+            _context(source), graph=COMMAND_GRAPH, spec=COMMAND_GRAPH.node(key).spec, arguments=arguments
         )
     assert caught.value.translated_message is not None
     assert caught.value.translated_message.endswith(reason)

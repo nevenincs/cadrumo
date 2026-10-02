@@ -87,6 +87,8 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
         "config.profile.archive.import",
         "config.profile.resume",
         "config.profile.automation.approve",
+        "config.profile.automation.create",
+        "config.profile.automation.change",
         "config.auth.certificate.secret.set",
     }
     for node in adopters:

@@ -30,7 +30,14 @@ _ORIGINAL_ARGUMENTS = (
     "0.5",
 )
 _ORIGINAL_LEAF_KEY = "ledger.ratios.set"
-_FAILED_CONDITION_ID = "profile.active"
+#: The cold-start condition a runtime-routed mutation fails. ``ledger ratios
+#: set`` authenticates through the local runtime, so its refusal comes from the
+#: shared active-profile precondition rather than the storage write policy's
+#: route classification. The two differ in what they can say: this one counts
+#: registered profiles, so a logged-out operator is pointed at login instead of
+#: at creating a second profile.
+_FAILED_CONDITION_ID = "profile.active.available"
+_FAILED_EVIDENCE_ID = "profile.active.state"
 _RECOVERY_ACTION_ID = "operator.profile.create"
 
 
@@ -54,7 +61,7 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
         text = semantic_cli_output(text_refusal)
         assert f"  command: {_ORIGINAL_LEAF_KEY}" in text
         assert f'  action.failed_condition_id: "{_FAILED_CONDITION_ID}"' in text
-        assert '"evidence_id":"profile.active.storage_route"' in text
+        assert f'"evidence_id":"{_FAILED_EVIDENCE_ID}"' in text
         assert (
             '  action.action: {"action_id":"operator.profile.create",'
             '"cli_path":["config","profile","create"],'
@@ -83,12 +90,11 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
             "evidence": [
                 {
                     "condition_id": _FAILED_CONDITION_ID,
-                    "evidence_id": "profile.active.storage_route",
-                    "provenance": "runtime_observation",
+                    "evidence_id": _FAILED_EVIDENCE_ID,
+                    "provenance": "application_state",
                     "values": {
-                        "active_bucket_attached": False,
                         "active_profile_present": False,
-                        "route_kind": "root_fallback_database",
+                        "registered_profile_count": 0,
                     },
                 }
             ],

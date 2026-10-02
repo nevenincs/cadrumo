@@ -25,6 +25,7 @@ from ...application.user_profile.automation_lifecycle import AutomationDenialKin
 from ...application.user_profile.automation_lifecycle_service import AutomationResumeReceipt
 from ...core.async_cleanup import await_cancellation_complete, close_async_resources
 from ...core.i18n.render import tr
+from .components.theme import tokenised
 from .profile.automation_inventory import RuntimeAutomationInventoryScreen
 
 if TYPE_CHECKING:
@@ -130,14 +131,20 @@ class RuntimeAccessManagementScreen(ModalScreen[None]):
     """
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     RuntimeAccessManagementScreen { align: center middle; }
-    #runtime-access-body { width: 88; height: 34; border: round $accent; padding: 1 2; background: $surface; }
+    #runtime-access-body {
+        width: $cadrumo-modal-width;
+        height: $cadrumo-modal-height;
+        border: $cadrumo-radius-overlay $accent;
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        background: $surface;
+    }
     #runtime-access-content { height: 1fr; }
-    #runtime-access-sessions { height: auto; min-height: 3; }
-    #runtime-access-status { height: 2; }
+    #runtime-access-sessions { height: auto; }
+    #runtime-access-status { height: auto; }
     #runtime-access-actions { height: auto; }
-    """
+    """)
 
     def __init__(
         self,

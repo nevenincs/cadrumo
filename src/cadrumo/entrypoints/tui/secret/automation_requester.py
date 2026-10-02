@@ -46,6 +46,7 @@ from ....core.async_cleanup import AsyncResourceCleanupError, await_cancellation
 from ....core.i18n.render import tr
 from ....core.period import Period
 from ....core.time.clock import now
+from ..components.theme import tokenised
 
 type RequesterClientOpener = Callable[[UUID], Awaitable[RuntimeFrontendClient]]
 type FreshCredentialClientOpener = Callable[[UUID, UUID, float], RuntimeFrontendClient]
@@ -139,12 +140,21 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
     """Present explicit scope consent and retain one submitted delivery until settled."""
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     RuntimeAutomationRequesterScreen { align: center middle; }
-    #automation-request-body { width: 112; height: 42; border: round $accent; padding: 1 2; background: $surface; }
+    #automation-request-body {
+        width: $cadrumo-modal-width;
+        height: $cadrumo-modal-height;
+        border: $cadrumo-radius-overlay $accent;
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        background: $surface;
+    }
     #automation-request-form { height: 1fr; }
-    #automation-request-operations, #automation-request-actions, #automation-request-disclosures { height: 7; }
-    """
+    #automation-request-operations, #automation-request-actions, #automation-request-disclosures {
+        height: auto;
+        max-height: $cadrumo-log-max-height;
+    }
+    """)
 
     def __init__(
         self,

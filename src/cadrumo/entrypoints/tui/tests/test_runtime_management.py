@@ -92,7 +92,13 @@ async def test_stop_acceptance_or_unknown_dispatch_stays_fenced_after_refresh(
             ),
         )
         screen.query_one("#runtime-management-stop", Button).press()
-        await _until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
+        await _until(
+            pilot,
+            lambda: (
+                isinstance(app.screen, RuntimeStopConfirmationScreen)
+                and bool(app.screen.query("#runtime-stop-confirm"))
+            ),
+        )
         app.screen.query_one("#runtime-stop-confirm", Button).press()
         await _until(pilot, lambda: not screen._busy and fixture.consent.released)
         message = str(screen.query_one("#runtime-management-status", Static).content)
@@ -160,7 +166,13 @@ async def test_cancelled_stop_preview_can_be_discarded_without_confirmation(
             ),
         )
         screen.query_one("#runtime-management-stop", Button).press()
-        await _until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
+        await _until(
+            pilot,
+            lambda: (
+                isinstance(app.screen, RuntimeStopConfirmationScreen)
+                and bool(app.screen.query("#runtime-stop-confirm"))
+            ),
+        )
         app.screen.query_one("#runtime-stop-cancel", Button).press()
         await _until(pilot, lambda: not screen._busy and fixture.consent.released)
         assert not screen.query_one("#runtime-management-stop", Button).disabled
@@ -191,7 +203,13 @@ async def test_stop_ack_cleanup_failure_is_visible_and_retained_after_screen_clo
             ),
         )
         screen.query_one("#runtime-management-stop", Button).press()
-        await _until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
+        await _until(
+            pilot,
+            lambda: (
+                isinstance(app.screen, RuntimeStopConfirmationScreen)
+                and bool(app.screen.query("#runtime-stop-confirm"))
+            ),
+        )
         app.screen.query_one("#runtime-stop-confirm", Button).press()
         await _until(pilot, lambda: not screen._busy and fixture.channel.close_calls == 1)
         message = str(screen.query_one("#runtime-management-status", Static).content)

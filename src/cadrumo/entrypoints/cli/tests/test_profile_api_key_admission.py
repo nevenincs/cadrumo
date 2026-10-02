@@ -72,6 +72,14 @@ def test_api_method_without_protected_root_channel_refuses_before_admission(comm
 
 
 def test_api_method_refuses_local_leaf_before_reading_the_root_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A verb invoked in a mode that opens no runtime client refuses the key.
+
+    ``app modelo work report verify --document-only`` authenticates against
+    the runtime in its ordinary mode, so the posture alone does not settle
+    this. The invocation is what decides: a local run has no protected runtime
+    login for the key to reach, and the refusal must land before the root
+    secret is read or a local session is admitted.
+    """
     events: list[str] = []
     monkeypatch.setattr(gate, "_read_and_stage_leaf", lambda **_kwargs: events.append("read_leaf"))
     monkeypatch.setattr(
@@ -82,8 +90,8 @@ def test_api_method_refuses_local_leaf_before_reading_the_root_secret(monkeypatc
         gate.preflight_parsed_leaf(
             _context(source),
             graph=COMMAND_GRAPH,
-            spec=COMMAND_GRAPH.node("config_profile_archive_export").spec,
-            arguments={},
+            spec=COMMAND_GRAPH.node("app_modelo_work_report_verify").spec,
+            arguments={"document_only": True},
         )
     assert refused.value.translated_message is not None
     assert refused.value.translated_message.endswith("profile_secrets_api_key_inapplicable")
@@ -107,11 +115,17 @@ def test_runtime_leaf_receives_explicit_api_method_before_local_session(
     # A grant change requires a stored reference for its independent fresh
     # reconciliation, so the raw-key route remains available to other leaves.
     raw_key_leaves = gate._RUNTIME_PROFILE_KEYS - {"config_profile_automation_change"}
+    # Two leaves gate their own dispatch before the secret source is read: a
+    # discard demands its audited confirmation, and a censo import reaches the
+    # runtime only when it applies rather than previews. Supplying both is how
+    # the invocation gets as far as runtime admission, which is the subject
+    # here; neither value relaxes the authentication route under test.
+    confirmations: Mapping[str, object] = {"confirmed": True, "apply": True}
     for key in raw_key_leaves:
         spec = COMMAND_GRAPH.node(key).spec
         assert profile_authentication_posture(COMMAND_GRAPH.node(key)) is ProfileAuthenticationPosture.RESUME_FALLBACK
         gate.preflight_parsed_leaf(
-            _context(source), graph=COMMAND_GRAPH, spec=spec, arguments=cast(Mapping[str, object], {})
+            _context(source), graph=COMMAND_GRAPH, spec=spec, arguments=cast(Mapping[str, object], confirmations)
         )
     assert events == [(ProfileSecretSelection(ProfileSecretChannel.STDIN), ProfileAuthenticationMethod.API_KEY)] * len(
         raw_key_leaves

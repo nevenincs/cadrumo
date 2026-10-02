@@ -28,7 +28,7 @@ import pytest
 import typer
 import yaml
 
-from ....domain.modelos.row_models import Modelo347ContraparteRow
+from ....application.modelo.operation_definitions import Modelo347ContraparteRowWireV1
 from .._modelo import _resolve_amendment_detail_rows
 from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 from ..command_spec import CommandSpec, OptionSpec
@@ -78,13 +78,21 @@ def test_the_nil_flag_declares_an_empty_set_rather_than_silence() -> None:
 
 
 def test_a_row_spec_is_parsed_into_the_typed_domain_row() -> None:
-    """The positive control: the refusals above must not be a resolver that refuses everything."""
+    """The positive control: the refusals above must not be a resolver that refuses everything.
+
+    The resolved row is the payload-safe wire mirror rather than the domain
+    ``ModeloDetailRow``, matching ``ModeloWorkAmendRequest.detail_rows`` (see
+    its docstring): two of the six row families hydrate registry codes through
+    before-validators that the payload-graph gate refuses on a published
+    schema, so the operation crosses the wire mirror and re-validates into the
+    domain row on the authority side.
+    """
     resolved = _resolve_amendment_detail_rows((_ROW_SPEC,), declared_none=False)
 
     assert resolved is not None
     assert len(resolved) == 1
     row = resolved[0]
-    assert isinstance(row, Modelo347ContraparteRow)
+    assert isinstance(row, Modelo347ContraparteRowWireV1)
     assert row.nif == "B12345674"
 
 
@@ -95,7 +103,7 @@ def test_several_rows_are_carried_in_the_order_given() -> None:
     resolved = _resolve_amendment_detail_rows((_ROW_SPEC, other), declared_none=False)
 
     assert resolved is not None
-    contrapartes = [row for row in resolved if isinstance(row, Modelo347ContraparteRow)]
+    contrapartes = [row for row in resolved if isinstance(row, Modelo347ContraparteRowWireV1)]
     assert [row.nif for row in contrapartes] == ["B12345674", "B12345675"]
 
 
