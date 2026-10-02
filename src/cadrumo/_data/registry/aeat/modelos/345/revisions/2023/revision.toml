@@ -102,6 +102,7 @@ source_refs = [
     "boe-modelo-345-2023-amendment-hfp-1397",
 ]
 family_storage_baseline = "2022"
+scoped_families = ["form_layouts"]
 
 [revisions."2023".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
@@ -310,3 +311,9 @@ family = "deadline_windows"
 selector = {revision = "2022", id = "modelo-345-2022-0a"}
 replacement_id = "modelo-345-2023-0a"
 fields = {closes_on = 2024-01-31, filing_year = 2023, opens_on = 2024-01-01, period = "2023 0A"}
+[[revisions."2023".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2022", id = "form-layout"}
+fields = {revision_id = "2023", source_state_digest = "64ad7f35aa0ecc93940ed510d52790c89d561e962f73a3d4b8d075f91b9191a9"}
+sequence_additions = {placements = [{casilla_id = "datos-adicionales-clave-m", kind = "unplaced", unplaced_reason = "no_official_anchor"}, {casilla_id = "datos-identificativos-empleador", kind = "unplaced", unplaced_reason = "no_official_anchor"}, {casilla_id = "devoluciones-excesos", kind = "unplaced", unplaced_reason = "no_official_anchor"}, {casilla_id = "empleador-nif", kind = "unplaced", unplaced_reason = "no_official_anchor"}, {casilla_id = "empleador-nombre", kind = "unplaced", unplaced_reason = "no_official_anchor"}, {casilla_id = "pepp-cuenta-subcuenta", kind = "unplaced", unplaced_reason = "no_official_anchor"}, {casilla_id = "pepp-denominacion", kind = "unplaced", unplaced_reason = "no_official_anchor"}, {casilla_id = "pepp-numero-inscripcion", kind = "unplaced", unplaced_reason = "no_official_anchor"}, {casilla_id = "rendimientos-trabajo-no-superiores-60000", kind = "unplaced", unplaced_reason = "no_official_anchor"}]}
+sequence_order = {placements = [0, 1, 2, 3, 4, 26, 5, 27, 6, 7, 8, 9, 10, 28, 11, 29, 30, 12, 13, 14, 15, 16, 17, 18, 31, 32, 33, 19, 20, 21, 22, 34, 23, 24, 25]}

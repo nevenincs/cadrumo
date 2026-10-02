@@ -58,7 +58,7 @@ source_refs = [
     "boe-modelo-180-2023-form",
 ]
 family_storage_baseline = "2019-2022"
-scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest", "form_layouts"]
 
 [revisions."2023-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
@@ -637,10 +637,10 @@ selector = {revision = "2019-2022", id = "modelo-180-perceptor-row-withholding-p
 sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [1, 0]}
-[[revisions.2023-y-siguientes.family_removals]]
-family = "deadline_windows"
-selector = {revision = "2019-2022", id = "modelo-180-2022-0a"}
-
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "form_layouts"
+selector = {revision = "2019-2022", id = "form-layout"}
+fields = {revision_id = "2023-y-siguientes", source_state_digest = "d3ff3155f70a629342b5acc3a333b70ae172ad6935b63103c483b294abf85e08"}
 [[revisions.2023-y-siguientes.family_removals]]
 family = "export_layouts"
 selector = {revision = "2019-2022", id = "modelo-180-fichero-boe-2014"}

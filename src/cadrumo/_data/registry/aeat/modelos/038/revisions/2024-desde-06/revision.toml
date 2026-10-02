@@ -26,7 +26,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent: applicability-grade review; June-December 2024 selection is bounded by BOE-A-2024-13049's first-applicable declaration; no pre-June design authority is selected"
 reviewed_at = 2026-08-25
 family_storage_baseline = "2022-hasta-2024-05"
-scoped_families = ["workbook_parity_refs"]
+scoped_families = ["workbook_parity_refs", "form_layouts"]
 
 [[revisions."2024-desde-06".family_overrides]]
 family = "constructs"
@@ -46,3 +46,7 @@ selector = {revision = "2022-hasta-2024-05", id = "modelo-038-static-layout"}
 fields = {fixture_id = "modelo-038-2024-layout", workbook_source = "aeat-dr-038-2024"}
 sequence_additions = {source_refs = ["aeat-dr-038-2024"]}
 sequence_removals = {source_refs = [0]}
+[[revisions."2024-desde-06".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2022-hasta-2024-05", id = "form-layout"}
+fields = {revision_id = "2024-desde-06", source_state_digest = "014ef867a91e49e6c5f92753627c212b0bca48a52f53b3fddc857727f0758322"}

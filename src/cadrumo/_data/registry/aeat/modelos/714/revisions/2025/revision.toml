@@ -63,7 +63,7 @@ source_refs = [
     "aeat-dr-714-2025",
 ]
 family_storage_baseline = "2024"
-scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest", "form_layouts"]
 
 [revisions."2025".family_dispositions.projection_endpoints]
 reason = """
@@ -7198,3 +7198,9 @@ family = "completeness_manifest"
 selector = {revision = "2024", id = "aeat-modelo-714-procedure"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-4"]}
 sequence_removals = {legal_refs = [7]}
+[[revisions."2025".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2024", id = "form-layout"}
+fields = {revision_id = "2025", source_state_digest = "b6f97b48ae17ccca6c61f626d97ada7a042735a5adb1adedecc5875c2ff59343"}
+sequence_additions = {design_sources = [{source_ref = "aeat-dr-714-2025", sha256 = "2245e91f8f074a73c2366b1af9eee14ae1744e7ab844709e8b84db053c7f454f"}]}
+sequence_removals = {design_sources = [0]}

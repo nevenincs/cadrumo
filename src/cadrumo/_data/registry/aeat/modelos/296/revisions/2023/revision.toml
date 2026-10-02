@@ -50,7 +50,7 @@ source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-
 # its differences from the 2022 edition, the modelo's storage baseline.
 casilla_storage_baseline = "2022"
 family_storage_baseline = "2022"
-scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "form_layouts"]
 
 [revisions."2023".family_dispositions.parameters]
 reason = """
@@ -131,3 +131,9 @@ replacement_id = "aeat-dr-296-2023"
 sequence_additions = {source_refs = ["aeat-dr-296-2023"]}
 sequence_removals = {source_refs = [1]}
 sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2022", id = "form-layout"}
+fields = {revision_id = "2023", source_state_digest = "aea3db55eaea526864d35a16553a50c97778d11607d96a813478d76ae0124c9f"}
+sequence_additions = {pages = [{id = "m296-declarante", official_ref = "m296-declarante", heading_key = "modelo.schema.296.form.page.m296-declarante.heading", sections = [{id = "general", heading_key = "modelo.schema.296.form.section.general.heading", blocks = [{kind = "field", id = "field", casilla_id = "02"}, {kind = "field", id = "field-2", casilla_id = "03"}, {kind = "field", id = "field-3", casilla_id = "04"}]}]}]}
+sequence_removals = {pages = [0]}

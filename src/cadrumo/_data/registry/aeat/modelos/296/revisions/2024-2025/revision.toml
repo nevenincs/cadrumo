@@ -43,7 +43,7 @@ source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-
 # stored as differences from the 2023 edition's effective members.
 casilla_storage_baseline = "2023"
 family_storage_baseline = "2023"
-scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "form_layouts"]
 
 [revisions."2024-2025".family_dispositions.parameters]
 reason = """
@@ -339,6 +339,10 @@ family = "projection_endpoints"
 selector = {revision = "2023", id = "m296-perceptor:field-tipo-codigo"}
 sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
 sequence_removals = {source_refs = [0]}
+[[revisions."2024-2025".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2023", id = "form-layout"}
+fields = {revision_id = "2024-2025", source_state_digest = "180bf403a4ffac4b04cdf4859a62dfed3e548cf4b069384e93b9b2b4a1dee1c7"}
 [[revisions."2024-2025".family_positions]]
 family = "projection_endpoints"
 id = "m296-perceptor:field-clave-de-mercado"

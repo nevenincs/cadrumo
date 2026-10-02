@@ -80,7 +80,7 @@ independent_check_coverage is n/a: NO CLAIM, not zero. No human operator has cou
 this edition."""
 reviewed_at = 2026-09-12
 family_storage_baseline = "2023"
-scoped_families = ["workbook_parity_refs", "completeness_manifest", "verification_expectations"]
+scoped_families = ["workbook_parity_refs", "completeness_manifest", "verification_expectations", "form_layouts"]
 
 [[revisions."2024".lineage_attestations]]
 family = "casillas"
@@ -708,3 +708,7 @@ family = "constructs"
 selector = {revision = "2023", id = "modelo-222-declaration-construct"}
 sequence_additions = {deadline_windows = ["modelo-222-2024-1p", "modelo-222-2024-2p", "modelo-222-2024-3p"]}
 sequence_removals = {deadline_windows = [0, 1, 2]}
+[[revisions."2024".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2023", id = "form-layout"}
+fields = {revision_id = "2024", source_state_digest = "279594812f13d0235231197d00e9e950f03a8312a2f75ee265a3ad2a3882e577"}

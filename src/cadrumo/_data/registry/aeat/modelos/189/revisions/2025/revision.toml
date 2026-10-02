@@ -57,7 +57,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-09-12
 family_storage_baseline = "2024"
-scoped_families = ["export_layouts", "workbook_parity_refs"]
+scoped_families = ["export_layouts", "workbook_parity_refs", "form_layouts"]
 
 [revisions."2025".family_dispositions.formulas]
 reason = """
@@ -307,6 +307,10 @@ family = "application_links"
 selector = {revision = "2024", id = "modelo-189-export"}
 fields = {consumer = "cadrumo.application.filing.export_draft"}
 sequence_removals = {legal_refs = [1, 2], source_refs = [0, 1, 2, 4]}
+[[revisions."2025".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2024", id = "form-layout"}
+fields = {revision_id = "2025", source_state_digest = "35de799e600d3464998f96acf4429f65df80f685fc2bffb1fe6add7d248cb033"}
 [[revisions."2025".family_removals]]
 family = "workbook_parity_refs"
 selector = {revision = "2024", id = "modelo-189-dr-pdf"}

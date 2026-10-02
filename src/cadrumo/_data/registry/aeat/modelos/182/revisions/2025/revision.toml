@@ -70,6 +70,7 @@ per-donor detail rows are not modelled. NOT CLAIMED -- all 3 locales are complet
 but the translated strings were not audited for accuracy."""
 reviewed_at = 2026-09-12
 family_storage_baseline = "2024"
+scoped_families = ["form_layouts"]
 
 [[revisions."2025".lineage_attestations]]
 family = "casillas"
@@ -152,3 +153,7 @@ selector = {revision = "2024", id = "modelo-182-informative"}
 fields = {verification_expectations = ["modelo-182-informative-summary-verification"], workbook_parity_refs = ["modelo-182-orden-static-layout"]}
 sequence_additions = {deadline_windows = ["modelo-182-2025-0a"], source_refs = ["aeat-dr-182-2025"]}
 sequence_removals = {deadline_windows = [0], source_refs = [2]}
+[[revisions."2025".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2024", id = "form-layout"}
+fields = {revision_id = "2025", source_state_digest = "aa5d212895b8c6bb0b6d3cf68cc268e9cdda5b21f1dcd148df271928833b3551"}

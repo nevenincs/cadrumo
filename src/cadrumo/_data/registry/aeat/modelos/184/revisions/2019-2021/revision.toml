@@ -16,7 +16,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent: applicability-only historical epoch. BOE-A-2019-18752 is not a modelo 184 diseno de registro: it is Orden HAC/1276/2019, a multi-modelo amending orden covering modelos 123, 124, 184, 193, 194, 196, 198, 280 and 289, so its anexo republishes only the blocks that orden changed. Strict parsing reads the record from position 95 and reports positions 1-94, 96-107, 144-156, 170-223, 236-265 and 396 of the declared 500 as never printed in this document. That is a property of the source, not a parser gap, so the criterion previously recorded here -- a complete strict parse from position 1 -- is unreachable and must not be waited on. AEAT's own diseno index for modelo 184 publishes consolidated workbooks only for the 2023-2024 and 2025 epochs and links the raw ordenes for every earlier one, so no AEAT workbook for this epoch is pending publication. No casillas, bindings, export layout, or continuity claim is declared. Promotion requires reconstructing this epoch's layout as a delta over the 2016-2018 baseline from the blocks this orden republishes, independently compared against BOE-A-2019-18752."
 reviewed_at = 2026-09-19
 family_storage_baseline = "2016-2018"
-scoped_families = ["workbook_parity_refs"]
+scoped_families = ["workbook_parity_refs", "form_layouts"]
 
 [[revisions."2019-2021".lineage_attestations]]
 family = "casillas"
@@ -50,6 +50,7 @@ fields = {fixture_id = "modelo-184-2019-boe-static-layout", workbook_source = "b
 sequence_additions = {source_refs = ["boe-dr-184-2019-2021"]}
 sequence_removals = {source_refs = [0]}
 
-[[revisions."2019-2021".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2016-2018", id = "modelo-184-2018-0a"}
+[[revisions."2019-2021".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2016-2018", id = "form-layout"}
+fields = {revision_id = "2019-2021", source_state_digest = "6e65e3a83dba7a85b8db48990fb65fb5458bd29fa29417f5ef793865542ca77d"}

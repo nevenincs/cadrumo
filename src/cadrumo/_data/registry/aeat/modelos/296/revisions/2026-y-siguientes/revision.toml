@@ -28,7 +28,7 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-09-30
 casilla_storage_baseline = "2024-2025"
 family_storage_baseline = "2024-2025"
-scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "export_layouts"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "export_layouts", "form_layouts"]
 
 [[revisions."2026-y-siguientes".cleared_families]]
 family = "export_layouts"
@@ -82,3 +82,9 @@ sequence_additions = {source_refs = ["boe-modelo-296-2026-layout"]}
 sequence_removals = {source_refs = [0]}
 
 # The export surface is retired with the layout that would back it.
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2024-2025", id = "form-layout"}
+fields = {revision_id = "2026-y-siguientes", source_state_digest = "077b0548620965edb80427775493a2ac995ac30be4ca73094c021a891d72cb66"}
+sequence_additions = {pages = [{id = "numbered-boxes", heading_key = "modelo.schema.296.form.page.numbered-boxes.heading", sections = [{id = "resumen", heading_key = "modelo.schema.296.form.section.resumen.heading", blocks = [{kind = "field", id = "field-1", casilla_id = "02"}, {kind = "field", id = "field-2", casilla_id = "03"}, {kind = "field", id = "field-3", casilla_id = "04"}]}]}]}
+sequence_removals = {pages = [0]}

@@ -63,7 +63,7 @@ gaps remain open (filing gaps 0). NOT CLAIMED -- all 3 \
 locales are complete for the 24 labels, but the translated strings were not audited for accuracy."""
 reviewed_at = 2026-08-21
 family_storage_baseline = "2022-2025"
-scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "form_layouts"]
 
 [revisions."2026".family_dispositions.projection_endpoints]
 reason = """
@@ -370,66 +370,7 @@ selector = {revision = "2022-2025", id = "modelo-136-filing"}
 sequence_additions = {source_refs = ["aeat-modelo-136-procedure", "aeat-modelo-136-procedure-record"]}
 sequence_removals = {source_refs = [0]}
 
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2022-1t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2022-2t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2022-3t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2022-4t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2023-1t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2023-2t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2023-3t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2023-4t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2024-1t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2024-2t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2024-3t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2024-4t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2025-1t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2025-2t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2025-3t"}
-
-[[revisions."2026".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2022-2025", id = "modelo-136-2025-4t"}
+[[revisions."2026".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2022-2025", id = "form-layout"}
+fields = {revision_id = "2026", source_state_digest = "edb9afdba80248bc81f403fe485da0e390e40d30d1d42b07887012e8923ce8e4"}

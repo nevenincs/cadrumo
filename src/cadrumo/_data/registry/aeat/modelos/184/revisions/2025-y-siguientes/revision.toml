@@ -39,7 +39,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-16
 family_storage_baseline = "2023-2024"
-scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "form_layouts"]
 
 [revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
@@ -903,10 +903,10 @@ sequence_additions = {source_refs = ["aeat-dr-184-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
 
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023-2024", id = "modelo-184-2023-0a"}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023-2024", id = "modelo-184-2024-0a"}
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2023-2024", id = "form-layout"}
+fields = {revision_id = "2025-y-siguientes", source_state_digest = "3cdf2a795b7999a0ac329d2abde7dfb174dac8ef36d936cdd79a6320009830b2"}
+sequence_additions = {pages = [{id = "m184-declarante", official_ref = "m184-declarante", heading_key = "modelo.schema.184.form.page.m184-declarante.heading", sections = [{id = "general", heading_key = "modelo.schema.184.form.section.general.heading", blocks = [{kind = "field", id = "field", casilla_id = "decl.ejercicio"}, {kind = "field", id = "field-2", casilla_id = "decl.tipo-soporte"}, {kind = "field", id = "field-3", casilla_id = "decl.numero-justificante"}, {kind = "field", id = "field-4", casilla_id = "decl.complementaria-sustitutiva"}, {kind = "field", id = "field-5", casilla_id = "decl.total-socios"}, {kind = "field", id = "field-6", casilla_id = "decl.entidad-espanola.tipo-entidad"}, {kind = "field", id = "field-7", casilla_id = "decl.entidad-espanola.actividad-principal"}, {kind = "field", id = "field-8", casilla_id = "decl.entidad-extranjera.tipo-entidad"}, {kind = "field", id = "field-9", casilla_id = "decl.entidad-extranjera.objeto"}, {kind = "field", id = "field-10", casilla_id = "decl.entidad-extranjera.clave-pais"}, {kind = "field", id = "field-11", casilla_id = "decl.entidad-extranjera.porcentaje-renta-residentes"}, {kind = "field", id = "field-12", casilla_id = "decl.tributacion-impuesto-sociedades"}, {kind = "field", id = "field-13", casilla_id = "decl.importe-neto-cifra-negocios"}, {kind = "field", id = "field-14", casilla_id = "decl.representante-nif"}, {kind = "field", id = "field-15", casilla_id = "decl.representante-nombre"}, {kind = "field", id = "field-16", casilla_id = "decl.total-registros-entidad"}]}]}], placements = [{casilla_id = "decl.total-registros-entidad", kind = "on_form"}]}
+sequence_removals = {pages = [0]}
+sequence_order = {pages = [3, 0, 1, 2], placements = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 86, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]}

@@ -110,7 +110,7 @@ id = "157"
 number = "157"
 section = ["iva", "recargo_equivalencia", "devengado"]
 data_type = "ratio"
-constraints = {min_value = "0", max_value = "100", legal_refs = ["orden-eha-3786-2008:art-1"]}
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "dr303_157"
 continuidad_id = "dr303-157"
 continuidad_origin = "new_on_form"

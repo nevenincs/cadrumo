@@ -22,7 +22,7 @@ absent. Stated because it is not a discriminator: 60 of the 80 revisions stamped
 carry the same flag and none of them name it."""
 reviewed_at = 2026-08-21
 family_storage_baseline = "2022"
-scoped_families = ["workbook_parity_refs", "verification_expectations"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "form_layouts"]
 
 [[revisions."2023-y-siguientes".lineage_attestations]]
 family = "casillas"
@@ -87,3 +87,7 @@ fields = {closes_on = 2026-01-31, filing_year = 2025, opens_on = 2026-01-01, per
 sequence_additions = {source_refs = ["aeat-calendario-contribuyente-2026-hasta-2-febrero"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2022", id = "form-layout"}
+fields = {revision_id = "2023-y-siguientes", source_state_digest = "9f16bb4e70a22b9a8164c95666cfe63ab4e734ce81c6fdf78f12cfe6b8935fd7"}

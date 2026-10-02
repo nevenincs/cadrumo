@@ -54,7 +54,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 family_storage_baseline = "2021"
-scoped_families = ["export_layouts", "workbook_parity_refs"]
+scoped_families = ["export_layouts", "workbook_parity_refs", "form_layouts"]
 
 [[revisions."2022-1t".casilla_overrides]]
 selector = { revision = "2021", id = "490-01-indicador-pagina-complementaria-12" }
@@ -973,3 +973,8 @@ selector = { revision = "2021", id = "reg-total-cuota-101" }
 fields = { continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t; el mismo diseno DR49002 conserva Total Regularizacion (cuota) [101] en posicion 1709. La resolucion 2022-1t>2022-2t-4t funda despues [101]>[363] por la ampliacion territorial; este edge no renumera ni repurposa [101].", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
+
+[[revisions."2022-1t".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2021", id = "form-layout"}
+fields = {revision_id = "2022-1t", source_state_digest = "ad8f829536c32dcb6422d50bcf1e6661104b4567f465d980d68c4aaede1ec62d"}

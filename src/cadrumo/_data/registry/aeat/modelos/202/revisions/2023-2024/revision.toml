@@ -33,7 +33,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 family_storage_baseline = "2019-2022"
-scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "form_layouts"]
 
 [revisions."2023-2024".family_dispositions.projection_endpoints]
 reason = "A projection endpoint names a FilingProjectionRef, and that type is a CLOSED union whose members are all m303_* -- the seven Modelo 303 endpoints the application projects into. No non-303 revision can populate this family at all: there is no member for it to name, so an entry here would not merely be unauthored, it would be unrepresentable. A type-level exclusion, not missing work; it changes only if the union gains a 202 member, which is a code change in core, not a registry one."
@@ -580,14 +580,9 @@ replacement_id = "aeat-dr-202-2023"
 sequence_additions = {source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
 sequence_removals = {source_refs = [0, 1]}
 
-[[revisions."2023-2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2019-2022", id = "modelo-202-2022-1p"}
-
-[[revisions."2023-2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2019-2022", id = "modelo-202-2022-2p"}
-
-[[revisions."2023-2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2019-2022", id = "modelo-202-2022-3p"}
+[[revisions."2023-2024".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2019-2022", id = "form-layout"}
+fields = {revision_id = "2023-2024", source_state_digest = "9de42ebc26d29a4e6d55dafd297deb31f8cd0a33de644f6f072dc96f8b26cca0"}
+sequence_additions = {design_sources = [{source_ref = "aeat-dr-202-2023", sha256 = "feca183eed1fc557950e44d043931e64b85d2858a16b06dff2c3cb8ba15aace5"}]}
+sequence_removals = {design_sources = [0]}

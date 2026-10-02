@@ -40,6 +40,7 @@ CLAIMED -- the export layout's byte-position parity against the design is not ru
 CLAIMED -- the grade stays applicability; no independent AEAT oracle checked any value. No \
 human operator has countersigned this."""
 reviewed_at = 2026-09-30
+scoped_families = ["form_layouts"]
 
 [[revisions."2023-2025".casilla_overrides]]
 selector = { revision = "2016-2022", id = "decl.ejercicio" }
@@ -66,13 +67,13 @@ fields = {workbook_parity_refs = ["modelo-165-orden-static-layout"]}
 sequence_additions = {source_refs = ["aeat-dr-165-2026"]}
 sequence_removals = {source_refs = [2]}
 
-[[revisions."2023-2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2016-2022", id = "modelo-165-2022-0a"}
-
-# EMPRESA EMERGENTE is tipo 1 position 184, so it follows IMPORTE FONDOS PROPIOS
-# (tipo 1, 168-183) and precedes the tipo 2 campos, which the storage merge
-# would otherwise place it after.
+[[revisions."2023-2025".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2016-2022", id = "form-layout"}
+fields = {revision_id = "2023-2025", source_state_digest = "bfe4f9df355ed96ef146d31359dfee1dc29e59e4ad660da36c3da5379a6e6dbb"}
+sequence_additions = {pages = [{id = "modelo-165-declarante", official_ref = "modelo-165-declarante", heading_key = "modelo.schema.165.form.page.modelo-165-declarante.heading", sections = [{id = "general", heading_key = "modelo.schema.165.form.section.general.heading", blocks = [{kind = "field", id = "field", casilla_id = "declarante-razon-social"}, {kind = "field", id = "field-2", casilla_id = "persona-relacion"}, {kind = "field", id = "field-3", casilla_id = "numero-identificativo-declaracion"}, {kind = "field", id = "field-4", casilla_id = "declaracion-complementaria-sustitutiva"}, {kind = "field", id = "field-5", casilla_id = "numero-identificativo-anterior"}, {kind = "field", id = "field-6", casilla_id = "numero-total-declarados"}, {kind = "field", id = "field-7", casilla_id = "importe-total-suscripciones"}, {kind = "field", id = "field-8", casilla_id = "fecha-constitucion"}, {kind = "field", id = "field-9", casilla_id = "importe-fondos-propios"}, {kind = "field", id = "field-10", casilla_id = "empresa-emergente"}]}]}], placements = [{casilla_id = "empresa-emergente", kind = "on_form"}]}
+sequence_removals = {pages = [0]}
+sequence_order = {pages = [1, 0], placements = [0, 1, 2, 3, 17, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]}
 [[revisions."2023-2025".casilla_positions]]
 id = "empresa-emergente"
 position = 11

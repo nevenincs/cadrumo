@@ -94,6 +94,7 @@ source_refs = [
     "boe-modelo-345-2024-amendment-hac-1504",
 ]
 family_storage_baseline = "2023"
+scoped_families = ["form_layouts"]
 
 [revisions."2024".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
@@ -325,3 +326,7 @@ family = "deadline_windows"
 selector = {revision = "2023", id = "modelo-345-2023-0a"}
 replacement_id = "modelo-345-2024-0a"
 fields = {closes_on = 2025-01-31, filing_year = 2024, opens_on = 2025-01-01, period = "2024 0A"}
+[[revisions."2024".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2023", id = "form-layout"}
+fields = {revision_id = "2024", source_state_digest = "edb24d2946c5fc404501856136beceb30c7ec9f8127b82cde3c120e4351a6904"}

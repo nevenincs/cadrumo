@@ -23,7 +23,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 family_storage_baseline = "2019-2023"
-scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest", "form_layouts"]
 
 [revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
@@ -318,3 +318,9 @@ replacement_id = "aeat-dr-123-2024-v20"
 sequence_additions = {casillas = [{casilla_id = "01", number = "01"}, {casilla_id = "02", number = "02"}, {casilla_id = "04", number = "04"}, {casilla_id = "09", number = "09"}, {casilla_id = "11", number = "11"}, {casilla_id = "12", number = "12"}, {casilla_id = "13", number = "13"}, {casilla_id = "14", number = "14"}], legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]}
 sequence_removals = {legal_refs = [3], source_refs = [0, 1, 2]}
 sequence_order = {casillas = [5, 6, 0, 7, 1, 2, 3, 4, 8, 9, 10, 11, 12], legal_refs = [0, 1, 2, 5, 3, 4]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2019-2023", id = "form-layout"}
+fields = {revision_id = "2024-y-siguientes", source_state_digest = "89ff3c6c46f69fb185099107278327908c3c510afb0b1549098c98f76ffaa21d"}
+sequence_additions = {design_sources = [{source_ref = "aeat-dr-123-2024-v20", sha256 = "4c57b86291d83f3557d1dedcf0d984c5c94216e6334ccc01aa91362e5fae4bc4"}], pages = [{id = "dr-12301", official_ref = "DR 12301", heading_key = "modelo.schema.123.form.page.dr-12301.heading", sections = [{id = "general", heading_key = "modelo.schema.123.form.section.general.heading", blocks = [{kind = "field", id = "field", casilla_id = "01"}, {kind = "field", id = "field-2", casilla_id = "02"}, {kind = "field", id = "field-3", casilla_id = "03"}, {kind = "field", id = "field-4", casilla_id = "04"}, {kind = "field", id = "field-5", casilla_id = "05"}, {kind = "field", id = "field-6", casilla_id = "06"}, {kind = "field", id = "field-7", casilla_id = "07"}, {kind = "field", id = "field-8", casilla_id = "08"}, {kind = "field", id = "field-9", casilla_id = "09"}, {kind = "field", id = "field-10", casilla_id = "10"}, {kind = "field", id = "field-11", casilla_id = "11"}, {kind = "field", id = "field-12", casilla_id = "12"}, {kind = "field", id = "field-13", casilla_id = "13"}, {kind = "field", id = "field-14", casilla_id = "14"}]}]}], placements = [{casilla_id = "09", kind = "on_form", box_number = "09"}, {casilla_id = "10", kind = "on_form", box_number = "10"}, {casilla_id = "11", kind = "on_form", box_number = "11"}, {casilla_id = "12", kind = "on_form", box_number = "12"}, {casilla_id = "13", kind = "on_form", box_number = "13"}, {casilla_id = "14", kind = "on_form", box_number = "14"}]}
+sequence_removals = {design_sources = [0], pages = [0]}

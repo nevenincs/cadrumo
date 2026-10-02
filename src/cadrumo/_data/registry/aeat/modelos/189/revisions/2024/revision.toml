@@ -111,7 +111,7 @@ no independent AEAT oracle checked any emitted byte against a real presentacion,
 formula is declared. No human operator has countersigned this."""
 reviewed_at = 2026-09-12
 family_storage_baseline = "2023"
-scoped_families = ["export_layouts", "workbook_parity_refs"]
+scoped_families = ["export_layouts", "workbook_parity_refs", "form_layouts"]
 
 [revisions."2024".family_dispositions.live_cross_references]
 reason = """
@@ -338,3 +338,7 @@ family = "constructs"
 selector = {revision = "2023", id = "modelo-189-informative"}
 sequence_additions = {deadline_windows = ["modelo-189-2024-0a"]}
 sequence_removals = {deadline_windows = [0]}
+[[revisions."2024".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2023", id = "form-layout"}
+fields = {revision_id = "2024", source_state_digest = "08e7b61f76fe4422321666b1f80ab6e2bfc277291fa50feb393f17d9b9e85ac0"}

@@ -55,7 +55,7 @@ source_refs = [
     "boe-modelo-210-2024-form-layout",
 ]
 family_storage_baseline = "2023"
-scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "form_layouts"]
 
 
 [revisions."2024".family_dispositions.live_cross_references]
@@ -343,18 +343,7 @@ family = "workbook_parity_refs"
 selector = {revision = "2023", id = "modelo-210-procedure-2025"}
 fields = {fixture_id = "modelo-210-2024-procedure-skeleton"}
 
-[[revisions."2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023", id = "modelo-210-2023-0a-arrendamiento-ingreso"}
-
-[[revisions."2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023", id = "modelo-210-2023-0a-cuota-cero"}
-
-[[revisions."2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023", id = "modelo-210-2023-0a-devolucion"}
-
-[[revisions."2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023", id = "modelo-210-2023-0a-renta-imputada"}
+[[revisions."2024".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2023", id = "form-layout"}
+fields = {revision_id = "2024", source_state_digest = "fccbaf2d40915ce2382a31b5d176a99fbc33fc2124ebfe7db68b8508da2ebdeb"}

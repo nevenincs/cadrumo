@@ -21,7 +21,7 @@ source_refs = [
     "boe-modelo-763-2015-amendment",
 ]
 family_storage_baseline = "2012-2014"
-scoped_families = ["workbook_parity_refs"]
+scoped_families = ["workbook_parity_refs", "form_layouts"]
 
 [[revisions."2015-2017".lineage_attestations]]
 family = "casillas"
@@ -60,46 +60,7 @@ fields = {fixture_id = "modelo-763-2015-2017-layout", workbook_source = "aeat-dr
 sequence_additions = {source_refs = ["aeat-dr-763-2015"]}
 sequence_removals = {source_refs = [0]}
 
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2012-2t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2012-3t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2012-4t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2013-1t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2013-2t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2013-3t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2013-4t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2014-1t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2014-2t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2014-3t"}
-
-[[revisions."2015-2017".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2012-2014", id = "modelo-763-2014-4t"}
+[[revisions."2015-2017".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2012-2014", id = "form-layout"}
+fields = {design_sources = [{source_ref = "aeat-dr-763-2015", sha256 = "ee02eeef8b9809fca181f940d17a51feca603824473d3e3745a91a22fa1f38b7"}], revision_id = "2015-2017", seed_source = "design_box_number", source_state_digest = "b94c8575526a2be769f5b6d8681fa4894aa38b4f6c02df4b8af2ed23dbcd879f"}

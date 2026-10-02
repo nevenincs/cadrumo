@@ -25,7 +25,7 @@ source_refs = [
     "boe-modelo-308-2008-form",
 ]
 family_storage_baseline = "2011-julio-2015"
-scoped_families = ["workbook_parity_refs"]
+scoped_families = ["workbook_parity_refs", "form_layouts"]
 
 [[revisions."2016-2018".casilla_overrides]]
 selector = { revision = "2011-julio-2015", id = "decl.ejercicio" }
@@ -73,3 +73,7 @@ selector = {revision = "2011-julio-2015", id = "modelo-308-dr-static-layout"}
 fields = {fixture_id = "modelo-308-2016-2018-record-design", workbook_source = "aeat-dr-308-2016"}
 sequence_additions = {legal_refs = ["orden-eha-3786-2008:art-2"], source_refs = ["aeat-dr-308-2016"]}
 sequence_removals = {legal_refs = [0], source_refs = [0]}
+[[revisions."2016-2018".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2011-julio-2015", id = "form-layout"}
+fields = {design_sources = [{source_ref = "aeat-dr-308-2016", sha256 = "2c95320da57cfca17c60db52d038a50c1ec8b6b9b06ba59a5401de0f99b5411c"}], revision_id = "2016-2018", seed_source = "design_box_number", source_state_digest = "5ae904a59f7778c8b97d834eb8736417bffb2e3f7830eee68a9b6ef185f7c437"}

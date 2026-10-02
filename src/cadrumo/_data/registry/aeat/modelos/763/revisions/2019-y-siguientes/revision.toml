@@ -20,7 +20,7 @@ source_refs = [
     "boe-modelo-763-2018-amendment",
 ]
 family_storage_baseline = "2018-4t"
-scoped_families = ["workbook_parity_refs"]
+scoped_families = ["workbook_parity_refs", "form_layouts"]
 
 [[revisions."2019-y-siguientes".lineage_attestations]]
 family = "casillas"
@@ -51,6 +51,7 @@ family = "workbook_parity_refs"
 selector = {revision = "2018-4t", id = "modelo-763-static-layout"}
 fields = {fixture_id = "modelo-763-2019-y-siguientes-layout"}
 
-[[revisions."2019-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2018-4t", id = "modelo-763-2018-4t"}
+[[revisions."2019-y-siguientes".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2018-4t", id = "form-layout"}
+fields = {revision_id = "2019-y-siguientes", source_state_digest = "0a1e29690d1ec855d31a12e73474feadf617d65d6d69a02b0cb7ff2c5c85b8b3"}

@@ -38,7 +38,7 @@ that no orden has withdrawn. The five hoja-resumen casillas remain manual input,
 declared, and no authority grade is promoted."""
 reviewed_at = 2026-08-30
 family_storage_baseline = "2023"
-scoped_families = ["workbook_parity_refs", "verification_expectations"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "form_layouts"]
 
 [[revisions."2024".lineage_attestations]]
 family = "casillas"
@@ -84,3 +84,8 @@ to_revision = "2024"
 origin = "seeded"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2024".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2023", id = "form-layout"}
+fields = {revision_id = "2024", source_state_digest = "2d6a1a7474b2323c3640858911e6661430577e922fd5a2bd05d7062ede78aebf"}

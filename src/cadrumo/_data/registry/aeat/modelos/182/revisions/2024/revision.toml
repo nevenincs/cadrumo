@@ -105,9 +105,14 @@ completeness manifest or verification expectation are declared, and the grade st
 applicability. NOT CLAIMED -- no independent AEAT oracle checked any value. No human \
 operator has countersigned this."""
 reviewed_at = 2026-10-01
+scoped_families = ["form_layouts"]
 
 [[revisions."2024".family_overrides]]
 family = "constructs"
 selector = {revision = "2022-2023", id = "modelo-182-informative"}
 sequence_additions = {deadline_windows = ["modelo-182-2024-0a"], source_refs = ["aeat-dr-182-2024"]}
 sequence_removals = {deadline_windows = [0, 1], legal_refs = [2], source_refs = [2]}
+[[revisions."2024".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2022-2023", id = "form-layout"}
+fields = {revision_id = "2024", source_state_digest = "ea8e9f05e3f25434ac06eb6a56feb7ca002de34f765a592d8112ef3832b235c0"}

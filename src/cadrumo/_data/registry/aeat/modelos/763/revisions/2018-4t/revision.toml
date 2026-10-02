@@ -21,7 +21,7 @@ source_refs = [
     "boe-modelo-763-2018-amendment",
 ]
 family_storage_baseline = "2018-1t-3t"
-scoped_families = ["workbook_parity_refs"]
+scoped_families = ["workbook_parity_refs", "form_layouts"]
 
 [[revisions."2018-4t".lineage_attestations]]
 family = "casillas"
@@ -60,14 +60,9 @@ fields = {fixture_id = "modelo-763-2018-4t-layout", workbook_source = "enrolled-
 sequence_additions = {source_refs = ["enrolled-modelo-763-layout"]}
 sequence_removals = {source_refs = [0]}
 
-[[revisions."2018-4t".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2018-1t-3t", id = "modelo-763-2018-1t"}
-
-[[revisions."2018-4t".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2018-1t-3t", id = "modelo-763-2018-2t"}
-
-[[revisions."2018-4t".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2018-1t-3t", id = "modelo-763-2018-3t"}
+[[revisions."2018-4t".family_overrides]]
+family = "form_layouts"
+selector = {revision = "2018-1t-3t", id = "form-layout"}
+fields = {revision_id = "2018-4t", source_state_digest = "2a229e845cc4235de173a72f0d7bdb62e0bf42d311e2ae63aa897755bdb4a3bf"}
+sequence_additions = {design_sources = [{source_ref = "enrolled-modelo-763-layout", sha256 = "97addffdb13416fd2a1a5339520987b615834a200e6772b22fcf0a6cd2127ea6"}]}
+sequence_removals = {design_sources = [0]}
