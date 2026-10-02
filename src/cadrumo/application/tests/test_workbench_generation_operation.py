@@ -130,10 +130,10 @@ class _Repository[ValueT]:
     def exists(self) -> bool:
         return True
 
-    def load(self) -> ValueT:
+    def load(self, *, operation: object | None = None) -> ValueT:
         return self.value
 
-    def load_revisioned(self) -> tuple[ValueT, str]:
+    def load_revisioned(self, *, operation: object | None = None) -> tuple[ValueT, str]:
         return self.value, "revision-1"
 
     def save(self, catalogue: ValueT) -> None:

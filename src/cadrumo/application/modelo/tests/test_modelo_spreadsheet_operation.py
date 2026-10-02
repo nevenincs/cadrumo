@@ -809,7 +809,7 @@ def test_snapshot_refusal_is_bound_to_exact_profile_purpose_and_workbook(
         workbook_engine_version="old",
         expected_engine_version="current",
         workbook_registry_sha="b" * 64,
-        snapshot_registry_sha="c" * 64,
+        snapshot_registry_sha="c" * 16,
     )
 
     def calculate(

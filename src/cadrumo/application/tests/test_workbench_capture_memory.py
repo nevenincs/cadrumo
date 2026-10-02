@@ -54,7 +54,7 @@ class _Store[ValueT]:
     def load(self, *_args: object) -> ValueT:
         return self.value
 
-    def load_revisioned(self) -> tuple[ValueT, str]:
+    def load_revisioned(self, *, operation: object | None = None) -> tuple[ValueT, str]:
         return self.value, self.revision
 
 
