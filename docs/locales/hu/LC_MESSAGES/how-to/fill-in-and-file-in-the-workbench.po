@@ -97,14 +97,16 @@ msgstr ""
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md:25
 msgid ""
-"To choose another declaration, press `+`. Choose the Modelo first, then "
-"one of its supported periods, and select **Create and open**. Esc on the "
-"period picker returns to the Modelo picker; Esc there cancels."
+"To choose another declaration, press `+`. Choose the Modelo first. In the"
+" period picker, press Enter to select a period, then select **Create and "
+"open**. Esc on the period picker returns to the Modelo picker; Esc there "
+"cancels."
 msgstr ""
 "Másik bevallás választásához nyomja meg a `+` billentyűt. Először "
-"válassza ki a nyomtatványt, majd az egyik támogatott időszakot, végül a "
-"**Létrehozás és megnyitás** lehetőséget. Az időszakválasztóban az Esc "
-"visszalép a nyomtatványválasztóhoz; ott az Esc megszakítja a választást."
+"válassza ki a nyomtatványt, majd az időszakválasztóban az Enterrel "
+"válasszon időszakot. Ezután válassza a **Létrehozás és megnyitás** "
+"lehetőséget. Az időszakválasztóban az Esc visszalép a "
+"nyomtatványválasztóhoz; ott az Esc megszakítja a választást."
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md:29
 msgid ""

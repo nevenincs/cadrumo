@@ -22,9 +22,9 @@ explains that step.
 3. Select a local declaration and press Enter to open it. For a period marked
    **Not started**, Enter asks you to confirm that you want to start it.
 
-To choose another declaration, press `+`. Choose the Modelo first, then one of
-its supported periods, and select **Create and open**. Esc on the period picker
-returns to the Modelo picker; Esc there cancels.
+To choose another declaration, press `+`. Choose the Modelo first. In the
+period picker, press Enter to select a period, then select **Create and open**.
+Esc on the period picker returns to the Modelo picker; Esc there cancels.
 
 The list shows the state, result direction, deadline and next action. Use `/`
 to search by modelo number, name or period in words; accents do not affect the

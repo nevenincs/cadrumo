@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:91da431888e89e8e811041956f941a546afb1a4b17a857f275370dfa5d2be5b3'
+body_hash: 'sha256:c8b8769fe4d1c9bd56db7d024211cae9289414c2a91214b6083f57e2a234bdff'
 related:
   - "[[2026-10-02-modelo-filing-ux-followup-plan]]"
 ---
@@ -69,7 +69,24 @@ related:
 - `S01` `verify:` `s02-locale-inventory introduced four missing cells` -> `fail`
 - `S01` `verify:` `s01-locale-inventory-repaired required missing0` -> `pass`
 - `S01` `verify:` `s04-native-frozen16 declarations stable and principal accepted` -> `pass`
+- `S02` `M` `src/cadrumo/locales/es/common.yml`
+- `S02` `M` `src/cadrumo/locales/en/common.yml`
+- `S02` `M` `src/cadrumo/locales/ca/common.yml`
+- `S02` `M` `src/cadrumo/locales/hu/common.yml`
+- `S02` `M` `docs/how-to/fill-in-and-file-in-the-workbench.md`
+- `S02` `M` `docs/locales/es/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S02` `M` `docs/locales/ca/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S02` `M` `docs/locales/hu/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S02` `verify:` `s02-scoped catalogue parity placeholders character/cell caps` -> `pass`
+- `S02` `verify:` `s02-help-contract 24 tests` -> `pass`
+- `S02` `verify:` `s04-docs-completeness 10 authored units` -> `pass`
+- `S02` `verify:` `s04-docs-full-strict-en full build` -> `pass`
+- `S02` `verify:` `s05-docs-frozen-authority-es full strict build` -> `pass`
+- `S02` `verify:` `s05-docs-frozen-authority-ca full strict build` -> `pass`
+- `S02` `verify:` `s05-docs-frozen-authority-hu full strict build` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S01` Initial exact5b7d twelve-path integration committed3d40; later total typed caption map repairs obsolete discovery registration without duplicate state key. Full repaired census remains failing for baseline19 inventory plus in-progress docs4 and spelling tool; no aggregate-green claim. Receipt work/UX5-checks/s01-locale-inventory-delta.json separates the introduced four missing cells and their repair. Final native source receipt excludes unrelated auth/profile writes; calendar proof remains owning typed projection.
+- `S02` Live localized strict builds refused unrelated auth config.logout sequences; corrected frozen admitted-source builds pass. Native Hungarian human review remains release-pending. Foreign live informal-register overlap on two HU leaves is preserved and excluded from this Step's staged leaf delta; frozen accepted copy is evidence-versioned.

@@ -91,13 +91,15 @@ msgstr ""
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md:25
 msgid ""
-"To choose another declaration, press `+`. Choose the Modelo first, then "
-"one of its supported periods, and select **Create and open**. Esc on the "
-"period picker returns to the Modelo picker; Esc there cancels."
+"To choose another declaration, press `+`. Choose the Modelo first. In the"
+" period picker, press Enter to select a period, then select **Create and "
+"open**. Esc on the period picker returns to the Modelo picker; Esc there "
+"cancels."
 msgstr ""
-"Per triar una altra declaració, prem `+`. Tria primer el Model, després "
-"un dels períodes admesos i selecciona **Crear i obrir**. Esc al selector "
-"de període torna al selector de Model; allà, Esc cancel·la."
+"Per triar una altra declaració, prem `+`. Tria primer el Modelo. Al "
+"selector de període, prem Enter per seleccionar un període i després "
+"selecciona **Crear i obrir**. Esc al selector de període torna al "
+"selector de Modelo; allà, Esc cancel·la."
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md:29
 msgid ""

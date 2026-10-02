@@ -520,77 +520,77 @@ entries:
     label: Közvetlen banki terhelés beállítása befizetésekhez
     purpose: Közvetlen banki terhelés beállítása önértékelési bevallásokhoz és adóbefizetésekhez.
   portal_m036_censal:
-    label: Modelo 036 - Adóhatósági nyilvántartási bevallás
+    label: "Modelo 036 - Adóhatósági nyilvántartási bevallás"
     purpose: Bejegyzés, módosítás és törlés a vállalkozások és szakemberek nyilvántartásában.
   portal_m037_censal_simplificada:
-    label: Modelo 037 - Egyszerűsített nyilvántartási bevallás (megszűnt)
+    label: "Modelo 037 - Egyszerűsített nyilvántartási bevallás (megszűnt)"
     notes:
       '0': A HAC/1526/2024 rendelet hatályon kívül helyezte, 2025-02-03-tól érvényes.
       '1': A Modelo 036-at kell használni minden további nyilvántartási eljáráshoz.
     purpose: Egyszerűsített nyilvántartási bevallás önálló vállalkozók számára, 2025-ben
       megszűnt.
   portal_m100_renta:
-    label: Modelo 100 - Személyi jövedelemadó bevallás
+    label: "Modelo 100 - Személyi jövedelemadó bevallás"
     purpose: Éves személyi jövedelemadó (IRPF) bevallás.
   portal_m111_retenciones_trabajo:
-    label: Modelo 111 - Foglalkoztatásból származó jövedelemadó-visszatartás
+    label: "Modelo 111 - Foglalkoztatásból származó jövedelemadó-visszatartás"
     purpose: IRPF-visszatartások és előlegfizetések önértékelése foglalkoztatásból
       származó jövedelemre.
   portal_m115_retenciones_arrendamientos:
-    label: Modelo 115 - Ingatlan-bérbeadásból való visszatartás
+    label: "Modelo 115 - Ingatlan-bérbeadásból való visszatartás"
     purpose: IRPF-visszatartások önértékelése városi ingatlan-bérbeadásból.
   portal_m123_retenciones_capital:
-    label: Modelo 123 - Befektetési jövedelemadó-visszatartás
+    label: "Modelo 123 - Befektetési jövedelemadó-visszatartás"
     purpose: IRPF-visszatartások önértékelése befektetési jövedelemre.
   portal_m130_pago_fraccionado_ed:
-    label: Modelo 130 - IRPF részletfizetés (közvetlen becslés)
+    label: "Modelo 130 - IRPF részletfizetés (közvetlen becslés)"
     purpose: Negyedéves IRPF részletfizetés közvetlen becslés szerint adózó önálló
       vállalkozók számára.
   portal_m131_pago_fraccionado_eo:
-    label: Modelo 131 - IRPF részletfizetés (objektív becslés)
+    label: "Modelo 131 - IRPF részletfizetés (objektív becslés)"
     purpose: Negyedéves IRPF részletfizetés objektív becslés (modulok) szerint adózó
       önálló vállalkozók számára.
   portal_m180_resumen_arrendamientos:
-    label: Modelo 180 - Ingatlan-bérbeadás éves összesítő
+    label: "Modelo 180 - Ingatlan-bérbeadás éves összesítő"
     purpose: Városi ingatlan-bérbeadásból való visszatartások éves összesítője.
   portal_m190_resumen_trabajo:
-    label: Modelo 190 - Foglalkoztatási visszatartások éves összesítője
+    label: "Modelo 190 - Foglalkoztatási visszatartások éves összesítője"
     purpose: Foglalkoztatásból származó jövedelemadó-visszatartások és előlegfizetések
       éves összesítője.
   portal_m193_resumen_capital:
-    label: Modelo 193 - Befektetési visszatartások éves összesítője
+    label: "Modelo 193 - Befektetési visszatartások éves összesítője"
     purpose: Befektetési jövedelemadó-visszatartások éves összesítője.
   portal_m200_sociedades_anual:
-    label: Modelo 200 - Társasági adóbevallás
+    label: "Modelo 200 - Társasági adóbevallás"
     purpose: Éves társasági adóbevallás.
   portal_m202_sociedades_fraccionado:
-    label: Modelo 202 - Társasági adó részletfizetés
+    label: "Modelo 202 - Társasági adó részletfizetés"
     purpose: Társasági adó előlege részletfizetés formájában.
   portal_m232_vinculadas:
-    label: Modelo 232 - Kapcsolt vállalkozásokkal való ügyletek
+    label: "Modelo 232 - Kapcsolt vállalkozásokkal való ügyletek"
     purpose: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek tájékoztató
       bevallása.
   portal_m303_iva_autoliquidacion:
-    label: Modelo 303 - IVA önértékelés
+    label: "Modelo 303 - IVA önértékelés"
     purpose: Időszakos hozzáadottérték-adó (IVA) önértékelés.
   portal_m347_operaciones_terceros:
-    label: Modelo 347 - Harmadik felekkel folytatott ügyletek
+    label: "Modelo 347 - Harmadik felekkel folytatott ügyletek"
     purpose: Éves tájékoztató bevallás harmadik felekkel folytatott, 3 005,06 EUR
       feletti ügyletekről.
   portal_m349_intracomunitarias:
-    label: Modelo 349 - Intraközösségi ügyletek
+    label: "Modelo 349 - Intraközösségi ügyletek"
     purpose: Összesítő nyilatkozat intraközösségi termékértékesítésekről és -szolgáltatásokról.
   portal_m369_oss_ioss:
-    label: Modelo 369 - IVA egyablakos rendszer (OSS/IOSS)
+    label: "Modelo 369 - IVA egyablakos rendszer (OSS/IOSS)"
     purpose: IVA önértékelés az OSS és IOSS egyablakos rendszerek keretein belül.
   portal_m390_resumen_iva:
-    label: Modelo 390 - Éves IVA összesítő
+    label: "Modelo 390 - Éves IVA összesítő"
     purpose: Éves összesítő hozzáadottérték-adóra vonatkozó bevallás.
   portal_m720_bienes_extranjero:
-    label: Modelo 720 - Külföldi vagyon és jogok
+    label: "Modelo 720 - Külföldi vagyon és jogok"
     purpose: Tájékoztató bevallás külföldön elhelyezett vagyonról és jogokról.
   portal_m840_iae:
-    label: Modelo 840 - Gazdasági tevékenységek adója
+    label: "Modelo 840 - Gazdasági tevékenységek adója"
     purpose: Bevallás a gazdasági tevékenységek adójára (IAE).
   portal_mi_area_personal:
     label: Személyes területem
@@ -1483,16 +1483,16 @@ tui:
       not_openable:
         help: Ez a sor itt még nem nyitható meg.
       search:
-        hint: Keresés Modelo-szám, név vagy időszak szerint
+        hint: "Keresés nyomtatványszám, név vagy időszak szerint"
       sort:
         deadline: Határidő
-        modelo: Modelo
+        modelo: "Nyomtatvány"
         result: Eredmény
         state: Állapot
       state:
         aeat_needs_check: Az AEAT-benyújtás ellenőrzést igényel
         aeat_unlinked: Benyújtva az AEAT-nál, itt még nincs összekapcsolva
-        aeat_unlinked_on: 'Benyújtva az AEAT-nál: {date}. Itt még nincs összekapcsolva'
+        aeat_unlinked_on: "Benyújtva az AEAT-nál: {date} Itt még nincs összekapcsolva"
         blocked: Valami akadályozza a benyújtást
         calculated: Kiszámítva, nincs ellenőrizve
         checked: Ellenőrizve
@@ -2394,8 +2394,7 @@ tui:
         confirm_all: Feltételezett értékek megerősítése ebben a szakaszban
         detail:
           advisory: Ez tanács. A bevallást a jelenlegi formájában is benyújthatja.
-          blocking_rule: A Modelo egyik szabálya nem teljesül. A benyújtás addig nem
-            rögzíthető, amíg nem teljesül.
+          blocking_rule: "A nyomtatvány egyik szabálya nem teljesül; a benyújtás még nem rögzíthető."
           cross_period_dependency_unclean: Ez a bevallás egy még le nem zárt korábbi
             időszak számait használja, ezért az eredménye még változhat.
           missing_required_casilla: A bevallás nem nyújtható be ez az érték nélkül.

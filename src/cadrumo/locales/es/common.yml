@@ -534,76 +534,76 @@ entries:
     label: Domiciliación bancaria de pagos
     purpose: Domiciliación bancaria de autoliquidaciones y pagos tributarios.
   portal_m036_censal:
-    label: Modelo 036 - Declaración censal
+    label: "Modelo 036 - Declaración censal"
     purpose: Alta, modificación y baja en el censo de empresarios y profesionales.
   portal_m037_censal_simplificada:
-    label: Modelo 037 - Declaración censal simplificada (retirado)
+    label: "Modelo 037 - Declaración censal simplificada (retirado)"
     notes:
       '0': Suprimido por la Orden HAC/1526/2024, con efecto desde 2025-02-03.
       '1': Use el Modelo 036 para cualquier trámite censal posterior.
     purpose: Declaración censal simplificada para autónomos, suprimida en 2025.
   portal_m100_renta:
-    label: Modelo 100 - Declaración de la Renta (IRPF)
+    label: "Modelo 100 - Declaración de la Renta (IRPF)"
     purpose: Declaración anual del Impuesto sobre la Renta de las Personas Físicas.
   portal_m111_retenciones_trabajo:
-    label: Modelo 111 - Retenciones del trabajo y actividades
+    label: "Modelo 111 - Retenciones del trabajo y actividades"
     purpose: Autoliquidación de retenciones e ingresos a cuenta del IRPF sobre rendimientos
       del trabajo.
   portal_m115_retenciones_arrendamientos:
-    label: Modelo 115 - Retenciones por arrendamiento de inmuebles
+    label: "Modelo 115 - Retenciones por arrendamiento de inmuebles"
     purpose: Autoliquidación de retenciones del IRPF por alquiler de inmuebles urbanos.
   portal_m123_retenciones_capital:
-    label: Modelo 123 - Retenciones del capital mobiliario
+    label: "Modelo 123 - Retenciones del capital mobiliario"
     purpose: Autoliquidación de retenciones del IRPF sobre rendimientos del capital
       mobiliario.
   portal_m130_pago_fraccionado_ed:
-    label: Modelo 130 - Pago fraccionado IRPF (estimación directa)
+    label: "Modelo 130 - Pago fraccionado IRPF (estimación directa)"
     purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación directa.
   portal_m131_pago_fraccionado_eo:
-    label: Modelo 131 - Pago fraccionado IRPF (estimación objetiva)
+    label: "Modelo 131 - Pago fraccionado IRPF (estimación objetiva)"
     purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación objetiva
       (módulos).
   portal_m180_resumen_arrendamientos:
-    label: Modelo 180 - Resumen anual de arrendamientos
+    label: "Modelo 180 - Resumen anual de arrendamientos"
     purpose: Resumen anual de retenciones por arrendamiento de inmuebles urbanos.
   portal_m190_resumen_trabajo:
-    label: Modelo 190 - Resumen anual de retenciones del trabajo
+    label: "Modelo 190 - Resumen anual de retenciones del trabajo"
     purpose: Resumen anual de retenciones e ingresos a cuenta sobre rendimientos del
       trabajo.
   portal_m193_resumen_capital:
-    label: Modelo 193 - Resumen anual de retenciones del capital
+    label: "Modelo 193 - Resumen anual de retenciones del capital"
     purpose: Resumen anual de retenciones sobre rendimientos del capital mobiliario.
   portal_m200_sociedades_anual:
-    label: Modelo 200 - Impuesto sobre Sociedades
+    label: "Modelo 200 - Impuesto sobre Sociedades"
     purpose: Declaración anual del Impuesto sobre Sociedades.
   portal_m202_sociedades_fraccionado:
-    label: Modelo 202 - Pago fraccionado del Impuesto sobre Sociedades
+    label: "Modelo 202 - Pago fraccionado del Impuesto sobre Sociedades"
     purpose: Pago fraccionado a cuenta del Impuesto sobre Sociedades.
   portal_m232_vinculadas:
-    label: Modelo 232 - Operaciones vinculadas
+    label: "Modelo 232 - Operaciones vinculadas"
     purpose: Declaración informativa de operaciones con personas o entidades vinculadas.
   portal_m303_iva_autoliquidacion:
-    label: Modelo 303 - Autoliquidación del IVA
+    label: "Modelo 303 - Autoliquidación del IVA"
     purpose: Autoliquidación periódica del Impuesto sobre el Valor Añadido.
   portal_m347_operaciones_terceros:
-    label: Modelo 347 - Operaciones con terceras personas
+    label: "Modelo 347 - Operaciones con terceras personas"
     purpose: Declaración informativa anual de operaciones con terceros superiores
       a 3.005,06 €.
   portal_m349_intracomunitarias:
-    label: Modelo 349 - Operaciones intracomunitarias
+    label: "Modelo 349 - Operaciones intracomunitarias"
     purpose: Declaración recapitulativa de operaciones intracomunitarias de bienes
       y servicios.
   portal_m369_oss_ioss:
-    label: Modelo 369 - Ventanilla única IVA (OSS/IOSS)
+    label: "Modelo 369 - Ventanilla única IVA (OSS/IOSS)"
     purpose: Autoliquidación del IVA en los regímenes de ventanilla única OSS e IOSS.
   portal_m390_resumen_iva:
-    label: Modelo 390 - Resumen anual del IVA
+    label: "Modelo 390 - Resumen anual del IVA"
     purpose: Declaración resumen anual del Impuesto sobre el Valor Añadido.
   portal_m720_bienes_extranjero:
-    label: Modelo 720 - Bienes y derechos en el extranjero
+    label: "Modelo 720 - Bienes y derechos en el extranjero"
     purpose: Declaración informativa de bienes y derechos situados en el extranjero.
   portal_m840_iae:
-    label: Modelo 840 - Impuesto sobre Actividades Económicas
+    label: "Modelo 840 - Impuesto sobre Actividades Económicas"
     purpose: Declaración del Impuesto sobre Actividades Económicas (IAE).
   portal_mi_area_personal:
     label: Mi Área Personal
@@ -1486,7 +1486,7 @@ tui:
         exists: Esta declaración ya existe. ¿Abrirla?
         period_selection_hint: Pulsa Enter para elegir el periodo; después, crea y
           abre la declaración.
-        show_all: Mostrar todos los modelos, no solo los tuyos
+        show_all: "Mostrar todos los modelos, no solo los tuyos"
         start_confirm: ¿Empezar el {modelo} de {period}?
       next:
         check_aeat: Comprobar la presentación en la AEAT
@@ -1500,16 +1500,16 @@ tui:
       not_openable:
         help: Esta fila aún no se puede abrir desde aquí.
       search:
-        hint: Busca por número de modelo, nombre o periodo
+        hint: "Busca por número de modelo, nombre o periodo"
       sort:
         deadline: Plazo
-        modelo: Modelo
+        modelo: "Modelo"
         result: Resultado
         state: Estado
       state:
         aeat_needs_check: Presentación en la AEAT pendiente de comprobar
         aeat_unlinked: Presentada en la AEAT, sin vincular aquí
-        aeat_unlinked_on: Presentada en la AEAT el {date}, sin vincular aquí
+        aeat_unlinked_on: "Presentada en la AEAT el {date}, sin vincular aquí"
         blocked: Algo impide presentarla
         calculated: Calculada, sin comprobar
         checked: Comprobada
@@ -2408,13 +2408,11 @@ tui:
         confirm_all: Confirmar valores supuestos de esta sección
         detail:
           advisory: Es un consejo. Puedes presentar la declaración tal como está.
-          blocking_rule: No se cumple una regla de este modelo. No se puede registrar
-            la presentación hasta que se cumpla.
+          blocking_rule: "No se cumple una regla del modelo; aún no se puede registrar la presentación."
           cross_period_dependency_unclean: Esta declaración usa cifras de un periodo
             anterior que aún no está resuelto, así que su resultado todavía puede
             cambiar.
-          missing_required_casilla: La declaración no se puede presentar sin este
-            valor. Si el valor correcto es cero, escribe 0 para que conste como tuyo.
+          missing_required_casilla: "Este valor es necesario para presentar. Si es cero, escribe 0 para que conste."
           reconciliation_mismatch: 'Dos cifras que deberían coincidir no coinciden.
             No se elige ninguna por ti: revisa las dos y corrige la que esté mal.'
           stale_calculation: Tus registros han cambiado desde que se calculó esta

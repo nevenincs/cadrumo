@@ -512,75 +512,75 @@ entries:
     label: Set Up Direct Debit for Payments
     purpose: Direct-debit setup for self-assessments and tax payments.
   portal_m036_censal:
-    label: Form 036 - Censo Declaration
+    label: "Modelo 036 - Censo Declaration"
     purpose: Registration, amendment and deregistration in the censo of businesses
       and professionals.
   portal_m037_censal_simplificada:
-    label: Form 037 - Simplified Censo Declaration (retired)
+    label: "Modelo 037 - Simplified Censo Declaration (retired)"
     notes:
       '0': Abolished by Order HAC/1526/2024, effective from 2025-02-03.
       '1': Use Form 036 for any subsequent censo procedure.
     purpose: Simplified censo declaration for sole traders, abolished in 2025.
   portal_m100_renta:
-    label: Form 100 - Personal Income Tax Return
+    label: "Modelo 100 - Personal Income Tax Return"
     purpose: Annual personal income tax (IRPF) return.
   portal_m111_retenciones_trabajo:
-    label: Form 111 - Withholdings on Employment Income
+    label: "Modelo 111 - Withholdings on Employment Income"
     purpose: Self-assessment of IRPF withholdings and payments on account for employment
       income.
   portal_m115_retenciones_arrendamientos:
-    label: Form 115 - Withholdings on Property Rental
+    label: "Modelo 115 - Withholdings on Property Rental"
     purpose: Self-assessment of IRPF withholdings on urban property rentals.
   portal_m123_retenciones_capital:
-    label: Form 123 - Withholdings on Investment Income
+    label: "Modelo 123 - Withholdings on Investment Income"
     purpose: Self-assessment of IRPF withholdings on investment income.
   portal_m130_pago_fraccionado_ed:
-    label: Form 130 - IRPF Instalment Payment (direct assessment)
+    label: "Modelo 130 - IRPF Instalment Payment (direct assessment)"
     purpose: Quarterly IRPF instalment payment for sole traders under direct assessment.
   portal_m131_pago_fraccionado_eo:
-    label: Form 131 - IRPF Instalment Payment (objective assessment)
+    label: "Modelo 131 - IRPF Instalment Payment (objective assessment)"
     purpose: Quarterly IRPF instalment payment for sole traders under objective assessment
       (modules).
   portal_m180_resumen_arrendamientos:
-    label: Form 180 - Annual Summary of Property Rentals
+    label: "Modelo 180 - Annual Summary of Property Rentals"
     purpose: Annual summary of withholdings on urban property rentals.
   portal_m190_resumen_trabajo:
-    label: Form 190 - Annual Summary of Employment Withholdings
+    label: "Modelo 190 - Annual Summary of Employment Withholdings"
     purpose: Annual summary of withholdings and payments on account for employment
       income.
   portal_m193_resumen_capital:
-    label: Form 193 - Annual Summary of Investment Withholdings
+    label: "Modelo 193 - Annual Summary of Investment Withholdings"
     purpose: Annual summary of withholdings on investment income.
   portal_m200_sociedades_anual:
-    label: Form 200 - Corporate Income Tax Return
+    label: "Modelo 200 - Corporate Income Tax Return"
     purpose: Annual corporate income tax return.
   portal_m202_sociedades_fraccionado:
-    label: Form 202 - Corporate Income Tax Instalment Payment
+    label: "Modelo 202 - Corporate Income Tax Instalment Payment"
     purpose: Instalment payment on account of corporate income tax.
   portal_m232_vinculadas:
-    label: Form 232 - Related-Party Transactions
+    label: "Modelo 232 - Related-Party Transactions"
     purpose: Informational return of transactions with related persons or entities.
   portal_m303_iva_autoliquidacion:
-    label: Form 303 - IVA Self-Assessment
+    label: "Modelo 303 - IVA Self-Assessment"
     purpose: Periodic IVA self-assessment.
   portal_m347_operaciones_terceros:
-    label: Form 347 - Transactions with Third Parties
+    label: "Modelo 347 - Transactions with Third Parties"
     purpose: Annual informational return of transactions with third parties above
       EUR 3,005.06.
   portal_m349_intracomunitarias:
-    label: Form 349 - Intra-Community Transactions
+    label: "Modelo 349 - Intra-Community Transactions"
     purpose: Recapitulative statement of intra-Community supplies of goods and services.
   portal_m369_oss_ioss:
-    label: Form 369 - IVA One-Stop Shop (OSS/IOSS)
+    label: "Modelo 369 - IVA One-Stop Shop (OSS/IOSS)"
     purpose: IVA self-assessment under the OSS and IOSS one-stop-shop schemes.
   portal_m390_resumen_iva:
-    label: Form 390 - Annual IVA Summary
+    label: "Modelo 390 - Annual IVA Summary"
     purpose: Annual summary return for IVA.
   portal_m720_bienes_extranjero:
-    label: Form 720 - Assets and Rights Held Abroad
+    label: "Modelo 720 - Assets and Rights Held Abroad"
     purpose: Informational return of assets and rights located abroad.
   portal_m840_iae:
-    label: Form 840 - Tax on Economic Activities
+    label: "Modelo 840 - Tax on Economic Activities"
     purpose: Return for the tax on economic activities (IAE).
   portal_mi_area_personal:
     label: My Personal Area
@@ -1438,7 +1438,7 @@ tui:
         exists: This declaration already exists. Open it?
         period_selection_hint: Press Enter to select a period, then create and open
           the declaration.
-        show_all: Show all modelos, not only yours
+        show_all: "Show all modelos, not only yours"
         start_confirm: Start {modelo} for {period}?
       next:
         check_aeat: Check AEAT filing
@@ -1452,16 +1452,16 @@ tui:
       not_openable:
         help: This row cannot be opened here yet.
       search:
-        hint: Search by Modelo number, name or period
+        hint: "Search by Modelo number, name or period"
       sort:
         deadline: Deadline
-        modelo: Modelo
+        modelo: "Modelo"
         result: Result
         state: State
       state:
         aeat_needs_check: AEAT filing needs checking
         aeat_unlinked: Filed with AEAT, not linked here
-        aeat_unlinked_on: Filed with AEAT on {date}, not linked here
+        aeat_unlinked_on: "Filed with AEAT on {date}, not linked here"
         blocked: Something blocks filing
         calculated: Calculated, not checked
         checked: Checked
@@ -2347,12 +2347,10 @@ tui:
         confirm_all: Confirm assumed values in this section
         detail:
           advisory: This is advice. You can file the declaration as it is.
-          blocking_rule: A rule of this modelo is not met. The filing cannot be recorded
-            until it is.
+          blocking_rule: "A rule of this modelo is unmet, so the filing cannot be recorded yet."
           cross_period_dependency_unclean: This declaration uses figures from an earlier
             period that is not settled yet, so its result can still change.
-          missing_required_casilla: The declaration cannot be filed without this value.
-            If the right value is zero, enter 0 so that it counts as yours.
+          missing_required_casilla: "To file, provide this value. If zero is correct, enter 0 to mark it as supplied."
           reconciliation_mismatch: 'Two figures that should agree do not. Neither
             is chosen for you: check both and correct the one that is wrong.'
           stale_calculation: Your records changed after this declaration was calculated,
