@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c48311b48f5ddb3910ff6bec0898c9f340d3e298d79ff68b8d05ba40d7cfe60'
+body_hash: 'sha256:5c4ce93637386b96234a2a2f02eceb6988df83e8b19c003e3f20d4ed88ae95ae'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1748,6 +1748,13 @@ related:
 - `S50` `verify:` `canonical coupled target publication and locale preflight before source adoption` -> `pass`
 - `S50` `verify:` `git check-attr whitespace normative HTML and code/sidecar controls` -> `pass`
 - `S50` `verify:` `git diff --cached --check` -> `pass`
+- `S50` `M` `dev/corpus/fetch_boe_normative.py`
+- `S50` `M` `dev/tests/test_fetch_boe_normative.py`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/tests/test_fetch_boe_normative.py dev/tests/test_fetch_boe_article.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync ruff check dev/corpus/fetch_boe_normative.py dev/tests/test_fetch_boe_normative.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync ruff format --check dev/corpus/fetch_boe_normative.py dev/tests/test_fetch_boe_normative.py` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `canonical prospective BOE HTTP capture with explicit destination_root` -> `pass`
 
 ## Notes
 
@@ -1852,3 +1859,4 @@ related:
 - `S50` S50 remains open for other mapping candidates and declaration debt. The three initial test failures were corrected and affected checks pass. Coupled target post-cutover refusal was recovered through the canonical publication journal; no intermediate pytest ran. Installed-package adoption remains unverified. The legal-anchor ratchet now passes without a ceiling change.
 - `S50` S50 remains open for the remaining semantic mapping and declaration inventory. Isolated construct legal-closure and locale preflight refusals were corrected before live installation; no intermediate pytest ran. Installed-package adoption remains unverified.
 - `S50` S50 remains open for the remaining semantic inventory. Isolated retained-order refusal was corrected; no pytest ran on intermediate registry inputs. Installed-package adoption remains unverified.
+- `S50` S50 continues. Prospective corpus artifacts remain isolated; registry inputs and published authority are unchanged. The temporary caller plural-wording assertion was corrected against actual operative text.
