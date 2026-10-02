@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -26,11 +28,12 @@ from ....application.ledger.evidence_add_operation import (
     LedgerEvidenceAddRequest,
     build_ledger_evidence_add_definition,
 )
-from ....application.ledger.evidence_ports import LedgerEvidencePorts, PurchaseInvoiceEvidenceRepositoryProtocol
+from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ....application.ledger.evidence_ports import LedgerEvidencePorts
 from ....application.operations.models import OperationRequest
 from ....application.operations.owner import OperationExecutorContext
 from ....core.operations import OperationEffect, profile_operation_subject
-from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from .unused_repository_ports import UnusedBucketEventRepository, UnusedEvidenceAttachmentIngestor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -62,6 +65,7 @@ def test_add_request_uses_wire_stable_canonical_date_and_amount_strings() -> Non
     request = LedgerEvidenceAddRequest(
         profile_id=_PROFILE,
         source_path="invoices/invoice.pdf",
+        source_directory=str(Path.cwd()),
         invoice_date="2026-05-08",
         taxable_base="100",
         iva_rate="21",
@@ -73,12 +77,36 @@ def test_add_request_uses_wire_stable_canonical_date_and_amount_strings() -> Non
     assert dumped["taxable_base"] == "100"
     assert isinstance(dumped["iva_rate"], str)
 
+    with pytest.raises(ValidationError, match="source_directory"):
+        LedgerEvidenceAddRequest.model_validate({"profile_id": str(_PROFILE), "source_path": "invoice.pdf"})
+
     with pytest.raises(ValidationError, match="YYYY-MM-DD"):
-        LedgerEvidenceAddRequest(profile_id=_PROFILE, source_path="invoice.pdf", invoice_date="08-05-2026")
+        LedgerEvidenceAddRequest(
+            profile_id=_PROFILE,
+            source_path="invoice.pdf",
+            source_directory=str(Path.cwd()),
+            invoice_date="08-05-2026",
+        )
     with pytest.raises(ValidationError, match="canonical non-negative"):
-        LedgerEvidenceAddRequest(profile_id=_PROFILE, source_path="invoice.pdf", taxable_base="100.00")
+        LedgerEvidenceAddRequest(
+            profile_id=_PROFILE,
+            source_path="invoice.pdf",
+            source_directory=str(Path.cwd()),
+            taxable_base="100.00",
+        )
     with pytest.raises(ValidationError, match="must not exceed 100"):
-        LedgerEvidenceAddRequest(profile_id=_PROFILE, source_path="invoice.pdf", iva_rate="101")
+        LedgerEvidenceAddRequest(
+            profile_id=_PROFILE, source_path="invoice.pdf", source_directory=str(Path.cwd()), iva_rate="101"
+        )
+
+
+@pytest.mark.parametrize("base", ["relative", "embedded-nul"])
+def test_invalid_source_directory_refuses_before_custody_access(tmp_path: Path, base: str) -> None:
+    """A transported source cannot fall back to the worker's ambient directory."""
+    directory = Path("relative") if base == "relative" else tmp_path / "invalid\x00directory"
+    service = PurchaseInvoiceEvidenceService(ports=cast(LedgerEvidencePorts, object()))
+    with pytest.raises(PurchaseInvoiceEvidenceInputError):
+        service.add(bucket_id=str(_PROFILE), source_path="invoice.pdf", source_directory=directory)
 
 
 @pytest.mark.asyncio
@@ -102,7 +130,7 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
             assert bucket_id == str(_PROFILE)
             return () if prior is None else (prior,)
 
-        def save(self, *, bucket_id: str, records: tuple[PurchaseInvoiceEvidence, ...]) -> None:
+        def save(self, *, bucket_id: str, records: Sequence[PurchaseInvoiceEvidence]) -> None:
             raise AssertionError("the service stub owns the operation result")
 
         def load_revisioned(self, *, bucket_id: str) -> tuple[tuple[PurchaseInvoiceEvidence, ...], str]:
@@ -112,25 +140,10 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
         def save_if_revision_with_secure_object_writes(self, **_kwargs: object) -> None:
             raise AssertionError("the service stub owns the operation result")
 
-    class EventRepository:
-        secure_object_repository = backend
-
-        def load_revisioned(self) -> tuple[object, str]:
-            return object(), "0" * 64
-
-    class AttachmentIngestor:
-        secure_object_repository = backend
-
-        def ingest(self, _request: object) -> object:
-            raise AssertionError("the service stub owns the operation result")
-
-    ports = cast(
-        LedgerEvidencePorts,
-        SimpleNamespace(
-            evidence_repository=cast(PurchaseInvoiceEvidenceRepositoryProtocol, EvidenceRepository()),
-            attachment_ingestor=AttachmentIngestor(),
-            bucket_event_repository=cast(BucketEventHistoryRepositoryProtocol, EventRepository()),
-        ),
+    ports = LedgerEvidencePorts(
+        evidence_repository=EvidenceRepository(),
+        attachment_ingestor=UnusedEvidenceAttachmentIngestor(backend),
+        bucket_event_repository=UnusedBucketEventRepository(backend),
     )
 
     class Cancellation:
@@ -174,6 +187,7 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
         *,
         bucket_id: str,
         source_path: str,
+        source_directory: Path,
         supplier: str | None,
         invoice_number: str | None,
         invoice_date: str | None,
@@ -186,6 +200,7 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
     ) -> PurchaseInvoiceEvidenceResult:
         assert bucket_id == str(_PROFILE)
         assert source_path == "invoice.pdf"
+        assert source_directory == Path.cwd()
         assert supplier == "Supplier SL"
         assert invoice_number == "INV-2026-05"
         assert invoice_date == "2026-05-08"
@@ -229,6 +244,7 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
         payload=LedgerEvidenceAddRequest(
             profile_id=_PROFILE,
             source_path="invoice.pdf",
+            source_directory=str(Path.cwd()),
             supplier="Supplier SL",
             invoice_number="INV-2026-05",
             invoice_date="2026-05-08",

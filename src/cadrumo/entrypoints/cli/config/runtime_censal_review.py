@@ -23,6 +23,9 @@ from ....application.operations.frontend_requests import (
     OperationResponseControlSuccessV1,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
+    OperationResultProjectionRefusalV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
     OperationReviewProjectionSuccessV1,
@@ -390,39 +393,55 @@ def _respond(
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
 
-def _parse_result_reference(result_ref: str, *, expected_outcome: CensalOperationOutcome) -> CensalOperationResult:
-    prefix, separator, outcome = result_ref.rpartition(":")
-    family, digest_separator, reviewed_digest = prefix.partition(":")
-    if not separator or not digest_separator or family != "censo-review":
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    try:
-        result = CensalOperationResult(
-            outcome=CensalOperationOutcome(outcome),
-            reviewed_proposal_digest=reviewed_digest,
-        )
-    except (TypeError, ValueError, ValidationError, RecursionError):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
-    if result.outcome is not expected_outcome:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    return result
-
-
 def _validate_terminal(
+    client: RuntimeFrontendClient,
     observed: OperationObservationSuccessV1,
     *,
+    contract: OperationPublicDefinitionContractV1,
+    review: CensalReviewProjectionV1,
     apply: bool,
+    deadline: float,
 ) -> None:
     expected_outcome = CensalOperationOutcome.APPLIED if apply else CensalOperationOutcome.REJECTED
-    expected_effect = OperationEffect.UPDATED if apply else OperationEffect.NONE
+    permitted_effects = {OperationEffect.UPDATED} if apply else {OperationEffect.NONE, OperationEffect.UPDATED}
     projection = observed.projection
     if (
         projection.lifecycle is not OperationLifecycle.TERMINAL
         or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or projection.effect is not expected_effect
+        or projection.effect not in permitted_effects
         or projection.result_ref is None
+        or contract.result_schema is None
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    _parse_result_reference(projection.result_ref, expected_outcome=expected_outcome)
+    document = client.read_result_document(
+        OperationResultProjectionRequestV1(
+            operation_id=projection.operation_id,
+            terminal_revision=projection.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        ),
+        timeout=_remaining(deadline),
+        deadline=deadline,
+    )
+    encoded = canonical_json_bytes(document)
+    try:
+        if document.get("outcome") == "refused":
+            refusal = OperationResultProjectionRefusalV1.model_validate_json(encoded)
+            raise RuntimeFrontendRefusedError(refusal.code.value)
+        success_type = cast(
+            "type[OperationResultProjectionSuccessV1[CensalOperationResult]]",
+            OperationResultProjectionSuccessV1.__class_getitem__(CensalOperationResult),
+        )
+        success = success_type.model_validate_json(encoded)
+    except (TypeError, ValueError, ValidationError, RecursionError):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+    if (
+        success.result_schema != contract.result_schema
+        or success.definition_contract_digest != contract.definition_contract_digest
+        or success.projection.outcome is not expected_outcome
+        or success.projection.reviewed_proposal_digest != review.reviewed_proposal_digest
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
 
 def review_censal_with_runtime(
@@ -545,7 +564,7 @@ def review_censal_with_runtime(
                         or state.failure_error_code
                         or (condition.value if condition is not None else "unknown")
                     )
-                _validate_terminal(terminal, apply=apply)
+                _validate_terminal(client, terminal, contract=contract, review=review, apply=apply, deadline=deadline)
                 if client.profile_id != profile_id or client.session_id != session_id:
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return CensalRuntimeReviewResult(projection=review, applied=apply)

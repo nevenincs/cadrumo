@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import override
 
 from ....application.ledger.extraction_draft_store import (
@@ -22,9 +23,21 @@ class ExtractionDraftRepository(SecureBoundRepository[ExtractionDraftDocument]):
     schema_version = LEDGER_EXTRACTION_DRAFT_NAMESPACE.schema_version
     payload_type = ExtractionDraftDocument
 
-    def __init__(self, *, bucket_id: str, settings: Settings) -> None:
+    def __init__(
+        self, *, bucket_id: str, settings: Settings, mutation_writer: Callable[[Callable[[], None]], None] | None = None
+    ) -> None:
         """Bind the repository to ``bucket_id`` through the storage runtime."""
         super().__init__(objects=secure_object_repository_for_bucket(bucket_id, settings))
+        self._mutation_writer = mutation_writer
+
+    @override
+    def save(self, payload: ExtractionDraftDocument) -> None:
+        """Prepare the canonical envelope before admitting its actual encrypted write."""
+        if self._mutation_writer is None:
+            super().save(payload)
+            return
+        write = self.to_secure_object_write(payload)
+        self._mutation_writer(lambda: self.secure_object_repository.save_many((write,)))
 
     @override
     def extract_identifier(self, payload: ExtractionDraftDocument) -> str:

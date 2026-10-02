@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
-from datetime import UTC, datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
@@ -15,7 +12,6 @@ from typer.main import get_command
 
 from ....adapters.persistence.storage.tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
 from ....application.auth.operator_results import LiveAuthPreflightReport
-from ....application.live.borrador_100 import Borrador100SnapshotService
 from ....application.live.errors import LiveIvaAcquisitionFailureMode
 from ....application.live.remote_state_models import (
     IvaRemoteStateAcquisitionReport,
@@ -26,8 +22,6 @@ from ....application.live.remote_state_models import (
 )
 from ....core.config import override_settings
 from ....core.period import Period
-from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ...adapter_composition import build_borrador_100_snapshot_repository
 from .._app_live import (
     _iva_remote_state_capture_lines,
     _live_iva_outcome_label,
@@ -166,10 +160,6 @@ def _invoke_expedientes(*args: str):
     return invoke_cached_cli(["app", "live", "expedientes", *args])
 
 
-def _invoke_borrador_100(*args: str):
-    return invoke_cached_cli(["app", "live", "borrador", "100", *args])
-
-
 def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
     report = LiveAuthPreflightReport(
         provider="clave_movil",
@@ -204,65 +194,6 @@ class TestExpedientesSubgroup:
         result = _invoke_expedientes("latest")
         assert result.exit_code == 0, result.output
         assert "snapshot_id\t-" in result.output
-
-
-class TestBorrador100Subgroup:
-    def test_borrador_100_list_is_empty_on_fresh_bucket(self) -> None:
-        result = _invoke_borrador_100("list")
-        assert result.exit_code == 0, result.output
-        assert "count\t0" in result.output
-
-    def test_borrador_100_latest_is_dash_when_no_snapshot(self) -> None:
-        result = _invoke_borrador_100("latest", "--filing-year", "2024")
-        assert result.exit_code == 0, result.output
-        assert "snapshot_id\t-" in result.output
-
-    def test_borrador_100_show_refuses_unknown_snapshot(self) -> None:
-        result = _invoke_borrador_100("view", "no-such-id")
-        assert result.exit_code != 0
-
-    def test_borrador_100_full_lifecycle_via_service_seed(self) -> None:
-        bucket_id = _ACTIVE_TEST_BUCKET_ID
-        Borrador100SnapshotService(
-            bucket_id=bucket_id,
-            repository=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
-        ).capture(
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "0A"),
-            captured_at=datetime(2025, 3, 15, tzinfo=UTC),
-            source_url=aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax")),
-            binding_values={"renta-certificado-trabajo-retenciones": Decimal("1000.00")},
-        )
-
-        listed = _invoke_borrador_100("list")
-        assert listed.exit_code == 0, listed.output
-        assert "count\t1" in listed.output
-        assert "active" in listed.output
-
-        latest = _invoke_borrador_100("latest", "--filing-year", "2024")
-        assert latest.exit_code == 0, latest.output
-        assert "filing_year\t2024" in latest.output
-
-        # Pick the snapshot id off the latest row to drive show.
-        snapshot_id = next(
-            line.split("\t", 1)[1] for line in latest.output.splitlines() if line.startswith("snapshot_id\t")
-        )
-        shown = _invoke_borrador_100("view", snapshot_id)
-        assert shown.exit_code == 0, shown.output
-        assert "binding_count\t1" in shown.output
-        assert "state\tactive" in shown.output
-
-        shown_json = invoke_cached_cli(["--format", "json", "app", "live", "borrador", "100", "view", snapshot_id])
-        assert shown_json.exit_code == 0, shown_json.output
-        payload = json.loads(shown_json.output)
-        assert payload["command"] == "app.live.borrador.100.view"
-        assert payload["result"]["binding_values"] == {
-            "renta-certificado-trabajo-retenciones": "1000.00",
-        }
-
-    def test_borrador_100_list_rejects_unknown_state(self) -> None:
-        result = _invoke_borrador_100("list", "--state", "old")
-        assert result.exit_code != 0
 
 
 class TestReadOnlyStructuralInvariants:

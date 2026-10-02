@@ -7,15 +7,20 @@ import errno
 import hashlib
 import math
 import os
+import platform
 import select
 import socket
 import stat
 import struct
 import sys
 import time
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
+from threading import RLock
 
 from ...application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.login import RuntimeLoginEvidence
 
 
 def posix_owner_uid() -> int:
@@ -56,6 +61,43 @@ def _linux_peer_credentials(sock: socket.socket) -> tuple[int, int, int]:
     raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
 
 
+def _linux_peer_pidfd_option() -> int:
+    if sys.platform != "linux":
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    exposed = getattr(socket, "SO_PEERPIDFD", None)
+    if type(exposed) is int and exposed > 0:
+        return exposed
+    # Linux's generic socket ABI uses 77 since 6.5. Other architectures can
+    # assign different numbers, so an absent Python constant is not portable.
+    if platform.machine().casefold() in ("x86_64", "aarch64"):
+        return 77
+    raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+
+
+def _linux_peer_pidfd(sock: socket.socket) -> int:
+    option = _linux_peer_pidfd_option()
+    try:
+        descriptor = sock.getsockopt(socket.SOL_SOCKET, option)
+    except OSError:
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+    if type(descriptor) is not int or descriptor < 0:
+        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+    return descriptor
+
+
+def _require_live_linux_pidfd(descriptor: int) -> None:
+    if sys.platform == "linux":
+        try:
+            poller = select.poll()
+            poller.register(descriptor, select.POLLIN | select.POLLERR | select.POLLHUP)
+            if poller.poll(0):
+                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            return
+        except OSError:
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+    raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+
+
 def _lock_exclusive(descriptor: int) -> None:
     if sys.platform != "win32":
         import fcntl
@@ -76,9 +118,9 @@ def _open_lock(directory_fd: int, name: str, flags: int) -> int:
         raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
 
 
-def _socket_metadata(path: Path) -> os.stat_result | None:
+def _socket_metadata(directory_fd: int, name: str) -> os.stat_result | None:
     try:
-        return path.lstat()
+        return os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
     except FileNotFoundError:
         return None
 
@@ -141,17 +183,10 @@ def _peer(sock: socket.socket) -> RuntimePeer:
         if sys.platform.startswith("linux"):
             pid, uid, _gid = _linux_peer_credentials(sock)
         elif sys.platform == "darwin":
-            import ctypes
+            from .macos_login import macos_peer_audit_token
 
-            libc = ctypes.CDLL(None, use_errno=True)
-            uid_value, gid_value = ctypes.c_uint(), ctypes.c_uint()
-            getpeereid = libc.getpeereid
-            getpeereid.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_uint), ctypes.POINTER(ctypes.c_uint))
-            getpeereid.restype = ctypes.c_int
-            if getpeereid(sock.fileno(), ctypes.byref(uid_value), ctypes.byref(gid_value)) != 0:
-                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-            uid = uid_value.value
-            pid = struct.unpack("i", sock.getsockopt(0, 2, 4))[0]
+            token = macos_peer_audit_token(sock, expected_owner=str(posix_owner_uid()))
+            uid, pid = token.effective_user_id, token.process_id
         else:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         if uid != posix_owner_uid() or pid <= 0:
@@ -167,6 +202,8 @@ class PosixRuntimeChannel:
     def __init__(self, sock: socket.socket) -> None:
         """Verify the connected socket before exposing any byte operations."""
         self._socket = sock
+        self._capture_guard = RLock()
+        self._closed = False
         try:
             self._peer = _peer(sock)
         except BaseException:
@@ -177,6 +214,56 @@ class PosixRuntimeChannel:
     def peer(self) -> RuntimePeer:
         """Return kernel-derived peer identity, independent of path permissions."""
         return self._peer
+
+    def capture_login(self) -> RuntimeLoginEvidence:
+        """Pin the verified socket while capturing its native login provenance."""
+        # Pin the socket against close/descriptor reuse until the temporary
+        # PIDFD has been consumed and released. Public transport needs no PIDFD.
+        with self._capture_guard:
+            if self._closed or self._socket.fileno() < 0:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            if sys.platform == "darwin":
+                from .macos_login import capture_macos_login
+
+                binding = capture_macos_login(self._socket, expected_owner=self._peer.os_owner_id)
+                if self._closed:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+                return binding
+            descriptor = _linux_peer_pidfd(self._socket)
+            try:
+                try:
+                    if os.get_inheritable(descriptor):
+                        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+                    _require_live_linux_pidfd(descriptor)
+                    from .linux_login import capture_linux_login
+
+                    binding = capture_linux_login(descriptor, expected_owner=self._peer.os_owner_id)
+                    _require_live_linux_pidfd(descriptor)
+                    if self._closed:
+                        raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+                    return binding
+                finally:
+                    os.close(descriptor)
+            except OSError:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+
+    @contextmanager
+    def capture_peer_pidfd(self) -> Generator[int]:
+        """Pin a live socket peer while a private worker checks its cgroup."""
+        with self._capture_guard:
+            if self._closed or self._socket.fileno() < 0:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            descriptor = _linux_peer_pidfd(self._socket)
+            try:
+                if os.get_inheritable(descriptor):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+                _require_live_linux_pidfd(descriptor)
+                yield descriptor
+                _require_live_linux_pidfd(descriptor)
+            except OSError:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+            finally:
+                os.close(descriptor)
 
     def _set_deadline(self, deadline: float) -> None:
         remaining = deadline - time.monotonic()
@@ -224,7 +311,9 @@ class PosixRuntimeChannel:
 
     def close(self) -> None:
         """Close this stream without touching the runtime singleton lock."""
-        self._socket.close()
+        with self._capture_guard:
+            self._closed = True
+            self._socket.close()
 
 
 class PosixRuntimeEndpoint:
@@ -283,16 +372,27 @@ class PosixRuntimeEndpoint:
             raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
 
     def connect(self, *, timeout: float = 5.0) -> PosixRuntimeChannel:
-        """Connect after validating the namespace and socket, then verify the peer."""
+        """Fence namespace/socket incarnation before exposing a verified peer."""
         self._verify_namespace()
         try:
-            metadata = self._path.lstat()
+            metadata = _socket_metadata(self._directory_fd, self._name)
+            if metadata is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_NOT_READY)
             if sys.platform == "win32" or not stat.S_ISSOCK(metadata.st_mode) or metadata.st_uid != posix_owner_uid():
                 raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
             sock = _unix_socket()
             try:
                 sock.settimeout(timeout)
                 sock.connect(str(self._path))
+                self._verify_namespace()
+                current = _socket_metadata(self._directory_fd, self._name)
+                if (
+                    current is None
+                    or (current.st_dev, current.st_ino) != (metadata.st_dev, metadata.st_ino)
+                    or not stat.S_ISSOCK(current.st_mode)
+                    or current.st_uid != posix_owner_uid()
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
                 return PosixRuntimeChannel(sock)
             except BaseException:
                 sock.close()
@@ -346,7 +446,7 @@ class PosixRuntimeEndpoint:
     def _remove_stale_socket(self) -> None:
         if sys.platform == "win32":
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        metadata = _socket_metadata(self._path)
+        metadata = _socket_metadata(self._directory_fd, self._name)
         if metadata is not None:
             if not stat.S_ISSOCK(metadata.st_mode) or metadata.st_uid != posix_owner_uid():
                 raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
@@ -359,8 +459,9 @@ class PosixRuntimeEndpoint:
                         raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
                 else:
                     raise RuntimeRefusalError(RuntimeRefusalCode.OWNER_BUSY)
-            current = self._path.lstat()
-            if (metadata.st_dev, metadata.st_ino) != (current.st_dev, current.st_ino):
+            self._verify_namespace()
+            current = _socket_metadata(self._directory_fd, self._name)
+            if current is None or (metadata.st_dev, metadata.st_ino) != (current.st_dev, current.st_ino):
                 raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
             os.unlink(self._name, dir_fd=self._directory_fd)
 
@@ -382,8 +483,8 @@ class PosixRuntimeEndpoint:
             self._listener = None
         if self._socket_identity is not None:
             with contextlib.suppress(OSError):
-                metadata = self._path.lstat()
-                if (metadata.st_dev, metadata.st_ino) == self._socket_identity:
+                metadata = _socket_metadata(self._directory_fd, self._name)
+                if metadata is not None and (metadata.st_dev, metadata.st_ino) == self._socket_identity:
                     os.unlink(self._name, dir_fd=self._directory_fd)
             self._socket_identity = None
         if self._lock_fd is not None:

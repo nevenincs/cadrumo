@@ -47,9 +47,12 @@ def run_auth_configure(
 
     try:
         client = require_profile_client(ctx, expected_profile_id=profile_id)
+        # The deferred certificate reference will be read in a worker whose
+        # cwd is the storage root, rather than this CLI invocation's directory.
+        absolute_certificate = certificate_path.expanduser().resolve(strict=False) if certificate_path else None
         completed = run_registered_operation(
             client,
-            AuthConfigureOperationRequest(provider=provider_kind, certificate_path=certificate_path),
+            AuthConfigureOperationRequest(provider=provider_kind, certificate_path=absolute_certificate),
             definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(profile_id)),
             result_type=AuthConfigureOperationProjection,

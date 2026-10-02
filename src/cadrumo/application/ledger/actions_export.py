@@ -10,6 +10,7 @@ with :func:`~cadrumo.application.export.tabular.serialize_tabular_rows`, emits a
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -30,7 +31,7 @@ from .actions_common import (
     normalise_timestamp,
     optional_decimal,
     resolve_bucket_event_repository,
-    resolve_transaction_repository,
+    resolve_revision_guarded_transaction_repository,
     save_transaction_catalogue_and_events,
 )
 from .models import (
@@ -82,6 +83,7 @@ def export_ledger_transactions(
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
     occurred_at: datetime | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> LedgerExportResult:
     """Export rows for a :class:`~cadrumo.application.ledger.models.LedgerExportCommand`.
 
@@ -89,9 +91,11 @@ def export_ledger_transactions(
         :class:`~cadrumo.application.ledger.models.LedgerExportResult`: The export outcome.
     """
     now = normalise_timestamp(occurred_at)
-    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
+    repository = resolve_revision_guarded_transaction_repository(
+        bucket_id=command.bucket_id, repository=transaction_repository
+    )
     event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
-    catalogue = repository.load()
+    catalogue, catalogue_revision = repository.load_revisioned()
     rows = _ledger_export_rows(
         catalogue,
         bucket_id=command.bucket_id,
@@ -104,7 +108,15 @@ def export_ledger_transactions(
         export_format=command.export_format,
     )
     if command.output_path is not None:
-        atomic_write_bytes(command.output_path, serialized.payload)
+        output_path = command.output_path
+
+        def write() -> None:
+            atomic_write_bytes(output_path, serialized.payload)
+
+        if mutation_writer is None:
+            write()
+        else:
+            mutation_writer(write)
     export_id = _ledger_export_id(
         bucket_id=command.bucket_id,
         export_format=command.export_format.value,
@@ -136,6 +148,7 @@ def export_ledger_transactions(
         event_repository=event_repository,
         catalogue=catalogue,
         events=(event,),
+        expected_catalogue_revision=catalogue_revision,
     )
     return LedgerExportResult(
         bucket_id=command.bucket_id,

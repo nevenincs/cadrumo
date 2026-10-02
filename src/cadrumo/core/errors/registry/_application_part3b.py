@@ -8,6 +8,36 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.modelo.mcp_query_operation.ModeloBindingValueContractUnsupportedError",
+        ErrorCode(
+            code="REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_binding_value_contract_unsupported",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.mcp_query_operation.ModeloBindingValueInvalidError",
+        ErrorCode(
+            code="REFUSED_MODELO_BINDING_VALUE_INVALID",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_binding_value_invalid",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.lifecycle_mutation_operation.LedgerLifecycleValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_LIFECYCLE_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_transaction_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.attachment_mutation_operation.LedgerAttachmentValidationRefusedError",
         ErrorCode(
             code="REFUSED_LEDGER_ATTACHMENT_VALIDATION",
@@ -113,6 +143,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_M145_COMMUNICATION_RECORD_PERSISTENCE",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.canonical_m145_communication_record_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.m145_communication_operation.M145CommunicationOperationRecordNotFoundError",
+        ErrorCode(
+            code="REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.m145_communication_record_not_found",
             retryable=False,
             runbook_id=None,
         ),

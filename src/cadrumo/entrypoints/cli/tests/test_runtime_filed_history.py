@@ -43,6 +43,9 @@ def _report() -> FiledHistoryOnboardingRun:
                 modelo="303",
                 ejercicio=2025,
                 signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
+                walk_attempted=True,
+                walk_completed=True,
+                reached_count=1,
                 row_count=1,
                 captured_count=1,
             ),
@@ -94,6 +97,9 @@ def _projection(report: FiledHistoryOnboardingRun | None = None) -> FiledHistory
                 modelo=pair.modelo,
                 ejercicio=pair.ejercicio,
                 signals=pair.signals,
+                walk_attempted=pair.walk_attempted,
+                walk_completed=pair.walk_completed,
+                reached_count=pair.reached_count,
                 row_count=pair.row_count,
                 captured_count=pair.captured_count,
                 refused=pair.refused,
@@ -205,3 +211,61 @@ def test_command_emits_existing_report_and_notice_from_registered_result(
     notices = envelope["notices"]
     assert isinstance(notices, list)
     assert any(notice.code == "live.filed.test_evidence" for notice in notices)
+
+
+@pytest.mark.parametrize("mismatch", ["duplicate", "incomplete_counts", "reached", "captured", "global"])
+def test_history_pair_accounting_refuses_contradictions_with_correlated_receipt(
+    monkeypatch: pytest.MonkeyPatch, mismatch: str
+) -> None:
+    projection = _projection()
+    pair = projection.pairs[0]
+    if mismatch == "duplicate":
+        projection = projection.model_copy(update={"pairs": (pair, pair)})
+    elif mismatch == "global":
+        projection = projection.model_copy(update={"reached_count": 0})
+    else:
+        update = (
+            {"walk_completed": False}
+            if mismatch == "incomplete_counts"
+            else {"reached_count": 2}
+            if mismatch == "reached"
+            else {"captured_count": 2}
+        )
+        projection = projection.model_copy(update={"pairs": (pair.model_copy(update=update),)})
+    _bind(monkeypatch, projection, effect=OperationEffect.UPDATED)
+    with pytest.raises(CliRefusedBoundaryError) as caught:
+        _read()
+    assert caught.value.context is not None
+    assert caught.value.context["operation_id"] == _OPERATION_ID
+    assert caught.value.context["reason"] == RuntimeRefusalCode.INVALID_FRAME.value
+
+
+def test_history_unvisited_pair_is_not_an_empty_answer_and_extra_actual_counts_survive(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    unvisited = FiledHistoryPairOutcome(
+        modelo="390",
+        ejercicio=2024,
+        signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
+        walk_attempted=False,
+        walk_completed=False,
+        row_count=0,
+        reached_count=0,
+        captured_count=0,
+    )
+    # Discovery's pair join does not include every rectangular capture pair.
+    report = _report().model_copy(
+        update={"pairs": (*_report().pairs, unvisited), "captured_count": 2, "reached_count": 2}
+    )
+    _bind(monkeypatch, _projection(report), effect=OperationEffect.UPDATED)
+    read = _read()
+    assert read.report.captured_count == 2 and read.report.reached_count == 2
+    assert read.report.genuinely_empty_pairs == ()
+    result, lines = handler._filed_pull_all_result_and_lines(read.report)
+    assert result.pair_count == 2
+    assert result.empty_count == 0
+    assert result.pairs[-1].walk_attempted is False and result.pairs[-1].walk_completed is False
+    assert result.pairs[-1].row_count == result.pairs[-1].reached_count == result.pairs[-1].captured_count == 0
+    assert any(
+        "390\t2024" in line and "walk_attempted=False" in line and "walk_completed=False" in line for line in lines
+    )

@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import asyncio
 import math
+import sys
 import time
 from collections.abc import Awaitable, Callable
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 from typing import ClassVar, cast, override
 from uuid import UUID
 
-from textual.app import ComposeResult
+from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
@@ -25,9 +25,11 @@ from ....adapters.local_runtime.automation_requester import (
 )
 from ....adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.access_contracts import (
+    GRANT_DEFAULT_VALIDITY,
     AccessAction,
     AccessScope,
     DisclosureCategory,
@@ -40,9 +42,10 @@ from ....application.user_profile.automation_enrollment import (
     EnrollmentProposal,
     EnrollmentStage,
 )
-from ....core.async_cleanup import await_cancellation_complete
+from ....core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from ....core.i18n.render import tr
 from ....core.period import Period
+from ....core.time.clock import now
 
 type RequesterClientOpener = Callable[[UUID], Awaitable[RuntimeFrontendClient]]
 type FreshCredentialClientOpener = Callable[[UUID, UUID, float], RuntimeFrontendClient]
@@ -120,6 +123,18 @@ class _ProposalDraft:
         )
 
 
+class _RequesterCleanup:
+    """Keep failed cleanup owned until a cancellation-complete retry succeeds."""
+
+    def __init__(self, close: Callable[[], Awaitable[None]], *, released: Callable[[], None]) -> None:
+        self._close = close
+        self._released = released
+
+    async def close(self) -> None:
+        await self._close()
+        self._released()
+
+
 class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | None]):
     """Present explicit scope consent and retain one submitted delivery until settled."""
 
@@ -140,9 +155,10 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
         client: RuntimeFrontendClient | None = None,
         open_client: RequesterClientOpener | None = None,
         fresh_credential_client: FreshCredentialClientOpener | None = None,
+        reviewer_client: RuntimeFrontendClient | None = None,
         journey_timeout: float = 300,
     ) -> None:
-        """Pin one prelogin or API lease; this screen never borrows human authority."""
+        """Pin requester and optional reviewer; decisions keep their own runtime proof."""
         super().__init__()
         if (client is None) == (open_client is None):
             raise ValueError("requester needs exactly one client source")
@@ -150,6 +166,10 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
             client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.TUI
         ):
             raise ValueError("requester client must be the exact TUI profile")
+        if reviewer_client is not None and (
+            reviewer_client.profile_id != profile_id or reviewer_client.frontend is not OperationFrontendProjection.TUI
+        ):
+            raise ValueError("reviewer must be the exact TUI profile")
         if not math.isfinite(journey_timeout) or not 0 < journey_timeout <= 300:
             raise ValueError("requester journey timeout must be finite and at most five minutes")
         self._profile_id = profile_id
@@ -158,6 +178,9 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
         self._owned_client: RuntimeFrontendClient | None = None
         self._open_client = open_client
         self._fresh_credential_client = fresh_credential_client
+        self._reviewer_client = reviewer_client
+        self._reviewer_session_id = reviewer_client.session_id if reviewer_client is not None else None
+        self._reviewer_access_lost = False
         self._secrets_store = secrets_store
         self._journey_timeout = journey_timeout
         self._operation_choices = tuple(
@@ -180,6 +203,7 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
                     if schema is not None
                     for category in DisclosureCategory
                 }
+                | {(OPERATION_OBSERVATION_PROJECTION_ID, DisclosureCategory.OPERATION_METADATA)}
             )
         )
         self._periods: set[Period] = set()
@@ -188,6 +212,7 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
         self._live = True
         self._outcome: AutomationRequestOutcome | None = None
         self._submitted: AutomationReceiptProjection | None = None
+        self._cleanup_owners: dict[int, _RequesterCleanup] = {}
 
     @property
     def safe_outcome(self) -> AutomationRequestOutcome | None:
@@ -246,6 +271,7 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
                 yield Input(placeholder=tr("tui.automation_request.grant_expiry"), id="automation-request-expiry")
                 yield Input(placeholder=tr("tui.automation_request.key_expiry"), id="automation-request-key-expiry")
                 yield Checkbox(tr("tui.automation_request.unattended"), id="automation-request-unattended")
+                yield Static(tr("tui.automation_inventory.unattended_notice"), markup=False)
                 yield Checkbox(tr("tui.automation_request.os_lock"), id="automation-request-os-lock")
                 yield Input(placeholder=tr("tui.automation_request.target_grant"), id="automation-request-grant")
                 yield Input(placeholder=tr("tui.automation_request.target_key"), id="automation-request-key")
@@ -256,30 +282,80 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
             yield Static("", id="automation-request-status", markup=False)
             with Horizontal():
                 yield Button(tr("tui.automation_request.submit"), id="automation-request-submit")
+                if self._reviewer_client is not None:
+                    yield Button(
+                        tr("tui.runtime_access.view_automation"), id="automation-request-review", disabled=True
+                    )
                 yield Button(tr("tui.runtime_access.close"), id="automation-request-close")
 
     async def on_unmount(self) -> None:
         """Finish the task before closing its owned requester connection."""
         self._live = False
         task = self._request_task
-        if task is not None:
-            with suppress(Exception, asyncio.CancelledError):
-                await await_cancellation_complete(task, task_name="tui-automation-request-settle")
-        self._request_task = None
-        owned = self._owned_client
-        self._owned_client = None
-        if owned is not None:
-            await await_cancellation_complete(asyncio.to_thread(owned.close), task_name="tui-automation-request-close")
-        self._periods.clear()
-        self._submitted = None
-        for field in self.query(Input):
-            field.value = ""
+        try:
+            if task is not None:
+
+                async def settle_request() -> None:
+                    try:
+                        await task
+                    except (Exception, asyncio.CancelledError) as error:
+                        self._retain_cleanup_errors(error)
+
+                await await_cancellation_complete(settle_request(), task_name="tui-automation-request-settle")
+        finally:
+            self._request_task = None
+            owned = self._owned_client
+            self._owned_client = None
+            if owned is not None:
+
+                async def close_owned() -> None:
+                    await asyncio.to_thread(owned.close)
+
+                self._retain_cleanup_owner(id(owned), close_owned)
+            try:
+                await close_async_resources(
+                    *tuple(self._cleanup_owners.values()), task_name="tui-automation-request-close"
+                )
+            finally:
+                self._periods.clear()
+                self._submitted = None
+                for field in self.query(Input):
+                    field.value = ""
+
+    def _retain_cleanup_owner(self, identity: int, close: Callable[[], Awaitable[None]]) -> None:
+        if identity not in self._cleanup_owners:
+
+            def released() -> None:
+                self._cleanup_owners.pop(identity, None)
+
+            self._cleanup_owners[identity] = _RequesterCleanup(close, released=released)
+
+    def _retain_cleanup_errors(self, error: BaseException) -> None:
+        """Adopt canonical failure attachments after the wire task returns to the UI."""
+        pending = [error]
+        seen: set[int] = set()
+        while pending:
+            current = pending.pop()
+            identity = id(current)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            if isinstance(current, AsyncResourceCleanupError):
+                self._retain_cleanup_owner(identity, current.retry_cleanup)
+            for name in ("async_cleanup_error", "cleanup_error", "body_error"):
+                attached = current.__dict__.get(name)
+                if isinstance(attached, BaseException):
+                    pending.append(attached)
+            if isinstance(current, AutomationRequesterUncertainError) and current.__cause__ is not None:
+                pending.append(current.__cause__)
 
     def on_mount(self) -> None:
         """Show only fields relevant to the initial requested change."""
         selected = cast("Select[EnrollmentKind]", self.query_one("#automation-request-kind", Select)).value
         if isinstance(selected, EnrollmentKind):
             self._show_kind(selected)
+            if selected is EnrollmentKind.ENROLL:
+                self.query_one("#automation-request-expiry", Input).value = (now() + GRANT_DEFAULT_VALIDITY).isoformat()
 
     def on_select_changed(self, event: Select.Changed) -> None:
         """Clear fields that no longer belong to the selected proposal kind."""
@@ -392,7 +468,17 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
                     raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
                 return fresh.reconcile_enrollment(submitted.request_id, timeout=remaining)
             finally:
-                fresh.close()
+                primary_error = sys.exception()
+
+                async def close_fresh() -> None:
+                    await asyncio.to_thread(fresh.close)
+
+                cleanup = _RequesterCleanup(close_fresh, released=lambda: None)
+                asyncio.run(
+                    close_async_resources(
+                        cleanup, task_name="tui-requester-reconcile-close", primary_error=primary_error
+                    )
+                )
 
         return reconcile
 
@@ -441,6 +527,8 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
             )
             self._submitted = submitted
             if self._live and self.is_mounted:
+                if self._reviewer_client is not None:
+                    self.query_one("#automation-request-review", Button).disabled = not self._reviewer_bound()
                 self.query_one("#automation-request-status", Static).update(
                     f"{tr('tui.automation_request.requested')} · "
                     f"{tr('tui.automation_request.request_id')}: {submitted.request_id} · "
@@ -451,6 +539,7 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
             )
             self._outcome = self._completed_outcome(completed)
         except AutomationRequesterUncertainError as error:
+            self._retain_cleanup_errors(error)
             self._outcome = AutomationRequestOutcome(
                 error.request_id,
                 str(self._submitted.review_digest) if self._submitted is not None else None,
@@ -459,7 +548,8 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
                 True,
                 error.reason,
             )
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as error:
+            self._retain_cleanup_errors(error)
             self._outcome = AutomationRequestOutcome(
                 request_id if submitted_attempted else None,
                 str(self._submitted.review_digest) if self._submitted is not None else None,
@@ -469,7 +559,8 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
                 None,
             )
             raise
-        except Exception:
+        except Exception as error:
+            self._retain_cleanup_errors(error)
             self._outcome = AutomationRequestOutcome(
                 request_id if submitted_attempted else None,
                 str(self._submitted.review_digest) if self._submitted is not None else None,
@@ -519,8 +610,41 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
         self.query_one("#automation-request-status", Static).update(" · ".join(parts))
         self.query_one("#automation-request-close", Button).disabled = False
 
+    def _reviewer_bound(self) -> bool:
+        reviewer = self._reviewer_client
+        try:
+            return (
+                reviewer is not None
+                and not self._reviewer_access_lost
+                and reviewer.frontend is OperationFrontendProjection.TUI
+                and reviewer.profile_id == self._profile_id
+                and reviewer.session_id == self._reviewer_session_id
+            )
+        except Exception:
+            return False
+
+    def _open_review(self) -> None:
+        """Let the human inspect and decide separately while delivery remains owned."""
+        from ..profile.automation_inventory import RuntimeAutomationInventoryScreen
+
+        reviewer = self._reviewer_client
+        if not self._live or self._submitted is None or reviewer is None or not self._reviewer_bound():
+            return
+        screen = RuntimeAutomationInventoryScreen(reviewer)
+
+        def closed(lost: bool | None) -> None:
+            if lost or screen.access_lost:
+                self._reviewer_access_lost = True
+            if self._live and self.is_mounted:
+                self.query_one("#automation-request-review", Button).disabled = not self._reviewer_bound()
+
+        cast("App[object]", self.app).push_screen(screen, closed)
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Add one typed period, submit once, or close after settlement."""
+        if event.button.id == "automation-request-review":
+            self._open_review()
+            return
         if event.button.id == "automation-request-period-add" and not self._busy:
             try:
                 period = Period.from_year_and_code(
@@ -557,9 +681,13 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
             self.dismiss(self._outcome)
 
 
+type HumanAutomationRequesterFactory = Callable[[RuntimeFrontendClient], RuntimeAutomationRequesterScreen]
+
+
 __all__ = [
     "AutomationRequestOutcome",
     "FreshCredentialClientOpener",
+    "HumanAutomationRequesterFactory",
     "RequesterClientOpener",
     "RuntimeAutomationRequesterScreen",
 ]

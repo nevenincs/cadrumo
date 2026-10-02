@@ -29,6 +29,7 @@ from ...core.unit_proportion import is_unit_proportion
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.usage_ratios.errors import CensoRatioMismatchError
+from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -47,6 +48,7 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
+    OperationResultProjector,
     OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
@@ -683,8 +685,8 @@ def _registration(
     *,
     request_type: type[BaseModel],
     projection_type: type[BaseModel],
-    access_resolver,
-    result_projector,
+    access_resolver: OperationAccessResolver,
+    result_projector: OperationResultProjector,
 ) -> OperationPublicDefinitionRegistrationV1:
     return OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,

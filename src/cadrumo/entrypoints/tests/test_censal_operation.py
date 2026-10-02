@@ -322,7 +322,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.UPDATED,
                     settled_at=_NOW,
-                    result_ref=f"censo-review:{operation_id}:applied",
+                    result_ref=operation_id,
                 ),
             )
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -415,7 +415,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.NONE,
                     settled_at=_NOW,
-                    result_ref=f"censo-review:{operation_id}:rejected",
+                    result_ref=operation_id,
                 ),
             )
             assert terminal.effect is OperationEffect.NONE
@@ -533,7 +533,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.UPDATED,
                     settled_at=_NOW + timedelta(minutes=2),
-                    result_ref=f"censo-review:{operation_id}:applied",
+                    result_ref=operation_id,
                 ),
             )
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED

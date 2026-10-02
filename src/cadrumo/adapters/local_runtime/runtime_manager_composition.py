@@ -7,6 +7,7 @@ import sysconfig
 from pathlib import Path
 
 from cadrumo.adapters.local_runtime.linux_manager import LinuxUserManager
+from cadrumo.adapters.local_runtime.macos_manager import MacosUserManager
 from cadrumo.adapters.local_runtime.posix import PosixRuntimeEndpoint, posix_owner_uid
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_manager import WindowsTaskManager
@@ -45,6 +46,8 @@ def installed_runtime_manager(
         return WindowsTaskManager(binding)
     if sys.platform == "linux":
         return LinuxUserManager(binding)
+    if sys.platform == "darwin":
+        return MacosUserManager(binding)
     return None
 
 

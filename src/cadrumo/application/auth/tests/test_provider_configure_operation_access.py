@@ -199,6 +199,7 @@ def test_configure_result_projector_binds_exact_subject_effect_and_exposes_only_
 
     projected = project_auth_configure_result(result, _receipt())
 
+    assert isinstance(projected, AuthConfigureOperationProjection)
     assert projected.profile_id == _PROFILE
     assert projected.result.to_result() == result
     encoded = projected.model_dump_json().casefold()
@@ -219,7 +220,9 @@ def test_configure_result_projector_binds_exact_subject_effect_and_exposes_only_
         "precondition_verdict",
     }
 
-    assert project_auth_configure_result(result, _receipt(profile_id=_OTHER_PROFILE)).profile_id == _OTHER_PROFILE
+    other_projected = project_auth_configure_result(result, _receipt(profile_id=_OTHER_PROFILE))
+    assert isinstance(other_projected, AuthConfigureOperationProjection)
+    assert other_projected.profile_id == _OTHER_PROFILE
 
     mismatches = (
         _receipt(definition_id="auth.session.acquire"),

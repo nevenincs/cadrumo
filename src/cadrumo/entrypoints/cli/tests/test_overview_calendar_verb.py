@@ -57,7 +57,7 @@ from ._overview_calendar_support import (
     _stamp_calendar_enrolment_from_censo,
 )
 from ._overview_native_support import invoke_native_overview
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 __all__ = ["_isolated_backend"]
 

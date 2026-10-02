@@ -3,21 +3,21 @@
 Provides the ``status`` and ``flush`` verbs over the default-off,
 consent-gated remote telemetry tier: ``status`` reports the deployment's current posture
 (opt-in, tier, gestor mode, endpoint) without ever emitting anything;
-``flush`` builds the one aggregate local-run payload a real send would
-transmit and, by default (``--dry-run``, the CLI default), only PREVIEWS
-it -- no network call is made. Passing ``--no-dry-run`` performs a real send,
-and even then only when the consent gate permits AND an endpoint is
-configured; otherwise it remains a safe no-op.
+``flush`` submits to the exact profile's registered worker, which builds the
+aggregate local-run payload and, by default (``--dry-run``, the CLI default),
+only PREVIEWS it -- no network call is made. Passing ``--no-dry-run`` permits
+the worker to attempt a real send only when the consent gate permits and an
+endpoint is configured; otherwise it remains a safe no-op.
 
 Every field this module can ever surface as "would be sent" is drawn from
 :class:`~core.telemetry.schema.TelemetryEventPayload`, the closed allowlisted
 payload shape -- there is no other data source, so this transport module
 cannot itself widen what telemetry carries.
 
-This module is the transport adapter over
-:func:`~application.diagnostics_telemetry.build_telemetry_status_report`,
-:func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`,
-and :func:`~application.diagnostics_telemetry.flush_telemetry`. It emits
+The status verb adapts
+:func:`~application.diagnostics_telemetry.build_telemetry_status_report`;
+the flush verb adapts the worker's registered ``diagnostics.telemetry.flush``
+projection. It emits
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryStatusResult` and
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryFlushResult`
 through :func:`~entrypoints.cli.common.emit_envelope`.
@@ -25,10 +25,8 @@ through :func:`~entrypoints.cli.common.emit_envelope`.
 See Also:
     :func:`~application.diagnostics_telemetry.build_telemetry_status_report`
         Read-only application service backing ``status``.
-    :func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`
-        Dry-run payload builder backing the default ``flush`` mode.
-    :func:`~application.diagnostics_telemetry.flush_telemetry`
-        Non-dry-run application service that still honours the consent gate.
+    :mod:`~application.diagnostics_operation`
+        Exact-profile registered worker operation backing ``flush``.
     :class:`~core.telemetry.schema.TelemetryEventPayload`
         Closed payload shape surfaced in the flush preview result.
 """
@@ -106,61 +104,19 @@ def diagnostics_telemetry_flush(
     acknowledge: bool = False,
 ) -> None:
     """Build the aggregate local telemetry payload and, unless --dry-run, send it."""
-    from ...application.diagnostics_telemetry import build_telemetry_flush_preview, flush_telemetry
-    from ...core.config import load_settings, override_settings
     from ...core.json_contract import Notice, NoticeSeverity
-    from ..diagnostics_run_health_composition import (
-        compose_diagnostics_auth_probe_port,
-        compose_diagnostics_run_health_port,
+    from .runtime_diagnostics import flush_diagnostics_telemetry
+
+    completed = flush_diagnostics_telemetry(
+        ctx,
+        dry_run=dry_run,
+        acknowledged=acknowledge,
+        opt_in=opt_in,
+        tier=tier,
+        endpoint=endpoint,
     )
-    from .state_projection_support import operator_probe_ports, state_projection_read_ports
-
-    overrides: dict[str, object] = {}
-    if opt_in is not None:
-        overrides["cadrumo_telemetry_opt_in"] = opt_in
-    if tier is not None:
-        overrides["cadrumo_telemetry_tier"] = tier
-    if endpoint is not None:
-        overrides["cadrumo_telemetry_endpoint"] = endpoint
-
-    if overrides:
-        ctx.with_resource(override_settings(**overrides))
-
-    settings = load_settings()
-    run_telemetry_port = compose_diagnostics_run_health_port()
-    from .state_projection_support import (
-        authority_operation,
-        certificate_secret_backend_factory,
-        operator_scope_ports,
-    )
-
-    auth_probe_port = compose_diagnostics_auth_probe_port(
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_probe_ports=operator_probe_ports(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
-        read_ports=state_projection_read_ports(ctx),
-        operation=authority_operation(ctx),
-    )
-
-    if dry_run:
-        # A bare --dry-run never sends regardless of --acknowledge-remote-telemetry;
-        # the preview still reflects the real acknowledgement value so the
-        # operator can see exactly what a matching --no-dry-run run would do.
-        preview = build_telemetry_flush_preview(
-            settings=settings,
-            acknowledged=acknowledge,
-            run_telemetry_port=run_telemetry_port,
-            auth_probe_port=auth_probe_port,
-        )
-        sent = False
-    else:
-        preview = flush_telemetry(
-            settings=settings,
-            acknowledged=acknowledge,
-            run_telemetry_port=run_telemetry_port,
-            auth_probe_port=auth_probe_port,
-        )
-        sent = preview.would_send
+    preview = completed.preview.to_preview()
+    sent = completed.sent
 
     result = TelemetryFlushResult(
         dry_run=dry_run,

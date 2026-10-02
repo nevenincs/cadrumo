@@ -19,23 +19,25 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
+from uuid import UUID, uuid4
 
 import pytest
 from textual.app import App
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input, Select
 
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....application.user_profile.login_interaction import ProfileLoginChoice, attempt_profile_login
-from ....application.user_profile.login_session import login_profile, logout_active_profile
+from ....application.user_profile.login_interaction import ProfileLoginChoice
+from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..components.host import ScreenHostApp
 from ..profile.overview import ProfileManagerScreen
-from ..secret.login import LoginScreen
+from ..secret.runtime_login import RuntimeLoginScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -60,7 +62,7 @@ A control pushed off the right edge is unreachable: there is no horizontal
 scroll affordance on these surfaces, so the operator cannot recover."""
 
 
-def _reachable_controls(app: App[object]) -> list[Widget]:
+def _reachable_controls[T](app: App[T]) -> list[Widget]:
     """Every displayed interactive control currently mounted on the screen."""
     return [
         widget
@@ -69,7 +71,7 @@ def _reachable_controls(app: App[object]) -> list[Widget]:
     ]
 
 
-def _assert_horizontally_contained(app: App[object], size: tuple[int, int], surface: str) -> None:
+def _assert_horizontally_contained[T](app: App[T], size: tuple[int, int], surface: str) -> None:
     """Assert every reachable control fits inside the terminal's width."""
     width, _height = size
     controls = _reachable_controls(app)
@@ -133,22 +135,20 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
 
 @pytest.mark.parametrize("size", _SIZES)
 @pytest.mark.asyncio
-async def test_the_secret_surface_fits_every_terminal_width(tmp_path: Path, size: tuple[int, int]) -> None:
-    """The login screen keeps both credential fields inside the terminal."""
-    with _registered_profile(tmp_path) as (_root, authority_operation):
-        bucket_id = require_active_bucket_id()
-        logout_active_profile()
-        screen = LoginScreen(
-            choices=[ProfileLoginChoice(profile_id=bucket_id, label=_LABEL)],
-            authenticate=lambda profile_id, secret: attempt_profile_login(
-                profile_id=profile_id,
-                passphrase=secret,
-                profile_decode_context=authority_operation.profile_decode_context(),
-            ),
-        )
-        app = ScreenHostApp(screen)
-        async with app.run_test(size=size) as pilot:
-            await pilot.pause()
-            await pilot.pause()
-            _assert_horizontally_contained(app.app, size, "login screen")
-            app.app.exit(None)
+async def test_the_secret_surface_fits_every_terminal_width(size: tuple[int, int]) -> None:
+    """The runtime login controls fit without acquiring any profile authority."""
+
+    async def must_not_open(_profile_id: UUID) -> RuntimeFrontendClient:
+        raise AssertionError("the terminal-size proof never opens a runtime connection")
+
+    screen = RuntimeLoginScreen(
+        choices=[ProfileLoginChoice(profile_id=str(uuid4()), label=_LABEL)],
+        open_client=must_not_open,
+        accept_handoff=lambda _: False,
+    )
+    app = ScreenHostApp(screen)
+    async with app.run_test(size=size) as pilot:
+        await pilot.pause()
+        await pilot.pause()
+        _assert_horizontally_contained(app, size, "runtime login screen")
+        app.exit(None)

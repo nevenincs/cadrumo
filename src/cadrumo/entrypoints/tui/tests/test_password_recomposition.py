@@ -15,6 +15,7 @@ from ....application.overview.home import HomeAccountSession, HomeSessionPosture
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ....core.credentials import assess_profile_password
 from ..account import (
+    AccountDirectSessionActionV1,
     AccountFactoriesV1,
     AccountRecomposeReasonV1,
     AccountRecomposeRequiredV1,
@@ -65,13 +66,18 @@ async def test_expiry_hides_private_screen_but_waits_for_rotation_result(complet
         raise AccountSessionExpiredError("old session retired")
 
     screen = PassphraseScreen(assess=assess_profile_password, rotate=rotate)
+
+    async def unrelated_session_completion() -> AccountRecomposeRequiredV1:
+        raise AssertionError("an unrelated account door was opened")
+
+    unrelated_action = AccountDirectSessionActionV1(complete=unrelated_session_completion)
     factories = AccountFactoriesV1(
         profile=_unavailable,
-        change_user=_unavailable,
+        change_user=lambda: unrelated_action,
         password=lambda: screen,
         appearance=_unavailable,
         language=_unavailable,
-        sign_out=_unavailable,
+        sign_out=lambda: unrelated_action,
     )
     app = CadrumoTuiApp(account_factories=factories, read_account_session=read_session)
     initial = HomeAccountSession(

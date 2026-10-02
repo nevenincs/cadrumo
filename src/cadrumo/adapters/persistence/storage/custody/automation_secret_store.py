@@ -98,7 +98,10 @@ class _WindowsCredentialManager:
         self._credential_type_generic = 1
         self._credential_persist_local_machine = 2
 
-        advapi32 = ctypes.WinDLL("Advapi32.dll", use_last_error=True)
+        if sys.platform == "win32":
+            advapi32 = ctypes.WinDLL("Advapi32.dll", use_last_error=True)
+        else:
+            raise OSError
         self._cred_read = advapi32.CredReadW
         self._cred_read.argtypes = [
             wintypes.LPCWSTR,
@@ -257,11 +260,15 @@ class WindowsAutomationSecretStore:
 
 
 def native_automation_secret_store(backend: NativeSecretBackend) -> AutomationSecretStore:
-    """Refuse unimplemented/nonmatching native facilities, including arbitrary keyring plugins.
-
-    macOS and Linux ports require native non-prompting adapters and platform
-    acceptance before composition can enable them; no installed support is implied.
-    """
+    """Select only implemented native facilities on their matching platform."""
     if backend is NativeSecretBackend.WINDOWS_CREDENTIAL_MANAGER and sys.platform == "win32":
         return WindowsAutomationSecretStore()
+    if backend is NativeSecretBackend.LINUX_DBUS and sys.platform == "linux":
+        from .linux_secret_service_store import LinuxSecretServiceAutomationSecretStore
+
+        return LinuxSecretServiceAutomationSecretStore()
+    if backend is NativeSecretBackend.MACOS_KEYCHAIN and sys.platform == "darwin":
+        from .macos_keychain_store import MacOSKeychainAutomationSecretStore
+
+        return MacOSKeychainAutomationSecretStore()
     raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)

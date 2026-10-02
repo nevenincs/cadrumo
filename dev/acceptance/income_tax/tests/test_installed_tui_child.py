@@ -4,17 +4,30 @@ from __future__ import annotations
 
 import asyncio
 import json
+import secrets
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
+from typing import override
+from uuid import UUID, uuid4
 
 import pytest
-from textual.widgets import OptionList
+from textual.app import App, ComposeResult
+from textual.widgets import OptionList, Static
+
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
+from cadrumo.application.user_profile.access_contracts import AccessScope, Availability, ProfileAccessStatus
+from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
+from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
 
 from .. import installed_tui_child as installed_child_module
 from ..installed_tui_child import (
     InstalledTuiChildError,
     _public_surface_diagnostic,
     _wait_for_selector,
+    admitted_session_autopilot,
     is_installed_product_origin,
     open_profile_manager_field,
     public_surface_diagnostic,
@@ -26,6 +39,139 @@ from ..installed_tui_child import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+_ADMISSION_SECRET = secrets.token_urlsafe(32)
+
+
+class _AdmissionClient(RuntimeFrontendClient):
+    """Explicit UI transport seam; this does not prove native runtime admission."""
+
+    def __init__(self, profile_id: UUID) -> None:
+        self._profile_id = profile_id
+        self._frontend = OperationFrontendProjection.TUI
+        self._session_id = None
+        self.proof: bytearray | None = None
+        self.password_calls = 0
+        self.closed = False
+        self.refuse = False
+
+    @override
+    def login_password(
+        self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False
+    ) -> RuntimeProfileStatus:
+        assert not persist_receipt
+        assert secret == _ADMISSION_SECRET.encode()
+        self.proof = secret
+        self.password_calls += 1
+        if self.refuse:
+            raise RuntimeFrontendRefusedError("credential_rejected")
+        self._session_id = uuid4()
+        return RuntimeProfileStatus(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            status=ProfileAccessStatus(
+                connected=True,
+                credential_authenticated=True,
+                profile_id=self.profile_id,
+                session_id=self.session_id,
+                session_expires_at=datetime.now(UTC) + timedelta(minutes=5),
+                grant_state=None,
+                grant_expires_at=None,
+                grant_valid=False,
+                profile_bound=True,
+                storage=Availability.AVAILABLE,
+                automation_custody=Availability.UNSUPPORTED,
+                published_authority=Availability.AVAILABLE,
+                provider=Availability.NOT_REQUIRED,
+                effective_scope=AccessScope(
+                    operations=frozenset(),
+                    actions=frozenset(),
+                    disclosures=frozenset(),
+                    periods=None,
+                    allow_period_independent=True,
+                    allow_delegation=False,
+                ),
+                denial=None,
+            ),
+        )
+
+    @override
+    def close(self) -> None:
+        self.closed = True
+
+
+class _AdmittedRoot(App[None]):
+    """A public Home marker for the separate root callback contract."""
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield Static("Home", id="home-agenda")
+
+
+@pytest.mark.asyncio
+async def test_admission_autopilot_transfers_exact_login_before_running_separate_root() -> None:
+    first, selected = uuid4(), uuid4()
+    client = _AdmissionClient(selected)
+    workflows: list[object] = []
+
+    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        assert profile_id == selected
+        return client
+
+    async def workflow(pilot) -> None:
+        assert isinstance(pilot.app, _AdmittedRoot)
+        assert client.password_calls == 1
+        assert not client.closed
+        assert client.proof is not None and not any(client.proof)
+        workflows.append(pilot.app)
+        pilot.app.exit()
+
+    autopilot = admitted_session_autopilot(passphrase=_ADMISSION_SECRET, drive_after_home=workflow)
+    async with asyncio.timeout(5):
+        async with runtime_login_session(
+            choices=(
+                ProfileLoginChoice(profile_id=str(first), label="First"),
+                ProfileLoginChoice(profile_id=str(selected), label="Selected"),
+            ),
+            preselected=str(selected),
+            open_client=open_client,
+            headless=True,
+            auto_pilot=autopilot,
+        ) as handoff:
+            assert handoff is not None and handoff.profile_id == selected
+            assert workflows == []
+            root = _AdmittedRoot()
+            await root.run_async(headless=True, auto_pilot=autopilot)
+            assert workflows == [root]
+            assert not client.closed
+    assert client.closed
+
+
+@pytest.mark.asyncio
+async def test_admission_autopilot_refusal_never_runs_workflow_and_closes_login_client() -> None:
+    selected = uuid4()
+    client = _AdmissionClient(selected)
+    client.refuse = True
+
+    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        assert profile_id == selected
+        return client
+
+    async def workflow(_pilot) -> None:
+        pytest.fail("a refused login must never run the private workflow")
+
+    async with asyncio.timeout(5):
+        with pytest.raises(InstalledTuiChildError, match="admission did not settle"):
+            async with runtime_login_session(
+                choices=(ProfileLoginChoice(profile_id=str(selected), label="Selected"),),
+                open_client=open_client,
+                headless=True,
+                auto_pilot=admitted_session_autopilot(passphrase=_ADMISSION_SECRET, drive_after_home=workflow, polls=3),
+            ):
+                pytest.fail("a refused login must never transfer ownership")
+    assert client.password_calls == 1
+    assert client.closed
+    assert client.proof is not None and not any(client.proof)
 
 
 def test_installed_origin_guard_refuses_checkout_source_and_accepts_site_packages(tmp_path: Path) -> None:

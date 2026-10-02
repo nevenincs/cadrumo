@@ -117,7 +117,7 @@ def _runtime_build_hook_base() -> Any:
     from importing this hook.
 
     The dynamic values only bridge the third-party runtime type API.  The
-    ``TYPE_CHECKING`` base below keeps the 1.32.3 protocol fully described to
+    ``TYPE_CHECKING`` base below keeps the current protocol fully described to
     static checkers, and unknown future shapes fail before any build data is
     changed.
     """
@@ -137,8 +137,8 @@ def _runtime_build_hook_base() -> Any:
 
 if TYPE_CHECKING:
 
-    class _CustomBuildHookBase(BuildHookInterface[BuilderConfig[PluginManager], PluginManager]):
-        """Static view of the Hatchling 1.32.3 hook protocol."""
+    class _CustomBuildHookBase(BuildHookInterface[BuilderConfig]):
+        """Static view of the current Hatchling hook protocol."""
 else:
     _CustomBuildHookBase = _runtime_build_hook_base()
 

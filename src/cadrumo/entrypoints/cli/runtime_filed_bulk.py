@@ -114,7 +114,6 @@ def _presentation_report(
         or projection.dry_run != request.dry_run
         or (request.modelos is not None and projection.modelos != request.modelos)
         or projection.failed_count != len(projection.failures)
-        or (projection.dry_run and projection.sync_run_ref is not None)
     ):
         raise ValueError("filed-bulk result does not match its submitted scope")
     for row in (*projection.failures, *projection.skipped_casillas):
@@ -122,9 +121,10 @@ def _presentation_report(
             request.modelos is not None and row.modelo not in request.modelos
         ):
             raise ValueError("filed-bulk detail row is outside the submitted scope")
-    return BulkFiledDataCaptureReport(
+    report = BulkFiledDataCaptureReport(
         output_root=projection.output_root,
         modelos=projection.modelos,
+        pair_outcomes=projection.pair_outcomes,
         year_from=projection.year_from,
         year_to=projection.year_to,
         dry_run=projection.dry_run,
@@ -174,6 +174,9 @@ def _presentation_report(
         recapture_notices=tuple(_notice(row) for row in projection.recapture_notices),
     )
 
+    report.require_consistent()
+    return report
+
 
 def read_filed_bulk_capture_for_cli(
     ctx: typer.Context,
@@ -212,6 +215,7 @@ def read_filed_bulk_capture_for_cli(
             raise ValueError("filed-bulk result projection has an invalid type")
         report = _presentation_report(completed.projection, profile_id=profile_id, request=request)
         expected_effect = OperationEffect.UPDATED if report.sync_run_ref is not None else OperationEffect.NONE
+        # A provider session refresh can persist even when capture itself writes nothing.
         if (
             completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
             or completed.refusal_code is not None

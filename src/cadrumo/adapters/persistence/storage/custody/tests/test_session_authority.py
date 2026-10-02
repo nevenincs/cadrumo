@@ -7,6 +7,7 @@ use their production implementations against test-owned synthetic profiles.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -74,6 +75,7 @@ from cadrumo.application.user_profile.session_authority import (
     ProfileSessionAuthority,
     SessionAuthorityFacts,
 )
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from cadrumo.core.time.utc import UtcInstant
 
 pytestmark = [
@@ -196,6 +198,15 @@ class AdmissionOwner:
                 self.human_released = True
         if self.fail_human_release:
             raise RuntimeError("synthetic human release failure")
+
+    def human_admission_deadline(self, connection_id: UUID) -> float:
+        assert connection_id in self.connections
+        return self.current.context.monotonic_now + 40
+
+    @contextmanager
+    def prepare_api_admission(self, connection_id: UUID) -> Iterator[float]:
+        assert connection_id in self.connections
+        yield self.current.context.monotonic_now + 30
 
 
 class Subject:
@@ -607,6 +618,123 @@ def test_failed_worker_preparation_does_not_publish_human_session(subject: Subje
 
 
 @pytest.mark.asyncio
+async def test_failed_human_binding_preserves_primary_and_retryable_candidate_retirement(subject: Subject) -> None:
+    primary = RuntimeError("synthetic original human binding failure")
+
+    class FailedCandidateOwner(AdmissionOwner):
+        @override
+        def bind_human(self, session: AccessSession) -> None:
+            self.failed_retirements.add(session.session_id)
+            try:
+                super().bind_human(session)
+            except RuntimeError:
+                raise primary from None
+
+    owner = FailedCandidateOwner(subject.enrollment)
+    owner.fail_human_bind = True
+    subject.owner = owner
+    subject.authority = subject.new_authority()
+    with pytest.raises(RuntimeError) as refused:
+        subject.authority.admit_human(connection_id=subject.connection)
+    assert refused.value is primary
+    attempted = owner.human_bind_attempt
+    assert attempted is not None
+    assert owner.human_released and not owner.active
+    cleanup = primary.__dict__.get("async_cleanup_error")
+    assert isinstance(cleanup, AsyncResourceCleanupError)
+    assert owner.retired.count(attempted) == 1
+
+    with pytest.raises(AsyncResourceCleanupError) as incomplete:
+        await cleanup.retry_cleanup()
+    assert owner.retired.count(attempted) == 2
+    owner.failed_retirements.clear()
+    await incomplete.value.retry_cleanup()
+    assert owner.retired.count(attempted) == 3
+    status = subject.authority.status(
+        connection_id=subject.connection,
+        session_id=attempted,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+    )
+    assert isinstance(status, ProfileAccessStatus)
+    assert not status.credential_authenticated and status.session_id is None
+    assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
+    await subject.authority.close()
+    assert owner.retired.count(attempted) == 3
+
+
+@pytest.mark.asyncio
+async def test_cancelled_human_binding_retains_prior_cleanup_and_candidate_retirement(subject: Subject) -> None:
+    primary = asyncio.CancelledError("synthetic original human binding cancellation")
+
+    class EarlierOwner:
+        def __init__(self) -> None:
+            self.calls = 0
+            self.failed = True
+            self.released = False
+
+        async def close(self) -> None:
+            if self.released:
+                return
+            self.calls += 1
+            if self.failed:
+                raise RuntimeError("synthetic earlier native close failure")
+            self.released = True
+
+    earlier = EarlierOwner()
+    with pytest.raises(asyncio.CancelledError) as prior:
+        await await_cancellation_complete(
+            close_async_resources(earlier, task_name="earlier-human-cleanup", primary_error=None),
+            task_name="cancelled-earlier-human-cleanup",
+            cancellation=primary,
+        )
+    assert prior.value is primary
+    assert isinstance(primary.__dict__.get("cleanup_error"), AsyncResourceCleanupError)
+    assert "async_cleanup_error" not in primary.__dict__
+    assert earlier.calls == 1
+
+    class FailedCandidateOwner(AdmissionOwner):
+        @override
+        def bind_human(self, session: AccessSession) -> None:
+            self.failed_retirements.add(session.session_id)
+            try:
+                super().bind_human(session)
+            except RuntimeError:
+                raise primary from None
+
+    owner = FailedCandidateOwner(subject.enrollment)
+    owner.fail_human_bind = True
+    subject.owner = owner
+    subject.authority = subject.new_authority()
+    with pytest.raises(asyncio.CancelledError) as refused:
+        subject.authority.admit_human(connection_id=subject.connection)
+    assert refused.value is primary
+    attempted = owner.human_bind_attempt
+    assert attempted is not None
+    assert owner.human_released and not owner.active
+    assert owner.retired.count(attempted) == 1
+    cleanup = primary.__dict__.get("async_cleanup_error")
+    assert isinstance(cleanup, AsyncResourceCleanupError)
+    assert primary.__dict__.get("cleanup_error") is cleanup
+    owner.failed_retirements.clear()
+    earlier.failed = False
+    await cleanup.retry_cleanup()
+    assert earlier.released and earlier.calls == 2
+    assert owner.retired.count(attempted) == 2
+    status = subject.authority.status(
+        connection_id=subject.connection,
+        session_id=attempted,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+    )
+    assert isinstance(status, ProfileAccessStatus)
+    assert not status.credential_authenticated and status.session_id is None
+    assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
+    await subject.authority.close()
+    assert owner.retired.count(attempted) == 2 and earlier.calls == 2
+
+
+@pytest.mark.asyncio
 async def test_shutdown_fences_all_leases_even_when_one_cleanup_fails(subject: Subject) -> None:
     first, second = subject.admit(), subject.admit()
     assert isinstance(first, AccessSession) and isinstance(second, AccessSession)
@@ -877,6 +1005,332 @@ def test_unselected_suspended_grant_stays_suspended_across_another_profile_lock(
         if not selected:
             assert isinstance(subject.admit(), AccessDenied)
     assert isinstance(subject.admit(), AccessSession)
+
+
+@pytest.mark.parametrize("resume_before_release", [False, True], ids=["locked", "resumed-generation"])
+def test_paused_human_authentication_allows_status_and_cannot_publish_across_profile_lock(
+    subject: Subject, resume_before_release: bool
+) -> None:
+    """Keep real password custody outside unrelated authority work and fence stale candidates."""
+    candidate_connection = uuid4()
+    entered, release, status_completed, authenticated = Event(), Event(), Event(), Event()
+
+    class PausedAdmissionOwner(AdmissionOwner):
+        @override
+        @contextmanager
+        def authenticate_human(self, connection_id: UUID) -> Iterator[tuple[ProfileLoginOutcome, str]]:
+            if connection_id == candidate_connection:
+                entered.set()
+                assert release.wait(10)
+            with super().authenticate_human(connection_id) as outcome:
+                if connection_id == candidate_connection:
+                    authenticated.set()
+                yield outcome
+
+    owner = PausedAdmissionOwner(subject.enrollment)
+    subject.owner = owner
+    subject.authority = subject.new_authority()
+    owner.connections[candidate_connection] = uuid4()
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    initial_generation = owner.current.profile.lock_generation
+    initial_bind = owner.human_bind_attempt
+    service = lifecycle(subject, human)
+
+    def observe_and_lock() -> tuple[ProfileAccessStatus, AutomationDenialReceipt]:
+        status = subject.authority.status(
+            connection_id=subject.connection,
+            session_id=human.session_id,
+            published_authority=Availability.AVAILABLE,
+            provider=Availability.NOT_REQUIRED,
+        )
+        assert isinstance(status, ProfileAccessStatus)
+        assert status.credential_authenticated and status.session_id == human.session_id
+        status_completed.set()
+        receipt = service.deny(
+            AutomationDenial(request_id=uuid4(), binding=human.binding, kind=AutomationDenialKind.PROFILE_LOCK)
+        )
+        if resume_before_release:
+            resumed = service.resume(
+                AutomationResumeRequest(
+                    request_id=uuid4(),
+                    profile_id=human.binding.profile_id,
+                    lock_generation=owner.current.profile.lock_generation,
+                    grants=frozenset(),
+                ),
+                password=SecretBytes(PROFILE_INPUT.encode()),
+            )
+            assert not resumed.reactivated_grants
+        return status, receipt
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        control_context = copy_context()
+
+        def control_work() -> tuple[ProfileAccessStatus, AutomationDenialReceipt]:
+            assert entered.wait(10)
+            return control_context.run(observe_and_lock)
+
+        admission = executor.submit(
+            copy_context().run, subject.authority.admit_human, connection_id=candidate_connection
+        )
+        control = executor.submit(control_work)
+        try:
+            assert entered.wait(10)
+            assert status_completed.wait(3), "unrelated authority status blocked on password authentication"
+            assert not release.is_set()
+            _, receipt = control.result(timeout=5)
+            assert receipt.access_denied and not receipt.cleanup_pending
+            assert owner.current.profile.lock_generation > initial_generation
+            assert owner.current.profile.globally_locked is not resume_before_release
+            assert not release.is_set() and not admission.done()
+        finally:
+            release.set()
+            # Both original threads settle even when a pre-release assertion fails.
+            admission.result(timeout=10)
+            control.result(timeout=10)
+        candidate = admission.result(timeout=0)
+
+    assert authenticated.is_set()
+    assert isinstance(candidate, AccessDenied)
+    assert candidate.code is AccessDenialCode.PROFILE_LOCKED
+    assert owner.human_bind_attempt == initial_bind
+    assert owner.human_released and not owner.human_bound and not owner.active
+    assert human.session_id in owner.retired
+    assert owner.login_calls == 2
+
+
+@pytest.mark.parametrize("fence", ["lock-resume", "deadline"])
+def test_human_candidate_is_retired_when_context_release_overlaps_fresh_fence(subject: Subject, fence: str) -> None:
+    candidate_connection = uuid4()
+    settled, publish = Event(), Event()
+
+    class SettledCandidateOwner(AdmissionOwner):
+        @override
+        @contextmanager
+        def authenticate_human(self, connection_id: UUID) -> Iterator[tuple[ProfileLoginOutcome, str]]:
+            with super().authenticate_human(connection_id) as outcome:
+                yield outcome
+            if connection_id == candidate_connection:
+                settled.set()
+                assert publish.wait(10)
+
+    owner = SettledCandidateOwner(subject.enrollment)
+    subject.owner = owner
+    subject.authority = subject.new_authority()
+    owner.connections[candidate_connection] = uuid4()
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    initial_generation = owner.current.profile.lock_generation
+    service = lifecycle(subject, human)
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        admission = executor.submit(
+            copy_context().run, subject.authority.admit_human, connection_id=candidate_connection
+        )
+        try:
+            assert settled.wait(10)
+            attempted = owner.human_bind_attempt
+            assert attempted is not None and attempted != human.session_id
+            assert attempted in owner.active
+            if fence == "lock-resume":
+                receipt = service.deny(
+                    AutomationDenial(request_id=uuid4(), binding=human.binding, kind=AutomationDenialKind.PROFILE_LOCK)
+                )
+                assert receipt.access_denied and not receipt.cleanup_pending
+                resumed = service.resume(
+                    AutomationResumeRequest(
+                        request_id=uuid4(),
+                        profile_id=human.binding.profile_id,
+                        lock_generation=owner.current.profile.lock_generation,
+                        grants=frozenset(),
+                    ),
+                    password=SecretBytes(PROFILE_INPUT.encode()),
+                )
+                assert not resumed.reactivated_grants
+                assert owner.current.profile.lock_generation > initial_generation
+                assert not owner.current.profile.globally_locked
+            else:
+                subject.advance(41)
+            assert not publish.is_set() and not admission.done()
+        finally:
+            publish.set()
+            candidate = admission.result(timeout=10)
+
+    assert isinstance(candidate, AccessDenied)
+    assert candidate.code is (
+        AccessDenialCode.PROFILE_LOCKED if fence == "lock-resume" else AccessDenialCode.SESSION_EXPIRED
+    )
+    assert owner.active == (set() if fence == "lock-resume" else {human.session_id})
+    assert owner.retired.count(attempted) == 1
+    status = subject.authority.status(
+        connection_id=candidate_connection,
+        session_id=attempted,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+    )
+    assert isinstance(status, ProfileAccessStatus)
+    assert not status.credential_authenticated and status.session_id is None
+    assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
+
+
+@pytest.mark.parametrize("fence", ["profile-lock", "lock-resume", "client-change", "deadline"])
+def test_api_preparation_allows_status_and_cannot_publish_across_a_fresh_fence(subject: Subject, fence: str) -> None:
+    candidate_connection = uuid4()
+    entered, release, status_completed = Event(), Event(), Event()
+
+    class PausedApiOwner(AdmissionOwner):
+        @override
+        @contextmanager
+        def prepare_api_admission(self, connection_id: UUID) -> Iterator[float]:
+            with super().prepare_api_admission(connection_id) as deadline:
+                if connection_id == candidate_connection:
+                    entered.set()
+                    assert release.wait(10)
+                yield deadline
+            if connection_id == candidate_connection and fence == "deadline":
+                subject.advance(31)
+
+    owner = PausedApiOwner(subject.enrollment)
+    subject.owner = owner
+    subject.authority = subject.new_authority()
+    owner.connections[candidate_connection] = owner.current.context.authenticated_client_id
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    initial_generation = owner.current.profile.lock_generation
+    original_grant = subject.store.snapshot().grants[0].grant_id
+    service = lifecycle(subject, human)
+
+    def observe_and_fence() -> ProfileAccessStatus:
+        status = subject.authority.status(
+            connection_id=subject.connection,
+            session_id=human.session_id,
+            published_authority=Availability.AVAILABLE,
+            provider=Availability.NOT_REQUIRED,
+        )
+        assert isinstance(status, ProfileAccessStatus)
+        assert status.credential_authenticated and status.session_id == human.session_id
+        status_completed.set()
+        if fence in {"profile-lock", "lock-resume"}:
+            receipt = service.deny(
+                AutomationDenial(request_id=uuid4(), binding=human.binding, kind=AutomationDenialKind.PROFILE_LOCK)
+            )
+            assert receipt.access_denied and not receipt.cleanup_pending
+            if fence == "lock-resume":
+                resumed = service.resume(
+                    AutomationResumeRequest(
+                        request_id=uuid4(),
+                        profile_id=human.binding.profile_id,
+                        lock_generation=owner.current.profile.lock_generation,
+                        grants=frozenset({original_grant}),
+                    ),
+                    password=SecretBytes(PROFILE_INPUT.encode()),
+                )
+                assert resumed.reactivated_grants == frozenset({original_grant})
+                assert subject.store.snapshot().grants[0].state is AuthorityState.ACTIVE
+            assert owner.current.profile.lock_generation > initial_generation
+            assert owner.current.profile.globally_locked is (fence == "profile-lock")
+        elif fence == "client-change":
+            with owner.admission_guard():
+                owner.connections[candidate_connection] = uuid4()
+        return status
+
+    def admit() -> AccessSession | AccessDenied:
+        return subject.authority.admit_api_key(
+            connection_id=candidate_connection,
+            target=owner.current.profile.binding,
+            credential=subject.credential,
+            scope=owner.current.profile.scope,
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        control_context = copy_context()
+
+        def control_work() -> ProfileAccessStatus:
+            assert entered.wait(10)
+            return control_context.run(observe_and_fence)
+
+        admission = executor.submit(copy_context().run, admit)
+        control = executor.submit(control_work)
+        try:
+            assert entered.wait(10)
+            assert status_completed.wait(3), "unrelated authority status blocked on API preparation"
+            assert not release.is_set()
+            status = control.result(timeout=5)
+            assert status.credential_authenticated
+            assert not release.is_set() and not admission.done()
+        finally:
+            release.set()
+            admission.result(timeout=10)
+            control.result(timeout=10)
+        candidate = admission.result(timeout=0)
+
+    assert isinstance(candidate, AccessDenied)
+    expected = {
+        "profile-lock": AccessDenialCode.PROFILE_LOCKED,
+        "lock-resume": AccessDenialCode.PROFILE_LOCKED,
+        "client-change": AccessDenialCode.CLIENT_MISMATCH,
+        "deadline": AccessDenialCode.SESSION_EXPIRED,
+    }
+    assert candidate.code is expected[fence]
+    assert owner.active == (set() if fence in {"profile-lock", "lock-resume"} else {human.session_id})
+    if fence == "deadline":
+        attempted = owner.activation_attempt
+        assert attempted is not None
+        assert owner.activated == [attempted] and owner.retired.count(attempted) == 1
+        assert subject.store.borrowed == bytearray(32)
+    else:
+        assert owner.activation_attempt is None and not owner.activated
+        assert subject.store.borrowed is None
+
+
+@pytest.mark.asyncio
+async def test_api_preparation_exit_failure_preserves_primary_and_retryable_installed_candidate(
+    subject: Subject,
+) -> None:
+    primary = RuntimeError("synthetic original API preparation exit failure")
+
+    class FailedPreparationOwner(AdmissionOwner):
+        @override
+        @contextmanager
+        def prepare_api_admission(self, connection_id: UUID) -> Iterator[float]:
+            with super().prepare_api_admission(connection_id) as deadline:
+                yield deadline
+            raise primary
+
+        @override
+        def activate(self, session: AccessSession, dek: bytearray) -> None:
+            super().activate(session, dek)
+            self.failed_retirements.add(session.session_id)
+
+    owner = FailedPreparationOwner(subject.enrollment)
+    subject.owner = owner
+    subject.authority = subject.new_authority()
+    with pytest.raises(RuntimeError) as refused:
+        subject.admit()
+    assert refused.value is primary
+    attempted = owner.activation_attempt
+    assert attempted is not None and owner.activated == [attempted]
+    assert not owner.active and subject.store.borrowed == bytearray(32)
+    assert owner.retired.count(attempted) == 1
+    cleanup = primary.__dict__.get("async_cleanup_error")
+    assert isinstance(cleanup, AsyncResourceCleanupError)
+    with pytest.raises(AsyncResourceCleanupError) as incomplete:
+        await cleanup.retry_cleanup()
+    assert owner.retired.count(attempted) == 2
+    owner.failed_retirements.clear()
+    await incomplete.value.retry_cleanup()
+    assert owner.retired.count(attempted) == 3
+    status = subject.authority.status(
+        connection_id=subject.connection,
+        session_id=attempted,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+    )
+    assert isinstance(status, ProfileAccessStatus)
+    assert not status.credential_authenticated and status.session_id is None
+    assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
+    await subject.authority.close()
+    assert owner.retired.count(attempted) == 3
 
 
 def test_revocation_serializes_against_material_release_and_retires_the_winning_admission(subject: Subject) -> None:

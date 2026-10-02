@@ -66,6 +66,7 @@ class _RuntimeClientStub:
         self.profile_id = profile_id
         self.frontend = OperationFrontendProjection.MCP
         self.session_id = uuid4()
+        self.session_expires_at = now() + timedelta(minutes=5)
         self.enrollment = enrollment
         self.close_count = 0
         self.enroll_calls = 0
@@ -86,7 +87,7 @@ class _RuntimeClientStub:
                 credential_authenticated=True,
                 profile_id=self.profile_id,
                 session_id=self.session_id,
-                session_expires_at=now() + timedelta(minutes=5),
+                session_expires_at=self.session_expires_at,
                 grant_state=None,
                 grant_expires_at=None,
                 grant_valid=True,

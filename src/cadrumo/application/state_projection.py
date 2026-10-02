@@ -587,6 +587,21 @@ _assert_total_action_projection(
 )
 
 
+class ModeloProfileRefusalCause(StrEnum):
+    """Closed cause of a profile readiness refusal, independent of display prose."""
+
+    SETUP_INCOMPLETE = "setup_incomplete"
+    NOT_APPLICABLE = "not_applicable"
+    PRE_ACTIVITY_PERIOD = "pre_activity_period"
+
+
+class ModeloRegistryRefusalCause(StrEnum):
+    """Closed cause of an unavailable modelo registry snapshot."""
+
+    SNAPSHOT_UNAVAILABLE = "snapshot_unavailable"
+    REVISION_MISMATCH = "revision_mismatch"
+
+
 class ProjectionModeloReadiness(BaseModel):
     """Readiness for one modelo target across all preflight axes.
 
@@ -649,9 +664,11 @@ class ProjectionModeloReadiness(BaseModel):
     profile_ready: bool
     per_operation_requirements_assessed: bool
     profile_refusal: str = ""
+    profile_refusal_cause: ModeloProfileRefusalCause | None = None
     profile_precondition_verdict: PreconditionVerdict | None = None
     registry_ready: bool = True
     registry_refusal: str = ""
+    registry_refusal_cause: ModeloRegistryRefusalCause | None = None
     binding_ready: bool = True
     missing_bindings: tuple[ProjectionModeloBindingRequirement, ...] = ()
     ledger_preflight_required: bool = False
@@ -666,6 +683,7 @@ class ProjectionModeloReadiness(BaseModel):
 class _ModeloReadinessRegistryResolution:
     snapshot: RegistrySnapshot | None
     refusal: str = ""
+    cause: ModeloRegistryRefusalCause | None = None
 
     @property
     def ready(self) -> bool:
@@ -697,6 +715,7 @@ class _ModeloReadinessEvaluation:
 
     profile_report: ProfilePreflightReport
     profile_refusal: str
+    profile_refusal_cause: ModeloProfileRefusalCause | None
     profile_precondition_verdict: PreconditionVerdict | None
     registry: _ModeloReadinessRegistryResolution
     period: Period
@@ -726,7 +745,7 @@ def _modelo_profile_refusal(
     request: ModeloReadinessRequest,
     period: Period,
     operation: PinnedAuthorityOperation,
-) -> tuple[str, PreconditionVerdict | None]:
+) -> tuple[str, PreconditionVerdict | None, ModeloProfileRefusalCause | None]:
     """Return the first profile refusal while evaluating every refusal limb.
 
     Only the setup-incomplete limb carries a typed recovery verdict: the
@@ -767,12 +786,16 @@ def _modelo_profile_refusal(
         period=period,
     )
     if setup_verdict is not None:
-        return tr("application.modelo.errors.profile_readiness_setup_incomplete"), setup_verdict
+        return (
+            tr("application.modelo.errors.profile_readiness_setup_incomplete"),
+            setup_verdict,
+            ModeloProfileRefusalCause.SETUP_INCOMPLETE,
+        )
     if applicability_refusal is not None:
-        return applicability_refusal[0], None
+        return applicability_refusal[0], None, ModeloProfileRefusalCause.NOT_APPLICABLE
     if pre_activity_refusal is not None:
-        return pre_activity_refusal[0], None
-    return "", None
+        return pre_activity_refusal[0], None, ModeloProfileRefusalCause.PRE_ACTIVITY_PERIOD
+    return "", None, None
 
 
 def _build_modelo_profile_stage(
@@ -782,7 +805,7 @@ def _build_modelo_profile_stage(
     period: Period,
     registry: _ModeloReadinessRegistryResolution,
     operation: PinnedAuthorityOperation,
-) -> tuple[ProfilePreflightReport, str, PreconditionVerdict | None]:
+) -> tuple[ProfilePreflightReport, str, PreconditionVerdict | None, ModeloProfileRefusalCause | None]:
     """Evaluate profile completeness and target-specific refusal limbs."""
     from .modelo.profile_readiness_gate import modelo_work_profile_preflight_report
 
@@ -799,14 +822,14 @@ def _build_modelo_profile_stage(
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
     )
-    profile_refusal, profile_verdict = _modelo_profile_refusal(
+    profile_refusal, profile_verdict, refusal_cause = _modelo_profile_refusal(
         record=context.record,
         bucket_id=context.bucket_id,
         request=request,
         period=period,
         operation=operation,
     )
-    return profile_report, profile_refusal, profile_verdict
+    return profile_report, profile_refusal, profile_verdict, refusal_cause
 
 
 def _build_modelo_ledger_stage(
@@ -845,7 +868,7 @@ def _evaluate_modelo_readiness(
     """Evaluate profile, registry, binding, and ledger axes for one request."""
     period = _ledger_period_for_modelo_readiness(request)
     registry = _resolve_modelo_readiness_registry(request, period=period, operation=operation)
-    profile_report, profile_refusal, profile_precondition_verdict = _build_modelo_profile_stage(
+    profile_report, profile_refusal, profile_precondition_verdict, profile_refusal_cause = _build_modelo_profile_stage(
         request,
         context=context,
         period=period,
@@ -875,6 +898,7 @@ def _evaluate_modelo_readiness(
     return _ModeloReadinessEvaluation(
         profile_report=profile_report,
         profile_refusal=profile_refusal,
+        profile_refusal_cause=profile_refusal_cause,
         profile_precondition_verdict=profile_precondition_verdict,
         registry=registry,
         period=period,
@@ -898,9 +922,11 @@ def _project_modelo_readiness(evaluation: _ModeloReadinessEvaluation) -> Project
         profile_ready=profile_ready,
         per_operation_requirements_assessed=profile_report.per_operation_requirements_assessed,
         profile_refusal=evaluation.profile_refusal,
+        profile_refusal_cause=evaluation.profile_refusal_cause,
         profile_precondition_verdict=evaluation.profile_precondition_verdict,
         registry_ready=evaluation.registry.ready,
         registry_refusal=evaluation.registry.refusal,
+        registry_refusal_cause=evaluation.registry.cause,
         binding_ready=not evaluation.missing_bindings,
         missing_bindings=evaluation.missing_bindings,
         ledger_preflight_required=ledger.required,
@@ -993,14 +1019,18 @@ def _resolve_modelo_readiness_registry(
             },
             exc_info=True,
         )
-        return _ModeloReadinessRegistryResolution(snapshot=None, refusal=refusal)
+        return _ModeloReadinessRegistryResolution(
+            snapshot=None, refusal=refusal, cause=ModeloRegistryRefusalCause.SNAPSHOT_UNAVAILABLE
+        )
     if request.revision_id and snapshot.revision.id != request.revision_id:
         refusal = _registry_readiness_revision_mismatch_refusal(
             request,
             period_token=period_token,
             resolved_revision_id=snapshot.revision.id,
         )
-        return _ModeloReadinessRegistryResolution(snapshot=None, refusal=refusal)
+        return _ModeloReadinessRegistryResolution(
+            snapshot=None, refusal=refusal, cause=ModeloRegistryRefusalCause.REVISION_MISMATCH
+        )
     return _ModeloReadinessRegistryResolution(snapshot=snapshot)
 
 

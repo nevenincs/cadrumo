@@ -135,6 +135,16 @@ def test_every_ratio_operation_is_period_independent_and_mutations_require_commi
     assert resolved.policy.requires_all_periods is True
     assert resolved.policy.allow_period_independent is True
     assert (AccessAction.COMMIT in resolved.policy.actions) is commit_required
+    assert isinstance(
+        request.payload,
+        (
+            ratios.LedgerRatiosListRequest,
+            ratios.LedgerRatiosSetRequest,
+            ratios.LedgerRatiosUnsetRequest,
+            ratios.LedgerRatiosEligibleRequest,
+            ratios.LedgerRatiosValidateRequest,
+        ),
+    )
     assert request.payload.profile_id == _PROFILE
 
 

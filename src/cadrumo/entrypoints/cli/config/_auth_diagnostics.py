@@ -122,28 +122,13 @@ def auth_diagnostics_report(
 ) -> None:
     """Record the human-observed Cl@ve app state for a captured diagnostic."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
-    from ....application.auth.diagnostics import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
+    from .runtime_auth_diagnostic_report import report_auth_diagnostic_phone_state
 
-    try:
-        result = record_auth_diagnostic_phone_state(
-            diagnostic_id,
-            phone_state,
-            persistence=build_auth_diagnostic_persistence(),
-        )
-    except ValueError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.diagnostics.invalid_phone_state",
-            context={
-                "phone_state": phone_state,
-                "choices": ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
-            },
-        ) from exc
-    if result is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.diagnostics.not_found",
-            context={"diagnostic_id": diagnostic_id},
-        )
+    result = report_auth_diagnostic_phone_state(
+        ctx,
+        diagnostic_id=diagnostic_id,
+        phone_state=phone_state,
+    )
     from ..config_payloads import AuthDiagnosticsReportResult
 
     report_result = AuthDiagnosticsReportResult(

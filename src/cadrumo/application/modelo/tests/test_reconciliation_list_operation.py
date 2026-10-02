@@ -116,6 +116,14 @@ def _context(
     )
 
 
+def _access_request(request: OperationRequest[ModeloReconciliationListRequest]) -> OperationRequest[BaseModel]:
+    return OperationRequest[BaseModel](
+        definition_id=request.definition_id,
+        subject_ref=request.subject_ref,
+        payload=request.payload,
+    )
+
+
 def _registered():
     definition = build_modelo_reconciliation_list_definition()
     registration = build_modelo_reconciliation_list_registration(definition)
@@ -193,7 +201,7 @@ def test_access_resolves_whole_profile_disclosure_and_requires_all_periods() -> 
     request = _request(work_unit_id=_WORK_A)
     resolved = resolve_operation_access(
         registry=registry,
-        request=cast(OperationRequest[BaseModel], request),
+        request=_access_request(request),
         context=_context(registration, frontend=OperationFrontendProjection.MCP),
     )
     assert resolved.request.profile_id == _PROFILE
@@ -215,7 +223,7 @@ def test_access_resolves_whole_profile_disclosure_and_requires_all_periods() -> 
     result_context = _context(registration, action=AccessAction.RESULT, admitted=result_admission)
     result_resolved = resolve_operation_access(
         registry=registry,
-        request=cast(OperationRequest[BaseModel], _request(work_unit_id=_WORK_A)),
+        request=_access_request(_request(work_unit_id=_WORK_A)),
         context=result_context,
     )
     result_permission = next(iter(result_resolved.policy.disclosures))
@@ -244,7 +252,7 @@ def test_wrong_profile_is_refused_before_access_is_admitted() -> None:
     with pytest.raises(ProfileAccessRefusedError) as refused:
         resolve_operation_access(
             registry=registry,
-            request=cast(OperationRequest[BaseModel], _request(profile_id=_OTHER)),
+            request=_access_request(_request(profile_id=_OTHER)),
             context=_context(registration),
         )
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
@@ -280,7 +288,7 @@ def test_executor_projects_the_existing_filter_and_order_without_private_diffs(m
             recorded.append(operand)
             return "f" * 64
 
-    pinned = cast(PinnedAuthorityOperation, cast(object, object()))
+    pinned = cast(PinnedAuthorityOperation, object())
     context = cast(
         OperationExecutorContext,
         cast(
@@ -326,7 +334,7 @@ def test_executor_refuses_active_profile_mismatch_before_read(monkeypatch: pytes
                     definition_id=MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,
                     subject_ref=profile_operation_subject(str(_PROFILE)),
                 ),
-                authority_operation=cast(PinnedAuthorityOperation, cast(object, object())),
+                authority_operation=cast(PinnedAuthorityOperation, object()),
                 events=SimpleNamespace(phase=lambda _code: None),
             ),
         ),
@@ -373,7 +381,7 @@ def test_executor_refuses_oversized_public_result_without_truncating(
                     definition_id=MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,
                     subject_ref=profile_operation_subject(str(_PROFILE)),
                 ),
-                authority_operation=cast(PinnedAuthorityOperation, cast(object, object())),
+                authority_operation=cast(PinnedAuthorityOperation, object()),
                 events=Events(),
                 operands=Operands(),
             ),

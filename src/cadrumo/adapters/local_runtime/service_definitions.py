@@ -82,7 +82,7 @@ def windows_task_xml(binding: RuntimeServiceBinding, *, login_autostart: bool) -
         ("Hidden", "true"),
         ("RunOnlyIfIdle", "false"),
         ("DisallowStartOnRemoteAppSession", "false"),
-        ("UseUnifiedSchedulingEngine", "false"),
+        ("UseUnifiedSchedulingEngine", "true"),
         ("WakeToRun", "false"),
         ("ExecutionTimeLimit", "PT0S"),
         ("Priority", "7"),
@@ -122,7 +122,9 @@ def macos_agent_plist(binding: RuntimeServiceBinding, *, login_autostart: bool) 
             # equivalent on-demand semantics has been proven.
             "KeepAlive": {"SuccessfulExit": False} if login_autostart else False,
             "ThrottleInterval": 60,
-            "ExitTimeOut": 15,
+            # Preserve the runtime's 15-second drain and 17-second watchdog
+            # before launchd terminates the remaining process group.
+            "ExitTimeOut": 25,
             "AbandonProcessGroup": False,
             "Umask": 0o077,
             "StandardOutPath": "/dev/null",

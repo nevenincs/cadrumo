@@ -7,6 +7,7 @@ import re
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
@@ -56,12 +57,8 @@ from .evidence import (
     PurchaseInvoiceEvidenceService,
     derive_keyed_purchase_invoice_evidence_id,
 )
-from .evidence_ports import (
-    LedgerEvidencePorts,
-    LedgerEvidencePortsFactory,
-    ProfileBoundEvidenceAttachmentIngestorProtocol,
-    RevisionGuardedPurchaseInvoiceEvidenceRepositoryProtocol,
-)
+from .evidence_port_identity import require_exact_evidence_ports
+from .evidence_ports import LedgerEvidencePortsFactory
 from .evidence_read_operation import LedgerEvidenceRecordProjection
 from .read_access import resolve_ledger_read_access
 
@@ -86,6 +83,7 @@ class LedgerEvidenceAddRequest(BaseModel):
 
     profile_id: UUID
     source_path: _EvidencePath
+    source_directory: _EvidencePath
     supplier: _EvidenceLabel | None = None
     invoice_number: _EvidenceLabel | None = None
     invoice_date: _InvoiceDate | None = None
@@ -184,7 +182,7 @@ class LedgerEvidenceAddExecutor:
 
         def preflight() -> _PreparedAdd:
             ports = self._ports_factory(bucket_id=bucket_id)
-            evidence_repository = _require_exact_evidence_ports(ports, bucket_id=bucket_id)
+            evidence_repository = require_exact_evidence_ports(ports, bucket_id=bucket_id)
             candidate = _candidate_record(payload, bucket_id=bucket_id)
             service = PurchaseInvoiceEvidenceService(ports=ports)
             event_ids = ("f" * 64,)
@@ -213,6 +211,7 @@ class LedgerEvidenceAddExecutor:
                     prepared.service.add,
                     bucket_id=bucket_id,
                     source_path=payload.source_path,
+                    source_directory=Path(payload.source_directory),
                     supplier=prepared.candidate.supplier,
                     invoice_number=prepared.candidate.invoice_number,
                     invoice_date=prepared.candidate.invoice_date,
@@ -319,29 +318,6 @@ def _require_worker_identity(
         or require_active_bucket_id() != bucket_id
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-
-def _require_exact_evidence_ports(
-    ports: LedgerEvidencePorts,
-    *,
-    bucket_id: str,
-) -> RevisionGuardedPurchaseInvoiceEvidenceRepositoryProtocol:
-    evidence_objects = getattr(ports.evidence_repository, "secure_object_repository", None)
-    event_objects = getattr(ports.bucket_event_repository, "secure_object_repository", None)
-    if (
-        evidence_objects is None
-        or evidence_objects is not event_objects
-        or not isinstance(ports.attachment_ingestor, ProfileBoundEvidenceAttachmentIngestorProtocol)
-        or ports.attachment_ingestor.secure_object_repository is not evidence_objects
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if not isinstance(ports.evidence_repository, RevisionGuardedPurchaseInvoiceEvidenceRepositoryProtocol):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    if not callable(getattr(ports.bucket_event_repository, "load_revisioned", None)):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    if bucket_id != require_active_bucket_id():
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return ports.evidence_repository
 
 
 def _require_record_identity(record: PurchaseInvoiceEvidence, *, bucket_id: str, evidence_id: str) -> None:

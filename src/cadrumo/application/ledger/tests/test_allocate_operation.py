@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from datetime import date
+from decimal import Decimal
 from types import SimpleNamespace
-from typing import cast
+from typing import cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -12,6 +14,13 @@ from pydantic import BaseModel, ValidationError
 
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ....domain.modelos.work_unit import WorkUnitCatalogue
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.usage_ratios.model import UsageRatioProfile
+from ...aggregation.tests.ledger_transaction_support import ledger_raw_transaction
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
@@ -26,6 +35,7 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import allocate_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..transaction_projection import LedgerTransactionProjection
+from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedAttachmentStore, UnusedBucketEventRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -168,6 +178,7 @@ def test_allocation_share_and_event_projection_are_bounded() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("operation")
 async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -175,23 +186,38 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
     loads: list[object] = []
     mutation: dict[str, object] = {}
     authority = cast(PinnedAuthorityOperation, object())
-    current_catalogue = SimpleNamespace(transactions={_CURRENT_TRANSACTION_ID: object()})
+    transaction = Transaction(
+        raw=ledger_raw_transaction("allocate-current", booked_date=date(2026, 4, 15), amount=Decimal("121.00")),
+        direction=TransactionDirection.OUTGOING,
+        source_jurisdiction="ES",
+        group_label=None,
+    )
+    current_id = transaction.transaction_id
+    current_catalogue = TransactionCatalogue.from_transactions((transaction,))
 
-    class TransactionRepository:
-        bucket_id = str(_PROFILE)
-
-        def load(self) -> object:
+    class TransactionRepository(ProfileOnlyCatalogueRepository[TransactionCatalogue]):
+        @override
+        def load(self, **_kwargs: object) -> TransactionCatalogue:
             assert in_commit
             loads.append(current_catalogue)
             return current_catalogue
 
-    transaction_repository = TransactionRepository()
-    ports = SimpleNamespace(
+    transaction_repository = TransactionRepository(str(_PROFILE))
+
+    def unused_ratio_loader(*, bucket_id: str, operation: PinnedAuthorityOperation) -> UsageRatioProfile:
+        raise AssertionError("the allocation update seam does not load usage ratios")
+
+    ports = LedgerActionPorts(
         operation=authority,
         transaction_repository=transaction_repository,
-        invoice_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
-        work_unit_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
-        calculation_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
+        bucket_event_repository=UnusedBucketEventRepository(),
+        invoice_repository=ProfileOnlyCatalogueRepository[InvoiceCatalogue](str(_PROFILE)),
+        attachment_store=UnusedAttachmentStore(),
+        usage_ratio_profile=UsageRatioProfile(),
+        usage_ratio_profile_loader=unused_ratio_loader,
+        work_unit_repository=ProfileOnlyCatalogueRepository[WorkUnitCatalogue](str(_PROFILE)),
+        calculation_repository=ProfileOnlyCatalogueRepository[CalculationRevisionCatalogue](str(_PROFILE)),
+        purchase_invoice_evidence_records=(),
     )
 
     class Cancellation:
@@ -254,7 +280,7 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=operation.LedgerAllocateRequest(
             profile_id=_PROFILE,
-            transaction_id=_CURRENT_TRANSACTION_ID[:12],
+            transaction_id=current_id[:12],
             business_pct="0.5",
         ),
     )
@@ -263,7 +289,7 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
 
     assert result_ref == "d" * 64
     assert len(loads) == 1
-    assert mutation["transaction_id"] == _CURRENT_TRANSACTION_ID
+    assert mutation["transaction_id"] == current_id
     assert mutation["catalogue"] is current_catalogue
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
     assert operands.value == projection

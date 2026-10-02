@@ -17,6 +17,7 @@ from textual.widgets import Button, Static
 
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.management import (
     RuntimeManagerInspection,
     RuntimeManagerKind,
@@ -27,12 +28,14 @@ from cadrumo.application.runtime.management_status import (
     RuntimeManagementSnapshot,
     RuntimeManagerAvailability,
 )
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
+from cadrumo.entrypoints.tests.test_runtime_management import StopFixture
 
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
-from ..runtime_management import RuntimeManagementScreen
+from ..runtime_management import RuntimeManagementCleanup, RuntimeManagementScreen, RuntimeStopConfirmationScreen
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
@@ -56,6 +59,264 @@ def _available() -> RuntimeManagementSnapshot:
             process_state=RuntimeManagerProcessState.STOPPED,
         ),
     )
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("outcome", ["accepted", "lost"])
+async def test_stop_acceptance_or_unknown_dispatch_stays_fenced_after_refresh(
+    monkeypatch: pytest.MonkeyPatch, outcome: str
+) -> None:
+    fixture = StopFixture(outcome="lost" if outcome == "lost" else "accepted")
+    previews = 0
+
+    async def preview() -> object:
+        nonlocal previews
+        previews += 1
+        return fixture.consent
+
+    async def read() -> RuntimeManagementSnapshot:
+        return _available()
+
+    monkeypatch.setattr("cadrumo.entrypoints.tui.runtime_management.preview_installed_runtime_stop", preview)
+    cleanup = RuntimeManagementCleanup()
+    screen = RuntimeManagementScreen(reader=read, cleanup=cleanup)
+    app = ScreenHostApp(screen)
+    async with app.run_test(size=(100, 30)) as pilot:
+        await _until(
+            pilot,
+            lambda: (
+                not screen._busy
+                and tr("tui.runtime_management.listener.ready")
+                in str(screen.query_one("#runtime-management-listener", Static).content)
+            ),
+        )
+        screen.query_one("#runtime-management-stop", Button).press()
+        await _until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
+        app.screen.query_one("#runtime-stop-confirm", Button).press()
+        await _until(pilot, lambda: not screen._busy and fixture.consent.released)
+        message = str(screen.query_one("#runtime-management-status", Static).content)
+        expected_key = (
+            "tui.runtime_management.stop_accepted"
+            if outcome == "accepted"
+            else "tui.runtime_management.availability.unknown"
+        )
+        assert tr(expected_key) in message
+        assert tr("tui.runtime_management.refused") not in message
+        assert screen.query_one("#runtime-management-stop", Button).disabled
+        screen.query_one("#runtime-management-refresh", Button).press()
+        await _until(
+            pilot,
+            lambda: (
+                not screen._busy
+                and tr("tui.runtime_management.listener.ready")
+                in str(screen.query_one("#runtime-management-listener", Static).content)
+            ),
+        )
+        assert screen.query_one("#runtime-management-stop", Button).disabled
+        assert tr(expected_key) in str(screen.query_one("#runtime-management-status", Static).content)
+        await screen._stop()
+        screen._stop_pressed()
+        assert previews == 1 and fixture.channel.confirmations == 1
+        assert (fixture.consent.accepted is not None) == (outcome == "accepted")
+    reopened = RuntimeManagementScreen(reader=read, cleanup=cleanup)
+    async with ScreenHostApp(reopened).run_test(size=(100, 30)) as pilot:
+        await _until(
+            pilot,
+            lambda: (
+                not reopened._busy
+                and tr("tui.runtime_management.listener.ready")
+                in str(reopened.query_one("#runtime-management-listener", Static).content)
+            ),
+        )
+        assert reopened.query_one("#runtime-management-stop", Button).disabled
+        assert tr(expected_key) in str(reopened.query_one("#runtime-management-status", Static).content)
+        await reopened._stop()
+        reopened._stop_pressed()
+        assert previews == 1 and fixture.channel.confirmations == 1
+        assert cleanup.consent is fixture.consent
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_cancelled_stop_preview_can_be_discarded_without_confirmation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = StopFixture()
+    monkeypatch.setattr("cadrumo.entrypoints.tui.runtime_management.preview_installed_runtime_stop", fixture.open)
+
+    async def read() -> RuntimeManagementSnapshot:
+        return _available()
+
+    screen = RuntimeManagementScreen(reader=read)
+    app = ScreenHostApp(screen)
+    async with app.run_test(size=(100, 30)) as pilot:
+        await _until(
+            pilot,
+            lambda: (
+                not screen._busy
+                and tr("tui.runtime_management.listener.ready")
+                in str(screen.query_one("#runtime-management-listener", Static).content)
+            ),
+        )
+        screen.query_one("#runtime-management-stop", Button).press()
+        await _until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
+        app.screen.query_one("#runtime-stop-cancel", Button).press()
+        await _until(pilot, lambda: not screen._busy and fixture.consent.released)
+        assert not screen.query_one("#runtime-management-stop", Button).disabled
+        assert fixture.channel.confirmations == 0 and not fixture.consent.confirmation_started
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_stop_ack_cleanup_failure_is_visible_and_retained_after_screen_closure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = StopFixture(channel_failures=3)
+    monkeypatch.setattr("cadrumo.entrypoints.tui.runtime_management.preview_installed_runtime_stop", fixture.open)
+
+    async def read() -> RuntimeManagementSnapshot:
+        return _available()
+
+    cleanup = RuntimeManagementCleanup()
+    screen = RuntimeManagementScreen(reader=read, cleanup=cleanup)
+    app = ScreenHostApp(screen)
+    async with app.run_test(size=(100, 30)) as pilot:
+        await _until(
+            pilot,
+            lambda: (
+                not screen._busy
+                and tr("tui.runtime_management.listener.ready")
+                in str(screen.query_one("#runtime-management-listener", Static).content)
+            ),
+        )
+        screen.query_one("#runtime-management-stop", Button).press()
+        await _until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
+        app.screen.query_one("#runtime-stop-confirm", Button).press()
+        await _until(pilot, lambda: not screen._busy and fixture.channel.close_calls == 1)
+        message = str(screen.query_one("#runtime-management-status", Static).content)
+        assert tr("tui.runtime_management.stop_accepted") in message
+        assert tr("tui.runtime_management.availability.unavailable") in message
+        assert "synthetic private" not in message
+        assert screen.query_one("#runtime-management-stop", Button).disabled
+        assert fixture.consent.accepted is not None
+        assert fixture.endpoint.close_calls == 1
+    assert fixture.channel.close_calls == 2 and cleanup.pending
+    with pytest.raises(AsyncResourceCleanupError) as failed:
+        await cleanup.release()
+    assert failed.value is cleanup.failure and fixture.channel.close_calls == 3
+    await failed.value.retry_cleanup()
+    assert fixture.channel.close_calls == 4 and fixture.endpoint.close_calls == 1
+    assert not cleanup.pending
+    assert fixture.consent.released and fixture.channel.confirmations == 1
+    with pytest.raises(RuntimeRefusalError) as refused:
+        await fixture.consent.confirm()
+    assert refused.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_stop_collector_preserves_original_cancellation_and_one_native_retry_authority() -> None:
+    fixture = StopFixture(channel_failures=2)
+    fixture.channel.continue_reply.clear()
+    cleanup = RuntimeManagementCleanup()
+    cleanup.retain_consent(fixture.consent)
+    confirming = asyncio.create_task(fixture.consent.confirm())
+    try:
+        assert await asyncio.to_thread(fixture.channel.confirming.wait, 2)
+        confirming.cancel("original-screen-stop-cancellation")
+        fixture.channel.continue_reply.set()
+        with pytest.raises(asyncio.CancelledError) as cancelled:
+            await confirming
+        primary = cancelled.value
+        with pytest.raises(asyncio.CancelledError) as releasing:
+            await fixture.consent.release(primary_error=primary)
+        assert releasing.value is primary
+        cleanup.retain(primary)
+        assert cleanup.pending and cleanup.failure is primary
+        with pytest.raises(asyncio.CancelledError) as retry_failed:
+            await cleanup.release()
+        assert retry_failed.value is primary
+        assert fixture.channel.close_calls == 2 and fixture.endpoint.close_calls == 1
+        retained = primary.__dict__.get("async_cleanup_error")
+        assert isinstance(retained, AsyncResourceCleanupError)
+        await retained.retry_cleanup()
+        assert fixture.channel.close_calls == 3 and fixture.endpoint.close_calls == 1
+        assert not cleanup.pending and fixture.consent.released
+        await cleanup.release()
+        assert fixture.channel.close_calls == 3 and fixture.channel.confirmations == 1
+    finally:
+        fixture.channel.continue_reply.set()
+        if not confirming.done():
+            await confirming
+
+
+class _AsyncRelease:
+    """A non-native actual owner whose successful release cannot be repeated."""
+
+    def __init__(self, *, failures: int) -> None:
+        self.failures = failures
+        self.calls = 0
+        self.closed = False
+
+    async def close(self) -> None:
+        assert not self.closed, "a historical attachment replayed successful release"
+        self.calls += 1
+        if self.calls <= self.failures:
+            raise OSError("synthetic asynchronous release failure")
+        self.closed = True
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cancelled", [False, True], ids=["body-error", "original-cancellation"])
+async def test_stop_collector_retires_success_despite_historical_primary_cleanup(cancelled: bool) -> None:
+    resource = _AsyncRelease(failures=1)
+    primary = asyncio.CancelledError("original-body-cancellation") if cancelled else ValueError("original-body-error")
+    if cancelled:
+        with pytest.raises(asyncio.CancelledError) as caught:
+            await close_async_resources(resource, task_name="historical-owner-close", primary_error=primary)
+        assert caught.value is primary
+    else:
+        await close_async_resources(resource, task_name="historical-owner-close", primary_error=primary)
+    assert resource.calls == 1 and not resource.closed
+    cleanup = RuntimeManagementCleanup()
+    cleanup.retain(primary)
+    assert cleanup.pending and cleanup.failure is primary
+    for _ in range(2):
+        if cancelled:
+            with pytest.raises(asyncio.CancelledError) as caught:
+                await cleanup.release(primary_error=primary)
+            assert caught.value is primary
+        else:
+            await cleanup.release(primary_error=primary)
+        assert resource.closed and resource.calls == 2
+        assert not cleanup.pending and cleanup.failure is primary
+    # Explicitly re-adopting the old canonical error cannot resurrect its
+    # owner after this scope has witnessed that exact owner release succeed.
+    cleanup.retain(primary)
+    assert not cleanup.pending
+    await cleanup.release()
+    assert resource.calls == 2
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_stop_collector_retains_only_current_failed_owners_under_original_primary() -> None:
+    first, second = _AsyncRelease(failures=1), _AsyncRelease(failures=2)
+    primary = ValueError("original-body-error")
+    await close_async_resources(first, second, task_name="historical-owner-close", primary_error=primary)
+    cleanup = RuntimeManagementCleanup()
+    cleanup.retain(primary)
+    await cleanup.release(primary_error=primary)
+    assert first.closed and first.calls == 2
+    assert not second.closed and second.calls == 2
+    assert cleanup.pending and cleanup.failure is primary
+    await cleanup.release(primary_error=primary)
+    assert second.closed and second.calls == 3
+    assert first.calls == 2 and not cleanup.pending
+    await cleanup.release(primary_error=primary)
+    assert first.calls == 2 and second.calls == 3
 
 
 @pytest.mark.unit
@@ -256,3 +517,123 @@ async def test_installed_tui_passively_observes_existing_native_listener(tmp_pat
                 await asyncio.to_thread(running.result, 10)
     finally:
         endpoint.close()
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("primary_kind", ["aggregate", "value-error", "cancellation"])
+async def test_stop_collector_public_retry_contains_only_current_failed_owner(primary_kind: str) -> None:
+    """A completed owner is absent from the canonical error's public retry route."""
+    first, second = _AsyncRelease(failures=1), _AsyncRelease(failures=2)
+    primary: BaseException | None = None
+    if primary_kind == "value-error":
+        primary = ValueError("original-body-error")
+    elif primary_kind == "cancellation":
+        primary = asyncio.CancelledError("original-body-cancellation")
+    if primary is None:
+        with pytest.raises(AsyncResourceCleanupError) as original:
+            await close_async_resources(first, second, task_name="original-two-owner-close", primary_error=None)
+        original_error: BaseException = original.value
+    elif isinstance(primary, asyncio.CancelledError):
+        with pytest.raises(asyncio.CancelledError) as original_cancel:
+            await close_async_resources(first, second, task_name="original-two-owner-close", primary_error=primary)
+        assert original_cancel.value is primary
+        original_error = primary
+    else:
+        await close_async_resources(first, second, task_name="original-two-owner-close", primary_error=primary)
+        original_error = primary
+    cleanup = RuntimeManagementCleanup()
+    cleanup.retain(original_error)
+    if primary is None:
+        with pytest.raises(AsyncResourceCleanupError) as current:
+            await cleanup.release()
+        retained = current.value
+    elif isinstance(primary, asyncio.CancelledError):
+        with pytest.raises(asyncio.CancelledError) as current_cancel:
+            await cleanup.release(primary_error=primary)
+        assert current_cancel.value is primary
+        retained = primary.__dict__.get("cleanup_error")
+        assert retained is primary.__dict__.get("async_cleanup_error")
+    else:
+        await cleanup.release(primary_error=primary)
+        assert cleanup.failure is primary
+        retained = primary.__dict__.get("async_cleanup_error")
+    assert first.closed and first.calls == 2
+    assert not second.closed and second.calls == 2
+    assert isinstance(retained, AsyncResourceCleanupError)
+    assert retained.resources == (second,)
+    await retained.retry_cleanup()
+    assert second.closed and second.calls == 3
+    assert first.calls == 2
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_stop_collector_fresh_cancellation_retains_body_and_current_failed_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Cancellation during actual release keeps the older body and the retry owner."""
+    resource = _AsyncRelease(failures=2)
+    primary = ValueError("original-body-error")
+    await close_async_resources(resource, task_name="original-owner-close", primary_error=primary)
+    cleanup = RuntimeManagementCleanup()
+    cleanup.retain(primary)
+    started, proceed = asyncio.Event(), asyncio.Event()
+    close = resource.close
+
+    async def blocked_close() -> None:
+        started.set()
+        await proceed.wait()
+        await close()
+
+    monkeypatch.setattr(resource, "close", blocked_close)
+    task = asyncio.create_task(cleanup.release(primary_error=primary))
+    try:
+        async with asyncio.timeout(5):
+            await started.wait()
+            task.cancel("fresh-cleanup-cancellation")
+            proceed.set()
+            with pytest.raises(asyncio.CancelledError) as cancelled:
+                await task
+        assert cancelled.value.args == ("fresh-cleanup-cancellation",)
+        assert cancelled.value.__dict__.get("body_error") is primary
+        assert cleanup.failure is cancelled.value
+        retained = cancelled.value.__dict__.get("cleanup_error")
+        assert isinstance(retained, AsyncResourceCleanupError)
+        assert retained.resources == (resource,)
+        assert retained is cancelled.value.__dict__.get("async_cleanup_error")
+        assert resource.calls == 2 and not resource.closed
+        await retained.retry_cleanup()
+        assert resource.closed and resource.calls == 3
+    finally:
+        proceed.set()
+        if not task.done():
+            await task
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("second_failures", [2, 1], ids=["partial-release", "complete-release"])
+async def test_stop_collector_explicit_aggregate_primary_public_retry_discards_released_owners(
+    second_failures: int,
+) -> None:
+    """The original aggregate survives unwinding with only its still-owned resources."""
+    first, second = _AsyncRelease(failures=1), _AsyncRelease(failures=second_failures)
+    with pytest.raises(AsyncResourceCleanupError) as original:
+        await close_async_resources(first, second, task_name="original-aggregate-close", primary_error=None)
+    primary = original.value
+    assert primary.resources == (first, second)
+    cleanup = RuntimeManagementCleanup()
+    cleanup.retain(primary)
+    with pytest.raises(AsyncResourceCleanupError) as unwound:
+        try:
+            raise primary
+        finally:
+            await cleanup.release(primary_error=primary)
+    assert unwound.value is primary
+    assert first.closed and first.calls == 2
+    assert second.calls == 2
+    assert primary.resources == ((second,) if second_failures == 2 else ())
+    await primary.retry_cleanup()
+    assert first.calls == 2 and second.closed
+    assert second.calls == (3 if second_failures == 2 else 2)

@@ -44,8 +44,8 @@ from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.deadlines.models import ObligationStatus
 from ...adapter_composition import build_work_lifecycle_ports
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

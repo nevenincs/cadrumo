@@ -8,6 +8,7 @@ from ctypes import wintypes
 from typing import cast
 
 _WINDOWS_DLL_LOADER = "WinDLL"
+_MAX_ANCESTORS = 8
 
 
 class _ProcessEntry(ctypes.Structure):
@@ -87,7 +88,10 @@ def task_engine_owns_process(engine_pid: int, process_pid: int) -> bool:
         close_handle(handle)
     pid = process_pid
     child_created = _creation_time(kernel, pid)
-    for _ in range(4):
+    # Installed console/venv redirectors can create a five-process chain from
+    # the service action to its host. Retain every native birth-order check,
+    # allowing that observed chain within a fixed traversal bound.
+    for _ in range(_MAX_ANCESTORS):
         if child_created is None or pid not in parents:
             return False
         if pid == engine_pid:

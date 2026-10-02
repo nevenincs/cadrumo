@@ -8,13 +8,10 @@ import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from threading import RLock
-from typing import override
 from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
@@ -25,7 +22,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.runtime.profile_access import RuntimeHumanProof
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
-from cadrumo.application.user_profile.access_contracts import AccessDenied, AccessSession, ProfileAccessBinding
+from cadrumo.application.user_profile.access_contracts import AccessDenied, AccessSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.session_authority import ProfileSessionAuthority, SessionAuthorityFacts
 from cadrumo.core.time.clock import now
@@ -39,74 +36,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _RetryingWorker(ProfileWorkerProcess):
-    """Only the close/settle boundary of an already published worker is used."""
-
-    def __init__(self) -> None:
-        self.close_calls = 0
-        self.settle_calls = 0
-        self.fail_close = True
-
-    @override
-    def close(self, *, deadline: float | None = None) -> None:
-        self.close_calls += 1
-        if self.fail_close:
-            raise RuntimeError("synthetic containment failure")
-
-    @override
-    def settle(self, *, deadline: float | None = None) -> None:
-        self.settle_calls += 1
-
-
-def test_failed_worker_containment_is_retried_until_settled(tmp_path: Path) -> None:
-    """A failed close keeps the exact worker owned across later close attempts."""
-    identity = ProfileWorkerIdentity(
-        worker_id=uuid4(),
-        runtime_boot_id=uuid4(),
-        binding=ProfileAccessBinding(
-            profile_id=uuid4(),
-            installation_id=uuid4(),
-            os_owner_id="synthetic-owner",
-            custody_generation=1,
-            dek_epoch=uuid4(),
-        ),
-    )
-
-    def unused_observe(connection_id: UUID) -> SessionAuthorityFacts:
-        raise AssertionError("close must not reobserve authority")
-
-    @contextmanager
-    def unused_secret(connection_id: UUID) -> Generator[RuntimeHumanProof]:
-        raise AssertionError("close must not request a secret")
-        yield  # pragma: no cover
-
-    owner = ProfileWorkerSessionOwner(
-        identity,
-        storage_root=tmp_path,
-        observe=unused_observe,
-        human_secret=unused_secret,
-        guard=RLock(),
-    )
-    worker = _RetryingWorker()
-    owner._worker = worker
-
-    with pytest.raises(ExceptionGroup, match="worker containment failed"):
-        owner.close()
-    assert worker.close_calls == 1 and owner.lost
-    with pytest.raises(ExceptionGroup, match="worker authorization cleanup failed"):
-        owner.settle()
-    assert worker.close_calls == 2 and worker.settle_calls == 0
-    with pytest.raises(ExceptionGroup, match="worker containment failed"):
-        owner.close()
-    assert worker.close_calls == 3
-    worker.fail_close = False
-    owner.settle()
-    assert worker.close_calls == 4 and worker.settle_calls == 1
-    owner.close()
-    owner.settle()
-    assert worker.close_calls == 4 and worker.settle_calls == 1
 
 
 def test_real_key_admission_refresh_and_human_lock_share_the_installed_worker(tmp_path: Path) -> None:

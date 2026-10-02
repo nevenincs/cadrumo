@@ -125,7 +125,11 @@ class RuntimeEvidenceTuiDoorV1:
     async def add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
         """Register one file and correlate its typed result with the durable receipt."""
         projection = await self._execute(
-            LedgerEvidenceAddRequest(profile_id=self._profile_id, source_path=source_path),
+            LedgerEvidenceAddRequest(
+                profile_id=self._profile_id,
+                source_path=source_path,
+                source_directory=str(Path.cwd()),
+            ),
             definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
             result_type=LedgerEvidenceAddProjection,
             success_effect=OperationEffect.UPDATED,

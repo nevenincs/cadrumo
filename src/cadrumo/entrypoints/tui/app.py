@@ -10,7 +10,7 @@ authority.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, ClassVar, Final, override
 
@@ -26,7 +26,6 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.logging import get_logger
-from ...core.operations import OperationTerminalCondition
 from ...core.time.clock import now
 from ..runtime_management import inspect_installed_runtime_management
 from .account import (
@@ -63,10 +62,8 @@ from .navigation import (
     TuiNavigationTargetV1,
     TuiScreenContextV1,
 )
-from .operations.controller_port import OperationControllerPort
-from .operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
 from .runtime_access_management import RuntimeAccessManagementScreen
-from .runtime_management import RuntimeManagementReader, RuntimeManagementScreen
+from .runtime_management import RuntimeManagementCleanup, RuntimeManagementReader, RuntimeManagementScreen
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
 from .secret.passphrase import PassphraseScreen
 
@@ -161,6 +158,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         read_account_session: AccountSessionReaderV1 | None = None,
         load_root: RootLoaderV1 | None = None,
         runtime_management_reader: RuntimeManagementReader = inspect_installed_runtime_management,
+        runtime_management_cleanup: RuntimeManagementCleanup | None = None,
     ) -> None:
         """Bind the shell to caller-owned doors.
 
@@ -185,6 +183,9 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._load_root = load_root
         """Builds the workbench root off the event loop once the shell has rendered."""
         self._runtime_management_reader = runtime_management_reader
+        self._runtime_management_cleanup = (
+            RuntimeManagementCleanup() if runtime_management_cleanup is None else runtime_management_cleanup
+        )
         self._refresh_destination_catalogue = refresh_destination_catalogue
         self._account_factories = account_factories
         self._home_refresh_refusal_code: str | None = None
@@ -459,7 +460,11 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     def action_runtime_management(self) -> None:
         """Open a profile-free passive status panel outside active modal work."""
         if self._account_controls_apply():
-            self.push_screen(RuntimeManagementScreen(reader=self._runtime_management_reader))
+            self.push_screen(
+                RuntimeManagementScreen(
+                    reader=self._runtime_management_reader, cleanup=self._runtime_management_cleanup
+                )
+            )
 
     def action_account(self, action: str) -> None:
         """Run the account control a key names."""
@@ -481,11 +486,9 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             return
         match action:
             case AccountActionV1.CHANGE_USER:
-                change_user = factories.change_user()
-                if isinstance(change_user, AccountDirectSessionActionV1):
-                    self._start_direct_session_action(change_user, expected=AccountRecomposeReasonV1.CHANGE_USER)
-                else:
-                    self.push_screen(change_user, self._on_change_user_dismissed)
+                self._start_direct_session_action(
+                    factories.change_user(), expected=AccountRecomposeReasonV1.CHANGE_USER
+                )
             case AccountActionV1.PASSWORD:
                 if factories.password is not None:
                     password_screen = factories.password()
@@ -517,24 +520,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
                 except Exception:
                     self._refuse_account_action()
                     return
-                if isinstance(sign_out, AccountDirectSessionActionV1):
-                    self._start_direct_session_action(sign_out, expected=AccountRecomposeReasonV1.SIGNED_OUT)
-                else:
-                    self.run_worker(self._open_sign_out(sign_out), name="account-sign-out", exclusive=True)
-
-    def _on_change_user_dismissed(self, outcome: object | None) -> None:
-        """Accept only the real Login owner's non-secret authenticated result."""
-        from ...application.user_profile.login_session import ProfileLoginOutcome
-
-        if not isinstance(outcome, ProfileLoginOutcome):
-            return
-        self._request_recompose(
-            AccountRecomposeRequiredV1(
-                reason=AccountRecomposeReasonV1.CHANGE_USER,
-                profile_id=str(outcome.bucket_id),
-                profile_label=outcome.label,
-            )
-        )
+                self._start_direct_session_action(sign_out, expected=AccountRecomposeReasonV1.SIGNED_OUT)
 
     def _on_access_dismissed(self, screen: Screen[None]) -> None:
         """Retire known-lost access immediately; otherwise recheck live status."""
@@ -552,26 +538,6 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._password_screen = None
         if isinstance(outcome, ProfilePassphraseRotationOutcome):
             self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED))
-
-    async def _open_sign_out(self, sign_out: Awaitable[OperationControllerPort]) -> None:
-        """Submit strong close and hand observation to the canonical modal."""
-        try:
-            controller = await sign_out
-        except Exception:
-            self._refuse_account_action()
-            return
-        self.push_screen(OperationModal(controller), self._on_sign_out_dismissed)
-
-    def _on_sign_out_dismissed(self, outcome: OperationModalOutcomeV1 | None) -> None:
-        """Rebootstrap only after the canonical operation reports success."""
-        if (
-            isinstance(outcome, OperationModalSettledOutcomeV1)
-            and outcome.view_model.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        ):
-            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT))
-            return
-        if outcome is not None:
-            self._refuse_account_action()
 
     def _start_direct_session_action(
         self, action: AccountDirectSessionActionV1, *, expected: AccountRecomposeReasonV1

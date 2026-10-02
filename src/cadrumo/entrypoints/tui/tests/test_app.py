@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime, timedelta
-from types import SimpleNamespace
 from typing import ClassVar
 
 import pytest
@@ -14,12 +12,11 @@ from textual.screen import Screen
 from textual.widgets import Static
 
 from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
+from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
-from ....application.user_profile.login_session import ProfileLoginOutcome
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
-from ....core.operations import OperationTerminalCondition
 from ..account import (
     AccountDirectSessionActionV1,
     AccountFactoriesV1,
@@ -41,7 +38,6 @@ from ..navigation import (
     TuiScreenFactoryV1,
     build_destination_catalogue,
 )
-from ..operations.modal import OperationModalSettledOutcomeV1
 from ..runtime_access_management import RuntimeAccessManagementScreen
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
@@ -121,7 +117,7 @@ async def test_navigate_to_refuses_unavailable_destination_without_replacing_hom
     app = CadrumoTuiApp(
         destination_catalogue=_catalogue([], destination_state=destination_state),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(HandoverScreen()),
+        account_factories=_account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -160,7 +156,7 @@ async def test_navigate_to_refuses_a_factory_invocation_failure_without_replacin
             destination_factory=broken_factory,
         ),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(HandoverScreen()),
+        account_factories=_account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -276,7 +272,7 @@ async def test_expired_custody_refresh_recomposes_without_rendering_a_stale_root
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: (_ for _ in ()).throw(AccountSessionExpiredError()),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(HandoverScreen()),
+        account_factories=_account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -312,7 +308,7 @@ async def test_a_refused_home_refresh_keeps_the_session_and_reports_a_code() -> 
         destination_catalogue=_catalogue([]),
         refresh_home=refresh,
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(HandoverScreen()),
+        account_factories=_account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -340,7 +336,7 @@ async def test_a_refused_refresh_never_reports_an_expiry_it_did_not_observe() ->
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: (_ for _ in ()).throw(RuntimeError("secure workbench generation changed during capture")),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(HandoverScreen()),
+        account_factories=_account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -352,12 +348,17 @@ async def test_a_refused_refresh_never_reports_an_expiry_it_did_not_observe() ->
         app.exit(None)
 
 
-class HandoverScreen(Screen[ProfileLoginOutcome | None]):
-    """A test door returning the same safe outcome as the existing Login owner."""
+def _direct_session_action(reason: AccountRecomposeReasonV1) -> AccountDirectSessionActionV1:
+    """Supply the canonical non-secret account completion for unrelated tests."""
+
+    async def complete() -> AccountRecomposeRequiredV1:
+        return AccountRecomposeRequiredV1(reason=reason)
+
+    return AccountDirectSessionActionV1(complete=complete)
 
 
 def _account_factories(
-    change_user: Screen[ProfileLoginOutcome | None] | AccountDirectSessionActionV1,
+    change_user: AccountDirectSessionActionV1 | None = None,
     *,
     password: Screen[ProfilePassphraseRotationOutcome | None] | None = None,
     password_available: bool = True,
@@ -368,12 +369,16 @@ def _account_factories(
     """Supply observable account doors without reproducing an account surface."""
     factories = object.__new__(AccountFactoriesV1)
     object.__setattr__(factories, "profile", lambda context: MarkerScreen(context))
-    object.__setattr__(factories, "change_user", lambda: change_user)
+    object.__setattr__(
+        factories, "change_user", lambda: change_user or _direct_session_action(AccountRecomposeReasonV1.CHANGE_USER)
+    )
     object.__setattr__(factories, "password", (lambda: password or Screen()) if password_available else None)
     object.__setattr__(factories, "access", (lambda: access) if access is not None else None)
     object.__setattr__(factories, "appearance", lambda _app: "appearance.changed")
     object.__setattr__(factories, "language", lambda _screen: None)
-    object.__setattr__(factories, "sign_out", lambda: sign_out)
+    object.__setattr__(
+        factories, "sign_out", lambda: sign_out or _direct_session_action(AccountRecomposeReasonV1.SIGNED_OUT)
+    )
     object.__setattr__(factories, "onboarding_pending", onboarding_pending)
     return factories
 
@@ -385,7 +390,7 @@ async def test_an_unfinished_profile_opens_on_setup_once_then_returns_home() -> 
     app = CadrumoTuiApp(
         destination_catalogue=_catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(HandoverScreen(), onboarding_pending=True),
+        account_factories=_account_factories(onboarding_pending=True),
     )
     async with app.run_test() as pilot:
         await _settle(app, pilot)
@@ -402,40 +407,33 @@ async def test_an_unfinished_profile_opens_on_setup_once_then_returns_home() -> 
 
 
 @pytest.mark.asyncio
-async def test_change_user_returns_typed_identity_and_revokes_old_profile_root() -> None:
-    """A successful handover cannot leave the prior catalogue or search callable."""
+async def test_change_user_requests_fresh_selection_and_revokes_old_profile_root() -> None:
+    """The account key retires the old root before requesting a fresh selection."""
     contexts: list[TuiScreenContextV1] = []
-    new_profile_id = "11111111-1111-4111-8111-111111111111"
-    authenticated_at = datetime(2026, 9, 3, tzinfo=UTC)
-    outcome = ProfileLoginOutcome(
-        bucket_id=new_profile_id,
-        label="Profile two",
-        authenticated_at=authenticated_at,
-        idle_deadline=authenticated_at + timedelta(minutes=15),
-        absolute_deadline=authenticated_at + timedelta(hours=8),
-        session_persisted=False,
-        already_authenticated=False,
-        closed_previous_bucket_id="22222222-2222-4222-8222-222222222222",
-    )
-    handover = HandoverScreen()
+
+    async def complete() -> AccountRecomposeRequiredV1:
+        assert app._account_factories is None
+        assert app._destination_catalogue is None
+        assert app._workbench_search_service is None
+        assert len(app.screen_stack) == 1
+        return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.CHANGE_USER)
+
     app = CadrumoTuiApp(
         destination_catalogue=_catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(handover),
+        account_factories=_account_factories(AccountDirectSessionActionV1(complete=complete)),
     )
 
     async with app.run_test(size=(80, 24)) as pilot:
+        await _settle(app, pilot)
         await pilot.press("f5")
-        await pilot.pause()
-        assert app.screen is handover
-        handover.dismiss(outcome)
-        await pilot.pause()
+        async with asyncio.timeout(5):
+            while app.return_value is None:
+                await pilot.pause(0.02)
 
         assert app.return_value == AccountRecomposeRequiredV1(
             reason=AccountRecomposeReasonV1.CHANGE_USER,
-            profile_id=str(new_profile_id),
-            profile_label="Profile two",
         )
         assert app._account_factories is None
         with pytest.raises(InternalInvariantError, match="no composed destination"):
@@ -452,7 +450,7 @@ async def test_password_rotation_recomposes_before_the_old_session_root_can_be_r
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(HandoverScreen(), password=password),
+        account_factories=_account_factories(password=password),
     )
     outcome = ProfilePassphraseRotationOutcome(
         profile_id="11111111-1111-4111-8111-111111111111",
@@ -477,33 +475,42 @@ async def test_password_rotation_recomposes_before_the_old_session_root_can_be_r
 
 
 @pytest.mark.asyncio
-async def test_successful_sign_out_tears_down_root_but_refusal_does_not_claim_logout() -> None:
-    """Only a canonical successful settlement authorizes signed-out recomposition."""
+@pytest.mark.parametrize("completion", ["success", "refusal", "wrong_reason"])
+async def test_sign_out_direct_action_recomposes_success_or_requires_fresh_admission(completion: str) -> None:
+    """A dispatched action retires the root; only its matching receipt claims logout."""
+
+    async def complete() -> AccountRecomposeRequiredV1:
+        if completion == "refusal":
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        return AccountRecomposeRequiredV1(
+            reason=(
+                AccountRecomposeReasonV1.SIGNED_OUT if completion == "success" else AccountRecomposeReasonV1.CHANGE_USER
+            )
+        )
+
     app = CadrumoTuiApp(
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(HandoverScreen()),
-    )
-    refused = OperationModalSettledOutcomeV1.model_construct(
-        view_model=SimpleNamespace(projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.REFUSED))
-    )
-    succeeded = OperationModalSettledOutcomeV1.model_construct(
-        view_model=SimpleNamespace(projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.SUCCEEDED))
+        account_factories=_account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
     )
 
     async with app.run_test() as pilot:
         await _settle(app, pilot)
-        app._on_sign_out_dismissed(refused)
-        assert app.return_value is None
-        assert str(app.query_one("#root-account-refusal", Static).render())
-
-        app._on_sign_out_dismissed(succeeded)
-        await pilot.pause()
-        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
+        await pilot.press("f10")
+        async with asyncio.timeout(5):
+            while app.return_value is None:
+                await pilot.pause(0.02)
+        assert app.return_value == AccountRecomposeRequiredV1(
+            reason=(
+                AccountRecomposeReasonV1.SIGNED_OUT if completion == "success" else AccountRecomposeReasonV1.EXPIRED
+            )
+        )
         assert app._account_factories is None
         with pytest.raises(InternalInvariantError, match="no composed destination"):
             _ = app.destination_catalogue
+        with pytest.raises(InternalInvariantError, match="no composed workbench search"):
+            _ = app.workbench_search_service
 
 
 @pytest.mark.asyncio
@@ -513,7 +520,7 @@ async def test_account_header_is_keyboard_reachable_without_horizontal_overflow(
     app = CadrumoTuiApp(
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(HandoverScreen()),
+        account_factories=_account_factories(),
     )
 
     async with app.run_test(size=(width, 24)) as pilot:
@@ -560,7 +567,7 @@ async def test_direct_account_action_severs_private_root_before_completion(
 
     direct = AccountDirectSessionActionV1(complete=complete)
     factories = _account_factories(
-        direct if action is AccountActionV1.CHANGE_USER else HandoverScreen(),
+        direct if action is AccountActionV1.CHANGE_USER else None,
         sign_out=direct if action is AccountActionV1.SIGN_OUT else None,
     )
     app = CadrumoTuiApp(
@@ -626,9 +633,7 @@ async def test_cancelled_direct_action_retains_completion_until_runtime_effect_s
     app = CadrumoTuiApp(
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(
-            HandoverScreen(), sign_out=AccountDirectSessionActionV1(complete=complete)
-        ),
+        account_factories=_account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
     )
     async with app.run_test() as pilot:
         await _settle(app, pilot)
@@ -653,7 +658,7 @@ async def test_access_dismissal_with_lost_admission_exits_before_old_root_can_re
     app = CadrumoTuiApp(
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(HandoverScreen(), access=Screen()),
+        account_factories=_account_factories(access=Screen()),
     )
     lost_screen = object.__new__(RuntimeAccessManagementScreen)
     object.__setattr__(lost_screen, "_access_lost", True)
@@ -671,8 +676,8 @@ async def test_access_dismissal_with_lost_admission_exits_before_old_root_can_re
 async def test_captured_home_bundle_replaces_matching_catalogue_account_and_clears_search() -> None:
     old_catalogue = _catalogue([])
     new_catalogue = _catalogue([])
-    old_factories = _account_factories(HandoverScreen())
-    new_factories = _account_factories(HandoverScreen(), password_available=False)
+    old_factories = _account_factories()
+    new_factories = _account_factories(password_available=False)
     bundle = RootPresentationV1(
         home=build_home_projection_fixture(HomeFixtureScenario.READY),
         destination_catalogue=new_catalogue,

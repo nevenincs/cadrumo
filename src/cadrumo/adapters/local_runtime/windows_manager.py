@@ -6,9 +6,10 @@ import asyncio
 import os
 import sys
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
-from threading import Event
 from typing import Protocol, cast
+from uuid import UUID
 from xml.etree import ElementTree
 
 from defusedxml.common import DefusedXmlException
@@ -21,17 +22,39 @@ from ...application.runtime.management import (
     RuntimeManagerProcessState,
     RuntimeServiceBinding,
 )
+from ...core.async_cleanup import await_cancellation_complete
 from .service_definitions import runtime_service_name, windows_task_xml
 from .windows import WindowsRuntimeEndpoint
 from .windows_task_process import task_engine_owns_process
 
 _XML_NAMESPACE = "{http://schemas.microsoft.com/windows/2004/02/mit/task}"
 _MISSING = {0x80070002, 0x8004130F}
+# Microsoft task schema defaults which the native registered XML omits.
+# Every explicit non-default value, duplicate or unknown field is retained.
+_OMITTED_NATIVE_DEFAULTS = {
+    "Principal": {"RunLevel": "LeastPrivilege"},
+    "Settings": {
+        "AllowHardTerminate": "true",
+        "StartWhenAvailable": "false",
+        "RunOnlyIfNetworkAvailable": "false",
+        "AllowStartOnDemand": "true",
+        "Enabled": "true",
+        "RunOnlyIfIdle": "false",
+        "DisallowStartOnRemoteAppSession": "false",
+        "WakeToRun": "false",
+        "Priority": "7",
+    },
+}
+
+type _TaskXmlShape = tuple[str, str, tuple[tuple[str, str], ...], tuple[_TaskXmlShape, ...]]
 
 
 class _RunningTask(Protocol):
     EnginePID: int
-    Stop: Callable[[int], None]
+    InstanceGuid: str
+    Path: str
+    Refresh: Callable[[], None]
+    Stop: Callable[[], None]
 
 
 class _RunningTasks(Protocol):
@@ -41,12 +64,12 @@ class _RunningTasks(Protocol):
 
 class _RegisteredTask(Protocol):
     Xml: str
+    Path: str
     State: int
     Enabled: bool
 
     Run: Callable[[object], object]
     Stop: Callable[[int], None]
-    GetInstances: Callable[[int], _RunningTasks]
 
 
 class _TaskFolder(Protocol):
@@ -57,9 +80,37 @@ class _TaskFolder(Protocol):
 class _TaskService(Protocol):
     Connect: Callable[[], None]
     GetFolder: Callable[[str], _TaskFolder]
+    GetRunningTasks: Callable[[int], _RunningTasks]
+
+
+@dataclass(frozen=True)
+class WindowsTaskStopIdentity:
+    """Retain one verified scheduler incarnation without retaining COM objects."""
+
+    instance_guid: UUID
+    engine_pid: int
+    process_pid: int
+    login_autostart: bool
+
+
+def _instance_guid(instance: _RunningTask) -> UUID:
+    raw = instance.InstanceGuid
+    try:
+        value = UUID(raw)
+    except ValueError:
+        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED) from None
+    # Task Scheduler uses the standard GUID representation, possibly braced.
+    # Do not accept an empty identity or alternative UUID encodings.
+    if not value.int or raw.lower() not in {str(value), "{" + str(value) + "}"}:
+        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+    return value
 
 
 def _scheduler_call[Result](operation: Callable[[_TaskFolder], Result]) -> Result:
+    return _scheduler_service_call(lambda service: operation(service.GetFolder("\\")))
+
+
+def _scheduler_service_call[Result](operation: Callable[[_TaskService], Result]) -> Result:
     if sys.platform != "win32":
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     import pythoncom
@@ -67,15 +118,16 @@ def _scheduler_call[Result](operation: Callable[[_TaskFolder], Result]) -> Resul
 
     # Never ignore RPC_E_CHANGED_MODE and subsequently uninitialize someone
     # else's apartment. No dispatch object may outlive this initialized scope.
+    initialize_apartment = cast(Callable[[int], None], pythoncom.CoInitializeEx)
     try:
-        pythoncom.CoInitializeEx(pythoncom.COINIT_APARTMENTTHREADED)
+        initialize_apartment(pythoncom.COINIT_APARTMENTTHREADED)
     except pythoncom.com_error:
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
 
     def invoke() -> Result:
         service = cast(_TaskService, win32com.client.Dispatch("Schedule.Service"))
         service.Connect()
-        return operation(service.GetFolder("\\"))
+        return operation(service)
 
     refusal: RuntimeRefusalCode | None = None
     result: list[Result] = []
@@ -93,7 +145,7 @@ def _scheduler_call[Result](operation: Callable[[_TaskFolder], Result]) -> Resul
     return result[0]
 
 
-def _shape(element: ElementTree.Element) -> tuple[str, str, tuple[tuple[str, str], ...], tuple[object, ...]]:
+def _shape(element: ElementTree.Element) -> _TaskXmlShape:
     return (
         element.tag,
         (element.text or "") if len(element) == 0 else (element.text or "").strip(),
@@ -102,17 +154,38 @@ def _shape(element: ElementTree.Element) -> tuple[str, str, tuple[tuple[str, str
     )
 
 
-def windows_task_binding_matches(xml: str, binding: RuntimeServiceBinding, *, login_autostart: bool) -> bool:
+def _definition_shape(element: ElementTree.Element) -> _TaskXmlShape:
+    """Restore schema defaults and singleton-field ordering, preserving values."""
+    children = [_definition_shape(child) for child in element]
+    local_name = element.tag.removeprefix(_XML_NAMESPACE)
+    present = {child[0] for child in children}
+    for name, value in _OMITTED_NATIVE_DEFAULTS.get(local_name, {}).items():
+        tag = _XML_NAMESPACE + name
+        if tag not in present:
+            children.append((tag, value, (), ()))
+    if local_name in {"Principal", "Settings", "RestartOnFailure"}:
+        children.sort(key=lambda child: child[0])
+    return (
+        element.tag,
+        (element.text or "").strip() if children else (element.text or ""),
+        tuple(sorted(element.attrib.items())),
+        tuple(children),
+    )
+
+
+def _task_xml_definition_matches(actual_xml: str, expected_xml: str) -> bool:
     """Refuse changed identity, actions, triggers, policy or ambiguous XML.
 
-    Settings include the native defaults explicitly. Only inert registration
-    metadata may be added; unknown behavior and duplicate fields refuse.
+    Native XML omits documented defaults and reorders singleton policy fields.
+    Restore those defaults before comparison; engine and non-default settings
+    remain exact. Registration metadata may include only the exact protected
+    SYSTEM/owner descriptor supplied by canonical provisioning and inert facts.
     """
-    if len(xml) > 256 * 1024:
+    if len(actual_xml) > 256 * 1024 or len(expected_xml) > 256 * 1024:
         return False
     try:
-        actual = fromstring(xml, forbid_dtd=True, forbid_entities=True, forbid_external=True)
-        expected = fromstring(windows_task_xml(binding, login_autostart=login_autostart))
+        actual = fromstring(actual_xml, forbid_dtd=True, forbid_entities=True, forbid_external=True)
+        expected = fromstring(expected_xml, forbid_dtd=True, forbid_entities=True, forbid_external=True)
     except (ElementTree.ParseError, DefusedXmlException):
         return False
     if actual.tag != expected.tag or actual.attrib != expected.attrib:
@@ -126,15 +199,20 @@ def windows_task_binding_matches(xml: str, binding: RuntimeServiceBinding, *, lo
         found = actual.findall(_XML_NAMESPACE + section)
         wanted = expected.find(_XML_NAMESPACE + section)
         if wanted is None:
-            if len(found) > 1 or (found and len(found[0])):
+            if len(found) > 1 or (found and (len(found[0]) or found[0].attrib or (found[0].text or "").strip())):
                 return False
-        elif len(found) != 1 or _shape(found[0]) != _shape(wanted):
+        elif len(found) != 1 or _definition_shape(found[0]) != _definition_shape(wanted):
             return False
     registrations = actual.findall(_XML_NAMESPACE + "RegistrationInfo")
     wanted_registration = expected.find(_XML_NAMESPACE + "RegistrationInfo")
     if len(registrations) != 1 or wanted_registration is None:
         return False
     registration = registrations[0]
+    if (
+        registration.attrib != wanted_registration.attrib
+        or (registration.text or "").strip() != (wanted_registration.text or "").strip()
+    ):
+        return False
     required = {item.tag: item for item in wanted_registration}
     metadata = {_XML_NAMESPACE + name for name in ("Author", "Date", "Description", "Documentation", "Source")}
     seen: set[str] = set()
@@ -142,12 +220,24 @@ def windows_task_binding_matches(xml: str, binding: RuntimeServiceBinding, *, lo
         if item.tag in seen:
             return False
         seen.add(item.tag)
-        if item.tag in required:
+        if item.tag == _XML_NAMESPACE + "SecurityDescriptor":
+            owners = expected.findall(f"{_XML_NAMESPACE}Principals/{_XML_NAMESPACE}Principal/{_XML_NAMESPACE}UserId")
+            if len(owners) != 1 or not owners[0].text:
+                return False
+            intended = f"D:P(A;;GA;;;SY)(A;;GA;;;{owners[0].text})"
+            if len(item) or item.attrib or item.text != intended:
+                return False
+        elif item.tag in required:
             if _shape(item) != _shape(required[item.tag]):
                 return False
         elif item.tag not in metadata or len(item) or item.attrib:
             return False
     return required.keys() <= seen
+
+
+def windows_task_binding_matches(xml: str, binding: RuntimeServiceBinding, *, login_autostart: bool) -> bool:
+    """Compare native task semantics against the exact canonical binding."""
+    return _task_xml_definition_matches(xml, windows_task_xml(binding, login_autostart=login_autostart))
 
 
 class WindowsTaskManager:
@@ -278,23 +368,38 @@ class WindowsTaskManager:
                 raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
             return result
 
-        operation = asyncio.create_task(asyncio.to_thread(_scheduler_call, configure_task))
-        cancelled = False
-        while True:
+        failures: list[BaseException] = []
+
+        def configure_outcome() -> RuntimeManagerInspection | None:
+            # Carry native terminal cancellation as a value across the Task
+            # boundary; caller cancellation still waits for registration.
             try:
-                await asyncio.shield(operation)
-                break
-            except asyncio.CancelledError:
-                cancelled = True
-                if operation.done():
-                    break
-        if cancelled:
-            # Retrieve any native failure to avoid an unobserved task exception;
-            # cancellation never asserts that registration was rolled back.
-            if not operation.cancelled():
-                operation.exception()
-            raise asyncio.CancelledError
-        result = operation.result()
+                return _scheduler_call(configure_task)
+            except BaseException as error:
+                failures.append(error)
+                return None
+
+        try:
+            result = await await_cancellation_complete(
+                asyncio.to_thread(configure_outcome),
+                task_name="windows-task-manager-configure",
+            )
+        except asyncio.CancelledError as primary:
+            if failures:
+
+                async def failed_configuration() -> None:
+                    raise failures[0]
+
+                # Registration has already settled. Retain its exact failure
+                # on the original cancellation without replaying native work.
+                await await_cancellation_complete(
+                    failed_configuration(),
+                    task_name="windows-task-manager-configure-outcome",
+                    cancellation=primary,
+                )
+            raise
+        if failures:
+            raise failures[0]
         if not isinstance(result, RuntimeManagerInspection):
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         return result
@@ -336,26 +441,85 @@ class WindowsTaskManager:
 
         await asyncio.to_thread(_scheduler_call, stop_task)
 
-    def stop_current_process(self, submitted: Event) -> None:
-        """Ask the exact running instance to stop, preserving task triggers.
+    def prepare_current_process_stop(self) -> WindowsTaskStopIdentity:
+        """Verify this running task without stopping it or changing its triggers."""
 
-        Called on a dedicated thread because native Stop may wait for the
-        process to finish its own drain before returning.
-        """
-
-        def stop_task(folder: _TaskFolder) -> None:
+        def prepare_task(service: _TaskService) -> WindowsTaskStopIdentity:
+            folder = service.GetFolder("\\")
             task = self._find(folder)
             if task is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-            if self._autostart(task) is None:
+            autostart = self._autostart(task)
+            if autostart is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
-            instances = task.GetInstances(0)
-            if instances.Count != 1:
+            instance = self._running_instance(service, task)
+            guid = _instance_guid(instance)
+            engine_pid = instance.EnginePID
+            process_pid = os.getpid()
+            if not task_engine_owns_process(engine_pid, process_pid):
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-            instance = instances.Item(1)
-            if not task_engine_owns_process(instance.EnginePID, os.getpid()):
-                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-            submitted.set()
-            instance.Stop(0)
+            verified = self._find(folder)
+            if verified is None or self._autostart(verified) is not autostart:
+                raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+            return WindowsTaskStopIdentity(guid, engine_pid, process_pid, autostart)
 
-        _scheduler_call(stop_task)
+        return _scheduler_service_call(prepare_task)
+
+    def _running_instance(self, service: _TaskService, task: _RegisteredTask) -> _RunningTask:
+        """Select this hidden task without relying on filtered GetInstances results."""
+        expected_path = "\\" + self._name
+        if task.Path != expected_path:
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        instances = service.GetRunningTasks(1)  # TASK_ENUM_HIDDEN, with native caller access checks.
+        count = instances.Count
+        if type(count) is not int or not 0 <= count <= 4096:
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        matched: _RunningTask | None = None
+        for index in range(1, count + 1):
+            candidate = instances.Item(index)
+            if candidate.Path != expected_path:
+                continue
+            candidate.Refresh()
+            if candidate.Path != expected_path or matched is not None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            matched = candidate
+        if matched is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        return matched
+
+    def finalize_current_process_stop(self, identity: WindowsTaskStopIdentity) -> None:
+        """Stop only the freshly reverified prepared instance after application drain.
+
+        Args:
+            identity: Exact native incarnation retained during preparation.
+
+        The running-instance Stop method takes no reserved flags. Its native
+        call may terminate this process; the caller retains its shutdown
+        watchdog and listener ownership until this boundary settles.
+        """
+
+        def stop_task(service: _TaskService) -> None:
+            folder = service.GetFolder("\\")
+            task = self._find(folder)
+            if task is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            autostart = self._autostart(task)
+            if autostart is None or autostart is not identity.login_autostart:
+                raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+            instance = self._running_instance(service, task)
+            guid = _instance_guid(instance)
+            engine_pid = instance.EnginePID
+            process_pid = os.getpid()
+            if (
+                guid != identity.instance_guid
+                or engine_pid != identity.engine_pid
+                or process_pid != identity.process_pid
+                or not task_engine_owns_process(engine_pid, process_pid)
+            ):
+                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            verified = self._find(folder)
+            if verified is None or self._autostart(verified) is not identity.login_autostart:
+                raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+            instance.Stop()
+
+        _scheduler_service_call(stop_task)

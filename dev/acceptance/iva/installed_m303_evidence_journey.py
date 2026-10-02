@@ -52,13 +52,13 @@ from typing import Any, Final, Literal, cast
 
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
+    admit_installed_session,
     installed_product_evidence,
     public_surface_diagnostic,
     query_public_selector,
     read_passphrase_from_stdin,
     run_installed_tui_child_process,
     select_public_data_table_row,
-    wait_for_public_selector,
     write_installed_tui_failure_receipt,
 )
 from dev.acceptance.income_tax.tui_journey import (
@@ -799,83 +799,11 @@ def _require_development_developer_header(payload: bytes, positions: tuple[str, 
             raise IvaInstalledM303Error(f"{record} bytes {span} do not carry the development identity")
 
 
-async def _admit_session(pilot: Any, *, passphrase: str, seconds: float = 300.0) -> None:
-    """Reach Home through the visible admission surface, allowing a slow first workbench composition.
-
-    A failure names the root refusal text the launcher rendered, so an
-    unadmitted workbench is distinguishable from a slow one.
-    """
-    import time
-
-    from textual.css.query import NoMatches
-    from textual.widgets import Input
-
-    unlocked = False
-    deadline = time.monotonic() + seconds
-    while time.monotonic() < deadline:
-        screen = pilot.app.screen
-        try:
-            screen.query_one("#home-agenda")
-        except NoMatches:
-            pass
-        else:
-            return
-        if not unlocked:
-            try:
-                field = screen.query_one("#field-passphrase", Input)
-            except NoMatches:
-                pass
-            else:
-                field.value = passphrase
-                await pilot.click("#btn-unlock")
-                unlocked = True
-        await pilot.pause(0.2)
-    visible = {
-        selector: _rendered(widget)
-        for selector in ("#root-account-refusal", "#root-navigation-refusal", "#root-no-areas", "#root-updating")
-        for widget in pilot.app.screen.query(selector)
-    }
-    raise InstalledTuiChildError(
-        f"installed TUI did not reach Home; visible root text: {visible}",
-        diagnostic=public_surface_diagnostic(pilot),
+async def _admit_session(pilot: Any, *, passphrase: str, seconds: float = 300.0) -> bool:
+    """Drive runtime admission within the existing slow-composition bound."""
+    return await admit_installed_session(
+        pilot=pilot, passphrase=passphrase, deadline=asyncio.get_running_loop().time() + seconds
     )
-
-
-async def _login_existing_profile(*, passphrase: str) -> None:
-    """Admit the CLI-created profile through the installed production Login screen."""
-    import time
-
-    from textual.widgets import Input
-
-    from cadrumo.application.user_profile.login_interaction import (
-        ProfileLoginInventoryState,
-        attempt_profile_login,
-        observe_profile_login_inventory,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
-
-    inventory = observe_profile_login_inventory()
-    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
-        raise InstalledTuiChildError("installed TUI login did not recognise the CLI-created profile")
-    with bundled_indexed_authority().operation() as operation:
-        screen = LoginScreen(
-            choices=inventory.choices,
-            authenticate=lambda profile_id, secret: attempt_profile_login(
-                profile_id, secret, profile_decode_context=operation.profile_decode_context()
-            ),
-            preselected=inventory.preselected_profile_id,
-        )
-        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-            await wait_for_public_selector(pilot, "#field-passphrase")
-            query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
-            await pilot.click("#btn-unlock")
-            deadline = time.monotonic() + 120.0
-            while screen.outcome is None and time.monotonic() < deadline:
-                await pilot.pause(0.2)
-    if screen.outcome is None:
-        raise InstalledTuiChildError("installed TUI Login screen did not admit the CLI-created profile")
 
 
 def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
@@ -887,12 +815,7 @@ def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
     reopen: list[ReopenReadback] = []
     failure: list[InstalledTuiChildError] = []
 
-    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-    from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
     from cadrumo.entrypoints.tui.launcher import main as launch
-
-    with live_exchange_rate_composition(), profile_adapter_composition():
-        asyncio.run(_login_existing_profile(passphrase=passphrase))
 
     async def drive(pilot: Any) -> None:
         try:
@@ -953,7 +876,8 @@ def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
 
     async def autopilot(pilot: Any) -> None:
         try:
-            await _admit_session(pilot, passphrase=passphrase)
+            if not await _admit_session(pilot, passphrase=passphrase):
+                return
         except InstalledTuiChildError as error:
             failure.append(error)
             pilot.app.exit()

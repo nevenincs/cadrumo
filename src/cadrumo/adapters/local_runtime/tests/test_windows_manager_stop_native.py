@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import ctypes
+import hashlib
 import json
 import os
 import subprocess
@@ -11,10 +12,12 @@ import sys
 import tempfile
 import time
 from collections.abc import Callable, Generator
+from concurrent.futures import Future
 from contextlib import contextmanager
+from contextvars import ContextVar
 from importlib.metadata import version
 from pathlib import Path
-from threading import Event, Thread
+from threading import Lock, Thread
 from typing import Protocol, TypedDict, cast
 from uuid import uuid4
 from xml.etree import ElementTree
@@ -26,7 +29,11 @@ from defusedxml.ElementTree import fromstring
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.service_definitions import runtime_service_name, windows_task_xml
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.local_runtime.windows_manager import WindowsTaskManager, windows_task_binding_matches
+from cadrumo.adapters.local_runtime.windows_manager import (
+    WindowsTaskManager,
+    _task_xml_definition_matches,
+    windows_task_binding_matches,
+)
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.management import RuntimeServiceBinding
 from cadrumo.application.runtime.owner_control import (
@@ -35,6 +42,8 @@ from cadrumo.application.runtime.owner_control import (
     RuntimeStopPreview,
     RuntimeStopPreviewRequest,
 )
+from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 
 _TASK_NAMESPACE = "{http://schemas.microsoft.com/windows/2004/02/mit/task}"
 _TASK_CREATE = 2
@@ -69,6 +78,146 @@ class _TaskFolder(Protocol):
 
 
 type _XmlShape = tuple[str, str, tuple[tuple[str, str], ...], tuple[_XmlShape, ...]]
+
+
+class _NativeCall:
+    """Retain the actual scheduler thread until its terminal outcome is joined."""
+
+    def __init__(self, operation: Callable[[], None]) -> None:
+        self.result: Future[None] = Future()
+
+        def run() -> None:
+            try:
+                operation()
+            except BaseException as error:
+                self.result.set_exception(error)
+            else:
+                self.result.set_result(None)
+
+        self.thread = Thread(target=run, name="managed-stop-com-call", daemon=True)
+
+    def start(self) -> None:
+        try:
+            self.thread.start()
+        except BaseException as error:
+            if not self.result.done():
+                self.result.set_exception(error)
+            raise
+
+    def settle(self, *, timeout: float) -> BaseException | None:
+        deadline = time.monotonic() + timeout
+        failure: BaseException | None = None
+        primary: BaseException | None = None
+        try:
+            failure = self.result.exception(timeout=max(0.0, deadline - time.monotonic()))
+        except BaseException as error:
+            primary = error
+        try:
+            if self.thread.ident is not None:
+                self.thread.join(timeout=max(0.0, deadline - time.monotonic()))
+            if self.thread.is_alive():
+                raise TimeoutError("original scheduler thread has not settled")
+        except BaseException as error:
+            if primary is None:
+                primary = error
+            elif error is not primary:
+                previous = primary.__dict__.get("cleanup_error")
+                diagnostic = AsyncResourceCleanupError(
+                    (), (error,), retry_task_name="managed-stop-thread-diagnostics", close_attempts=1
+                )
+                if isinstance(previous, AsyncResourceCleanupError):
+                    diagnostic = previous.merged_with(diagnostic)
+                elif isinstance(previous, BaseException):
+                    diagnostic = diagnostic.merged_with(
+                        AsyncResourceCleanupError(
+                            (), (previous,), retry_task_name="managed-stop-thread-diagnostics", close_attempts=1
+                        )
+                    )
+                primary.__dict__["cleanup_error"] = diagnostic
+        if primary is not None:
+            raise primary
+        return failure
+
+
+class _ProbeTaskCleanup:
+    """Own one registered probe and its original scheduler calls across failure."""
+
+    def __init__(self, task_name: str, identity: _XmlShape, root: Path, events_path: Path) -> None:
+        self.task_name, self.identity = task_name, identity
+        self.root, self.events_path = root, events_path
+        self.stop_call: _NativeCall | None = None
+        self.cleanup_call: _NativeCall | None = None
+        self.retiring = False
+        self.released = False
+        self.settlement_seconds = 12.0
+        self._guard = Lock()
+
+    def start_stop(self) -> None:
+        if self.stop_call is not None or self.retiring or self.released:
+            raise RuntimeError("probe Stop is already owned or retiring")
+        call = _NativeCall(lambda: _stop_task(self.task_name, self.identity))
+        self.stop_call = call
+        call.start()
+
+    def settle_stop(self) -> None:
+        call = self.stop_call
+        if call is None:
+            return
+        failure = call.settle(timeout=self.settlement_seconds)
+        self.stop_call = None
+        if failure is not None:
+            raise failure
+
+    def retain_failure(self, primary: BaseException, *failures: BaseException) -> None:
+        retained = AsyncResourceCleanupError(
+            (self,), failures, retry_task_name="managed-stop-probe-cleanup", close_attempts=1
+        )
+        diagnostics = [failure for failure in failures if failure is not primary]
+        seen: set[int] = set()
+        for name in ("async_cleanup_error", "cleanup_error"):
+            previous = primary.__dict__.get(name)
+            if isinstance(previous, AsyncResourceCleanupError) and id(previous) not in seen:
+                seen.add(id(previous))
+                retained = previous.merged_with(retained)
+                if previous.__cause__ is not None:
+                    diagnostics.append(previous.__cause__)
+            elif isinstance(previous, BaseException) and not isinstance(previous, AsyncResourceCleanupError):
+                diagnostics.append(previous)
+                retained = retained.merged_with(
+                    AsyncResourceCleanupError(
+                        (), (previous,), retry_task_name="managed-stop-probe-diagnostics", close_attempts=1
+                    )
+                )
+        if diagnostics:
+            retained.__cause__ = BaseExceptionGroup("Retained probe cleanup failures", diagnostics)
+        primary.__dict__["async_cleanup_error"] = retained
+        primary.__dict__["cleanup_error"] = retained
+
+    def _close_now(self) -> None:
+        if not self._guard.acquire(timeout=self.settlement_seconds):
+            raise TimeoutError("probe cleanup is already settling its original call")
+        try:
+            if self.released:
+                return
+            self.settle_stop()
+            if self.cleanup_call is None:
+                call = _NativeCall(lambda: _cleanup_task(self.task_name, self.identity, self.root, self.events_path))
+                self.cleanup_call = call
+                call.start()
+            failure = self.cleanup_call.settle(timeout=25)
+            self.cleanup_call = None
+            if failure is not None:
+                raise failure
+            self.released = True
+        finally:
+            self._guard.release()
+
+    async def close(self) -> None:
+        """Retry owned native settlement without redispatching a pending Stop."""
+        await asyncio.to_thread(self._close_now)
+
+
+_PROBE_TASK_CLEANUP: ContextVar[_ProbeTaskCleanup | None] = ContextVar("managed-stop-probe-cleanup", default=None)
 
 
 def _scheduler_call[Result](operation: Callable[[_TaskFolder], Result]) -> Result:
@@ -113,48 +262,71 @@ def _normalize_registered_xml(xml: str) -> _XmlShape:
         raise RuntimeError("registered probe task XML could not be normalized") from error
 
 
-def _registered_xml_matches_definition(actual_xml: str, expected_xml: str) -> bool:
-    """Check every task behavior field while allowing inert scheduler metadata."""
+def _definition_difference(actual_xml: str, expected_xml: str) -> dict[str, object]:
+    """Retain bounded structural diagnostics without account or action text."""
+    difference: dict[str, object] = {
+        "expected_xml_sha256": hashlib.sha256(expected_xml.encode()).hexdigest(),
+        "registered_xml_sha256": hashlib.sha256(actual_xml.encode()).hexdigest(),
+    }
+    if len(actual_xml) > 256 * 1024 or len(expected_xml) > 256 * 1024:
+        difference["reason"] = "xml_bound_exceeded"
+        return difference
     try:
         actual = fromstring(actual_xml, forbid_dtd=True, forbid_entities=True, forbid_external=True)
         expected = fromstring(expected_xml, forbid_dtd=True, forbid_entities=True, forbid_external=True)
     except (ElementTree.ParseError, DefusedXmlException):
-        return False
-    if actual.tag != expected.tag or actual.attrib != expected.attrib:
-        return False
-    allowed = {_TASK_NAMESPACE + name for name in ("Principals", "Actions", "Triggers", "Settings", "RegistrationInfo")}
-    if any(child.tag not in allowed for child in actual):
-        return False
-    for section in ("Principals", "Actions", "Triggers", "Settings"):
-        actual_sections = actual.findall(_TASK_NAMESPACE + section)
-        expected_sections = expected.findall(_TASK_NAMESPACE + section)
-        if section == "Triggers" and not expected_sections:
-            if len(actual_sections) > 1 or (actual_sections and len(actual_sections[0])):
-                return False
-            continue
-        if len(actual_sections) != len(expected_sections):
-            return False
-        if expected_sections and _shape(actual_sections[0]) != _shape(expected_sections[0]):
-            return False
-    actual_registration = actual.findall(_TASK_NAMESPACE + "RegistrationInfo")
-    expected_registration = expected.find(_TASK_NAMESPACE + "RegistrationInfo")
-    if len(actual_registration) != 1 or expected_registration is None:
-        return False
-    required = {item.tag: item for item in expected_registration}
-    permitted_metadata = {
-        _TASK_NAMESPACE + name for name in ("Author", "Date", "Description", "Documentation", "Source")
-    }
-    seen: set[str] = set()
-    for item in actual_registration[0]:
-        if item.tag in seen:
-            return False
-        seen.add(item.tag)
-        if item.tag in required:
-            if _shape(item) != _shape(required[item.tag]):
-                return False
-        elif item.tag not in permitted_metadata or len(item) or item.attrib:
-            return False
-    return required.keys() <= seen
+        difference["reason"] = "invalid_task_xml"
+        return difference
+    rows: list[dict[str, object]] = []
+
+    def compare(actual_shape: _XmlShape, expected_shape: _XmlShape, path: str) -> None:
+        if len(rows) >= 32:
+            return
+        for field, found, wanted in (
+            ("tag", actual_shape[0], expected_shape[0]),
+            ("text", actual_shape[1], expected_shape[1]),
+            ("attributes", actual_shape[2], expected_shape[2]),
+        ):
+            if found != wanted:
+                if field == "text" and actual_shape[0].removeprefix(_TASK_NAMESPACE) in {
+                    "UserId",
+                    "Command",
+                    "Arguments",
+                    "WorkingDirectory",
+                }:
+                    rows.append(
+                        {
+                            "path": path,
+                            "field": "text_sha256",
+                            "actual": hashlib.sha256(str(found).encode()).hexdigest(),
+                            "expected": hashlib.sha256(str(wanted).encode()).hexdigest(),
+                        }
+                    )
+                else:
+                    rows.append({"path": path, "field": field, "actual": found, "expected": wanted})
+        actual_children, expected_children = actual_shape[3], expected_shape[3]
+        if len(actual_children) != len(expected_children):
+            rows.append(
+                {
+                    "path": path,
+                    "field": "child_tags",
+                    "actual": [child[0] for child in actual_children],
+                    "expected": [child[0] for child in expected_children],
+                }
+            )
+        for index, (found_child, wanted_child) in enumerate(zip(actual_children, expected_children, strict=False)):
+            compare(
+                found_child, wanted_child, path + "/" + wanted_child[0].removeprefix(_TASK_NAMESPACE) + f"[{index}]"
+            )
+
+    compare(_shape(actual), _shape(expected), "Task")
+    difference["differences"] = rows[:32]
+    return difference
+
+
+def _registered_xml_matches_definition(actual_xml: str, expected_xml: str) -> bool:
+    """Use the owning production matcher for the synthetic fixture action."""
+    return _task_xml_definition_matches(actual_xml, expected_xml)
 
 
 def _missing_task(error: BaseException) -> bool:
@@ -353,30 +525,43 @@ def _release_drain(root: Path, process: _Event) -> None:
 def _stop_and_release_drain(
     task_name: str, identity: _XmlShape, root: Path, events_path: Path, process: _Event
 ) -> tuple[_Event, ...]:
-    finished = Event()
-    errors: list[BaseException] = []
-
-    def stop() -> None:
-        try:
-            _stop_task(task_name, identity)
-        except BaseException as error:
-            errors.append(error)
-        finally:
-            finished.set()
-
-    stopper = Thread(target=stop, name="managed-stop-com-call", daemon=True)
-    stopper.start()
+    owner = _PROBE_TASK_CLEANUP.get()
+    if owner is None or (owner.task_name, owner.identity, owner.root, owner.events_path) != (
+        task_name,
+        identity,
+        root,
+        events_path,
+    ):
+        raise RuntimeError("drain probe has no exact registered-task cleanup owner")
+    primary: BaseException | None = None
     try:
-        events = _wait_for_event(events_path, "drain_started", timeout=12)
-        assert not any(event["kind"] == "drain_completed" for event in events)
-    finally:
+        owner.start_stop()
+        try:
+            events = _wait_for_event(events_path, "drain_started", timeout=12)
+            assert not any(event["kind"] == "drain_completed" for event in events)
+        except BaseException as error:
+            primary = error
         # Release from the parent thread even if COM Stop waits for the task
         # process to finish; the fixture's own four-second timeout is the bound.
-        _release_drain(root, process)
-    if not finished.wait(12):
-        raise AssertionError("Task.Stop did not return after the bounded drain release")
-    if errors:
-        raise errors[0]
+        try:
+            _release_drain(root, process)
+        except BaseException as error:
+            if primary is None:
+                primary = error
+            else:
+                owner.retain_failure(primary, error)
+        try:
+            owner.settle_stop()
+        except BaseException as error:
+            if primary is None:
+                primary = error
+            owner.retain_failure(primary, error)
+        if primary is not None:
+            raise primary
+    except BaseException as error:
+        if owner.stop_call is not None:
+            owner.retain_failure(error, error)
+        raise
     return _wait_for_event(events_path, "drain_completed", timeout=8)
 
 
@@ -462,12 +647,37 @@ def _registered_probe_task(
     # serialization, then use that identity before both Stop and Delete.
     identity = _normalize_registered_xml(registered_xml)
     events_path = root / "events.jsonl"
+    owner = _ProbeTaskCleanup(task_name, identity, root, events_path)
+    token = _PROBE_TASK_CLEANUP.set(owner)
+    primary_errors: list[BaseException] = []
     try:
         if not _registered_xml_matches_definition(registered_xml, expected_xml):
-            raise RuntimeError("Task Scheduler changed the managed-stop task definition")
+            diagnostic = _definition_difference(registered_xml, expected_xml)
+            (root / "registered-task-difference.json").write_text(
+                json.dumps(diagnostic, indent=2) + "\n", encoding="utf-8"
+            )
+            error = RuntimeError("Task Scheduler changed the managed-stop task definition")
+            error.add_note(json.dumps(diagnostic, sort_keys=True))
+            raise error
         yield task_name, identity, events_path
+    except BaseException as error:
+        primary_errors.append(error)
+        raise
     finally:
-        _cleanup_task(task_name, identity, root, events_path)
+        primary = primary_errors[0] if primary_errors else None
+        owner.retiring = True
+        try:
+            asyncio.run(close_async_resources(owner, task_name="managed-stop-probe-cleanup", primary_error=primary))
+        finally:
+            _PROBE_TASK_CLEANUP.reset(token)
+            if primary is not None:
+                if owner.released:
+                    for name in ("async_cleanup_error", "cleanup_error"):
+                        failure = primary.__dict__.get(name)
+                        if isinstance(failure, AsyncResourceCleanupError):
+                            failure.discard_released_resources(owner)
+                else:
+                    owner.retain_failure(primary)
 
 
 def _read_events(path: Path) -> tuple[_Event, ...]:
@@ -698,7 +908,9 @@ async def test_installed_runtime_owner_stop_preserves_bound_task_and_suppresses_
         if _owned_installed_task_identity(task_name, binding) is None:
             raise RuntimeError("configured installed task disappeared")
         await manager.start()
-        deadline = time.monotonic() + 12
+        # Real cold registry preparation shares the installed admission budget;
+        # the short probe deadlines elsewhere do not govern runtime readiness.
+        deadline = time.monotonic() + PROFILE_ADMISSION_TIMEOUT_SECONDS
         while True:
             try:
                 client = VerifiedRuntimeConnection(

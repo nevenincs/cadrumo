@@ -9,6 +9,76 @@ from ._application_profile_bundle import PROFILE_BUNDLE_ERROR_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.user_profile.google_configuration_operation_refusal.GoogleConfigurationRefusedError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_CONFIGURATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.google_configuration_operation_contracts.GoogleConfigurationExportDisabledError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_CONFIGURATION_EXPORT_DISABLED",
+            category=ErrorCategory.REFUSED,
+            message_key="cli.config.google.export_capability_disabled",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_intake_refusal.InvoiceWizardFieldsValidationError",
+        ErrorCode(
+            code="ERROR_INVOICE_WIZARD_FIELDS",
+            category=ErrorCategory.ERROR,
+            message_key="application.invoices.wizard.errors.field_errors",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_intake_refusal.InvoiceWizardValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_WIZARD_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="application.invoices.wizard.errors.field_errors",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_intake_operation_ports.InvoiceIntakeCommitConflictError",
+        ErrorCode(
+            code="LOCKED_INVOICE_INTAKE_COMMIT_CONFLICT",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.canonical_ledger_persistence_conflict",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.link_operation.LedgerLinkValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_LINK_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_financial_invoices_invoice_link",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.modelo_spreadsheet_operation_contracts.ModeloSpreadsheetRowIngressRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_SPREADSHEET_ROW_INGRESS",
+            category=ErrorCategory.REFUSED,
+            message_key="application.calculations.row_set.errors.row_assembly_failed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.prorrata_register.sector_lifecycle.ProrrataSectorLifecycleUnavailableError",
         ErrorCode(
             code="REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE",

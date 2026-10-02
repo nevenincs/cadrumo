@@ -29,9 +29,9 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import require_error_document, unwrap_cli_result
 from ...tests import modelo_operation_test_support
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import native_api_cli_session
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

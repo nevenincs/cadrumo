@@ -53,7 +53,7 @@ class RuntimeClientHello(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["client_hello"] = "client_hello"
-    protocol_version: Annotated[int, Field(strict=True, ge=1, le=1)] = 1
+    protocol_version: Annotated[int, Field(strict=True, ge=2, le=2)] = 2
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
 
@@ -64,7 +64,7 @@ class RuntimeServerHello(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["server_hello"] = "server_hello"
-    protocol_version: Annotated[int, Field(strict=True, ge=1, le=1)] = 1
+    protocol_version: Annotated[int, Field(strict=True, ge=2, le=2)] = 2
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
     boot_id: UUID

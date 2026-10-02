@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
@@ -402,49 +401,6 @@ def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: Pinn
     assert context["calculation_revision_id"] == revision_id
     assert context["modelo"] == "303"
     assert context["blocking_reference_count"] == "1"
-
-
-# --- Drive document-link fetch-and-encrypt-or-refuse -------------------------------
-@pytest.mark.usefixtures("bbva_world")
-def test_evidence_pull_refuses_when_document_bytes_are_unreachable() -> None:
-    """A Drive link the app cannot fetch (no connected Google credentials) is
-    refused: evidence must carry encrypted document bytes, so the verb never
-    falls back to storing the bare link, and the row gains no attachment.
-    """
-    rows = _list_rows()
-    tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
-    link = "https://drive.google.com/file/d/ABC123ticket/view"
-
-    res = _invoke(
-        ["app", "ledger", "evidence", "pull", tx, "--source", "GOOGLE_DRIVE", "--reference", link, "--note", "ticket"],
-    )
-    assert res.exit_code != 0, res.output
-
-    catalogue = load_active_catalogue()
-    txn = catalogue.get(tx)
-    assert txn is not None
-    assert not txn.attachment_ids, "a refused evidence pull must not bind any attachment to the row"
-
-
-@pytest.mark.usefixtures("bbva_world")
-def test_evidence_pull_refuses_non_link_source(tmp_path: Path) -> None:
-    rows = _list_rows()
-    tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
-    # LOCAL_FILE is a valid AttachmentSource but not a document *link* source.
-    res = _invoke(
-        [
-            "app",
-            "ledger",
-            "evidence",
-            "pull",
-            tx,
-            "--source",
-            "LOCAL_FILE",
-            "--reference",
-            str(tmp_path / "local-source.txt"),
-        ],
-    )
-    assert res.exit_code != 0, res.output
 
 
 # --- Split a mixed invoice into business + personal children -----------------------

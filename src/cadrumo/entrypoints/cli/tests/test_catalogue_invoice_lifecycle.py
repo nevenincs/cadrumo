@@ -150,15 +150,11 @@ def test_catalogue_view_resolves_full_id_and_prefix(tmp_path: Path) -> None:
     with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
         invoice_id = _create_catalogue_invoice(session)
 
-        by_full = session.invoke_password(
-            "app", "ledger", "invoice", "view", invoice_id, output_format="text"
-        )
+        by_full = session.invoke_password("app", "ledger", "invoice", "view", invoice_id, output_format="text")
         assert by_full.exit_code == 0, by_full.output
         assert _line_value(by_full.output, "invoice_id") == invoice_id
 
-        by_prefix = session.invoke_password(
-            "app", "ledger", "invoice", "view", invoice_id[:8], output_format="text"
-        )
+        by_prefix = session.invoke_password("app", "ledger", "invoice", "view", invoice_id[:8], output_format="text")
         assert by_prefix.exit_code == 0, by_prefix.output
         assert _line_value(by_prefix.output, "invoice_id") == invoice_id
 
@@ -169,9 +165,7 @@ def test_catalogue_view_refuses_unknown_id(tmp_path: Path) -> None:
     """An id matching no invoice is refused, naming the id — never a silent miss."""
     with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
         _create_catalogue_invoice(session)
-        result = session.invoke_password(
-            "app", "ledger", "invoice", "view", "deadbeefdeadbeef", output_format="text"
-        )
+        result = session.invoke_password("app", "ledger", "invoice", "view", "deadbeefdeadbeef", output_format="text")
         assert result.exit_code != 0, result.output
         assert "deadbeefdeadbeef" in result.output, result.output
 

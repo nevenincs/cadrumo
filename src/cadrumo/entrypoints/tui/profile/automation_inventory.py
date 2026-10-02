@@ -70,6 +70,7 @@ def _grant_detail(item: AutomationGrantProjection) -> str:
             _detail("expires", item.expires_at.isoformat()),
             *_scope(item.scope),
             _detail("unattended", item.unattended),
+            *((tr("tui.automation_inventory.unattended_notice"),) if item.unattended else ()),
             _detail("os_lock", item.allow_os_lock),
         )
     )
@@ -107,6 +108,7 @@ def _request_detail(item: AutomationReviewProjection) -> str:
             _detail("target_key", item.proposal.target_key_id or ""),
             *_scope(item.proposal.scope),
             _detail("unattended", item.proposal.unattended),
+            *((tr("tui.automation_inventory.unattended_notice"),) if item.proposal.unattended else ()),
             _detail("os_lock", item.proposal.allow_os_lock),
         )
     )

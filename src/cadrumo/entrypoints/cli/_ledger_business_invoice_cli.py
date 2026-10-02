@@ -5,14 +5,14 @@ replaces the prior payable-invoice / collectible-invoice split. Every verb
 reads and writes the sole invoice aggregate — the
 :class:`Invoice` records held in the
 :class:`InvoiceCatalogue`. Mutations use the application-layer lifecycle
-functions; list and view use authenticated profile-worker snapshots of that
-same catalogue identity.
+functions; list, view, import, and wizard use authenticated profile-worker
+operations over that same catalogue identity.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import Enum
@@ -23,14 +23,8 @@ import typer
 from pydantic import ValidationError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
-from ...application.invoices.bulk_import import (
-    BulkInvoiceImportResult,
-    BulkInvoiceImportSource,
-    import_invoices_from_rows,
-    read_bulk_invoice_import_source,
-)
 from ...application.invoices.catalogue_add_operation import InvoiceAddLine, InvoiceAddRequest
-from ...application.invoices.catalogue_creation_ports import CatalogueCreationPorts
+from ...application.invoices.catalogue_intake_operation import InvoiceImportProjection
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ...application.invoices.catalogue_update_operation import InvoiceUpdatePatch
@@ -44,7 +38,6 @@ from ...application.operations.public_scalar import PublicDecimal
 from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.field_role import FieldRole
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.type_guards import is_object_list_or_tuple
@@ -85,11 +78,8 @@ from .runtime_invoice_catalogue import (
     update_invoice_catalogue,
     view_invoice_catalogue,
 )
+from .runtime_invoice_intake import submit_invoice_import, submit_invoice_wizard
 from .runtime_registered_operation import submitted_operation_error
-from .state_projection_support import (
-    authority_operation,
-    catalogue_creation_ports_factory,
-)
 
 # The domain-invoice fields shared by mutation readback and evidence-confirm.
 # Authenticated list/view use the closed application snapshot instead.
@@ -153,36 +143,9 @@ def catalogue_invoice_shared_fields(invoice: Invoice) -> dict[str, object]:
     """Project the :class:`Invoice` identity/total fields in their string wire form.
 
     Consumed by the evidence-confirm verb, whose envelope is all-``str``. Shares
-    :data:`_SHARED_INVOICE_FIELDS` with mutation readback via
-    :func:`_catalogue_invoice_payload`.
+    :data:`_SHARED_INVOICE_FIELDS` with the canonical evidence-confirm payload.
     """
     return {name: _wire_scalar(getattr(invoice, name)) for name in _SHARED_INVOICE_FIELDS}
-
-
-def _catalogue_invoice_payload(invoice: Invoice) -> dict[str, object]:
-    """Project the :class:`Invoice` in native typed form for the catalogue envelopes.
-
-    Same field set as :func:`catalogue_invoice_shared_fields` plus the two
-    fields only the catalogue surface carries; values stay native because
-    :class:`CatalogueInvoiceRecordPayload` is strict and declares real
-    ``Decimal`` / ``date`` / enum types.
-    """
-    payload: dict[str, object] = {name: getattr(invoice, name) for name in _SHARED_INVOICE_FIELDS}
-    payload["linked_transaction_ids"] = list(invoice.linked_transaction_ids)
-    payload["bucket_id"] = invoice.bucket_id
-    payload["operation_type"] = invoice.operation_type
-    payload["lines"] = [line.model_dump() for line in invoice.lines]
-    payload["invoice_class"] = invoice.invoice_class
-    payload["series"] = invoice.series
-    payload["operation_date"] = invoice.operation_date
-    payload["operation_date_role"] = invoice.operation_date_role
-    payload["iva_category"] = invoice.iva_category
-    payload["rectifies_invoice_number"] = invoice.rectifies_invoice_number
-    provenance = invoice.provenance
-    payload["source_filename"] = provenance.source_path.name if provenance is not None else None
-    payload["source_sha256"] = provenance.source_sha256 if provenance is not None else None
-    payload["source_row_index"] = provenance.source_row_index if provenance is not None else None
-    return payload
 
 
 def _snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueInvoiceRecordPayload:
@@ -567,97 +530,62 @@ def invoice_wizard(
     rather than re-written or raised as a duplicate
     (``aeat-cli-contract``).
     """
-    from ...application.invoices.creation_wizard import create_invoice_via_wizard
-
-    # Field validation reads registry facts (the tax-ID format among them)
-    # before the write takes its own scope, so the invocation's lease comes first.
-    authority_operation(ctx)
-    bucket_id = _business_invoice_bucket_id()
-    catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
-    resolved_iva_category = iva_category or iva_category_for_operation_type(operation_type)
-    try:
-        wizard_result = create_invoice_via_wizard(
-            bucket_id=bucket_id,
-            kind=kind,
-            counterparty_nif=counterparty_nif,
-            counterparty_name=counterparty_name,
-            invoice_number=invoice_number,
-            invoice_date=invoice_date,
-            taxable_base=taxable_base,
-            iva_rate=iva_rate,
-            currency=currency,
-            country_code=country_code,
-            notes=notes,
-            iva_category=resolved_iva_category,
-            operation_type=operation_type,
-            operation_date=operation_date,
-            retention_rate=retention_rate,
-            retention_amount=retention_amount,
-            ports=catalogue_ports,
-        )
-    except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
-            raise refusal from None
-        raise
-
-    payload = _catalogue_invoice_payload(wizard_result.invoice)
-    payload["already_existed"] = wizard_result.already_existed
-    lines = _catalogue_invoice_lines(wizard_result.invoice)
+    wizard_result = submit_invoice_wizard(
+        ctx,
+        kind=kind,
+        counterparty_nif=counterparty_nif,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        currency=currency,
+        country_code=country_code,
+        operation_date=operation_date,
+        notes=notes,
+        iva_category=iva_category,
+        operation_type=operation_type,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        invoice_class=invoice_class,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        recargo_amount=recargo,
+    )
+    invoice = _snapshot_invoice_payload(wizard_result.invoice)
+    payload = CatalogueInvoiceWizardResult.model_validate(
+        {**invoice.model_dump(mode="python"), "already_existed": wizard_result.already_existed}
+    )
+    lines = _catalogue_invoice_lines(invoice)
     lines.append(f"already_existed\t{wizard_result.already_existed}")
 
     notices: list[Notice] = []
     if wizard_result.already_existed:
         noop_message = tr(
             "cli.app.ledger.invoice.wizard_idempotent_noop",
-            invoice_id=wizard_result.invoice.invoice_id,
+            invoice_id=invoice.invoice_id,
         )
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
                 code="ledger.invoice.catalogue.wizard.idempotent_noop",
                 message=noop_message,
-                context={"invoice_id": wizard_result.invoice.invoice_id},
+                context={"invoice_id": invoice.invoice_id},
             ),
         )
         lines.append(noop_message)
-    notices.extend(_euro_value_pending_notices(wizard_result.invoice))
+    notices.extend(_euro_value_pending_notices(invoice, pending=wizard_result.euro_value_pending))
 
     emit_envelope(
         ctx,
         command="ledger.invoice.wizard",
-        result=CatalogueInvoiceWizardResult.model_validate(payload),
+        result=payload,
         lines=lines,
         notices=notices,
     )
 
 
-def _run_invoice_import(
-    file: Path,
-    *,
-    bucket_id: str,
-    kind: InvoiceKind,
-    country: str | None,
-    ports: CatalogueCreationPorts,
-) -> tuple[BulkInvoiceImportSource, BulkInvoiceImportResult, list[str]]:
-    """Read and apply one invoice book through the application bulk service."""
-    try:
-        mapper, mapping_reasons = _invoice_column_role_mapper()
-        source = read_bulk_invoice_import_source(file, mapper=mapper)
-        result = import_invoices_from_rows(
-            source,
-            bucket_id=bucket_id,
-            kind=kind,
-            declared_country=country.strip().upper() if country else None,
-            ports=ports,
-        )
-    except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
-            raise refusal from None
-        raise
-    return source, result, mapping_reasons
-
-
-def _invoice_import_summary_lines(bucket_id: str, result: BulkInvoiceImportResult) -> list[str]:
+def _invoice_import_summary_lines(bucket_id: str, result: InvoiceImportProjection) -> list[str]:
     return [
         f"bucket\t{bucket_id}",
         f"rows\t{result.rows}",
@@ -667,7 +595,7 @@ def _invoice_import_summary_lines(bucket_id: str, result: BulkInvoiceImportResul
     ]
 
 
-def _invoice_import_refusal_lines(result: BulkInvoiceImportResult) -> list[str]:
+def _invoice_import_refusal_lines(result: InvoiceImportProjection) -> list[str]:
     return [
         f"  refused\trow={failure.row_number}\tfield={failure.field}\treason={failure.reason}"
         for failure in result.refused
@@ -675,11 +603,11 @@ def _invoice_import_refusal_lines(result: BulkInvoiceImportResult) -> list[str]:
 
 
 def _invoice_import_unmapped_report(
-    source: BulkInvoiceImportSource,
+    unmapped_column_headers: tuple[str, ...],
 ) -> tuple[str, Notice] | None:
-    if not source.resolution.unmapped_columns:
+    if not unmapped_column_headers:
         return None
-    headers = ", ".join(column.header for column in source.resolution.unmapped_columns)
+    headers = ", ".join(unmapped_column_headers)
     message = tr(
         "cli.app.ledger.invoice.import_unmapped_columns",
         columns=headers,
@@ -690,7 +618,7 @@ def _invoice_import_unmapped_report(
             severity=NoticeSeverity.INFO,
             code="ledger.invoice.catalogue.import.unmapped_columns",
             message=message,
-            context={"columns": headers, "count": str(len(source.resolution.unmapped_columns))},
+            context={"columns": headers, "count": str(len(unmapped_column_headers))},
         ),
     )
 
@@ -720,9 +648,9 @@ def _invoice_import_mapping_reports(mapping_reasons: Sequence[str]) -> tuple[lis
 
 
 def _invoice_import_all_refused_report(
-    result: BulkInvoiceImportResult,
+    result: InvoiceImportProjection,
 ) -> tuple[str, Notice] | None:
-    if not (result.rows > 0 and result.created == 0 and bool(result.refused)):
+    if not (result.rows > 0 and result.created == 0 and result.skipped_duplicate == 0 and bool(result.refused)):
         return None
     message = tr(
         "cli.app.ledger.invoice.import_all_refused",
@@ -738,9 +666,9 @@ def _invoice_import_all_refused_report(
     )
 
 
-def _invoice_import_payload(bucket_id: str, result: BulkInvoiceImportResult) -> dict[str, object]:
+def _invoice_import_payload(result: InvoiceImportProjection) -> dict[str, object]:
     return {
-        "bucket_id": bucket_id,
+        "bucket_id": str(result.profile_id),
         "rows": result.rows,
         "created": result.created,
         "skipped_duplicate": result.skipped_duplicate,
@@ -767,26 +695,16 @@ def invoice_import(
     with its row number and the failing field; the remaining valid rows still
     import.
     """
-    # Every row is validated against dated registry rates, so the whole import
-    # runs under the invocation's lease.
-    authority_operation(ctx)
-    bucket_id = _business_invoice_bucket_id()
-    catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
-    source, result, mapping_reasons = _run_invoice_import(
-        file,
-        bucket_id=bucket_id,
-        kind=kind,
-        country=country,
-        ports=catalogue_ports,
-    )
+    result = submit_invoice_import(ctx, source_path=file, kind=kind, country=country)
+    bucket_id = str(result.profile_id)
     lines = _invoice_import_summary_lines(bucket_id, result)
     lines.extend(_invoice_import_refusal_lines(result))
     notices: list[Notice] = []
-    if unmapped_report := _invoice_import_unmapped_report(source):
+    if unmapped_report := _invoice_import_unmapped_report(result.unmapped_column_headers):
         unmapped_line, unmapped_notice = unmapped_report
         lines.append(unmapped_line)
         notices.append(unmapped_notice)
-    mapping_lines, mapping_notices = _invoice_import_mapping_reports(mapping_reasons)
+    mapping_lines, mapping_notices = _invoice_import_mapping_reports(result.mapping_reasons)
     lines.extend(mapping_lines)
     notices.extend(mapping_notices)
     all_refused_report = _invoice_import_all_refused_report(result)
@@ -797,7 +715,7 @@ def invoice_import(
     emit_envelope(
         ctx,
         command="ledger.invoice.import",
-        result=CatalogueInvoiceImportResult.model_validate(_invoice_import_payload(bucket_id, result)),
+        result=CatalogueInvoiceImportResult.model_validate(_invoice_import_payload(result)),
         lines=lines,
         notices=notices,
     )
@@ -807,53 +725,6 @@ def invoice_import(
     # the refuse-whole behaviour this path exists to remove.
     if all_refused_report:
         raise typer.Exit(code=1)
-
-
-def _invoice_column_role_mapper() -> tuple[Callable[[Sequence[str]], Sequence[FieldRole] | None], list[str]]:
-    """Return the invoice-book column-role mapper, and the reasons it collects.
-
-    Bound here rather than inside the importer so the application layer keeps no
-    dependency on the language-model package: the CLI already reaches it, and the
-    importer only needs something callable. A host that cannot map -- the extra
-    absent, no model configured, an unusable reply -- resolves to ``None``, and
-    every column then reports as unmapped instead of the file being refused.
-
-    The mapping the importer consumes is positional roles and nothing else, so
-    *why* a column ended up unmapped cannot travel with it. The reasons are
-    accumulated in the returned list instead, and the command turns them into
-    notices -- which is the only sanctioned channel for them, and the difference
-    between telling an operator "this column was not imported" and telling them
-    the mapping proposed a role that is not a permitted one.
-    """
-    reasons: list[str] = []
-
-    def resolve(headers: Sequence[str]) -> Sequence[FieldRole] | None:
-        from ...core.errors.hierarchy import CadrumoError
-
-        try:
-            from ...adapters.outbound.llm.column_role_mapping import map_column_roles
-        except ImportError:
-            return None
-        try:
-            proposal = map_column_roles(headers)
-        except CadrumoError:
-            return None
-        reasons.extend(
-            f"column {item.column_index} {item.header!r}: proposed role {item.proposed_role!r} is not a permitted role"
-            for item in proposal.rejected_role_proposals
-        )
-        reasons.extend(
-            f"column {item.column_index} {item.header!r}: role {item.role.value!r} was already taken by column "
-            f"{item.kept_column_index}"
-            for item in proposal.discarded_duplicate_claims
-        )
-        reasons.extend(
-            f"a role {item.proposed_role!r} was claimed for column {item.column_index}, which the table does not carry"
-            for item in proposal.unknown_column_claims
-        )
-        return proposal.roles
-
-    return resolve, reasons
 
 
 def invoice_list(

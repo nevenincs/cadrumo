@@ -28,6 +28,8 @@ while True:
 
 
 def _service(arguments: list[str]) -> None:
+    if sys.platform != "linux":
+        raise RuntimeError("systemd stop fixture requires Linux")
     parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument("--storage-root", required=True)
     parser.add_argument("--storage-identity", required=True)
@@ -89,6 +91,8 @@ def _service(arguments: list[str]) -> None:
 
 
 async def _queue_stop(root: Path) -> None:
+    if sys.platform != "linux":
+        raise RuntimeError("systemd stop fixture requires Linux")
     from cadrumo.adapters.local_runtime.linux_manager import LinuxUserManager
     from cadrumo.adapters.local_runtime.posix import posix_storage_identity
     from cadrumo.application.runtime.management import RuntimeServiceBinding

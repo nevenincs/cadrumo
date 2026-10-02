@@ -21,6 +21,7 @@ from .access_management import (
     RuntimeProfileRecoveryPrepare,
     RuntimeProfileResume,
     RuntimeSessionInventory,
+    RuntimeSessionInventoryTransfer,
 )
 from .contracts import RuntimeByteChannel, RuntimeRefusalCode
 from .enrollment_access import (
@@ -36,6 +37,10 @@ if TYPE_CHECKING:
 
 
 type RuntimeHumanProofMethod = Literal["password", "receipt"]
+
+# One cold profile admission can launch and prepare an isolated worker before
+# its first reply. The same budget covers human proof and protected references.
+PROFILE_ADMISSION_TIMEOUT_SECONDS = 75.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,6 +160,7 @@ class RuntimeReply(
             | RuntimeSecretReady
             | RuntimeProfileStatus
             | RuntimeProfileStatusTransfer
+            | RuntimeSessionInventoryTransfer
             | RuntimeSessionsLocked
             | RuntimeOperationReply
             | RuntimeEnrollmentReply

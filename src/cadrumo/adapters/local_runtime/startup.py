@@ -15,8 +15,8 @@ from ...application.runtime.contracts import (
     RuntimeRefusalError,
 )
 from ...application.runtime.management import RuntimeUserManager
-from ...core.async_cleanup import await_cancellation_complete
-from .framing import VerifiedRuntimeConnection
+from ...core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
+from .framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
 
 
 class RuntimeEndpointConnector(Protocol):
@@ -37,6 +37,19 @@ def _remaining(deadline: float) -> float:
     if not math.isfinite(remaining) or remaining <= 0:
         raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
     return remaining
+
+
+def _carry_cleanup_owner(target: BaseException, source: BaseException) -> None:
+    """Keep failed startup owners visible after cancellation or deadline mapping."""
+    for name in ("async_cleanup_error", "cleanup_error"):
+        failure = source.__dict__.get(name)
+        if isinstance(failure, BaseException) and not isinstance(failure, AsyncResourceCleanupError):
+            failure = failure.__dict__.get("async_cleanup_error")
+        if isinstance(failure, AsyncResourceCleanupError):
+            previous = target.__dict__.get("async_cleanup_error")
+            if isinstance(previous, AsyncResourceCleanupError) and previous is not failure:
+                failure = previous.merged_with(failure)
+            target.__dict__["async_cleanup_error"] = failure
 
 
 class RuntimeLaunchDoor:
@@ -81,9 +94,17 @@ class RuntimeLaunchDoor:
             # closed while the connection thread still uses it.
             async def discard() -> None:
                 connection = await task
-                connection.close()
+                await close_async_resources(
+                    RuntimeTransportCleanup(connection), task_name="runtime-connect-close", primary_error=None
+                )
 
-            await await_cancellation_complete(discard(), task_name="runtime-connect-cleanup", cancellation=cancellation)
+            try:
+                await await_cancellation_complete(
+                    discard(), task_name="runtime-connect-cleanup", cancellation=cancellation
+                )
+            except asyncio.CancelledError as retained:
+                _carry_cleanup_owner(retained, retained)
+                raise
             raise
 
     async def open(self, *, timeout: float = 10) -> VerifiedRuntimeConnection:
@@ -118,5 +139,8 @@ class RuntimeLaunchDoor:
                         if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY:
                             raise
                     await asyncio.sleep(min(0.05, _remaining(deadline)))
-        except TimeoutError:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED) from None
+        except TimeoutError as error:
+            refusal = RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            if isinstance(error.__cause__, asyncio.CancelledError):
+                _carry_cleanup_owner(refusal, error.__cause__)
+            raise refusal from error

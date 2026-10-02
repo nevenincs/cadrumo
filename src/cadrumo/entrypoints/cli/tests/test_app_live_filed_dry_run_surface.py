@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.live.remote_state_models import BulkFiledDataCaptureReport
+from ....application.live.remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
 from .._app_live_filed_payloads import FiledCaptureResult
 from .._app_live_rendering import _filed_capture_lines
 
@@ -69,6 +69,17 @@ def test_dry_run_defaults_false_so_a_silent_omission_never_reads_as_a_preview() 
 def test_text_mode_agrees_with_the_result_field(dry_run: bool) -> None:
     """Text and JSON must not disagree about whether anything was written."""
     report = BulkFiledDataCaptureReport(
+        pair_outcomes=(
+            FiledCapturePairOutcome(
+                modelo="303",
+                year=2025,
+                walk_attempted=True,
+                walk_completed=True,
+                row_count=0,
+                reached_count=0,
+                captured_count=0,
+            ),
+        ),
         output_root="filed-declarations",
         modelos=("303",),
         year_from=2025,

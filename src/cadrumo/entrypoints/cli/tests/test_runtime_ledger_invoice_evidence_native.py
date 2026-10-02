@@ -12,12 +12,12 @@ from click.testing import Result
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....tests.cli_envelope import require_error_document, unwrap_cli_result
-from ._runtime_profile_cli_fixture import (
+from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )
-from .cli_runner import invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,

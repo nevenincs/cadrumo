@@ -28,6 +28,14 @@ class ReviewPackageSigningKeypairCapability(Protocol):
         ...
 
 
+class ReviewPackageSigningKeypairReader(Protocol):
+    """Read an existing bucket signing keypair without creating one."""
+
+    def load_keypair(self, *, bucket_id: str) -> ReviewPackageSigningKeypair | None:
+        """Return the existing bucket keypair, or ``None`` when absent."""
+        ...
+
+
 class ReviewPackageSigningKeypairCapabilityFactory(Protocol):
     """Construct a signing-keypair capability for one profile bucket."""
 
@@ -39,4 +47,5 @@ class ReviewPackageSigningKeypairCapabilityFactory(Protocol):
 __all__ = [
     "ReviewPackageSigningKeypairCapability",
     "ReviewPackageSigningKeypairCapabilityFactory",
+    "ReviewPackageSigningKeypairReader",
 ]

@@ -240,6 +240,42 @@ class _ReceiptResumingPort:
         )
         return _ResumedOutcome(resumed=True, refusal=None, record=record), bytearray(self._dek)
 
+    def borrow_acceleration_receipt_key(
+        self,
+        *,
+        storage_root: Path,
+        profile_id: UUID,
+        custody_generation: int,
+        dek_epoch: str,
+        now: datetime,
+    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
+        return self._real.borrow_acceleration_receipt_key(
+            storage_root=storage_root,
+            profile_id=profile_id,
+            custody_generation=custody_generation,
+            dek_epoch=dek_epoch,
+            now=now,
+        )
+
+    def resume_acceleration_receipt_with_key(
+        self,
+        *,
+        storage_root: Path,
+        profile_id: UUID,
+        custody_generation: int,
+        dek_epoch: str,
+        now: datetime,
+        receipt_key: bytearray,
+    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
+        return self._real.resume_acceleration_receipt_with_key(
+            storage_root=storage_root,
+            profile_id=profile_id,
+            custody_generation=custody_generation,
+            dek_epoch=dek_epoch,
+            now=now,
+            receipt_key=receipt_key,
+        )
+
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         self._real.delete_acceleration_receipt(storage_root=storage_root, profile_id=profile_id)
 

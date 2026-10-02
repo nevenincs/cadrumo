@@ -19,8 +19,8 @@ from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....tests.cli_envelope import unwrap_cli_result
 from ..config import runtime_auth_configure as configure_bridge
 from ..runtime_registered_operation import RegisteredOperationCompletion, run_registered_operation
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, RuntimeFailureObservation, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, RuntimeFailureObservation, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

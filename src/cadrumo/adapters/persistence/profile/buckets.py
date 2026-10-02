@@ -96,13 +96,20 @@ class BucketEventHistoryRepository:
     read path stays separate).
     """
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        objects: SecureObjectRepository | None = None,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> None:
         """Bind to the active profile bucket's secure-object store, or an injected one.
 
         Args:
             objects: Optional injected secure-object repository (testing seam);
                 the active-bucket store is resolved at runtime when ``None``.
+            mutation_writer: Optional admission callback around the actual write.
         """
+        self._mutation_writer = mutation_writer
         if objects is not None:
             self._objects = objects
         else:
@@ -221,7 +228,16 @@ class BucketEventHistoryRepository:
                 :class:`~domain.buckets.event.BucketEventHistoryCatalogue` to
                 persist.
         """
-        self._objects.save_many((self.to_secure_object_write(catalogue),))
+        self._write_many((self.to_secure_object_write(catalogue),))
+
+    def _write_many(self, writes: tuple[SecureObjectWrite, ...]) -> None:
+        def write() -> None:
+            self._objects.save_many(writes)
+
+        if self._mutation_writer is None:
+            write()
+        else:
+            self._mutation_writer(write)
 
     def append_guarded(
         self,
@@ -262,7 +278,7 @@ class BucketEventHistoryRepository:
             current, revision_id = self.load_revisioned()
             updated = appender(current)
             try:
-                self._objects.save_many(
+                self._write_many(
                     (self.to_secure_object_write(updated, expected_revision_id=revision_id),),
                 )
             except SecureObjectRevisionConflictError as exc:

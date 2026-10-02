@@ -1260,6 +1260,9 @@ tui:
     target_key: Célkulcs
     title: Automatizált hozzáférés
     unattended: Felügyelet nélküli
+    unattended_notice: Érvényes felügyelet nélküli jogosultság esetén ez a telepítés
+      a felhasználó kijelentkezése után is feloldhatja a profilt. A zárolási és visszavonási
+      szabályok továbbra is érvényesek.
     unavailable: Az automatizálási jogosultságok listája nem érhető el. Az újrapróbálkozáshoz
       frissítse.
   automation_request:
@@ -2308,6 +2311,8 @@ tui:
     busy: Feldolgozás…
     close: Bezárás
     completed: Befejezve.
+    denial_acknowledgement: 'Hozzáférés megtagadva: {access_denied} · A hitelesítő
+      adatok eltávolítása függőben: {cleanup_pending}'
     deny_all: Minden automatizált hozzáférés visszavonása
     deny_grant: Jogosultság visszavonása
     deny_key: Kulcs visszavonása
@@ -2322,8 +2327,12 @@ tui:
     resume_grants: Újraaktiválandó jogosultságok UUID-jai
     resume_password: Profiljelszó
     revoke_session: Munkamenet visszavonása
+    session_details: 'Munkamenet: {session_id} | Ügyfél: {client_id} | Szülőmunkamenet:
+      {parent_session_id} | Jogosultság: {grant_id} | Kulcs: {key_id} | Típus: {kind}
+      | Állapot: {state} | Lejárat: {expires_at}'
     sessions: Munkamenetek
     sessions_empty: Nincsenek aktuális munkamenetek.
+    sessions_locked: 'Zárolt munkamenetek: {session_ids}'
     title: Profilhozzáférés
     view_automation: Automatizált hozzáférés megtekintése
   runtime_login:

@@ -10,6 +10,7 @@ from typing import Annotated, Literal, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, model_validator
 
 from ....core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
@@ -487,12 +488,22 @@ class OperationLeaseRepository(Protocol):
         ...
 
 
+def serialize_operation_operand(operand: BaseModel) -> bytes:
+    """Return the exact typed JSON bytes addressed by secure-reference digests."""
+    return operand.model_dump_json(
+        by_alias=True,
+        exclude_defaults=False,
+        exclude_none=False,
+        exclude_unset=False,
+    ).encode(UTF_8_ENCODING)
+
+
 @runtime_checkable
 class OperationSecureReferenceStore(Protocol):
     """Store and resolve confidential operands outside credential-free journals."""
 
     async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest:
-        """Store one typed confidential operand and return its reference."""
+        """Store one confidential operand by the SHA-256 of its canonical serialized bytes."""
         ...
 
     async def resolve[OperandT: BaseModel](
@@ -522,4 +533,5 @@ __all__ = [
     "OperationRecoveryInventoryPage",
     "OperationRecoveryInventoryReader",
     "OperationSecureReferenceStore",
+    "serialize_operation_operand",
 ]

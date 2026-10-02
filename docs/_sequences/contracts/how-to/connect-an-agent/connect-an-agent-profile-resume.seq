@@ -1,0 +1,6 @@
+@step Resume human access without reactivating grants.
+@static aeat config profile resume
+@blocked interactive-tty Requires the reader's suspended profile and fresh password entry through the hidden terminal prompt.
+@step Resume human access and explicitly reactivate one selected grant.
+@static aeat config profile resume --grant GRANT_UUID
+@blocked interactive-tty Requires fresh hidden password entry and an actual grant ID deliberately selected for reactivation.

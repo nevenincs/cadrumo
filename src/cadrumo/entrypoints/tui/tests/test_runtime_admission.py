@@ -2,21 +2,47 @@
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import AbstractAsyncContextManager, AbstractContextManager, nullcontext
 from datetime import UTC, datetime, timedelta
+from functools import partial
+from types import TracebackType
 from typing import override
 from uuid import UUID, uuid4
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Input, Select
+from textual.widgets import Button, Input, Select, Static
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime.management_status import (
+    RuntimeListenerState,
+    RuntimeManagementSnapshot,
+    RuntimeManagerAvailability,
+)
+from cadrumo.entrypoints.tests.test_runtime_management import StopFixture
+from cadrumo.entrypoints.tui import runtime_management
+from cadrumo.entrypoints.tui.runtime_management import RuntimeManagementScreen, RuntimeStopConfirmationScreen
+
+from ....adapters.local_runtime.framing import RuntimeTransportCleanup
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.profile_access import RuntimeProfileStatus
 from ....application.user_profile.access_contracts import AccessScope, AuthorityState, Availability, ProfileAccessStatus
-from ....application.user_profile.login_interaction import ProfileLoginChoice
+from ....application.user_profile.automation_operations import (
+    build_automation_operation_definitions,
+    build_automation_operation_registrations,
+)
+from ....application.user_profile.login_interaction import (
+    ProfileLoginChoice,
+    ProfileLoginInventoryState,
+    ProfileLoginInventoryV1,
+)
+from ....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ....core.i18n.render import tr
+from .. import installed_session
 from ..runtime_admission import runtime_login_session
-from ..secret.runtime_login import RuntimeLoginMethod
+from ..secret.runtime_login import RuntimeLoginHandoff, RuntimeLoginMethod
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -201,3 +227,239 @@ async def test_stored_reference_handoff_stays_owned_through_restricted_session_s
         assert handoff.status.status.grant_valid and client.closed == 0
     assert calls == [(profile_id, reference)]
     assert client.closed == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("body", ["normal", "failure", "cancellation"])
+async def test_accepted_handoff_failed_close_retains_owner_and_exact_body(body: str) -> None:
+    profile_id = uuid4()
+
+    class FailingClient(_OwnedClient):
+        def __init__(self) -> None:
+            super().__init__(profile_id)
+            self.attempts = 0
+            self.refuse_close = True
+            self.close_error = OSError("synthetic persistent native release failure")
+
+        @override
+        def close(self) -> None:
+            self.attempts += 1
+            if self.refuse_close:
+                raise self.close_error
+            super().close()
+
+    client = FailingClient()
+    primary = (
+        asyncio.CancelledError("synthetic frontend cancellation")
+        if body == "cancellation"
+        else _RootFailureError("synthetic frontend body failure")
+        if body == "failure"
+        else None
+    )
+
+    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+        assert selected == profile_id
+        return client
+
+    async def sign_in(pilot: Pilot[object]) -> None:
+        await pilot.pause()
+        pilot.app.screen.query_one("#runtime-login-credential", Input).value = "synthetic-proof"
+        await pilot.click("#runtime-login-submit")
+
+    expected = type(primary) if primary is not None else AsyncResourceCleanupError
+    with pytest.raises(expected) as caught:
+        async with runtime_login_session(
+            choices=(ProfileLoginChoice(profile_id=str(profile_id), label="Owned profile"),),
+            open_client=open_client,
+            headless=True,
+            auto_pilot=sign_in,
+        ) as handoff:
+            assert handoff is not None and handoff.client is client
+            assert handoff.profile_id == profile_id and client.closed == client.attempts == 0
+            if primary is not None:
+                raise primary
+    if primary is not None:
+        assert caught.value is primary
+        cleanup = primary.__dict__.get("async_cleanup_error")
+        if not isinstance(cleanup, AsyncResourceCleanupError):
+            cleanup = primary.__dict__.get("cleanup_error")
+    else:
+        cleanup = caught.value
+    assert isinstance(cleanup, AsyncResourceCleanupError)
+    assert client.attempts == 1 and client.closed == 0
+    with pytest.raises(AsyncResourceCleanupError) as persistent:
+        await cleanup.retry_cleanup()
+    assert client.attempts == 2 and client.closed == 0
+    client.refuse_close = False
+    await persistent.value.retry_cleanup()
+    assert client.attempts == 3 and client.closed == 1
+    await cleanup.retry_cleanup()
+    await persistent.value.retry_cleanup()
+    assert client.attempts == 3 and client.closed == 1
+
+
+@pytest.mark.parametrize("frontend_refusal", [False, True])
+@pytest.mark.parametrize("attachment", [None, "async_cleanup_error", "cleanup_error"])
+def test_installed_exit_mapping_preserves_cleanup_bearing_refusal(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], frontend_refusal: bool, attachment: str | None
+) -> None:
+    profile_id = uuid4()
+    primary = (
+        RuntimeFrontendRefusedError("authentication_required")
+        if frontend_refusal
+        else RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+    )
+
+    class NativeRelease:
+        def __init__(self) -> None:
+            self.attempts = 0
+            self.refuse_close = True
+
+        def close(self) -> None:
+            self.attempts += 1
+            if self.refuse_close:
+                raise OSError("synthetic retained native owner")
+
+    native = NativeRelease()
+    owner = RuntimeTransportCleanup(native)
+    if attachment is not None:
+
+        async def attach_cleanup() -> None:
+            try:
+                raise primary
+            finally:
+                await close_async_resources(owner, task_name="installed-tui-fault", primary_error=primary)
+
+        with pytest.raises(type(primary)) as original:
+            asyncio.run(attach_cleanup())
+        assert original.value is primary
+        cleanup = primary.__dict__.pop("async_cleanup_error")
+        assert isinstance(cleanup, AsyncResourceCleanupError)
+        primary.__dict__[attachment] = cleanup
+
+    class RefusingLogin(AbstractAsyncContextManager[RuntimeLoginHandoff | None]):
+        @override
+        async def __aenter__(self) -> RuntimeLoginHandoff | None:
+            raise primary
+
+        @override
+        async def __aexit__(
+            self, exc_type: type[BaseException] | None, exc: BaseException | None, traceback: TracebackType | None
+        ) -> None:
+            return None
+
+    def refuse_login(**_options: object) -> RefusingLogin:
+        return RefusingLogin()
+
+    def bootstrap_ports() -> AbstractContextManager[None]:
+        return nullcontext()
+
+    def release_bootstrap() -> None:
+        return None
+
+    def inventory() -> ProfileLoginInventoryV1:
+        return ProfileLoginInventoryV1(
+            state=ProfileLoginInventoryState.RECOGNIZED,
+            choices=(ProfileLoginChoice(profile_id=str(profile_id), label="Synthetic profile"),),
+            preselected_profile_id=str(profile_id),
+        )
+
+    definitions = build_automation_operation_definitions()
+    registry = OperationRegistry(
+        definitions=definitions,
+        public_registrations=tuple(
+            sorted(build_automation_operation_registrations(definitions), key=lambda row: row.contract.definition_id)
+        ),
+    )
+
+    def operation_registry() -> OperationRegistry:
+        return registry
+
+    monkeypatch.setattr(installed_session, "profile_adapter_composition", bootstrap_ports)
+    monkeypatch.setattr(installed_session, "close_active_profile_record_session", release_bootstrap)
+    monkeypatch.setattr(installed_session, "close_active_bucket_session", release_bootstrap)
+    monkeypatch.setattr(installed_session, "observe_profile_login_inventory", inventory)
+    monkeypatch.setattr(installed_session, "build_production_operation_registry", operation_registry)
+    monkeypatch.setattr(installed_session, "runtime_login_session", refuse_login)
+    if attachment is None:
+        assert installed_session.run_installed_workbench_session() == installed_session.SESSION_INVENTORY_UNAVAILABLE
+        assert capsys.readouterr().err.strip() == (
+            primary.reason if isinstance(primary, RuntimeFrontendRefusedError) else primary.reason.value
+        )
+        assert native.attempts == 0
+    else:
+        with pytest.raises(type(primary)) as caught:
+            installed_session.run_installed_workbench_session()
+        assert caught.value is primary and native.attempts == 1
+        assert capsys.readouterr().err == ""
+        retained = primary.__dict__.get(attachment)
+        assert isinstance(retained, AsyncResourceCleanupError)
+        native.refuse_close = False
+        asyncio.run(retained.retry_cleanup())
+        asyncio.run(retained.retry_cleanup())
+        assert native.attempts == 2 and owner.released
+
+
+@pytest.mark.asyncio
+async def test_prelogin_installed_runner_retains_stop_cleanup_after_modal_close(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Installed scope exit retains failed stop release after its modal disappears."""
+    fixture = StopFixture(channel_failures=3)
+    monkeypatch.setattr(runtime_management, "preview_installed_runtime_stop", fixture.open)
+
+    async def read() -> RuntimeManagementSnapshot:
+        return RuntimeManagementSnapshot(
+            listener=RuntimeListenerState.READY,
+            manager_availability=RuntimeManagerAvailability.UNAVAILABLE,
+        )
+
+    monkeypatch.setattr(runtime_management, "RuntimeManagementScreen", partial(RuntimeManagementScreen, reader=read))
+    calls = 0
+
+    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        nonlocal calls
+        calls += 1
+        raise AssertionError("runtime status must not open a profile client")
+
+    async def drive(pilot: Pilot[object]) -> None:
+        async with asyncio.timeout(10):
+            pilot.app.screen.query_one("#runtime-login-runtime-status", Button).press()
+            while not isinstance(pilot.app.screen, RuntimeManagementScreen):
+                await pilot.pause(0.02)
+            screen = pilot.app.screen
+            while screen._busy or tr("tui.runtime_management.listener.ready") not in str(
+                screen.query_one("#runtime-management-listener", Static).content
+            ):
+                await pilot.pause(0.02)
+            screen.query_one("#runtime-management-stop", Button).press()
+            while not isinstance(pilot.app.screen, RuntimeStopConfirmationScreen):
+                await pilot.pause(0.02)
+            pilot.app.screen.query_one("#runtime-stop-confirm", Button).press()
+            while screen._busy or fixture.channel.close_calls != 1:
+                await pilot.pause(0.02)
+            assert fixture.consent.accepted is not None
+            assert "synthetic private" not in str(screen.query_one("#runtime-management-status", Static).content)
+            screen.action_close()
+
+            def modal_closed() -> bool:
+                return screen not in pilot.app.screen_stack and fixture.channel.close_calls == 2
+
+            while not modal_closed():
+                await pilot.pause(0.02)
+            pilot.app.exit()
+
+    with pytest.raises(AsyncResourceCleanupError) as failed:
+        async with runtime_login_session(
+            choices=(ProfileLoginChoice(profile_id=str(uuid4()), label="Unused profile"),),
+            open_client=open_client,
+            headless=True,
+            auto_pilot=drive,
+        ):
+            pytest.fail("failed native cleanup must prevent a successful login-scope exit")
+    assert fixture.channel.close_calls == 3 and fixture.endpoint.close_calls == 1
+    assert fixture.channel.confirmations == 1
+    await failed.value.retry_cleanup()
+    assert fixture.channel.close_calls == 4 and fixture.endpoint.close_calls == 1
+    assert fixture.consent.released and fixture.channel.confirmations == 1
+    assert calls == 0

@@ -17,8 +17,8 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ._modelo_work_ux_support import operator_profile_facts
-from ._runtime_profile_cli_fixture import native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

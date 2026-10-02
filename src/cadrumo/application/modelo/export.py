@@ -39,7 +39,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -1014,6 +1014,7 @@ def _persist_exported_draft(
     export_ports: ModeloExportPorts,
     schema_provider: RegistrySchemaAccessor,
     operation: PinnedAuthorityOperation,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ModeloExportResult:
     resolved_result_disposition = resolve_modelo_result_disposition(
         work_unit=work_unit,
@@ -1070,6 +1071,7 @@ def _persist_exported_draft(
             prior_domiciliation_election=prior_domiciliation_election.election,
             product_software_identity=software_identity,
             schema_provider=schema_provider,
+            mutation_writer=mutation_writer,
         )
         event = _emit_export_event(
             command=command,
@@ -1084,7 +1086,10 @@ def _persist_exported_draft(
         # Defence in depth: the sink re-checks the path before staging and
         # translates a destination that changed underneath it (a TOCTOU race,
         # a file that appeared after the check) into the same typed refusal.
-        sink.publish(staged)
+        if mutation_writer is None:
+            sink.publish(staged)
+        else:
+            mutation_writer(lambda: sink.publish(staged))
 
     # The receipt below was measured against the staging file, and the result and
     # the durable MODELO_EXPORTED event both publish those numbers against
@@ -1160,6 +1165,7 @@ def _write_export_staging(
     prior_domiciliation_election: PriorDomiciliationElection,
     product_software_identity: AeatProductSoftwareIdentity | None,
     schema_provider: RegistrySchemaAccessor,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> DeclaracionExportResult:
     try:
         return export_draft(
@@ -1170,6 +1176,7 @@ def _write_export_staging(
             prior_domiciliation_election=prior_domiciliation_election,
             product_software_identity=product_software_identity,
             schema_provider=schema_provider,
+            mutation_writer=mutation_writer,
         )
     except FilingExportError as exc:
         # Surface the underlying FilingExportError cause in the typed context
@@ -1546,6 +1553,7 @@ def export_modelo_revision(
     operation: PinnedAuthorityOperation,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     clock: datetime | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ModeloExportResult:
     """Export a verified-complete or filed calculation revision to disk.
 
@@ -1640,6 +1648,7 @@ def export_modelo_revision(
         export_ports=export_ports,
         schema_provider=schema_provider,
         operation=operation,
+        mutation_writer=mutation_writer,
     )
 
 

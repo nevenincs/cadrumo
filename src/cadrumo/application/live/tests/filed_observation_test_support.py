@@ -377,7 +377,9 @@ class _UnavailableIvaRemoteStatePort:
         """Accept no remote-state manifest because no remote state is read."""
         del manifest
 
-    async def active_verified_session(self, *, operation: str, target_url: str | None) -> tuple[AeatSession, Settings]:
+    async def active_verified_session(
+        self, *, operation: str, target_url: str | None, **_kwargs: object
+    ) -> tuple[AeatSession, Settings]:
         """Refuse before any live session or network can be requested."""
         del operation, target_url
         raise RuntimeError("test bundle does not provide live IVA access")
@@ -388,6 +390,7 @@ class _UnavailableIvaRemoteStatePort:
         *,
         operation: str,
         target_url: str | None,
+        **_kwargs: object,
     ) -> AuthenticatedAeatSessionResult:
         """Refuse before any live authentication can be requested."""
         del settings, operation, target_url
@@ -402,6 +405,7 @@ class _UnavailableIvaRemoteStatePort:
         year_to: int,
         output_root: Path,
         progress_context: dict[str, object] | None,
+        **_kwargs: object,
     ) -> IvaCompensationHistoryCaptureReport:
         """Refuse direct IVA history capture in application tests."""
         del session, settings, year_from, year_to, output_root, progress_context
@@ -418,6 +422,7 @@ class _UnavailableIvaRemoteStatePort:
         output_root: Path | None,
         progress_context: dict[str, object] | None,
         effect_guard: FiledEffectGuard | None = None,
+        **_kwargs: object,
     ) -> IvaWalletCaptureReport:
         """Refuse direct IVA wallet capture in application tests."""
         del session, settings, target_year, target_period, taxpayer_nif, output_root, progress_context, effect_guard
@@ -485,6 +490,7 @@ class UnavailableFiledDataCapturePort:
         period: Period,
         artefact_sink: FiledArtefactSink | None = None,
         operation: str,
+        **_kwargs: object,
     ) -> tuple[FiledObservationProtocol, ...]:
         """Return no source rows because source capture is outside these tests."""
         del revision, filing_year, period, artefact_sink, operation
@@ -497,6 +503,7 @@ class UnavailableFiledDataCapturePort:
         filing_year: int,
         period: Period,
         operation: str,
+        **_kwargs: object,
     ):
         """Refuse staged source capture in this unavailable test bundle."""
         del revision, filing_year, period, operation
@@ -543,6 +550,7 @@ class _UnavailableFilingReconciliation:
         *,
         actor: str,
         clock: datetime,
+        **_kwargs: object,
     ) -> FilingReconciliationResult:
         """Refuse rather than fabricate a chain decision on the test-only surface."""
         del entry, actor, clock

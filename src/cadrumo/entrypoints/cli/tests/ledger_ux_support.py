@@ -14,8 +14,8 @@ from ....adapters.persistence.storage.master_key.active_session import close_act
 from ....core.config import override_settings
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ._ledger_validation_support import open_bucket_session
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
 

@@ -15,6 +15,7 @@ from typing import cast
 import pytest
 
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import lease, worker_profiles
+from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import activate_session
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
@@ -71,9 +72,12 @@ def test_runtime_drain_contains_all_workers_and_preserves_created_intent(tmp_pat
                 )
                 admitted = lease(identity)
                 sessions.append(admitted)
-                owner.activate(admitted, bytearray(key))
+                with owner.prepare_api_admission(admitted.connection_id):
+                    owner.activate(admitted, bytearray(key))
                 worker = owner.operation_worker()
-                handle = worker._process._handle
+                process = worker._process
+                assert isinstance(process, WindowsOwnedProcess)
+                handle = process._handle
                 assert handle is not None
                 handles.append(
                     win32api.DuplicateHandle(
@@ -86,7 +90,11 @@ def test_runtime_drain_contains_all_workers_and_preserves_created_intent(tmp_pat
                     )
                 )
                 owners.append(owner)
-                host = SimpleNamespace(store=SimpleNamespace(binding=identity.binding), owner=owner)
+                host = SimpleNamespace(
+                    store=SimpleNamespace(binding=identity.binding),
+                    owner=owner,
+                    approvals=SimpleNamespace(close=lambda: 0),
+                )
                 profiles._profiles[identity.binding.profile_id] = cast("RuntimeProfileHost", host)
             identity, key = identities[0]
             opened = datetime.now(UTC)
@@ -121,6 +129,11 @@ def test_runtime_drain_contains_all_workers_and_preserves_created_intent(tmp_pat
             result = profiles.drain(deadline=time.monotonic() + 15)
             assert len(result.receipts) == 2
             assert result.missing_receipts == result.uncontained == result.unsettled == ()
+            # A settled retry reports the original native receipts; it cannot
+            # turn an emptied host map into a new empty shutdown success.
+            assert profiles.drain(deadline=time.monotonic() + 1) == result
+            profiles.close()
+            assert profiles.drain(deadline=time.monotonic() + 1) == result
             assert stop.is_set()
             assert any(submitted.receipt.operation_id in receipt.recovery_required for receipt in result.receipts)
             for handle in handles:

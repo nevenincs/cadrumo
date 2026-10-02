@@ -365,9 +365,10 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
     )
 
 
-async def _host_operation_handoff(request: AeatSyncOperationRequestV1) -> None:
+async def _host_operation_handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
     """Stand in for the installed host's operation door; a fixture never runs the operation."""
     del request
+    raise AssertionError("workbench fixture must not execute an operation")
 
 
 def _aeat_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App[Any]:

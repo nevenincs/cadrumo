@@ -29,6 +29,7 @@ from ...application.modelo.query_read_operation import (
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.state_projection import ProjectionModeloBindingRequirement, ProjectionModeloReadiness
 from ...core.aggregation import BindingSourceKind
+from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
 from .runtime_profile_binding import require_profile_client
@@ -89,6 +90,8 @@ def _submit[ProjectionT: BaseModel](
 def read_modelo_bindings_list(
     ctx: typer.Context,
     request: ModeloBindingsListRequest,
+    *,
+    expected_authority_generation: ContentDigest,
 ) -> ModeloBindingsListProjection:
     """Return one complete listing under its registered read receipt."""
     completed = _submit(
@@ -100,6 +103,7 @@ def read_modelo_bindings_list(
     result = completed.projection
     if (
         result.profile_id != request.profile_id
+        or result.authority_generation != expected_authority_generation
         or result.modelo_filter != request.modelo
         or result.year_filter != request.year
         or result.period_filter != request.period_code
@@ -115,6 +119,8 @@ def read_modelo_bindings_list(
 def read_modelo_bindings_resolve(
     ctx: typer.Context,
     request: ModeloBindingsResolveRequest,
+    *,
+    expected_authority_generation: ContentDigest,
 ) -> ModeloBindingsResolveProjection:
     """Return one unsaved preview with its exact target and override count."""
     completed = _submit(
@@ -126,6 +132,7 @@ def read_modelo_bindings_resolve(
     result = completed.projection
     if (
         result.profile_id != request.profile_id
+        or result.authority_generation != expected_authority_generation
         or result.modelo != request.modelo
         or result.filing_year != request.period.filing_year
         or result.period != request.period.code
@@ -136,7 +143,12 @@ def read_modelo_bindings_resolve(
     return result
 
 
-def read_modelo_requires(ctx: typer.Context, request: ModeloRequiresRequest) -> ModeloRequiresProjection:
+def read_modelo_requires(
+    ctx: typer.Context,
+    request: ModeloRequiresRequest,
+    *,
+    expected_authority_generation: ContentDigest,
+) -> ModeloRequiresProjection:
     """Return all canonical inventory sections for one exact period."""
     completed = _submit(
         ctx,
@@ -151,6 +163,7 @@ def read_modelo_requires(ctx: typer.Context, request: ModeloRequiresRequest) -> 
         or result.filing_year != request.period.filing_year
         or result.period != request.period.code
         or result.language is not request.language
+        or result.authority_generation != expected_authority_generation
     ):
         _invalid(completed)
     return result
@@ -159,6 +172,8 @@ def read_modelo_requires(ctx: typer.Context, request: ModeloRequiresRequest) -> 
 def read_modelo_readiness(
     ctx: typer.Context,
     request: ModeloReadinessOperationRequest,
+    *,
+    expected_authority_generation: ContentDigest,
 ) -> ModeloReadinessProjection:
     """Return the canonical readiness axes without a second service read."""
     completed = _submit(
@@ -170,6 +185,7 @@ def read_modelo_readiness(
     result = completed.projection
     if (
         result.profile_id != request.profile_id
+        or result.authority_generation != expected_authority_generation
         or result.modelo != request.modelo
         or result.filing_year != request.filing_year
         or result.language is not request.language
@@ -221,7 +237,7 @@ def to_data_inventory_checklist(result: ModeloRequiresProjection) -> DataInvento
 def to_modelo_readiness_report(result: ModeloReadinessProjection) -> ProjectionModeloReadiness:
     """Restore the existing notice and text renderer's typed report."""
     return ProjectionModeloReadiness.model_validate(
-        result.model_dump(mode="python", exclude={"result_version", "operation", "language"})
+        result.model_dump(mode="python", exclude={"result_version", "operation", "language", "authority_generation"})
         | {
             "profile_id": str(result.profile_id),
             "period": result.period.to_period(),

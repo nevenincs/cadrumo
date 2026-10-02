@@ -2,16 +2,23 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+import runpy
 import sys
 from pathlib import Path
 
 import pytest
 
+from ....adapters.local_runtime.framing import RuntimeTransportCleanup
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ....tests.audited_process import run_audited_process
+from .. import launcher
 from ..launcher import main
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.hex_entrypoint]
 
 _CLI_PACKAGE = "cadrumo.entrypoints.cli"
 _CHILD_IMPORT_PROBE = """\
@@ -46,6 +53,7 @@ def _cli_modules_a_fresh_process_loads(*modules: str) -> list[str]:
 
 
 @pytest.mark.hex_entrypoint
+@pytest.mark.integration
 def test_the_installed_session_never_pulls_the_cli_into_the_child_process() -> None:
     """Composing the whole workbench must not import the sibling entrypoint.
 
@@ -60,6 +68,7 @@ def test_the_installed_session_never_pulls_the_cli_into_the_child_process() -> N
     assert _cli_modules_a_fresh_process_loads(*child_modules) == []
 
 
+@pytest.mark.integration
 def test_the_child_import_probe_reports_a_cli_import_when_one_happens() -> None:
     """The control: the same probe, handed a CLI module, reports it.
 
@@ -70,6 +79,7 @@ def test_the_child_import_probe_reports_a_cli_import_when_one_happens() -> None:
 
 
 @pytest.mark.hex_entrypoint
+@pytest.mark.integration
 def test_an_empty_profile_store_ends_the_headless_session_without_creating_one(tmp_path: Path) -> None:
     """The artifact proves it starts without inventing an operator's profile.
 
@@ -83,3 +93,45 @@ def test_an_empty_profile_store_ends_the_headless_session_without_creating_one(t
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         assert main(headless=True) == SESSION_COMPLETED
         assert not list(Path(storage_root).glob("**/*.capsule"))
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("kind", ["cleanup", "runtime", "frontend"])
+def test_module_cleanup_refusal_exits_without_disclosing_native_failure(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], kind: str
+) -> None:
+    sentinel = "UNIQUE-SYNTHETIC-NATIVE-CLOSE-FAILURE-DO-NOT-DISCLOSE"
+
+    class NativeRelease:
+        def close(self) -> None:
+            raise OSError(sentinel)
+
+    owner = RuntimeTransportCleanup(NativeRelease())
+
+    async def fail_cleanup() -> None:
+        await close_async_resources(owner, task_name="tui-module-fault", primary_error=None)
+
+    with pytest.raises(AsyncResourceCleanupError) as retained:
+        asyncio.run(fail_cleanup())
+    primary = (
+        RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        if kind == "runtime"
+        else RuntimeFrontendRefusedError("authentication_required")
+        if kind == "frontend"
+        else retained.value
+    )
+    if not isinstance(primary, AsyncResourceCleanupError):
+        primary.__dict__["async_cleanup_error"] = retained.value
+
+    def refuse_module(_arguments: list[str]) -> int:
+        raise primary
+
+    monkeypatch.setattr(launcher, "run_module", refuse_module)
+    monkeypatch.setattr(sys, "argv", ["cadrumo-tui"])
+    monkeypatch.setenv("PYDANTIC_DISABLE_PLUGINS", "__all__")
+    with pytest.raises(SystemExit) as exited:
+        runpy.run_module("cadrumo.entrypoints.tui", run_name="__main__", alter_sys=False)
+    assert exited.value.code == 1
+    output = capsys.readouterr()
+    assert output.out == "" and output.err.strip() == "runtime_cleanup_incomplete"
+    assert sentinel not in output.out + output.err

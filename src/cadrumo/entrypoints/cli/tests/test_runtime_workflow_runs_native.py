@@ -44,9 +44,9 @@ from ....domain.deadlines.models import ObligationStatus
 from ....tests.cli_envelope import require_error_document, unwrap_cli_result
 from ..errors import CliRefusedBoundaryError
 from ..runtime_registered_operation import run_registered_operation
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

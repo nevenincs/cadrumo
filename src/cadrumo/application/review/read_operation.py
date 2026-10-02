@@ -221,10 +221,7 @@ def _validate_queue_scope(
     accepted_source_kinds = frozenset(value.strip() for value in request.source_kinds if value.strip())
     if any(
         (accepted_kinds and row.kind not in accepted_kinds)
-        or (
-            accepted_source_kinds
-            and (row.source_kind is None or row.source_kind not in accepted_source_kinds)
-        )
+        or (accepted_source_kinds and (row.source_kind is None or row.source_kind not in accepted_source_kinds))
         or (request.modelo is not None and row.modelo != request.modelo)
         for row in rows
     ):

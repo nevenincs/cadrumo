@@ -73,6 +73,7 @@ class EvidenceAttachmentIngestRequest:
     mime_type: str
     captured_at: datetime
     actor: str
+    expected_content_digest: ContentDigest | None = None
 
 
 class EvidenceAttachmentIngestorProtocol(Protocol):

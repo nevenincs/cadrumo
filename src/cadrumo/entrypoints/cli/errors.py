@@ -57,7 +57,7 @@ from ...core.errors.error_codes import (
     render_error_json,
     render_error_text,
 )
-from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
+from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError, RecordedRegisteredError
 from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
 from ...domain.user_profile.errors import StoredProfileDriftError
@@ -518,6 +518,10 @@ class CliRefusedBoundaryError(CadrumoError):
     the structured payload contract intentionally does not expose them
     on stdout.
     """
+
+
+class CliRecordedOperationError(CliRefusedBoundaryError, RecordedRegisteredError):
+    """Preserve a supervised operation's declared code at the shared CLI boundary."""
 
 
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:

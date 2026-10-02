@@ -42,7 +42,7 @@ from ..ledger.tests.workspace_fixtures import (
 )
 from ..ledger.workspace_injection import LedgerWorkspaceInjection
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
-from .test_app import HandoverScreen, _account_factories, _catalogue
+from .test_app import _account_factories, _catalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -91,7 +91,7 @@ async def test_the_root_opens_and_returns_home_without_reading_on_the_loop() -> 
             workbench_search_service=WorkbenchSearchService(()),
             refresh_workbench_search=refresh_search,
             refresh_destination_catalogue=None,
-            account_factories=_account_factories(HandoverScreen()),
+            account_factories=_account_factories(),
             read_account_session=None,
         )
 

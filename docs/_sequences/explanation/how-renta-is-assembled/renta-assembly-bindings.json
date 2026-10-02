@@ -20,8 +20,17 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.bindings.list",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
+          "authority_generation": "33b9c4cf5ace0549979bd7f64a71a1071b2071c30ceaf2e0578414f8c5e3b13d",
           "binding_count": 67,
           "bindings": [
             {"binding_id":"renta-modelo-100-estimacion-directa-es-normal","borrador_capable":false,"encoded_options":[{"boolean_meaning":true,"encoded_value":"1","registry_value":"N"},{"boolean_meaning":false,"encoded_value":"0","registry_value":"S"}],"filing_year":2025,"input_channel":"decimal","legal_refs":["ley-35-2006:art-30"],"modelo":"100","period":"0A","readiness":"manual input","relation_inputs":[],"revision":"2025","source":"manual_input","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"typed_enum":"EstimacionDirectaModalidad"},
@@ -99,7 +108,7 @@
           "year_filter": 2025
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

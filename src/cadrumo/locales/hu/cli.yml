@@ -854,6 +854,15 @@ cli:
           elérhető VERIFICADO_COMPLETO vagy BORRADOR revíziója az összehasonlításhoz.
         no_work_units: Nem található %{modelo} modell munkaegység a(z) %{filing_year}.
           évre. Előbb hozz létre és számíts ki egy munkaegységet.
+        recover_no_revisions: Ellenőrizd a(z) %{modelo} modell számítási revízióit
+          mindkét kért évben (%{year_a} és %{year_b}); amelyik évben hiányzik revízió,
+          futtasd az `aeat app modelo work calculate` parancsot.
+        recover_no_usable_revisions: Ellenőrizd a(z) %{modelo} modell BORRADOR vagy
+          VERIFICADO_COMPLETO revízióit mindkét kért évben (%{year_a} és %{year_b});
+          amelyik évben szükséges, számíts ki egy megfelelő munkaegységet.
+        recover_no_work_units: Ellenőrizd a(z) %{modelo} modell munkaegységeit mindkét
+          kért évben (%{year_a} és %{year_b}); amelyik évben hiányzik munkaegység,
+          hozz létre és számíts ki egyet.
         year_help: Az összehasonlításba bevonandó pénzügyi év. Pontosan kétszer add
           meg (--year 2024 --year 2025).
       compare_help: Összehasonlítja ugyanazon modell két pénzügyi évének számítási

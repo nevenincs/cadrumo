@@ -7,6 +7,7 @@ import asyncio
 import typer
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.async_cleanup import AsyncResourceCleanupError
 from ..runtime_management import (
     configure_installed_runtime_management,
     inspect_installed_runtime_management,
@@ -98,20 +99,47 @@ def runtime_stop(ctx: typer.Context, *, acknowledge_all_profiles_and_work: bool 
     """Preview and acknowledge a shared-runtime stop on one owner connection."""
     if not acknowledge_all_profiles_and_work:
         raise CliRefusedBoundaryError(context={"reason": RuntimeRefusalCode.INVALID_FRAME.value})
+    uncertain = False
 
-    async def stop() -> RuntimeStopResult:
+    async def stop() -> None:
+        nonlocal uncertain
         consent = await preview_installed_runtime_stop()
+        primary: BaseException | None = None
         try:
-            accepted = await consent.confirm()
-            return RuntimeStopResult(runtime_boot_id=accepted.runtime_boot_id, scope=accepted.scope)
+            await consent.confirm()
+        except BaseException as error:
+            uncertain = consent.uncertain
+            primary = error
+            raise
         finally:
-            consent.close()
+            try:
+                # ACK is a separate observable outcome from release or drain.
+                # It remains reportable when caller cancellation arrived during
+                # the native exchange and was deferred until its settlement.
+                accepted = consent.accepted
+                if accepted is not None:
+                    result = RuntimeStopResult(runtime_boot_id=accepted.runtime_boot_id, scope=accepted.scope)
+                    emit_envelope(ctx, command="app.runtime.stop", result=result, lines=[f"scope\t{result.scope}"])
+            except BaseException as error:
+                if primary is None:
+                    primary = error
+                    raise
+                primary.__dict__["runtime_stop_output_error"] = error
+                primary.add_note("The accepted runtime stop acknowledgement could not be rendered")
+            finally:
+                await consent.release(primary_error=primary)
 
     try:
-        result = asyncio.run(stop())
+        asyncio.run(stop())
     except RuntimeRefusalError as refusal:
-        raise CliRefusedBoundaryError(context={"reason": refusal.reason.value}) from refusal
-    emit_envelope(ctx, command="app.runtime.stop", result=result, lines=[f"scope\t{result.scope}"])
+        if any(
+            isinstance(refusal.__dict__.get(field), AsyncResourceCleanupError)
+            for field in ("async_cleanup_error", "cleanup_error")
+        ):
+            raise
+        raise CliRefusedBoundaryError(
+            context={"reason": refusal.reason.value, "stop_outcome": "unknown" if uncertain else "refused"}
+        ) from refusal
 
 
 __all__ = ["runtime_disable", "runtime_enable", "runtime_root", "runtime_start", "runtime_status", "runtime_stop"]

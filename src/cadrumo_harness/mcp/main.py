@@ -22,10 +22,7 @@ def main() -> None:
     parser.add_argument("--credential-reference", type=lambda value: UUID(value) if value else None)
     args = parser.parse_args()
     required_version = os.environ.get("CADRUMO_MCP_REQUIRED_VERSION")
-    required_harness_version = os.environ.get("CADRUMO_MCP_REQUIRED_HARNESS_VERSION")
-    if (required_version is not None and version("cadrumo") != required_version) or (
-        required_harness_version is not None and version("cadrumo-harness") != required_harness_version
-    ):
+    if required_version is not None and version("cadrumo") != required_version:
         parser.error("installed Cadrumo cohort does not match the required version")
     from cadrumo.core.logging import configure_logging
 
@@ -38,5 +35,5 @@ def main() -> None:
         if error.name != "mcp":
             raise
         # stderr's platform-dependent stdlib annotation includes Any; the text stream contract is stable.
-        cast(TextIO, sys.stderr).write("Cadrumo MCP requires the cadrumo-harness MCP SDK installation.\n")
+        cast(TextIO, sys.stderr).write("Cadrumo MCP requires the MCP SDK installed with cadrumo.\n")
         raise SystemExit(3) from None

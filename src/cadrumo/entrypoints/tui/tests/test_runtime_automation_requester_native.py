@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+import traceback
 from collections.abc import Callable, Coroutine
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
@@ -16,18 +17,20 @@ from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
+from pydantic import SecretBytes
 from textual.pilot import Pilot
 from textual.widgets import Button, Checkbox, Input, Select, SelectionList, Static
 
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.adapters.local_runtime.automation_decision import run_automation_decision
 from cadrumo.adapters.local_runtime.automation_inventory import read_automation_inventory
+from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
-from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
+from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
@@ -38,6 +41,9 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime.contracts import RuntimeRefusalCode
+from cadrumo.application.runtime.worker_authorization import WorkerAuthorizationRequest
+from cadrumo.application.runtime.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 from cadrumo.application.user_profile.access_contracts import (
     KEY_ROTATION_MAXIMUM_OVERLAP,
     AccessAction,
@@ -49,13 +55,18 @@ from cadrumo.application.user_profile.access_contracts import (
     LoginEligibility,
     OsLoginContext,
 )
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentKind,
     EnrollmentStage,
+    EnrollmentTransition,
 )
+from cadrumo.core.async_cleanup import AsyncCloseable, await_cancellation_complete, close_async_resources
 from cadrumo.core.config import override_settings
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+from cadrumo.entrypoints.runtime.profile_host import RuntimeProfileHost
 from cadrumo.entrypoints.tui import installed_session
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.launcher import main
@@ -120,6 +131,7 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
@@ -130,27 +142,102 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
             "RuntimeAutomationRequesterScreen",
             partial(RuntimeAutomationRequesterScreen, journey_timeout=30),
         )
+        approval_stage = ["not_started"]
+        approval_failed_stage = ["none"]
+        approval_updated = [False]
+        approval_client_closed = [False]
+        approval_failures: list[tuple[str, str, tuple[str, ...]]] = []
+        original_phase = RuntimeProfileHost.approval_phase
+        original_publication = RuntimeProfileHost.approval_publication
+
+        def record_failure(phase: str, error: AutomationCustodyError) -> None:
+            locations = tuple(
+                f"{Path(frame.filename).name}:{frame.lineno}:{frame.name}"
+                for frame in traceback.extract_tb(error.__traceback__)
+            )
+            approval_failures.append((phase, error.reason.value, locations))
+            del approval_failures[:-32]
+
+        def observe_phase(
+            host: RuntimeProfileHost, request: WorkerApprovalRequest, password: SecretBytes | None
+        ) -> bool | None:
+            try:
+                return original_phase(host, request, password)
+            except AutomationCustodyError as error:
+                record_failure(f"approval_phase.{request.phase}", error)
+                raise
+
+        def observe_publication(
+            host: RuntimeProfileHost, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
+        ) -> EnrollmentTransition | None:
+            try:
+                return original_publication(host, authority, command)
+            except AutomationCustodyError as error:
+                record_failure(f"approval_publication.{command.phase}", error)
+                raise
+
+        monkeypatch.setattr(RuntimeProfileHost, "approval_phase", observe_phase)
+        monkeypatch.setattr(RuntimeProfileHost, "approval_publication", observe_publication)
+
+        def annotate_approval_error(error: BaseException, outcome: AutomationRequestOutcome | None) -> None:
+            safe_codes = {code.value for code in RuntimeRefusalCode} | {code.value for code in AutomationCustodyCode}
+            reason = outcome.reason if outcome is not None and outcome.reason in safe_codes else "unreported"
+            error.add_note(
+                f"Approval terminal failure: failed_stage={approval_failed_stage[0]}, "
+                f"stage={approval_stage[0]}, decision_updated={approval_updated[0]}, "
+                f"client_closed={approval_client_closed[0]}, "
+                f"outcome_stage={None if outcome is None or outcome.stage is None else outcome.stage.value}, "
+                f"outcome_uncertain={None if outcome is None else outcome.uncertain}, "
+                f"outcome_reason={reason}, phase_failures={tuple(approval_failures)!r}"
+            )
 
         def approve(request_id: UUID) -> None:
+            approval_stage[0] = "opening"
             human = asyncio.run(
                 open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
             )
+            human_owner = RuntimeTransportCleanup(human)
+            primary: BaseException | None = None
             try:
+                approval_stage[0] = "login"
                 proof = bytearray(PROFILE_INPUT.encode())
                 human.login_password(proof)
                 assert proof == bytes(len(proof))
+                approval_stage[0] = "inventory"
                 inventory = read_automation_inventory(human).projection
                 review = next(item for item in inventory.requests if item.receipt.request_id == request_id)
+                approval_stage[0] = "decision"
                 fresh = bytearray(PROFILE_INPUT.encode())
                 completed = run_automation_decision(human, review, decision="approve", password=fresh)
                 assert fresh == bytes(len(fresh))
                 assert completed.effect.value == "updated"
+                approval_updated[0] = completed.effect.value == "updated"
+            except BaseException as error:
+                approval_failed_stage[0] = approval_stage[0]
+                primary = error
+                raise
             finally:
-                human.close()
+                approval_stage[0] = "closing"
+                asyncio.run(
+                    close_async_resources(human_owner, task_name="tui-approval-human-close", primary_error=primary)
+                )
+                approval_client_closed[0] = human_owner.released
+                approval_stage[0] = "done"
 
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=3) as pool:
-            running = pool.submit(server.serve)
+        with override_settings(cadrumo_local_storage_root=storage_root):
+            runtime_owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=20)
+            resources: list[AsyncCloseable] = [runtime_owner]
+            primary: BaseException | None = None
             try:
+                pool = ThreadPoolExecutor(max_workers=3)
+                runtime_owner.executor = pool
+                context = copy_context()
+
+                def serve() -> None:
+                    context.run(server.serve)
+
+                runtime_owner.running = pool.submit(serve)
+                runtime_owner.server = server
                 assert server.ready.wait(3)
 
                 async def drive(pilot: Pilot[object]) -> None:
@@ -179,12 +266,33 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                     assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
                     assert submitted.profile_id == profile_id
                     approval = pool.submit(copy_context().run, approve, submitted.request_id)
+                    runtime_owner.auxiliary.append(approval)
                     await _until(pilot, lambda: request.safe_outcome is not None or approval.done(), timeout=30)
                     if approval.done():
-                        approval.result(timeout=0)
+                        approval_error = await await_cancellation_complete(
+                            asyncio.to_thread(approval.exception, timeout=0), task_name="tui-approval-result"
+                        )
+                        if approval_error is not None:
+                            annotate_approval_error(approval_error, request.safe_outcome)
+                            raise approval_error
                     if request.safe_outcome is None:
                         await _until(pilot, lambda: request.safe_outcome is not None, timeout=30)
-                    approval.result(timeout=10)
+                    try:
+                        approval_error = await await_cancellation_complete(
+                            asyncio.to_thread(approval.exception, timeout=10), task_name="tui-approval-result"
+                        )
+                    except TimeoutError as error:
+                        annotate_approval_error(error, request.safe_outcome)
+                        error.add_note(
+                            f"Approval thread did not settle: stage={approval_stage[0]}, "
+                            f"decision_updated={approval_updated[0]}, client_closed={approval_client_closed[0]}, "
+                            f"outcome_arrived={request.safe_outcome is not None}, "
+                            f"future_done={approval.done()}, future_cancelled={approval.cancelled()}"
+                        )
+                        raise
+                    if approval_error is not None:
+                        annotate_approval_error(approval_error, request.safe_outcome)
+                        raise approval_error
                     outcome = request.safe_outcome
                     assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
                     assert not outcome.uncertain
@@ -206,20 +314,27 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                         secrets_store=subject.client_native,
                     )
                 )
+                fresh_api_owner = RuntimeTransportCleanup(fresh_api)
+                resources.insert(0, fresh_api_owner)
+                client_primary: BaseException | None = None
                 try:
                     assert fresh_api.status().status.grant_valid
+                except BaseException as error:
+                    client_primary = error
+                    raise
                 finally:
-                    fresh_api.close()
+                    asyncio.run(
+                        close_async_resources(
+                            fresh_api_owner, task_name="tui-requester-api-close", primary_error=client_primary
+                        )
+                    )
+            except BaseException as error:
+                primary = error
+                raise
             finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    running.result(timeout=20)
-                except Exception:
-                    if primary is None:
-                        raise
-                finally:
-                    endpoint.close()
+                asyncio.run(
+                    close_async_resources(*resources, task_name="tui-requester-native-close", primary_error=primary)
+                )
 
 
 def test_restricted_tui_reviews_renew_rotation_and_scope_change(
@@ -260,6 +375,7 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
@@ -275,6 +391,8 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
             human = asyncio.run(
                 open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
             )
+            human_owner = RuntimeTransportCleanup(human)
+            primary: BaseException | None = None
             try:
                 password = bytearray(PROFILE_INPUT.encode())
                 human.login_password(password)
@@ -285,12 +403,28 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                 result = run_automation_decision(human, review, decision="approve", password=fresh)
                 assert fresh == bytes(len(fresh))
                 assert result.effect.value == "updated"
+            except BaseException as error:
+                primary = error
+                raise
             finally:
-                human.close()
+                asyncio.run(
+                    close_async_resources(human_owner, task_name="tui-approval-human-close", primary_error=primary)
+                )
 
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=3) as pool:
-            running = pool.submit(server.serve)
+        with override_settings(cadrumo_local_storage_root=storage_root):
+            runtime_owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=20)
+            resources: list[AsyncCloseable] = [runtime_owner]
+            primary: BaseException | None = None
             try:
+                pool = ThreadPoolExecutor(max_workers=3)
+                runtime_owner.executor = pool
+                context = copy_context()
+
+                def serve() -> None:
+                    context.run(server.serve)
+
+                runtime_owner.running = pool.submit(serve)
+                runtime_owner.server = server
                 assert server.ready.wait(3)
                 admitted = subject.store.snapshot()
                 assert admitted.grants[0].state is AuthorityState.ACTIVE
@@ -308,10 +442,20 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                         secrets_store=subject.client_native,
                     )
                 )
+                probe_owner = RuntimeTransportCleanup(probe)
+                resources.insert(0, probe_owner)
+                client_primary: BaseException | None = None
                 try:
                     assert probe.status().status.grant_valid
+                except BaseException as error:
+                    client_primary = error
+                    raise
                 finally:
-                    probe.close()
+                    asyncio.run(
+                        close_async_resources(
+                            probe_owner, task_name="tui-requester-api-close", primary_error=client_primary
+                        )
+                    )
                 for kind in (EnrollmentKind.RENEW, EnrollmentKind.ROTATE, EnrollmentKind.CHANGE_SCOPE):
                     before = subject.store.snapshot()
                     grant = before.grants[0]
@@ -351,10 +495,26 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                                 lambda: str(profile_id) in str(app.query_one("#restricted-profile", Static).render()),
                                 timeout=20,
                             )
-                            await pilot.click("#restricted-request-access")
-                            await _until(
-                                pilot, lambda: isinstance(app.screen, RuntimeAutomationRequesterScreen), timeout=10
-                            )
+                            request_button = app.query_one("#restricted-request-access", Button)
+                            clicked = await pilot.click("#restricted-request-access")
+                            if not clicked:
+                                raise AssertionError(
+                                    f"Restricted requester button was not clicked: kind={selected_kind.value}, "
+                                    f"disabled={request_button.disabled}, cleared={app._cleared}, locking={app._locking}"
+                                )
+                            try:
+                                await _until(
+                                    pilot, lambda: isinstance(app.screen, RuntimeAutomationRequesterScreen), timeout=10
+                                )
+                            except TimeoutError as error:
+                                availability = app.query_one("#restricted-availability", Static)
+                                invalid = str(availability.render()) == tr("tui.automation_request.invalid")
+                                error.add_note(
+                                    f"Restricted requester did not open: kind={selected_kind.value}, clicked={clicked}, "
+                                    f"disabled={request_button.disabled}, cleared={app._cleared}, locking={app._locking}, "
+                                    f"screen_type={type(app.screen).__name__}, invalid_availability={invalid}"
+                                )
+                                raise
                             request = app.screen
                             assert isinstance(request, RuntimeAutomationRequesterScreen)
                             assert request._client is not None
@@ -417,12 +577,21 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                             submitted = request._submitted
                             assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
                             approval = pool.submit(copy_context().run, approve, submitted.request_id)
+                            runtime_owner.auxiliary.append(approval)
                             await _until(pilot, lambda: request.safe_outcome is not None or approval.done(), timeout=45)
                             if approval.done():
-                                approval.result(timeout=0)
+                                approval_error = await await_cancellation_complete(
+                                    asyncio.to_thread(approval.exception, timeout=0), task_name="tui-approval-result"
+                                )
+                                if approval_error is not None:
+                                    raise approval_error
                             if request.safe_outcome is None:
                                 await _until(pilot, lambda: request.safe_outcome is not None, timeout=45)
-                            approval.result(timeout=10)
+                            approval_error = await await_cancellation_complete(
+                                asyncio.to_thread(approval.exception, timeout=10), task_name="tui-approval-result"
+                            )
+                            if approval_error is not None:
+                                raise approval_error
                             outcome = request.safe_outcome
                             assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
                             assert not outcome.uncertain and outcome.request_id == submitted.request_id
@@ -483,17 +652,24 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                             secrets_store=subject.client_native,
                         )
                     )
+                    fresh_api_owner = RuntimeTransportCleanup(fresh_api)
+                    resources.insert(0, fresh_api_owner)
+                    client_primary: BaseException | None = None
                     try:
                         assert fresh_api.status().status.grant_valid
-                    finally:
-                        fresh_api.close()
-            finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    running.result(timeout=20)
-                except Exception:
-                    if primary is None:
+                    except BaseException as error:
+                        client_primary = error
                         raise
-                finally:
-                    endpoint.close()
+                    finally:
+                        asyncio.run(
+                            close_async_resources(
+                                fresh_api_owner, task_name="tui-requester-api-close", primary_error=client_primary
+                            )
+                        )
+            except BaseException as error:
+                primary = error
+                raise
+            finally:
+                asyncio.run(
+                    close_async_resources(*resources, task_name="tui-requester-native-close", primary_error=primary)
+                )

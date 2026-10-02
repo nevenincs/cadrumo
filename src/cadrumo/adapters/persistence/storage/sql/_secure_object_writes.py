@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, cast
 
@@ -77,6 +77,8 @@ class _PendingSecureObjectWrite(NamedTuple):
     schema_version: int
     written_at: datetime
     payload: bytes
+    payload_hash: str
+    ciphertext_hash: str
     write_provenance: str
     source_event_id: str | None
     expected_revision_id: str | None
@@ -102,6 +104,7 @@ class SecureObjectWriteOperations:
         # Declared for the checker only so the mixin never shadows the host's
         # runtime definitions.
         _engine: Engine
+        _mutation_writer: Callable[[Callable[[], None]], None] | None
 
         def _check_session_freshness(self, namespace: str | None = None) -> None: ...
 
@@ -245,41 +248,49 @@ class SecureObjectWriteOperations:
             )
             for write in writes
         )
-        with session_scope(self._engine, serializable=bool(assertions)) as session:
-            for assertion in assertions:
-                row = session.execute(
-                    select(SecureObjectRow.revision_id).where(
-                        SecureObjectRow.namespace == assertion.namespace,
-                        SecureObjectRow.object_key == secure_object_key_digest(assertion.object_key),
-                    ),
-                ).one_or_none()
-                current_revision = row[0] if row is not None else None
-                matches = (
-                    row is None
-                    if assertion.expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID
-                    else row is not None and current_revision == assertion.expected_revision_id
-                )
-                if not matches:
-                    raise self._revision_conflict(
-                        namespace=assertion.namespace,
-                        expected_revision_id=assertion.expected_revision_id,
-                        current_revision_id=current_revision,
+
+        def commit() -> None:
+            self._check_session_freshness()
+            with session_scope(self._engine, serializable=bool(assertions)) as session:
+                for assertion in assertions:
+                    row = session.execute(
+                        select(SecureObjectRow.revision_id).where(
+                            SecureObjectRow.namespace == assertion.namespace,
+                            SecureObjectRow.object_key == secure_object_key_digest(assertion.object_key),
+                        ),
+                    ).one_or_none()
+                    current_revision = row[0] if row is not None else None
+                    matches = (
+                        row is None
+                        if assertion.expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID
+                        else row is not None and current_revision == assertion.expected_revision_id
                     )
-            self._write_pending_in_session(session, pending)
-            for removal in deletions:
-                statement = delete(SecureObjectRow).where(
-                    SecureObjectRow.namespace == removal.namespace,
-                    SecureObjectRow.object_key == removal.hashed_object_key,
-                )
-                if removal.expected_revision_id is not None:
-                    statement = statement.where(SecureObjectRow.revision_id == removal.expected_revision_id)
-                result = cast("CursorResult[Any]", session.execute(statement))
-                if removal.expected_revision_id is not None and result.rowcount != 1:
-                    raise self._revision_conflict(
-                        namespace=removal.namespace,
-                        expected_revision_id=removal.expected_revision_id,
-                        current_revision_id=None,
+                    if not matches:
+                        raise self._revision_conflict(
+                            namespace=assertion.namespace,
+                            expected_revision_id=assertion.expected_revision_id,
+                            current_revision_id=current_revision,
+                        )
+                self._write_pending_in_session(session, pending)
+                for removal in deletions:
+                    statement = delete(SecureObjectRow).where(
+                        SecureObjectRow.namespace == removal.namespace,
+                        SecureObjectRow.object_key == removal.hashed_object_key,
                     )
+                    if removal.expected_revision_id is not None:
+                        statement = statement.where(SecureObjectRow.revision_id == removal.expected_revision_id)
+                    result = cast("CursorResult[Any]", session.execute(statement))
+                    if removal.expected_revision_id is not None and result.rowcount != 1:
+                        raise self._revision_conflict(
+                            namespace=removal.namespace,
+                            expected_revision_id=removal.expected_revision_id,
+                            current_revision_id=None,
+                        )
+
+        if writes or deletions:
+            self._commit_prepared_mutation(commit)
+        else:
+            commit()
 
     def save_with_raw_key(
         self,
@@ -387,8 +398,20 @@ class SecureObjectWriteOperations:
             source_event_id=source_event_id,
             expected_revision_id=expected_revision_id,
         )
-        with session_scope(self._engine) as session:
-            self._write_pending_in_session(session, (pending,))
+
+        def commit() -> None:
+            self._check_session_freshness(namespace)
+            with session_scope(self._engine) as session:
+                self._write_pending_in_session(session, (pending,))
+
+        self._commit_prepared_mutation(commit)
+
+    def _commit_prepared_mutation(self, write: Callable[[], None]) -> None:
+        """Admit one complete prepared transaction, including its actual commit."""
+        if self._mutation_writer is None:
+            write()
+        else:
+            self._mutation_writer(write)
 
     def _pending_write(
         self,
@@ -419,13 +442,20 @@ class SecureObjectWriteOperations:
         read matches on, and what the AEAD associated data binds, so all
         three surfaces provably share one spelling of the row identity.
         """
+        object_key_digest = secure_object_key_digest(key)
+        instant = validate_utc_aware(written_at)
+        payload_wire = encrypt_secure_object_payload(
+            payload, associated_data=secure_object_payload_aad(namespace, object_key_digest, schema_version)
+        )
         return _PendingSecureObjectWrite(
             namespace=namespace,
-            object_key_digest=secure_object_key_digest(key),
+            object_key_digest=object_key_digest,
             classification=classification,
             schema_version=schema_version,
-            written_at=validate_utc_aware(written_at),
-            payload=payload,
+            written_at=instant,
+            payload=payload_wire,
+            payload_hash=sha256_hex(payload),
+            ciphertext_hash=sha256_hex(payload_wire),
             write_provenance=write_provenance,
             source_event_id=source_event_id,
             expected_revision_id=expected_revision_id,
@@ -476,19 +506,11 @@ class SecureObjectWriteOperations:
         for write in chunk:
             prior = previous.get((write.namespace, write.object_key_digest))
             self._assert_expected_revision(write, prior)
-            # Encrypt the payload explicitly, binding the row identity into
-            # the AEAD associated data so the ciphertext is valid only for
-            # this exact (namespace, object_key, schema_version) row.
-            payload_hash = sha256_hex(write.payload)
-            payload_wire = encrypt_secure_object_payload(
-                write.payload,
-                associated_data=secure_object_payload_aad(
-                    write.namespace,
-                    write.object_key_digest,
-                    write.schema_version,
-                ),
-            )
-            ciphertext_hash = sha256_hex(payload_wire)
+            # Payload encryption and hashes are prepared before admission;
+            # only current lineage/CAS facts are resolved under this transaction.
+            payload_hash = write.payload_hash
+            payload_wire = write.payload
+            ciphertext_hash = write.ciphertext_hash
             previous_revision_id = prior.revision_id if prior is not None else None
             previous_payload_hash = prior.payload_hash if prior is not None else None
             revision_id = derive_revision_id(
@@ -556,27 +578,31 @@ class SecureObjectWriteOperations:
         previous: dict[tuple[str, bytes], _PreviousRowMetadata] = {}
         for namespace, digests in by_namespace.items():
             for start in range(0, len(digests), OBJECT_KEY_SELECT_CHUNK):
-                rows = session.execute(
-                    select(
-                        SecureObjectRow.id,
-                        SecureObjectRow.object_key,
-                        SecureObjectRow.revision_id,
-                        SecureObjectRow.revision_ancestor_ids,
-                        SecureObjectRow.payload_hash,
-                    ).where(
-                        SecureObjectRow.namespace == namespace,
-                        SecureObjectRow.object_key.in_(
-                            digests[start : start + OBJECT_KEY_SELECT_CHUNK],
+                rows = (
+                    session.execute(
+                        select(
+                            SecureObjectRow.id,
+                            SecureObjectRow.object_key,
+                            SecureObjectRow.revision_id,
+                            SecureObjectRow.revision_ancestor_ids,
+                            SecureObjectRow.payload_hash,
+                        ).where(
+                            SecureObjectRow.namespace == namespace,
+                            SecureObjectRow.object_key.in_(
+                                digests[start : start + OBJECT_KEY_SELECT_CHUNK],
+                            ),
                         ),
-                    ),
-                ).all()
-                for row in rows:
-                    digest = row.object_key if isinstance(row.object_key, bytes) else bytes(row.object_key)
+                    )
+                    .tuples()
+                    .all()
+                )
+                for row_id, object_key, revision_id, revision_ancestor_ids, payload_hash in rows:
+                    digest = bytes(object_key)
                     previous[(namespace, digest)] = _PreviousRowMetadata(
-                        row_id=int(row.id),
-                        revision_id=row.revision_id,
-                        revision_ancestor_ids=parse_revision_ancestor_ids(row.revision_ancestor_ids),
-                        payload_hash=row.payload_hash,
+                        row_id=int(row_id),
+                        revision_id=revision_id,
+                        revision_ancestor_ids=parse_revision_ancestor_ids(revision_ancestor_ids),
+                        payload_hash=payload_hash,
                     )
         return previous
 

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sys
 import time
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import date
 from enum import Enum
 from typing import TYPE_CHECKING, Any, NotRequired, TypedDict, TypeVar, cast
@@ -39,6 +41,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResponseApplyRequestV1,
     OperationResponseControlRequestV1,
     OperationResponseRejectRequestV1,
+    OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
@@ -53,6 +56,7 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationSubmit,
     RuntimeOperationSubmitted,
 )
+from cadrumo.application.runtime.projection_pages import ProjectionPage, ProjectionPageRequest
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, ProfileAccessStatus
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
@@ -61,8 +65,13 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentProposal,
     EnrollmentStage,
 )
-from cadrumo.core.async_cleanup import await_cancellation_complete
-from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.async_cleanup import (
+    AsyncCloseable,
+    AsyncResourceCleanupError,
+    await_cancellation_complete,
+    close_async_resources,
+)
+from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_store import AuthorityStoreError
@@ -143,6 +152,11 @@ _TOOLS = (
     ),
     ("observe", "Read a currently authorized operation observation", _schema({"observation": _DOC})),
     ("result", "Read a settled registered result with fresh disclosure checks per page", _schema({"result": _DOC})),
+    (
+        "result_page",
+        "Read one bounded settled result page with fresh disclosure checks",
+        _schema({"result": _DOC, "page": _DOC}),
+    ),
     ("review", "Read a currently authorized review projection", _schema({"review": _DOC})),
     (
         "respond",
@@ -202,6 +216,21 @@ def _has_refusal(value: dict[str, Any]) -> bool:
     document = _result_object(value.get("document"))
     if document is not None:
         return str(document.get("outcome")) == "refused"
+    page = _result_object(value.get("page"))
+    if page is not None:
+        # Byte transport can carry a registered refusal. Classify only a
+        # complete canonical document; a fragment or digest grants no outcome.
+        try:
+            released = ProjectionPage.model_validate(page)
+            if released.offset:
+                return False
+            encoded = released.decode()
+            if len(encoded) != released.total_bytes or sha256_hex(encoded) != released.document_digest:
+                return False
+            refusal = OperationResultProjectionRefusalV1.model_validate_json(encoded)
+            return canonical_json_bytes(refusal.model_dump(mode="json")) == encoded
+        except (ValueError, TypeError):
+            return False
     return False
 
 
@@ -273,6 +302,31 @@ def _require_exact_admitted_status(client: RuntimeFrontendClient, *, profile_id:
     return status
 
 
+@dataclass(frozen=True, slots=True)
+class _RuntimeClientCleanup:
+    """Retain a blocking connection owner until close succeeds or is retried."""
+
+    client: RuntimeFrontendClient
+    on_closed: Callable[[], None] | None = None
+
+    async def close(self) -> None:
+        await asyncio.to_thread(self.client.close)
+        if self.on_closed is not None:
+            self.on_closed()
+
+
+@dataclass(frozen=True, slots=True)
+class _RuntimeAdmissionCleanup:
+    """Own cleanup left by an admission that never returned its connection."""
+
+    failure: AsyncResourceCleanupError
+    on_closed: Callable[[], None]
+
+    async def close(self) -> None:
+        await self.failure.retry_cleanup()
+        self.on_closed()
+
+
 class RuntimeMcpAdapter:
     """One MCP connection owns one admitted lease and independent enrollment door."""
 
@@ -291,22 +345,161 @@ class RuntimeMcpAdapter:
         self._enrollment: NativeEnrollmentClient | None = None
         self._enrollment_reference: UUID | None = None
         self._requester: AutomationRequesterJourney | None = None
+        self._startup_denial: str | None = None
+        self._retiring_resources: dict[int, AsyncCloseable] = {}
+
+    async def bootstrap_reference(self, credential_reference: UUID) -> None:
+        """Try the normal authentication door while keeping public MCP reachable."""
+        result = await self.call("authenticate", {"credential_reference": str(credential_reference)})
+        if result.get("outcome") == "authenticated":
+            return
+        code = result.get("code")
+        self._startup_denial = code if isinstance(code, str) else "runtime_unavailable"
+
+    def _retirement(self, client: RuntimeFrontendClient) -> AsyncCloseable:
+        identity = id(client)
+        owner = self._retiring_resources.get(identity)
+        if owner is None:
+
+            def released() -> None:
+                self._retiring_resources.pop(identity, None)
+
+            owner = _RuntimeClientCleanup(client, on_closed=released)
+            self._retiring_resources[identity] = owner
+        return owner
+
+    def _retain_admission_cleanup(self, error: BaseException) -> None:
+        """Own native resources retained by an opener that returned no client."""
+        for name in ("async_cleanup_error", "cleanup_error"):
+            failure = error.__dict__.get(name)
+            if isinstance(failure, AsyncResourceCleanupError):
+                identity = id(failure)
+                if identity not in self._retiring_resources:
+
+                    def released(identity: int = identity) -> None:
+                        self._retiring_resources.pop(identity, None)
+
+                    self._retiring_resources[identity] = _RuntimeAdmissionCleanup(failure, on_closed=released)
+
+    async def _open_reference_client(self, reference: UUID, *, timeout: float | None = None) -> RuntimeFrontendClient:
+        try:
+            if timeout is not None:
+                return await open_installed_credential_client(
+                    profile_id=self.profile_id,
+                    credential_reference=reference,
+                    frontend=OperationFrontendProjection.MCP,
+                    timeout=timeout,
+                )
+            return await open_installed_credential_client(
+                profile_id=self.profile_id, credential_reference=reference, frontend=OperationFrontendProjection.MCP
+            )
+        except BaseException as error:
+            self._retain_admission_cleanup(error)
+            raise
+
+    async def _retire_client(
+        self,
+        client: RuntimeFrontendClient,
+        *,
+        task_name: str,
+        primary_error: BaseException | None = None,
+    ) -> None:
+        await close_async_resources(self._retirement(client), task_name=task_name, primary_error=primary_error)
 
     async def close(self) -> None:
         """Release only this adapter's connection and pending enrollment."""
-        async with self._lock:
-            for client in (self._enrollment_client, self.client):
-                if client is not None:
-                    await await_cancellation_complete(asyncio.to_thread(client.close), task_name="mcp-runtime-close")
-            self._enrollment_client = None
-            self._enrollment = None
-            self._enrollment_reference = None
-            self._requester = None
-            self.client = None
+        primary_error = sys.exception()
+        failures: list[BaseException] = []
+        diagnostics: dict[int, BaseException] = {}
+
+        def retain_cleanup(target: BaseException, *sources: BaseException, capture_only: bool = False) -> None:
+            retained: AsyncResourceCleanupError | None = None
+            seen: set[int] = set()
+            seen_errors: set[int] = set()
+            pending = [target, *sources]
+            while pending:
+                error = pending.pop(0)
+                if id(error) in seen_errors:
+                    continue
+                seen_errors.add(id(error))
+                body_error = error.__dict__.get("body_error")
+                if isinstance(body_error, BaseException):
+                    pending.append(body_error)
+                candidates: list[object] = [error] if isinstance(error, AsyncResourceCleanupError) else []
+                candidates.extend(error.__dict__.get(name) for name in ("async_cleanup_error", "cleanup_error"))
+                for candidate in candidates:
+                    if isinstance(candidate, AsyncResourceCleanupError) and id(candidate) not in seen:
+                        seen.add(id(candidate))
+                        retained = candidate if retained is None else retained.merged_with(candidate)
+                    elif isinstance(candidate, BaseException) and not isinstance(candidate, AsyncResourceCleanupError):
+                        diagnostics[id(candidate)] = candidate
+            if retained is not None and not capture_only:
+                if diagnostics:
+                    diagnostic = AsyncResourceCleanupError(
+                        (),
+                        tuple(diagnostics.values()),
+                        retry_task_name="mcp-runtime-close-diagnostics",
+                        close_attempts=1,
+                    )
+                    retained = retained.merged_with(diagnostic)
+                    retained.__cause__ = (
+                        next(iter(diagnostics.values()))
+                        if len(diagnostics) == 1
+                        else BaseExceptionGroup("Earlier MCP cleanup diagnostics", list(diagnostics.values()))
+                    )
+                target.__dict__["async_cleanup_error"] = retained
+                target.__dict__["cleanup_error"] = retained
+
+        if primary_error is not None:
+            # Native cleanup can replace a raw diagnostic attached to a
+            # cancellation. Keep its exact identity before cleanup starts.
+            retain_cleanup(primary_error, capture_only=True)
+
+        async def release() -> None:
+            async with self._lock:
+                if self._enrollment_client is not None:
+                    self._retirement(self._enrollment_client)
+                if self.client is not None:
+                    self._retirement(self.client)
+                owners = tuple(self._retiring_resources.values())
+                self._enrollment_client = None
+                self._enrollment = None
+                self._enrollment_reference = None
+                self._requester = None
+                self.client = None
+                await close_async_resources(*owners, task_name="mcp-runtime-clients-close", primary_error=primary_error)
+
+        async def settle() -> None:
+            # A terminal cancellation is an outcome of the retained release,
+            # rather than a new cancellation of the caller awaiting shield.
+            try:
+                await release()
+            except BaseException as error:
+                failures.append(error)
+
+        try:
+            await await_cancellation_complete(settle(), task_name="mcp-runtime-close")
+        except asyncio.CancelledError as cancellation:
+            sources = (*failures, *((primary_error,) if primary_error is not None else ()))
+            retain_cleanup(cancellation, *sources)
+            if "body_error" not in cancellation.__dict__:
+                for error in sources:
+                    body_error = error.__dict__.get("body_error")
+                    if isinstance(body_error, BaseException):
+                        cancellation.__dict__["body_error"] = body_error
+                        break
+                else:
+                    if primary_error is not None and not isinstance(primary_error, asyncio.CancelledError):
+                        cancellation.__dict__["body_error"] = primary_error
+            raise
+        if primary_error is not None and not isinstance(primary_error, AsyncResourceCleanupError):
+            retain_cleanup(primary_error)
+        if failures:
+            raise failures[0]
 
     def _admitted(self) -> RuntimeFrontendClient:
         if self.client is None:
-            raise RuntimeFrontendRefusedError("authentication_required")
+            raise RuntimeFrontendRefusedError(self._startup_denial or "authentication_required")
         return self.client
 
     async def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
@@ -351,14 +544,17 @@ class RuntimeMcpAdapter:
             self._enrollment = None
             self._enrollment_reference = None
             self._requester = None
-            await await_cancellation_complete(asyncio.to_thread(previous.close), task_name="mcp-enrollment-retire")
-        client = (
-            await open_installed_runtime_client(profile_id=self.profile_id, frontend=OperationFrontendProjection.MCP)
-            if reference is None
-            else await open_installed_credential_client(
-                profile_id=self.profile_id, credential_reference=reference, frontend=OperationFrontendProjection.MCP
-            )
-        )
+            await self._retire_client(previous, task_name="mcp-enrollment-retire")
+        if reference is None:
+            try:
+                client = await open_installed_runtime_client(
+                    profile_id=self.profile_id, frontend=OperationFrontendProjection.MCP
+                )
+            except BaseException as error:
+                self._retain_admission_cleanup(error)
+                raise
+        else:
+            client = await self._open_reference_client(reference)
         try:
             enrollment = await self._wire(
                 lambda: (
@@ -367,8 +563,8 @@ class RuntimeMcpAdapter:
                     else client.prepare_grant_change(installed_automation_secret_store())
                 )
             )
-        except BaseException:
-            await await_cancellation_complete(asyncio.to_thread(client.close), task_name="mcp-enrollment-close")
+        except BaseException as error:
+            await self._retire_client(client, task_name="mcp-enrollment-close", primary_error=error)
             raise
         self._enrollment_client = client
         self._enrollment = enrollment
@@ -405,18 +601,11 @@ class RuntimeMcpAdapter:
             if reference is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             deadline = time.monotonic() + timeout
-            fresh = asyncio.run(
-                open_installed_credential_client(
-                    profile_id=self.profile_id,
-                    credential_reference=reference,
-                    frontend=OperationFrontendProjection.MCP,
-                    timeout=timeout,
-                )
-            )
+            fresh = asyncio.run(self._open_reference_client(reference, timeout=timeout))
             try:
                 return fresh.reconcile_enrollment(submitted.request_id, timeout=deadline - time.monotonic())
             finally:
-                fresh.close()
+                asyncio.run(self._retire_client(fresh, task_name="mcp-reconcile-close", primary_error=sys.exception()))
 
         self._requester = AutomationRequesterJourney(
             enrollment, timeout=300, reconcile=None if original_reference is None else reconcile
@@ -437,21 +626,18 @@ class RuntimeMcpAdapter:
 
     async def _authenticate(self, args: dict[str, Any]) -> dict[str, Any]:
         credential_reference = UUID(args["credential_reference"])
-        client = await open_installed_credential_client(
-            profile_id=self.profile_id,
-            credential_reference=credential_reference,
-            frontend=OperationFrontendProjection.MCP,
-        )
+        client = await self._open_reference_client(credential_reference)
         try:
             status = await self._wire(lambda: _require_exact_admitted_status(client, profile_id=self.profile_id))
-        except BaseException:
-            await await_cancellation_complete(asyncio.to_thread(client.close), task_name="mcp-admission-close")
+        except BaseException as error:
+            await self._retire_client(client, task_name="mcp-admission-close", primary_error=error)
             raise
         result = {"outcome": "authenticated", "status": _public(status)}
         old_client = self.client
         self.client = client
+        self._startup_denial = None
         if old_client is not None:
-            await await_cancellation_complete(asyncio.to_thread(old_client.close), task_name="mcp-reauth-close")
+            await self._retire_client(old_client, task_name="mcp-reauth-close")
         return result
 
     def _call_admitted(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
@@ -460,7 +646,7 @@ class RuntimeMcpAdapter:
                 "outcome": "status",
                 "profile_id": str(self.profile_id),
                 "authenticated": False,
-                "denial": "authentication_required",
+                "denial": self._startup_denial or "authentication_required",
             }
         client = self._admitted()
         if name == "status":
@@ -491,19 +677,17 @@ class RuntimeMcpAdapter:
             client.describe(definition_id, deadline=deadline)
             payload_json = json.dumps(args["payload"], ensure_ascii=False, separators=(",", ":"), allow_nan=False)
             request_id = uuid4()
+            submission = RuntimeOperationSubmit(
+                request_id=request_id,
+                profile_id=client.profile_id,
+                session_id=client.session_id,
+                definition_id=definition_id,
+                subject_ref=args["subject_ref"],
+                payload_json=payload_json,
+                idempotency_key=args.get("idempotency_key"),
+            )
             try:
-                reply = client.operation(
-                    RuntimeOperationSubmit(
-                        request_id=request_id,
-                        profile_id=client.profile_id,
-                        session_id=client.session_id,
-                        definition_id=definition_id,
-                        subject_ref=args["subject_ref"],
-                        payload_json=payload_json,
-                        idempotency_key=args.get("idempotency_key"),
-                    ),
-                    deadline=deadline,
-                )
+                reply = client.operation(submission, deadline=deadline)
                 if not isinstance(reply, RuntimeOperationSubmitted):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             except RuntimeRefusalError as error:
@@ -512,6 +696,22 @@ class RuntimeMcpAdapter:
                 return {
                     "outcome": "unresolved",
                     "code": _refusal(error),
+                    "request_id": str(request_id),
+                    "definition_id": definition_id,
+                }
+            except TimeoutError:
+                # Native transports normally normalize this; a failed close
+                # can still surface the underlying timeout after dispatch.
+                return {
+                    "outcome": "unresolved",
+                    "code": RuntimeRefusalCode.DEADLINE_EXCEEDED.value,
+                    "request_id": str(request_id),
+                    "definition_id": definition_id,
+                }
+            except OSError:
+                return {
+                    "outcome": "unresolved",
+                    "code": RuntimeRefusalCode.CONNECTION_CLOSED.value,
                     "request_id": str(request_id),
                     "definition_id": definition_id,
                 }
@@ -551,6 +751,10 @@ class RuntimeMcpAdapter:
         if name == "result":
             request = _parse(OperationResultProjectionRequestV1, args["result"])
             return {"outcome": "reply", "document": client.read_result_document(request, deadline=deadline)}
+        if name == "result_page":
+            request = _parse(OperationResultProjectionRequestV1, args["result"])
+            page = _parse(ProjectionPageRequest, args["page"])
+            return {"outcome": "reply", "page": _public(client.read_result_page(request, page, deadline=deadline))}
         if name == "review":
             request = _parse(OperationReviewProjectionRequestV1, args["review"])
             reply = client.operation(
@@ -731,24 +935,11 @@ def serve(*, profile_id: UUID, credential_reference: UUID | None = None) -> None
     from mcp.server.stdio import stdio_server
 
     async def run() -> None:
-        client = None
-        if credential_reference is not None:
-            client = await open_installed_credential_client(
-                profile_id=profile_id,
-                credential_reference=credential_reference,
-                frontend=OperationFrontendProjection.MCP,
-            )
-            try:
-                await await_cancellation_complete(
-                    asyncio.to_thread(_require_exact_admitted_status, client, profile_id=profile_id),
-                    task_name="mcp-startup-status",
-                )
-            except BaseException:
-                await await_cancellation_complete(asyncio.to_thread(client.close), task_name="mcp-startup-close")
-                raise
-        adapter = RuntimeMcpAdapter(profile_id=profile_id, client=client)
-        server = build_server(adapter)
+        adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
         try:
+            if credential_reference is not None:
+                await adapter.bootstrap_reference(credential_reference)
+            server = build_server(adapter)
             async with stdio_server() as (read_stream, write_stream):
                 await server.run(
                     read_stream,

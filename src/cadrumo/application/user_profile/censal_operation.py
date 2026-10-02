@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.hashing import content_hash_hex
+from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity.digest import ContentDigest, ContentDigestOrAbsent
 from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -28,6 +28,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
+from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.user_profile.values import UserProfileRecord
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
@@ -49,6 +50,7 @@ from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
+from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -292,6 +294,7 @@ class CensalReviewProjectionV1(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     projection_version: Literal[1]
+    reviewed_proposal_digest: ContentDigest
     fields: tuple[CensalReviewFieldProjectionV1, ...]
 
 
@@ -318,6 +321,7 @@ def _project_censal_review(
     observed = {fact.path: str(fact.value) for fact in censal_facts_from_read(reviewed.observation)}
     return CensalReviewProjectionV1(
         projection_version=1,
+        reviewed_proposal_digest=sha256_hex(serialize_operation_operand(reviewed)),
         fields=tuple(
             CensalReviewFieldProjectionV1(
                 path=item.path,
@@ -588,7 +592,13 @@ class CensalOperationExecutor:
                 OperationEffect.UPDATED if operand.session_write_recorded else OperationEffect.NONE
             )
             await context.events.phase(CENSAL_PHASE_SETTLEMENT)
-            return f"censo-review:{proposal_digest}:{CensalOperationOutcome.REJECTED.value}"
+            return await context.operands.put(
+                CensalOperationResult(
+                    outcome=CensalOperationOutcome.REJECTED,
+                    reviewed_proposal_digest=proposal_digest,
+                ),
+                written_at=now(),
+            )
         await context.events.phase(CENSAL_PHASE_APPLY)
         if await _acknowledge_if_cancelled(context):
             return None
@@ -625,7 +635,13 @@ class CensalOperationExecutor:
             raise stale_conflict
         await context.events.effect(OperationEffect.UPDATED)
         await context.events.phase(CENSAL_PHASE_SETTLEMENT)
-        return f"censo-review:{proposal_digest}:{CensalOperationOutcome.APPLIED.value}"
+        return await context.operands.put(
+            CensalOperationResult(
+                outcome=CensalOperationOutcome.APPLIED,
+                reviewed_proposal_digest=proposal_digest,
+            ),
+            written_at=now(),
+        )
 
 
 async def _pull_censal_datos(

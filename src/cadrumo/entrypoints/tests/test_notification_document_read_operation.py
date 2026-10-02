@@ -273,6 +273,7 @@ def test_registered_document_reads_project_safe_local_results_with_none_receipts
             )
             result_access = resolve_operation_access(registry=registry, request=request, context=result_context)
             assert result_access.policy.disclosures
+            assert registration.contract.result_schema is not None
             assert all(
                 item.projection_id == registration.contract.result_schema.schema_id
                 for item in result_access.policy.disclosures
@@ -340,6 +341,7 @@ def test_registered_document_reads_project_safe_local_results_with_none_receipts
                 result_type,
             )
             assert isinstance(projected, OperationResultProjectionSuccessV1)
+            assert isinstance(projected.projection, result_type)
             return terminal, projected.projection
 
         view_terminal, view_result = asyncio.run(run(requests[0][0], "3" * 64, requests[0][1]))

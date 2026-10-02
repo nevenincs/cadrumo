@@ -1,17 +1,15 @@
 """Passphrase change: re-wrap one profile's key under a new password.
 
 This screen collects the current passphrase (proof), the replacement, and
-its confirmation, then hands all three to the injected rotation door. It
-decides nothing about whether a new password is acceptable or whether a
-confirmation mismatch refuses the change -- both are re-checked inside
-:func:`~cadrumo.application.user_profile.passphrase_rotation
-.rotate_profile_passphrase` regardless of what this screen already validated,
-per that door's own stated contract ("a caller reaching this function
-directly must not be able to skip the check").
+its confirmation, then hands all three to the injected rotation door. The
+installed account composition submits the registered rotation through
+:func:`~cadrumo.adapters.local_runtime.profile_password_rotation.run_profile_password_rotation`.
+Password acceptability and confirmation are re-checked by the canonical
+application service regardless of the screen's local validation.
 
 See Also:
     :func:`~cadrumo.application.user_profile.passphrase_rotation.rotate_profile_passphrase`
-        The application door this screen drives.
+        The application policy enforced by the registered rotation executor.
     :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationScreen`
         The sibling credential surface this one borrows its live strength
         feedback and attempt shape from.
@@ -47,13 +45,11 @@ if TYPE_CHECKING:
 
     from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
     from ....core.credentials import ProfilePasswordAssessment
-    from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 __all__ = [
     "PassphraseChangeAttempt",
     "PassphraseChangeRefusal",
     "PassphraseScreen",
-    "build_profile_passphrase_change_door",
 ]
 
 
@@ -329,47 +325,3 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
             self.query_one(f"#{field_id}", Input).disabled = busy
         self.query_one("#btn-change", Button).disabled = busy
         self.query_one("#btn-cancel", Button).disabled = busy
-
-
-def build_profile_passphrase_change_door(
-    profile_id: str,
-    *,
-    profile_decode_context: ProfileDecodeContext,
-) -> Callable[[str, str, str], PassphraseChangeAttempt]:
-    """Bind the canonical rotation door to one already-authenticated profile.
-
-    The identity is closed over here so the screen never carries it, and the
-    returned door mutates nothing until the operator submits. Expected
-    refusals stay data: the application owns which failures are expected and
-    supplies their localized key, and no passphrase reaches the result.
-    """
-    from uuid import UUID
-
-    from ....application.user_profile.passphrase_rotation import (
-        ProfilePassphraseRotationError,
-        rotate_profile_passphrase,
-    )
-
-    parsed_profile_id = UUID(profile_id)
-
-    def rotate(current: str, replacement: str, confirmation: str) -> PassphraseChangeAttempt:
-        try:
-            outcome = rotate_profile_passphrase(
-                profile_id=parsed_profile_id,
-                current_passphrase=current,
-                new_passphrase=replacement,
-                new_passphrase_confirmation=confirmation,
-                profile_decode_context=profile_decode_context,
-            )
-        except ProfilePassphraseRotationError as refusal:
-            if refusal.translated_message is None:
-                raise
-            return PassphraseChangeAttempt(
-                expected_refusal=PassphraseChangeRefusal(
-                    message_key=refusal.translated_message,
-                    context=tuple((refusal.context or {}).items()),
-                )
-            )
-        return PassphraseChangeAttempt(outcome=outcome)
-
-    return rotate

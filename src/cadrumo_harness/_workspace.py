@@ -1,10 +1,8 @@
 """Materialise a Claude-native operator workspace from the shipped harness data.
 
-The workspace materialiser is an optional Claude-native mirror, not the primary
-delivery vehicle: the operating layer reaches an arbitrary MCP client through
-the console's floor tool, resources, and prompts, and this materialiser is the
-Claude-specific enhancement that lays the same shipped harness out in the
-layout a Claude Code project loads natively.
+The MCP server exposes registered tools to MCP clients. This optional
+materialiser lays the shipped harness out in the layout a Claude Code project
+loads natively.
 
 The emitted layout is the Claude-native convention for an end-user project
 directory - never the repository's own developer tooling ``.claude/`` tree:
@@ -96,7 +94,7 @@ _PLUGIN_LICENSE = "Apache-2.0"
 _PLUGIN_KEYWORDS = (PRODUCT_IDENTITY.plugin_identifier, "tax", "aeat", "spain", "irpf", "iva", "modelo")
 _PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
 
-# ``uvx`` launches the exact harness, root, and mandatory companion wheels
+# ``uvx`` launches the exact root and mandatory companion wheels
 # embedded beneath ``${CLAUDE_PLUGIN_ROOT}``. There is no index-backed or
 # source-checkout form. The plugin supplies its release
 # version through ``CADRUMO_MCP_REQUIRED_VERSION`` so a stale, incomplete, or
@@ -111,11 +109,10 @@ _PLUGIN_ARTIFACTS_SUBDIR = Path("artifacts") / "python"
 _PLUGIN_COHORT_MANIFEST = "plugin-python-cohort.json"
 _PYTHON_COHORT_WHEELS = (
     "cadrumo",
-    "cadrumo-harness",
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
-_PLUGIN_COHORT_SCHEMA = "cadrumo.plugin-python-cohort.v1"
+_PLUGIN_COHORT_SCHEMA = "cadrumo.plugin-python-cohort.v2"
 _RUNTIME_WHEELHOUSE_SCHEMA = "cadrumo.runtime-wheelhouse.v3"
 _RUNTIME_WHEELHOUSE_MANIFEST = "runtime-wheelhouse.json"
 _RUNTIME_WHEELHOUSE_PREFIX = "wheels/"
@@ -164,17 +161,32 @@ class PluginManifest(BaseModel):
 class _PluginPythonCohort(Protocol):
     """Validated Python release cohort consumed by the plugin emitter."""
 
-    directory: Path
-    source_commit: str
-    version: str
-    harness_version: str
-    root_wheel: Path
-    harness_wheel: Path
-    runtime_wheelhouse: Path
-    runtime_wheelhouse_manifest: Mapping[str, object]
-    manuals_wheel: Path
-    official_wheel: Path
-    sha256: Mapping[str, str]
+    @property
+    def directory(self) -> Path: ...
+
+    @property
+    def source_digest(self) -> str: ...
+
+    @property
+    def version(self) -> str: ...
+
+    @property
+    def root_wheel(self) -> Path: ...
+
+    @property
+    def runtime_wheelhouse(self) -> Path: ...
+
+    @property
+    def runtime_wheelhouse_manifest(self) -> Mapping[str, object]: ...
+
+    @property
+    def manuals_wheel(self) -> Path: ...
+
+    @property
+    def official_wheel(self) -> Path: ...
+
+    @property
+    def sha256(self) -> Mapping[str, str]: ...
 
 
 def _write_json(dest_dir: Path, name: str, document: object) -> None:
@@ -334,7 +346,6 @@ def _emit_plugin_agents(output_dir: Path) -> int:
 def _cohort_wheels(cohort: _PluginPythonCohort) -> dict[str, Path]:
     return {
         "cadrumo": cohort.root_wheel,
-        "cadrumo-harness": cohort.harness_wheel,
         "cadrumo-data-manuals": cohort.manuals_wheel,
         "cadrumo-data-official": cohort.official_wheel,
     }
@@ -354,8 +365,6 @@ def _mcp_args(cohort: _PluginPythonCohort) -> list[str]:
         f"{root}/{_RUNTIME_WHEELHOUSE_SUBDIR}",
         "--no-python-downloads",
         "--from",
-        f"{root}/{wheels['cadrumo-harness'].name}",
-        "--with",
         f"{root}/{wheels['cadrumo'].name}",
         "--with",
         f"{root}/{wheels['cadrumo-data-manuals'].name}",
@@ -378,7 +387,6 @@ def _mcp_config_document(version: str, cohort: _PluginPythonCohort) -> dict[str,
                 "args": _mcp_args(cohort),
                 "env": {
                     _MCP_REQUIRED_VERSION_ENV: version,
-                    "CADRUMO_MCP_REQUIRED_HARNESS_VERSION": cohort.harness_version,
                     "PYTHONNOUSERSITE": "1",
                     "PYTHONPATH": "",
                 },
@@ -392,11 +400,12 @@ def _materialise_plugin_python_cohort(
     cohort: _PluginPythonCohort,
 ) -> None:
     artifact_dir = output_dir / _PLUGIN_ARTIFACTS_SUBDIR
+    resolved = artifact_dir.resolve()
+    source_directory = cohort.directory.resolve(strict=True)
+    if source_directory == resolved or source_directory in resolved.parents or resolved in source_directory.parents:
+        raise ValueError("plugin output artifact directory must not overlap the source cohort")
     if artifact_dir.exists():
         shutil.rmtree(artifact_dir)
-    resolved = artifact_dir.resolve()
-    if cohort.directory == resolved or cohort.directory in resolved.parents or resolved in cohort.directory.parents:
-        raise ValueError("plugin output artifact directory must not overlap the source cohort")
     artifact_dir.mkdir(parents=True)
     retained = _verify_and_copy_cohort_wheels(cohort, artifact_dir)
     wheelhouse = _extract_runtime_wheelhouse(cohort, artifact_dir / _RUNTIME_WHEELHOUSE_SUBDIR)
@@ -405,12 +414,11 @@ def _materialise_plugin_python_cohort(
         _PLUGIN_COHORT_MANIFEST,
         {
             "artifacts": retained,
-            "harness_version": cohort.harness_version,
             "runtime_wheelhouse": wheelhouse,
             "runtime_wheelhouse_sha256": cohort.sha256["runtime-wheelhouse"],
             "schema": _PLUGIN_COHORT_SCHEMA,
             "sha256": {distribution: cohort.sha256[distribution] for distribution in _PYTHON_COHORT_WHEELS},
-            "source_commit": cohort.source_commit,
+            "source_digest": cohort.source_digest,
             "version": cohort.version,
         },
     )

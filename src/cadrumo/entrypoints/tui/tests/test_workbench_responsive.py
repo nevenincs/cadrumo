@@ -31,14 +31,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _THEMES = (CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME)
 
 
-
-
-
-
-
-
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("size", [s for s in SUPPORTED_TERMINAL_SIZES if s[0] >= 120])
 @pytest.mark.parametrize("scenario", ["ready", "blocked"])

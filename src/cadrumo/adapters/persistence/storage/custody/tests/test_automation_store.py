@@ -6,17 +6,21 @@ test module; these cases prove crypto/protocol behavior, not platform readiness.
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import gzip
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, SecretBytes, ValidationError
+
+if TYPE_CHECKING:
+    from _ctypes import _CArgObject
 
 from cadrumo.adapters.persistence.storage.custody import automation_secret_store as windows_secret_store
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import (
@@ -55,10 +59,12 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessBinding,
 )
 from cadrumo.application.user_profile.automation_custody_port import (
+    AutomationCustodyCode,
     AutomationCustodyError,
     AutomationCustodyPort,
     AutomationGrantMaterial,
     AutomationKeyVerifier,
+    AutomationSecretStore,
     NativeSecretBackend,
 )
 from cadrumo.application.user_profile.capsule_archive import (
@@ -68,6 +74,7 @@ from cadrumo.application.user_profile.capsule_archive import (
 from cadrumo.application.user_profile.capsule_restore import restore_profile_capsule_with_password
 from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 NOW = datetime(2026, 9, 26, tzinfo=UTC)
@@ -478,6 +485,36 @@ class TrackedWindowsStore(WindowsAutomationSecretStore):
         super().replace(namespace, account, value)
 
 
+@dataclass
+class TrackedWindowsItemCleanup:
+    """Retain one exact synthetic item until native deletion and absence succeed."""
+
+    native: AutomationSecretStore
+    namespace: str
+    account: str
+    released: bool = False
+
+    def _release(self) -> None:
+        if not self.released:
+            self.native.delete(self.namespace, self.account)
+            if self.native.read(self.namespace, self.account) is not None:
+                raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+            self.released = True
+
+    async def close(self) -> None:
+        """Keep synchronous native calls off the cleanup event loop."""
+        await asyncio.to_thread(self._release)
+
+
+async def close_tracked_windows_items(native: TrackedWindowsStore, *, primary_error: BaseException | None) -> None:
+    """Attempt every tracked item, retaining failed owners on the original error."""
+    await close_async_resources(
+        *(TrackedWindowsItemCleanup(native, namespace, account) for namespace, account in sorted(native.created)),
+        task_name="synthetic-windows-credential-cleanup",
+        primary_error=primary_error,
+    )
+
+
 class WindowsCredentialApiDouble:
     """In-memory raw-byte seam for portable adapter contract tests."""
 
@@ -543,6 +580,10 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
 
     class FakeAdvapi32:
         credential_type: Any
+        CredReadW: FakeFunction
+        CredWriteW: FakeFunction
+        CredDeleteW: FakeFunction
+        CredFree: FakeFunction
 
     api = FakeAdvapi32()
     recorded: dict[str, object] = {}
@@ -551,7 +592,7 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
     freed: list[int] = []
     last_error = {"value": 0}
 
-    def cred_write(pointer: object, _flags: int) -> int:
+    def cred_write(pointer: _CArgObject, _flags: int) -> int:
         credential = ctypes.cast(pointer, ctypes.POINTER(api.credential_type)).contents
         size = int(credential.CredentialBlobSize)
         recorded["target"] = credential.TargetName
@@ -563,7 +604,7 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
         records[credential.TargetName] = bytes(recorded["blob"])
         return 1
 
-    def cred_read(target: str, _credential_type: int, _flags: int, output_pointer: object) -> int:
+    def cred_read(target: str, _credential_type: int, _flags: int, output_pointer: _CArgObject) -> int:
         value = records.get(target)
         if value is None:
             last_error["value"] = 1168
@@ -580,7 +621,7 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
         output[0] = ctypes.pointer(credential)
         return 1
 
-    def cred_free(pointer: object) -> None:
+    def cred_free(pointer: ctypes.c_void_p) -> None:
         address = ctypes.cast(pointer, ctypes.c_void_p).value
         assert address is not None
         allocations.pop(address)
@@ -599,9 +640,7 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
     api.CredFree = FakeFunction(cred_free)
     monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
     monkeypatch.setattr(windows_secret_store.ctypes, "WinDLL", lambda _name, **_kwargs: api, raising=False)
-    monkeypatch.setattr(
-        windows_secret_store.ctypes, "get_last_error", lambda: last_error["value"], raising=False
-    )
+    monkeypatch.setattr(windows_secret_store.ctypes, "get_last_error", lambda: last_error["value"], raising=False)
 
     manager = windows_secret_store._WindowsCredentialManager()
     api.credential_type = manager._credential_type
@@ -638,6 +677,7 @@ def test_windows_native_publication_replacement_and_deletion(subject: Subject) -
             pytest.skip("Windows Credential Manager is unavailable in this logon session (WinError 1312)")
         raise
     assert native.read(CONTROL_NAMESPACE, store.account) is None
+    primary: BaseException | None = None
     try:
         probe_namespace = "cadrumo.automation.native-probe.v1"
         probe_account = store.account + "/synthetic"
@@ -661,7 +701,83 @@ def test_windows_native_publication_replacement_and_deletion(subject: Subject) -
         assert store.read()[1].grants == ()
         with pytest.raises(AutomationCustodyError):
             store.unwrap(credential=subject.credential, now=NOW)
+    except BaseException as error:
+        primary = error
+        raise
     finally:
-        for namespace, account in native.created:
-            native.delete(namespace, account)
-            assert native.read(namespace, account) is None
+        asyncio.run(close_tracked_windows_items(native, primary_error=primary))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("primary_kind", ["none", "body", "cancel"])
+async def test_native_item_cleanup_attempts_all_items_and_retains_exact_failures(primary_kind: str) -> None:
+    """Portable faults preserve actual failed-item owners and never replay success."""
+    delete_failure = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    read_failure = AutomationCustodyError(AutomationCustodyCode.INVALID)
+    namespace = "cadrumo.automation.synthetic-cleanup.v1"
+
+    class FaultStore(TrackedWindowsStore):
+        def __init__(self) -> None:
+            super().__init__()
+            self.created = {(namespace, account) for account in ("a-delete", "b-read", "c-success")}
+            self.items = set(self.created)
+            self.deletes: list[tuple[str, str]] = []
+            self.reads: list[tuple[str, str]] = []
+
+        @override
+        def delete(self, namespace: str, account: str) -> None:
+            item = (namespace, account)
+            self.deletes.append(item)
+            if account == "a-delete" and self.deletes.count(item) == 1:
+                raise delete_failure
+            self.items.discard(item)
+
+        @override
+        def read(self, namespace: str, account: str) -> SecretBytes | None:
+            item = (namespace, account)
+            self.reads.append(item)
+            if account == "b-read" and self.reads.count(item) <= 2:
+                raise read_failure
+            return SecretBytes(b"synthetic") if item in self.items else None
+
+    native = FaultStore()
+    primary = (
+        asyncio.CancelledError("synthetic body cancellation")
+        if primary_kind == "cancel"
+        else ValueError("synthetic body failure")
+        if primary_kind == "body"
+        else None
+    )
+    caught: BaseException | None = None
+    try:
+        try:
+            if primary is not None:
+                raise primary
+        finally:
+            await close_tracked_windows_items(native, primary_error=primary)
+    except BaseException as error:
+        caught = error
+    if primary is None:
+        assert isinstance(caught, AsyncResourceCleanupError)
+        retained = caught
+    else:
+        assert caught is primary
+        retained = primary.__dict__.get("cleanup_error" if primary_kind == "cancel" else "async_cleanup_error")
+        assert isinstance(retained, AsyncResourceCleanupError)
+    assert retained.__cause__ is delete_failure
+    assert native.deletes == [(namespace, account) for account in ("a-delete", "b-read", "c-success")]
+    assert native.reads == [(namespace, account) for account in ("b-read", "c-success")]
+    assert len(retained.resources) == 2
+    with pytest.raises(AsyncResourceCleanupError) as still_failed:
+        await retained.retry_cleanup()
+    assert still_failed.value.__cause__ is read_failure
+    assert len(still_failed.value.resources) == 1
+    await still_failed.value.retry_cleanup()
+    assert not native.items
+    assert native.deletes == [
+        (namespace, account) for account in ("a-delete", "b-read", "c-success", "a-delete", "b-read", "b-read")
+    ]
+    assert native.reads == [(namespace, account) for account in ("b-read", "c-success", "a-delete", "b-read", "b-read")]
+    settled_counts = len(native.deletes), len(native.reads)
+    await retained.retry_cleanup()
+    assert (len(native.deletes), len(native.reads)) == settled_counts

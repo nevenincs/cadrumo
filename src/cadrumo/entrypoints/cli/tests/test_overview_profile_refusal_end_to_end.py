@@ -27,7 +27,7 @@ from ....application.user_profile.preflight import build_profile_preflight_requi
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ._overview_calendar_support import _CALENDAR_GATING_FACT_OVERRIDES
 from ._overview_native_support import invoke_native_overview
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

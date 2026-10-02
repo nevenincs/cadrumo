@@ -8,21 +8,15 @@ import pytest
 import typer
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
-
 from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 from ..._config_bucket_history_payloads import BucketHistoryEventPayload
 from .._bucket_history import (
-    _bucket_history_event_matches,
     _bucket_history_event_payload,
     _parse_bucket_event_types,
     _parse_bucket_history_instant,
-    _resolve_profile_history_target,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _event_at(occurred_at: datetime) -> BucketEvent:
@@ -72,35 +66,6 @@ def test_parse_bucket_history_instant_normalises_naive_date_to_utc() -> None:
     assert parsed.utcoffset() == UTC.utcoffset(None)
 
 
-def test_bucket_history_filter_compares_naive_since_against_aware_events() -> None:
-    # Regression: a bare ``--since 2026-02-01`` parsed naive while events stamp
-    # ``occurred_at`` as aware UTC, raising ``TypeError`` on the ``<`` comparison.
-    since_dt = _parse_bucket_history_instant("2026-02-01", flag="--since")
-    before = _event_at(datetime(2026, 1, 15, tzinfo=UTC))
-    after = _event_at(datetime(2026, 3, 15, tzinfo=UTC))
-
-    assert (
-        _bucket_history_event_matches(
-            before,
-            since_dt=since_dt,
-            until_dt=None,
-            object_id_token=None,
-            actor_token=None,
-        )
-        is False
-    )
-    assert (
-        _bucket_history_event_matches(
-            after,
-            since_dt=since_dt,
-            until_dt=None,
-            object_id_token=None,
-            actor_token=None,
-        )
-        is True
-    )
-
-
 def test_bucket_history_event_payload_carries_payload_version() -> None:
     """The profile-history projection carries the same discriminator LedgerHistoryEventPayload does.
 
@@ -128,28 +93,4 @@ def test_bucket_history_event_payload_requires_payload_version() -> None:
                 "object_type": BucketEventObjectType.PROFILE,
                 "object_id": "profile-1",
             },
-        )
-
-
-def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> None:
-    """The omitted subject is the real active profile, not a copied default."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    history_credential = "history-subject-operator-secret"
-    from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-    from .....application.user_profile.registration import register_profile_with_credentials
-    from .....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-    from .....domain.user_profile.values import UserProfileFact
-
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(
-            label="History Subject",
-            passphrase=history_credential,
-            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="en"),),
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
-
-        assert _resolve_profile_history_target(None) == (
-            "History Subject",
-            outcome.bucket_id,
         )

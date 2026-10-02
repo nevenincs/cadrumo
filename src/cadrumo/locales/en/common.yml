@@ -1234,6 +1234,8 @@ tui:
     target_key: Target key
     title: Automation access
     unattended: Unattended
+    unattended_notice: With a valid unattended grant, this installation may unlock
+      the profile after human sign-out. Lock and revocation policies still apply.
     unavailable: Automation inventory is unavailable. Refresh to try again.
   automation_request:
     actions: Actions
@@ -2275,6 +2277,8 @@ tui:
     busy: Working…
     close: Close
     completed: Completed.
+    denial_acknowledgement: 'Access denied: {access_denied} · Credential cleanup pending:
+      {cleanup_pending}'
     deny_all: Revoke all automation
     deny_grant: Revoke grant
     deny_key: Revoke key
@@ -2289,8 +2293,12 @@ tui:
     resume_grants: Grant UUIDs to reactivate
     resume_password: Profile password
     revoke_session: Revoke session
+    session_details: 'Session: {session_id} | Client: {client_id} | Parent: {parent_session_id}
+      | Grant: {grant_id} | Key: {key_id} | Kind: {kind} | State: {state} | Expires:
+      {expires_at}'
     sessions: Sessions
     sessions_empty: No current sessions.
+    sessions_locked: 'Locked sessions: {session_ids}'
     title: Profile access
     view_automation: View automation
   runtime_login:

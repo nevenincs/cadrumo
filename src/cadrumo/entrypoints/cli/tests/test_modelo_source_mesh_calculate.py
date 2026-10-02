@@ -23,6 +23,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from ....application.user_profile.login_session import login_profile
+from ....core.external_constants import OutputLanguage
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -43,8 +44,8 @@ from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m303_ordinary_cli_support import joint_return_options
 from ._modelo_work_ux_support import _capture_m115_invoice_withholding
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 __all__ = ["_isolated_cli_backend"]
 
@@ -928,6 +929,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     import typer.main
 
     from ....application.modelo.calculate_input import ModeloWorkCalculationServiceResult
+    from ....application.modelo.operation_definitions import calculation_public_result
     from .._modelo_behavior_support import resolve_work_unit_for_cli
     from .._modelo_work_wizard_cli import _emit_wizard_result
 
@@ -945,9 +947,12 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     wizard_work_unit = resolve_work_unit_for_cli(work_unit_id=work_unit["work_unit_id"])
     _emit_wizard_result(
         wizard_context,
-        ModeloWorkCalculationServiceResult(revision=persisted, work_unit=wizard_work_unit, revision_published=True),
+        calculation_public_result(
+            ModeloWorkCalculationServiceResult(revision=persisted, work_unit=wizard_work_unit, revision_published=True),
+            operation=operation,
+        ),
         (),
-        operation=operation,
+        language=OutputLanguage.EN,
     )
     wizard_payload = _payload(capsys.readouterr().out)
     assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"

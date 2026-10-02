@@ -1,23 +1,13 @@
-"""Behavior handlers for modelo projection and comparison commands.
-
-The ``modelo.project`` adapter calls :func:`project_modelo_100_from_m130`
-and serializes the service result as :class:`ModeloProjectResult`.  Its
-:class:`CasillaObservationPayload` list is the provenance-carrying channel for
-formula-computed :class:`CasillaId` values, while
-:class:`M130AccumulatedPayload` and :class:`M100ProjectionPayload` expose the
-operator-facing summary values.
-
-The ``modelo.compare`` adapter calls :func:`compare_modelo_years`, converts
-:class:`ModeloCompareDeltaRow` rows into :class:`DeltaRowPayload`, and emits the
-typed envelope through :func:`emit_envelope`.
-"""
+"""Presentation of registered modelo projection and comparison results."""
 
 from __future__ import annotations
 
 from decimal import Decimal
+from uuid import UUID
 
 import typer
 
+from ...application.modelo.projection import ModeloCompareNeedTwoYearsError
 from ...application.modelo.projection_operation import (
     CompareDeltaRowProjection,
     ModeloCompareOperationProjection,
@@ -25,10 +15,9 @@ from ...application.modelo.projection_operation import (
     ModeloProjectOperationRequest,
     ProjectionOverride,
 )
-from ...application.modelo.projection import ModeloCompareNeedTwoYearsError
+from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...core.output_rendering import jsonable_output_payload
-from .common import active_bucket_id_or_refuse
 from ._modelo_cli_support import (
     bad_parameter_from_localized_context,
     parse_binding_override,
@@ -43,9 +32,26 @@ from ._modelo_payloads import (
     ModeloCompareResult,
     ModeloProjectResult,
 )
-from .common import emit_envelope
+from .common import active_bucket_id_or_refuse, emit_envelope
+from .errors import CliRefusedBoundaryError
 from .runtime_modelo_projection import run_modelo_compare, run_modelo_project
-from uuid import UUID
+
+_PROJECT_RECOVERY_LOCALE_KEYS = {
+    "ERROR_MODELO_PROJECT_NO_M130_UNITS": "cli.app.modelo.project.no_m130_units",
+    "ERROR_MODELO_PROJECT_NO_M130_REVISIONS": "cli.app.modelo.project.no_m130_revisions",
+}
+_COMPARE_RECOVERY_LOCALE_KEYS = {
+    "ERROR_MODELO_COMPARE_NO_WORK_UNITS": "cli.app.modelo.compare.recover_no_work_units",
+    "ERROR_MODELO_COMPARE_NO_REVISIONS": "cli.app.modelo.compare.recover_no_revisions",
+    "ERROR_MODELO_COMPARE_NO_USABLE_REVISIONS": "cli.app.modelo.compare.recover_no_usable_revisions",
+}
+
+
+def _recovery_code(exc: CliRefusedBoundaryError) -> str | None:
+    """Use only the registered settled failure code, never private worker text."""
+    context = exc.context or {}
+    code = context.get("reason")
+    return code if context.get("terminal_condition") == "failed" and isinstance(code, str) else None
 
 
 def _delta_row_payload(row: CompareDeltaRowProjection) -> DeltaRowPayload:
@@ -92,16 +98,28 @@ def modelo_project(
     profile_id = UUID(active_bucket_id_or_refuse())
     casilla_pairs = dict(parse_casilla_override(spec) for spec in casilla or ())
     binding_pairs = dict(parse_binding_override(spec) for spec in binding or ())
-    service_result = run_modelo_project(
-        ctx,
-        ModeloProjectOperationRequest(
-            profile_id=profile_id,
-            year=year,
-            ccaa=ccaa,
-            casilla_overrides=tuple(ProjectionOverride(key=key, value=value) for key, value in casilla_pairs.items()),
-            binding_overrides=tuple(ProjectionOverride(key=key, value=value) for key, value in binding_pairs.items()),
-        ),
-    )
+    try:
+        service_result = run_modelo_project(
+            ctx,
+            ModeloProjectOperationRequest(
+                profile_id=profile_id,
+                year=year,
+                ccaa=ccaa,
+                casilla_overrides=tuple(
+                    ProjectionOverride(key=key, value=value) for key, value in casilla_pairs.items()
+                ),
+                binding_overrides=tuple(
+                    ProjectionOverride(key=key, value=value) for key, value in binding_pairs.items()
+                ),
+            ),
+        )
+    except CliRefusedBoundaryError as exc:
+        key = _PROJECT_RECOVERY_LOCALE_KEYS.get(_recovery_code(exc) or "")
+        if key is None:
+            raise
+        context = dict(exc.context or {})
+        context["year"] = year
+        raise CliRefusedBoundaryError(tr(key, year=year), context=context) from exc
     project_result = ModeloProjectResult(
         year=service_result.year,
         ccaa=service_result.ccaa,
@@ -125,12 +143,22 @@ def modelo_project(
             for entry in service_result.casilla_observations
         ],
         m100_projection=M100ProjectionPayload(
-            base_liquidable_general_0505=_decimal_wire(Decimal(service_result.m100_projection.base_liquidable_general_0505)),
+            base_liquidable_general_0505=_decimal_wire(
+                Decimal(service_result.m100_projection.base_liquidable_general_0505)
+            ),
             pagos_fraccionados_0604=_decimal_wire(Decimal(service_result.m100_projection.pagos_fraccionados_0604)),
-            cuota_integra_estatal_0545=_decimal_wire(Decimal(service_result.m100_projection.cuota_integra_estatal_0545)),
-            cuota_integra_autonomica_0546=_decimal_wire(Decimal(service_result.m100_projection.cuota_integra_autonomica_0546)),
-            cuota_liquida_estatal_0595=_decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_estatal_0595)),
-            cuota_liquida_autonomica_0596=_decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_autonomica_0596)),
+            cuota_integra_estatal_0545=_decimal_wire(
+                Decimal(service_result.m100_projection.cuota_integra_estatal_0545)
+            ),
+            cuota_integra_autonomica_0546=_decimal_wire(
+                Decimal(service_result.m100_projection.cuota_integra_autonomica_0546)
+            ),
+            cuota_liquida_estatal_0595=_decimal_wire(
+                Decimal(service_result.m100_projection.cuota_liquida_estatal_0595)
+            ),
+            cuota_liquida_autonomica_0596=_decimal_wire(
+                Decimal(service_result.m100_projection.cuota_liquida_autonomica_0596)
+            ),
             cuota_resultante_0597=_decimal_wire(Decimal(service_result.m100_projection.cuota_resultante_0597)),
         ),
     )
@@ -190,7 +218,11 @@ def _compare_lines(service_result: ModeloCompareOperationProjection) -> list[str
         "casilla_id\tlabel\tsection\tyear_a\tyear_b\tdelta\tpct_change",
     ]
     for row in service_result.delta_rows:
-        if Decimal(row.delta) == Decimal("0") and Decimal(row.year_a_value) == Decimal("0") and Decimal(row.year_b_value) == Decimal("0"):
+        if (
+            Decimal(row.delta) == Decimal("0")
+            and Decimal(row.year_a_value) == Decimal("0")
+            and Decimal(row.year_b_value) == Decimal("0")
+        ):
             continue
         pct = row.pct_change if row.pct_change is not None else "n/a"
         lines.append(
@@ -211,14 +243,25 @@ def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: st
         raise bad_parameter_from_localized_context(
             ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years")
         )
-    service_result = run_modelo_compare(
-        ctx,
-        ModeloCompareOperationRequest(
-            profile_id=UUID(active_bucket_id_or_refuse()),
-            modelo=modelo,
-            years=years,
-        ),
-    )
+    try:
+        service_result = run_modelo_compare(
+            ctx,
+            ModeloCompareOperationRequest(
+                profile_id=UUID(active_bucket_id_or_refuse()),
+                modelo=modelo,
+                years=years,
+            ),
+        )
+    except CliRefusedBoundaryError as exc:
+        key = _COMPARE_RECOVERY_LOCALE_KEYS.get(_recovery_code(exc) or "")
+        if key is None:
+            raise
+        context = dict(exc.context or {})
+        context["modelo"] = modelo
+        context["year_a"], context["year_b"] = sorted(years)
+        raise CliRefusedBoundaryError(
+            tr(key, modelo=modelo, year_a=context["year_a"], year_b=context["year_b"]), context=context
+        ) from exc
     compare_result = _compare_result_payload(service_result)
     lines = _compare_lines(service_result)
     emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)

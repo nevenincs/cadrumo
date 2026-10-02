@@ -49,6 +49,16 @@ class AsyncResourceCleanupError(CoreError):
         self._retry_task_name = retry_task_name
         self._close_attempts = close_attempts
 
+    @property
+    def resources(self) -> tuple[AsyncCloseable, ...]:
+        """Expose the actual failed owners for transfer to an enclosing scope."""
+        return self._resources
+
+    def discard_released_resources(self, *resources: AsyncCloseable) -> None:
+        """Retire retry ownership after an enclosing scope completed actual release."""
+        released = {id(resource) for resource in resources}
+        self._resources = tuple(resource for resource in self._resources if id(resource) not in released)
+
     async def retry_cleanup(self) -> None:
         """Retry only the resource owners whose prior close failed."""
         await close_async_resources(
@@ -60,8 +70,9 @@ class AsyncResourceCleanupError(CoreError):
 
     def merged_with(self, later: AsyncResourceCleanupError) -> AsyncResourceCleanupError:
         """Combine nested cleanup failures without losing either owner."""
+        retained = {id(resource): resource for resource in self._resources + later._resources}
         return AsyncResourceCleanupError(
-            self._resources + later._resources,
+            tuple(retained.values()),
             self._failures + later._failures,
             retry_task_name=self._retry_task_name,
             close_attempts=max(self._close_attempts, later._close_attempts),
@@ -71,6 +82,30 @@ class AsyncResourceCleanupError(CoreError):
 def _runtime_object(value: object) -> object:
     """Capture an event-loop result before checking its concrete task shape."""
     return value
+
+
+def has_async_cleanup_failure(error: BaseException) -> bool:
+    """Identify failures that retain asynchronous resource cleanup ownership."""
+    return bool(async_cleanup_failures(error))
+
+
+def async_cleanup_failures(error: BaseException) -> tuple[AsyncResourceCleanupError, ...]:
+    """Recover canonical cleanup owners attached while an error unwinds."""
+    pending = [error]
+    visited: set[int] = set()
+    failures: list[AsyncResourceCleanupError] = []
+    while pending:
+        current = pending.pop()
+        if id(current) in visited:
+            continue
+        visited.add(id(current))
+        if isinstance(current, AsyncResourceCleanupError):
+            failures.append(current)
+        for field in ("async_cleanup_error", "cleanup_error", "body_error"):
+            attached = current.__dict__.get(field)
+            if isinstance(attached, BaseException):
+                pending.append(attached)
+    return tuple(failures)
 
 
 async def await_cancellation_complete[T](
@@ -251,6 +286,8 @@ def _attach_cleanup_error_to_body(
 __all__ = [
     "AsyncCloseable",
     "AsyncResourceCleanupError",
+    "async_cleanup_failures",
     "await_cancellation_complete",
     "close_async_resources",
+    "has_async_cleanup_failure",
 ]

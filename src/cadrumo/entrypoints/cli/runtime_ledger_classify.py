@@ -12,11 +12,14 @@ from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.classify_operation import (
     LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
     LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
+    LEDGER_OPERATOR_IVA_DEFINITION_ID,
     LedgerClassifyM210Options,
     LedgerClassifyOperationResult,
     LedgerClassifyPatch,
     LedgerClassifyPatchField,
     LedgerClassifyRequest,
+    LedgerOperatorIvaRequest,
+    LedgerOperatorIvaResult,
 )
 from ...application.ledger.models import ManualLedgerTransactionPatch
 from ...application.runtime.contracts import RuntimeRefusalCode
@@ -253,4 +256,52 @@ def _matches_selected_fields(
     return True
 
 
-__all__ = ["run_ledger_classify"]
+def run_ledger_operator_iva(
+    ctx: typer.Context, *, transaction_id: str, iva_category: str, actor: str | None
+) -> LedgerOperatorIvaResult:
+    """Derive the operator-selected IVA substrate in the exact-profile worker."""
+    client = bound_profile_client(ctx)
+    payload = LedgerOperatorIvaRequest(
+        profile_id=client.profile_id, transaction_id=transaction_id, iva_category=iva_category, actor=actor
+    )
+    completed = run_registered_operation(
+        client,
+        payload,
+        definition_id=LEDGER_OPERATOR_IVA_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(client.profile_id)),
+        result_type=LedgerOperatorIvaResult,
+        request_version=1,
+        result_version=1,
+        timeout=120,
+        allow_refusal_detail=True,
+    )
+    result = completed.projection
+    expected_effect = (
+        OperationEffect.UPDATED
+        if result.classification is not None and result.classification.bucket_event_ids
+        else OperationEffect.NONE
+    )
+    if (
+        result.profile_id != client.profile_id
+        or not result.transaction_id.startswith(payload.transaction_id)
+        or result.iva_category != iva_category
+        or completed.effect is not expected_effect
+        or (
+            result.outcome == "validation_error"
+            and (
+                completed.terminal_condition is not OperationTerminalCondition.REFUSED
+                or completed.refusal_code != LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE
+            )
+        )
+        or (result.outcome == "derived" and completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED)
+    ):
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+        )
+    return result
+
+
+__all__ = ["run_ledger_classify", "run_ledger_operator_iva"]

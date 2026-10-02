@@ -1,15 +1,17 @@
-"""Runtime-owned Windows worker with containment established before secret delivery."""
+"""Runtime-owned profile worker with containment before secret delivery."""
 
 from __future__ import annotations
 
+import asyncio
 import os
 import sys
 import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
-from threading import RLock
+from threading import Event, RLock
 from uuid import UUID, uuid4, uuid5
 
 from pydantic import BaseModel
@@ -68,15 +70,67 @@ from ...application.user_profile.access_contracts import AccessDenialCode, Acces
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
-from .framing import accept_runtime_handshake, read_document, write_document, write_secret
-from .windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
-from .windows_process import WindowsOwnedProcess, WindowsProcessScope
+from ...core.async_cleanup import AsyncResourceCleanupError
+from ...core.time.clock import now
+from .framing import RuntimeTransportCleanup, accept_runtime_handshake, read_document, write_document, write_secret
+from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
+from .posix import PosixRuntimeChannel
+from .windows_process import WindowsOwnedProcess, WindowsProcessScope, unreturned_windows_process_scope
 from .worker_authorization import WorkerAuthorizationServer
 from .worker_lease_transfer import write_worker_lease
+from .worker_transport import WorkerChannel, WorkerEndpoint, worker_endpoint
 
 _WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS = 45.0
 _WORKER_STARTUP_ACCEPT_POLL_SECONDS = 0.1
 _WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS = 30.0
+_WORKER_NATIVE_HEALTH_WAIT_SECONDS = 2.0
+
+
+class _WorkerCleanup:
+    """Retain native release until it succeeds, including asynchronous retries."""
+
+    def __init__(self, release: Callable[[], None], *, retry_release: Callable[[], None] | None = None) -> None:
+        self._release = release
+        self._retry_release = retry_release or release
+        self._released = False
+
+    def close_now(self) -> None:
+        if not self._released:
+            release, self._release = self._release, self._retry_release
+            release()
+            self._released = True
+
+    async def close(self) -> None:
+        await asyncio.to_thread(self.close_now)
+
+
+def _release_worker_resources(*owners: _WorkerCleanup, primary_error: BaseException | None = None) -> None:
+    failed: list[_WorkerCleanup] = []
+    failures: list[BaseException] = []
+    for owner in owners:
+        try:
+            owner.close_now()
+        except BaseException as error:
+            failed.append(owner)
+            failures.append(error)
+    if not failures:
+        return
+    cleanup = AsyncResourceCleanupError(
+        tuple(failed), tuple(failures), retry_task_name="profile-worker-cleanup", close_attempts=1
+    )
+    if primary_error is None:
+        raise cleanup from failures[0]
+    previous = primary_error.__dict__.get("async_cleanup_error")
+    if isinstance(previous, AsyncResourceCleanupError):
+        cleanup = previous.merged_with(cleanup)
+    primary_error.__dict__["async_cleanup_error"] = cleanup
+    primary_error.add_note("Worker cleanup also failed; retry through the attached async_cleanup_error")
+
+
+def unreturned_profile_worker(error: BaseException) -> ProfileWorkerProcess | None:
+    """Find the native owner a failed constructor could not return to its caller."""
+    candidate = error.__dict__.get("_profile_worker_candidate")
+    return candidate if isinstance(candidate, ProfileWorkerProcess) else None
 
 
 def worker_operation_namespace(worker_id: UUID) -> UUID:
@@ -84,7 +138,13 @@ def worker_operation_namespace(worker_id: UUID) -> UUID:
     return uuid5(worker_id, "cadrumo-profile-operations")
 
 
-def _verified_worker_pid(channel: WindowsRuntimeChannel, scope: WindowsProcessScope, os_owner_id: str) -> int:
+def _verified_worker_pid(
+    channel: WorkerChannel, scope: WindowsProcessScope | LinuxProcessScope, os_owner_id: str
+) -> int:
+    if isinstance(scope, LinuxProcessScope):
+        if not isinstance(channel, PosixRuntimeChannel):
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        return scope.verify_worker(channel, owner_id=os_owner_id)
     peer = channel.peer
     process_id = peer.process_id
     if process_id is None or process_id not in scope.active_process_ids() or peer.os_owner_id != os_owner_id:
@@ -102,8 +162,8 @@ class ProfileWorkerProcess:
     identity: ProfileWorkerIdentity
     _lock: RLock
     _operation_lock: RLock
-    _scope: WindowsProcessScope
-    _process: WindowsOwnedProcess
+    _scope: WindowsProcessScope | LinuxProcessScope
+    _process: WindowsOwnedProcess | LinuxOwnedProcess
     _authorization: WorkerAuthorizationServer | None
 
     def __init__(
@@ -112,38 +172,73 @@ class ProfileWorkerProcess:
         *,
         storage_root: Path,
         authorization: WorkerAuthorizationOwner | None = None,
+        worker_script: Path | None = None,
+        wall_clock: Callable[[], datetime] = now,
     ) -> None:
         """Launch and authenticate a contained installed worker before key access."""
-        if sys.platform != "win32":
+        if sys.platform not in {"win32", "linux"}:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+        if worker_script is not None:
+            worker_script = worker_script.resolve(strict=True)
         self.identity = identity
         self._lock = RLock()
         self._operation_lock = RLock()
-        self._channel: WindowsRuntimeChannel | None = None
-        self._operation_channel: WindowsRuntimeChannel | None = None
+        self._human_lock = RLock()
+        self._native_guard = RLock()
+        self._stopping = Event()
+        self._channel: WorkerChannel | None = None
+        self._operation_channel: WorkerChannel | None = None
         self._human_candidate: UUID | None = None
+        self._human_deadline: float | None = None
         self._authorization = None
-        endpoint = WindowsRuntimeEndpoint(storage_root=storage_root, worker_namespace=identity.worker_id)
-        operation_endpoint = WindowsRuntimeEndpoint(
+        endpoint = worker_endpoint(storage_root=storage_root, worker_namespace=identity.worker_id)
+        operation_endpoint = worker_endpoint(
             storage_root=storage_root, worker_namespace=worker_operation_namespace(identity.worker_id)
         )
-        self._scope = WindowsProcessScope()
+        endpoint_owner = _WorkerCleanup(endpoint.close)
+        operation_endpoint_owner = _WorkerCleanup(operation_endpoint.close)
+        self._listener_cleanup = (endpoint_owner, operation_endpoint_owner)
+        self._pending_channel_cleanup: list[_WorkerCleanup] = []
+        try:
+            self._scope = (
+                WindowsProcessScope()
+                if sys.platform == "win32"
+                else LinuxProcessScope(worker_id=identity.worker_id, worker_script=worker_script)
+            )
+        except BaseException as error:
+            retained_scope = unreturned_windows_process_scope(error)
+            if retained_scope is not None:
+                # Native construction already attempted release. Transfer its
+                # actual remaining owner before a public refusal drops errors.
+                self._scope = retained_scope
+                self._stopping.set()
+                error.__dict__["_profile_worker_candidate"] = self
+            raise
+        retiring_listeners = False
         try:
             endpoint.listen()
             operation_endpoint.listen()
-            environment = {
-                key: value
-                for key, value in os.environ.items()
-                if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
-            }
+            environment = (
+                {
+                    key: value
+                    for key, value in os.environ.items()
+                    if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
+                }
+                if sys.platform == "win32"
+                else {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
+            )
             environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
             product_version = version("cadrumo")
+            worker_entrypoint = (
+                ("-m", "cadrumo.entrypoints.runtime.worker")
+                if worker_script is None
+                else (str(worker_script.resolve(strict=True)),)
+            )
             self._process = self._scope.launch(
                 executable=Path(sys.executable),
                 arguments=(
                     "-I",
-                    "-m",
-                    "cadrumo.entrypoints.runtime.worker",
+                    *worker_entrypoint,
                     "--storage-root",
                     str(storage_root),
                     "--worker-id",
@@ -161,7 +256,7 @@ class ProfileWorkerProcess:
             # separate from the short handshakes after the pipe is connected.
             channel = self._accept_startup_channel(endpoint, timeout=_WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS)
             self._channel = channel
-            worker_process_id = _verified_worker_pid(channel, self._scope, identity.binding.os_owner_id)
+            worker_process_id = self._verify_native_peer(channel)
             deadline = time.monotonic() + 10
             accept_runtime_handshake(
                 channel,
@@ -180,14 +275,17 @@ class ProfileWorkerProcess:
                 identity=identity,
                 root=storage_root,
                 process_id=worker_process_id,
-                owns_process=lambda pid: pid in self._scope.active_process_ids(),
-                contain=self._scope.terminate,
+                owns_process=self._owns_native_process,
+                contain=self._contain_native_process,
                 owner=authorization,
+                wall_clock=wall_clock,
             )
             operation_channel = self._accept_startup_channel(operation_endpoint, timeout=10)
             self._operation_channel = operation_channel
             if operation_channel.peer != channel.peer:
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            if isinstance(self._scope, LinuxProcessScope):
+                self._verify_native_peer(operation_channel)
             deadline = time.monotonic() + 10
             accept_runtime_handshake(
                 operation_channel,
@@ -201,29 +299,68 @@ class ProfileWorkerProcess:
             write_document(operation_channel, identity, deadline=deadline)
             if read_document(operation_channel, ProfileWorkerIdentity, deadline=deadline) != identity:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        except BaseException:
-            self.close()
+            # Construction transfers the child only after both native listeners
+            # have retired. A release failure must not lose the unreturned owner.
+            retiring_listeners = True
+            try:
+                _release_worker_resources(endpoint_owner, operation_endpoint_owner)
+            except AsyncResourceCleanupError as cleanup:
+                error = RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+                error.__dict__["async_cleanup_error"] = cleanup
+                raise error from cleanup
+        except BaseException as error:
+            # Callback settlement needs the caller's profile guard released.
+            # Retain this candidate for adoption before a refusal is projected.
+            error.__dict__["_profile_worker_candidate"] = self
+            owners = (_WorkerCleanup(lambda: self._close_resources(deadline=None, retire_listeners=False)),)
+            if not retiring_listeners:
+                owners += (endpoint_owner, operation_endpoint_owner)
+            _release_worker_resources(*owners, primary_error=error)
             raise
-        finally:
-            endpoint.close()
-            operation_endpoint.close()
 
     def _require_process_alive(self) -> None:
-        try:
-            self._process.wait(timeout=0)
-        except RuntimeRefusalError as error:
-            if error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED:
-                return
-            raise
+        with self._native_guard:
+            if self._stopping.is_set():
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            try:
+                self._process.wait(timeout=0)
+            except RuntimeRefusalError as error:
+                if error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED:
+                    return
+                raise
         raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+
+    def _verify_native_peer(self, channel: WorkerChannel) -> int:
+        with self._native_guard:
+            if self._stopping.is_set():
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            return _verified_worker_pid(channel, self._scope, self.identity.binding.os_owner_id)
+
+    def _owns_native_process(self, process_id: int) -> bool:
+        with self._native_guard:
+            return not self._stopping.is_set() and process_id in self._scope.active_process_ids()
+
+    def _contain_native_process(self, *, timeout: float = 2.0) -> None:
+        self._stopping.set()
+        acquired = self._native_guard.acquire(blocking=False)
+        if not acquired:
+            deadline = time.monotonic() + timeout
+            acquired = self._native_guard.acquire(timeout=max(0.0, timeout))
+            timeout = max(0.0, deadline - time.monotonic())
+        if not acquired:
+            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        try:
+            self._scope.terminate(timeout=timeout)
+        finally:
+            self._native_guard.release()
 
     def _accept_startup_channel(
         self,
-        endpoint: WindowsRuntimeEndpoint,
+        endpoint: WorkerEndpoint,
         *,
         timeout: float,
         monotonic: Callable[[], float] = time.monotonic,
-    ) -> WindowsRuntimeChannel:
+    ) -> WorkerChannel:
         deadline = monotonic() + timeout
         while True:
             self._require_process_alive()
@@ -239,8 +376,10 @@ class ProfileWorkerProcess:
                 continue
             try:
                 self._require_process_alive()
-            except BaseException:
-                channel.close()
+            except BaseException as error:
+                owner = _WorkerCleanup(channel.close)
+                self._pending_channel_cleanup.append(owner)
+                _release_worker_resources(owner, primary_error=error)
                 raise
             return channel
 
@@ -265,8 +404,12 @@ class ProfileWorkerProcess:
                     raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
             try:
                 channel = self._operation_channel if operation else self._channel
-                if channel is None:
+                if channel is None or self._stopping.is_set():
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+                if isinstance(self._scope, LinuxProcessScope):
+                    with self._native_guard:
+                        if self._stopping.is_set() or not self._scope.owns_process(self._scope.worker_pid):
+                            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
                 wire_deadline = time.monotonic() + 10 if deadline is None else deadline
                 if isinstance(request.root, ProfileWorkerLeaseRequest | ProfileWorkerHumanBindingRequest):
                     write_worker_lease(channel, request, deadline=wire_deadline)
@@ -288,32 +431,67 @@ class ProfileWorkerProcess:
                 lock.release()
         except (AutomationCustodyError, ProfileAccessRefusedError):
             raise
-        except BaseException:
+        except BaseException as error:
             # No frame was sent when a caller merely timed out waiting for
             # this shared channel. Keep other sessions' worker alive.
             if acquired:
-                self.close(deadline=deadline)
+                self._stopping.set()
+                released = error.__dict__.get("_runtime_transport_cleanup")
+                if isinstance(released, RuntimeTransportCleanup) and released.released:
+                    # Framing has already released this exact native channel.
+                    # Physical worker containment must not close it a second time.
+                    if released.resource is self._channel:
+                        self._channel = None
+                    if released.resource is self._operation_channel:
+                        self._operation_channel = None
+                _release_worker_resources(
+                    _WorkerCleanup(lambda: self.close(deadline=deadline), retry_release=self.close), primary_error=error
+                )
             raise
         finally:
             if secret is not None:
                 secret[:] = bytes(len(secret))
 
+    @property
+    def stopping(self) -> bool:
+        """Whether containment or a dispatched control failure fenced this worker."""
+        return self._stopping.is_set()
+
     def require_alive(self) -> None:
-        """Observe the retained worker process handle, without trusting a reused PID."""
-        with self._lock:
-            if self._channel is None:
+        """Bound native contention, then observe the retained worker's current health.
+
+        Native membership checks do not await host callbacks or worker wire
+        replies. Waiting briefly for their guard avoids refusing a healthy
+        concurrent call; expiry never closes the other guard owner.
+        """
+        if self._stopping.is_set():
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        if not self._native_guard.acquire(timeout=_WORKER_NATIVE_HEALTH_WAIT_SECONDS):
+            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        try:
+            if self._stopping.is_set() or self._channel is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
             if self._authorization is not None:
                 self._authorization.require_healthy()
             self._require_process_alive()
+        finally:
+            self._native_guard.release()
 
-    def install(self, lease: AccessSession, dek: bytearray) -> None:
+    def prepare_api_admission(self, *, deadline: float) -> None:
+        """Compose the pinned graph without receiving any secret or installing a lease."""
+        self._exchange(
+            ProfileWorkerRequest(ProfileWorkerControlRequest(action="prepare_api", request_id=uuid4())),
+            ProfileWorkerStatus,
+            deadline=deadline,
+        )
+
+    def install(self, lease: AccessSession, dek: bytearray, *, deadline: float | None = None) -> None:
         """Consume verified material and finish first-use graph preparation before admission."""
         self._exchange(
             ProfileWorkerRequest(ProfileWorkerLeaseRequest(action="install", request_id=uuid4(), lease=lease)),
             ProfileWorkerStatus,
             dek,
-            deadline=time.monotonic() + _WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS,
+            deadline=(time.monotonic() + _WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS if deadline is None else deadline),
         )
 
     def refresh(self, lease: AccessSession) -> None:
@@ -676,75 +854,150 @@ class ProfileWorkerProcess:
         self, secret: bytearray, *, method: RuntimeHumanProofMethod = "password"
     ) -> Generator[ProfileLoginOutcome]:
         """Borrow a proven human outcome while the runtime admits its human lease."""
-        with self._lock:
+        with self._human_lock:
+            started = time.monotonic()
+            transaction_deadline = started + _WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS + 10
+            primary: BaseException | None = None
             try:
+                self._human_deadline = transaction_deadline
                 result = self._exchange(
                     ProfileWorkerRequest(ProfileWorkerControlRequest(action=method, request_id=uuid4())),
                     ProfileWorkerHumanOutcome,
                     secret,
+                    deadline=started + _WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS,
                 )
                 self._human_candidate = result.candidate_id
                 yield result.login
+            except BaseException as error:
+                primary = error
+                raise
             finally:
                 self._human_candidate = None
+                self._human_deadline = None
                 secret[:] = bytes(len(secret))
-                if self._channel is not None:
-                    self._exchange(
-                        ProfileWorkerRequest(ProfileWorkerControlRequest(action="cancel_human", request_id=uuid4())),
-                        ProfileWorkerStatus,
-                    )
+                if self._channel is not None and not self._stopping.is_set():
+                    try:
+                        self._exchange(
+                            ProfileWorkerRequest(
+                                ProfileWorkerControlRequest(action="cancel_human", request_id=uuid4())
+                            ),
+                            ProfileWorkerStatus,
+                            deadline=time.monotonic() + 10,
+                        )
+                    except BaseException as failure:
+                        # Protocol failures already retain their original native
+                        # close owner. A typed refusal also fences this worker;
+                        # never retry a bare cancel against a later candidate.
+                        if not self._stopping.is_set():
+                            _release_worker_resources(_WorkerCleanup(self.close), primary_error=failure)
+                        if primary is None:
+                            raise
+                        cleanup = AsyncResourceCleanupError(
+                            (), (failure,), retry_task_name="human-candidate-cleanup", close_attempts=1
+                        )
+                        seen: set[int] = set()
+                        for error in (failure, primary):
+                            for field in ("async_cleanup_error", "cleanup_error"):
+                                retained = error.__dict__.get(field)
+                                if isinstance(retained, AsyncResourceCleanupError) and id(retained) not in seen:
+                                    seen.add(id(retained))
+                                    cleanup = retained.merged_with(cleanup)
+                        primary.__dict__["async_cleanup_error"] = cleanup
+                        primary.__dict__["cleanup_error"] = cleanup
+                        primary.add_note("Human candidate cleanup failed; original native owner retained")
+            if time.monotonic() >= transaction_deadline:
+                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+
+    @property
+    def human_admission_deadline(self) -> float:
+        """Expose the trusted original bound only while a candidate is borrowed."""
+        if self._human_deadline is None:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        return self._human_deadline
 
     def bind_human(self, lease: AccessSession, *, persist_receipt: bool = False) -> ProfileHumanLoginReceipt:
         """Promote only the human candidate held by this admission context."""
-        with self._lock:
-            if self._human_candidate is None:
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-            result = self._exchange(
-                ProfileWorkerRequest(
-                    ProfileWorkerHumanBindingRequest(
-                        request_id=uuid4(),
-                        candidate_id=self._human_candidate,
-                        lease=lease,
-                        persist_receipt=persist_receipt,
-                    )
-                ),
-                ProfileWorkerHumanBound,
-                deadline=time.monotonic() + _WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS,
-            )
-            if result.session_id != lease.session_id:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            self._human_candidate = None
-            return result.receipt
+        if self._human_candidate is None or self._human_deadline is None:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        deadline = min(time.monotonic() + 10, self._human_deadline)
+        if deadline <= time.monotonic():
+            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        result = self._exchange(
+            ProfileWorkerRequest(
+                ProfileWorkerHumanBindingRequest(
+                    request_id=uuid4(),
+                    candidate_id=self._human_candidate,
+                    lease=lease,
+                    persist_receipt=persist_receipt,
+                )
+            ),
+            ProfileWorkerHumanBound,
+            deadline=deadline,
+        )
+        if result.session_id != lease.session_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        self._human_candidate = None
+        return result.receipt
 
     def close(self, *, deadline: float | None = None) -> None:
         """Fence calls and terminate the complete owned process scope."""
+        self._close_resources(deadline=deadline, retire_listeners=True)
+
+    def _close_resources(self, *, deadline: float | None, retire_listeners: bool) -> None:
+        self._stopping.set()
+        failures: list[BaseException] = []
         if self._authorization is not None:
-            self._authorization.close()
+            try:
+                self._authorization.close()
+            except BaseException as error:
+                failures.append(error)
         # Contain first: an operation may be waiting for the caller's profile
         # guard. Do not wait for its transport lock while it is still alive.
-        self._scope.terminate(timeout=2.0 if deadline is None else max(0.0, deadline - time.monotonic()))
+        try:
+            self._contain_native_process(timeout=2.0 if deadline is None else max(0.0, deadline - time.monotonic()))
+        except BaseException as error:
+            failures.append(error)
         acquired_control = self._lock.acquire(
             timeout=2.0 if deadline is None else max(0.0, deadline - time.monotonic())
         )
-        if not acquired_control:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-        try:
-            acquired_operation = self._operation_lock.acquire(
-                timeout=2.0 if deadline is None else max(0.0, deadline - time.monotonic())
-            )
-            if not acquired_operation:
-                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        if acquired_control:
             try:
                 if self._channel is not None:
-                    self._channel.close()
-                    self._channel = None
+                    try:
+                        self._channel.close()
+                    except BaseException as error:
+                        failures.append(error)
+                    else:
+                        self._channel = None
+            finally:
+                self._lock.release()
+        else:
+            failures.append(RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED))
+        acquired_operation = self._operation_lock.acquire(
+            timeout=2.0 if deadline is None else max(0.0, deadline - time.monotonic())
+        )
+        if acquired_operation:
+            try:
                 if self._operation_channel is not None:
-                    self._operation_channel.close()
-                    self._operation_channel = None
+                    try:
+                        self._operation_channel.close()
+                    except BaseException as error:
+                        failures.append(error)
+                    else:
+                        self._operation_channel = None
             finally:
                 self._operation_lock.release()
-        finally:
-            self._lock.release()
+        else:
+            failures.append(RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED))
+        if retire_listeners:
+            try:
+                _release_worker_resources(*self._listener_cleanup, *self._pending_channel_cleanup)
+            except BaseException as error:
+                failures.append(error)
+        if len(failures) == 1:
+            raise failures[0]
+        if failures:
+            raise BaseExceptionGroup("Profile worker release failed", failures)
 
     def settle(self, *, deadline: float | None = None) -> None:
         """Join authorization callbacks after releasing the profile admission guard."""

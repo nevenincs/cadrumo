@@ -9,6 +9,14 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from ...application.modelo.data_inventory import data_inventory_checklist
+from ...application.modelo.mcp_query_operation import (
+    ModeloBindingsResolveTypedProjection,
+    ModeloReadinessSafeLedgerIssue,
+    ModeloReadinessSafeMissingRequirement,
+    ModeloReadinessSafeRecovery,
+    ModeloReadinessSummaryProjection,
+    ModeloTypedBindingValue,
+)
 from ...application.modelo.query_read_operation import (
     ModeloBindingOverride,
     ModeloBindingRowV1,
@@ -51,6 +59,7 @@ def prepare_modelo_query_conformance_case(
         return ModeloQueryConformanceCase(
             request=ModeloBindingsListRequest(profile_id=profile_id, modelo="303", year=2025, period_code="1T"),
             expected_projection=ModeloBindingsListProjection(
+                authority_generation=operation.generation.logical_generation,
                 profile_id=profile_id,
                 modelo_filter="303",
                 year_filter=2025,
@@ -76,6 +85,7 @@ def prepare_modelo_query_conformance_case(
                 profile_id=profile_id, modelo="303", period=public_period, overrides=(override,)
             ),
             expected_projection=ModeloBindingsResolveProjection(
+                authority_generation=operation.generation.logical_generation,
                 profile_id=profile_id,
                 modelo=report.code,
                 revision=report.revision,
@@ -84,6 +94,43 @@ def prepare_modelo_query_conformance_case(
                 override_count=1,
                 binding_count=len(rows),
                 bindings=rows,
+            ),
+        )
+    if definition_id == "modelo.bindings.resolve.typed":
+        assert report.rows, "the real modelo must provide a grounded binding preview"
+        first = report.rows[0]
+        snapshot = operation.snapshot("303", filing_year=2025, period="1T")
+        declaration = next(binding for binding in snapshot.revision.bindings if binding.id == first.binding_id)
+        assert declaration.value.channel.value == "decimal"
+        override = ModeloBindingOverride(binding_id=first.binding_id, value="0.75")
+        rows = tuple(
+            ModeloBindingRowV1.from_report_row(
+                report, row, override=override.value if row.binding_id == override.binding_id else None
+            )
+            for row in report.rows
+        )
+        return ModeloQueryConformanceCase(
+            request=ModeloBindingsResolveRequest(
+                profile_id=profile_id, modelo="303", period=public_period, overrides=(override,)
+            ),
+            expected_projection=ModeloBindingsResolveTypedProjection(
+                authority_generation=operation.generation.logical_generation,
+                profile_id=profile_id,
+                modelo=report.code,
+                revision=report.revision,
+                filing_year=report.filing_year,
+                period=report.period,
+                override_count=1,
+                binding_count=len(rows),
+                bindings=rows,
+                validated_overrides=(
+                    ModeloTypedBindingValue(
+                        binding_id=declaration.id,
+                        data_type=declaration.value.data_type,
+                        channel=declaration.value.channel,
+                        value=override.value,
+                    ),
+                ),
             ),
         )
     if definition_id == "modelo.requires":
@@ -96,10 +143,13 @@ def prepare_modelo_query_conformance_case(
         return ModeloQueryConformanceCase(
             request=ModeloRequiresRequest(profile_id=profile_id, modelo="303", period=public_period),
             expected_projection=ModeloRequiresProjection.from_checklist(
-                profile_id, checklist, language=OutputLanguage.ES
+                profile_id,
+                checklist,
+                language=OutputLanguage.ES,
+                authority_generation=operation.generation.logical_generation,
             ),
         )
-    if definition_id != "modelo.readiness":
+    if definition_id not in {"modelo.readiness", "modelo.readiness.summary"}:
         raise ValueError(f"unknown modelo query operation: {definition_id}")
     ports = build_modelo_query_read_ports(bucket_id=str(profile_id))
     readiness = build_modelo_readiness_reports(
@@ -109,11 +159,63 @@ def prepare_modelo_query_conformance_case(
         operation=operation,
     )
     assert len(readiness) == 1
+    request = ModeloReadinessOperationRequest(
+        profile_id=profile_id, modelo="303", filing_year=2025, period=public_period
+    )
+    human = ModeloReadinessProjection.from_report(
+        profile_id,
+        readiness[0],
+        language=OutputLanguage.ES,
+        authority_generation=operation.generation.logical_generation,
+    )
+    if definition_id == "modelo.readiness":
+        return ModeloQueryConformanceCase(request=request, expected_projection=human)
+    verdict = human.profile_precondition_verdict
     return ModeloQueryConformanceCase(
-        request=ModeloReadinessOperationRequest(
-            profile_id=profile_id, modelo="303", filing_year=2025, period=public_period
+        request=request,
+        expected_projection=ModeloReadinessSummaryProjection(
+            authority_generation=operation.generation.logical_generation,
+            profile_id=human.profile_id,
+            language=human.language,
+            modelo=human.modelo,
+            revision_id=human.revision_id,
+            filing_year=human.filing_year,
+            period=human.period,
+            ready=human.ready,
+            profile_ready=human.profile_ready,
+            per_operation_requirements_assessed=human.per_operation_requirements_assessed,
+            profile_refusal_cause=readiness[0].profile_refusal_cause,
+            profile_recovery=(
+                ModeloReadinessSafeRecovery(
+                    failed_condition_id="profile.setup.declared_complete",
+                    action_id="operator.profile.complete_setup",
+                    missing_argument_names=(),
+                )
+                if verdict is not None
+                else None
+            ),
+            registry_ready=human.registry_ready,
+            registry_refusal_cause=readiness[0].registry_refusal_cause,
+            binding_ready=human.binding_ready,
+            missing=tuple(
+                ModeloReadinessSafeMissingRequirement(
+                    section_key=row.section_key,
+                    field_key=row.field_key,
+                    legal_refs=row.legal_refs,
+                    modelos=row.modelos,
+                )
+                for row in readiness[0].missing
+            ),
+            missing_bindings=human.missing_bindings,
+            ledger_preflight_required=human.ledger_preflight_required,
+            ledger_ready=human.ledger_ready,
+            ledger_period=human.ledger_period,
+            ledger_checked_transaction_count=human.ledger_checked_transaction_count,
+            ledger_issues=tuple(
+                ModeloReadinessSafeLedgerIssue(transaction_id=row.transaction_id, reason=row.reason)
+                for row in readiness[0].ledger_issues
+            ),
         ),
-        expected_projection=ModeloReadinessProjection.from_report(profile_id, readiness[0], language=OutputLanguage.ES),
     )
 
 

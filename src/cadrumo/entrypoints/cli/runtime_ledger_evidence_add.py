@@ -42,6 +42,7 @@ def run_ledger_evidence_add(
     request = LedgerEvidenceAddRequest(
         profile_id=client.profile_id,
         source_path=source_path,
+        source_directory=str(Path.cwd()),
         supplier=supplier,
         invoice_number=invoice_number,
         invoice_date=invoice_date,

@@ -1,15 +1,6 @@
-"""Real CLI coverage for ``config check`` hardware and contention rows.
-
-The production provisioning assessor receives injected measurements through its
-public arguments. Each projection assertion therefore consumes a genuine typed
-outcome and verifies that the CLI layer neither recreates a condition nor
-retains a prose compatibility field.
-"""
+"""Canonical workstation contention rows and their CLI transport shape."""
 
 from __future__ import annotations
-
-import json
-from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -22,24 +13,14 @@ from .....application.provisioning import (
     probe_hardware_profile,
 )
 from .....application.provisioning_runtime import assess_model_load_contention
+from .....application.workstation_contention import CONTENTION_ROW_ID, contention_row
 from .....core.config import override_settings
 from .....core.hardware import AcceleratorKind, ContentionCause
-from ...tests.cli_runner import invoke_cached_cli
-from .._check_hardware_rows import CONTENTION_ROW_ID, contention_row
-from ..check_payloads import CheckDependencyPayload
-from .isolated_storage_fixture import config_check_backend, config_check_isolated_backend
+from ..check_payloads import CheckDependencyPayload, CheckPreflightPayload, ConfigCheckResult
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["config_check_backend", "config_check_isolated_backend"]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _GIB = 1024**3
-_HARDWARE_ROW_ID = "local-inference-hardware"
-
-
-def _config_check_payload() -> dict[str, Any]:
-    result = invoke_cached_cli(["--format", "json", "config", "check"])
-    assert result.exit_code in (0, 2), result.output
-    return json.loads(result.output)["result"]
 
 
 def _profile(*, kind: AcceleratorKind, free_vram_bytes: int | None = None) -> HardwareProfile:
@@ -73,41 +54,30 @@ def _contention_snapshot(*, kind: AcceleratorKind, free_vram_bytes: int | None, 
         )
 
 
-def test_the_doctor_reports_the_hardware_profile_and_contention_rows() -> None:
-    """Both rows reach the operator through the existing dependency channel."""
-    payload = _config_check_payload()
-    by_id = {row["service"]: row for row in payload["dependencies"]}
-
-    assert _HARDWARE_ROW_ID in by_id
-    assert CONTENTION_ROW_ID in by_id
-    assert by_id[_HARDWARE_ROW_ID]["facts"]
-
-
-def test_dependency_rows_use_the_typed_outcome_schema() -> None:
-    """The doctor has no bespoke hardware block or legacy text fields."""
-    payload = _config_check_payload()
-
-    assert set(payload) == {"profile_id", "ok", "capabilities", "dependencies", "preflight", "issues"}
-    for row in payload["dependencies"]:
-        assert set(row) == {"service", "available", "facts", "precondition_action"}
-
+def test_workstation_cli_result_keeps_the_closed_row_schemas() -> None:
+    """The authenticated presenter retains the established JSON result rows."""
+    assert set(ConfigCheckResult.model_fields) == {
+        "profile_id",
+        "ok",
+        "capabilities",
+        "dependencies",
+        "preflight",
+        "issues",
+    }
+    assert set(CheckDependencyPayload.model_fields) == {"service", "available", "facts", "precondition_action"}
+    assert set(CheckPreflightPayload.model_fields) == {
+        "check",
+        "healthy",
+        "severity",
+        "facts",
+        "precondition_action",
+    }
     with pytest.raises(ValidationError):
         CheckDependencyPayload(service="dependency", available=False, detail="legacy")
 
 
-def test_neither_row_flips_the_commands_exit_contract() -> None:
-    """Capability/dependency pairing owns ``ok``, not diagnostic contention."""
-    payload = _config_check_payload()
-    by_id = {row["service"]: row for row in payload["dependencies"]}
-    contention = by_id[CONTENTION_ROW_ID]
-
-    assert not any(CONTENTION_ROW_ID in issue for issue in payload["issues"])
-    if not contention["available"]:
-        assert payload["ok"] == (not payload["issues"])
-
-
 def test_unmeasurable_load_is_reported_open_without_forwarding_a_refusal() -> None:
-    """The report preserves facts but does not turn an observation into a rejection."""
+    """A report distinguishes unreadable measurements from a measured shortfall."""
     snapshot = _contention_snapshot(
         kind=AcceleratorKind.UNKNOWN,
         free_vram_bytes=None,
@@ -118,13 +88,14 @@ def test_unmeasurable_load_is_reported_open_without_forwarding_a_refusal() -> No
 
     row = contention_row(snapshot)
 
+    assert row.service == CONTENTION_ROW_ID
     assert row.available is True
     assert row.facts == snapshot.facts
     assert row.precondition_verdict is None
 
 
 def test_measured_shortfall_preserves_the_exact_typed_refusal() -> None:
-    """The CLI projection must not recreate an instruction from contention causes."""
+    """The canonical row retains its owning precondition verdict and measurements."""
     snapshot = _contention_snapshot(
         kind=AcceleratorKind.NVIDIA_CUDA,
         free_vram_bytes=_GIB,
@@ -135,13 +106,14 @@ def test_measured_shortfall_preserves_the_exact_typed_refusal() -> None:
 
     row = contention_row(snapshot)
 
+    assert row.service == CONTENTION_ROW_ID
     assert row.available is False
     assert row.facts == snapshot.facts
     assert row.precondition_verdict == snapshot.precondition_verdict
 
 
 def test_admitted_load_and_no_selected_model_remain_distinct_factual_states() -> None:
-    """Both report available, but their machine facts retain the distinction."""
+    """Both rows are available, while only the selected load has measured figures."""
     admitted = contention_row(
         _contention_snapshot(
             kind=AcceleratorKind.NVIDIA_CUDA,

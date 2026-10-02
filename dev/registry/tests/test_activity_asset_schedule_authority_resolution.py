@@ -1177,7 +1177,14 @@ class _MemoryHistoryRepository:
         self.history = self.history.append_revision(revision)
         return self.history
 
-    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
+    def record_claim(
+        self,
+        claim: AmortizationClaim,
+        *,
+        expected_history: ActivityAssetHistory | None = None,
+    ) -> ActivityAssetHistoryClaimResult:
+        if expected_history is not None and expected_history != self.history:
+            raise ActividadAssetClaimConflictError("activity asset history changed before claim recording")
         recorded = self.history.record_claim(claim)
         self.history = recorded.history
         return recorded

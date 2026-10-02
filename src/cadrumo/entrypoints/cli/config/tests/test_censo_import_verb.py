@@ -113,9 +113,7 @@ def test_apply_routes_through_the_registered_file_import_operation() -> None:
     bridge_calls = [
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "import_censal_file_facts"
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "import_censal_file_facts"
     ]
     assert len(bridge_calls) == 1, "the import door must submit one registered file-import operation"
     assert not any(

@@ -40,6 +40,7 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
 from ...domain.categories.spending_category_catalogue import require_spending_category
+from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
@@ -70,17 +71,21 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory
 from .actions_common import display_decimal
 from .actions_manual import ledger_transaction_result_payload, update_manual_transaction_fields
-from .id_resolution import resolve_transaction_id
+from .id_resolution import normalise_transaction_id_prefix, resolve_transaction_id
+from .llm_classification import derive_operator_iva_substrate
+from .llm_classification_ports import OperatorIvaDerivationResult
 from .m210_classification import resolve_m210_income_classification
 from .models import (
     LedgerTransactionResultPayload,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from .persistence_ports import LedgerPersistenceConflictError
 from .read_access import resolve_ledger_read_access
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_CLASSIFY_OPERATION_DEFINITION_ID = "ledger.classify.single"
+LEDGER_OPERATOR_IVA_DEFINITION_ID = "ledger.classify.iva-derive"
 LEDGER_CLASSIFY_PHASE = "ledger.classify.single"
 _MAX_CLASSIFY_EVENT_IDS = 3
 _MAX_VALIDATION_MESSAGES = 32
@@ -745,10 +750,293 @@ def build_ledger_classify_registration(
     )
 
 
+class LedgerOperatorIvaRequest(BaseModel):
+    """Exact-profile operator-selected IVA category, without frontend tax resolution."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    transaction_id: _TransactionPrefix
+    iva_category: Annotated[str, Field(min_length=1, max_length=128)]
+    actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
+
+    @field_validator("transaction_id")
+    @classmethod
+    def _canonical_transaction_prefix(cls, value: str) -> str:
+        return normalise_transaction_id_prefix(value)
+
+
+class LedgerOperatorIvaResult(BaseModel):
+    """Existing grounded IVA outcome, including a truthful non-derivable result."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    outcome: Literal["derived", "validation_error"] = "derived"
+    transaction_id: Annotated[str, Field(min_length=1, max_length=96)]
+    iva_category: Annotated[str, Field(min_length=1, max_length=128)]
+    derivable: bool
+    iva_rate: _DecimalText | None = None
+    taxable_base: _DecimalText | None = None
+    iva_amount: _DecimalText | None = None
+    note: _LongText = ""
+    classification: LedgerClassifyOperationResult | None = None
+    validation_messages: _ValidationMessages = ()
+
+    @model_validator(mode="after")
+    def _complete_derivation(self) -> LedgerOperatorIvaResult:
+        values = (self.iva_rate, self.taxable_base, self.iva_amount, self.classification)
+        if self.outcome == "validation_error":
+            if (
+                self.derivable
+                or any(value is not None for value in values)
+                or not self.validation_messages
+                or self.note
+            ):
+                raise ValueError("operator IVA validation refusal requires only its bounded validation details")
+            return self
+        if self.validation_messages:
+            raise ValueError("derived IVA result cannot carry validation refusal details")
+        if self.derivable:
+            if any(value is None for value in values):
+                raise ValueError("derivable IVA result requires its complete substrate")
+            if (
+                self.classification is None
+                or self.classification.profile_id != self.profile_id
+                or self.classification.transaction is None
+                or self.classification.transaction.transaction_id != self.transaction_id
+            ):
+                raise ValueError("derived IVA result belongs to another profile or row")
+        elif any(value is not None for value in values):
+            raise ValueError("non-derivable IVA result cannot carry a write result")
+        return self
+
+
+class LedgerOperatorIvaExecutionResult(BaseModel):
+    """Encrypted exact-request wrapper for the operator IVA result."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    request: LedgerOperatorIvaRequest
+    result: LedgerOperatorIvaResult
+
+
+class LedgerOperatorIvaExecutor:
+    """Delegate operator-selected IVA derivation to its existing guarded writer."""
+
+    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+        """Retain the canonical exact-profile service composition."""
+        self._ports_factory = ports_factory
+
+    async def execute(
+        self, request: OperationRequest[LedgerOperatorIvaRequest], context: OperationExecutorContext
+    ) -> str | OperationRefusalEvidence:
+        """Resolve and derive inside the existing COMMIT guard."""
+        payload = request.payload
+        bucket_id = str(payload.profile_id)
+        if (
+            request.definition_id != LEDGER_OPERATOR_IVA_DEFINITION_ID
+            or context.identity.definition_id != request.definition_id
+            or request.subject_ref != profile_operation_subject(bucket_id)
+            or context.identity.subject_ref != request.subject_ref
+            or require_active_bucket_id() != bucket_id
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        ports = self._ports_factory(bucket_id=bucket_id, operation=context.authority_operation)
+        _require_exact_ports(ports, bucket_id=bucket_id, operation=context.authority_operation)
+        await context.events.phase(LEDGER_OPERATOR_IVA_DEFINITION_ID)
+
+        async def refuse(error: Exception, transaction_id: str) -> OperationRefusalEvidence:
+            result = LedgerOperatorIvaResult(
+                profile_id=payload.profile_id,
+                outcome="validation_error",
+                transaction_id=transaction_id,
+                iva_category=payload.iva_category,
+                derivable=False,
+                validation_messages=_validation_messages(error),
+            )
+            detail_ref = await context.operands.put(
+                LedgerOperatorIvaExecutionResult(request=payload, result=result), written_at=now()
+            )
+            return OperationRefusalEvidence(refusal_code=LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE, detail_ref=detail_ref)
+
+        async def commit() -> str | OperationRefusalEvidence:
+            async with context.cancellation.irreversible_section():
+
+                def prepare() -> tuple[str, Transaction, IvaCategory]:
+                    with validating_governed_facts(context.authority_operation):
+                        catalogue = ports.transaction_repository.load()
+                        transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
+                        baseline = catalogue.transactions[transaction_id]
+                        category = require_iva_category(
+                            payload.iva_category,
+                            effective_date=baseline.raw.value_date or baseline.raw.booked_date,
+                            authority=context.authority_operation,
+                        )
+                        if category.value != payload.iva_category:
+                            raise TransactionValidationError("operator IVA category must be canonical")
+                        return transaction_id, baseline, category
+
+                try:
+                    transaction_id, baseline, category = await asyncio.to_thread(prepare)
+                except _CLASSIFY_VALIDATION_ERRORS as error:
+                    return await refuse(error, payload.transaction_id)
+                await context.events.effect(OperationEffect.UNKNOWN)
+
+                def derive() -> OperatorIvaDerivationResult:
+                    with validating_governed_facts(context.authority_operation):
+                        return derive_operator_iva_substrate(
+                            bucket_id=bucket_id,
+                            transaction_id=transaction_id,
+                            iva_category=category,
+                            actor=payload.actor or bucket_id,
+                            source_command="aeat app ledger classify --iva-category --saturate",
+                            ports=ports,
+                            expected_current=baseline,
+                        )
+
+                try:
+                    derivation = await asyncio.to_thread(derive)
+                except TransactionValidationError as error:
+                    await context.events.effect(OperationEffect.NONE)
+                    return await refuse(error, transaction_id)
+                except LedgerPersistenceConflictError:
+                    await context.events.effect(OperationEffect.NONE)
+                    raise
+                await context.events.effect(
+                    OperationEffect.UPDATED
+                    if derivation.result is not None and derivation.result.bucket_event_ids
+                    else OperationEffect.NONE
+                )
+                result = LedgerOperatorIvaResult(
+                    profile_id=payload.profile_id,
+                    transaction_id=transaction_id,
+                    iva_category=derivation.iva_category.value,
+                    derivable=derivation.derivable,
+                    iva_rate=format(derivation.iva_rate, "f") if derivation.iva_rate is not None else None,
+                    taxable_base=format(derivation.taxable_base, "f") if derivation.taxable_base is not None else None,
+                    iva_amount=format(derivation.iva_amount, "f") if derivation.iva_amount is not None else None,
+                    note=derivation.note,
+                    classification=_operation_result(payload.profile_id, derivation.result)
+                    if derivation.result is not None
+                    else None,
+                )
+                return await context.operands.put(
+                    LedgerOperatorIvaExecutionResult(request=payload, result=result), written_at=now()
+                )
+
+        return await await_cancellation_complete(commit(), task_name="ledger-operator-iva-commit")
+
+
+def resolve_ledger_operator_iva_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Require exact-profile ledger disclosure and COMMIT for IVA derivation."""
+    if request.definition_id != LEDGER_OPERATOR_IVA_DEFINITION_ID or not isinstance(
+        request.payload, LedgerOperatorIvaRequest
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    policy = OperationAccessPolicy.model_validate(
+        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
+    )
+    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+
+
+def _project_operator_iva_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+    if not isinstance(result, LedgerOperatorIvaExecutionResult):
+        raise ValueError("invalid operator IVA execution result")
+    payload, projection = result.request, result.result
+    expected_effect = (
+        OperationEffect.UPDATED
+        if projection.classification is not None and projection.classification.bucket_event_ids
+        else OperationEffect.NONE
+    )
+    if (
+        receipt.identity.definition_id != LEDGER_OPERATOR_IVA_DEFINITION_ID
+        or receipt.identity.subject_ref != profile_operation_subject(str(payload.profile_id))
+        or projection.profile_id != payload.profile_id
+        or not projection.transaction_id.startswith(payload.transaction_id)
+        or projection.iva_category != payload.iva_category
+        or receipt.effect is not expected_effect
+    ):
+        raise ValueError("operator IVA result does not match its request and terminal receipt")
+    if projection.outcome == "validation_error":
+        if (
+            receipt.condition is not OperationTerminalCondition.REFUSED
+            or receipt.refusal_ref != LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE
+            or receipt.refusal_detail_ref is None
+            or receipt.result_ref is not None
+            or receipt.failure_error_code is not None
+            or receipt.diagnostic_ref is not None
+        ):
+            raise ValueError("operator IVA validation detail has an incompatible terminal receipt")
+    elif (
+        receipt.condition is not OperationTerminalCondition.SUCCEEDED
+        or receipt.result_ref is None
+        or receipt.refusal_ref is not None
+        or receipt.refusal_detail_ref is not None
+        or receipt.failure_error_code is not None
+        or receipt.diagnostic_ref is not None
+    ):
+        raise ValueError("operator IVA success has an incompatible terminal receipt")
+    return projection
+
+
+def build_ledger_operator_iva_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+    """Register the existing derivation with immutable profile custody and COMMIT."""
+    return OperationDefinition(
+        definition_id=LEDGER_OPERATOR_IVA_DEFINITION_ID,
+        request_type=LedgerOperatorIvaRequest,
+        result_type=LedgerOperatorIvaExecutionResult,
+        executor_factory=OperationExecutorFactory(
+            request_type=LedgerOperatorIvaRequest,
+            executor_type=LedgerOperatorIvaExecutor,
+            build=lambda: LedgerOperatorIvaExecutor(ports_factory),
+        ),
+        phase_codes=(LEDGER_OPERATOR_IVA_DEFINITION_ID,),
+        interaction_kinds=frozenset(),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RECORDED,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            baseline=OperationBaselinePolicy.NONE,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset(),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
+        ),
+        refusal_detail_codes=frozenset({LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE}),
+    )
+
+
+def build_ledger_operator_iva_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the bounded operator IVA request/result and exact access policy."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=definition.definition_id + ".request", schema_version=1, model_type=LedgerOperatorIvaRequest
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id=definition.definition_id + ".result", schema_version=1, model_type=LedgerOperatorIvaResult
+        ),
+        result_projector=_project_operator_iva_result,
+        access_resolver=resolve_ledger_operator_iva_access,
+    )
+
+
 __all__ = [
     "LEDGER_CLASSIFY_OPERATION_DEFINITION_ID",
     "LEDGER_CLASSIFY_PHASE",
     "LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE",
+    "LEDGER_OPERATOR_IVA_DEFINITION_ID",
     "LedgerClassifyExecutionResult",
     "LedgerClassifyExecutor",
     "LedgerClassifyM210Options",
@@ -756,7 +1044,14 @@ __all__ = [
     "LedgerClassifyPatch",
     "LedgerClassifyPatchField",
     "LedgerClassifyRequest",
+    "LedgerOperatorIvaExecutionResult",
+    "LedgerOperatorIvaExecutor",
+    "LedgerOperatorIvaRequest",
+    "LedgerOperatorIvaResult",
     "build_ledger_classify_definition",
     "build_ledger_classify_registration",
+    "build_ledger_operator_iva_definition",
+    "build_ledger_operator_iva_registration",
     "resolve_ledger_classify_access",
+    "resolve_ledger_operator_iva_access",
 ]

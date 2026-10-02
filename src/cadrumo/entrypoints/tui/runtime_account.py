@@ -26,6 +26,7 @@ from .secret.passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal,
 
 if TYPE_CHECKING:
     from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from .secret.automation_requester import HumanAutomationRequesterFactory
 
 
 def compose_runtime_account_factories(
@@ -33,6 +34,7 @@ def compose_runtime_account_factories(
     *,
     profile: AccountProfileFactoryV1,
     open_recovery_client: RecoveryClientOpener,
+    requester_factory: HumanAutomationRequesterFactory | None = None,
     onboarding_pending: bool = False,
 ) -> AccountFactoriesV1:
     """Compose controls without acquiring a profile or constructing local custody.
@@ -67,7 +69,9 @@ def compose_runtime_account_factories(
 
     def access() -> RuntimeAccessManagementScreen:
         require_binding()
-        return RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery_client)
+        return RuntimeAccessManagementScreen(
+            client, open_recovery_client=open_recovery_client, requester_factory=requester_factory
+        )
 
     def password() -> PassphraseScreen:
         require_binding()

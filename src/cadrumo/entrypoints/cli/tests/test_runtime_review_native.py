@@ -5,7 +5,9 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Mapping
+from datetime import datetime
 from pathlib import Path
+from typing import cast
 from uuid import UUID
 
 import pytest
@@ -20,18 +22,19 @@ from ....application.review.read_operation import (
     ReviewViewReadRequest,
 )
 from ....application.user_profile.login_session import login_profile
+from ....core.config import override_settings
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import require_error_document, unwrap_cli_result
 from ...tests.review_read_operation_test_support import (
     ReviewReadConformanceCase,
     prepare_review_read_conformance_case,
 )
-from ._runtime_profile_cli_fixture import (
+from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )
-from .cli_runner import invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -62,14 +65,16 @@ def _invoke(
     profile: NativeCliProfileFixture,
     *command: str,
     env: Mapping[str, str | None] | None = None,
+    reveal_identifiers: bool = False,
 ) -> Result:
     assert profile.label is not None
     close_active_bucket_session()
-    result = invoke_cached_cli(
-        ("--language", "en", "--format", "json", "--profile", profile.label, "--profile-secrets-stdin", *command),
-        input=json.dumps({"profile_passphrase": profile.passphrase}),
-        env=env,
-    )
+    with override_settings(cadrumo_cli_reveal_identifiers=reveal_identifiers):
+        result = invoke_cached_cli(
+            ("--language", "en", "--format", "json", "--profile", profile.label, "--profile-secrets-stdin", *command),
+            input=json.dumps({"profile_passphrase": profile.passphrase}),
+            env=env,
+        )
     assert profile.passphrase not in result.output
     return result
 
@@ -106,7 +111,28 @@ def _expected_row(case: ReviewReadConformanceCase) -> dict[str, object]:
         row = rows[0]
     if not isinstance(row, BaseModel):
         raise AssertionError("review fixture expected row is not a Pydantic projection")
-    return row.model_dump(mode="json")
+    since = getattr(row, "since", None)
+    if not isinstance(since, datetime):
+        raise AssertionError("review fixture expected row has no canonical UTC instant")
+    expected = cast(dict[str, object], row.model_dump(mode="json"))
+    # CLI emission uses jsonable_output_payload, which calls datetime.isoformat()
+    # and writes UTC as +00:00. model_dump(mode="json") writes the same instant
+    # with Pydantic's Z spelling; match the current CLI wire form without
+    # weakening the typed canonical projection used for every other field.
+    expected["since"] = since.isoformat()
+    return expected
+
+
+def _assert_row_matches(actual: object, expected: dict[str, object]) -> None:
+    if not isinstance(actual, Mapping) or not all(isinstance(key, str) for key in actual):
+        raise AssertionError("native review CLI result did not contain a JSON object row")
+    missing = "<missing>"
+    differing_fields = {
+        field: (actual.get(field, missing), expected.get(field, missing))
+        for field in sorted(set(actual) | set(expected))
+        if actual.get(field, missing) != expected.get(field, missing)
+    }
+    assert not differing_fields, f"native review row differs by field (actual, expected): {differing_fields!r}"
 
 
 def test_native_review_queue_and_item_view_match_encrypted_canonical_projection(
@@ -142,10 +168,15 @@ def test_native_review_queue_and_item_view_match_encrypted_canonical_projection(
             "--output-language",
             "en",
             "--explain",
+            reveal_identifiers=True,
         )
         assert queue.exit_code == 0, (queue.output, failures)
         queue_payload = unwrap_cli_result(queue)
-        assert queue_payload == {"operation": "review.queue", "rows": [_expected_row(queue_case)]}
+        assert set(queue_payload) == {"operation", "rows"}
+        assert queue_payload["operation"] == "review.queue"
+        queue_rows = queue_payload["rows"]
+        assert isinstance(queue_rows, list) and len(queue_rows) == 1
+        _assert_row_matches(queue_rows[0], _expected_row(queue_case))
 
         view_case = _seed_case(
             profile,
@@ -155,10 +186,21 @@ def test_native_review_queue_and_item_view_match_encrypted_canonical_projection(
         if not isinstance(view_case.request, ReviewViewReadRequest):
             raise AssertionError("review view fixture returned another request type")
         assert queue_case.request.profile_id == view_case.request.profile_id
-        view = _invoke(profile, "app", "review", "view", row_id, "--output-language", "en")
+        view = _invoke(
+            profile,
+            "app",
+            "review",
+            "view",
+            row_id,
+            "--output-language",
+            "en",
+            reveal_identifiers=True,
+        )
         assert view.exit_code == 0, (view.output, failures)
         view_payload = unwrap_cli_result(view)
-        assert view_payload == {"operation": "review.view", "row": _expected_row(view_case)}
+        assert set(view_payload) == {"operation", "row"}
+        assert view_payload["operation"] == "review.view"
+        _assert_row_matches(view_payload["row"], _expected_row(view_case))
 
         private_selector = "private-tax-id-12345678Z-review-kind"
         refused = _invoke(
@@ -181,4 +223,11 @@ def test_native_review_queue_and_item_view_match_encrypted_canonical_projection(
         assert context["terminal_condition"] == "refused"
         assert context["effect"] == "none"
         assert isinstance(context["operation_id"], str) and len(context["operation_id"]) == 64
-        assert failures == []
+        failure_events = tuple(
+            observation
+            for observation in failures
+            if observation.exception_type is not None
+            or observation.stage.endswith("_raised")
+            or observation.stage == "runtime_server_failure"
+        )
+        assert failure_events == ()

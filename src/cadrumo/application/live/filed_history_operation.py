@@ -49,7 +49,7 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.owner import OperationEventEmitter, OperationExecutorContext
+from ..operations.owner import OperationEventEmitter, OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -413,7 +413,10 @@ class FiledHistoryPairOutcomePublicV1(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
+    walk_attempted: bool
+    walk_completed: bool
     row_count: NonNegativeInt
+    reached_count: NonNegativeInt
     captured_count: NonNegativeInt
     refused: bool
     failure_type: str | None = Field(default=None, min_length=1, max_length=128)
@@ -421,11 +424,15 @@ class FiledHistoryPairOutcomePublicV1(BaseModel):
 
 
 def _project_pair_outcome(pair: FiledHistoryPairOutcome) -> FiledHistoryPairOutcomePublicV1:
+    pair.require_consistent()
     return FiledHistoryPairOutcomePublicV1(
         modelo=pair.modelo,
         ejercicio=pair.ejercicio,
         signals=pair.signals,
+        walk_attempted=pair.walk_attempted,
+        walk_completed=pair.walk_completed,
         row_count=pair.row_count,
+        reached_count=pair.reached_count,
         captured_count=pair.captured_count,
         refused=pair.refused,
         failure_type=pair.failure_type,
@@ -532,7 +539,10 @@ class FiledHistoryOperationExecutor:
         browser_resources = self._browser_resources_factory()
         context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
         session_receipt = LiveSessionWriteReceipt(context.events.effect)
-        with browser_resources.activate():
+        with (
+            retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
+            browser_resources.activate(),
+        ):
             run = await self._pull(
                 request.payload,
                 profile,

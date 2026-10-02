@@ -77,6 +77,10 @@ from typing import TYPE_CHECKING, Protocol, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....application.user_profile.google_configuration_operation_ports import (
+    GoogleConfigurationAcknowledgement,
+    GoogleConfigurationHandoff,
+)
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -242,10 +246,16 @@ class _AdcResolver(Protocol):
         self,
         *,
         scopes: Sequence[str],
+        request: object | None = None,
     ) -> tuple[Credentials, str | None]: ...
 
 
-def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Credentials:
+def resolve_impersonated_credentials(
+    config: GoogleImpersonationConfig,
+    *,
+    before_handoff: GoogleConfigurationHandoff | None = None,
+    acknowledged: GoogleConfigurationAcknowledgement | None = None,
+) -> Credentials:
     """Resolve ``config`` into a validated, impersonated ``Credentials`` object.
 
     Three-step resolution:
@@ -273,6 +283,8 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
 
     Args:
         config: The impersonation target and scope configuration.
+        before_handoff: Renew authority before ADC discovery and each transport request.
+        acknowledged: Record completion of each admitted credential acquisition boundary.
 
     Returns:
         A ``google.auth.impersonated_credentials.Credentials`` instance
@@ -308,11 +320,23 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
             ),
         ) from exc
 
+    if before_handoff is not None:
+        before_handoff("google.adc-discovery")
     try:
         # CAST-RATIONALE-thirdparty: `google.auth.default` ships py.typed but
         # carries no annotations; `_AdcResolver` states the documented signature.
         adc = cast(_AdcResolver, google.auth.default)
-        source_credentials, _project_id = adc(scopes=list(config.target_scopes))
+        if before_handoff is None and acknowledged is None:
+            source_credentials, _project_id = adc(scopes=list(config.target_scopes))
+        else:
+            from .google_configuration_admission import admitted_google_auth_request
+
+            source_credentials, _project_id = adc(
+                scopes=list(config.target_scopes),
+                request=admitted_google_auth_request(
+                    before_handoff=before_handoff, acknowledged=acknowledged, action="google.adc-request"
+                ),
+            )
     except google.auth.exceptions.DefaultCredentialsError as exc:
         raise GoogleAuthAdcUnavailableError(
             f"Application Default Credentials not found: {exc}",
@@ -325,10 +349,17 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
             ),
         ) from exc
 
-    _ensure_source_credential_is_fresh(
-        source_credentials,
-        target_principal=config.target_principal,
-    )
+    if acknowledged is not None:
+        acknowledged("google.adc-discovery")
+    if before_handoff is None and acknowledged is None:
+        _ensure_source_credential_is_fresh(source_credentials, target_principal=config.target_principal)
+    else:
+        _ensure_source_credential_is_fresh(
+            source_credentials,
+            target_principal=config.target_principal,
+            before_handoff=before_handoff,
+            acknowledged=acknowledged,
+        )
 
     impersonated = google.auth.impersonated_credentials.Credentials(
         source_credentials=source_credentials,
@@ -342,7 +373,16 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
     try:
         # CAST-RATIONALE-thirdparty: `Credentials.refresh` is unannotated upstream.
         mintable = cast(_RefreshableCredentials, impersonated)
-        mintable.refresh(google.auth.transport.requests.Request())
+        if before_handoff is None and acknowledged is None:
+            mintable.refresh(google.auth.transport.requests.Request())
+        else:
+            from .google_configuration_admission import admitted_google_auth_request
+
+            mintable.refresh(
+                admitted_google_auth_request(
+                    before_handoff=before_handoff, acknowledged=acknowledged, action="google.iam-mint"
+                )
+            )
     except google.auth.exceptions.RefreshError as exc:
         raise GoogleAuthImpersonationRefusedError(
             f"IAM refused to mint an impersonated token for {config.target_principal!r}: {exc}",
@@ -362,6 +402,8 @@ def _ensure_source_credential_is_fresh(
     source_credentials: Credentials,
     *,
     target_principal: str,
+    before_handoff: GoogleConfigurationHandoff | None = None,
+    acknowledged: GoogleConfigurationAcknowledgement | None = None,
 ) -> None:
     """Eagerly refresh ``source_credentials`` when stale or invalid.
 
@@ -393,7 +435,16 @@ def _ensure_source_credential_is_fresh(
     try:
         # CAST-RATIONALE-thirdparty: `Credentials.refresh` is unannotated upstream.
         refreshable = cast(_RefreshableCredentials, source_credentials)
-        refreshable.refresh(google.auth.transport.requests.Request())
+        if before_handoff is None and acknowledged is None:
+            refreshable.refresh(google.auth.transport.requests.Request())
+        else:
+            from .google_configuration_admission import admitted_google_auth_request
+
+            refreshable.refresh(
+                admitted_google_auth_request(
+                    before_handoff=before_handoff, acknowledged=acknowledged, action="google.adc-refresh"
+                )
+            )
     except google.auth.exceptions.RefreshError as exc:
         raise GoogleAuthAdcStaleError(
             f"Application Default Credentials could not be refreshed: {exc}",

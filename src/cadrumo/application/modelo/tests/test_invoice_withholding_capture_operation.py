@@ -63,6 +63,7 @@ from ..invoice_withholding_capture_operation import (
     resolve_modelo_invoice_withholding_capture_access,
 )
 from ..invoice_withholding_capture_public import PublicInvoiceWithholdingEvidence
+from .withholding_window_operation_test_support import WithholdingWindowServiceFixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -305,7 +306,9 @@ class _Operands:
         return _OPERAND_REF
 
 
-def _executor_context(events: _Events, operands: _Operands) -> OperationExecutorContext:
+def _executor_context(
+    events: _Events, operands: _Operands, *, authority_operation: PinnedAuthorityOperation | None = None
+) -> OperationExecutorContext:
     return cast(
         OperationExecutorContext,
         SimpleNamespace(
@@ -314,7 +317,7 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
                 definition_id=MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
-            authority_operation=object(),
+            authority_operation=authority_operation,
             cancellation=_Cancellation(),
             events=events,
             operands=operands,
@@ -322,13 +325,9 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
     )
 
 
-class _WithholdingService:
+class _WithholdingService(WithholdingWindowServiceFixture):
     def __init__(self) -> None:
-        self.generation = 1
-        self.baseline = _BASELINE
-        self.reads: list[WithholdingWindowScope] = []
-        self.audit_reads: list[tuple[WithholdingWindowScope, str]] = []
-        self.observations = (
+        observations = (
             RetencionObservation(
                 source_kind=BindingSourceKind.PAYABLE_INVOICE,
                 source_object_id="b" * 64,
@@ -341,18 +340,7 @@ class _WithholdingService:
             ),
         )
 
-    def read_window(self, scope: WithholdingWindowScope):
-        self.reads.append(scope)
-        return SimpleNamespace(
-            scope=scope,
-            baseline=self.baseline,
-            generation=self.generation,
-            entries=tuple(SimpleNamespace(retencion=row) for row in self.observations),
-        )
-
-    def read_generation(self, scope: WithholdingWindowScope, generation_id: str):
-        self.audit_reads.append((scope, generation_id))
-        return None
+        super().__init__(baseline=_BASELINE, generation=1, observations=observations, include_audit=False)
 
 
 def _prepared() -> _PreparedCapture:
@@ -415,8 +403,8 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
     )
     prepared = _prepared()
     service = prepared.ports.withholding_observation_service
-    context = _executor_context(events, operands)
-    context.authority_operation = authority_operation
+    assert isinstance(service, _WithholdingService)
+    context = _executor_context(events, operands, authority_operation=authority_operation)
     monkeypatch.setattr(
         "cadrumo.application.modelo.invoice_withholding_capture_operation.require_active_bucket_id",
         lambda: str(_PROFILE),
@@ -504,6 +492,7 @@ def test_prewrite_refusal_is_bounded_and_stored_as_secure_result_detail(
     )
     assert isinstance(projection, ModeloInvoiceWithholdingCaptureProjection)
     assert projection.outcome == "refused"
+    assert isinstance(projection, ModeloInvoiceWithholdingCaptureProjection)
     assert projection.refusal_reason == "not_a_retenedor_liability"
     assert set(projection.model_dump(mode="json")) == {
         "outcome",
@@ -554,6 +543,7 @@ def test_invoice_source_conflict_refuses_and_ambiguous_mutation_keeps_effect_unk
 
     if refusal_code == "source_revision_changed":
         result = asyncio.run(executor.execute(_request(), _executor_context(events, operands)))
+        assert isinstance(result, OperationRefusalEvidence)
         assert result.refusal_code == MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE
         assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.NONE]
         report = operands.values[0]
@@ -562,7 +552,9 @@ def test_invoice_source_conflict_refuses_and_ambiguous_mutation_keeps_effect_unk
             report,
             _terminal_receipt(effect=OperationEffect.NONE, refused=True),
         )
+        assert isinstance(projection, ModeloInvoiceWithholdingCaptureProjection)
         assert projection.refusal_reason == "source_revision_changed"
+        assert isinstance(prepared.ports.withholding_observation_service, _WithholdingService)
         assert prepared.ports.withholding_observation_service.reads == []
     else:
         with pytest.raises(WithholdingObservationMutationError):

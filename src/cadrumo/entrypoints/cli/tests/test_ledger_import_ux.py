@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import sys
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
@@ -10,7 +12,15 @@ import pytest
 from ....application.ledger.actions_import import LedgerProviderID
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ._cli_json_support import _json_object
-from .ledger_ux_support import _FOUR_ROW_CSV, _FOUR_ROW_OFX, _N26_HEADER, _invoke, _open_bucket_session
+from .ledger_ux_support import (
+    _FOUR_ROW_CSV,
+    _FOUR_ROW_OFX,
+    _N26_HEADER,
+    _invoke,
+    _invoke_exact_profile,
+    _open_bucket_session,
+)
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]
@@ -471,6 +481,75 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
         "context": {"likely_duplicate_count": "1"},
         "action": None,
     }
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+@pytest.mark.usefixtures("authority_operation")
+@pytest.mark.parametrize("source_kind", ["file", "directory"])
+def test_relative_import_and_verification_source_use_the_callers_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, source_kind: str
+) -> None:
+    """Native worker cwd must not reinterpret either caller-owned source path."""
+    caller = tmp_path / "caller"
+    statements = caller / "statements"
+    statements.mkdir(parents=True)
+    rows = _FOUR_ROW_CSV.splitlines(keepends=True)
+    if source_kind == "file":
+        (statements / "statement.csv").write_text(_FOUR_ROW_CSV, encoding="utf-8")
+        relative_source = Path("statements/statement.csv")
+        file_count = 1
+    else:
+        (statements / "a.csv").write_text(rows[0] + "".join(rows[1:3]), encoding="utf-8")
+        (statements / "b.csv").write_text(rows[0] + "".join(rows[3:]), encoding="utf-8")
+        relative_source = Path("statements")
+        file_count = 2
+    original_bytes = b"Synthetic original export, distinct from the imported statements.\n"
+    (caller / "original-export.bin").write_bytes(original_bytes)
+    monkeypatch.chdir(caller)
+
+    # Real encrypted worker and transport; OS-login/store observations are
+    # explicit synthetic controls, not native credential-store acceptance.
+    with native_cli_profile_scope(tmp_path / "native") as profile:
+        profile.register(label="relative-ledger-import", facts={})
+        assert profile.storage_root != caller
+        assert not (profile.storage_root / relative_source).exists()
+        assert not (profile.storage_root / "original-export.bin").exists()
+        imported = _invoke_exact_profile(
+            profile,
+            [
+                "--format",
+                "json",
+                "app",
+                "ledger",
+                "import",
+                "--file",
+                str(relative_source),
+                "--provider",
+                "csv",
+                "--verify",
+                "--verify-source",
+                "original-export.bin",
+            ],
+        )
+        assert imported.exit_code == 0, imported.output
+        result = _json_object(_json_document(imported.output)["result"])
+        assert result["rows"] == result["imported"] == 4
+        assert result["skipped"] == 0
+        assert result["verify"] is True
+        assert (
+            result["sources"]
+            == [{"requested": True, "path": None, "sha256": sha256(original_bytes).hexdigest()}] * file_count
+        )
+        validations = result["validations"]
+        assert isinstance(validations, list) and len(validations) == file_count
+        assert all(isinstance(item, dict) and item["valid"] is True for item in validations)
+
+        listed = _invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
+        assert listed.exit_code == 0, listed.output
+        readback = _json_object(_json_document(listed.output)["result"])
+        persisted_rows = readback["rows"]
+        assert isinstance(persisted_rows, list) and len(persisted_rows) == 4
 
 
 def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_path: Path) -> None:

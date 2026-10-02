@@ -28,8 +28,8 @@ import pytest
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ._isolated_profile_storage_fixtures import _isolated_state
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli, semantic_cli_output
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_isolated_state"]
@@ -123,10 +123,11 @@ def _assert_output_language_effective(args: Sequence[str], fixture: NativeCliPro
     verdict line, so the two locales must diverge.
     """
     assert fixture.label is not None
+    profile_label = fixture.label
 
     def invoke(command: Sequence[str]):
         return invoke_cached_cli(
-            ["--profile", fixture.label, "--profile-secrets-stdin", *command],
+            ["--profile", profile_label, "--profile-secrets-stdin", *command],
             input=json.dumps({"profile_passphrase": fixture.passphrase}),
         )
 

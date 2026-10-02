@@ -20,7 +20,7 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._overview_native_support import invoke_native_overview
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

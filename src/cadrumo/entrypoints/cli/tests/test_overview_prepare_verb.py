@@ -26,7 +26,7 @@ from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .._overview_payloads import OverviewPrepareStepPayload
 from ._overview_native_support import invoke_native_overview
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
 pytestmark = [
     pytest.mark.integration,

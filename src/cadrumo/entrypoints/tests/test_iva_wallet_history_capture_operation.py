@@ -211,8 +211,10 @@ class _SyntheticIvaRemoteStatePort:
         operation: str,
         target_url: str | None,
         authority_operation: PinnedAuthorityOperation | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> AuthenticatedAeatSessionResult:
-        del settings, operation, target_url, authority_operation
+        del settings, operation, target_url, authority_operation, effect_guard, on_session_write
         raise AssertionError("history capture uses the verified session port directly")
 
     async def capture_wallet(

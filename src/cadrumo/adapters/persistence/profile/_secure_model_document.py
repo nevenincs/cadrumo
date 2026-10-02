@@ -91,12 +91,14 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
         model_type: type[DocumentT],
         empty_document: Callable[[], DocumentT],
         write_provenance: str = DEFAULT_WRITE_PROVENANCE,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> None:
         self._objects = objects
         self._definition = definition
         self._model_type = model_type
         self._empty_document = empty_document
         self._write_provenance = write_provenance
+        self._mutation_writer = mutation_writer
 
     @property
     def object_key(self) -> str:
@@ -162,7 +164,18 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
 
     def save(self, document: DocumentT) -> None:
         """Encrypt and save one document in the transactional secure-object path."""
-        self._objects.save_many((self.to_secure_object_write(document),))
+        self._save_write(self.to_secure_object_write(document))
+
+    def _save_write(self, write: SecureObjectWrite) -> None:
+        """Enter the optional operation fence only for the prepared SQL write."""
+
+        def save() -> None:
+            self._objects.save_many((write,))
+
+        if self._mutation_writer is None:
+            save()
+        else:
+            self._mutation_writer(save)
 
     def mutate(self, mutation: Callable[[DocumentT], DocumentT], *, attempts: int = 4) -> DocumentT:
         """Apply ``mutation`` to the stored document as one guarded unit of work.
@@ -201,7 +214,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
             return self.to_secure_object_write(document, expected_revision_id=expected_revision_id)
 
         def save(secure_object_write: SecureObjectWrite) -> None:
-            self._objects.save_many((secure_object_write,))
+            self._save_write(secure_object_write)
 
         return mutate_revision_guarded_singleton(
             mutation,

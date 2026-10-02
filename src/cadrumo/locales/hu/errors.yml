@@ -798,6 +798,10 @@ errors:
       nem exportálható: olyan tételt tartalmaz, amely korábbi évben keletkezett jövedelmet
       fizet ki, és egyetlen hivatalos forrás sem határozza meg, milyen alapot és forrásadót
       kell ebben a tételben bevallani.'
+    canonical_modelo_binding_value_contract_unsupported: Az adatkapcsolathoz nem tartozik
+      az automatikus előnézet által támogatott hivatalos értékformátum.
+    canonical_modelo_binding_value_invalid: A megadott érték nem felel meg az adatkapcsolat
+      hivatalos értékformátumának.
     canonical_modelo_lifecycle_clock_precedes: A művelet órája korábbi egy frissítendő
       rekordnál, ezért semmi sem lett mentve. Próbálja újra az aktuális idővel.
     canonical_modelo_workspace_stale_cursor: A rögzített kurzor már nem egyezik az

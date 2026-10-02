@@ -10,8 +10,8 @@ import pytest
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ._modelo_work_ux_support import operator_profile_facts
-from ._runtime_profile_cli_fixture import native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _PROFILE_LABEL = "Borrador missing work profile"

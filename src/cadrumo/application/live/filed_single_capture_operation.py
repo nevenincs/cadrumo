@@ -35,7 +35,7 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.owner import OperationExecutorContext
+from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -221,7 +221,10 @@ class FiledSingleCaptureExecutor:
         # points. Until a report settles, the committed effect is unknown.
         await context.events.effect(OperationEffect.UNKNOWN)
         session_receipt = LiveSessionWriteReceipt(context.events.effect)
-        with resources.activate():
+        with (
+            retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
+            resources.activate(),
+        ):
             report = await capture_filed_data(
                 filed_data_port=composition.filed_data_port,
                 modelo=payload.modelo,

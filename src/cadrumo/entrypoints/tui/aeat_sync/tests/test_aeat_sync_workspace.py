@@ -325,7 +325,11 @@ def _contracts(
 ) -> OperationPublicContractSetV1:
     """Build a public contract whose operation/action join is explicit."""
     if action_id == "operator.live.notifications.list" and operation_id == NOTIFICATIONS_LIST_DEFINITION_ID:
-        definition = build_notifications_list_definition(lambda: cast(NotificationsPorts, None))
+
+        def unused_notification_ports() -> NotificationsPorts:
+            raise AssertionError("public contract projection must not open notification ports")
+
+        definition = build_notifications_list_definition(unused_notification_ports)
         return OperationPublicContractSetV1.build((build_notifications_list_registration(definition).contract,))
     definition = build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),

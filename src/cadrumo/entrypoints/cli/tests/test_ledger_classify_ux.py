@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .ledger_ux_support import _imported_transaction_id_exact_profile, _invoke_exact_profile
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

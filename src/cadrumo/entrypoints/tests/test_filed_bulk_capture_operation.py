@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import contextmanager
+from contextlib import AbstractAsyncContextManager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -23,9 +23,18 @@ from cadrumo.application.live.filed_bulk_capture_operation import (
     build_filed_bulk_capture_definition,
     build_filed_bulk_capture_registration,
 )
-from cadrumo.application.live.filed_data_ports import FiledDataCapturePort
+from cadrumo.application.live.filed_data_ports import (
+    DeferredFiledObservations,
+    FiledArtefactSink,
+    FiledDataCapturePort,
+    FiledDataRegisterPort,
+    FiledDeclarationAvailabilityReportProtocol,
+    FiledEffectGuard,
+)
 from cadrumo.application.live.filed_history_operation import FiledHistoryComposition
-from cadrumo.application.live.filed_observation_ports import FiledObservationPersistencePorts
+from cadrumo.application.live.filed_observation_ports import FiledObservationPersistencePorts, FiledObservationProtocol
+from cadrumo.application.live.remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
+from cadrumo.application.live.session import SessionWriteReporter
 from cadrumo.application.live.tests.filed_observation_test_support import in_memory_filed_observation_test_bundle
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
@@ -46,7 +55,9 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -62,8 +73,49 @@ class _Composition:
 
 
 class _NeverOpenFiledDataPort:
-    async def open_register(self, *, operation: str):
+    def open_register(
+        self,
+        *,
+        operation: str,
+        authority_operation: PinnedAuthorityOperation | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> AbstractAsyncContextManager[FiledDataRegisterPort]:
         raise AssertionError(f"unsupported-only preview unexpectedly opened register: {operation}")
+
+    async def discover_availability(
+        self,
+        *,
+        operation: str,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> FiledDeclarationAvailabilityReportProtocol:
+        raise AssertionError("unsupported-only preview unexpectedly read register availability")
+
+    async def capture_source_observations(
+        self,
+        revision: ModeloRevision,
+        *,
+        filing_year: int,
+        period: Period,
+        artefact_sink: FiledArtefactSink | None = None,
+        operation: str,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> tuple[FiledObservationProtocol, ...]:
+        raise AssertionError("unsupported-only preview unexpectedly captured filed observations")
+
+    async def capture_source_observations_deferred(
+        self,
+        revision: ModeloRevision,
+        *,
+        filing_year: int,
+        period: Period,
+        operation: str,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> DeferredFiledObservations:
+        raise AssertionError("unsupported-only preview unexpectedly captured deferred filed observations")
 
 
 class _ResourceScope:
@@ -88,7 +140,7 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         bundle = in_memory_filed_observation_test_bundle()
-        filed_data_port = cast(FiledDataCapturePort, _NeverOpenFiledDataPort())
+        filed_data_port = _NeverOpenFiledDataPort()
         composition = _Composition(ports=bundle.ports, filed_data_port=filed_data_port)
         resources = _ResourceScope()
         preflight_calls: list[tuple[UUID, PinnedAuthorityOperation]] = []
@@ -106,7 +158,7 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
             composition_factory=composition_factory,
             browser_resources_factory=lambda: resources,
             provider_preflight=provider_preflight,
-            sync_run_repository_factory=cast(type[SyncRunRecordRepositoryProtocol], unused_sync_run_repository_factory),
+            sync_run_repository_factory=unused_sync_run_repository_factory,
         )
         registration = build_filed_bulk_capture_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -178,9 +230,51 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
                 ),
                 FiledBulkCapturePublicResultV1,
             )
-            return terminal, projected
+            receipt = terminal.terminal_receipt
+            assert receipt is not None and receipt.result_ref is not None
+            report = await operands.resolve(receipt.result_ref, BulkFiledDataCaptureReport)
+            assert registration.result_projector is not None
+            accounting_projections: list[FiledBulkCapturePublicResultV1] = []
+            # These synthetic scalar reports exercise secure serialization and
+            # the registered projector, independently of provider acquisition.
+            for dry_run, attempted, completed, rows, reached, captured in (
+                (True, True, True, 2, 2, 0),
+                (True, False, False, 0, 0, 0),
+                (False, True, True, 2, 2, 2),
+            ):
+                pair = FiledCapturePairOutcome(
+                    modelo="303",
+                    year=2025,
+                    walk_attempted=attempted,
+                    walk_completed=completed,
+                    row_count=rows,
+                    reached_count=reached,
+                    captured_count=captured,
+                )
+                accounting_report = report.model_copy(
+                    update={
+                        "modelos": ("303",),
+                        "dry_run": dry_run,
+                        "pair_outcomes": (pair,),
+                        "reached_count": reached,
+                        "captured_count": captured,
+                        "observation_paths": ("first", "second") if captured else (),
+                        "calculation_observation_count": 1 if captured else 0,
+                        "calculation_observation_keys": ("303:2025:1T",) if captured else (),
+                        "failed_count": 0,
+                        "failures": (),
+                    }
+                )
+                accounting_report.require_consistent()
+                reference = await operands.put(accounting_report, written_at=_NOW)
+                restored = await operands.resolve(reference, BulkFiledDataCaptureReport)
+                public = registration.result_projector(restored, receipt)
+                wire = FiledBulkCapturePublicResultV1.model_validate_json(public.model_dump_json())
+                assert wire.pair_outcomes == (pair,)
+                accounting_projections.append(wire)
+            return terminal, projected, accounting_projections
 
-        terminal, projected = asyncio.run(run())
+        terminal, projected, accounting_projections = asyncio.run(run())
 
     assert definition.definition_id == "live.filed-capture.bulk"
     assert terminal.lifecycle is OperationLifecycle.TERMINAL
@@ -195,6 +289,11 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
     assert result.sync_run_ref is None
     assert result.observation_paths == ()
     assert result.artefact_refs == ()
+    assert len(result.pair_outcomes) == 1
+    pair = result.pair_outcomes[0]
+    assert (pair.modelo, pair.year) == ("999", 2025)
+    assert (pair.walk_attempted, pair.walk_completed) == (False, False)
+    assert (pair.row_count, pair.reached_count, pair.captured_count) == (0, 0, 0)
     assert len(result.failures) == 1
     failure = result.failures[0]
     assert (failure.modelo, failure.year, failure.period, failure.expediente_id) == ("999", 2025, None, None)
@@ -202,3 +301,10 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
     assert "registry has no modelo definition" in failure.message
     assert preflight_calls == [(profile_id, authority)]
     assert resources.closed
+    preview, unwalked, persisted = accounting_projections
+    assert (preview.pair_outcomes[0].row_count, preview.reached_count, preview.captured_count) == (2, 2, 0)
+    assert unwalked.pair_outcomes[0].walk_attempted is False
+    assert unwalked.pair_outcomes[0].walk_completed is False
+    assert (persisted.pair_outcomes[0].row_count, persisted.captured_count) == (2, 2)
+    assert persisted.calculation_observation_count == 1
+    assert persisted.calculation_observation_keys == ("303:2025:1T",)

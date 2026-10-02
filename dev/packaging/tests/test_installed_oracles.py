@@ -22,6 +22,7 @@ import shutil
 import sqlite3
 import sys
 import zipfile
+from contextlib import ExitStack
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -971,6 +972,7 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
         "execute",
         "observe",
         "result",
+        "result_page",
         "review",
         "respond",
         "control",
@@ -1059,90 +1061,81 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     assert runtime_executable.is_file(), "install the current development environment entry points first"
 
     profile_id, credential_reference = uuid4(), uuid4()
-    process_scope = WindowsProcessScope()
-    endpoint: WindowsRuntimeEndpoint | None = None
-    runtime_started = False
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root, ExitStack() as cleanup:
+        storage_root.mkdir(parents=True, exist_ok=True)
+        endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
+        cleanup.callback(endpoint.close)
+        process_scope = WindowsProcessScope()
+        cleanup.callback(process_scope.terminate, timeout=5)
+        runtime_installation(
+            storage_root=storage_root,
+            os_owner_id=endpoint.os_owner_id,
+            storage_identity=endpoint.storage_identity,
+        )
+        with composed_profile_persistence_ports():
+            publish_test_profile_capsule(
+                profile_id,
+                label="Installed MCP synthetic acceptance",
+                root=storage_root,
+            )
+        native = installed_automation_secret_store()
         try:
-            storage_root.mkdir(parents=True, exist_ok=True)
-            endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
-            runtime_installation(
-                storage_root=storage_root,
-                os_owner_id=endpoint.os_owner_id,
-                storage_identity=endpoint.storage_identity,
-            )
-            with composed_profile_persistence_ports():
-                publish_test_profile_capsule(
-                    profile_id,
-                    label="Installed MCP synthetic acceptance",
-                    root=storage_root,
-                )
-            native = installed_automation_secret_store()
+            native.read(CLIENT_NAMESPACE, str(credential_reference))
+        except AutomationCustodyError as error:
+            expected_refusal = error.reason.value
+        else:
+            expected_refusal = "missing"
+        assert expected_refusal in {"missing", "unavailable"}
+
+        runtime_environment = {
+            key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
+        }
+        runtime_environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
+        process_scope.launch(
+            executable=runtime_executable.resolve(strict=True),
+            arguments=(
+                "--storage-root",
+                str(storage_root),
+                "--storage-identity",
+                endpoint.storage_identity,
+                "--expected-version",
+                version("cadrumo"),
+            ),
+            directory=storage_root,
+            environment=runtime_environment,
+        )
+
+        deadline = time.monotonic() + 30
+        while True:
             try:
-                native.read(CLIENT_NAMESPACE, str(credential_reference))
-            except AutomationCustodyError as error:
-                expected_refusal = error.reason.value
-            else:
-                expected_refusal = "missing"
-            assert expected_refusal in {"missing", "unavailable"}
-
-            runtime_environment = {
-                key: value
-                for key, value in os.environ.items()
-                if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
-            }
-            runtime_environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
-            process_scope.launch(
-                executable=runtime_executable.resolve(strict=True),
-                arguments=(
-                    "--storage-root",
-                    str(storage_root),
-                    "--storage-identity",
-                    endpoint.storage_identity,
-                    "--expected-version",
-                    version("cadrumo"),
-                ),
-                directory=storage_root,
-                environment=runtime_environment,
-            )
-            runtime_started = True
-
-            deadline = time.monotonic() + 30
-            while True:
-                try:
-                    connection = VerifiedRuntimeConnection(
-                        endpoint.connect(timeout=0.2),
-                        expected=RuntimeClientHello(
-                            product_version=version("cadrumo"), storage_identity=endpoint.storage_identity
-                        ),
-                        deadline=deadline,
-                    )
-                    connection.close()
-                    break
-                except RuntimeRefusalError as error:
-                    if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
-                        raise
-                    time.sleep(0.05)
-
-            authentication_error, authentication, status_error, status = asyncio.run(
-                _call_dev_installed_mcp_authenticate(
-                    mcp_executable,
-                    storage_root=storage_root,
-                    profile_id=str(profile_id),
-                    credential_reference=str(credential_reference),
+                connection = VerifiedRuntimeConnection(
+                    endpoint.connect(timeout=0.2),
+                    expected=RuntimeClientHello(
+                        product_version=version("cadrumo"), storage_identity=endpoint.storage_identity
+                    ),
+                    deadline=deadline,
                 )
+                connection.close()
+                break
+            except RuntimeRefusalError as error:
+                if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+                    raise
+                time.sleep(0.05)
+
+        authentication_error, authentication, status_error, status = asyncio.run(
+            _call_dev_installed_mcp_authenticate(
+                mcp_executable,
+                storage_root=storage_root,
+                profile_id=str(profile_id),
+                credential_reference=str(credential_reference),
             )
-            assert authentication_error is True
-            assert authentication == {"outcome": "refused", "code": expected_refusal}
-            assert status_error is False
-            assert status == {
-                "outcome": "status",
-                "profile_id": str(profile_id),
-                "authenticated": False,
-                "denial": "authentication_required",
-            }
-        finally:
-            if runtime_started:
-                process_scope.terminate(timeout=5)
-            if endpoint is not None:
-                endpoint.close()
+        )
+        assert authentication_error is True
+        assert authentication == {"outcome": "refused", "code": expected_refusal}
+        assert status_error is False
+        assert status == {
+            "outcome": "status",
+            "profile_id": str(profile_id),
+            "authenticated": False,
+            "denial": "authentication_required",
+        }

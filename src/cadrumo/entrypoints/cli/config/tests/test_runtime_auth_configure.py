@@ -24,6 +24,7 @@ from .....application.runtime.contracts import RuntimeRefusalCode
 from .....core.auth_provider import AuthProviderKind
 from .....core.external_constants import OutputLanguage
 from .....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...config_payloads import AuthConfigurePayload
 from ...errors import CliRefusedBoundaryError
 from ...runtime_registered_operation import RegisteredOperationCompletion
 from .. import _auth as auth_cli
@@ -125,6 +126,42 @@ def test_configure_submits_exact_profile_operation_and_returns_operator_result(
     assert options["result_type"] is AuthConfigureOperationProjection
     assert options["request_version"] == options["result_version"] == 1
     assert options["timeout"] == 120
+
+
+def test_relative_certificate_reference_keeps_caller_file_after_worker_cwd_changes(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The deferred request keeps the caller's file across serialization and cwd."""
+    caller = tmp_path / "caller"
+    worker = tmp_path / "worker"
+    relative = Path("certificates") / "personal.p12"
+    intended = caller / relative
+    unintended = worker / relative
+    intended.parent.mkdir(parents=True)
+    unintended.parent.mkdir(parents=True)
+    intended.write_bytes(b"synthetic caller certificate input")
+    unintended.write_bytes(b"different worker-relative file")
+    projection = AuthConfigureOperationProjection(
+        profile_id=_PROFILE,
+        result=AuthConfigureResultSnapshot(provider="certificate", file=str(intended), complete=True),
+    )
+    submitted, bound_profiles = _bind(monkeypatch, projection)
+    monkeypatch.chdir(caller)
+
+    result = bridge.run_auth_configure(_context(), provider="certificate", certificate_path=relative)
+
+    assert bound_profiles == [_PROFILE]
+    assert len(submitted) == 1
+    request = submitted[0][1]
+    assert isinstance(request, AuthConfigureOperationRequest)
+    # Exercise the canonical request's wire representation before deferred read.
+    received = AuthConfigureOperationRequest.model_validate_json(request.model_dump_json())
+    monkeypatch.chdir(worker)
+    assert relative.read_bytes() == b"different worker-relative file"
+    assert received.certificate_path is not None
+    assert received.certificate_path.read_bytes() == b"synthetic caller certificate input"
+    assert result.file == str(intended)
 
 
 @pytest.mark.parametrize(
@@ -261,6 +298,7 @@ def test_auth_configure_keeps_payload_and_operator_text_lines(
     assert emitted[0]["ctx"] is ctx
     assert emitted[0]["command"] == "config.auth.configure"
     payload = emitted[0]["result"]
+    assert isinstance(payload, AuthConfigurePayload)
     assert payload.provider == "clave_movil"
     assert payload.complete is True
     assert emitted[0]["lines"] == [

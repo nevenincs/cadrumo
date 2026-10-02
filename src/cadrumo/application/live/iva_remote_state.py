@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Awaitable, Mapping
+from collections.abc import Awaitable, Mapping
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
 from ...core.access_gate.gate import AeatAccessGate as _AeatAccessGate
+from ...core.async_cleanup import has_async_cleanup_failure
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
@@ -24,7 +25,7 @@ from ..runtime.contracts import RuntimeRefusalError
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.automation_custody_port import AutomationCustodyError
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
-from .filed_data_ports import FiledEffectGuard
+from .filed_data_ports import FiledEffectGuard, LocalEffectTracker
 from .iva_remote_state_ports import IvaRemoteStatePort
 from .remote_state_models import (
     IvaCompensationHistoryCaptureReport,
@@ -48,24 +49,6 @@ _IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME = Path(
 _IVA_REMOTE_STATE_WALLET_DIRNAME = Path(
     _storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_WALLET).subpath
 ).name
-
-
-class _LocalEffectTracker:
-    """Identify failures raised inside an authorized local persistence fence."""
-
-    def __init__(self, guard: FiledEffectGuard) -> None:
-        self._guard = guard
-        self.failed = False
-
-    @asynccontextmanager
-    async def enter(self) -> AsyncGenerator[None]:
-        """Propagate local write failures instead of reporting a remote miss."""
-        try:
-            async with self._guard():
-                yield
-        except BaseException:
-            self.failed = True
-            raise
 
 
 def list_iva_compensation_history(
@@ -261,6 +244,8 @@ async def _capture_iva_remote_state_for_active_storage(
         except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
             raise
         except (TimeoutError, _CadrumoError, OSError) as exc:
+            if has_async_cleanup_failure(exc):
+                raise
             auth_error = exc
         if auth_result is None:
             return await _persist_report_with_guard(
@@ -285,7 +270,7 @@ async def _capture_iva_remote_state_for_active_storage(
             "year_from": year_from,
             "year_to": year_to,
         }
-        filed_tracker = _LocalEffectTracker(effect_guard) if effect_guard is not None else None
+        filed_tracker = LocalEffectTracker(effect_guard) if effect_guard is not None else None
         try:
             filed_awaitable = (
                 ports.capture_history(
@@ -317,7 +302,9 @@ async def _capture_iva_remote_state_for_active_storage(
         except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
             raise
         except (TimeoutError, _CadrumoError, OSError) as exc:
-            if filed_tracker is not None and filed_tracker.failed:
+            if has_async_cleanup_failure(exc) or (
+                filed_tracker is not None and (filed_tracker.started or filed_tracker.failed)
+            ):
                 raise
             filed_error = exc
         wallet_progress: dict[str, object] = {
@@ -325,7 +312,7 @@ async def _capture_iva_remote_state_for_active_storage(
             "target_year": target_year,
             "target_period": target_period.registry_token,
         }
-        wallet_tracker = _LocalEffectTracker(effect_guard) if effect_guard is not None else None
+        wallet_tracker = LocalEffectTracker(effect_guard) if effect_guard is not None else None
         try:
             wallet_awaitable = (
                 ports.capture_wallet(
@@ -359,7 +346,9 @@ async def _capture_iva_remote_state_for_active_storage(
         except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
             raise
         except (TimeoutError, _CadrumoError, OSError) as exc:
-            if wallet_tracker is not None and wallet_tracker.failed:
+            if has_async_cleanup_failure(exc) or (
+                wallet_tracker is not None and (wallet_tracker.started or wallet_tracker.failed)
+            ):
                 raise
             wallet_error = exc
         return await _persist_report_with_guard(

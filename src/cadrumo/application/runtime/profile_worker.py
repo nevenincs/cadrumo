@@ -79,7 +79,7 @@ class ProfileWorkerControlRequest(BaseModel):
     """Internal lifecycle control or a request for a following protected proof frame."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    action: Literal["status", "stop", "password", "receipt", "cancel_human"]
+    action: Literal["status", "stop", "password", "receipt", "cancel_human", "prepare_api"]
     request_id: UUID
 
 

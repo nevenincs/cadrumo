@@ -8,10 +8,13 @@ from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
+import typer
+from typer.core import TyperCommand
 
 from cadrumo.application.ledger.evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidencePatch
 from cadrumo.application.ledger.evidence_mutation_operation import (
     LedgerEvidenceUpdateProjection,
+    LedgerEvidenceUpdateRequest,
 )
 from cadrumo.application.ledger.evidence_read_operation import LedgerEvidenceRecordProjection
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
@@ -49,13 +52,13 @@ def _run_bridge(
     patch: PurchaseInvoiceEvidencePatch,
     projection: LedgerEvidenceUpdateProjection,
     effect: OperationEffect,
-) -> tuple[LedgerEvidenceUpdateProjection, object]:
+) -> tuple[LedgerEvidenceUpdateProjection, LedgerEvidenceUpdateRequest]:
     client = SimpleNamespace(profile_id=_PROFILE)
-    captured: dict[str, object] = {}
+    captured: list[LedgerEvidenceUpdateRequest] = []
     monkeypatch.setattr(runtime, "bound_profile_client", lambda _ctx: client)
 
-    def run_registered(_client, request, **_kwargs):
-        captured["request"] = request
+    def run_registered(_client: object, request: LedgerEvidenceUpdateRequest, **_kwargs: object):
+        captured.append(request)
         return SimpleNamespace(
             projection=projection,
             terminal_condition=OperationTerminalCondition.SUCCEEDED,
@@ -65,8 +68,11 @@ def _run_bridge(
         )
 
     monkeypatch.setattr(runtime, "run_registered_operation", run_registered)
-    result = runtime.run_ledger_evidence_update(object(), evidence_id="evidence-target", patch=patch)
-    return result, captured["request"]
+    result = runtime.run_ledger_evidence_update(
+        typer.Context(TyperCommand("test")), evidence_id="evidence-target", patch=patch
+    )
+    assert len(captured) == 1
+    return result, captured[0]
 
 
 def test_update_bridge_canonicalizes_trailing_zero_decimal_and_correlates_result(

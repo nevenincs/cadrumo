@@ -83,14 +83,14 @@ def test_worker_hosts_the_canonical_operation_services_and_rechecks_custody(tmp_
             worker.install(admitted, bytearray(key))
             definition = "user-profile.field-mutation"
             expected = build_production_operation_registry().lookup_public_contract(definition)
-            assert worker.contract(admitted.session_id, definition) == expected
+            assert worker.describe(admitted.session_id, definition).contract == expected
             with pytest.raises(AutomationCustodyError):
-                worker.contract(uuid4(), definition)
+                worker.describe(uuid4(), definition)
             with pytest.raises(AutomationCustodyError):
-                worker.contract(admitted.session_id, "user-profile.automation-approve")
+                worker.describe(admitted.session_id, "user-profile.automation-approve")
             worker.retire(admitted.session_id)
             with pytest.raises(AutomationCustodyError):
-                worker.contract(admitted.session_id, definition)
+                worker.describe(admitted.session_id, definition)
         finally:
             worker.close()
 

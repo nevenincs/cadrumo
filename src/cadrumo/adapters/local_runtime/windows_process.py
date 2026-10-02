@@ -13,6 +13,7 @@ from pathlib import Path
 from threading import Lock
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete
 
 if sys.platform == "win32":
     from ctypes import wintypes
@@ -53,7 +54,7 @@ if sys.platform == "win32":
 
 def _launch_in_job(
     job: int, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
-) -> tuple[int, int]:
+) -> tuple[int, int, int]:
     if sys.platform != "win32":
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -88,9 +89,6 @@ def _launch_in_job(
         ctypes.POINTER(_ProcessInformation),
     )
     create.restype = wintypes.BOOL
-    close = kernel.CloseHandle
-    close.argtypes = (wintypes.HANDLE,)
-    close.restype = wintypes.BOOL
     size = ctypes.c_size_t()
     initialize(None, 1, 0, ctypes.byref(size))
     if size.value == 0:
@@ -128,18 +126,18 @@ def _launch_in_job(
             ctypes.byref(information),
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        close(information.thread)
-        return int(information.process), int(information.pid)
+        return int(information.process), int(information.thread), int(information.pid)
     finally:
         destroy(attributes)
 
 
 class WindowsOwnedProcess:
-    """A retained process handle; closing it does not dispose of the owning job."""
+    """Retained child handles; closing them does not dispose of the owning job."""
 
-    def __init__(self, *, handle: int, pid: int) -> None:
-        """Take ownership of the native process handle returned at launch."""
+    def __init__(self, *, handle: int, pid: int, thread_handle: int | None = None) -> None:
+        """Take ownership of the process and initial thread handles at launch."""
         self._handle: int | None = handle
+        self._thread_handle = thread_handle
         self.pid = pid
 
     def wait(self, *, timeout: float) -> int:
@@ -157,12 +155,32 @@ class WindowsOwnedProcess:
         return win32process.GetExitCodeProcess(self._handle)
 
     def close(self) -> None:
-        """Release the retained process handle after its owning resource settles."""
+        """Attempt both handles, retaining each until its native release succeeds."""
         import win32api
 
+        failures: list[BaseException] = []
+        if self._thread_handle is not None:
+            try:
+                win32api.CloseHandle(self._thread_handle)
+            except BaseException as error:
+                failures.append(error)
+            else:
+                self._thread_handle = None
         if self._handle is not None:
-            win32api.CloseHandle(self._handle)
-            self._handle = None
+            try:
+                win32api.CloseHandle(self._handle)
+            except BaseException as error:
+                failures.append(error)
+            else:
+                self._handle = None
+        if failures:
+            raise failures[0]
+
+
+def unreturned_windows_process_scope(error: BaseException) -> WindowsProcessScope | None:
+    """Return the exact unreturned scope retained after failed native cleanup."""
+    candidate = error.__dict__.get("_windows_process_scope_candidate")
+    return candidate if isinstance(candidate, WindowsProcessScope) else None
 
 
 class WindowsProcessScope:
@@ -186,6 +204,8 @@ class WindowsProcessScope:
         self._lock = Lock()
         self._children: list[WindowsOwnedProcess] = []
         self._job: int | None = None
+        self._launch_fenced = False
+        self._terminated = False
         self._termination_failure: RuntimeRefusalCode | None = None
         try:
             kernel = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -203,11 +223,21 @@ class WindowsProcessScope:
             actual = win32job.QueryInformationJobObject(self._job, win32job.JobObjectExtendedLimitInformation)
             if actual["BasicLimitInformation"]["LimitFlags"] != win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE:
                 raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        except (pywintypes.error, RuntimeRefusalError):
-            if self._job is not None:
-                win32api.CloseHandle(self._job)
-                self._job = None
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
+        except BaseException as error:
+            primary = (
+                RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+                if isinstance(error, pywintypes.error)
+                else error
+            )
+            try:
+                self.terminate()
+            except BaseException as cleanup:
+                self._retain_cleanup(primary, (error, cleanup))
+                if self._job is not None:
+                    primary.__dict__["_windows_process_scope_candidate"] = self
+            if primary is error:
+                raise
+            raise primary from error
 
     def launch(
         self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
@@ -231,16 +261,16 @@ class WindowsProcessScope:
         except (OSError, ValueError):
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
         with self._lock:
-            if self._job is None:
+            if self._launch_fenced or self._job is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-            handle, pid = _launch_in_job(
+            handle, thread_handle, pid = _launch_in_job(
                 self._job,
                 executable=executable,
                 arguments=arguments,
                 directory=directory,
                 environment=environment,
             )
-            process = WindowsOwnedProcess(handle=handle, pid=pid)
+            process = WindowsOwnedProcess(handle=handle, thread_handle=thread_handle, pid=pid)
             self._children.append(process)
             return process
 
@@ -253,34 +283,77 @@ class WindowsProcessScope:
         if not math.isfinite(timeout) or timeout < 0:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         with self._lock:
-            if self._termination_failure is not None:
-                raise RuntimeRefusalError(self._termination_failure)
-            if self._job is None:
-                return
-            job, self._job = self._job, None
+            self._launch_fenced = True
             deadline = time.monotonic() + timeout
-            try:
-                win32job.TerminateJobObject(job, 1)
-                while win32job.QueryInformationJobObject(job, win32job.JobObjectBasicAccountingInformation)[
-                    "ActiveProcesses"
-                ]:
-                    if time.monotonic() >= deadline:
-                        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-                    time.sleep(min(0.01, max(0, deadline - time.monotonic())))
-            except RuntimeRefusalError as error:
-                # Releasing the last job handle requests termination, but does
-                # not prove it finished. Do not turn a retry into false success
-                # after discarding the native handle needed for observation.
-                self._termination_failure = error.reason
-                raise
-            except pywintypes.error:
-                self._termination_failure = RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
-                raise RuntimeRefusalError(self._termination_failure) from None
-            finally:
-                win32api.CloseHandle(job)
-                for child in self._children:
+            primary: BaseException | None = None
+            native_cause: BaseException | None = None
+            failures: list[BaseException] = []
+            if self._job is not None and not self._terminated:
+                try:
+                    win32job.TerminateJobObject(self._job, 1)
+                    while win32job.QueryInformationJobObject(self._job, win32job.JobObjectBasicAccountingInformation)[
+                        "ActiveProcesses"
+                    ]:
+                        if time.monotonic() >= deadline:
+                            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+                        time.sleep(min(0.01, max(0, deadline - time.monotonic())))
+                    self._terminated = True
+                    self._termination_failure = None
+                except BaseException as error:
+                    if isinstance(error, pywintypes.error):
+                        primary = RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+                        native_cause = error
+                    else:
+                        primary = error
+                    self._termination_failure = (
+                        error.reason
+                        if isinstance(error, RuntimeRefusalError)
+                        else RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
+                    )
+            # Preserve the observation handle when termination is unproven.
+            # Kill-on-close alone cannot prove that independently grouped
+            # descendants have stopped; a later retry must observe this job.
+            if self._job is not None and self._terminated:
+                try:
+                    win32api.CloseHandle(self._job)
+                except BaseException as error:
+                    failures.append(error)
+                else:
+                    self._job = None
+            retained_children: list[WindowsOwnedProcess] = []
+            for child in self._children:
+                try:
                     child.close()
-                self._children.clear()
+                except BaseException as error:
+                    failures.append(error)
+                    retained_children.append(child)
+            self._children = retained_children
+            if primary is not None:
+                self._retain_cleanup(primary, (native_cause or primary, *failures))
+                if native_cause is not None:
+                    raise primary from native_cause
+                raise primary
+            if failures:
+                raise AsyncResourceCleanupError(
+                    (self,), tuple(failures), retry_task_name="windows-process-scope-release", close_attempts=1
+                ) from failures[0]
+
+    def _retain_cleanup(self, primary: BaseException, failures: tuple[BaseException, ...]) -> None:
+        """Keep one original scope as the retry authority on the exact primary."""
+        cleanup = AsyncResourceCleanupError(
+            (self,), failures, retry_task_name="windows-process-scope-release", close_attempts=1
+        )
+        seen: set[int] = set()
+        for error in (primary, *failures):
+            attachments: list[object] = [error] if isinstance(error, AsyncResourceCleanupError) else []
+            attachments.extend(error.__dict__.get(name) for name in ("async_cleanup_error", "cleanup_error"))
+            for previous in attachments:
+                if isinstance(previous, AsyncResourceCleanupError) and id(previous) not in seen:
+                    seen.add(id(previous))
+                    cleanup = previous.merged_with(cleanup)
+        primary.__dict__["async_cleanup_error"] = cleanup
+        if "cleanup_error" in primary.__dict__ or isinstance(primary, asyncio.CancelledError):
+            primary.__dict__["cleanup_error"] = cleanup
 
     def active_process_ids(self) -> tuple[int, ...]:
         """Snapshot current job members for health; PIDs confer no authority."""
@@ -298,4 +371,21 @@ class WindowsProcessScope:
 
     async def close(self) -> None:
         """Settle through OperationCleanupOwner without blocking its event loop."""
-        await asyncio.to_thread(self.terminate)
+        failures: list[BaseException] = []
+
+        def release() -> None:
+            # Transport terminal cancellation as a value; otherwise shield
+            # turns a native CancelledError into a different caller cancel.
+            try:
+                self.terminate()
+            except BaseException as error:
+                failures.append(error)
+
+        try:
+            await await_cancellation_complete(asyncio.to_thread(release), task_name="windows-process-scope-release")
+        except asyncio.CancelledError as primary:
+            if failures:
+                self._retain_cleanup(primary, tuple(failures))
+            raise
+        if failures:
+            raise failures[0]

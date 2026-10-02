@@ -157,7 +157,7 @@ def test_native_worker_refuses_private_submit_when_startup_journal_is_unreadable
             try:
                 admitted = lease(identity)
                 worker.install(admitted, bytearray(key))
-                contract = worker.contract(admitted.session_id, request.definition_id)
+                contract = worker.describe(admitted.session_id, request.definition_id).contract
                 assert contract.definition_id == request.definition_id
                 operand_keys_before = _secure_operand_keys(root, identity.binding.profile_id, key)
 
@@ -172,7 +172,7 @@ def test_native_worker_refuses_private_submit_when_startup_journal_is_unreadable
                     assert _secure_operand_keys(root, identity.binding.profile_id, key) == operand_keys_before
                     worker.require_alive()
                     assert worker.status().sessions
-                    assert worker.contract(admitted.session_id, request.definition_id) == contract
+                    assert worker.describe(admitted.session_id, request.definition_id).contract == contract
                 assert authority.calls == []
             finally:
                 worker.close()

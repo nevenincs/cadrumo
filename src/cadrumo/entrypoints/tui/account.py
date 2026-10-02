@@ -21,7 +21,6 @@ from ...core.errors.hierarchy import CadrumoError
 from .components.account_chrome import AccountActionV1, TuiAccountHostV1, account_action_help, account_action_label
 from .navigation import TuiScreenContextV1
 from .profile.overview import ProfileManagerScreen
-from .secret.login import LoginScreen
 from .secret.passphrase import PassphraseScreen
 
 if TYPE_CHECKING:
@@ -29,16 +28,15 @@ if TYPE_CHECKING:
     from textual.screen import Screen
 
     from ...application.overview.home import HomeAccountSession
-    from .operations.controller_port import OperationControllerPort
 
 
 type AccountProfileFactoryV1 = Callable[[TuiScreenContextV1], ProfileManagerScreen]
-type AccountChangeUserFactoryV1 = Callable[[], LoginScreen | AccountDirectSessionActionV1]
+type AccountChangeUserFactoryV1 = Callable[[], AccountDirectSessionActionV1]
 type AccountPasswordFactoryV1 = Callable[[], PassphraseScreen]
 type AccountAccessFactoryV1 = Callable[[], Screen[None]]
 type AccountAppearanceFactoryV1 = Callable[[App[AccountRecomposeRequiredV1 | None]], str]
 type AccountLanguageFactoryV1 = Callable[[ProfileManagerScreen], None]
-type AccountSignOutFactoryV1 = Callable[[], Awaitable[OperationControllerPort] | AccountDirectSessionActionV1]
+type AccountSignOutFactoryV1 = Callable[[], AccountDirectSessionActionV1]
 type AccountSessionReaderV1 = Callable[[], Awaitable[HomeAccountSession]]
 
 

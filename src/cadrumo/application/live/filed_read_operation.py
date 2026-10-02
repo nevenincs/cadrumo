@@ -39,7 +39,7 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.owner import OperationExecutorContext
+from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -248,7 +248,10 @@ class FiledListExecutor:
         context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
         await context.events.phase(_LIST_PHASES[1])
         session_receipt = LiveSessionWriteReceipt(context.events.effect)
-        with resources.activate():
+        with (
+            retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
+            resources.activate(),
+        ):
             if payload.modelo is None:
                 bulk = await list_filed_data_bulk(
                     filed_data_port=composition.filed_data_port,
@@ -317,7 +320,10 @@ class FiledDiscoverExecutor:
         context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
         await context.events.phase(_DISCOVER_PHASES[1])
         session_receipt = LiveSessionWriteReceipt(context.events.effect)
-        with resources.activate():
+        with (
+            retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
+            resources.activate(),
+        ):
             report = await discover_filed_history(
                 filed_data_port=composition.filed_data_port,
                 profile=profile,

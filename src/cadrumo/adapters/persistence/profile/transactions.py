@@ -101,6 +101,7 @@ from ..storage.errors import (
     BlobIntegrityError,
     ClassificationError,
     EnvelopeVersionError,
+    SecureObjectRevisionConflictError,
     SecureObjectRowIdentityError,
     StorageError,
 )
@@ -113,6 +114,8 @@ from ..storage.sql.secure_objects import SecureObjectMigrationTarget
 from .bienes_inversion import BienesInversionIvaRegisterRepository
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from sqlalchemy.orm import Session
+
     from ....core.secure_object_write import SecureObjectWrite
     from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
     from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
@@ -1446,66 +1449,113 @@ class TransactionCatalogueRepository:
             for transaction_id, transaction in catalogue.transactions.items()
         }
 
-        with self._objects.guarded_session_scope() as session:
-            existing_rows = session.execute(
-                select(
-                    TransactionDateIndexRow.id,
-                    TransactionDateIndexRow.transaction_id,
-                    TransactionDateIndexRow.filing_date,
-                    TransactionDateIndexRow.eligible_from,
-                    TransactionDateIndexRow.eligible_to,
-                ).where(TransactionDateIndexRow.bucket_id == self._bucket_id),
-            ).all()
-            existing: dict[str, tuple[int, _IndexedTransactionDates]] = {
-                transaction_id: (
-                    row_id,
-                    _IndexedTransactionDates(
-                        filing_date=filing_date,
-                        eligible_from=eligible_from,
-                        eligible_to=eligible_to,
-                    ),
-                )
-                for row_id, transaction_id, filing_date, eligible_from, eligible_to in existing_rows
-            }
+        for attempt in range(3):
+            with self._objects.guarded_session_scope() as session:
+                baseline = self._read_date_index_rows(session)
+            if {key: value[1] for key, value in baseline.items()} == incoming:
+                return
 
-            stale_ids = set(existing) - set(incoming)
-            if stale_ids:
-                session.execute(
-                    delete(TransactionDateIndexRow).where(
-                        TransactionDateIndexRow.bucket_id == self._bucket_id,
-                        TransactionDateIndexRow.transaction_id.in_(stale_ids),
-                    ),
-                )
-
-            new_rows: list[TransactionDateIndexRow] = []
-            for transaction_id, dates in incoming.items():
-                current = existing.get(transaction_id)
-                if current is not None and current[1] == dates:
-                    continue  # unchanged: leave the existing row untouched
-                if current is not None:
-                    session.execute(
-                        update(TransactionDateIndexRow)
-                        .where(TransactionDateIndexRow.id == current[0])
-                        .values(
-                            filing_date=dates.filing_date,
-                            filing_year=dates.filing_date.year,
-                            eligible_from=dates.eligible_from,
-                            eligible_to=dates.eligible_to,
-                        ),
+            def commit(session: Session, baseline: dict[str, tuple[int, _IndexedTransactionDates]] = baseline) -> None:
+                current = self._read_date_index_rows(session)
+                if current != baseline:
+                    # No DML has occurred: the whole transaction is a proven
+                    # prewrite conflict, including convergence by another writer.
+                    raise SecureObjectRevisionConflictError(
+                        translated_message="errors.fail.fail_storage_secure_object_revision_conflict",
+                        context={
+                            "namespace": "transaction-date-index",
+                            "expected_revision_id": self._date_index_revision(baseline),
+                            "current_revision_id": self._date_index_revision(current),
+                        },
                     )
-                    continue
-                new_rows.append(
-                    TransactionDateIndexRow(
-                        bucket_id=self._bucket_id,
-                        transaction_id=transaction_id,
+                self._write_date_index_rows(session, incoming=incoming, existing=current)
+
+            try:
+                self._objects.write_transaction(commit)
+            except SecureObjectRevisionConflictError:
+                if attempt == 2:
+                    raise
+            else:
+                return
+
+    @staticmethod
+    def _date_index_revision(rows: dict[str, tuple[int, _IndexedTransactionDates]]) -> str:
+        """Identify a prepared routing baseline without persisting financial data."""
+        values = [
+            (key, row_id, dates.filing_date.isoformat(), dates.eligible_from.isoformat(), dates.eligible_to.isoformat())
+            for key, (row_id, dates) in sorted(rows.items())
+        ]
+        return sha256_hex(json.dumps(values, separators=(",", ":")).encode(UTF_8_ENCODING))
+
+    def _read_date_index_rows(self, session: Session) -> dict[str, tuple[int, _IndexedTransactionDates]]:
+        """Read the exact bucket baseline used by the canonical routing diff."""
+        existing_rows = session.execute(
+            select(
+                TransactionDateIndexRow.id,
+                TransactionDateIndexRow.transaction_id,
+                TransactionDateIndexRow.filing_date,
+                TransactionDateIndexRow.eligible_from,
+                TransactionDateIndexRow.eligible_to,
+            ).where(TransactionDateIndexRow.bucket_id == self._bucket_id),
+        ).all()
+        return {
+            transaction_id: (
+                row_id,
+                _IndexedTransactionDates(
+                    filing_date=filing_date,
+                    eligible_from=eligible_from,
+                    eligible_to=eligible_to,
+                ),
+            )
+            for row_id, transaction_id, filing_date, eligible_from, eligible_to in existing_rows
+        }
+
+    def _write_date_index_rows(
+        self,
+        session: Session,
+        *,
+        incoming: dict[str, _IndexedTransactionDates],
+        existing: dict[str, tuple[int, _IndexedTransactionDates]],
+    ) -> None:
+        """Apply the canonical routing diff after its complete baseline assertion."""
+        stale_ids = set(existing) - set(incoming)
+        if stale_ids:
+            session.execute(
+                delete(TransactionDateIndexRow).where(
+                    TransactionDateIndexRow.bucket_id == self._bucket_id,
+                    TransactionDateIndexRow.transaction_id.in_(stale_ids),
+                ),
+            )
+
+        new_rows: list[TransactionDateIndexRow] = []
+        for transaction_id, dates in incoming.items():
+            current = existing.get(transaction_id)
+            if current is not None and current[1] == dates:
+                continue  # unchanged: leave the existing row untouched
+            if current is not None:
+                session.execute(
+                    update(TransactionDateIndexRow)
+                    .where(TransactionDateIndexRow.id == current[0])
+                    .values(
                         filing_date=dates.filing_date,
                         filing_year=dates.filing_date.year,
                         eligible_from=dates.eligible_from,
                         eligible_to=dates.eligible_to,
                     ),
                 )
-            if new_rows:
-                session.add_all(new_rows)
+                continue
+            new_rows.append(
+                TransactionDateIndexRow(
+                    bucket_id=self._bucket_id,
+                    transaction_id=transaction_id,
+                    filing_date=dates.filing_date,
+                    filing_year=dates.filing_date.year,
+                    eligible_from=dates.eligible_from,
+                    eligible_to=dates.eligible_to,
+                ),
+            )
+        if new_rows:
+            session.add_all(new_rows)
 
     def _reconcile(
         self,

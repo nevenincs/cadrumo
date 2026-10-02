@@ -53,8 +53,10 @@ from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode, normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
-from ...domain.invoices.enums import resolve_iva_rate_slot
+from ...domain.invoices.enums import InvoiceClass, resolve_iva_rate_slot
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
@@ -127,6 +129,10 @@ class _ValidatedWizardFields:
     currency: IsoCurrencyCode
     retention_amount: Decimal | None
     retention_rate: Decimal | None
+    invoice_class: InvoiceClass | None
+    series: str | None
+    rectifies_invoice_number: str | None
+    recargo_amount: Decimal | None
 
 
 def _collect_wizard_field[T](
@@ -323,6 +329,32 @@ def _validate_currency(raw: str) -> str:
         raise _WizardFieldError(field="currency", reason=resolve_error_message(exc)) from exc
 
 
+def _validate_declared_text(raw: str | None, *, field: str) -> str | None:
+    if raw is None:
+        return None
+    value = raw.strip()
+    if not value:
+        raise _WizardFieldError(field=field, reason="must not be blank")
+    return value
+
+
+def _validate_declared_invoice_class(raw: str | None, *, on_date: date | None) -> InvoiceClass | None:
+    if raw is None:
+        return None
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=on_date)
+    value = next((token for token in catalogue.invoice_class_choices if str(token) == raw.strip()), None)
+    if value is None:
+        raise _WizardFieldError(field="invoice_class", reason="must be a declared invoice class")
+    return value
+
+
+def _validate_recargo_amount(raw: str | None) -> Decimal | None:
+    try:
+        return _validate_retention_amount(raw)
+    except _WizardFieldError as exc:
+        raise _WizardFieldError(field="recargo_amount", reason=exc.reason) from exc
+
+
 #: The one country code that establishes domesticity. Named rather than inlined
 #: because the Modelo 303 invoice screen decides the same fact the same way, and
 #: two spellings of one discriminator is how they drift apart.
@@ -334,6 +366,7 @@ def _derived_domestic_category(
     country_code: str,
     iva_rate: Decimal | None,
     on_date: date,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> IvaCategory | None:
     """Return the domestic category the rate denotes, or ``None`` to leave it unset.
 
@@ -361,18 +394,20 @@ def _derived_domestic_category(
         return None
     from ...domain.calculations.registry.authority import bundled_indexed_authority
 
-    with bundled_indexed_authority().operation() as operation:
-        tiers = rate_kinds_for_declared_rate(
-            spanish_eu_member_state(effective_date=on_date),
-            iva_rate / Decimal("100"),
-            on_date,
-            operation=operation,
-        )
-        if len(tiers) != 1:
-            return None
-        # The tier-to-category table is registry data dated like the rate, so
-        # it is projected from the same lease rather than assumed.
-        mapping = resolve_iva_classification_inputs(effective_date=on_date, operation=operation).rate_categories
+    if operation is None:
+        with bundled_indexed_authority().operation() as pinned:
+            return _derived_domestic_category(
+                country_code=country_code, iva_rate=iva_rate, on_date=on_date, operation=pinned
+            )
+    tiers = rate_kinds_for_declared_rate(
+        spanish_eu_member_state(effective_date=on_date),
+        iva_rate / Decimal("100"),
+        on_date,
+        operation=operation,
+    )
+    if len(tiers) != 1:
+        return None
+    mapping = resolve_iva_classification_inputs(effective_date=on_date, operation=operation).rate_categories
     return domestic_categories_by_rate_kind(mapping).get(tiers[0])
 
 
@@ -389,6 +424,10 @@ def _validate_wizard_fields(
     country_code: str,
     retention_rate: str | None,
     retention_amount: str | None,
+    invoice_class: str | None,
+    series: str | None,
+    rectifies_invoice_number: str | None,
+    recargo_amount: str | None,
 ) -> tuple[_ValidatedWizardFields, list[InvoiceWizardFieldError]]:
     field_errors: list[InvoiceWizardFieldError] = []
     # A pre-validation placeholder, never an output. It is read below by the NIF
@@ -452,6 +491,22 @@ def _validate_wizard_fields(
         lambda: _validate_retention_rate(retention_rate),
         fallback=None,
     )
+    resolved_class = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_invoice_class(invoice_class, on_date=resolved_operation_date or resolved_date),
+        fallback=None,
+    )
+    resolved_series = _collect_wizard_field(
+        field_errors, lambda: _validate_declared_text(series, field="series"), fallback=None
+    )
+    resolved_rectifies = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_text(rectifies_invoice_number, field="rectifies_invoice_number"),
+        fallback=None,
+    )
+    resolved_recargo = _collect_wizard_field(
+        field_errors, lambda: _validate_recargo_amount(recargo_amount), fallback=None
+    )
     return (
         _ValidatedWizardFields(
             country=resolved_country,
@@ -465,6 +520,10 @@ def _validate_wizard_fields(
             currency=resolved_currency,
             retention_amount=resolved_retention_amount,
             retention_rate=resolved_retention_rate,
+            invoice_class=resolved_class,
+            series=resolved_series,
+            rectifies_invoice_number=resolved_rectifies,
+            recargo_amount=resolved_recargo,
         ),
         field_errors,
     )
@@ -473,16 +532,9 @@ def _validate_wizard_fields(
 def _raise_wizard_field_errors(field_errors: list[InvoiceWizardFieldError]) -> None:
     if not field_errors:
         return
-    joined = "; ".join(f"{err.field}: {err.reason}" for err in field_errors)
-    raise InvoiceValidationError(
-        f"invoice wizard refused {len(field_errors)} field(s): {joined}",
-        translated_message="application.invoices.wizard.errors.field_errors",
-        context={
-            "field_count": str(len(field_errors)),
-            "fields": ", ".join(err.field for err in field_errors),
-            "detail": joined,
-        },
-    )
+    from .catalogue_intake_refusal import InvoiceWizardFieldsValidationError
+
+    raise InvoiceWizardFieldsValidationError(tuple(field_errors))
 
 
 def _require_wizard_core_fields(fields: _ValidatedWizardFields) -> tuple[date, Decimal]:
@@ -506,6 +558,7 @@ def _build_wizard_invoice(
     operation_type: IntracomOperationType | None,
     notes: str,
     ports: CatalogueCreationPorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Invoice:
     try:
         # Derived once, before construction, so the built candidate and the
@@ -515,6 +568,7 @@ def _build_wizard_invoice(
             country_code=fields.country,
             iva_rate=fields.iva_rate,
             on_date=fields.operation_date or invoice_date,
+            operation=operation,
         )
         return build_catalogue_invoice(
             bucket_id=bucket_id,
@@ -534,6 +588,11 @@ def _build_wizard_invoice(
             retention_rate=fields.retention_rate,
             retention_amount=fields.retention_amount,
             rate_provider=ports.rate_provider,
+            invoice_class=fields.invoice_class,
+            series=fields.series,
+            rectifies_invoice_number=fields.rectifies_invoice_number,
+            recargo_amount=fields.recargo_amount,
+            operation=operation,
         )
     except (InvoiceValidationError, ValidationError, CoreValidationError) as exc:
         reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)
@@ -591,6 +650,11 @@ def create_invoice_via_wizard(
     retention_rate: str | None = None,
     retention_amount: str | None = None,
     ports: CatalogueCreationPorts,
+    invoice_class: str | None = None,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    recargo_amount: str | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> InvoiceWizardResult:
     """Validate every field, then create (or resolve) one catalogue invoice.
 
@@ -626,6 +690,11 @@ def create_invoice_via_wizard(
             ``retention_amount``; never derives it.
         retention_amount: Raw RIRPF art. 95 retención euro amount string, or
             ``None``/blank for no declared retención.
+        invoice_class: Optional declared registry invoice-class token.
+        series: Optional declared invoice series; a supplied blank is refused.
+        rectifies_invoice_number: Optional declared original invoice reference.
+        recargo_amount: Optional canonical euro amount added to grand total.
+        operation: Exact retained authority pin, or the ordinary bundled default.
         ports: Required catalogue-creation capabilities for the active bucket.
 
     Returns:
@@ -649,6 +718,10 @@ def create_invoice_via_wizard(
         country_code=country_code,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
+        invoice_class=invoice_class,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        recargo_amount=recargo_amount,
     )
     _raise_wizard_field_errors(field_errors)
     resolved_date, resolved_base = _require_wizard_core_fields(fields)
@@ -662,5 +735,6 @@ def create_invoice_via_wizard(
         operation_type=operation_type,
         notes=notes,
         ports=ports,
+        operation=operation,
     )
     return _persist_or_resolve_wizard_invoice(candidate, ports=ports)

@@ -65,7 +65,7 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .review_package import assert_review_package_verifies
 
 if TYPE_CHECKING:
@@ -183,6 +183,7 @@ def sign_review_package(
     *,
     keypair: ReviewPackageSigningKeypair,
     signed_at: datetime | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> SignedReviewPackage:
     """Verify ``package_path``'s checksum manifest, then sign its digest.
 
@@ -198,6 +199,7 @@ def sign_review_package(
             :func:`ensure_review_package_signing_keypair`).
         signed_at: Optional override for the envelope's ``signed_at``
             timestamp (tests only); defaults to the current UTC time.
+        operation: Retained authority operation for the package integrity check.
 
     Raises:
         FileNotFoundError: If ``package_path`` does not exist.
@@ -205,7 +207,10 @@ def sign_review_package(
             verification (propagated from
             :func:`~application.modelo.review_package.assert_review_package_verifies`).
     """
-    with bundled_indexed_authority().operation() as operation:
+    if operation is None:
+        with bundled_indexed_authority().operation() as supplied_operation:
+            manifest = assert_review_package_verifies(package_path, operation=supplied_operation)
+    else:
         manifest = assert_review_package_verifies(package_path, operation=operation)
     manifest_sha256 = _package_manifest_sha256(package_path)
     signature_hex = sign_digest_hex(

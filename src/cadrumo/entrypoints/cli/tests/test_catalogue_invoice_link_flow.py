@@ -39,6 +39,7 @@ from ....adapters.persistence.storage.secure_object_namespaces import INVOICE_CA
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.invoices.catalogue_add_operation import INVOICE_ADD_OPERATION_DEFINITION_ID
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
+from ....application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
@@ -56,6 +57,7 @@ from .test_runtime_invoice_add import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _RUNTIME_OPERATIONS = frozenset({INVOICE_ADD_OPERATION_DEFINITION_ID})
+_LINK_RUNTIME_OPERATIONS = _RUNTIME_OPERATIONS | {LEDGER_LINK_OPERATION_DEFINITION_ID}
 
 # A valid Spanish CIF for the received-invoice counterparty; the rich Invoice
 # aggregate validates the tax-id control digit, so an arbitrary token would be
@@ -112,16 +114,14 @@ def test_catalogue_create_then_link_succeeds_bidirectionally(
     """
     with native_invoice_runtime_session(
         tmp_path,
-        operation_ids=_RUNTIME_OPERATIONS,
+        operation_ids=_LINK_RUNTIME_OPERATIONS,
+        profile_value_operation_ids=frozenset({LEDGER_LINK_OPERATION_DEFINITION_ID}),
         authority_operation=authority_operation,
     ) as session:
         transaction_id = _add_outgoing_transaction(session)
         invoice_id = _create_catalogue_invoice(session)
 
-        linked = _invoke_open_profile(
-            session,
-            "app", "ledger", "link", transaction_id, "--invoice-id", invoice_id
-        )
+        linked = _invoke_open_profile(session, "app", "ledger", "link", transaction_id, "--invoice-id", invoice_id)
         assert linked.exit_code == 0, linked.output
         assert _line_value(linked.output, "invoice_id") == invoice_id
 
@@ -163,7 +163,8 @@ def test_link_refuses_cross_bucket_catalogue_invoice(
     """
     with native_invoice_runtime_session(
         tmp_path,
-        operation_ids=_RUNTIME_OPERATIONS,
+        operation_ids=_LINK_RUNTIME_OPERATIONS,
+        profile_value_operation_ids=frozenset({LEDGER_LINK_OPERATION_DEFINITION_ID}),
         authority_operation=authority_operation,
     ) as session:
         transaction_id = _add_outgoing_transaction(session)

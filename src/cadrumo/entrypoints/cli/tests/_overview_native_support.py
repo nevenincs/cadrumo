@@ -12,8 +12,8 @@ from click.testing import Result
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....core.config import override_settings
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 # Active since the first supported exercise, so every year the schedule is
 # asked about falls inside the activity.

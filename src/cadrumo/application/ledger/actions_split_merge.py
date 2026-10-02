@@ -58,6 +58,7 @@ from .models import (
     SplitChildCommand,
     SplitTransactionResult,
 )
+from .persistence_ports import LedgerPersistenceConflictError
 
 
 def split_transaction(
@@ -378,6 +379,7 @@ def split_transaction_with_classified_children(
     reason: str = "",
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
 ) -> SplitTransactionResult:
     """Split a parent and persist fully-classified children in ONE transaction.
 
@@ -415,6 +417,12 @@ def split_transaction_with_classified_children(
     )
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
     catalogue, catalogue_revision = repository.load_revisioned()
+
+    if expected_current is not None and require_transaction(catalogue, transaction_id) != expected_current:
+        raise LedgerPersistenceConflictError(
+            "transaction changed since it was reviewed; obtain a new review before splitting",
+            context={"transaction_id": transaction_id},
+        )
 
     parent_after, bare_children, split_event, split_group_id, child_ids = _build_split_state(
         catalogue=catalogue,

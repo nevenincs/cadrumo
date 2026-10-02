@@ -19,7 +19,11 @@ from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalE
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import RegisteredOperationCompletion, run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import (
+    RegisteredOperationCompletion,
+    run_registered_operation,
+    submitted_operation_error,
+)
 
 
 def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> None:

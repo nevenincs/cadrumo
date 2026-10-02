@@ -11,6 +11,7 @@ import pytest
 
 from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import lease, worker_profiles
+from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import activate_session
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
@@ -43,7 +44,9 @@ def test_drain_contains_worker_and_preserves_created_operation_for_recovery(tmp_
         root, ((identity, key), _) = profiles
         authority = BoundaryAuthority(deny_commit=False)
         worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
-        process_handle = worker._process._handle
+        process = worker._process
+        assert isinstance(process, WindowsOwnedProcess)
+        process_handle = process._handle
         assert process_handle is not None
         current_process = win32api.GetCurrentProcess()
         retained_process_handle = win32api.DuplicateHandle(

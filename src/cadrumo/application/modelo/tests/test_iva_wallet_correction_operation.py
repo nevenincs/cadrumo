@@ -8,7 +8,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
-from typing import cast
+from typing import Never, cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -16,7 +16,14 @@ from pydantic import BaseModel, ValidationError
 
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
 
+from ...calculations.observations_repository import CalculationObservationPorts
+from ...ledger.tests.unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedBucketEventRepository
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -38,6 +45,7 @@ from ..iva_wallet_correction_operation import (
 )
 from ..iva_wallet_seed import ModeloIvaWalletCorrectionNoRecordError
 from ..iva_wallet_seed_ports import ModeloIvaWalletSeedPorts, ModeloIvaWalletSeedPortsFactory
+from .advisory_diagnostic_repositories import EmptyObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,11 +56,61 @@ _AUTHORITY = object()
 
 
 class _History:
-    def __init__(self, prior: object) -> None:
+    def __init__(self, prior: IvaCompensationPeriodState) -> None:
         self.prior = prior
 
-    def load_period(self, _period: object) -> object:
+    def load_period(self, period: Period) -> IvaCompensationPeriodState:
+        assert period == self.prior.period
         return self.prior
+
+    def list_periods(self) -> tuple[IvaCompensationPeriodState, ...]:
+        return (self.prior,)
+
+    def save_period(self, state: IvaCompensationPeriodState) -> None:
+        raise AssertionError("the correction seam owns history writes in this test")
+
+    def to_secure_object_write(self, payload: IvaCompensationPeriodState, **_kwargs: object) -> Never:
+        raise AssertionError("the correction seam owns secure writes in this test")
+
+    @property
+    def secure_object_repository(self) -> Never:
+        raise AssertionError("the correction seam owns storage in this test")
+
+
+class _UnusedWalletDecisionRepository:
+    def load_decision(self, taxpayer_nif: str, target_period: Period) -> Never:
+        raise AssertionError("the correction seam does not read wallet decisions")
+
+    def list_decisions(self) -> Never:
+        raise AssertionError("the correction seam does not list wallet decisions")
+
+    def load_decision_history(self, taxpayer_nif: str, target_period: Period) -> Never:
+        raise AssertionError("the correction seam does not read wallet history")
+
+    def save_decision(self, decision: object) -> Never:
+        raise AssertionError("the correction seam owns wallet decision writes")
+
+    @property
+    def secure_object_repository(self) -> Never:
+        raise AssertionError("the correction seam owns wallet storage")
+
+
+def _history_state(
+    amount: Decimal, *, provenance: IvaCompensationStateProvenance = IvaCompensationStateProvenance.OPERATOR_SEED
+) -> IvaCompensationPeriodState:
+    return IvaCompensationPeriodState(
+        taxpayer_nif="12345678Z",
+        filing_year=_PERIOD.filing_year,
+        period=_PERIOD.to_period(),
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303", revision_id="synthetic-revision", modelo_year=_PERIOD.filing_year, period=_PERIOD.code
+        ),
+        provenance=provenance,
+        presented_at=datetime(2026, 9, 29, 10, 0, tzinfo=UTC),
+        generated_amount=Decimal("0"),
+        available_end_amount=amount,
+        source_observation_key="synthetic-correction-history",
+    )
 
 
 class _Events:
@@ -92,13 +150,15 @@ class _Factory:
     def __call__(self, *, bucket_id: str) -> ModeloIvaWalletSeedPorts:
         self.requested.append(bucket_id)
         selected = self.bucket_id if self.bucket_id is not None else bucket_id
-        return cast(
-            ModeloIvaWalletSeedPorts,
-            SimpleNamespace(
-                work_unit_repository=SimpleNamespace(bucket_id=selected),
-                calculation_repository=SimpleNamespace(bucket_id=selected),
-                iva_compensation_history_repository=self.history,
+        return ModeloIvaWalletSeedPorts(
+            work_unit_repository=ProfileOnlyCatalogueRepository[WorkUnitCatalogue](selected),
+            calculation_repository=ProfileOnlyCatalogueRepository[CalculationRevisionCatalogue](selected),
+            bucket_event_repository=UnusedBucketEventRepository(),
+            calculation_observation_ports=CalculationObservationPorts(
+                observation_repository=EmptyObservationRepository(),
+                iva_wallet_decision_repository=_UnusedWalletDecisionRepository(),
             ),
+            iva_compensation_history_repository=self.history,
         )
 
 
@@ -152,7 +212,12 @@ def test_operation_keeps_request_confidential_and_public_result_closed() -> None
 
 def test_access_is_exact_profile_period_scoped_and_requires_commit() -> None:
     _definition, registration = _definition_and_registration()
-    request = _request()
+    typed_request = _request()
+    request = OperationRequest[BaseModel](
+        definition_id=typed_request.definition_id,
+        subject_ref=typed_request.subject_ref,
+        payload=typed_request.payload,
+    )
     context = OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=uuid4(),
@@ -162,14 +227,14 @@ def test_access_is_exact_profile_period_scoped_and_requires_commit() -> None:
         published_authority=Availability.AVAILABLE,
     )
 
-    resolved = resolve_modelo_iva_wallet_correction_access(cast(OperationRequest[BaseModel], request), context)
+    resolved = resolve_modelo_iva_wallet_correction_access(request, context)
 
     assert resolved.request.periods == frozenset({_PERIOD.to_period()})
     assert not resolved.request.period_independent
     assert AccessAction.COMMIT in resolved.policy.actions
     with pytest.raises(ProfileAccessRefusedError) as refused:
         resolve_modelo_iva_wallet_correction_access(
-            cast(OperationRequest[BaseModel], request),
+            request,
             replace(context, profile_id=_OTHER_PROFILE),
         )
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
@@ -192,18 +257,12 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
     )
 
 
+@pytest.mark.usefixtures("operation")
 def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    period = _PERIOD.to_period()
-    prior = SimpleNamespace(period=period, available_end_amount=Decimal("500.00"))
-    state = SimpleNamespace(
-        period=period,
-        taxpayer_nif="12345678Z",
-        provenance=IvaCompensationStateProvenance.OPERATOR_CORRECTION,
-        available_end_amount=Decimal("1200.50"),
-        status=None,
-    )
+    prior = _history_state(Decimal("500.00"))
+    state = _history_state(Decimal("1200.50"), provenance=IvaCompensationStateProvenance.OPERATOR_CORRECTION)
     events = _Events()
     operands = _Operands()
     factory = _Factory(history=_History(prior))
@@ -255,11 +314,11 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
     assert project_modelo_iva_wallet_correction_result(report, receipt) == projection
 
 
+@pytest.mark.usefixtures("operation")
 def test_known_seed_refusal_is_settled_with_no_effect(monkeypatch: pytest.MonkeyPatch) -> None:
-    period = _PERIOD.to_period()
     events = _Events()
     operands = _Operands()
-    factory = _Factory(history=_History(SimpleNamespace(period=period, available_end_amount=Decimal("500.00"))))
+    factory = _Factory(history=_History(_history_state(Decimal("500.00"))))
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_correction_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )

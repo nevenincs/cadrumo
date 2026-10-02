@@ -29,6 +29,7 @@ class _Client:
         self.profile_id = profile_id
         self.frontend = OperationFrontendProjection.MCP
         self.session_id = uuid4()
+        self.session_expires_at = now() + timedelta(minutes=5)
         self.fail_status = fail_status
         self.status_flaw = status_flaw
         self.closed = False
@@ -42,7 +43,7 @@ class _Client:
             credential_authenticated=True,
             profile_id=self.profile_id,
             session_id=self.session_id,
-            session_expires_at=now() + timedelta(minutes=5),
+            session_expires_at=self.session_expires_at,
             grant_state=None,
             grant_expires_at=None,
             grant_valid=True,
@@ -69,6 +70,8 @@ class _Client:
             status = status.model_copy(update={"session_id": uuid4()})
         elif self.status_flaw == "expired":
             status = status.model_copy(update={"session_expires_at": now() - timedelta(seconds=1)})
+        elif self.status_flaw == "grant":
+            status = status.model_copy(update={"grant_valid": False})
         return SimpleNamespace(status=status)
 
     def close(self) -> None:
@@ -76,7 +79,7 @@ class _Client:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("failure", [None, "admission", "status", "denial", "profile", "session", "expired"])
+@pytest.mark.parametrize("failure", [None, "admission", "status", "denial", "profile", "session", "expired", "grant"])
 async def test_reauthentication_retires_existing_session_only_after_candidate_status(
     monkeypatch: pytest.MonkeyPatch, failure: str | None
 ) -> None:
@@ -85,7 +88,7 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
     candidate = _Client(
         profile_id,
         fail_status=failure == "status",
-        status_flaw=failure if failure in {"denial", "profile", "session", "expired"} else None,
+        status_flaw=failure if failure in {"denial", "profile", "session", "expired", "grant"} else None,
     )
 
     async def admit(
@@ -116,6 +119,8 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
                     if failure == "admission"
                     else "profile_mismatch"
                     if failure in {"profile", "session"}
+                    else "grant_inactive"
+                    if failure == "grant"
                     else "session_expired"
                 ),
             }

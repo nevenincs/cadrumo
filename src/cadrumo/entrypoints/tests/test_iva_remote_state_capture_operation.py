@@ -201,8 +201,10 @@ class _SyntheticIvaRemoteStatePort:
         operation: str,
         target_url: str | None,
         authority_operation: PinnedAuthorityOperation | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> tuple[AeatSession, Settings]:
-        del authority_operation
+        del authority_operation, effect_guard, on_session_write
         del operation, target_url
         raise AssertionError("combined capture must use the authenticated-session ensure port")
 

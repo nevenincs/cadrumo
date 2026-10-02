@@ -11,6 +11,7 @@ from typing import Any, cast
 from uuid import UUID
 
 import pytest
+from pydantic import BaseModel
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -185,12 +186,12 @@ def test_registered_pull_owns_process_and_projects_dedup_receipt(monkeypatch: py
     definition = build_notification_document_capture_definition(
         lambda: cast(Any, composition), lambda: cast(Any, object()), lambda: cast(Any, resources), preflight
     )
-    request = OperationRequest(
+    request = OperationRequest[BaseModel](
         definition_id=NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID,
         subject_ref=identity.subject_ref,
         payload=NotificationDocumentCaptureRequest(profile_id=_PROFILE_ID, certificado_id=_CERTIFICADO),
     )
-    reference = asyncio.run(definition.executor_factory.build().execute(request, cast(Any, context)))
+    reference = asyncio.run(definition.executor_factory.create().execute(request, cast(Any, context)))
     assert reference == "result-ref"
     assert operands.report is not None
     assert events.index("remote-fetch") < events.index("commit-enter") < events.index("local-custody")

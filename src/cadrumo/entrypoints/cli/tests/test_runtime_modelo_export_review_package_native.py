@@ -20,8 +20,8 @@ from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import require_schema_envelope
 from ...tests import modelo_operation_test_support
-from ._runtime_profile_cli_fixture import RuntimeFailureObservation, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import RuntimeFailureObservation, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

@@ -232,8 +232,12 @@ def attach_manual_transaction_evidence(
     source_command: str = "aeat app ledger attach",
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
 ) -> ManualLedgerTransactionResult:
     """Attach purchase evidence or supplementary attachments to one ledger transaction.
+
+    ``expected_current`` pins an explicitly supplied opened row through the
+    existing atomic transaction/event replacement guard.
 
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`.
     """
@@ -273,6 +277,7 @@ def attach_manual_transaction_evidence(
         ports=ports,
         occurred_at=occurred_at,
         catalogue=catalogue,
+        expected_current=expected_current,
         _evidence_authority=True,
     )
 
@@ -415,7 +420,7 @@ def link_manual_transaction_invoice(
     )
     # The event write rides the SAME batch as the two catalogues, so a crash
     # cannot record a linkage that did not land, nor land one silently.
-    return link_invoice_transaction_repositories(
+    result = link_invoice_transaction_repositories(
         bucket_id=bucket_id,
         invoice_id=invoice_id,
         transaction_id=current.transaction_id,
@@ -423,6 +428,7 @@ def link_manual_transaction_invoice(
         transaction_repository=repository,
         extra_writes=(bucket_event_history_write(event_repository, (event,)),),
     )
+    return result.model_copy(update={"bucket_event_ids": (event.event_id,)})
 
 
 def get_manual_transaction(

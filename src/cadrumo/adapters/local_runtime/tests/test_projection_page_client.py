@@ -122,7 +122,7 @@ type ReplyMaker = Callable[[RuntimeOperationResultPage, int, UUID, UUID], Runtim
 
 
 def _exchange(
-    replies: int, make_reply: ReplyMaker
+    replies: int, make_reply: ReplyMaker, *, read_one: bool = False
 ) -> tuple[RuntimeFrontendClient, object, list[RuntimeOperationResultPage]]:
     client_channel, server_channel = MemoryChannel(), MemoryChannel()
     client_channel.pair(server_channel)
@@ -157,7 +157,11 @@ def _exchange(
         client._session_id = _SESSION_ID
         try:
             try:
-                outcome: object = client.read_result_document(_result(), timeout=5)
+                outcome: object = (
+                    client.read_result_page(_result(), ProjectionPageRequest(), deadline=time.monotonic() + 5)
+                    if read_one
+                    else client.read_result_document(_result(), timeout=5)
+                )
             except (RuntimeRefusalError, RuntimeFrontendRefusedError) as error:
                 outcome = error
             serving.result(timeout=5)
@@ -174,6 +178,66 @@ def _page(request: RuntimeOperationResultPage, *, boot_id: UUID, connection_id: 
         operation_id=request.result.operation_id,
         page=project_document_page(_DOCUMENT, request.page),
     )
+
+
+def test_frontend_reads_one_bound_result_page_without_collecting_full_document() -> None:
+    def reply(
+        request: RuntimeOperationResultPage, _index: int, boot_id: UUID, connection_id: UUID
+    ) -> RuntimeOperationPage:
+        return _page(request, boot_id=boot_id, connection_id=connection_id)
+
+    _, result, requests = _exchange(1, reply, read_one=True)
+    assert isinstance(result, ProjectionPage)
+    assert result.offset == 0
+    assert result.total_bytes == len(canonical_json_bytes(_DOCUMENT))
+    assert result.decode() == canonical_json_bytes(_DOCUMENT)[:16_384]
+    assert len(requests) == 1
+    assert requests[0].result == _result()
+
+
+@pytest.mark.parametrize("fault", ["operation", "offset"])
+def test_frontend_refuses_one_page_with_wrong_binding(fault: str) -> None:
+    def reply(
+        request: RuntimeOperationResultPage, _index: int, boot_id: UUID, connection_id: UUID
+    ) -> RuntimeOperationPage:
+        correct = _page(request, boot_id=boot_id, connection_id=connection_id)
+        if fault == "operation":
+            return correct.model_copy(update={"operation_id": "f" * 64})
+        return correct.model_copy(update={"page": correct.page.model_copy(update={"offset": 1})})
+
+    _, result, requests = _exchange(1, reply, read_one=True)
+    assert len(requests) == 1
+    assert isinstance(result, RuntimeRefusalError)
+    assert result.reason is RuntimeRefusalCode.INVALID_FRAME
+
+
+@pytest.mark.parametrize(
+    ("code", "expected_error"),
+    (
+        (RuntimeRefusalCode.DEADLINE_EXCEEDED, RuntimeRefusalError),
+        (AccessDenialCode.PERIOD_DENIED, RuntimeFrontendRefusedError),
+    ),
+)
+def test_frontend_preserves_received_wire_refusal_provenance(
+    code: RuntimeRefusalCode | AccessDenialCode, expected_error: type[Exception]
+) -> None:
+    def reply(
+        request: RuntimeOperationResultPage, _index: int, boot_id: UUID, connection_id: UUID
+    ) -> RuntimeAccessRefusal:
+        return RuntimeAccessRefusal(
+            request_id=request.request_id,
+            runtime_boot_id=boot_id,
+            connection_id=connection_id,
+            code=code,
+        )
+
+    _, result, requests = _exchange(1, reply, read_one=True)
+    assert len(requests) == 1
+    assert isinstance(result, expected_error)
+    assert isinstance(result, RuntimeRefusalError | RuntimeFrontendRefusedError)
+    assert result.reason == (code if isinstance(code, RuntimeRefusalCode) else code.value)
+    with pytest.raises(expected_error):
+        RuntimeFrontendClient._reply(reply(requests[0], 0, uuid4(), uuid4()), RuntimeOperationPage)
 
 
 def test_frontend_reassembles_verified_multi_page_result() -> None:

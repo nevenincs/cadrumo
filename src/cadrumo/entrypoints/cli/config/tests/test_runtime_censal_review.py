@@ -26,6 +26,10 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResponseControlSuccessV1,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
+    OperationResultProjectionRefusalCode,
+    OperationResultProjectionRefusalV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
     OperationReviewProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
@@ -36,6 +40,7 @@ from cadrumo.application.operations.registry import (
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
 )
+from cadrumo.application.runtime.contracts import RuntimeRefusalCode
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
@@ -57,6 +62,7 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalFieldIntent,
     CensalOperationOutcome,
     CensalOperationRequest,
+    CensalOperationResult,
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
     CensalReviewFieldProjectionV1,
@@ -75,6 +81,7 @@ _OPERATION_ID = "c" * 64
 _INTERACTION_ID = "d" * 64
 _NOW = datetime(2026, 9, 29, tzinfo=UTC)
 _RESULT_DIGEST = "e" * 64
+_REVIEW_DIGEST = "f" * 64
 _BOOT_ID = UUID("cc000000-0000-4000-8000-0000000000cc")
 _CONNECTION_ID = UUID("dd000000-0000-4000-8000-0000000000dd")
 
@@ -114,11 +121,13 @@ class _RuntimeClient:
         refuse_before_review: bool = False,
         terminal_effect_override: OperationEffect | None = None,
         result_outcome_override: CensalOperationOutcome | None = None,
+        result_fault: str | None = None,
     ) -> None:
         self.public_contract = _contract()
         self.contract_set_digest = OperationPublicContractSetV1.build((self.public_contract,)).contract_set_digest
         self.review_projection = CensalReviewProjectionV1(
             projection_version=1,
+            reviewed_proposal_digest=_REVIEW_DIGEST,
             fields=tuple(
                 CensalReviewFieldProjectionV1(
                     path=item.path,
@@ -131,6 +140,8 @@ class _RuntimeClient:
         self.refuse_before_review = refuse_before_review
         self.terminal_effect_override = terminal_effect_override
         self.result_outcome_override = result_outcome_override
+        self.result_fault = result_fault
+        self.result_requests: list[OperationResultProjectionRequestV1] = []
         self.requests: list[RuntimeOperationRequest] = []
         self.contract_reads: list[str] = []
         self.response_action: str | None = None
@@ -141,6 +152,41 @@ class _RuntimeClient:
         assert deadline > 0
         self.contract_reads.append(definition_id)
         return self.public_contract
+
+    def read_result_document(
+        self, request: OperationResultProjectionRequestV1, *, timeout: float, deadline: float
+    ) -> dict[str, Any]:
+        assert timeout > 0 and deadline > 0
+        assert self.response_action is not None
+        assert request.operation_id == _OPERATION_ID
+        assert request.terminal_revision == 5
+        assert request.definition_contract_digest == self.public_contract.definition_contract_digest
+        assert request.result_schema == self.public_contract.result_schema
+        self.result_requests.append(request)
+        if self.result_fault == "refused":
+            return json.loads(
+                OperationResultProjectionRefusalV1(
+                    code=OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
+                    requested_version=1,
+                    diagnostic_ref=None,
+                ).model_dump_json()
+            )
+        schema = self.public_contract.result_schema
+        assert schema is not None
+        expected_outcome = (
+            CensalOperationOutcome.APPLIED if self.response_action == "apply" else CensalOperationOutcome.REJECTED
+        )
+        success = OperationResultProjectionSuccessV1[CensalOperationResult](
+            result_schema=self.public_contract.request_schema if self.result_fault == "schema" else schema,
+            definition_contract_digest=(
+                "a" * 64 if self.result_fault == "contract" else self.public_contract.definition_contract_digest
+            ),
+            projection=CensalOperationResult(
+                outcome=self.result_outcome_override or expected_outcome,
+                reviewed_proposal_digest="a" * 64 if self.result_fault == "review-digest" else _REVIEW_DIGEST,
+            ),
+        )
+        return json.loads(success.model_dump_json())
 
     def operation(self, request: RuntimeOperationRequest, *, deadline: float) -> RuntimeOperationReply:
         assert deadline > 0
@@ -261,11 +307,7 @@ class _RuntimeClient:
             condition = OperationTerminalCondition.SUCCEEDED
             expected_effect = OperationEffect.UPDATED if self.response_action == "apply" else OperationEffect.NONE
             effect = self.terminal_effect_override or expected_effect
-            expected_outcome = (
-                CensalOperationOutcome.APPLIED if self.response_action == "apply" else CensalOperationOutcome.REJECTED
-            )
-            outcome = self.result_outcome_override or expected_outcome
-            result_ref = f"censo-review:{_RESULT_DIGEST}:{outcome}"
+            result_ref = _RESULT_DIGEST
             refusal_ref = None
             self.result_ref = result_ref
             phase_code = "censo.settlement"
@@ -382,7 +424,9 @@ def test_review_bridge_uses_exact_session_projection_and_terminal_decision(
     assert result.applied is apply
     assert client.response_action == ("apply" if apply else "reject")
     assert client.terminal_effect is expected_effect
-    assert client.result_ref == f"censo-review:{_RESULT_DIGEST}:{expected_outcome.value}"
+    assert client.result_ref == _RESULT_DIGEST
+    assert len(client.result_requests) == 1
+    assert expected_outcome is (CensalOperationOutcome.APPLIED if result.applied else CensalOperationOutcome.REJECTED)
     terminal_observation = next(
         exchange for exchange in reversed(client.requests) if isinstance(exchange, RuntimeOperationObserve)
     )
@@ -400,6 +444,32 @@ def test_review_refusal_retains_submitted_operation_identity_and_effect() -> Non
     assert refused.value.context["operation_id"] == _OPERATION_ID
     assert refused.value.context["effect"] == OperationEffect.NONE.value
     assert refused.value.context["terminal_condition"] == OperationTerminalCondition.REFUSED.value
+
+
+def test_review_rejection_preserves_an_earlier_provider_session_write() -> None:
+    client = _RuntimeClient(terminal_effect_override=OperationEffect.UPDATED)
+    result = review_censal_with_runtime(cast(RuntimeFrontendClient, client), _request(), decide=lambda _review: False)
+    assert not result.applied
+    assert client.terminal_effect is OperationEffect.UPDATED
+    assert len(client.result_requests) == 1
+
+
+@pytest.mark.parametrize("fault", ["schema", "contract", "review-digest", "refused"])
+def test_review_result_release_refuses_mismatched_binding_or_denial_without_losing_terminal_truth(fault: str) -> None:
+    client = _RuntimeClient(result_fault=fault)
+    with pytest.raises(CliRefusedBoundaryError) as refused:
+        review_censal_with_runtime(cast(RuntimeFrontendClient, client), _request(), decide=lambda _review: True)
+    assert len(client.result_requests) == 1
+    assert refused.value.context is not None
+    assert refused.value.context["operation_id"] == _OPERATION_ID
+    assert refused.value.context["terminal_condition"] == OperationTerminalCondition.SUCCEEDED.value
+    assert refused.value.context["effect"] == OperationEffect.UPDATED.value
+    expected_reason = (
+        OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE.value
+        if fault == "refused"
+        else RuntimeRefusalCode.INVALID_FRAME.value
+    )
+    assert refused.value.context["reason"] == expected_reason
 
 
 @pytest.mark.parametrize(

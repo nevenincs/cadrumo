@@ -3,23 +3,30 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import struct
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime, timedelta
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
-from typing import override
+from typing import Literal, cast, override
 from uuid import uuid4
 
 import pytest
 
+from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeClientHello,
+    RuntimePeer,
     RuntimeRefusalCode,
     RuntimeRefusalError,
+    RuntimeServerHello,
 )
 from cadrumo.application.runtime.management import (
     RuntimeManagerInspection,
@@ -27,12 +34,137 @@ from cadrumo.application.runtime.management import (
     RuntimeManagerProcessState,
 )
 from cadrumo.application.runtime.management_status import RuntimeListenerState, RuntimeManagerAvailability
+from cadrumo.application.runtime.owner_control import RuntimeStopAccepted, RuntimeStopPreview
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.config import override_settings
-from cadrumo.entrypoints.runtime_management import inspect_installed_runtime_management, inspect_runtime_management
+from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.entrypoints.runtime_management import (
+    RuntimeStopConsent,
+    inspect_installed_runtime_management,
+    inspect_runtime_management,
+    preview_installed_runtime_stop,
+)
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
 _IDENTITY = "c" * 64
+
+
+class StopChannel:
+    """Script the public framed owner-control port and real release failures."""
+
+    def __init__(self, *, failures: int, outcome: Literal["accepted", "lost", "refused"] = "accepted") -> None:
+        self.peer = RuntimePeer(os_owner_id="synthetic-owner", process_id=1)
+        self.boot = uuid4()
+        self.connection_id = uuid4()
+        self.inbound = bytearray()
+        self.writes: list[bytes] = []
+        self.close_calls = 0
+        self.failures = failures
+        self.outcome = outcome
+        self.confirmations = 0
+        self.confirming = Event()
+        self.continue_reply = Event()
+        self.continue_reply.set()
+        self._confirm_reply = False
+        self._queue(RuntimeServerHello(product_version="stop-test", storage_identity=_IDENTITY, boot_id=self.boot))
+
+    def _queue(self, document: RuntimeServerHello) -> None:
+        payload = canonical_json_bytes(document.model_dump(mode="json"))
+        self.inbound.extend(b"J" + struct.pack("!I", len(payload)) + payload)
+
+    def read_exact(self, count: int, *, deadline: float) -> bytes:
+        if self._confirm_reply:
+            self.confirming.set()
+            assert self.continue_reply.wait(max(0.0, deadline - time.monotonic()))
+            self._confirm_reply = False
+            if self.outcome == "lost":
+                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        assert deadline > time.monotonic()
+        if len(self.inbound) < count:
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        result = bytes(self.inbound[:count])
+        del self.inbound[:count]
+        return result
+
+    def read_ready(self) -> bool:
+        return bool(self.inbound)
+
+    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
+        assert deadline > time.monotonic()
+        self.writes.append(bytes(payload))
+        assert payload[:1] == b"J"
+        request = json.loads(payload[5:])
+        if request.get("action") != "runtime_stop_confirm":
+            return
+        self.confirmations += 1
+        self._confirm_reply = True
+        reply = {
+            "kind": "access_refusal" if self.outcome == "refused" else "runtime_stop_accepted",
+            "request_id": request["request_id"],
+            "runtime_boot_id": str(self.boot),
+            "connection_id": str(self.connection_id),
+        }
+        if self.outcome == "refused":
+            reply["code"] = RuntimeRefusalCode.PEER_UNTRUSTED.value
+        else:
+            reply["scope"] = "all_profiles_and_work"
+        body = canonical_json_bytes(reply)
+        self.inbound.extend(b"J" + struct.pack("!I", len(body)) + body)
+
+    def close(self) -> None:
+        self.close_calls += 1
+        if self.close_calls <= self.failures:
+            raise OSError("synthetic private release detail")
+
+
+class StopEndpoint:
+    """Native endpoint release port, independent of its connection."""
+
+    storage_identity = _IDENTITY
+
+    def __init__(self, failures: int) -> None:
+        self.failures = failures
+        self.close_calls = 0
+
+    def close(self) -> None:
+        self.close_calls += 1
+        if self.close_calls <= self.failures:
+            raise OSError("synthetic private endpoint detail")
+
+
+class StopFixture:
+    """Exercise actual verified framing and consent with isolated native ports."""
+
+    def __init__(
+        self,
+        *,
+        channel_failures: int = 0,
+        endpoint_failures: int = 0,
+        outcome: Literal["accepted", "lost", "refused"] = "accepted",
+    ) -> None:
+        self.channel = StopChannel(failures=channel_failures, outcome=outcome)
+        self.endpoint = StopEndpoint(endpoint_failures)
+        self.connection = VerifiedRuntimeConnection(
+            self.channel,
+            expected=RuntimeClientHello(product_version="stop-test", storage_identity=_IDENTITY),
+            deadline=time.monotonic() + 5,
+        )
+        self.preview = RuntimeStopPreview(
+            request_id=uuid4(),
+            runtime_boot_id=self.channel.boot,
+            connection_id=self.channel.connection_id,
+            preview_id=uuid4(),
+            expires_at=datetime.now(UTC) + timedelta(seconds=60),
+        )
+        # The fixture substitutes only endpoint release, not consent/framing.
+        self.consent = RuntimeStopConsent(
+            endpoint=cast("WindowsRuntimeEndpoint", self.endpoint), connection=self.connection, preview=self.preview
+        )
+
+    async def open(self) -> RuntimeStopConsent:
+        """Provide the public preview seam to owning frontend tests."""
+        return self.consent
 
 
 class _Endpoint:
@@ -40,6 +172,132 @@ class _Endpoint:
 
     def connect(self, *, timeout: float) -> RuntimeByteChannel:
         pytest.fail("composed status used an unconfigured native connection")
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_stop_ack_survives_failed_release_and_retries_only_native_owners() -> None:
+    fixture = StopFixture(channel_failures=2, endpoint_failures=1)
+    accepted = await fixture.consent.confirm()
+    assert isinstance(accepted, RuntimeStopAccepted)
+    assert fixture.consent.accepted is accepted
+    assert not fixture.consent.uncertain
+    with pytest.raises(AsyncResourceCleanupError) as failed:
+        await fixture.consent.release()
+    assert fixture.channel.close_calls == fixture.endpoint.close_calls == 1
+    with pytest.raises(AsyncResourceCleanupError) as retry_failed:
+        await failed.value.retry_cleanup()
+    assert fixture.channel.close_calls == fixture.endpoint.close_calls == 2
+    await retry_failed.value.retry_cleanup()
+    assert fixture.channel.close_calls == 3
+    assert fixture.endpoint.close_calls == 2
+    assert fixture.consent.released
+    await fixture.consent.release()
+    with pytest.raises(RuntimeRefusalError) as replay:
+        await fixture.consent.confirm()
+    assert replay.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    assert fixture.channel.confirmations == 1
+    assert fixture.channel.close_calls == 3 and fixture.endpoint.close_calls == 2
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_stop_lost_ack_retains_same_native_failure_owner_without_replay() -> None:
+    fixture = StopFixture(channel_failures=2, outcome="lost")
+    with pytest.raises(RuntimeRefusalError) as refused:
+        await fixture.consent.confirm()
+    primary = refused.value
+    assert primary.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+    assert fixture.consent.uncertain and fixture.consent.accepted is None
+    assert fixture.channel.close_calls == 1
+    await fixture.consent.release(primary_error=primary)
+    assert fixture.channel.close_calls == 2
+    cleanup = primary.__dict__.get("async_cleanup_error")
+    assert isinstance(cleanup, AsyncResourceCleanupError)
+    await cleanup.retry_cleanup()
+    assert fixture.channel.close_calls == 3 and fixture.endpoint.close_calls == 1
+    assert fixture.consent.released
+    with pytest.raises(RuntimeRefusalError):
+        await fixture.consent.confirm()
+    assert fixture.channel.confirmations == 1
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_stop_cancellation_retains_ack_before_failed_release() -> None:
+    fixture = StopFixture(channel_failures=1)
+    fixture.channel.continue_reply.clear()
+    confirming = asyncio.create_task(fixture.consent.confirm())
+    try:
+        assert await asyncio.to_thread(fixture.channel.confirming.wait, 2)
+        confirming.cancel("original-stop-cancellation")
+        fixture.channel.continue_reply.set()
+        with pytest.raises(asyncio.CancelledError) as cancelled:
+            await confirming
+        primary = cancelled.value
+        assert primary.args == ("original-stop-cancellation",)
+        assert fixture.consent.accepted is not None and not fixture.consent.uncertain
+        with pytest.raises(asyncio.CancelledError) as releasing:
+            await fixture.consent.release(primary_error=primary)
+        assert releasing.value is primary
+        cleanup = primary.__dict__.get("cleanup_error")
+        assert isinstance(cleanup, AsyncResourceCleanupError)
+        assert fixture.endpoint.close_calls == fixture.channel.close_calls == 1
+        await cleanup.retry_cleanup()
+        assert fixture.consent.released and fixture.channel.close_calls == 2
+        assert fixture.endpoint.close_calls == 1 and fixture.channel.confirmations == 1
+    finally:
+        fixture.channel.continue_reply.set()
+        if not confirming.done():
+            await confirming
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_stop_explicit_refusal_is_not_ambiguous_and_confirmation_is_single_use() -> None:
+    fixture = StopFixture(outcome="refused")
+    with pytest.raises(RuntimeRefusalError) as refused:
+        await fixture.consent.confirm()
+    assert refused.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
+    assert fixture.consent.confirmation_started and not fixture.consent.uncertain
+    assert fixture.consent.accepted is None
+    await fixture.consent.release(primary_error=refused.value)
+    with pytest.raises(RuntimeRefusalError):
+        await fixture.consent.confirm()
+    assert fixture.channel.confirmations == 1 and fixture.consent.released
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_stop_preview_failure_preserves_primary_and_exact_release_owners(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    fixture = StopFixture(channel_failures=2, endpoint_failures=1)
+    # Preview is intentionally unavailable on this channel; actual framing
+    # rejects the empty reply and retains its failed native release owner.
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.effective_storage_root", lambda: tmp_path)
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.version", lambda _name: "stop-test")
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.runtime_management.WindowsRuntimeEndpoint", lambda **_kwargs: fixture.endpoint
+    )
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.runtime_management.PosixRuntimeEndpoint", lambda **_kwargs: fixture.endpoint
+    )
+
+    async def opened(*_args: object, **_kwargs: object) -> VerifiedRuntimeConnection:
+        return fixture.connection
+
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.RuntimeLaunchDoor.open", opened)
+    with pytest.raises(RuntimeRefusalError) as failed:
+        await preview_installed_runtime_stop()
+    primary = failed.value
+    assert primary.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    cleanup = primary.__dict__.get("async_cleanup_error")
+    assert isinstance(cleanup, AsyncResourceCleanupError)
+    assert fixture.channel.close_calls == 2 and fixture.endpoint.close_calls == 1
+    await cleanup.retry_cleanup()
+    assert fixture.channel.close_calls == 3 and fixture.endpoint.close_calls == 2
+    assert fixture.channel.confirmations == 0
 
 
 class _Manager:

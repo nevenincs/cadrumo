@@ -22,8 +22,8 @@ from ....application.user_profile.profile_record_repository import close_active_
 from ....core.config import override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from ._runtime_profile_cli_fixture import native_cli_profile_scope
 from .cli_runner import cadrumo_click_command, invoke_cached_cli
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

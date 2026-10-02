@@ -65,7 +65,9 @@ class _BlockedRequestServer(RuntimeTransportServer):
             self._entered.set()
             self._release.wait()
 
-        self._requests.add(workers.submit(blocked))
+        future = workers.submit(blocked)
+        self._requests.add(future)
+        future.add_done_callback(self._forget_request)
         self._entered.wait(timeout=2)
         self.stop.wait(timeout=2)
 

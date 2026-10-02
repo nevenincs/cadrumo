@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import SecretBytes
 
-from ...adapters.local_runtime.framing import read_secret, write_document
+from ...adapters.local_runtime.framing import read_secret, write_document, write_session_inventory
 from ...adapters.persistence.storage.profile_custody import build_profile_custody_port
 from ...application.runtime.access_management import (
     RuntimeAccessManagementRequest,
@@ -171,7 +171,7 @@ class RuntimeAccessManagement:
                     sessions = host.authority.session_inventory(
                         connection_id=context.connection_id, session_id=request.session_id
                     )
-                    write_document(
+                    write_session_inventory(
                         channel,
                         RuntimeSessionInventoryReply(
                             request_id=request.request_id,

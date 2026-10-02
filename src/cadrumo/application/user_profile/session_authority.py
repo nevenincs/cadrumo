@@ -9,15 +9,17 @@ Durable grants remain in the existing automation control store.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
-from contextlib import AbstractContextManager, contextmanager
+from collections.abc import Callable, Generator
+from contextlib import AbstractContextManager, ExitStack, contextmanager
 from dataclasses import dataclass
 from datetime import timedelta
+from math import isfinite
 from typing import Protocol
 from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
 
+from ...core.async_cleanup import AsyncResourceCleanupError
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.time.utc import UtcInstant
 from ..operations.registry import OperationRegistry
@@ -80,6 +82,15 @@ class SessionAuthorityOwner(Protocol):
         """Reobserve the exact live connection, clocks, profile and OS login contexts."""
         ...
 
+    def prepare_api_admission(self, connection_id: UUID) -> AbstractContextManager[float]:
+        """Prepare the exact worker without keys or leases; lend its original deadline.
+
+        Preparation leaves the shared denial guard. Activation must use that same
+        worker and connection, within the remaining original preparation budget.
+        Exiting this context never publishes an application lease.
+        """
+        ...
+
     def activate(self, session: AccessSession, dek: bytearray) -> None:
         """Copy borrowed material into exact-profile worker custody or raise.
 
@@ -105,6 +116,10 @@ class SessionAuthorityOwner(Protocol):
         """Attach this lease to the exact worker admitted by authenticate_human."""
         ...
 
+    def human_admission_deadline(self, connection_id: UUID) -> float:
+        """Lend the original monotonic preparation bound for this exact candidate."""
+        ...
+
     def authenticate_human(self, connection_id: UUID) -> AbstractContextManager[tuple[ProfileLoginOutcome, str] | None]:
         """Use the existing profile admission/login lifecycle in its bound worker.
 
@@ -115,6 +130,35 @@ class SessionAuthorityOwner(Protocol):
         a failed candidate must not retire another connection's existing custody.
         """
         ...
+
+
+class _ProspectiveSessionRetirement:
+    """Retain one prospective lease whose original physical retirement failed."""
+
+    def __init__(self, owner: SessionAuthorityOwner, release: Callable[[], None]) -> None:
+        self.owner, self._release = owner, release
+        self._released = False
+
+    def close_now(self) -> None:
+        with self.owner.admission_guard():
+            if not self._released:
+                self._release()
+                self._released = True
+
+    async def close(self) -> None:
+        await asyncio.to_thread(self.close_now)
+
+    def retain_failure(self, primary: BaseException, cleanup: AsyncResourceCleanupError) -> None:
+        seen: set[int] = set()
+        for field in ("async_cleanup_error", "cleanup_error"):
+            previous = primary.__dict__.get(field)
+            if isinstance(previous, AsyncResourceCleanupError) and id(previous) not in seen:
+                seen.add(id(previous))
+                cleanup = previous.merged_with(cleanup)
+        primary.__dict__["async_cleanup_error"] = cleanup
+        primary.add_note("Prospective session retirement failed; cleanup owner retained")
+        if isinstance(primary, asyncio.CancelledError):
+            primary.__dict__["cleanup_error"] = cleanup
 
 
 class ProfileSessionAuthority:
@@ -247,6 +291,7 @@ class ProfileSessionAuthority:
         A parsed key identifier is routing only; unwrap must prove possession.
         Both durable state and trusted lifecycle facts are checked again after it.
         """
+        identity = uuid4()
         with self.owner.admission_guard():
             if target != self.binding:
                 return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
@@ -264,7 +309,7 @@ class ProfileSessionAuthority:
             if expires <= facts.context.now:
                 return AccessDenied(code=AccessDenialCode.KEY_EXPIRED)
             session = AccessSession(
-                session_id=uuid4(),
+                session_id=identity,
                 binding=self.binding,
                 profile_lock_generation=facts.profile.lock_generation,
                 runtime_boot_id=self.runtime_boot_id,
@@ -284,25 +329,83 @@ class ProfileSessionAuthority:
             decision = self._evaluate(session, facts, grant, key)
             if isinstance(decision, AccessDenied):
                 return decision
-            with (
-                self._activation(session.session_id),
-                self.custody.unlocked(credential=credential, now=facts.context.now) as dek,
-            ):
-                current = self._facts(connection_id)
-                if isinstance(current, AccessDenied):
-                    return current
-                latest = self._snapshot(current)
-                if isinstance(latest, AccessDenied):
-                    return latest
-                # Even a benign concurrent publication requires a fresh attempt.
-                if latest != snapshot:
-                    return AccessDenied(code=AccessDenialCode.CUSTODY_CHANGED)
-                decision = self._evaluate(session, current, grant, key)
-                if isinstance(decision, AccessDenied):
-                    return decision
-                self.owner.activate(session, dek)
-            self._sessions[session.session_id] = session
-            return session
+        committed = False
+        binding_attempted = False
+        primary: BaseException | None = None
+        retirement = _ProspectiveSessionRetirement(self.owner, lambda: self._retire({identity}))
+        try:
+            with ExitStack() as preparation:
+                deadline = preparation.enter_context(self.owner.prepare_api_admission(connection_id))
+                with self.owner.admission_guard():
+                    current = self._facts(connection_id)
+                    if isinstance(current, AccessDenied):
+                        return current
+                    if not isfinite(deadline) or current.context.monotonic_now >= deadline:
+                        return AccessDenied(code=AccessDenialCode.SESSION_EXPIRED)
+                    if current.profile.lock_generation != facts.profile.lock_generation:
+                        return AccessDenied(code=AccessDenialCode.PROFILE_LOCKED)
+                    latest = self._snapshot(current)
+                    if isinstance(latest, AccessDenied):
+                        return latest
+                    if latest != snapshot:
+                        return AccessDenied(code=AccessDenialCode.CUSTODY_CHANGED)
+                    decision = self._evaluate(session, current, grant, key)
+                    if isinstance(decision, AccessDenied):
+                        return decision
+                    # Unwrap, exact-worker installation and the borrowed-buffer
+                    # wipe remain serialized with durable denial and revocation.
+                    with self.custody.unlocked(credential=credential, now=current.context.now) as dek:
+                        current = self._facts(connection_id)
+                        if isinstance(current, AccessDenied):
+                            return current
+                        if current.context.monotonic_now >= deadline:
+                            return AccessDenied(code=AccessDenialCode.SESSION_EXPIRED)
+                        latest = self._snapshot(current)
+                        if isinstance(latest, AccessDenied):
+                            return latest
+                        if latest != snapshot:
+                            return AccessDenied(code=AccessDenialCode.CUSTODY_CHANGED)
+                        decision = self._evaluate(session, current, grant, key)
+                        if isinstance(decision, AccessDenied):
+                            return decision
+                        binding_attempted = True
+                        self.owner.activate(session, dek)
+                    # The key-free context's successful finalizer only releases
+                    # its preparation reservation. Keep material admission and
+                    # publication atomic against queued revocation; no lease
+                    # escapes a failed finalizer or an expired original bound.
+                    preparation.close()
+                    current = self._facts(connection_id)
+                    if isinstance(current, AccessDenied):
+                        return current
+                    if current.context.monotonic_now >= deadline:
+                        return AccessDenied(code=AccessDenialCode.SESSION_EXPIRED)
+                    latest = self._snapshot(current)
+                    if isinstance(latest, AccessDenied):
+                        return latest
+                    if latest != snapshot:
+                        return AccessDenied(code=AccessDenialCode.CUSTODY_CHANGED)
+                    decision = self._evaluate(session, current, grant, key)
+                    if isinstance(decision, AccessDenied):
+                        return decision
+                    self._sessions[identity] = session
+                    committed = True
+                    return session
+        except BaseException as error:
+            primary = error
+            raise
+        finally:
+            if binding_attempted and not committed:
+                try:
+                    retirement.close_now()
+                except BaseException as failure:
+                    cleanup = AsyncResourceCleanupError(
+                        (retirement,), (failure,), retry_task_name="api-session-retirement", close_attempts=1
+                    )
+                    if primary is not None:
+                        retirement.retain_failure(primary, cleanup)
+                    else:
+                        raise cleanup from failure
 
     def admit_human(self, *, connection_id: UUID) -> AccessSession | AccessDenied:
         """Bind existing password admission without consulting automation custody."""
@@ -310,40 +413,81 @@ class ProfileSessionAuthority:
             facts = self._facts(connection_id)
             if isinstance(facts, AccessDenied):
                 return facts
-            identity = uuid4()
-            with self._activation(identity), self.owner.authenticate_human(connection_id) as authenticated:
+        identity = uuid4()
+        committed = False
+        binding_attempted = False
+        primary: BaseException | None = None
+        retirement = _ProspectiveSessionRetirement(self.owner, lambda: self._retire({identity}))
+        try:
+            with self.owner.authenticate_human(connection_id) as authenticated:
                 if authenticated is None:
                     return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
                 outcome, login_id = authenticated
+                deadline = self.owner.human_admission_deadline(connection_id)
                 if str(outcome.bucket_id) != str(self.binding.profile_id):
                     return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
+                with self.owner.admission_guard():
+                    current = self._facts(connection_id)
+                    if isinstance(current, AccessDenied):
+                        return current
+                    if not isfinite(deadline) or current.context.monotonic_now >= deadline:
+                        return AccessDenied(code=AccessDenialCode.SESSION_EXPIRED)
+                    if current.profile.lock_generation != facts.profile.lock_generation:
+                        return AccessDenied(code=AccessDenialCode.PROFILE_LOCKED)
+                    if current.context.authenticated_client_id != facts.context.authenticated_client_id:
+                        return AccessDenied(code=AccessDenialCode.CLIENT_MISMATCH)
+                    expires = min(outcome.idle_deadline, outcome.absolute_deadline)
+                    if expires <= current.context.now or outcome.authenticated_at > current.context.now:
+                        return AccessDenied(code=AccessDenialCode.SESSION_EXPIRED)
+                    session = AccessSession(
+                        session_id=identity,
+                        binding=self.binding,
+                        profile_lock_generation=facts.profile.lock_generation,
+                        runtime_boot_id=self.runtime_boot_id,
+                        connection_id=connection_id,
+                        client_id=facts.context.authenticated_client_id,
+                        kind=SessionKind.HUMAN,
+                        originating_login_id=login_id,
+                        state=SessionState.ACTIVE,
+                        scope=current.profile.scope,
+                        issued_at=current.context.now,
+                        expires_at=expires,
+                        issued_monotonic=current.context.monotonic_now,
+                    )
+                    decision = self._evaluate(session, current, None, None)
+                    if isinstance(decision, AccessDenied):
+                        return decision
+                    binding_attempted = True
+                    self.owner.bind_human(session)
+            # Candidate release may fail or overlap denial. Publish only after
+            # it settles and the original generation is freshly reauthorized.
+            with self.owner.admission_guard():
                 current = self._facts(connection_id)
                 if isinstance(current, AccessDenied):
                     return current
-                expires = min(outcome.idle_deadline, outcome.absolute_deadline)
-                if expires <= current.context.now or outcome.authenticated_at > current.context.now:
+                if not isfinite(deadline) or current.context.monotonic_now >= deadline:
                     return AccessDenied(code=AccessDenialCode.SESSION_EXPIRED)
-                session = AccessSession(
-                    session_id=identity,
-                    binding=self.binding,
-                    profile_lock_generation=current.profile.lock_generation,
-                    runtime_boot_id=self.runtime_boot_id,
-                    connection_id=connection_id,
-                    client_id=current.context.authenticated_client_id,
-                    kind=SessionKind.HUMAN,
-                    originating_login_id=login_id,
-                    state=SessionState.ACTIVE,
-                    scope=current.profile.scope,
-                    issued_at=current.context.now,
-                    expires_at=expires,
-                    issued_monotonic=current.context.monotonic_now,
-                )
                 decision = self._evaluate(session, current, None, None)
                 if isinstance(decision, AccessDenied):
                     return decision
-                self.owner.bind_human(session)
-            self._sessions[session.session_id] = session
-            return session
+                self._sessions[identity] = session
+                committed = True
+                return session
+        except BaseException as error:
+            primary = error
+            raise
+        finally:
+            if binding_attempted and not committed:
+                try:
+                    retirement.close_now()
+                except BaseException as failure:
+                    cleanup = AsyncResourceCleanupError(
+                        (retirement,), (failure,), retry_task_name="human-session-retirement", close_attempts=1
+                    )
+                    if primary is not None:
+                        retirement.retain_failure(primary, cleanup)
+                    else:
+                        raise cleanup from failure
 
     def refresh_api_key(self, *, connection_id: UUID, session_id: UUID) -> AccessSession | AccessDenied:
         """Refresh a live root API lease; expired or disconnected leases require login."""

@@ -13,9 +13,10 @@ import hashlib
 import os
 import secrets
 import sys
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
+from threading import Lock
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, SecretBytes
@@ -92,16 +93,53 @@ class AutomationControlStore:
     existing root lock. It never selects/unlocks the ambient human profile.
     """
 
-    def __init__(self, *, root: Path, binding: ProfileAccessBinding, secrets_store: AutomationSecretStore) -> None:
+    def __init__(
+        self,
+        *,
+        root: Path,
+        binding: ProfileAccessBinding,
+        secrets_store: AutomationSecretStore | None = None,
+        secrets_store_factory: Callable[[], AutomationSecretStore] | None = None,
+    ) -> None:
         """Bind trusted composition to one local custody owner."""
-        if not root.is_absolute() or not isinstance(secrets_store.backend, NativeSecretBackend):
+        if (
+            not root.is_absolute()
+            or (secrets_store is None) == (secrets_store_factory is None)
+            or (secrets_store_factory is not None and not callable(secrets_store_factory))
+        ):
             raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
         self.root = root
         self.binding = binding
-        self.secrets = secrets_store
+        self._secrets_lock = Lock()
+        self._secrets_store: AutomationSecretStore | None = None
+        self._secrets_store_factory = secrets_store_factory
+        if secrets_store is not None:
+            self.secrets = secrets_store
         self.directory = root / ".automation-v1" / str(binding.installation_id) / str(binding.profile_id)
         root_digest = hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()
         self.account = f"{root_digest}/{binding.installation_id}/{binding.profile_id}"
+
+    @property
+    def secrets(self) -> AutomationSecretStore:
+        """Acquire optional native custody only when an automation operation needs it."""
+        with self._secrets_lock:
+            if self._secrets_store is None:
+                factory = self._secrets_store_factory
+                if factory is None:
+                    raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
+                acquired = factory()
+                if not isinstance(acquired.backend, NativeSecretBackend):
+                    raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
+                self._secrets_store = acquired
+            return self._secrets_store
+
+    @secrets.setter
+    def secrets(self, value: AutomationSecretStore) -> None:
+        """Replace the native port supplied by trusted custody composition."""
+        with self._secrets_lock:
+            if not isinstance(value.backend, NativeSecretBackend):
+                raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
+            self._secrets_store = value
 
     def _prepare(self) -> None:
         self._prepare_directories()

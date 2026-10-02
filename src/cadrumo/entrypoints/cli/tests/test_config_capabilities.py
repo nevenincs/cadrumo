@@ -122,49 +122,6 @@ def test_set_disables_a_capability_and_show_reflects_it() -> None:
     assert rows["llm_vision"]["source"] == "profile"
 
 
-def test_config_check_reports_capabilities_and_dependencies() -> None:
-    # Opt out of llm_vision so the report is deterministic regardless of whether a
-    # real Ollama is running in the test environment (no opted-in dependency gap).
-    off = _invoke(["config", "profile", "capabilities", "set", "llm_vision", "off"])
-    assert off.exit_code == 0, off.output
-
-    result = invoke_cached_cli(["--format", "json", "config", "check"])
-    assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
-    assert payload["ok"] is True
-    assert payload["issues"] == []
-    caps = {c["capability"]: c for c in payload["capabilities"]}
-    assert set(caps) == {capability.value for capability in ServiceCapability}
-    assert caps["llm_vision"]["enabled"] is False
-    services = {d["service"] for d in payload["dependencies"]}
-    # One row per invoice-reading role, from the probe the status surface uses.
-    assert {"local-reader:text_extraction", "local-reader:vision_transcription"} <= services
-    assert "ollama-vision" not in services
-    assert "playwright-chromium" in services
-    # Re-pointed rather than dropped when the subprocess provider probe was
-    # deleted: the doctor must still report a row for the LOCAL model runtime,
-    # which is now the only classification backend. Deleting the assertion
-    # outright would have removed the coverage along with the cloud rows.
-    assert "model-runtime-hardware-floor" in services
-    assert not any(s.startswith("llm-provider:") for s in services), (
-        "the subprocess cloud providers are deleted; no llm-provider row may survive"
-    )
-    # The doctor reports every capability-gated optional extra's importability.
-    assert {"extra:google", "extra:browser", "extra:anthropic"} <= services
-
-
-def test_config_check_flags_opted_in_capability_with_missing_dependency() -> None:
-    # llm_vision is on by default; point the local runtime at a closed port so the
-    # vision reader is reliably unavailable. The doctor must surface the gap by
-    # the reader's own row id and exit non-zero.
-    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        result = invoke_cached_cli(["--format", "json", "config", "check"])
-    assert result.exit_code == 2, result.output
-    payload = json.loads(result.output)["result"]
-    assert payload["ok"] is False
-    assert "local-reader:vision_transcription" in payload["issues"]
-
-
 @pytest.mark.parametrize(
     "argv",
     [

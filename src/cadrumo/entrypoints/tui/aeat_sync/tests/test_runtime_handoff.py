@@ -133,7 +133,7 @@ class _PreparedController:
         assert after_cursor == 0
         assert page_limit == 1
         contract_set_digest = "c" * 64
-        terminal_result_ref = "censo-review:" + "d" * 64 + ":applied"
+        terminal_result_ref = "d" * 64
         projection = OperationPublicProjectionV1(
             operation_id=self.operation_id,
             definition_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID,

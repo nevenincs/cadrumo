@@ -49,11 +49,13 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from pydantic import BaseModel, ConfigDict
 
 from ..core.config import Settings, load_settings
 from ..core.telemetry.consent import telemetry_emit_permitted
-from ..core.telemetry.emit import emit_telemetry_event
+from ..core.telemetry.emit import TelemetrySink, emit_telemetry_event
 from ..core.telemetry.http_sink import HttpTelemetrySink
 from ..core.telemetry.schema import TelemetryEventPayload, build_telemetry_payload
 from ..core.telemetry.tier import TelemetryTier
@@ -214,8 +216,13 @@ def build_telemetry_flush_preview(
         run_telemetry_port=run_telemetry_port,
         auth_probe_port=auth_probe_port,
     )
-    gate_permits = telemetry_emit_permitted(resolved_settings, acknowledged=acknowledged)
-    endpoint_configured = bool(resolved_settings.cadrumo_telemetry_endpoint)
+    return _flush_preview(payload, settings=resolved_settings, acknowledged=acknowledged)
+
+
+def _flush_preview(payload: TelemetryEventPayload, *, settings: Settings, acknowledged: bool) -> TelemetryFlushPreview:
+    """Evaluate the canonical consent gate without rebuilding the captured payload."""
+    gate_permits = telemetry_emit_permitted(settings, acknowledged=acknowledged)
+    endpoint_configured = bool(settings.cadrumo_telemetry_endpoint)
     return TelemetryFlushPreview(
         payload=payload,
         gate_permits=gate_permits,
@@ -230,6 +237,8 @@ def flush_telemetry(
     acknowledged: bool,
     run_telemetry_port: DiagnosticRunTelemetryPort,
     auth_probe_port: DiagnosticAuthProbePort,
+    before_dispatch: Callable[[], Settings] | None = None,
+    sink_factory: Callable[[Settings], TelemetrySink] | None = None,
 ) -> TelemetryFlushPreview:
     """Send the aggregate local telemetry payload, honouring the consent gate.
 
@@ -259,6 +268,9 @@ def flush_telemetry(
             the outer composition root.
         auth_probe_port: Injected redacted auth-readiness probe supplied by the
             outer composition root.
+        before_dispatch: Optional current-authority boundary returning fresh
+            settings immediately before dispatch. Never holds authority over HTTP.
+        sink_factory: Optional composition-owned sink for the refreshed settings.
 
     Returns:
         The :class:`~application.diagnostics_telemetry.TelemetryFlushPreview`
@@ -272,6 +284,17 @@ def flush_telemetry(
         run_telemetry_port=run_telemetry_port,
         auth_probe_port=auth_probe_port,
     )
-    sink = HttpTelemetrySink(endpoint=resolved_settings.cadrumo_telemetry_endpoint)
+    if not preview.would_send:
+        return preview
+    if before_dispatch is not None:
+        resolved_settings = before_dispatch()
+        preview = _flush_preview(preview.payload, settings=resolved_settings, acknowledged=acknowledged)
+    if not preview.would_send:
+        return preview
+    sink = (
+        sink_factory(resolved_settings)
+        if sink_factory is not None
+        else HttpTelemetrySink(endpoint=resolved_settings.cadrumo_telemetry_endpoint)
+    )
     emit_telemetry_event(preview.payload, settings=resolved_settings, acknowledged=acknowledged, sink=sink)
     return preview

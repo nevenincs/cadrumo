@@ -30,8 +30,6 @@ from ..navigation import TUI_DESTINATION_CATALOGUE
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-
-
 async def _assert_tab_reaches_everything(screen: object, label: str) -> None:
     """Drive a full Tab cycle and require every focusable control to be reached."""
     app = ScreenHostApp(cast("Screen[None]", screen))
@@ -103,10 +101,6 @@ async def test_home_restores_focus_by_domain_identity_rather_than_row_position()
         await pilot.pause()
         assert restored.highlighted_target == HomeTarget(kind=chosen.kind, identity=chosen.identity)
         app.exit(None)
-
-
-
-
 
 
 def test_the_destination_catalogue_names_every_destination_in_every_shipped_locale() -> None:

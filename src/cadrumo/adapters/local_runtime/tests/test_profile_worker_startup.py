@@ -76,6 +76,7 @@ class _Endpoint(WindowsRuntimeEndpoint):
 def _worker(child: _Child) -> ProfileWorkerProcess:
     worker = ProfileWorkerProcess.__new__(ProfileWorkerProcess)
     worker._process = child
+    worker._pending_channel_cleanup = []
     return worker
 
 

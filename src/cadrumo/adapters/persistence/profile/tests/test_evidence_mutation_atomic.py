@@ -21,7 +21,8 @@ from cadrumo.application.ledger.evidence import (
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
 )
-from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
+from cadrumo.application.ledger.evidence_ports import EvidenceAttachmentIngestRequest, LedgerEvidencePorts
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
@@ -36,6 +37,11 @@ _BUCKET_ID = "34343434-3434-4434-8434-343434343434"
 _TARGET_ID = "evidence-target"
 _CONCURRENT_ID = "evidence-concurrent"
 _AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+
+
+class _UnexpectedAttachmentIngestor:
+    def ingest(self, request: EvidenceAttachmentIngestRequest) -> ContentDigest:
+        raise AssertionError("evidence mutations must not ingest files")
 
 
 def _record(evidence_id: str) -> PurchaseInvoiceEvidence:
@@ -73,7 +79,7 @@ def test_evidence_mutation_retries_whole_snapshot_and_co_commits_event(
     evidence_repository.save(bucket_id=_BUCKET_ID, records=(target,))
     ports = LedgerEvidencePorts(
         evidence_repository=evidence_repository,
-        attachment_ingestor=object(),  # mutation paths do not ingest files
+        attachment_ingestor=_UnexpectedAttachmentIngestor(),
         bucket_event_repository=event_repository,
     )
     service = PurchaseInvoiceEvidenceService(ports=ports)

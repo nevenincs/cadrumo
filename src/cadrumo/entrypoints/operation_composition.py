@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope, default_browser_session_factory
+from ..adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ..adapters.outbound.aeat.sede.groi_check import collect_groi_observations
 from ..adapters.outbound.aeat.sede.nif_iva_check import collect_nif_iva_check_observations
 from ..adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
@@ -24,11 +25,14 @@ from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ..adapters.persistence.profile.buckets import build_bucket_event_history_repository
+from ..adapters.persistence.profile.calculation_revision_override_migration import GuardedCalculationRevisionMigration
 from ..adapters.persistence.profile.catalogue_creation import (
     build_catalogue_creation_ports,
     build_catalogue_lifecycle_ports,
 )
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ..adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
+from ..adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ..adapters.persistence.profile.review_package_recipient_registry import build_recipient_fingerprint_registry_ports
 from ..adapters.persistence.profile.review_package_signing import build_review_package_signing_keypair_capability
@@ -52,6 +56,10 @@ from ..application.actividad_asset.registered_operations import (
     build_activity_asset_inspect_definition,
     build_activity_asset_inspect_registration,
 )
+from ..application.auth.apoderado_operation import (
+    build_apoderado_operation_definitions,
+    build_apoderado_operation_registrations,
+)
 from ..application.auth.certificate_secret_operation import (
     CertificateSecretOperationPorts,
     build_certificate_secret_operation_definitions,
@@ -70,6 +78,10 @@ from ..application.auth.certificate_source_operation import (
     build_certificate_source_select_definition,
     build_certificate_source_select_registration,
 )
+from ..application.auth.diagnostic_report_operation import (
+    build_auth_diagnostic_report_definition,
+    build_auth_diagnostic_report_registration,
+)
 from ..application.auth.operation_definitions import (
     AuthOperationPorts,
     ProfileRotationFinalizer,
@@ -85,6 +97,12 @@ from ..application.bienes_inversion.registered_operation import (
     build_bienes_inversion_list_registration,
 )
 from ..application.bucket_event_repository import BucketEventHistoryRepositoryFactory
+from ..application.diagnostics_operation import (
+    build_diagnostics_read_definition,
+    build_diagnostics_read_registration,
+    build_diagnostics_telemetry_flush_definition,
+    build_diagnostics_telemetry_flush_registration,
+)
 from ..application.exchange_rate_provider import exchange_rate_provider
 from ..application.export.google_operation import (
     GoogleSheetsExportAuthDependencyError,
@@ -110,6 +128,11 @@ from ..application.inventory.registered_operation import (
 )
 from ..application.invoices.catalogue_add_operation import build_invoice_add_definition, build_invoice_add_registration
 from ..application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
+from ..application.invoices.catalogue_intake_operation import (
+    build_invoice_import_definition,
+    build_invoice_intake_registration,
+    build_invoice_wizard_definition,
+)
 from ..application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
 from ..application.invoices.catalogue_read_operation import (
     build_invoice_list_definition,
@@ -135,8 +158,17 @@ from ..application.ledger.attachment_mutation_operation import (
     build_ledger_detach_definition,
     build_ledger_detach_registration,
 )
+from ..application.ledger.bulk_classify_operation import (
+    build_ledger_bulk_classify_definition,
+    build_ledger_bulk_classify_registration,
+)
 from ..application.ledger.check_operation import build_ledger_check_definition, build_ledger_check_registration
-from ..application.ledger.classify_operation import build_ledger_classify_definition, build_ledger_classify_registration
+from ..application.ledger.classify_operation import (
+    build_ledger_classify_definition,
+    build_ledger_classify_registration,
+    build_ledger_operator_iva_definition,
+    build_ledger_operator_iva_registration,
+)
 from ..application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
 from ..application.ledger.counterparty_operation import (
     build_ledger_counterparty_definition,
@@ -151,6 +183,10 @@ from ..application.ledger.evidence_followup_operation import (
     build_ledger_evidence_followup_definitions,
     build_ledger_evidence_followup_registrations,
 )
+from ..application.ledger.evidence_ingestion_operation import (
+    build_ledger_evidence_ingestion_definitions,
+    build_ledger_evidence_ingestion_registrations,
+)
 from ..application.ledger.evidence_mutation_operation import (
     build_ledger_evidence_remove_definition,
     build_ledger_evidence_remove_registration,
@@ -163,6 +199,7 @@ from ..application.ledger.evidence_read_operation import (
     build_ledger_evidence_view_definition,
     build_ledger_evidence_view_registration,
 )
+from ..application.ledger.export_operation import build_ledger_export_definition, build_ledger_export_registration
 from ..application.ledger.history_operation import (
     build_ledger_history_definition,
     build_ledger_history_registration,
@@ -180,7 +217,29 @@ from ..application.ledger.invoice_evidence_operation import (
     build_ledger_evidence_reader_readiness_definition,
     build_ledger_evidence_reader_readiness_registration,
 )
+from ..application.ledger.lifecycle_mutation_operation import (
+    build_ledger_archive_definition,
+    build_ledger_archive_registration,
+    build_ledger_exclude_definition,
+    build_ledger_exclude_registration,
+    build_ledger_restore_definition,
+    build_ledger_restore_registration,
+    build_ledger_stash_definition,
+    build_ledger_stash_registration,
+)
+from ..application.ledger.link_operation import build_ledger_link_definition, build_ledger_link_registration
 from ..application.ledger.list_operation import build_ledger_list_definition, build_ledger_list_registration
+from ..application.ledger.llm_diagnostics_operation import (
+    build_ledger_llm_diagnostics_definition,
+    build_ledger_llm_diagnostics_registration,
+)
+from ..application.ledger.llm_review_operation import (
+    LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
+    LEDGER_SPLIT_REVIEW_DEFINITION_ID,
+    LedgerLlmOperationPorts,
+    build_ledger_llm_review_definition,
+    build_ledger_llm_review_registration,
+)
 from ..application.ledger.merge_operation import build_ledger_merge_definition, build_ledger_merge_registration
 from ..application.ledger.participation_operation import (
     build_ledger_participation_definition,
@@ -210,6 +269,15 @@ from ..application.ledger.ratios_operation import (
 from ..application.ledger.remove_operation import build_ledger_remove_definition, build_ledger_remove_registration
 from ..application.ledger.reset_operation import build_ledger_reset_definition, build_ledger_reset_registration
 from ..application.ledger.review_operation import build_ledger_review_definition, build_ledger_review_registration
+from ..application.ledger.rule_operation import (
+    build_ledger_rule_add_definition,
+    build_ledger_rule_add_registration,
+    build_ledger_rule_apply_definition,
+    build_ledger_rule_apply_registration,
+    build_ledger_rule_list_definition,
+    build_ledger_rule_list_registration,
+)
+from ..application.ledger.rule_repository import LedgerClassificationRuleRepositoryFactory
 from ..application.ledger.split_operation import build_ledger_split_definition, build_ledger_split_registration
 from ..application.ledger.status_operation import (
     build_ledger_status_definition,
@@ -218,6 +286,10 @@ from ..application.ledger.status_operation import (
 from ..application.ledger.track_operation import build_ledger_track_definition, build_ledger_track_registration
 from ..application.ledger.update_operation import build_ledger_update_definition, build_ledger_update_registration
 from ..application.ledger.view_operation import build_ledger_view_definition, build_ledger_view_registration
+from ..application.live.borrador_100_operation import (
+    build_borrador_100_operation_definitions,
+    build_borrador_100_operation_registrations,
+)
 from ..application.live.expedientes_capture_operation import (
     build_expedientes_bulk_capture_definition,
     build_expedientes_bulk_capture_registration,
@@ -336,7 +408,15 @@ from ..application.modelo.amendment_context_operation import (
     build_modelo_work_amendment_context_definition,
     build_modelo_work_amendment_context_registration,
 )
+from ..application.modelo.audit_operation import (
+    build_modelo_audit_operation_definitions,
+    build_modelo_audit_operation_registrations,
+)
 from ..application.modelo.calculation_action_ports import CalculationActionPortsFactory
+from ..application.modelo.calculation_report_verification_operation import (
+    build_modelo_calculation_report_verify_definition,
+    build_modelo_calculation_report_verify_registration,
+)
 from ..application.modelo.dependency_operation import (
     build_modelo_dependency_definition,
     build_modelo_dependency_registration,
@@ -366,6 +446,10 @@ from ..application.modelo.history_operation import (
     build_modelo_work_history_registration,
 )
 from ..application.modelo.history_ports import ModeloHistoryPortsFactory
+from ..application.modelo.history_timeline_operation import (
+    build_modelo_history_timeline_definition,
+    build_modelo_history_timeline_registration,
+)
 from ..application.modelo.invoice_withholding_capture_operation import (
     ModeloInvoiceWithholdingCapturePorts,
     ModeloInvoiceWithholdingCapturePortsFactory,
@@ -388,18 +472,44 @@ from ..application.modelo.iva_wallet_seed_operation import (
     build_modelo_iva_wallet_seed_definition,
     build_modelo_iva_wallet_seed_registration,
 )
+from ..application.modelo.lifecycle_history_operation import (
+    build_modelo_history_definition,
+    build_modelo_history_registration,
+)
 from ..application.modelo.local_observation_operation import (
     build_modelo_local_observation_definition,
     build_modelo_local_observation_registration,
+)
+from ..application.modelo.m036_operation import (
+    build_m036_operation_definitions,
+    build_m036_operation_registrations,
+)
+from ..application.modelo.m145_communication_operation import (
+    build_m145_communication_operation_definitions,
+    build_m145_communication_operation_registrations,
 )
 from ..application.modelo.m303_attestation_operation import (
     build_modelo_work_m303_attestation_definition,
     build_modelo_work_m303_attestation_registration,
 )
+from ..application.modelo.maritime_preview_operation import (
+    build_modelo_maritime_preview_definition,
+    build_modelo_maritime_preview_registration,
+)
+from ..application.modelo.mcp_query_operation import (
+    build_modelo_bindings_resolve_typed_definition,
+    build_modelo_bindings_resolve_typed_registration,
+    build_modelo_readiness_summary_definition,
+    build_modelo_readiness_summary_registration,
+)
 from ..application.modelo.metadata_operation_access import compose_modelo_metadata_access
 from ..application.modelo.metadata_read_operation import (
     build_modelo_metadata_definition,
     build_modelo_metadata_registration,
+)
+from ..application.modelo.modelo_spreadsheet_operation import (
+    build_modelo_spreadsheet_definitions,
+    build_modelo_spreadsheet_registration,
 )
 from ..application.modelo.operation_definitions import (
     ModeloWorkVerifyProfileResolver,
@@ -408,6 +518,12 @@ from ..application.modelo.operation_definitions import (
     resolve_active_workflow_profile,
 )
 from ..application.modelo.participation_index_rebuild_ports import ParticipationIndexRebuildPortsFactory
+from ..application.modelo.projection_operation import (
+    build_modelo_compare_definition,
+    build_modelo_compare_registration,
+    build_modelo_project_definition,
+    build_modelo_project_registration,
+)
 from ..application.modelo.query_read_operation import (
     ModeloQueryReadPortsFactory,
     build_modelo_bindings_list_definition,
@@ -419,6 +535,7 @@ from ..application.modelo.query_read_operation import (
     build_modelo_requires_definition,
     build_modelo_requires_registration,
 )
+from ..application.modelo.quickfile_operation import build_quickfile_definition, build_quickfile_registration
 from ..application.modelo.reconciliation_import_operation import (
     build_modelo_reconciliation_import_definition,
     build_modelo_reconciliation_import_registration,
@@ -430,6 +547,10 @@ from ..application.modelo.reconciliation_list_operation import (
 from ..application.modelo.reconciliation_pull_operation import (
     build_modelo_reconciliation_pull_definition,
     build_modelo_reconciliation_pull_registration,
+)
+from ..application.modelo.review_package_exchange_operation import (
+    build_review_package_exchange_operation_definitions,
+    build_review_package_exchange_operation_registrations,
 )
 from ..application.modelo.review_package_operation import (
     build_modelo_review_package_build_definition,
@@ -522,8 +643,17 @@ from ..application.prorrata_register.registered_operations import (
     build_prorrata_seed_sector_definition,
     build_prorrata_settle_sector_definition,
 )
+from ..application.review.read_operation import (
+    ReviewReadOperationPorts,
+    build_review_read_definitions,
+    build_review_read_registrations,
+)
 from ..application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from ..application.storage.calc_sheets.records import SheetExportPlan, TabName
+from ..application.user_profile.archive_operation import (
+    build_profile_archive_operation_definitions,
+    build_profile_archive_operation_registrations,
+)
 from ..application.user_profile.automation_operations import (
     AutomationAdministrationFactory,
     AutomationInventoryReader,
@@ -546,6 +676,15 @@ from ..application.user_profile.censal_preview_operation import (
     build_censal_preview_operation_definition,
     build_censal_preview_operation_registration,
 )
+from ..application.user_profile.google_configuration_operation import (
+    build_google_configuration_definitions,
+    build_google_configuration_registration,
+)
+from ..application.user_profile.history_operation import (
+    ProfileHistoryReadPorts,
+    build_profile_history_definition,
+    build_profile_history_registration,
+)
 from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
@@ -567,6 +706,10 @@ from ..application.workflow.run_read_operation import (
     build_workflow_run_read_registration,
 )
 from ..application.workflow.run_read_ports import WorkflowRunReadPortsFactory
+from ..application.workstation_check_operation import (
+    build_workstation_check_definition,
+    build_workstation_check_registration,
+)
 from ..core.access_gate.gate import AeatAccessGate
 from ..core.config import Settings, load_settings
 from ..core.identity.tax_id import tax_id_identity_token
@@ -582,6 +725,7 @@ from .adapter_composition import (
     build_bienes_inversion_repository,
     build_calculation_action_ports,
     build_censal_fetch_port,
+    build_draft_review_ports,
     build_expedientes_ports,
     build_filing_action_ports,
     build_inventory_service_ports,
@@ -597,10 +741,18 @@ from .adapter_composition import (
     build_verification_repository_bundle,
     build_withholding_observation_service,
 )
+from .auth_apoderado_composition import build_apoderado_operation_ports, build_auth_diagnostic_report_ports
 from .auth_read_composition import compose_auth_read_ports
+from .calculation_report_verification_operation_composition import build_modelo_calculation_report_verification_ports
+from .diagnostics_operation_composition import (
+    build_diagnostics_read_ports,
+    build_diagnostics_telemetry_flush_ports,
+)
 from .evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
+from .google_configuration_operation_composition import build_google_configuration_operation_ports
 from .invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
 from .invoice_inspection_composition import build_invoice_inspection_read_ports
+from .invoice_intake_operation_composition import build_invoice_intake_ports
 from .justificante_composition import (
     build_justificante_authenticity_verifier,
     build_justificante_capture_service,
@@ -608,6 +760,11 @@ from .justificante_composition import (
     build_justificante_registration_ports,
 )
 from .ledger_action_composition import compose_ledger_action_ports, compose_ledger_import_ports
+from .ledger_evidence_ingestion_operation_composition import build_ledger_evidence_ingestion_operation_ports
+from .ledger_export_link_operation_composition import build_ledger_export_link_operation_ports
+from .ledger_llm_composition import compose_ledger_llm
+from .ledger_llm_diagnostics_composition import build_ledger_llm_diagnostics_operation_ports
+from .live_borrador_operation_composition import build_borrador_100_operation_ports
 from .live_state_composition import (
     compose_live_state,
     compose_notification_document_service,
@@ -615,15 +772,34 @@ from .live_state_composition import (
     preflight_filed_history_provider,
     pull_filed_history_with_shared_composition,
 )
+from .m036_operation_composition import build_m036_operation_ports
+from .modelo_audit_operation_composition import build_modelo_audit_operation_ports
 from .modelo_dependency_composition import build_dependency_read_ports
+from .modelo_maritime_operation_composition import build_modelo_maritime_preview_ports
 from .modelo_query_read_operation_composition import build_modelo_query_read_ports
+from .modelo_spreadsheet_operation_composition import build_modelo_spreadsheet_operation_ports
 from .overview_pipeline_composition import build_pipeline_read_ports
 from .overview_read_composition import build_overview_read_ports
+from .profile_archive_operation_composition import build_profile_archive_operation_ports
+from .quickfile_operation_composition import build_quickfile_operation_ports
+from .review_package_exchange_operation_composition import build_review_package_exchange_operation_ports
 from .workflow_run_composition import build_workflow_run_read_ports
+from .workstation_check_operation_composition import build_workstation_check_operation_ports
 
 _LEASE_DURATION = timedelta(minutes=10)
 _EXECUTION_TIMEOUT = timedelta(hours=1)
 _CLEANUP_TIMEOUT = timedelta(minutes=2)
+
+
+def _build_profile_history_read_ports(
+    *, bucket_id: str, operation: PinnedAuthorityOperation
+) -> ProfileHistoryReadPorts:
+    """Bind canonical event history to the worker's exact profile and authority pin."""
+    return ProfileHistoryReadPorts(
+        bucket_id=bucket_id,
+        operation=operation,
+        event_repository=build_bucket_event_history_repository(bucket_id=bucket_id),
+    )
 
 
 def _build_modelo_invoice_withholding_capture_ports(*, profile_id: str) -> ModeloInvoiceWithholdingCapturePorts:
@@ -766,6 +942,7 @@ def build_production_operation_registry(
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
     ledger_action_ports_factory: LedgerActionPortsFactory = compose_ledger_action_ports,
+    ledger_rule_repository_factory: LedgerClassificationRuleRepositoryFactory = LedgerClassificationRuleRepository,
     counterparty_repository_factory: CounterpartyEstablishmentRepositoryFactory | None = None,
     ledger_participation_repository_factory: TransactionParticipationIndexRepositoryFactory = (
         TransactionParticipationIndexRepository
@@ -782,13 +959,21 @@ def build_production_operation_registry(
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
+    review_read_definitions = build_review_read_definitions(
+        ReviewReadOperationPorts(settings=resolved_settings, draft_review_ports_factory=build_draft_review_ports)
+    )
     evidence_followup_definitions = build_ledger_evidence_followup_definitions(
         evidence_followup_ports or build_ledger_evidence_followup_operation_ports(settings=resolved_settings)
     )
     modelo_bindings_list_definition = build_modelo_bindings_list_definition()
     modelo_bindings_resolve_definition = build_modelo_bindings_resolve_definition()
+    modelo_bindings_resolve_typed_definition = build_modelo_bindings_resolve_typed_definition()
     modelo_requires_definition = build_modelo_requires_definition()
     modelo_readiness_definition = build_modelo_readiness_definition(modelo_query_read_ports_factory)
+    modelo_readiness_summary_definition = build_modelo_readiness_summary_definition(modelo_query_read_ports_factory)
+    modelo_report_verify_definition = build_modelo_calculation_report_verify_definition(
+        build_modelo_calculation_report_verification_ports
+    )
     recipient_add_definition = build_review_package_recipient_add_definition(
         recipient_registry_ports_factory, recipient_event_repository_factory
     )
@@ -807,6 +992,7 @@ def build_production_operation_registry(
         )
     )
     profile_definitions = build_user_profile_operation_definitions()
+    profile_history_definition = build_profile_history_definition(_build_profile_history_read_ports)
     certificate_source_ports = CertificateSourceOperationPorts(
         operator_scope_ports=resolved_operator_scope_ports,
         operator_probe_ports=resolved_auth_ports.operator_probe_ports,
@@ -856,9 +1042,39 @@ def build_production_operation_registry(
         build_inventory_service_ports
     )
     auth_read_definition = build_auth_read_definition(compose_auth_read_ports)
+    apoderado_definitions = build_apoderado_operation_definitions(build_apoderado_operation_ports)
+    auth_diagnostic_report_definition = build_auth_diagnostic_report_definition(build_auth_diagnostic_report_ports)
+    diagnostics_read_definition = build_diagnostics_read_definition(build_diagnostics_read_ports)
+    workstation_check_definition = build_workstation_check_definition(build_workstation_check_operation_ports)
+    google_configuration_definitions = build_google_configuration_definitions(
+        build_google_configuration_operation_ports
+    )
+    quickfile_definition = build_quickfile_definition(build_quickfile_operation_ports)
+    evidence_ingestion_definitions = build_ledger_evidence_ingestion_definitions(
+        build_ledger_evidence_ingestion_operation_ports
+    )
+    diagnostics_telemetry_flush_definition = build_diagnostics_telemetry_flush_definition(
+        build_diagnostics_telemetry_flush_ports
+    )
+    ledger_llm_diagnostics_definition = build_ledger_llm_diagnostics_definition(
+        build_ledger_llm_diagnostics_operation_ports
+    )
+    borrador_100_definitions = build_borrador_100_operation_definitions(build_borrador_100_operation_ports)
+    m036_definitions = build_m036_operation_definitions(build_m036_operation_ports)
+    modelo_audit_definitions = build_modelo_audit_operation_definitions(build_modelo_audit_operation_ports)
+    modelo_maritime_preview_definition = build_modelo_maritime_preview_definition(build_modelo_maritime_preview_ports)
+    modelo_spreadsheet_definitions = build_modelo_spreadsheet_definitions(build_modelo_spreadsheet_operation_ports)
+    review_package_exchange_definitions = build_review_package_exchange_operation_definitions(
+        build_review_package_exchange_operation_ports
+    )
+    profile_archive_definitions = build_profile_archive_operation_definitions(build_profile_archive_operation_ports)
     recovery_status_definition = build_recovery_status_definition()
     automation_definitions = build_automation_operation_definitions(
         automation_administration_factory, inventory_reader=automation_inventory_reader
+    )
+    m145_communication_definitions = build_m145_communication_operation_definitions(
+        records_ports_factory=build_m145_communication_records_ports,
+        renderer_factory=RegistryFixedWidthRecordRenderer,
     )
     modelo_definitions = build_modelo_lifecycle_operation_definitions(
         profile_resolver=modelo_profile_resolver,
@@ -1052,6 +1268,15 @@ def build_production_operation_registry(
     workbench_definition = build_workbench_generation_operation_definition(workbench_generation_reader)
     metadata_definition = build_modelo_metadata_definition(work_lifecycle_ports_factory)
     history_definition = build_modelo_work_history_definition(modelo_history_ports_factory)
+    lifecycle_history_definition = build_modelo_history_definition(modelo_history_ports_factory)
+    history_timeline_definition = build_modelo_history_timeline_definition(modelo_history_ports_factory)
+    projection_migration = GuardedCalculationRevisionMigration()
+    project_definition = build_modelo_project_definition(
+        factory=calculation_action_ports_factory, migration=projection_migration
+    )
+    compare_definition = build_modelo_compare_definition(
+        factory=calculation_action_ports_factory, migration=projection_migration
+    )
     reconciliation_import_definition = build_modelo_reconciliation_import_definition()
     reconciliation_pull_definition = build_modelo_reconciliation_pull_definition(build_justificante_capture_service)
     reconciliation_list_definition = build_modelo_reconciliation_list_definition()
@@ -1066,6 +1291,8 @@ def build_production_operation_registry(
         build_overview_read_definition(kind, overview_read_ports_factory) for kind in OverviewReadKind
     )
     invoice_add_definition = build_invoice_add_definition(invoice_creation_ports_factory)
+    invoice_import_definition = build_invoice_import_definition(build_invoice_intake_ports)
+    invoice_wizard_definition = build_invoice_wizard_definition(build_invoice_intake_ports)
     modelo_aggregate_definition = build_modelo_aggregate_operation_definition(modelo_aggregate_operation_ports_factory)
     modelo_invoice_withholding_capture_definition = build_modelo_invoice_withholding_capture_definition(
         modelo_invoice_withholding_capture_ports_factory
@@ -1088,6 +1315,8 @@ def build_production_operation_registry(
         ledger_action_ports_factory, verification_repository_bundle_factory
     )
     ledger_history_definition = build_ledger_history_definition(ledger_action_ports_factory)
+    ledger_export_definition = build_ledger_export_definition(build_ledger_export_link_operation_ports)
+    ledger_link_definition = build_ledger_link_definition(build_ledger_export_link_operation_ports)
 
     def ledger_import_ports_factory(
         *, bucket_id: str, operation: PinnedAuthorityOperation
@@ -1108,6 +1337,29 @@ def build_production_operation_registry(
     )
     ledger_allocate_definition = build_ledger_allocate_definition(ledger_action_ports_factory)
     ledger_classify_definition = build_ledger_classify_definition(ledger_action_ports_factory)
+    ledger_operator_iva_definition = build_ledger_operator_iva_definition(ledger_action_ports_factory)
+
+    def ledger_llm_operation_ports_factory(
+        *, bucket_id: str, operation: PinnedAuthorityOperation
+    ) -> LedgerLlmOperationPorts:
+        return LedgerLlmOperationPorts(
+            ledger=ledger_action_ports_factory(bucket_id=bucket_id, operation=operation),
+            llm=compose_ledger_llm(bucket_id=bucket_id, settings=resolved_settings).ports,
+            settings=resolved_settings,
+        )
+
+    ledger_classify_review_definition = build_ledger_llm_review_definition(
+        LEDGER_CLASSIFY_REVIEW_DEFINITION_ID, ledger_llm_operation_ports_factory
+    )
+    ledger_split_review_definition = build_ledger_llm_review_definition(
+        LEDGER_SPLIT_REVIEW_DEFINITION_ID, ledger_llm_operation_ports_factory
+    )
+    ledger_bulk_classify_definition = build_ledger_bulk_classify_definition(ledger_action_ports_factory)
+    ledger_rule_add_definition = build_ledger_rule_add_definition(ledger_rule_repository_factory)
+    ledger_rule_list_definition = build_ledger_rule_list_definition(ledger_rule_repository_factory)
+    ledger_rule_apply_definition = build_ledger_rule_apply_definition(
+        ledger_action_ports_factory, ledger_rule_repository_factory
+    )
     ledger_evidence_add_definition = build_ledger_evidence_add_definition(build_ledger_evidence_ports)
     ledger_evidence_list_definition = build_ledger_evidence_list_definition(build_ledger_evidence_ports)
     ledger_evidence_view_definition = build_ledger_evidence_view_definition(build_ledger_evidence_ports)
@@ -1127,6 +1379,10 @@ def build_production_operation_registry(
     ledger_update_definition = build_ledger_update_definition(ledger_action_ports_factory)
     ledger_attach_definition = build_ledger_attach_definition(ledger_action_ports_factory)
     ledger_detach_definition = build_ledger_detach_definition(ledger_action_ports_factory)
+    ledger_archive_definition = build_ledger_archive_definition(ledger_action_ports_factory)
+    ledger_stash_definition = build_ledger_stash_definition(ledger_action_ports_factory)
+    ledger_restore_definition = build_ledger_restore_definition(ledger_action_ports_factory)
+    ledger_exclude_definition = build_ledger_exclude_definition(ledger_action_ports_factory)
     ledger_remove_definition = build_ledger_remove_definition(ledger_action_ports_factory)
     ledger_reset_definition = build_ledger_reset_definition(ledger_action_ports_factory)
     if counterparty_repository_factory is None:
@@ -1185,11 +1441,19 @@ def build_production_operation_registry(
         sorted(
             (
                 *resolved_auth_definitions,
+                *review_read_definitions,
                 *evidence_followup_definitions,
+                *evidence_ingestion_definitions,
+                workstation_check_definition,
+                *google_configuration_definitions,
+                quickfile_definition,
                 modelo_bindings_list_definition,
                 modelo_bindings_resolve_definition,
+                modelo_bindings_resolve_typed_definition,
                 modelo_requires_definition,
                 modelo_readiness_definition,
+                modelo_readiness_summary_definition,
+                modelo_report_verify_definition,
                 recipient_add_definition,
                 recipient_list_definition,
                 recipient_remove_definition,
@@ -1220,9 +1484,23 @@ def build_production_operation_registry(
                 inventory_valuation_preview_definition,
                 inventory_closing_authority_record_definition,
                 auth_read_definition,
+                *apoderado_definitions,
+                auth_diagnostic_report_definition,
+                diagnostics_read_definition,
+                diagnostics_telemetry_flush_definition,
+                ledger_llm_diagnostics_definition,
+                *borrador_100_definitions,
+                *m036_definitions,
+                *modelo_audit_definitions,
+                modelo_maritime_preview_definition,
+                *modelo_spreadsheet_definitions,
+                *review_package_exchange_definitions,
+                *profile_archive_definitions,
                 recovery_status_definition,
                 *profile_definitions,
+                profile_history_definition,
                 *automation_definitions,
+                *m145_communication_definitions,
                 *modelo_definitions,
                 resolved_censal_definition,
                 censal_prepare_definition,
@@ -1264,6 +1542,10 @@ def build_production_operation_registry(
                 metadata_definition,
                 wizard_context_definition,
                 history_definition,
+                lifecycle_history_definition,
+                history_timeline_definition,
+                project_definition,
+                compare_definition,
                 reconciliation_import_definition,
                 reconciliation_pull_definition,
                 reconciliation_list_definition,
@@ -1276,6 +1558,8 @@ def build_production_operation_registry(
                 pipeline_definition,
                 *overview_definitions,
                 invoice_add_definition,
+                invoice_import_definition,
+                invoice_wizard_definition,
                 modelo_aggregate_definition,
                 modelo_invoice_withholding_capture_definition,
                 invoice_list_definition,
@@ -1288,10 +1572,19 @@ def build_production_operation_registry(
                 revisions_definition,
                 ledger_status_definition,
                 ledger_history_definition,
+                ledger_export_definition,
+                ledger_link_definition,
                 ledger_import_definition,
                 ledger_add_definition,
                 ledger_allocate_definition,
                 ledger_classify_definition,
+                ledger_operator_iva_definition,
+                ledger_classify_review_definition,
+                ledger_split_review_definition,
+                ledger_bulk_classify_definition,
+                ledger_rule_add_definition,
+                ledger_rule_list_definition,
+                ledger_rule_apply_definition,
                 ledger_evidence_add_definition,
                 ledger_evidence_list_definition,
                 ledger_evidence_view_definition,
@@ -1305,6 +1598,10 @@ def build_production_operation_registry(
                 ledger_update_definition,
                 ledger_attach_definition,
                 ledger_detach_definition,
+                ledger_archive_definition,
+                ledger_stash_definition,
+                ledger_restore_definition,
+                ledger_exclude_definition,
                 ledger_remove_definition,
                 ledger_reset_definition,
                 ledger_counterparty_definition,
@@ -1340,11 +1637,22 @@ def build_production_operation_registry(
         sorted(
             (
                 *build_auth_operation_registrations(resolved_auth_definitions),
+                *build_review_read_registrations(review_read_definitions),
                 *build_ledger_evidence_followup_registrations(evidence_followup_definitions),
+                *build_ledger_evidence_ingestion_registrations(evidence_ingestion_definitions),
+                build_workstation_check_registration(workstation_check_definition),
+                *(
+                    build_google_configuration_registration(definition)
+                    for definition in google_configuration_definitions
+                ),
+                build_quickfile_registration(quickfile_definition),
                 build_modelo_bindings_list_registration(modelo_bindings_list_definition),
                 build_modelo_bindings_resolve_registration(modelo_bindings_resolve_definition),
+                build_modelo_bindings_resolve_typed_registration(modelo_bindings_resolve_typed_definition),
                 build_modelo_requires_registration(modelo_requires_definition),
                 build_modelo_readiness_registration(modelo_readiness_definition),
+                build_modelo_readiness_summary_registration(modelo_readiness_summary_definition),
+                build_modelo_calculation_report_verify_registration(modelo_report_verify_definition),
                 build_review_package_recipient_add_registration(recipient_add_definition),
                 build_review_package_recipient_list_registration(recipient_list_definition),
                 build_review_package_recipient_remove_registration(recipient_remove_definition),
@@ -1375,9 +1683,23 @@ def build_production_operation_registry(
                 build_inventory_valuation_preview_registration(inventory_valuation_preview_definition),
                 build_inventory_closing_authority_record_registration(inventory_closing_authority_record_definition),
                 build_auth_read_registration(auth_read_definition),
+                *build_apoderado_operation_registrations(apoderado_definitions),
+                build_auth_diagnostic_report_registration(auth_diagnostic_report_definition),
+                build_diagnostics_read_registration(diagnostics_read_definition),
+                build_diagnostics_telemetry_flush_registration(diagnostics_telemetry_flush_definition),
+                build_ledger_llm_diagnostics_registration(ledger_llm_diagnostics_definition),
+                *build_borrador_100_operation_registrations(borrador_100_definitions),
+                *build_m036_operation_registrations(m036_definitions),
+                *build_modelo_audit_operation_registrations(modelo_audit_definitions),
+                build_modelo_maritime_preview_registration(modelo_maritime_preview_definition),
+                *(build_modelo_spreadsheet_registration(definition) for definition in modelo_spreadsheet_definitions),
+                *build_review_package_exchange_operation_registrations(review_package_exchange_definitions),
+                *build_profile_archive_operation_registrations(profile_archive_definitions),
                 build_recovery_status_registration(recovery_status_definition),
                 *build_user_profile_operation_registrations(profile_definitions),
+                build_profile_history_registration(profile_history_definition),
                 *build_automation_operation_registrations(automation_definitions),
+                *build_m145_communication_operation_registrations(m145_communication_definitions),
                 *build_modelo_lifecycle_operation_registrations(
                     modelo_definitions,
                     metadata_access_resolver=compose_modelo_metadata_access(work_lifecycle_ports_factory),
@@ -1423,6 +1745,10 @@ def build_production_operation_registry(
                 build_modelo_metadata_registration(metadata_definition, work_lifecycle_ports_factory),
                 build_modelo_work_wizard_context_registration(wizard_context_definition, work_lifecycle_ports_factory),
                 build_modelo_work_history_registration(history_definition, modelo_history_ports_factory),
+                build_modelo_history_registration(lifecycle_history_definition),
+                build_modelo_history_timeline_registration(history_timeline_definition),
+                build_modelo_project_registration(project_definition),
+                build_modelo_compare_registration(compare_definition),
                 build_modelo_reconciliation_import_registration(reconciliation_import_definition),
                 build_modelo_reconciliation_pull_registration(reconciliation_pull_definition),
                 build_modelo_reconciliation_list_registration(reconciliation_list_definition),
@@ -1435,6 +1761,8 @@ def build_production_operation_registry(
                 build_overview_pipeline_registration(pipeline_definition),
                 *(build_overview_read_registration(definition) for definition in overview_definitions),
                 build_invoice_add_registration(invoice_add_definition),
+                build_invoice_intake_registration(invoice_import_definition),
+                build_invoice_intake_registration(invoice_wizard_definition),
                 build_modelo_aggregate_operation_registration(modelo_aggregate_definition),
                 build_modelo_invoice_withholding_capture_registration(modelo_invoice_withholding_capture_definition),
                 build_invoice_list_registration(invoice_list_definition),
@@ -1447,10 +1775,19 @@ def build_production_operation_registry(
                 build_modelo_work_revisions_registration(revisions_definition, verification_repository_bundle_factory),
                 build_ledger_status_registration(ledger_status_definition),
                 build_ledger_history_registration(ledger_history_definition),
+                build_ledger_export_registration(ledger_export_definition),
+                build_ledger_link_registration(ledger_link_definition),
                 build_ledger_import_registration(ledger_import_definition),
                 build_ledger_add_registration(ledger_add_definition),
                 build_ledger_allocate_registration(ledger_allocate_definition),
                 build_ledger_classify_registration(ledger_classify_definition),
+                build_ledger_operator_iva_registration(ledger_operator_iva_definition),
+                build_ledger_llm_review_registration(ledger_classify_review_definition),
+                build_ledger_llm_review_registration(ledger_split_review_definition),
+                build_ledger_bulk_classify_registration(ledger_bulk_classify_definition),
+                build_ledger_rule_add_registration(ledger_rule_add_definition),
+                build_ledger_rule_list_registration(ledger_rule_list_definition),
+                build_ledger_rule_apply_registration(ledger_rule_apply_definition),
                 build_ledger_evidence_add_registration(ledger_evidence_add_definition),
                 build_ledger_evidence_list_registration(ledger_evidence_list_definition),
                 build_ledger_evidence_view_registration(ledger_evidence_view_definition),
@@ -1464,6 +1801,10 @@ def build_production_operation_registry(
                 build_ledger_update_registration(ledger_update_definition),
                 build_ledger_attach_registration(ledger_attach_definition),
                 build_ledger_detach_registration(ledger_detach_definition),
+                build_ledger_archive_registration(ledger_archive_definition),
+                build_ledger_stash_registration(ledger_stash_definition),
+                build_ledger_restore_registration(ledger_restore_definition),
+                build_ledger_exclude_registration(ledger_exclude_definition),
                 build_ledger_remove_registration(ledger_remove_definition),
                 build_ledger_reset_registration(ledger_reset_definition),
                 build_ledger_counterparty_registration(ledger_counterparty_definition),

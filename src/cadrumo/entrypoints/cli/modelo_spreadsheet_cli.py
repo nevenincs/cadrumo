@@ -1,35 +1,22 @@
 """Workbook transport and calculation commands for ``aeat app modelo spreadsheet``.
 
-Spreadsheet commands resolve a
-:class:`RegistrySnapshot` before exporting
-or pulling sheet rows against the live calculation schema.
+The export, pull, calculate, and verify leaves present exact-profile registered
+operation projections. The older Google ``push`` route retains its own runtime
+bridge.
 """
 
 from __future__ import annotations
 
-import json
-from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import TypeAdapter, ValidationError
-
-from ...adapters.outbound.google.active_profile import resolve_active_profile
-from ...adapters.outbound.google.calc_sheets_pull_records import relation_edit_payload
-from ...adapters.outbound.google.errors import GoogleAuthError
-from ...adapters.outbound.storage.errors import OutboundStorageError
-from ...adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
-from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.config import load_settings
-from ...core.decimal.coercion import coerce_decimal
-from ...core.period import Period, PeriodError
-from ...core.type_guards import is_object_dict
-from ...domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-    bundled_indexed_authority,
+from ...application.modelo.modelo_spreadsheet_operation_contracts import (
+    ModeloSpreadsheetCalculateProjection,
+    ModeloSpreadsheetPullProjection,
+    ModeloSpreadsheetVerifyProjection,
 )
-from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.ids import BindingId, RelationId
+from ...application.operations.public_period import PublicPeriod
+from ...core.period import Period, PeriodError
 from ._modelo_spreadsheet_payloads import (
     ModeloSpreadsheetCalculateCasillaPayload,
     ModeloSpreadsheetCalculateResult,
@@ -41,38 +28,18 @@ from ._modelo_spreadsheet_payloads import (
     ModeloSpreadsheetVerifyResult,
 )
 from .common import emit_envelope
-from .config.google_errors import google_refusal
 from .errors import CliRefusedBoundaryError
+from .runtime_modelo_spreadsheet import (
+    calculate_modelo_spreadsheet,
+    export_modelo_spreadsheet,
+    pull_modelo_spreadsheet,
+    verify_modelo_spreadsheet,
+)
 from .runtime_modelo_spreadsheet_push import run_google_sheets_export
 from .runtime_profile_binding import bound_profile_client
 
 if TYPE_CHECKING:
     import typer
-    from google.auth.credentials import Credentials
-
-    from ...adapters.outbound.google.calc_sheets_pull_records import (
-        BindingEdit,
-        OperatorEdit,
-        PullResult,
-        RelationEdit,
-        RowSetEdit,
-    )
-    from ...application.storage.calc_sheets.casilla_parity import CasillaParity
-    from ...application.storage.calc_sheets.parity_harness import OperatorInputScenario, ParityReport
-    from ...domain.calculations.registry.formula_runtime import RegistryCalculationResult
-    from ...domain.calculations.registry.schema import RegistrySnapshot
-
-
-def resolve_credentials_and_root(profile: str) -> tuple[Credentials, str]:
-    """Hydrate refreshable Google credentials + the configured Drive root."""
-    settings = load_settings()
-    credentials = build_google_credentials(profile=profile)
-    root_folder_id = resolve_drive_root_folder_id(profile=profile, settings=settings)
-    if not root_folder_id:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.app.modelo.spreadsheet.push.root_folder_required",
-        )
-    return credentials, root_folder_id
 
 
 def filing_period_or_refusal(*, modelo: str, period: str, year: int) -> Period:
@@ -83,91 +50,6 @@ def filing_period_or_refusal(*, modelo: str, period: str, year: int) -> Period:
             translated_message="cli.app.modelo.spreadsheet.push.snapshot_failure",
             context={"modelo": modelo, "period": period, "year": year},
         ) from exc
-
-
-def _resolve_active_profile_or_refuse() -> str:
-    """Resolve the active profile through the canonical Google profile authority."""
-    try:
-        return resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise google_refusal(exc) from exc
-
-
-def _resolve_credentials_or_refuse(profile: str) -> tuple[Credentials, str]:
-    """Hydrate Google credentials and Drive root through the CLI refusal boundary."""
-    try:
-        return resolve_credentials_and_root(profile)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise google_refusal(exc) from exc
-
-
-def load_snapshot(
-    modelo: str,
-    period: Period,
-    *,
-    operation: PinnedAuthorityOperation | None = None,
-) -> RegistrySnapshot:
-    if operation is not None:
-        try:
-            operation.modelo_directory(modelo)
-            return operation.snapshot(
-                modelo,
-                filing_year=period.filing_year,
-                period=period.registry_token,
-            )
-        except (RegistrySnapshotError, RegistryValidationError) as exc:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.app.modelo.spreadsheet.push.snapshot_failure",
-                context={
-                    "modelo": modelo,
-                    "period": period.registry_token,
-                    "year": period.filing_year,
-                },
-            ) from exc
-        except ValueError as exc:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.app.modelo.spreadsheet.push.unknown_modelo",
-                context={"modelo": modelo, "available": ""},
-            ) from exc
-    with bundled_indexed_authority().operation() as indexed_operation:
-        return load_snapshot(modelo, period, operation=indexed_operation)
-
-
-def _pull_operator_edits_for_command(
-    *,
-    modelo: str,
-    period: str,
-    year: int,
-    spreadsheet_id: str,
-    operation: PinnedAuthorityOperation | None = None,
-) -> tuple[str, RegistrySnapshot, PullResult]:
-    """Resolve the active profile, credentials, and snapshot, then pull operator edits.
-
-    Shared by the ``pull`` and ``compute`` commands: each surface refuses on the
-    same :class:`GoogleAuthError` / :class:`OutboundStorageError` boundaries with
-    identical translated messages, so the resolution is one implementation.
-    """
-    from ...adapters.outbound.google.calc_sheets_pull import pull_operator_edits
-
-    active = _resolve_active_profile_or_refuse()
-    credentials, _ = _resolve_credentials_or_refuse(active)
-
-    snapshot = load_snapshot(
-        modelo,
-        filing_period_or_refusal(modelo=modelo, period=period, year=year),
-        operation=operation,
-    )
-
-    try:
-        result: PullResult = pull_operator_edits(
-            snapshot,
-            spreadsheet_id=spreadsheet_id,
-            credentials=credentials,
-        )
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise google_refusal(exc) from exc
-
-    return active, snapshot, result
 
 
 def modelo_spreadsheet_push(
@@ -245,37 +127,27 @@ def modelo_spreadsheet_export(
     prefill_relations: bool = False,
 ) -> None:
     """Export the registry calculation surface for a modelo + period to a local ``.xlsx`` workbook."""
-    from ...adapters.outbound.workbook.calc_sheets_xlsx import materialize_export_plan
-    from ...application.modelo.export_sink import LocalFileExportSink, ModeloExportOutputPathError
-    from ...application.storage.calc_sheets.workbook_export import export_modelo_workbook
-    from ._modelo_cli_support import bad_parameter_from_error
-
-    filing_period = filing_period_or_refusal(modelo=modelo, period=period, year=year)
-    sink = LocalFileExportSink(path=output, replace_existing=replace_existing)
-    try:
-        sink.require_writable()
-        workbook = export_modelo_workbook(
-            modelo=modelo,
-            period=filing_period,
-            materializer=materialize_export_plan,
-            prefill_relations=prefill_relations,
-            snapshot_resolver=lambda selected, selected_period: load_snapshot(selected, selected_period),
-        )
-        receipt = sink.write(workbook.payload)
-    except ModeloExportOutputPathError as exc:
-        raise bad_parameter_from_error(exc) from exc
+    request_period = PublicPeriod.from_period(filing_period_or_refusal(modelo=modelo, period=period, year=year))
+    projection = export_modelo_spreadsheet(
+        ctx,
+        modelo=modelo,
+        period=request_period,
+        output=output,
+        replace_existing=replace_existing,
+        prefill_relations=prefill_relations,
+    )
 
     export_result = ModeloSpreadsheetExportResult(
-        modelo=str(workbook.modelo),
-        revision=str(workbook.revision),
-        period=workbook.period,
-        year=int(workbook.filing_year),
-        output_path=str(receipt.path),
-        byte_size=receipt.byte_size,
-        sha256=receipt.sha256,
-        tab_names=list(workbook.tab_names),
-        casilla_count=workbook.casilla_count,
-        prefill_relations=prefill_relations,
+        modelo=str(projection.modelo),
+        revision=str(projection.revision),
+        period=projection.period.code,
+        year=projection.period.filing_year,
+        output_path=str(output),
+        byte_size=projection.byte_size,
+        sha256=projection.sha256,
+        tab_names=list(projection.tab_names),
+        casilla_count=projection.casilla_count,
+        prefill_relations=projection.prefill_relations,
     )
     lines = (
         "operation\tmodelo.spreadsheet.export",
@@ -291,129 +163,43 @@ def modelo_spreadsheet_export(
     emit_envelope(ctx, command="modelo.spreadsheet.export", result=export_result, lines=lines)
 
 
-def _scenario_decimal_value(value: object) -> Decimal:
-    """Decode a scenario scalar through the shared decimal coercion boundary."""
-    return coerce_decimal(value) or Decimal("0")
-
-
-def _scenario_binding_id(value: object, adapter: TypeAdapter[str]) -> BindingId:
-    """Decode one canonical binding identifier or retain the registry refusal."""
-    try:
-        return adapter.validate_python(value)
-    except ValidationError as exc:
-        raise RegistryValidationError(f"scenario binding key must be canonical: {value!r}") from exc
-
-
-def _scenario_relation_id(value: object, adapter: TypeAdapter[str]) -> RelationId:
-    """Decode one canonical relation identifier or retain the registry refusal."""
-    try:
-        return adapter.validate_python(value)
-    except ValidationError as exc:
-        raise RegistryValidationError(f"scenario relation key must be canonical: {value!r}") from exc
-
-
-def _scenario_casilla_decimal_map(node: object) -> dict[CasillaId, Decimal]:
-    """Decode an optional casilla-to-decimal scenario mapping."""
-    if not is_object_dict(node):
-        return {}
-    return {
-        validated_casilla_id(k, surface="spreadsheet verify scenario casilla.id"): _scenario_decimal_value(v)
-        for k, v in node.items()
-    }
-
-
-def _scenario_binding_decimal_map(
-    node: object,
-    adapter: TypeAdapter[str],
-) -> dict[BindingId, Decimal]:
-    """Decode an optional numeric binding scenario mapping."""
-    if not is_object_dict(node):
-        return {}
-    return {_scenario_binding_id(k, adapter): _scenario_decimal_value(v) for k, v in node.items()}
-
-
-def _scenario_enum_binding_map(node: object, adapter: TypeAdapter[str]) -> dict[BindingId, str]:
-    """Decode an optional enum binding scenario mapping."""
-    if not is_object_dict(node):
-        return {}
-    return {_scenario_binding_id(k, adapter): str(v) for k, v in node.items()}
-
-
-def _scenario_relation_decimal_map(
-    node: object,
-    adapter: TypeAdapter[str],
-) -> dict[RelationId, Decimal]:
-    """Decode an optional relation-to-decimal scenario mapping."""
-    if not is_object_dict(node):
-        return {}
-    return {_scenario_relation_id(k, adapter): _scenario_decimal_value(v) for k, v in node.items()}
-
-
-def _load_parity_scenario(scenario_path: Path | None) -> OperatorInputScenario:
-    """Load the CLI scenario file into the parity harness's canonical model."""
-    from ...application.storage.calc_sheets.parity_harness import OperatorInputScenario
-
-    if scenario_path is None:
-        return OperatorInputScenario(scenario_label="empty-defaults")
-
-    raw = json.loads(scenario_path.read_text(encoding="utf-8"))
-    binding_id_adapter: TypeAdapter[str] = TypeAdapter(BindingId)
-    relation_id_adapter: TypeAdapter[str] = TypeAdapter(RelationId)
-    return OperatorInputScenario(
-        inputs_by_casilla_id=_scenario_casilla_decimal_map(raw.get("inputs_by_casilla_id")),
-        bindings=_scenario_binding_decimal_map(raw.get("bindings"), binding_id_adapter),
-        enum_bindings=_scenario_enum_binding_map(raw.get("enum_bindings"), binding_id_adapter),
-        relation_values=_scenario_relation_decimal_map(raw.get("relation_values"), relation_id_adapter),
-        expected_by_casilla_id=_scenario_casilla_decimal_map(raw.get("expected_by_casilla_id")),
-        scenario_label=str(raw.get("scenario_label") or scenario_path.stem),
-    )
-
-
-def _verify_divergence_payload(divergence: CasillaParity) -> ModeloSpreadsheetVerifyDivergencePayload:
-    """Project one parity divergence into the typed CLI payload."""
-    return ModeloSpreadsheetVerifyDivergencePayload(
-        casilla_id=divergence.casilla_id,
-        label=divergence.label,
-        local=str(divergence.local) if divergence.local is not None else None,
-        sheets=str(divergence.sheets) if divergence.sheets is not None else None,
-        aeat=str(divergence.aeat) if divergence.aeat is not None else None,
-    )
-
-
-def _verify_result(profile: str, report: ParityReport) -> ModeloSpreadsheetVerifyResult:
-    """Project a parity report onto the public verify schema."""
+def _verify_result(projection: ModeloSpreadsheetVerifyProjection) -> ModeloSpreadsheetVerifyResult:
+    """Project the correlated worker result onto the public verify schema."""
     return ModeloSpreadsheetVerifyResult(
-        profile=profile,
-        modelo=report.modelo_id,
-        revision=report.revision_id,
-        period=report.period.registry_token,
-        year=report.filing_year,
-        spreadsheet_id=report.spreadsheet_id,
-        spreadsheet_url=report.spreadsheet_url,
-        verdict=report.verdict,
-        aeat_oracle_present=report.aeat_oracle_present,
-        computed_count=len(report.casillas),
-        divergence_count=len(report.divergences),
-        divergences=[_verify_divergence_payload(divergence) for divergence in report.divergences],
+        profile=str(projection.profile_id),
+        modelo=str(projection.modelo),
+        revision=str(projection.revision),
+        period=projection.period.code,
+        year=projection.period.filing_year,
+        spreadsheet_id=projection.spreadsheet_id,
+        spreadsheet_url=projection.spreadsheet_url,
+        verdict=projection.verdict,
+        aeat_oracle_present=projection.aeat_oracle_present,
+        computed_count=projection.computed_count,
+        divergence_count=projection.divergence_count,
+        divergences=[
+            ModeloSpreadsheetVerifyDivergencePayload.model_validate(divergence.model_dump(mode="json"))
+            for divergence in projection.divergences
+        ],
     )
 
 
-def _verify_lines(profile: str, report: ParityReport) -> list[str]:
+def _verify_lines(projection: ModeloSpreadsheetVerifyProjection) -> list[str]:
     """Render the stable tabular projection of a parity report."""
     lines = [
         "operation\tmodelo.spreadsheet.verify",
-        f"profile\t{profile}",
-        f"modelo\t{report.modelo_id}",
-        f"revision\t{report.revision_id}",
-        f"period\t{report.period}",
-        f"year\t{report.filing_year}",
-        f"spreadsheet_url\t{report.spreadsheet_url}",
-        f"verdict\t{report.verdict}",
-        f"aeat_oracle_present\t{report.aeat_oracle_present}",
-        f"computed_count\t{len(report.casillas)}",
-        f"divergence_count\t{len(report.divergences)}",
+        f"profile\t{projection.profile_id}",
+        f"modelo\t{projection.modelo}",
+        f"revision\t{projection.revision}",
+        f"period\t{projection.period.code}",
+        f"year\t{projection.period.filing_year}",
+        f"spreadsheet_url\t{projection.spreadsheet_url}",
+        f"verdict\t{projection.verdict}",
+        f"aeat_oracle_present\t{projection.aeat_oracle_present}",
+        f"computed_count\t{projection.computed_count}",
+        f"divergence_count\t{projection.divergence_count}",
     ]
-    for divergence in report.divergences:
+    for divergence in projection.divergences:
         lines.append(
             f"divergence\t{divergence.casilla_id}\tlocal={divergence.local}"
             f"\tsheets={divergence.sheets}\taeat={divergence.aeat}",
@@ -429,197 +215,94 @@ def modelo_spreadsheet_verify(
     scenario_path: Path | None = None,
 ) -> None:
     """Run a three-way parity check across AEAT oracle, local Decimal runtime, and Sheets."""
-    from ...application.storage.calc_sheets.parity_harness import verify_modelo_parity
-    from ...application.user_profile.capabilities import resolve_active_capability
-    from ...core.capabilities import ServiceCapability
-    from ..adapter_composition import build_calc_sheets_parity_apply_port
-
-    # `verify` creates a Drive spreadsheet and writes cells, so it is a Google
-    # export egress and is gated on the same capability as `export`.
-    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.app.modelo.spreadsheet.push.capability_disabled",
-        )
-
-    active = _resolve_active_profile_or_refuse()
-    credentials, root_folder_id = _resolve_credentials_or_refuse(active)
-
-    with bundled_indexed_authority().operation() as operation:
-        snapshot = load_snapshot(
-            modelo,
-            filing_period_or_refusal(modelo=modelo, period=period, year=year),
-            operation=operation,
-        )
-        scenario = _load_parity_scenario(scenario_path)
-
-        try:
-            report = verify_modelo_parity(
-                snapshot,
-                scenario,
-                credentials=credentials,
-                root_folder_id=root_folder_id,
-                apply_port=build_calc_sheets_parity_apply_port(),
-            )
-        except OutboundStorageError as exc:
-            raise google_refusal(exc) from exc
+    request_period = PublicPeriod.from_period(filing_period_or_refusal(modelo=modelo, period=period, year=year))
+    projection = verify_modelo_spreadsheet(
+        ctx,
+        modelo=modelo,
+        period=request_period,
+        scenario_path=scenario_path,
+    )
     emit_envelope(
         ctx,
         command="modelo.spreadsheet.verify",
-        result=_verify_result(active, report),
-        lines=tuple(_verify_lines(active, report)),
+        result=_verify_result(projection),
+        lines=tuple(_verify_lines(projection)),
     )
 
 
-def _populated_pull_edits(
-    result: PullResult,
-) -> tuple[list[OperatorEdit], list[BindingEdit], list[RelationEdit], list[RowSetEdit]]:
-    """Select populated edit families while leaving the adapter result immutable."""
-    return (
-        [edit for edit in result.operator_edits if edit.value is not None],
-        [edit for edit in result.binding_edits if edit.value is not None],
-        [edit for edit in result.relation_edits if edit.value is not None],
-        [row_set for row_set in result.row_set_edits if row_set.cells],
-    )
-
-
-def _pull_metadata_payload(result: PullResult) -> dict[str, object]:
-    """Project the adapter's workbook metadata into the public pull payload."""
-    return {
-        "modelo_id": result.metadata.modelo_id,
-        "revision_id": result.metadata.revision_id,
-        "filing_year": result.metadata.filing_year,
-        "period": result.metadata.period,
-        "engine_version": result.metadata.engine_version,
-        "registry_sha": result.metadata.registry_sha,
-        "exported_at": result.metadata.exported_at,
-    }
-
-
-def _pull_operator_payload(edits: list[OperatorEdit]) -> list[dict[str, object]]:
-    """Project populated operator casilla edits into typed-boundary rows."""
-    return [
-        {
-            "casilla_id": edit.casilla_id,
-            "label": edit.label,
-            "value": str(edit.value) if edit.value is not None else None,
-        }
-        for edit in edits
-    ]
-
-
-def _pull_binding_payload(edits: list[BindingEdit]) -> list[dict[str, object]]:
-    """Project populated numeric/enum binding edits into boundary rows."""
-    return [{"binding": edit.binding, "value": str(edit.value) if edit.value is not None else None} for edit in edits]
-
-
-def _pull_relation_payload(edits: list[RelationEdit]) -> list[ModeloSpreadsheetPullRelationEditPayload]:
-    """Project populated relation edits with their adapter-provided grounding."""
-    return [ModeloSpreadsheetPullRelationEditPayload.model_validate(relation_edit_payload(edit)) for edit in edits]
-
-
-def _pull_row_set_payload(row_sets: list[RowSetEdit]) -> list[dict[str, object]]:
-    """Project populated row-set cells without changing their coordinates."""
-    return [
-        {
-            "grouping": row_set.grouping,
-            "cells": [
-                {
-                    "binding": cell.binding,
-                    "row_index": cell.row_index,
-                    "value": str(cell.value) if cell.value is not None else None,
-                }
-                for cell in row_set.cells
-            ],
-        }
-        for row_set in row_sets
-    ]
-
-
-def _pull_result(
-    *,
-    active: str,
-    snapshot: RegistrySnapshot,
-    result: PullResult,
-    populated_operator: list[OperatorEdit],
-    populated_bindings: list[BindingEdit],
-    populated_relations: list[RelationEdit],
-    populated_row_sets: list[RowSetEdit],
-    row_set_cells_total: int,
-    assembled_groupings: list[dict[str, object]],
-    assembled_observation_count: int,
-) -> ModeloSpreadsheetPullResult:
-    """Build and validate the public pull result from canonical adapter records."""
+def _pull_result(projection: ModeloSpreadsheetPullProjection) -> ModeloSpreadsheetPullResult:
+    """Project the worker's complete pull facts into the established CLI schema."""
     payload: dict[str, object] = {
         "operation": "modelo.spreadsheet.pull",
-        "profile": active,
-        "modelo": snapshot.modelo.id,
-        "revision": snapshot.revision.id,
-        "period": snapshot.period,
-        "year": snapshot.filing_year,
-        "spreadsheet_id": result.spreadsheet_id,
-        "metadata_match": result.metadata_match,
-        "metadata": _pull_metadata_payload(result),
-        "cells_read": result.cells_read,
-        "operator_edits_total": len(result.operator_edits),
-        "operator_edits_populated": len(populated_operator),
-        "binding_edits_populated": len(populated_bindings),
-        "relation_edits_populated": len(populated_relations),
-        "operator_edits": _pull_operator_payload(populated_operator),
-        "binding_edits": _pull_binding_payload(populated_bindings),
-        "relation_edits": _pull_relation_payload(populated_relations),
-        "row_set_edits_populated": len(populated_row_sets),
-        "row_set_cells_populated": row_set_cells_total,
-        "assembled_groupings": assembled_groupings,
-        "assembled_observation_count": assembled_observation_count,
-        "row_set_edits": _pull_row_set_payload(populated_row_sets),
+        "profile": str(projection.profile_id),
+        "modelo": str(projection.modelo),
+        "revision": str(projection.revision),
+        "period": projection.period.code,
+        "year": projection.period.filing_year,
+        "spreadsheet_id": projection.spreadsheet_id,
+        "metadata_match": projection.metadata_match,
+        "metadata": projection.metadata.model_dump(mode="json"),
+        "cells_read": projection.cells_read,
+        "operator_edits_total": projection.operator_edits_total,
+        "operator_edits_populated": projection.operator_edits_populated,
+        "binding_edits_populated": projection.binding_edits_populated,
+        "relation_edits_populated": projection.relation_edits_populated,
+        "operator_edits": [edit.model_dump(mode="json") for edit in projection.operator_edits],
+        "binding_edits": [edit.model_dump(mode="json") for edit in projection.binding_edits],
+        "relation_edits": [
+            ModeloSpreadsheetPullRelationEditPayload.model_validate(edit.model_dump(mode="json"))
+            for edit in projection.relation_edits
+        ],
+        "row_set_edits_populated": projection.row_set_edits_populated,
+        "row_set_cells_populated": projection.row_set_cells_populated,
+        "assembled_groupings": [
+            {
+                "grouping": group.grouping,
+                "source_kind": group.source_kind,
+                "observation_count": group.observation_count,
+                "observations": [observation.model_dump(mode="json") for observation in group.observations],
+            }
+            for group in projection.assembled_groupings
+        ],
+        "assembled_observation_count": projection.assembled_observation_count,
+        "row_set_edits": [row_set.model_dump(mode="json") for row_set in projection.row_set_edits],
     }
     return ModeloSpreadsheetPullResult.model_validate(payload)
 
 
-def _pull_lines(
-    *,
-    active: str,
-    snapshot: RegistrySnapshot,
-    result: PullResult,
-    populated_operator: list[OperatorEdit],
-    populated_bindings: list[BindingEdit],
-    populated_relations: list[RelationEdit],
-    populated_row_sets: list[RowSetEdit],
-    row_set_cells_total: int,
-    assembled_groupings: list[dict[str, object]],
-) -> list[str]:
-    """Render the stable tabular projection of a workbook pull."""
+def _pull_lines(projection: ModeloSpreadsheetPullProjection) -> list[str]:
+    """Render the established stable tabular projection of a workbook pull."""
     lines: list[str] = [
         "operation\tmodelo.spreadsheet.pull",
-        f"profile\t{active}",
-        f"modelo\t{snapshot.modelo.id}",
-        f"revision\t{snapshot.revision.id}",
-        f"period\t{snapshot.period}",
-        f"year\t{snapshot.filing_year}",
-        f"spreadsheet_id\t{result.spreadsheet_id}",
-        f"metadata_match\t{result.metadata_match}",
-        f"metadata.modelo_id\t{result.metadata.modelo_id}",
-        f"metadata.revision_id\t{result.metadata.revision_id}",
-        f"metadata.registry_sha\t{result.metadata.registry_sha}",
-        f"cells_read\t{result.cells_read}",
-        f"operator_edits_populated\t{len(populated_operator)}",
-        f"binding_edits_populated\t{len(populated_bindings)}",
-        f"relation_edits_populated\t{len(populated_relations)}",
-        f"row_set_edits_populated\t{len(populated_row_sets)}",
-        f"row_set_cells_populated\t{row_set_cells_total}",
+        f"profile\t{projection.profile_id}",
+        f"modelo\t{projection.modelo}",
+        f"revision\t{projection.revision}",
+        f"period\t{projection.period.code}",
+        f"year\t{projection.period.filing_year}",
+        f"spreadsheet_id\t{projection.spreadsheet_id}",
+        f"metadata_match\t{projection.metadata_match}",
+        f"metadata.modelo_id\t{projection.metadata.modelo_id}",
+        f"metadata.revision_id\t{projection.metadata.revision_id}",
+        f"metadata.registry_sha\t{projection.metadata.registry_sha}",
+        f"cells_read\t{projection.cells_read}",
+        f"operator_edits_populated\t{projection.operator_edits_populated}",
+        f"binding_edits_populated\t{projection.binding_edits_populated}",
+        f"relation_edits_populated\t{projection.relation_edits_populated}",
+        f"row_set_edits_populated\t{projection.row_set_edits_populated}",
+        f"row_set_cells_populated\t{projection.row_set_cells_populated}",
     ]
-    for edit in populated_operator:
+    for edit in projection.operator_edits:
         lines.append(f"casilla_id\t{edit.casilla_id}\t{edit.value}\t{edit.label}")
-    for edit in populated_bindings:
+    for edit in projection.binding_edits:
         lines.append(f"binding\t{edit.binding}\t{edit.value}")
-    for edit in populated_relations:
+    for edit in projection.relation_edits:
         lines.append(f"relation\t{edit.relation}\t{edit.value}")
-    for row_set in populated_row_sets:
+    for row_set in projection.row_set_edits:
         for cell in row_set.cells:
             lines.append(f"row_set\t{row_set.grouping}\t{cell.row_index}\t{cell.binding}\t{cell.value}")
-    for assembled in assembled_groupings:
+    for assembled in projection.assembled_groupings:
         lines.append(
-            f"assembled\t{assembled['grouping']}\t{assembled['source_kind']}\t{assembled['observation_count']}",
+            f"assembled\t{assembled.grouping}\t{assembled.source_kind}\t{assembled.observation_count}",
         )
     return lines
 
@@ -633,124 +316,60 @@ def modelo_spreadsheet_pull(
     assemble_observations: bool = False,
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records."""
-    with bundled_indexed_authority().operation() as operation:
-        active, snapshot, result = _pull_operator_edits_for_command(
-            modelo=modelo,
-            period=period,
-            year=year,
-            spreadsheet_id=spreadsheet_id,
-            operation=operation,
-        )
-
-    populated_operator, populated_bindings, populated_relations, populated_row_sets = _populated_pull_edits(result)
-    row_set_cells_total = sum(len(rs.cells) for rs in populated_row_sets)
-
-    assembled_groupings, assembled_observation_count = _assemble_pull_observations(
-        populated_row_sets=populated_row_sets,
-        snapshot=snapshot,
-        enabled=assemble_observations,
+    request_period = PublicPeriod.from_period(filing_period_or_refusal(modelo=modelo, period=period, year=year))
+    projection = pull_modelo_spreadsheet(
+        ctx,
+        modelo=modelo,
+        period=request_period,
+        spreadsheet_id=spreadsheet_id,
+        assemble_observations=assemble_observations,
     )
-
     emit_envelope(
         ctx,
         command="modelo.spreadsheet.pull",
-        result=_pull_result(
-            active=active,
-            snapshot=snapshot,
-            result=result,
-            populated_operator=populated_operator,
-            populated_bindings=populated_bindings,
-            populated_relations=populated_relations,
-            populated_row_sets=populated_row_sets,
-            row_set_cells_total=row_set_cells_total,
-            assembled_groupings=assembled_groupings,
-            assembled_observation_count=assembled_observation_count,
-        ),
-        lines=tuple(
-            _pull_lines(
-                active=active,
-                snapshot=snapshot,
-                result=result,
-                populated_operator=populated_operator,
-                populated_bindings=populated_bindings,
-                populated_relations=populated_relations,
-                populated_row_sets=populated_row_sets,
-                row_set_cells_total=row_set_cells_total,
-                assembled_groupings=assembled_groupings,
-            ),
-        ),
+        result=_pull_result(projection),
+        lines=tuple(_pull_lines(projection)),
     )
 
 
-def _computed_casilla_entries(
-    calculation: RegistryCalculationResult,
-) -> list[ModeloSpreadsheetCalculateCasillaPayload]:
-    """Project registry calculation entries into the public compute schema."""
-    return [
-        ModeloSpreadsheetCalculateCasillaPayload(
-            casilla_id=entry.target_casilla_id,
-            value=str(entry.value),
-            formula_id=entry.formula_id,
-            legal_refs=tuple(entry.legal_refs),
-            source_refs=tuple(entry.source_refs),
-        )
-        for entry in calculation.entries
-    ]
-
-
-def _calculate_result(
-    *,
-    active: str,
-    snapshot: RegistrySnapshot,
-    result: PullResult,
-    populated_operator: list[OperatorEdit],
-    populated_bindings: list[BindingEdit],
-    populated_relations: list[RelationEdit],
-    computed: list[ModeloSpreadsheetCalculateCasillaPayload],
-) -> ModeloSpreadsheetCalculateResult:
-    """Build the typed compute result from canonical pull and engine records."""
+def _calculate_result(projection: ModeloSpreadsheetCalculateProjection) -> ModeloSpreadsheetCalculateResult:
+    """Build the typed compute result from the canonical worker projection."""
     return ModeloSpreadsheetCalculateResult(
-        profile=active,
-        modelo=snapshot.modelo.id,
-        revision=snapshot.revision.id,
-        period=snapshot.period,
-        year=snapshot.filing_year,
-        spreadsheet_id=result.spreadsheet_id,
-        metadata_match=result.metadata_match,
-        cells_read=result.cells_read,
-        operator_edits_populated=len(populated_operator),
-        binding_edits_populated=len(populated_bindings),
-        relation_edits_populated=len(populated_relations),
-        computed=computed,
+        profile=str(projection.profile_id),
+        modelo=str(projection.modelo),
+        revision=str(projection.revision),
+        period=projection.period.code,
+        year=projection.period.filing_year,
+        spreadsheet_id=projection.spreadsheet_id,
+        metadata_match=projection.metadata_match,
+        cells_read=projection.cells_read,
+        operator_edits_populated=projection.operator_edits_populated,
+        binding_edits_populated=projection.binding_edits_populated,
+        relation_edits_populated=projection.relation_edits_populated,
+        computed=[
+            ModeloSpreadsheetCalculateCasillaPayload.model_validate(entry.model_dump(mode="json"))
+            for entry in projection.computed
+        ],
     )
 
 
-def _calculate_lines(
-    *,
-    active: str,
-    snapshot: RegistrySnapshot,
-    result: PullResult,
-    populated_operator: list[OperatorEdit],
-    populated_bindings: list[BindingEdit],
-    populated_relations: list[RelationEdit],
-    computed: list[ModeloSpreadsheetCalculateCasillaPayload],
-) -> list[str]:
+def _calculate_lines(projection: ModeloSpreadsheetCalculateProjection) -> list[str]:
     """Render the stable tabular projection of a workbook calculation."""
     lines: list[str] = [
         "operation\tmodelo.spreadsheet.calculate",
-        f"profile\t{active}",
-        f"modelo\t{snapshot.modelo.id}",
-        f"revision\t{snapshot.revision.id}",
-        f"period\t{snapshot.period}",
-        f"year\t{snapshot.filing_year}",
-        f"spreadsheet_id\t{result.spreadsheet_id}",
-        f"metadata_match\t{result.metadata_match}",
-        f"cells_read\t{result.cells_read}",
-        f"operator_edits_populated\t{len(populated_operator)}",
-        f"binding_edits_populated\t{len(populated_bindings)}",
-        f"relation_edits_populated\t{len(populated_relations)}",
+        f"profile\t{projection.profile_id}",
+        f"modelo\t{projection.modelo}",
+        f"revision\t{projection.revision}",
+        f"period\t{projection.period.code}",
+        f"year\t{projection.period.filing_year}",
+        f"spreadsheet_id\t{projection.spreadsheet_id}",
+        f"metadata_match\t{projection.metadata_match}",
+        f"cells_read\t{projection.cells_read}",
+        f"operator_edits_populated\t{projection.operator_edits_populated}",
+        f"binding_edits_populated\t{projection.binding_edits_populated}",
+        f"relation_edits_populated\t{projection.relation_edits_populated}",
     ]
-    for entry in computed:
+    for entry in projection.computed:
         lines.append(f"computed\t{entry.casilla_id}\t{entry.value}\t{entry.formula_id}")
     return lines
 
@@ -763,91 +382,19 @@ def modelo_spreadsheet_calculate(
     spreadsheet_id: str,
 ) -> None:
     """Compute casilla values from a workbook's operator edits; persist nothing."""
-    from ...adapters.outbound.google.calc_sheets_pull import compute_from_pull
-
-    with bundled_indexed_authority().operation() as operation:
-        active, snapshot, result = _pull_operator_edits_for_command(
-            modelo=modelo,
-            period=period,
-            year=year,
-            spreadsheet_id=spreadsheet_id,
-            operation=operation,
-        )
-
-    if result.metadata_match != "matches":
-        raise CliRefusedBoundaryError(
-            translated_message="cli.app.modelo.spreadsheet.compute.refused_stale",
-            context={"metadata_match": result.metadata_match},
-        )
-
-    try:
-        calc = compute_from_pull(snapshot, result)
-    except OutboundStorageError as exc:
-        raise google_refusal(exc) from exc
-
-    computed_casilla_entries = _computed_casilla_entries(calc)
-    populated_operator, populated_bindings, populated_relations, _ = _populated_pull_edits(result)
+    request_period = PublicPeriod.from_period(filing_period_or_refusal(modelo=modelo, period=period, year=year))
+    projection = calculate_modelo_spreadsheet(
+        ctx,
+        modelo=modelo,
+        period=request_period,
+        spreadsheet_id=spreadsheet_id,
+    )
     emit_envelope(
         ctx,
         command="modelo.spreadsheet.calculate",
-        result=_calculate_result(
-            active=active,
-            snapshot=snapshot,
-            result=result,
-            populated_operator=populated_operator,
-            populated_bindings=populated_bindings,
-            populated_relations=populated_relations,
-            computed=computed_casilla_entries,
-        ),
-        lines=tuple(
-            _calculate_lines(
-                active=active,
-                snapshot=snapshot,
-                result=result,
-                populated_operator=populated_operator,
-                populated_bindings=populated_bindings,
-                populated_relations=populated_relations,
-                computed=computed_casilla_entries,
-            ),
-        ),
+        result=_calculate_result(projection),
+        lines=tuple(_calculate_lines(projection)),
     )
-
-
-def _assemble_pull_observations(
-    *,
-    populated_row_sets: list[RowSetEdit],
-    snapshot: RegistrySnapshot,
-    enabled: bool,
-) -> tuple[list[dict[str, object]], int]:
-    """Guarded whole-pull assembly of the operator row-set blocks.
-
-    The worksheet ingress guard is applied once over every populated block, so
-    a block claiming a row coordinate an earlier block already owns is refused
-    rather than silently overwriting part of a declared figure.  Per-block
-    validation could not observe that cross-block collision.
-    """
-    if not enabled:
-        return [], 0
-    from ...application.storage.calc_sheets.row_set_assembly import assemble_row_sets_for_snapshot
-
-    try:
-        assembled = assemble_row_sets_for_snapshot(populated_row_sets, snapshot)
-    except (OutboundStorageError, RegistryValidationError) as exc:
-        raise google_refusal(exc) from exc
-
-    groupings: list[dict[str, object]] = []
-    total = 0
-    for row_set, (source_kind, observations) in zip(populated_row_sets, assembled, strict=True):
-        total += len(observations)
-        groupings.append(
-            {
-                "grouping": row_set.grouping,
-                "source_kind": source_kind,
-                "observation_count": len(observations),
-                "observations": [obs.model_dump(mode="json") for obs in observations],
-            },
-        )
-    return groupings, total
 
 
 __all__ = [

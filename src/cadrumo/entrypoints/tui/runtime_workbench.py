@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from .navigation import TuiDestinationCatalogueV1
     from .profile.overview import ProfileManagerScreen
     from .runtime_access_management import RecoveryClientOpener
+    from .secret.automation_requester import HumanAutomationRequesterFactory
 
 
 def _action(action_id: str) -> ActionReference:
@@ -78,6 +79,7 @@ class RuntimeWorkbenchRoot:
         profile_label: str,
         output_language: OutputLanguage,
         open_recovery_client: RecoveryClientOpener,
+        requester_factory: HumanAutomationRequesterFactory | None = None,
     ) -> None:
         """Pin a TUI client and its explicit capture language without performing I/O."""
         if client.frontend is not OperationFrontendProjection.TUI:
@@ -86,6 +88,7 @@ class RuntimeWorkbenchRoot:
         self._profile_id, self._session_id = client.profile_id, client.session_id
         self._label, self._language = profile_label, output_language
         self._open_recovery_client = open_recovery_client
+        self._requester_factory = requester_factory
 
     def _require_binding(self) -> None:
         try:
@@ -265,6 +268,7 @@ class RuntimeWorkbenchRoot:
                 self._client,
                 profile=profile,
                 open_recovery_client=self._open_recovery_client,
+                requester_factory=self._requester_factory,
                 onboarding_pending=capture.profile.setup_state is ProfileSetupState.INCOMPLETE,
             ),
         )

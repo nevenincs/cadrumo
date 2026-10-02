@@ -6,6 +6,7 @@ import asyncio
 import socket
 import sys
 import tempfile
+import threading
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -13,13 +14,21 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.contracts import (
+    RuntimeByteChannel,
+    RuntimeClientHello,
+    RuntimePeer,
+    RuntimeRefusalCode,
+    RuntimeRefusalError,
+)
 from cadrumo.application.runtime.management import (
     RuntimeManagerInspection,
     RuntimeManagerKind,
     RuntimeManagerProcessState,
 )
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 
+from ..framing import RuntimeTransportCleanup
 from ..posix import PosixRuntimeEndpoint
 from ..startup import RuntimeLaunchDoor
 from ..windows import WindowsRuntimeEndpoint
@@ -268,3 +277,89 @@ async def test_cancelled_handshake_closes_late_connection_without_stopping_owner
                 opening.cancel()
                 with pytest.raises(asyncio.CancelledError):
                     await opening
+
+
+class _FailOnceNativeChannel:
+    """Preserve real native I/O while refusing the first owned release."""
+
+    def __init__(self, channel: RuntimeByteChannel) -> None:
+        self.channel = channel
+        self.close_calls = 0
+        self.close_threads: list[int] = []
+        self.released = False
+
+    @property
+    def peer(self) -> RuntimePeer:
+        return self.channel.peer
+
+    def read_exact(self, count: int, *, deadline: float) -> bytes:
+        return self.channel.read_exact(count, deadline=deadline)
+
+    def read_ready(self) -> bool:
+        return self.channel.read_ready()
+
+    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
+        self.channel.write_all(payload, deadline=deadline)
+
+    def close(self) -> None:
+        if self.released:
+            return
+        self.close_threads.append(threading.get_ident())
+        self.close_calls += 1
+        if self.close_calls == 1:
+            raise OSError("synthetic native close failure")
+        self.channel.close()
+        self.released = True
+
+
+class _FaultEndpoint:
+    def __init__(self, endpoint: PosixRuntimeEndpoint | WindowsRuntimeEndpoint) -> None:
+        self.endpoint = endpoint
+        self.channel: _FailOnceNativeChannel | None = None
+
+    @property
+    def storage_identity(self) -> str:
+        return self.endpoint.storage_identity
+
+    def connect(self, *, timeout: float) -> _FailOnceNativeChannel:
+        self.channel = _FailOnceNativeChannel(self.endpoint.connect(timeout=timeout))
+        return self.channel
+
+
+@pytest.mark.asyncio
+async def test_cancelled_native_handshake_failed_close_retains_owner_until_retry(tmp_path: Path) -> None:
+    async with _fixture(tmp_path) as (manager, endpoint):
+        manager.mode = "blocked"
+        await manager.start()
+        fault = _FaultEndpoint(endpoint)
+        opening = asyncio.create_task(RuntimeLaunchDoor(fault, expected=_expected(endpoint), manager=manager).open())
+        try:
+            assert await manager.line() == b"handshake\n"
+            opening.cancel("native handshake cancellation")
+            assert manager.process is not None and manager.process.stdin is not None
+            manager.process.stdin.write(b"release\n")
+            await manager.process.stdin.drain()
+            with pytest.raises(asyncio.CancelledError) as caught:
+                await opening
+            assert caught.value.args == ("native handshake cancellation",)
+            cleanup = caught.value.__dict__.get("async_cleanup_error")
+            assert isinstance(cleanup, AsyncResourceCleanupError)
+            assert fault.channel is not None
+            assert fault.channel.close_calls == 1
+            assert not fault.channel.released
+            assert all(identity != threading.get_ident() for identity in fault.channel.close_threads)
+            await cleanup.retry_cleanup()
+            await cleanup.retry_cleanup()
+            assert fault.channel.close_calls == 2
+            assert fault.channel.released
+            assert await manager.line() == b"late_closed\n"
+            assert manager.process.returncode is None
+        finally:
+            if not opening.done():
+                opening.cancel()
+                with pytest.raises(asyncio.CancelledError):
+                    await opening
+            if fault.channel is not None:
+                await close_async_resources(
+                    RuntimeTransportCleanup(fault.channel), task_name="native-launch-test-close"
+                )

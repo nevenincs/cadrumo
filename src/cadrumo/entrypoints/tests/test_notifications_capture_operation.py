@@ -260,6 +260,7 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
             browser_resources_factory=lambda: cast(Any, resources),
             provider_preflight=provider_preflight,
         ).executor_factory.build()
+        assert isinstance(executor, capture_module.NotificationsCaptureExecutor)
         request = OperationRequest(
             definition_id=NOTIFICATIONS_CAPTURE_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE_ID)),

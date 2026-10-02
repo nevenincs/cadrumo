@@ -6,12 +6,16 @@ Core types:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 
 from pydantic import ValidationError
 
 from ....application.modelo.review_package_signing import ReviewPackageSigningError, ReviewPackageSigningKeypair
-from ....application.modelo.review_package_signing_ports import ReviewPackageSigningKeypairCapability
+from ....application.modelo.review_package_signing_ports import (
+    ReviewPackageSigningKeypairCapability,
+    ReviewPackageSigningKeypairReader,
+)
 from ....core.ed25519_signing import generate_ed25519_keypair_hex
 from ....core.identity.bucket import canonical_bucket_id
 from ....core.time.clock import now as _utc_now
@@ -30,10 +34,17 @@ def _signing_key_object_key(bucket_id: str) -> str:
 class ReviewPackageSigningKeypairAdapter:
     """Concrete signing-keypair capability backed by encrypted storage."""
 
-    def __init__(self, *, repository: SecureObjectRepository, bucket_id: str) -> None:
+    def __init__(
+        self,
+        *,
+        repository: SecureObjectRepository,
+        bucket_id: str,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> None:
         """Bind signing-key storage to one canonical bucket."""
         self._repository = repository
         self._bucket_id = canonical_bucket_id(bucket_id)
+        self._mutation_writer = mutation_writer
 
     def ensure_keypair(
         self,
@@ -74,12 +85,42 @@ class ReviewPackageSigningKeypairAdapter:
                 expected_bucket_id=normalized_bucket_id,
                 mismatch_error=_mismatch_error,
                 write_provenance="adapters.persistence.profile.review_package_signing",
+                mutation_writer=self._mutation_writer,
             )
         except ReviewPackageSigningError:
             raise
         except (OSError, StorageError, TypeError, ValueError, ValidationError) as exc:
             raise ReviewPackageSigningError(
                 "unable to load or persist review-package signing keypair",
+            ) from exc
+
+    def load_keypair(self, *, bucket_id: str) -> ReviewPackageSigningKeypair | None:
+        """Read the bound bucket's existing keypair without minting or writing."""
+        normalized_bucket_id = canonical_bucket_id(bucket_id)
+        if normalized_bucket_id != self._bucket_id:
+            raise ReviewPackageSigningError(
+                "review-package signing capability is bound to a different bucket",
+            )
+        try:
+            existing = self._repository.load(
+                _NAMESPACE.namespace,
+                _signing_key_object_key(normalized_bucket_id),
+                expected_class=_NAMESPACE.sensitivity,
+                max_supported_version=_NAMESPACE.schema_version,
+            )
+            if existing is None:
+                return None
+            keypair = ReviewPackageSigningKeypair.model_validate_json(existing.payload)
+            if keypair.bucket_id != normalized_bucket_id:
+                raise ReviewPackageSigningError(
+                    "stored review-package signing keypair does not belong to the bucket it was read from",
+                )
+            return keypair
+        except ReviewPackageSigningError:
+            raise
+        except (OSError, StorageError, TypeError, ValueError, ValidationError) as exc:
+            raise ReviewPackageSigningError(
+                "unable to load review-package signing keypair",
             ) from exc
 
 
@@ -95,7 +136,20 @@ def build_review_package_signing_keypair_capability(
     )
 
 
+def build_review_package_signing_keypair_reader(
+    *,
+    bucket_id: str,
+) -> ReviewPackageSigningKeypairReader:
+    """Bind read-only signing-keypair access to ``bucket_id``'s secure store."""
+    normalized_bucket_id = canonical_bucket_id(bucket_id)
+    return ReviewPackageSigningKeypairAdapter(
+        repository=secure_object_repository_for_bucket(normalized_bucket_id),
+        bucket_id=normalized_bucket_id,
+    )
+
+
 __all__ = [
     "ReviewPackageSigningKeypairAdapter",
     "build_review_package_signing_keypair_capability",
+    "build_review_package_signing_keypair_reader",
 ]

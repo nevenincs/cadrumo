@@ -391,6 +391,7 @@ def casilla(
 def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
     guard_ceded_autonomic_modelo(modelo)
     typed_period = deps.resolve_year_period(year, period, modelo=modelo)
+    operation = authority_operation(ctx)
     projection = read_modelo_requires(
         ctx,
         ModeloRequiresRequest(
@@ -399,9 +400,11 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
             period=PublicPeriod.from_period(typed_period),
             language=OutputLanguage(output_language()),
         ),
+        expected_authority_generation=operation.generation.logical_generation,
     )
     checklist = to_data_inventory_checklist(projection)
     result = ModeloRequiresResult(
+        authority_generation=projection.authority_generation,
         modelo=checklist.modelo,
         revision=checklist.revision_id,
         filing_year=checklist.filing_year,
@@ -438,6 +441,7 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
         profile_checked=checklist.profile_checked,
     )
     lines = [
+        f"authority_generation\t{projection.authority_generation}",
         f"modelo\t{checklist.modelo}",
         f"revision\t{checklist.revision_id}",
         f"filing_year\t{checklist.filing_year}",
@@ -472,7 +476,7 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
         *discovery_rendering.data_inventory_section_lines("live_observation", checklist.live_observation),
         *discovery_rendering.data_inventory_section_lines("unbucketed_sources", checklist.unbucketed_sources),
     ]
-    notices = discovery_rendering.requires_notices(checklist)
+    notices = discovery_rendering.requires_notices(checklist, operation=operation)
     lines.extend(discovery_rendering.notice_text_lines(notices))
     emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
 
@@ -496,8 +500,11 @@ def bindings_list(
         missing=missing,
         as_of=resolved_as_of,
     )
+    operation = authority_operation(ctx)
     try:
-        projection = read_modelo_bindings_list(ctx, request)
+        projection = read_modelo_bindings_list(
+            ctx, request, expected_authority_generation=operation.generation.logical_generation
+        )
     except CliRefusedBoundaryError as error:
         if (
             modelo is None
@@ -507,7 +514,9 @@ def bindings_list(
             raise
         try:
             catalogue = read_modelo_bindings_list(
-                ctx, ModeloBindingsListRequest(profile_id=profile_id, catalogue_only=True)
+                ctx,
+                ModeloBindingsListRequest(profile_id=profile_id, catalogue_only=True),
+                expected_authority_generation=operation.generation.logical_generation,
             )
         except CliRefusedBoundaryError:
             raise error from None
@@ -550,6 +559,7 @@ def bindings_list(
     if missing:
         text_rows.extend(discovery_rendering.binding_relation_guidance_lines(projection.bindings))
     result = ModeloBindingsListResult(
+        authority_generation=projection.authority_generation,
         modelo_filter=modelo,
         year_filter=year,
         period_filter=period,
@@ -559,6 +569,7 @@ def bindings_list(
     )
     lines = [
         "operation\tregistry.modelo.bindings.list",
+        f"authority_generation\t{projection.authority_generation}",
         f"modelo_filter\t{modelo or '-'}",
         f"year_filter\t{(year if year is not None else '-')}",
         f"period_filter\t{period or '-'}",
@@ -593,8 +604,11 @@ def bindings_resolve(
         as_of=resolved_as_of,
         overrides=tuple(ModeloBindingOverride(binding_id=key, value=value) for key, value in overrides.items()),
     )
+    operation = authority_operation(ctx)
     try:
-        report = read_modelo_bindings_resolve(ctx, request)
+        report = read_modelo_bindings_resolve(
+            ctx, request, expected_authority_generation=operation.generation.logical_generation
+        )
     except CliRefusedBoundaryError as error:
         if (
             not overrides
@@ -612,6 +626,7 @@ def bindings_resolve(
                     period_code=period,
                     as_of=resolved_as_of,
                 ),
+                expected_authority_generation=operation.generation.logical_generation,
             )
         except CliRefusedBoundaryError:
             raise error from None
@@ -630,6 +645,7 @@ def bindings_resolve(
             ) from error
         raise
     result = ModeloBindingsPreviewResult(
+        authority_generation=report.authority_generation,
         modelo=report.modelo,
         revision=report.revision,
         filing_year=report.filing_year,
@@ -657,6 +673,7 @@ def bindings_resolve(
     )
     lines = [
         "operation\tregistry.modelo.bindings.resolve",
+        f"authority_generation\t{report.authority_generation}",
         f"modelo\t{report.modelo}",
         f"revision\t{report.revision}",
         f"filing_year\t{report.filing_year}",

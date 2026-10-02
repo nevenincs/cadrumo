@@ -865,6 +865,15 @@ cli:
           no tiene revisiones VERIFICADO_COMPLETO ni BORRADOR disponibles para comparar.
         no_work_units: No se encontraron unidades de trabajo del Modelo %{modelo}
           para el ejercicio %{filing_year}. Crea y calcula una unidad de trabajo primero.
+        recover_no_revisions: Comprueba las revisiones de cálculo del Modelo %{modelo}
+          en los dos ejercicios solicitados (%{year_a} y %{year_b}); ejecuta `aeat
+          app modelo work calculate` en el ejercicio que carezca de revisión.
+        recover_no_usable_revisions: Comprueba las revisiones BORRADOR o VERIFICADO_COMPLETO
+          del Modelo %{modelo} en los dos ejercicios solicitados (%{year_a} y %{year_b});
+          calcula una unidad de trabajo válida en el ejercicio que lo necesite.
+        recover_no_work_units: Comprueba las unidades de trabajo del Modelo %{modelo}
+          en los dos ejercicios solicitados (%{year_a} y %{year_b}); crea y calcula
+          una unidad en el ejercicio donde falte.
         year_help: Ejercicio fiscal a incluir en la comparación. Especifica exactamente
           dos veces (--year 2024 --year 2025).
       compare_help: Compara las revisiones de cálculo de dos ejercicios para el mismo

@@ -47,6 +47,8 @@ _VENV_PYTHON = Path(sys.executable)
 
 
 def _binding(root: Path) -> RuntimeServiceBinding:
+    if sys.platform != "linux":
+        pytest.skip("requires native Linux user systemd and procfs")
     return RuntimeServiceBinding(
         executable=str(root / "synthetic-runtime"),
         storage_root=str(root),
@@ -57,6 +59,8 @@ def _binding(root: Path) -> RuntimeServiceBinding:
 
 
 def _unit_directory() -> Path:
+    if sys.platform != "linux":
+        pytest.skip("requires native Linux user systemd and procfs")
     home = Path.home()
     directory = home / ".config" / "systemd" / "user"
     for part in (home, home / ".config", home / ".config" / "systemd", directory):
@@ -126,6 +130,8 @@ def _launcher(source: Path) -> str:
 
 @asynccontextmanager
 async def _installed_runtime(root: Path) -> AsyncIterator[tuple[LinuxUserManager, str, RuntimeServiceBinding, Path]]:
+    if sys.platform != "linux":
+        pytest.skip("requires native Linux user systemd and procfs")
     if not root.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()) or root.stat().st_uid != os.getuid():
         raise RuntimeError("synthetic runtime root must be an owner-controlled /tmp directory")
     if not Path("/usr/bin/systemctl").is_file() or not Path("/proc/self/stat").is_file():

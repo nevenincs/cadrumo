@@ -5,13 +5,34 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from textual.app import App
+
 from ...core.errors.hierarchy import CadrumoError
+from .runtime_management import RuntimeManagementCleanup
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
 
     from .account import AccountRecomposeRequiredV1
     from .app import RootBindingV1
+
+
+async def run_runtime_managed_application[ResultT](
+    app: App[ResultT],
+    *,
+    cleanup: RuntimeManagementCleanup,
+    headless: bool,
+    auto_pilot: AutopilotCallbackType | None,
+) -> ResultT | None:
+    """Release actual management owners after Textual's installed runner exits."""
+    primary: BaseException | None = None
+    try:
+        return await app.run_async(headless=headless, auto_pilot=auto_pilot)
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        await cleanup.release(primary_error=primary)
 
 
 async def run_precomposed_runtime_root_session(
@@ -23,7 +44,9 @@ async def run_precomposed_runtime_root_session(
     """Run an admitted root while its caller retains the runtime connection."""
     from .app import CadrumoTuiApp
 
-    return await CadrumoTuiApp(load_root=load_root).run_async(headless=headless, auto_pilot=auto_pilot)
+    cleanup = RuntimeManagementCleanup()
+    app = CadrumoTuiApp(load_root=load_root, runtime_management_cleanup=cleanup)
+    return await run_runtime_managed_application(app, cleanup=cleanup, headless=headless, auto_pilot=auto_pilot)
 
 
 TUI_SELF_TEST_FLAG = "--self-test"
@@ -66,4 +89,5 @@ __all__ = [
     "main",
     "run_module",
     "run_precomposed_runtime_root_session",
+    "run_runtime_managed_application",
 ]

@@ -79,7 +79,7 @@ def _bind(
     submitted: list[tuple[object, dict[str, object]]] = []
 
     def submit(_client: object, request: object, **kwargs: object):
-        submitted.append((request, cast(dict[str, object], kwargs)))
+        submitted.append((request, kwargs))
         return RegisteredOperationCompletion(
             operation_id=_OPERATION_ID,
             projection=projection,

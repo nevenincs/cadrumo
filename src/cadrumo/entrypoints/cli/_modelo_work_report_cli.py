@@ -26,27 +26,20 @@ from ...application.modelo.calculation_report_export import (
     ModeloCalculationReportResult,
 )
 from ...application.modelo.calculation_report_verification import (
-    CalculationSummaryStoreContext,
     CalculationSummaryVerification,
     CalculationSummaryVerificationOutcome,
     verify_calculation_summary,
 )
-from ...application.workflow.persistence import workflow_state_repository
 from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.external_constants import OutputLanguage
+from ...core.hashing import hash_file
 from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ._modelo_behavior_support import require_active_profile
-from ._modelo_cli_support import resolve_explicit_or_active_bucket_id, validate_trusted_public_key
+from ._modelo_cli_support import validate_trusted_public_key
 from ._modelo_payloads import WorkReportResult, WorkReportVerifyResult
-from .common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
-from .state_projection_support import (
-    authority_operation,
-    modelo_export_ports_factory,
-    review_package_signing_keypair_capability_factory,
-)
+from .common import activate_subcommand_output_language, emit_envelope
 
 __all__ = ["work_report", "work_report_verify"]
 
@@ -251,28 +244,34 @@ def work_report_verify(
     trusted_public_key_hex = validate_trusted_public_key(trusted_key)
     if not path.is_file():
         raise typer.BadParameter(tr("cli.app.modelo.work.report_verify.errors.file_not_found", path=str(path)))
-    from ...adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
+    if document_only:
+        from ...adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
 
-    store = None
-    if not document_only:
-        require_active_profile()
-        workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
-        bucket_id = resolve_explicit_or_active_bucket_id(None)
-        store = CalculationSummaryStoreContext(
-            active_bucket_id=bucket_id,
-            export_ports=modelo_export_ports_factory(ctx)(
-                bucket_id=bucket_id,
-                m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-            ),
-            signing_keypair=review_package_signing_keypair_capability_factory(ctx)(bucket_id=bucket_id),
-            operation=authority_operation(ctx),
+        verification = verify_calculation_summary(
+            path.read_bytes(),
+            reader=read_calculation_summary_pdf,
+            trusted_public_key_hex=trusted_public_key_hex,
         )
-    verification = verify_calculation_summary(
-        path.read_bytes(),
-        reader=read_calculation_summary_pdf,
-        trusted_public_key_hex=trusted_public_key_hex,
-        store=store,
-    )
+    else:
+        from ...application.modelo.calculation_report_verification_operation import (
+            ModeloCalculationReportVerificationRequest,
+        )
+        from .runtime_modelo_calculation_report_verify import run_modelo_calculation_report_verify
+        from .runtime_profile_binding import bound_profile_client
+
+        client = bound_profile_client(ctx)
+        source_path = path.resolve()
+        source_sha256, _ = hash_file(source_path)
+        completed = run_modelo_calculation_report_verify(
+            client,
+            ModeloCalculationReportVerificationRequest(
+                profile_id=client.profile_id,
+                source_path=str(source_path),
+                source_sha256=source_sha256,
+                trusted_public_key_hex=trusted_public_key_hex,
+            ),
+        )
+        verification = completed.projection.verification.to_verification()
     emit_envelope(
         ctx,
         command="modelo.work.report_verify",

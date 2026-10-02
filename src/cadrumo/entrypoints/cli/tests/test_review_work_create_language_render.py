@@ -24,6 +24,7 @@ from .clean_install_fixtures import clean_install
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+
 def _rendered(language: str | None) -> str:
     """Return the joined ``review queue`` render for *language*.
 

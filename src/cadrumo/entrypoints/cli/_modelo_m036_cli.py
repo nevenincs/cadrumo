@@ -2,17 +2,11 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import typer
 
-from ...application.modelo.m036_lifecycle import (
-    M036DeclarationAmbiguousError,
-    M036DeclarationCommand,
-    M036DeclarationNotFoundError,
-    M036DeclarationResult,
-    list_m036_declarations,
-    read_m036_declaration,
-    record_m036_declaration,
-)
+from ...application.modelo.m036_operation import M036DeclarationSnapshot
 from ...core.i18n.render import tr
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
@@ -24,10 +18,11 @@ from ._modelo_payloads_m036 import (
     M036DeclarationShowResult,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .state_projection_support import m036_lifecycle_ports_factory
+from .errors import CliRefusedBoundaryError
+from .runtime_modelo_m036 import read_modelo_m036, record_modelo_m036
 
 
-def _declaration_row(declaration: M036DeclarationResult) -> M036DeclarationRowPayload:
+def _declaration_row(declaration: M036DeclarationSnapshot) -> M036DeclarationRowPayload:
     """Project a persisted declaration into its JSON-serialisable row payload."""
     return M036DeclarationRowPayload(
         declaration_id=declaration.declaration_id,
@@ -65,37 +60,33 @@ def record_m036(
                 value=declared_on,
             )
         ) from exc
-    bucket_id = active_bucket_id_or_refuse()
-    command = M036DeclarationCommand(
-        profile_id=bucket_id,
+    profile_id = UUID(active_bucket_id_or_refuse())
+    declaration = record_modelo_m036(
+        ctx,
+        profile_id=profile_id,
         event_kind=event_kind,
         declared_on=parsed_declared_on,
         sede_justificante=sede_justificante,
         note=note,
     )
-    result = record_m036_declaration(
-        command,
-        bucket_id=bucket_id,
-        ports=m036_lifecycle_ports_factory(ctx)(bucket_id=bucket_id),
-    )
     payload = M036DeclarationRecordResult(
-        declaration_id=result.declaration_id,
-        bucket_id=result.bucket_id,
-        profile_id=result.profile_id,
-        event_kind=result.event_kind.value,
-        declared_on=result.declared_on.isoformat(),
-        sede_justificante=result.sede_justificante,
-        recorded_at=result.recorded_at.isoformat(),
+        declaration_id=declaration.declaration_id,
+        bucket_id=declaration.bucket_id,
+        profile_id=declaration.profile_id,
+        event_kind=declaration.event_kind.value,
+        declared_on=declaration.declared_on.isoformat(),
+        sede_justificante=declaration.sede_justificante,
+        recorded_at=declaration.recorded_at.isoformat(),
     )
     lines = [
-        f"declaration_id\t{result.declaration_id}",
-        f"event_kind\t{result.event_kind.value}",
-        f"declared_on\t{result.declared_on.isoformat()}",
-        f"recorded_at\t{result.recorded_at.isoformat()}",
+        f"declaration_id\t{declaration.declaration_id}",
+        f"event_kind\t{declaration.event_kind.value}",
+        f"declared_on\t{declaration.declared_on.isoformat()}",
+        f"recorded_at\t{declaration.recorded_at.isoformat()}",
     ]
-    if result.sede_justificante is not None:
-        lines.append(f"sede_justificante\t{result.sede_justificante}")
-    emit_envelope(ctx, command=f"modelo.m036.{result.event_kind.value}", result=payload, lines=lines)
+    if declaration.sede_justificante is not None:
+        lines.append(f"sede_justificante\t{declaration.sede_justificante}")
+    emit_envelope(ctx, command=f"modelo.m036.{declaration.event_kind.value}", result=payload, lines=lines)
 
 
 def m036_alta(
@@ -155,10 +146,12 @@ def m036_baja(
 def m036_list(ctx: typer.Context) -> None:
     """List the active profile's recorded M036 declarations."""
     require_active_profile()
-    bucket_id = active_bucket_id_or_refuse()
-    declarations = list_m036_declarations(
-        bucket_id=bucket_id,
-        ports=m036_lifecycle_ports_factory(ctx)(bucket_id=bucket_id),
+    profile_id = UUID(active_bucket_id_or_refuse())
+    bucket_id = str(profile_id)
+    declarations = read_modelo_m036(
+        ctx,
+        profile_id=profile_id,
+        kind="list",
     )
     result = M036DeclarationListResult(
         bucket_id=bucket_id,
@@ -192,20 +185,33 @@ def m036_list(ctx: typer.Context) -> None:
 def m036_view(ctx: typer.Context, declaration_id: str) -> None:
     """View one recorded M036 declaration in full."""
     require_active_profile()
-    bucket_id = active_bucket_id_or_refuse()
+    profile_id = UUID(active_bucket_id_or_refuse())
     try:
-        declaration = read_m036_declaration(
-            declaration_id,
-            bucket_id=bucket_id,
-            ports=m036_lifecycle_ports_factory(ctx)(bucket_id=bucket_id),
+        declarations = read_modelo_m036(
+            ctx,
+            profile_id=profile_id,
+            kind="view",
+            declaration_id=declaration_id,
         )
-    except (M036DeclarationNotFoundError, M036DeclarationAmbiguousError) as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.m036.errors.declaration_not_found",
-                value=declaration_id,
-            )
-        ) from exc
+    except CliRefusedBoundaryError as exc:
+        context = exc.context
+        expected_refusal = {
+            "REFUSED_M036_DECLARATION_NOT_FOUND",
+            "REFUSED_M036_DECLARATION_AMBIGUOUS",
+        }
+        if (
+            context is None
+            or context.get("reason") not in expected_refusal
+            or context.get("refusal_code") != context.get("reason")
+            or context.get("terminal_condition") != "refused"
+            or context.get("effect") != "none"
+        ):
+            raise
+        raise CliRefusedBoundaryError(
+            translated_message="cli.app.modelo.m036.errors.declaration_not_found",
+            context={**context, "value": declaration_id},
+        ) from None
+    declaration = declarations[0]
     result = M036DeclarationShowResult(
         declaration_id=declaration.declaration_id,
         bucket_id=declaration.bucket_id,

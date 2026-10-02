@@ -17,7 +17,7 @@ from ....core.classification.policies import SensitivityClass
 from ....core.time.clock import now, today_madrid
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ._overview_native_support import invoke_native_overview
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
 pytestmark = [
     pytest.mark.integration,

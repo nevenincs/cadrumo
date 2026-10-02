@@ -22,7 +22,7 @@ from ...core.i18n.render import tr
 from ...core.time.clock import now
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from .components.theme import BASE_CSS, install_cadrumo_themes, tokenised
-from .runtime_management import RuntimeManagementScreen
+from .runtime_management import RuntimeManagementCleanup, RuntimeManagementScreen
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 
 _STATUS_INTERVAL_SECONDS = 10.0
@@ -42,6 +42,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         *,
         profile_label: str,
         requester_factory: RestrictedRequesterFactory | None = None,
+        runtime_management_cleanup: RuntimeManagementCleanup | None = None,
     ) -> None:
         """Pin the caller-owned TUI connection without taking ownership of close."""
         super().__init__()
@@ -52,6 +53,9 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         self._session_id: UUID = client.session_id
         self._profile_label = profile_label
         self._requester_factory = requester_factory
+        self._runtime_management_cleanup = (
+            RuntimeManagementCleanup() if runtime_management_cleanup is None else runtime_management_cleanup
+        )
         self._cleared = False
         self._locking = False
         self._reading = False
@@ -60,13 +64,15 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
     def compose(self) -> ComposeResult:
         with VerticalScroll():
             yield Static(tr("tui.restricted.title"), id="restricted-title")
-            yield Static("", id="restricted-profile")
-            yield Static("", id="restricted-session-expiry")
-            yield Static("", id="restricted-grant")
-            yield Static("", id="restricted-operations")
-            yield Static("", id="restricted-actions")
-            yield Static("", id="restricted-periods")
-            yield Static("", id="restricted-availability")
+            yield Static("", id="restricted-profile", markup=False)
+            yield Static("", id="restricted-session-expiry", markup=False)
+            yield Static("", id="restricted-grant", markup=False)
+            yield Static("", id="restricted-operations", markup=False)
+            yield Static("", id="restricted-actions", markup=False)
+            yield Static("", id="restricted-disclosures", markup=False)
+            yield Static("", id="restricted-delegation", markup=False)
+            yield Static("", id="restricted-periods", markup=False)
+            yield Static("", id="restricted-availability", markup=False)
             with Horizontal():
                 if self._requester_factory is not None:
                     yield Button(tr("tui.automation_request.title"), id="restricted-request-access")
@@ -144,6 +150,21 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         empty = tr("tui.restricted.none")
         operations = ", ".join(sorted(str(item) for item in scope.operations)) or empty
         actions = ", ".join(sorted(item.value for item in scope.actions)) or empty
+        disclosures = (
+            ", ".join(
+                f"{permission.destination_id}/{permission.projection_id}/{permission.category.value}"
+                for permission in sorted(
+                    scope.disclosures,
+                    key=lambda permission: (
+                        str(permission.destination_id),
+                        str(permission.projection_id),
+                        permission.category.value,
+                    ),
+                )
+            )
+            or empty
+        )
+        delegation = tr("tui.restricted.yes") if scope.allow_delegation else tr("tui.restricted.no")
         periods = (
             tr("tui.restricted.all_periods")
             if scope.periods is None
@@ -166,6 +187,12 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         )
         self.query_one("#restricted-operations", Static).update(tr("tui.restricted.operations", values=operations))
         self.query_one("#restricted-actions", Static).update(tr("tui.restricted.actions", values=actions))
+        self.query_one("#restricted-disclosures", Static).update(
+            f"{tr('tui.automation_inventory.disclosures')}: {disclosures}"
+        )
+        self.query_one("#restricted-delegation", Static).update(
+            f"{tr('tui.automation_inventory.delegation')}: {delegation}"
+        )
         self.query_one("#restricted-periods", Static).update(
             tr(
                 "tui.restricted.periods",
@@ -190,6 +217,8 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             "#restricted-grant",
             "#restricted-operations",
             "#restricted-actions",
+            "#restricted-disclosures",
+            "#restricted-delegation",
             "#restricted-periods",
             "#restricted-availability",
         ):
@@ -256,7 +285,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
     def _runtime_status_pressed(self) -> None:
         """Inspect the passive runtime manager independently of API authority."""
         if not self._locking:
-            self.push_screen(RuntimeManagementScreen())
+            self.push_screen(RuntimeManagementScreen(cleanup=self._runtime_management_cleanup))
 
     def action_leave(self) -> None:
         """Leave normally without revoking another authority or closing the client."""

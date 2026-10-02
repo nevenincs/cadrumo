@@ -17,8 +17,8 @@ from .._bienes_inversion_payloads import (
     BienInversionDisposalPayload,
     BienInversionRecordPayload,
 )
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

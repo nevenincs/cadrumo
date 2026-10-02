@@ -121,6 +121,7 @@ def test_bridge_rejects_nonsettled_receipt_and_scope_mismatch(monkeypatch: pytes
     _bind(monkeypatch, refused_completion, submitted)
     with pytest.raises(CliRefusedBoundaryError) as refused:
         _invoke(work_unit_id=_WORK_A)
+    assert refused.value.context is not None
     assert refused.value.context["reason"] == "runtime_invalid_frame"
 
     invalid_projection = ModeloReconciliationListProjection.model_construct(
@@ -141,6 +142,7 @@ def test_bridge_rejects_nonsettled_receipt_and_scope_mismatch(monkeypatch: pytes
     )
     with pytest.raises(CliRefusedBoundaryError) as scope_refused:
         _invoke(work_unit_id=_WORK_A)
+    assert scope_refused.value.context is not None
     assert scope_refused.value.context["reason"] == "runtime_invalid_frame"
 
     foreign_profile_projection = ModeloReconciliationListProjection.model_construct(
@@ -161,6 +163,7 @@ def test_bridge_rejects_nonsettled_receipt_and_scope_mismatch(monkeypatch: pytes
     )
     with pytest.raises(CliRefusedBoundaryError) as profile_refused:
         _invoke(work_unit_id=_WORK_A)
+    assert profile_refused.value.context is not None
     assert profile_refused.value.context["reason"] == "runtime_invalid_frame"
 
 
@@ -178,6 +181,7 @@ def test_bridge_rejects_mutating_effect(monkeypatch: pytest.MonkeyPatch) -> None
     )
     with pytest.raises(CliRefusedBoundaryError) as refused:
         _invoke()
+    assert refused.value.context is not None
     assert refused.value.context["reason"] == "runtime_invalid_frame"
 
 
@@ -196,4 +200,5 @@ def test_bridge_rejects_success_receipt_with_refusal_code(monkeypatch: pytest.Mo
     )
     with pytest.raises(CliRefusedBoundaryError) as refused:
         _invoke()
+    assert refused.value.context is not None
     assert refused.value.context["reason"] == "runtime_invalid_frame"

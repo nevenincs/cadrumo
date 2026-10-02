@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -29,12 +30,12 @@ from ....application.ledger.evidence_mutation_operation import (
     build_ledger_evidence_remove_definition,
     build_ledger_evidence_update_definition,
 )
-from ....application.ledger.evidence_ports import LedgerEvidencePorts, PurchaseInvoiceEvidenceRepositoryProtocol
+from ....application.ledger.evidence_ports import LedgerEvidencePorts
 from ....application.operations.models import OperationRequest
 from ....application.operations.owner import OperationExecutorContext
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
-from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from .unused_repository_ports import UnusedBucketEventRepository, UnusedEvidenceAttachmentIngestor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -116,29 +117,23 @@ async def test_update_effect_is_unknown_before_guarded_mutation_and_updated_afte
         def load_revisioned(self, *, bucket_id: str) -> tuple[tuple[PurchaseInvoiceEvidence, ...], str]:
             return self.load(bucket_id=bucket_id), "0" * 64
 
+        def save(self, *, bucket_id: str, records: Sequence[PurchaseInvoiceEvidence]) -> None:
+            raise AssertionError("the fake service update owns its test result")
+
         def save_if_revision_with_secure_object_writes(
             self,
             *,
             bucket_id: str,
-            records: tuple[PurchaseInvoiceEvidence, ...],
+            records: Sequence[PurchaseInvoiceEvidence],
             expected_revision_id: str,
             extra_writes: tuple[SecureObjectWrite, ...],
         ) -> None:
             raise AssertionError("the fake service update owns its test result")
 
-    class EventRepository:
-        secure_object_repository = backend
-
-        def load_revisioned(self):
-            return object(), "0" * 64
-
-    ports = cast(
-        LedgerEvidencePorts,
-        SimpleNamespace(
-            evidence_repository=cast(PurchaseInvoiceEvidenceRepositoryProtocol, EvidenceRepository()),
-            attachment_ingestor=object(),
-            bucket_event_repository=cast(BucketEventHistoryRepositoryProtocol, EventRepository()),
-        ),
+    ports = LedgerEvidencePorts(
+        evidence_repository=EvidenceRepository(),
+        attachment_ingestor=UnusedEvidenceAttachmentIngestor(backend),
+        bucket_event_repository=UnusedBucketEventRepository(backend),
     )
 
     class Cancellation:

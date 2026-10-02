@@ -109,8 +109,10 @@ class _EmptyActivityAssetHistoryRepository:
         del revision
         raise AssertionError("empty resolver repository is read-only")
 
-    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
-        del claim
+    def record_claim(
+        self, claim: AmortizationClaim, *, expected_history: ActivityAssetHistory | None = None
+    ) -> ActivityAssetHistoryClaimResult:
+        del claim, expected_history
         raise AssertionError("empty resolver repository is read-only")
 
 

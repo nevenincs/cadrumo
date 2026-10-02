@@ -26,13 +26,15 @@ from ...application.user_profile.login_interaction import (
     observe_profile_login_inventory,
 )
 from ...application.user_profile.profile_record_repository import close_active_profile_record_session
+from ...core.async_cleanup import AsyncResourceCleanupError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ..adapter_composition import profile_adapter_composition
 from ..operation_composition import build_production_operation_registry
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from .launcher import run_precomposed_runtime_root_session
+from .launcher import run_precomposed_runtime_root_session, run_runtime_managed_application
 from .runtime_admission import runtime_login_session
+from .runtime_management import RuntimeManagementCleanup
 from .runtime_workbench import RuntimeWorkbenchRoot
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 from .secret.runtime_login import RuntimeLoginMethod
@@ -146,20 +148,35 @@ async def _run_runtime_session(
                     fresh_credential_client=fresh_credential_client,
                 )
 
-            return await RuntimeRestrictedSessionApp(
+            cleanup = RuntimeManagementCleanup()
+            app = RuntimeRestrictedSessionApp(
                 handoff.client,
                 profile_label=handoff.profile_label,
                 requester_factory=requester_for_api,
-            ).run_async(headless=headless, auto_pilot=auto_pilot)
+                runtime_management_cleanup=cleanup,
+            )
+            return await run_runtime_managed_application(app, cleanup=cleanup, headless=headless, auto_pilot=auto_pilot)
 
         async def open_recovery_client() -> RuntimeFrontendClient:
             return await _open_client(handoff.profile_id)
+
+        def requester_for_human(client: RuntimeFrontendClient) -> RuntimeAutomationRequesterScreen:
+            if client is not handoff.client:
+                raise ValueError("requester requires the original human client")
+            return RuntimeAutomationRequesterScreen(
+                profile_id=handoff.profile_id,
+                contracts=operation_contracts,
+                secrets_store=installed_automation_secret_store(),
+                open_client=_open_client,
+                reviewer_client=client,
+            )
 
         root = RuntimeWorkbenchRoot(
             handoff.client,
             profile_label=handoff.profile_label,
             output_language=OutputLanguage(output_language()),
             open_recovery_client=open_recovery_client,
+            requester_factory=requester_for_human,
         )
         return await run_precomposed_runtime_root_session(load_root=root.load, headless=headless, auto_pilot=auto_pilot)
 
@@ -201,6 +218,12 @@ def run_installed_workbench_session(
                     )
                 )
             except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+                if any(
+                    isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
+                    for name in ("async_cleanup_error", "cleanup_error")
+                ):
+                    # A numeric refusal cannot retain an unsettled native owner.
+                    raise
                 reason = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
                 sys.stderr.write(f"{reason}\n")
                 return SESSION_INVENTORY_UNAVAILABLE

@@ -23,9 +23,10 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
-from ._runtime_profile_cli_fixture import native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,
@@ -202,7 +203,9 @@ def test_requires_buckets_local_register_resolvers_as_live_observations(
     } <= live_pairs
 
 
-def test_requires_warns_about_unresolved_profile_coefficients(invoke_requires: Callable[[list[str]], Result]) -> None:
+def test_requires_warns_about_unresolved_profile_coefficients(
+    invoke_requires: Callable[[list[str]], Result], operation: PinnedAuthorityOperation
+) -> None:
     """With an active but incomplete profile, unresolved coefficients surface as a warning.
 
     Modelo 100 declares dozens of ``source = "profile"`` bindings (marital
@@ -235,6 +238,7 @@ def test_requires_warns_about_unresolved_profile_coefficients(invoke_requires: C
     result = unwrap_schema_envelope(invocation.output)
 
     assert result["profile_checked"] is True
+    assert result["authority_generation"] == operation.generation.logical_generation
     profile_binding_ids = {row["binding_id"] for row in result["profile_derivable"]}
     assert profile_binding_ids, "fixture expectation must be non-trivial"
     # The seeded resolved bindings must actually be declared bindings for
@@ -254,6 +258,11 @@ def test_requires_warns_about_unresolved_profile_coefficients(invoke_requires: C
     warning = next(notice for notice in notices if notice["code"] == "modelo.requires.missing_profile_coefficient")
     assert warning["severity"] == "warning"
     assert warning["action"] is None
+    # The runtime owns profile facts; the cold CLI still owes their grounded labels.
+    assert "renta-profile-marital-status" in unresolved
+    assert "renta_taxpayer.marital_status" in result["unresolved_profile_keys"]
+    assert "Marital status" in warning["message"]
+    assert "orden-hac-277-2026:art-3" in warning["message"]
     for binding_id in unresolved:
         assert binding_id in warning["context"]["missing_bindings"]
 

@@ -8,8 +8,8 @@ small structural ports by an outer composition root.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from contextlib import AbstractAsyncContextManager
+from collections.abc import AsyncGenerator, Callable, Sequence
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.period import Period
@@ -104,6 +104,26 @@ class FiledDeclarationAvailabilityReportProtocol(Protocol):
 
 FiledArtefactSink = Callable[..., FiledObservationArtefactProtocol]
 FiledEffectGuard = Callable[[], AbstractAsyncContextManager[None]]
+
+
+class LocalEffectTracker:
+    """Identify failures raised inside an authorized local persistence fence."""
+
+    def __init__(self, guard: FiledEffectGuard) -> None:
+        self._guard = guard
+        self.failed = False
+        self.started = False
+
+    @asynccontextmanager
+    async def enter(self) -> AsyncGenerator[None]:
+        """Propagate local write failures instead of reporting a remote miss."""
+        try:
+            async with self._guard():
+                self.started = True
+                yield
+        except BaseException:
+            self.failed = True
+            raise
 
 
 class DeferredFiledObservation(Protocol):

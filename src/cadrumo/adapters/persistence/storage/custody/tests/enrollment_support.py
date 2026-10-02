@@ -128,13 +128,17 @@ class AdministrationSubject:
 
 @contextmanager
 def administration_subject(
-    tmp_path: Path, *, os_owner_id: str = "synthetic-owner", installation_id: UUID | None = None
+    tmp_path: Path,
+    *,
+    os_owner_id: str = "synthetic-owner",
+    installation_id: UUID | None = None,
+    profile_label: str = "Enrollment tests",
 ) -> Iterator[AdministrationSubject]:
     """Use a real encrypted profile; only native store and OS/transport observations are doubled."""
     create, decode = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         result = register_profile_with_credentials(
-            label="Enrollment tests",
+            label=profile_label,
             passphrase=PROFILE_INPUT,
             profile_create_context=create,
             profile_decode_context=decode,

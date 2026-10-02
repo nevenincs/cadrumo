@@ -10,6 +10,7 @@ from ..launcher import run_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+
 @pytest.mark.hex_entrypoint
 def test_module_entry_composes_the_production_session_rather_than_refusing(
     capsys: pytest.CaptureFixture[str],

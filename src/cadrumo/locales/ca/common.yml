@@ -1269,6 +1269,9 @@ tui:
     target_key: Clau de destinació
     title: Accés automatitzat
     unattended: Sense supervisió
+    unattended_notice: Amb una autorització vàlida per a l'accés sense supervisió,
+      aquesta instal·lació pot desbloquejar el perfil després de tancar la sessió
+      humana. Les normes de blocatge i revocació continuen vigents.
     unavailable: L'inventari d'automatització no està disponible. Actualitza per tornar-ho
       a provar.
   automation_request:
@@ -2325,6 +2328,8 @@ tui:
     busy: S'està processant…
     close: Tanca
     completed: Completat.
+    denial_acknowledgement: 'Accés denegat: {access_denied} · Neteja de credencials
+      pendent: {cleanup_pending}'
     deny_all: Revoca tota l'automatització
     deny_grant: Revoca la concessió
     deny_key: Revoca la clau
@@ -2339,8 +2344,12 @@ tui:
     resume_grants: UUID de les concessions que es reactivaran
     resume_password: Contrasenya del perfil
     revoke_session: Revocar la sessió
+    session_details: 'Sessió: {session_id} | Client: {client_id} | Sessió pare: {parent_session_id}
+      | Autorització: {grant_id} | Clau: {key_id} | Tipus: {kind} | Estat: {state}
+      | Caduca: {expires_at}'
     sessions: Sessions
     sessions_empty: No hi ha sessions actuals.
+    sessions_locked: 'Sessions blocades: {session_ids}'
     title: Accés al perfil
     view_automation: Mostra l'automatització
   runtime_login:

@@ -64,6 +64,25 @@ def _filed_capture_lines(
             metric_line("artefact_refs", ",".join(report.artefact_refs)),
         ),
     )
+    if isinstance(report, BulkFiledDataCaptureReport):
+        lines.append(metric_line("pair_count", len(report.pair_outcomes)))
+        lines.extend(
+            metric_line(
+                "pair",
+                "\t".join(
+                    (
+                        pair.modelo,
+                        str(pair.year),
+                        f"walk_attempted={pair.walk_attempted}",
+                        f"walk_completed={pair.walk_completed}",
+                        f"rows={pair.row_count}",
+                        f"reached={pair.reached_count}",
+                        f"captured={pair.captured_count}",
+                    )
+                ),
+            )
+            for pair in report.pair_outcomes
+        )
     lines.extend(_filed_capture_failure_lines(failures))
     return tuple(lines)
 

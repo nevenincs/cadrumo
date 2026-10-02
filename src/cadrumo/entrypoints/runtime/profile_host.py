@@ -8,6 +8,8 @@ import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
 from threading import RLock
 from typing import override
 from uuid import UUID, uuid4
@@ -177,12 +179,15 @@ class RuntimeProfileHost:
         logins: Callable[[], tuple[RuntimeLoginEvidence, ...]],
         admitting: Callable[[], bool],
         recipient: Callable[[EnrollmentRequester], ProtectedEnrollmentRecipient] | None = None,
+        worker_script: Path | None = None,
+        wall_clock: Callable[[], datetime] = now,
     ) -> None:
         """Compose existing authorities without opening keys or selecting a profile."""
         self.store, self._registry = store, registry
         self._contracts = registry.public_contract_set
         self._connected, self._logins, self._admitting = connected, logins, admitting
         self._recipient = recipient
+        self._wall_clock = wall_clock
         self.guard = RLock()
         self._lock_fence: ProfileGlobalLockState | None = None
         self._password_rotation: OperationIdentity | None = None
@@ -194,6 +199,8 @@ class RuntimeProfileHost:
             human_secret=self._human_proof,
             guard=self.guard,
             authorization=self,
+            worker_script=worker_script,
+            wall_clock=wall_clock,
         )
         self.authority = ProfileSessionAuthority(
             binding=store.binding,
@@ -417,6 +424,7 @@ class RuntimeProfileHost:
             if connection.method == "api_key":
                 raise
         scope = self.scope(connection)
+        logins = self._logins()
         return SessionAuthorityFacts(
             ProfileAccessState(
                 binding=self.store.binding,
@@ -428,13 +436,13 @@ class RuntimeProfileHost:
                 automation_custody=available,
             ),
             AccessEvaluationContext(
-                now=now(),
+                now=self._wall_clock(),
                 monotonic_now=time.monotonic(),
                 clock_rollback_detected=False,
                 runtime_boot_id=connection.context.runtime_boot_id,
                 connection_id=connection_id,
                 authenticated_client_id=connection.client_id,
-                login_contexts=tuple(login.observe(credential_facilities=available) for login in self._logins()),
+                login_contexts=tuple(login.observe(credential_facilities=available) for login in logins),
                 private_work_available=self._admitting(),
             ),
         )

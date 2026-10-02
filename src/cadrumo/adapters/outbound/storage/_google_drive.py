@@ -44,6 +44,10 @@ from collections.abc import Iterator
 from typing import Any
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
+from ....application.user_profile.google_configuration_operation_ports import (
+    GoogleConfigurationAcknowledgement,
+    GoogleConfigurationHandoff,
+)
 from ....core.config import load_settings
 from ....core.config_integration_fields import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME
 from ....core.errors.hierarchy import InternalInvariantError
@@ -302,7 +306,15 @@ def _validate_put_inputs(
 class GoogleDriveProvider:
     """Bytes-in / bytes-out :class:`StorageProvider` backed by Google Drive v3."""
 
-    def __init__(self, *, credentials: Credentials, root_folder_id: str, vault_folder_name: str | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        credentials: Credentials,
+        root_folder_id: str,
+        vault_folder_name: str | None = None,
+        before_handoff: GoogleConfigurationHandoff | None = None,
+        acknowledged: GoogleConfigurationAcknowledgement | None = None,
+    ) -> None:
         """Initialise the provider with credentials and the root Drive folder.
 
         Args:
@@ -310,6 +322,8 @@ class GoogleDriveProvider:
             root_folder_id: Parent folder ID under which the vault folder lives.
             vault_folder_name: Optional configured vault folder name. Defaults
                 to the centralized settings value.
+            before_handoff: Optional admission check before each provider request.
+            acknowledged: Optional acknowledgement of a completed provider request.
 
         Raises:
             :class:`OutboundStorageValidationError`: When ``root_folder_id`` or
@@ -366,6 +380,8 @@ class GoogleDriveProvider:
         self._service: Any | None = None
         self._vault_folder_id: str | None = None
         self._namespace_folder_ids: dict[str, str] = {}
+        self._before_handoff = before_handoff
+        self._acknowledged = acknowledged
 
     @property
     def root_folder_id(self) -> str:
@@ -377,15 +393,24 @@ class GoogleDriveProvider:
     # stub narrows the concrete type.
     def _get_service(self) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY
         if self._service is None:
+            if self._before_handoff is not None:
+                self._before_handoff("google.drive-service-construction")
             self._service = _service_factory(self._credentials)
+            if self._acknowledged is not None:
+                self._acknowledged("google.drive-service-construction")
         return self._service
 
     # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY:
     # googleapiclient.discovery.build() returns an untyped Resource object; no
     # stub narrows the concrete type.
     def _execute(self, request: Any, *, action: str) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY
+        writes = action in {"files.create", "files.update", "files.delete"} or action.startswith(
+            ("create_", "stamp_ownership_")
+        )
+        if self._before_handoff is not None:
+            self._before_handoff(action, writes=writes)
         try:
-            return request.execute()
+            result = request.execute()
         except OutboundStorageError:
             raise
         except Exception as exc:
@@ -397,7 +422,16 @@ class GoogleDriveProvider:
                 type(exc).__name__,
             )
             translated_error = _translate_http_error(exc, action=action)
+        else:
+            if not writes and self._acknowledged is not None:
+                self._acknowledged(action)
+            return result
         raise translated_error
+
+    def _acknowledge_write(self, action: str) -> None:
+        """Publish only the canonical positive write acknowledgement."""
+        if self._acknowledged is not None:
+            self._acknowledged(action, writes=True)
 
     def _first_drive_entry(
         self,
@@ -507,6 +541,7 @@ class GoogleDriveProvider:
                 ),
             )
         self._vault_folder_id = str(created["id"])
+        self._acknowledge_write("create_vault_folder")
         return self._vault_folder_id
 
     # ADAPTER-INTERNAL-ALIAS-RATIONALE-DRIVE-ENTRY: raw Google Drive API file
@@ -543,6 +578,7 @@ class GoogleDriveProvider:
                 ),
                 action=f"stamp_ownership_{kind}",
             )
+            self._acknowledge_write(f"stamp_ownership_{kind}")
             return
         raise OutboundStorageConflictError(
             "Drive folder exists under the configured root but is not marked as owned by this app",
@@ -608,6 +644,7 @@ class GoogleDriveProvider:
                     ),
                 )
             folder_id = str(created["id"])
+            self._acknowledge_write(f"create_namespace_{namespace}")
         self._namespace_folder_ids[namespace] = folder_id
         return folder_id
 
@@ -795,7 +832,9 @@ class GoogleDriveProvider:
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                 ),
             )
-        return metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
+        metadata = metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
+        self._acknowledge_write(action)
+        return metadata
 
     def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
         """Download the object, verify the stored hash, and return payload metadata.
@@ -860,6 +899,8 @@ class GoogleDriveProvider:
         request = service.files().get_media(fileId=entry["id"])
         translated_error: OutboundStorageError | None = None
         payload: Any = None
+        if self._before_handoff is not None:
+            self._before_handoff("files.get_media")
         try:
             payload = request.execute()
         except OutboundStorageError:
@@ -874,6 +915,8 @@ class GoogleDriveProvider:
             translated_error = _translate_http_error(exc, action="files.get_media")
         if translated_error is not None:
             raise translated_error
+        if self._acknowledged is not None:
+            self._acknowledged("files.get_media")
         if not isinstance(payload, (bytes, bytearray)):
             raise OutboundStorageNetworkError(
                 "drive files.get_media returned non-bytes payload",
@@ -955,6 +998,7 @@ class GoogleDriveProvider:
         if entry is None:
             return False
         self._execute(service.files().delete(fileId=entry["id"]), action="files.delete")
+        self._acknowledge_write("files.delete")
         return True
 
     def iter_namespaces(self) -> Iterator[str]:

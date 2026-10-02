@@ -104,7 +104,7 @@ def _bind(
 
     def submit(submitted_client: object, request: object, **kwargs: object):
         assert submitted_client is client
-        submitted.append((request, cast(dict[str, object], kwargs)))
+        submitted.append((request, kwargs))
         return completion
 
     monkeypatch.setattr(bridge, "run_registered_operation", submit)
@@ -242,6 +242,7 @@ def test_aggregate_cli_invoice_route_uses_worker_summary_without_ambient_authori
     assert command.retencion_observations == ()
     assert submitted_evidence == evidence
     result = cast(ModeloAggregateResult, rendered["result"])
+    assert result.withholding_window is not None
     assert result.withholding_window.generation == 1
     assert "B12345674" not in result.model_dump_json()
     assert "150.00" not in result.model_dump_json()

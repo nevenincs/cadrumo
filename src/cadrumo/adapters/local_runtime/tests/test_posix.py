@@ -119,6 +119,93 @@ def test_namespace_permission_and_symlink_substitution_refused(tmp_path: Path, n
         PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
 
 
+@pytest.mark.parametrize("substitution", ["namespace", "socket"])
+def test_connect_refuses_incarnation_substitution_and_closes_before_protocol(
+    tmp_path: Path, namespace: Path, monkeypatch: pytest.MonkeyPatch, substitution: str
+) -> None:
+    if sys.platform == "win32":
+        pytest.skip("requires real Unix socket substitution")
+    endpoint = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+    path = namespace / (endpoint.storage_identity[:32] + ".sock")
+    attempted: list[socket.socket] = []
+    original_connect = socket.socket.connect
+    with contextlib.ExitStack() as resources:
+        resources.callback(endpoint.close)
+        endpoint.listen()
+        replacement = resources.enter_context(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM))
+
+        def substitute_and_connect(sock: socket.socket, address: str) -> None:
+            assert address == str(path)
+            assert not attempted
+            attempted.append(sock)
+            if substitution == "namespace":
+                namespace.rename(namespace.with_name("displaced"))
+                namespace.mkdir(mode=0o700)
+            else:
+                path.rename(path.with_suffix(".displaced"))
+            replacement.bind(str(path))
+            replacement.listen(1)
+            original_connect(sock, address)
+
+        # Change only the transition timing; all socket operations, native
+        # peer identity and filesystem entries remain real.
+        monkeypatch.setattr(socket.socket, "connect", substitute_and_connect)
+        connected: PosixRuntimeChannel | None = None
+        try:
+            with pytest.raises(RuntimeRefusalError) as caught:
+                connected = endpoint.connect(timeout=1)
+            assert caught.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED
+            assert len(attempted) == 1 and attempted[0].fileno() == -1
+            replacement.settimeout(1)
+            accepted, _address = replacement.accept()
+            with accepted:
+                accepted.settimeout(1)
+                assert accepted.recv(1) == b"", "the replacement must receive no protocol or secret frame"
+            assert path.is_socket(), "refusal must preserve the replacement endpoint"
+        finally:
+            if connected is not None:
+                connected.close()
+
+
+@pytest.mark.parametrize("held_entry", ["owned_socket", "regular_file", "symlink"])
+def test_close_checks_socket_identity_in_held_namespace_only(tmp_path: Path, namespace: Path, held_entry: str) -> None:
+    endpoint = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+    name = endpoint.storage_identity[:32] + ".sock"
+    displaced = namespace.with_name("displaced")
+    try:
+        endpoint.listen()
+        owned = (namespace / name).lstat()
+        namespace.rename(displaced)
+        namespace.mkdir(mode=0o700)
+        held_path, replacement_path = displaced / name, namespace / name
+        if held_entry == "owned_socket":
+            replacement_path.write_bytes(b"synthetic replacement entry")
+        else:
+            # The absolute path now exposes the original socket inode, while
+            # the held directory contains an unrelated entry with that name.
+            held_path.rename(replacement_path)
+            if held_entry == "regular_file":
+                held_path.write_bytes(b"synthetic held entry")
+            else:
+                held_path.symlink_to(replacement_path)
+        held_before, replacement_before = held_path.lstat(), replacement_path.lstat()
+        endpoint.close()
+        if held_entry == "owned_socket":
+            assert not held_path.exists(), "the held namespace's owned socket must be removed"
+            assert replacement_path.read_bytes() == b"synthetic replacement entry"
+        else:
+            assert held_path.lstat().st_ino == held_before.st_ino
+            assert replacement_path.is_socket()
+            assert (replacement_before.st_dev, replacement_before.st_ino) == (owned.st_dev, owned.st_ino)
+            if held_entry == "regular_file":
+                assert held_path.read_bytes() == b"synthetic held entry"
+            else:
+                assert held_path.is_symlink() and held_path.readlink() == replacement_path
+        assert replacement_path.lstat().st_ino == replacement_before.st_ino
+    finally:
+        endpoint.close()
+
+
 def test_passive_endpoint_does_not_create_missing_namespace(tmp_path: Path, namespace: Path) -> None:
     endpoint = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
     try:

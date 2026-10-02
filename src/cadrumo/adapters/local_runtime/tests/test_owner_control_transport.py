@@ -20,6 +20,7 @@ from cadrumo.application.runtime.contracts import (
     RuntimeClientHello,
     RuntimeRefusalCode,
     RuntimeRefusalError,
+    RuntimeShutdownIncompleteError,
 )
 from cadrumo.application.runtime.owner_control import (
     RuntimeStopAccepted,
@@ -66,6 +67,13 @@ class RunningOwnerServer:
     observations: list[NativeLoginObservation]
     preparation_calls: list[bool] = field(default_factory=list)
     clients: list[VerifiedRuntimeConnection] = field(default_factory=list)
+    finalization_calls: list[bool] = field(default_factory=list)
+    finalization_completed: list[bool] = field(default_factory=list)
+    finalization_entered: Event = field(default_factory=Event)
+    finalization_refuse: Event = field(default_factory=Event)
+    finalization_release: Event = field(default_factory=Event)
+    lifecycle_events: list[str] = field(default_factory=list)
+    namespace: Path | None = None
 
     def connect(self) -> VerifiedRuntimeConnection:
         client = VerifiedRuntimeConnection(
@@ -76,30 +84,56 @@ class RunningOwnerServer:
         self.clients.append(client)
         return client
 
+    def competing_endpoint(self, *, storage_root: Path) -> PosixRuntimeEndpoint | WindowsRuntimeEndpoint:
+        if isinstance(self.endpoint, WindowsRuntimeEndpoint):
+            return WindowsRuntimeEndpoint(storage_root=storage_root)
+        assert self.namespace is not None
+        return PosixRuntimeEndpoint(storage_root=storage_root, namespace=self.namespace)
+
 
 @pytest.fixture
 def owner_server(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[RunningOwnerServer]:
     parent = None if sys.platform == "win32" else Path("/") / "tmp"
     with tempfile.TemporaryDirectory(prefix="cr-owner-", dir=parent) as folder:
+        namespace = None if sys.platform == "win32" else Path(folder) / "ipc"
         endpoint = (
             WindowsRuntimeEndpoint(storage_root=tmp_path)
             if sys.platform == "win32"
-            else PosixRuntimeEndpoint(storage_root=tmp_path, namespace=Path(folder) / "ipc")
+            else PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
         )
         observations: list[NativeLoginObservation] = []
         stop = Event()
         preparation_calls: list[bool] = []
+        finalization_calls: list[bool] = []
+        finalization_completed: list[bool] = []
+        finalization_entered = Event()
+        finalization_refuse = Event()
+        finalization_release = Event()
+        lifecycle_events: list[str] = []
         preparation = getattr(request, "param", True)
+        if preparation == "finalize-refuse":
+            finalization_refuse.set()
 
         def prepare_stop() -> None:
             preparation_calls.append(True)
-            if preparation == "refuse":
+            lifecycle_events.append("prepare")
+            if preparation in ("refuse", "finalize-prepare-refuse"):
                 raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
             if preparation == "signal":
                 stop.set()
                 # The serving loop observes stop before this confirming
                 # thread can send acceptance, as with native manager SIGTERM.
                 time.sleep(0.4)
+
+        def finalize_stop() -> None:
+            finalization_calls.append(True)
+            lifecycle_events.append("finalize")
+            finalization_entered.set()
+            if preparation == "finalize-block" and not finalization_release.wait(6):
+                raise RuntimeError("synthetic fixture finalizer was not released")
+            if finalization_refuse.is_set():
+                raise RuntimeError("synthetic fixture finalizer refused")
+            finalization_completed.append(True)
 
         def capture(channel: RuntimeByteChannel) -> NativeLoginObservation:
             observation = NativeLoginObservation(channel.peer.os_owner_id)
@@ -113,10 +147,28 @@ def owner_server(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[Run
             capture_owner_login=capture,
             owner_stop_available=preparation is not False,
             prepare_owner_stop=prepare_stop if isinstance(preparation, str) else None,
+            finalize_owner_stop=(
+                finalize_stop
+                if preparation in ("finalize-block", "finalize-refuse", "finalize-prepare-refuse")
+                else None
+            ),
         )
         with ThreadPoolExecutor(max_workers=1) as pool:
             serving = pool.submit(host.serve)
-            running = RunningOwnerServer(host, endpoint, serving, observations, preparation_calls)
+            running = RunningOwnerServer(
+                host,
+                endpoint,
+                serving,
+                observations,
+                preparation_calls,
+                finalization_calls=finalization_calls,
+                finalization_completed=finalization_completed,
+                finalization_entered=finalization_entered,
+                finalization_refuse=finalization_refuse,
+                finalization_release=finalization_release,
+                lifecycle_events=lifecycle_events,
+                namespace=namespace,
+            )
             try:
                 assert host.ready.wait(3)
                 yield running
@@ -124,7 +176,17 @@ def owner_server(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[Run
                 for client in running.clients:
                     client.close()
                 host.stop.set()
-                serving.result(timeout=7)
+                try:
+                    serving.result(timeout=7)
+                except RuntimeShutdownIncompleteError:
+                    if preparation != "finalize-refuse":
+                        raise
+                    if not host._listener_owner.released:
+                        finalization_refuse.clear()
+                        try:
+                            host.retry_drain(deadline=time.monotonic() + 3)
+                        except RuntimeShutdownIncompleteError:
+                            host._listener_owner.close_now()
 
 
 def _preview(client: VerifiedRuntimeConnection) -> RuntimeStopPreview:
@@ -140,6 +202,24 @@ def _confirm(preview: RuntimeStopPreview) -> RuntimeStopConfirm:
         preview_id=preview.preview_id,
         acknowledge_all_profiles_and_work=True,
     )
+
+
+def _assert_same_storage_owner_busy(owner_server: RunningOwnerServer, storage_root: Path) -> None:
+    contender = owner_server.competing_endpoint(storage_root=storage_root)
+    try:
+        with pytest.raises(RuntimeRefusalError) as refusal:
+            contender.listen()
+        assert refusal.value.reason is RuntimeRefusalCode.OWNER_BUSY
+    finally:
+        contender.close()
+
+
+def _assert_same_storage_listener_available(owner_server: RunningOwnerServer, storage_root: Path) -> None:
+    contender = owner_server.competing_endpoint(storage_root=storage_root)
+    try:
+        contender.listen()
+    finally:
+        contender.close()
 
 
 def test_owner_disconnect_preserves_other_clients_and_confirm_drains_native_host(
@@ -227,7 +307,7 @@ def test_unavailable_managed_stop_refuses_before_native_login_or_drain(owner_ser
     assert owner.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 3).accepting_connections
 
 
-@pytest.mark.parametrize("owner_server", ["refuse"], indirect=True)
+@pytest.mark.parametrize("owner_server", ["finalize-prepare-refuse"], indirect=True)
 def test_native_preparation_requires_valid_consent_and_refusal_preserves_runtime(
     owner_server: RunningOwnerServer,
 ) -> None:
@@ -241,9 +321,64 @@ def test_native_preparation_requires_valid_consent_and_refusal_preserves_runtime
     refused = owner.owner_control(_confirm(_preview(owner)), deadline=time.monotonic() + 3)
     assert isinstance(refused, RuntimeAccessRefusal) and refused.code is RuntimeRefusalCode.VERSION_MISMATCH
     assert owner_server.preparation_calls == [True]
+    assert owner_server.lifecycle_events == ["prepare"]
+    assert owner_server.finalization_calls == []
     status = owner.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 3)
     assert isinstance(status, RuntimeTransportStatus) and status.accepting_connections
     assert not owner_server.host.stop.is_set()
+
+
+@pytest.mark.parametrize("owner_server", ["finalize-block"], indirect=True)
+def test_accepted_owner_stop_finalizes_after_drain_before_releasing_singleton(
+    owner_server: RunningOwnerServer, tmp_path: Path
+) -> None:
+    owner = owner_server.connect()
+    reply = owner.owner_control(_confirm(_preview(owner)), deadline=time.monotonic() + 3)
+    assert isinstance(reply, RuntimeStopAccepted)
+    assert owner_server.preparation_calls == [True]
+    assert owner_server.finalization_entered.wait(3)
+    assert owner_server.lifecycle_events == ["prepare", "finalize"]
+    assert owner_server.finalization_calls == [True]
+    assert not owner_server.serving.done()
+    with pytest.raises(RuntimeRefusalError) as drained:
+        owner.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 2)
+    assert drained.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    _assert_same_storage_owner_busy(owner_server, tmp_path)
+    assert not owner_server.serving.done()
+
+    owner_server.finalization_release.set()
+    owner_server.serving.result(timeout=7)
+    assert not owner_server.host.ready.is_set()
+    _assert_same_storage_listener_available(owner_server, tmp_path)
+
+
+@pytest.mark.parametrize("owner_server", ["finalize-refuse"], indirect=True)
+def test_owner_finalizer_refusal_retains_singleton_until_owned_fixture_cleanup(
+    owner_server: RunningOwnerServer, tmp_path: Path
+) -> None:
+    owner = owner_server.connect()
+    reply = owner.owner_control(_confirm(_preview(owner)), deadline=time.monotonic() + 3)
+    assert isinstance(reply, RuntimeStopAccepted)
+    assert owner_server.finalization_entered.wait(3)
+    assert owner_server.lifecycle_events == ["prepare", "finalize"]
+    assert owner_server.finalization_calls == [True]
+    assert owner_server.finalization_completed == []
+    with pytest.raises(RuntimeShutdownIncompleteError):
+        owner_server.serving.result(timeout=7)
+    _assert_same_storage_owner_busy(owner_server, tmp_path)
+    with pytest.raises(RuntimeShutdownIncompleteError):
+        owner_server.host.retry_drain(deadline=time.monotonic() + 3)
+    assert owner_server.finalization_calls == [True, True]
+    assert owner_server.finalization_completed == []
+    _assert_same_storage_owner_busy(owner_server, tmp_path)
+
+    owner_server.finalization_refuse.clear()
+    owner_server.host.retry_drain(deadline=time.monotonic() + 3)
+    assert owner_server.finalization_calls == [True, True, True]
+    assert owner_server.finalization_completed == [True]
+    _assert_same_storage_listener_available(owner_server, tmp_path)
+    owner_server.host.retry_drain(deadline=time.monotonic() + 3)
+    assert owner_server.finalization_calls == [True, True, True]
 
 
 @pytest.mark.parametrize("owner_server", ["signal"], indirect=True)

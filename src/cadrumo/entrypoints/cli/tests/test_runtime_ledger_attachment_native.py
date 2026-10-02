@@ -35,12 +35,12 @@ from ....domain.transactions.models import BucketTransactionRef, Transaction
 from ....tests.cli_envelope import unwrap_cli_result, unwrap_envelope_notices
 from ...ledger_action_composition import compose_ledger_action_ports
 from .._ledger_payloads import LedgerAttachResult, LedgerDetachResult
-from ._runtime_profile_cli_fixture import (
+from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )
-from .cli_runner import invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -204,6 +204,7 @@ def _expected_stale_notice(blocker: LedgerAttachmentStaleRevisionProjection) -> 
             period=blocker.period,
             locale="en",
         ),
+        "action": None,
         "context": {
             "work_unit_id": blocker.work_unit_id,
             "calculation_revision_id": blocker.calculation_revision_id,
@@ -214,6 +215,18 @@ def _expected_stale_notice(blocker: LedgerAttachmentStaleRevisionProjection) -> 
             "reason": "finalized_revision_predates_evidence",
             "actionability": "finalized_revision_has_no_safe_recovery_action",
         },
+    }
+
+
+def _expected_session_scoped_auth_notice() -> dict[str, object]:
+    from ....core.i18n.render import tr
+
+    return {
+        "severity": "warning",
+        "code": "config.login.session_not_persisted",
+        "message": tr("cli.config.login.notices.session_invocation_scoped", locale="en"),
+        "action": None,
+        "context": None,
     }
 
 
@@ -234,7 +247,10 @@ def _assert_stale_notice_and_blocker(
     assert tuple(blocker.calculation_revision_id for blocker in blockers) == (finalized_revision_id,)
     stale_projection = tuple(LedgerAttachmentStaleRevisionProjection.from_blocker(item) for item in blockers)
     assert len(stale_projection) == 1
-    assert unwrap_envelope_notices(result.output) == [_expected_stale_notice(stale_projection[0])]
+    assert unwrap_envelope_notices(result.output) == [
+        _expected_stale_notice(stale_projection[0]),
+        _expected_session_scoped_auth_notice(),
+    ]
 
 
 def test_native_attach_detach_preserve_full_results_history_and_historical_manifest(

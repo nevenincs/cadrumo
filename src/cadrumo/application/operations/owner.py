@@ -7,13 +7,14 @@ operation envelope or obtain concrete persistence and frontend adapters.
 
 from __future__ import annotations
 
-from contextlib import AbstractAsyncContextManager
+from collections.abc import Generator
+from contextlib import AbstractAsyncContextManager, contextmanager
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from ...core.async_cleanup import AsyncCloseable
+from ...core.async_cleanup import AsyncCloseable, async_cleanup_failures
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect
 from .capabilities import OperationOwnedResource
@@ -155,6 +156,23 @@ class OperationInteractionAccess(Protocol):
     ) -> None:
         """Secure a typed reviewed operand before publishing its digest-bound checkpoint."""
         ...
+
+
+@contextmanager
+def retain_failed_operation_resources(
+    cleanup: OperationCleanupOwner, *, family: OperationOwnedResource
+) -> Generator[None]:
+    """Transfer failed asynchronous owners before executor errors are settled."""
+    try:
+        yield
+    except BaseException as error:
+        retained: set[int] = set()
+        for cleanup_error in async_cleanup_failures(error):
+            for resource in cleanup_error.resources:
+                if id(resource) not in retained:
+                    cleanup.own(resource, family=family)
+                    retained.add(id(resource))
+        raise
 
 
 @runtime_checkable

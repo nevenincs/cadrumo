@@ -49,8 +49,9 @@ from ...application.user_profile.automation_operations import (
 from ...core.async_cleanup import await_cancellation_complete, close_async_resources
 from ...core.time.clock import now
 from .framing import VerifiedRuntimeConnection, read_document, write_document, write_secret
-from .windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
+from .posix import PosixRuntimeChannel
 from .worker_authorization import worker_authorization_namespace
+from .worker_transport import WorkerChannel, worker_endpoint
 
 
 class WorkerAuthorizationLease:
@@ -66,7 +67,7 @@ class WorkerAuthorizationLease:
     ) -> None:
         """Capture only trusted worker routing and registered operation coordinates."""
         self.identity, self.root, self.parent_pid, self.request = identity, root, parent_pid, request
-        self._channel: WindowsRuntimeChannel | None = None
+        self._channel: WorkerChannel | None = None
         self._permit: WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit | None = (
             None
         )
@@ -75,10 +76,10 @@ class WorkerAuthorizationLease:
 
     def acquire(self) -> None:
         """Authenticate the retained native parent before requesting a held fence."""
-        endpoint = WindowsRuntimeEndpoint(
+        endpoint = worker_endpoint(
             storage_root=self.root, worker_namespace=worker_authorization_namespace(self.identity.worker_id)
         )
-        channel: WindowsRuntimeChannel | None = None
+        channel: WorkerChannel | None = None
         try:
             channel = endpoint.connect(timeout=5)
             if (
@@ -86,6 +87,9 @@ class WorkerAuthorizationLease:
                 or channel.peer.os_owner_id != self.identity.binding.os_owner_id
             ):
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            if isinstance(channel, PosixRuntimeChannel):
+                with channel.capture_peer_pidfd():
+                    pass
             deadline = time.monotonic() + AUTHORITY_SECTION_MAXIMUM_SECONDS + 5
             verified = VerifiedRuntimeConnection(
                 channel,
@@ -282,7 +286,7 @@ class WorkerAuthorizationClient:
     def _approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
         if (request.phase == "prepare") != (password is not None):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        endpoint = WindowsRuntimeEndpoint(
+        endpoint = worker_endpoint(
             storage_root=self.root, worker_namespace=worker_authorization_namespace(self.identity.worker_id)
         )
         with ExitStack() as resources:
@@ -294,6 +298,9 @@ class WorkerAuthorizationClient:
                 or channel.peer.os_owner_id != self.identity.binding.os_owner_id
             ):
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            if isinstance(channel, PosixRuntimeChannel):
+                with channel.capture_peer_pidfd():
+                    pass
             deadline = time.monotonic() + 60
             verified = VerifiedRuntimeConnection(
                 channel,

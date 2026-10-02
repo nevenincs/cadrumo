@@ -16,7 +16,7 @@ from cadrumo.application.operations.models import OperationIdentity
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.operation_access import RuntimeOperationSubmitted
+from cadrumo.application.runtime.operation_access import RuntimeOperationRequest, RuntimeOperationSubmitted
 from cadrumo.core.operations import profile_operation_subject
 
 from ..errors import CliRefusedBoundaryError
@@ -68,8 +68,8 @@ class _Client:
             ephemeral_secret_required=self.secret_required,
         )
 
-    def operation(self, request: object, *, deadline: float) -> RuntimeOperationSubmitted:
-        del request, deadline
+    def operation(self, request: RuntimeOperationRequest, *, deadline: float) -> RuntimeOperationSubmitted:
+        del deadline
         self.submissions += 1
         requirement = OperationSecretRequirement(
             identity=OperationIdentity(
@@ -81,7 +81,7 @@ class _Client:
             expires_at=datetime.now(UTC) + timedelta(minutes=1),
         )
         return RuntimeOperationSubmitted(
-            request_id=uuid4(),
+            request_id=request.request_id,
             runtime_boot_id=uuid4(),
             connection_id=uuid4(),
             receipt=OperationSubmissionReceiptV1(operation_id=_OPERATION_ID, secret_requirement=requirement),

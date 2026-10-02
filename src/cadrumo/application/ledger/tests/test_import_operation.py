@@ -13,13 +13,16 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.operations import OperationEffect, profile_operation_subject
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.currency.service import CurrencyNormalizationService
+from ....domain.transactions.models import TransactionCatalogue
 from ...operations.models import OperationRequest
 from ..actions_import import LedgerProviderID
 from ..import_operation import (
     LEDGER_IMPORT_OPERATION_DEFINITION_ID,
     MAX_LEDGER_IMPORT_FILES,
     MAX_LEDGER_IMPORT_ROWS,
+    LedgerImportExecutionResult,
     LedgerImportExecutor,
     LedgerImportOperationPorts,
     LedgerImportRequest,
@@ -30,6 +33,7 @@ from ..models import (
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
 )
+from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedBucketEventRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -73,23 +77,22 @@ class _Location:
         return f"fake://{bucket_id}"
 
 
-class _TransactionRepository:
-    def __init__(self, bucket_id: str) -> None:
-        self.bucket_id = bucket_id
-
-
 class _PortsFactory:
-    def __init__(self, operation: object, transaction_repository: _TransactionRepository) -> None:
+    def __init__(
+        self,
+        operation: PinnedAuthorityOperation,
+        transaction_repository: ProfileOnlyCatalogueRepository[TransactionCatalogue],
+    ) -> None:
         self.operation = operation
         self.transaction_repository = transaction_repository
 
-    def __call__(self, *, bucket_id: str, operation: object) -> LedgerImportOperationPorts:
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerImportOperationPorts:
         assert bucket_id == str(_PROFILE)
         assert operation is self.operation
         return LedgerImportOperationPorts(
             import_ports=LedgerImportPorts(provider_resolver=_Resolver(), catalogue_location=_Location()),
             transaction_repository=self.transaction_repository,
-            bucket_event_repository=object(),
+            bucket_event_repository=UnusedBucketEventRepository(),
             currency_normalizer=CurrencyNormalizationService(),
             operation=operation,
         )
@@ -118,7 +121,9 @@ def test_import_request_rejects_more_than_the_registered_file_limit() -> None:
         )
 
 
-def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
     """Row limits are applied during staging, before any source reaches persistence."""
     from .. import import_operation as operation_module
 
@@ -127,9 +132,8 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(mo
     persisted_paths: list[str] = []
     cancellation = _Cancellation()
     events = _Events()
-    stored: list[object] = []
-    operation = object()
-    repository = _TransactionRepository(str(_PROFILE))
+    stored: list[LedgerImportExecutionResult] = []
+    repository = ProfileOnlyCatalogueRepository[TransactionCatalogue](str(_PROFILE))
 
     def prepare(command, *, ports):
         del ports
@@ -147,21 +151,11 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(mo
         return _source_result(bucket_id=str(_PROFILE), rows=counts[name])
 
     class _Operands:
-        async def put(self, result, *, written_at):
+        async def put(self, result: LedgerImportExecutionResult, *, written_at):
             del written_at
             stored.append(result)
             return "secure-result-reference"
 
-    @asynccontextmanager
-    async def guard() -> AsyncIterator[None]:
-        cancellation.entries += 1
-        cancellation.active = True
-        try:
-            yield
-        finally:
-            cancellation.active = False
-
-    cancellation.irreversible_section = guard
     monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
     monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)

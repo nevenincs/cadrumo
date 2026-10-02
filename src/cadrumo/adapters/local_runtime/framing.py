@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
 import math
@@ -10,6 +11,7 @@ import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from threading import RLock
+from typing import Protocol
 from uuid import UUID
 
 from pydantic import BaseModel, SecretBytes, ValidationError
@@ -23,6 +25,7 @@ from ...application.runtime.access_management import (
     RuntimeProfileResumed,
     RuntimeSessionInventory,
     RuntimeSessionInventoryReply,
+    RuntimeSessionInventoryTransfer,
 )
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
@@ -84,6 +87,7 @@ from ...application.runtime.submission_payload import (
 )
 from ...application.runtime.transport import RuntimeStatusRequest, RuntimeTransportStatus
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
+from ...core.async_cleanup import AsyncResourceCleanupError
 from ...core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 
 MAXIMUM_FRAME_BYTES = 64 * 1024
@@ -92,55 +96,150 @@ _DOCUMENT = b"J"
 _SECRET = b"S"
 
 
+class RuntimeTransportResource(Protocol):
+    """Native transport ownership with synchronous release."""
+
+    def close(self) -> None:
+        """Release the owned channel, connection or listener."""
+        ...
+
+
+class RuntimeTransportCleanup:
+    """Retain native transport release, with success-only close bookkeeping."""
+
+    def __init__(self, resource: RuntimeTransportResource) -> None:
+        """Keep native transport ownership until its release succeeds."""
+        self.resource = resource
+        self._released = False
+        self._close_guard = RLock()
+
+    def close_now(self, *, deadline: float | None = None) -> None:
+        """Release synchronously at the owning native failure boundary."""
+        if deadline is None:
+            self._close_guard.acquire()
+        elif not self._close_guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
+            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        try:
+            if not self._released:
+                self.resource.close()
+                self._released = True
+        finally:
+            self._close_guard.release()
+
+    @property
+    def released(self) -> bool:
+        """Report successful release for its enclosing connection owner."""
+        return self._released
+
+    async def close(self) -> None:
+        """Keep blocking native release off the event loop, including retries."""
+        await asyncio.to_thread(self.close_now)
+
+
+def close_runtime_transport_after_failure(
+    resource: RuntimeByteChannel | VerifiedRuntimeConnection, error: BaseException
+) -> None:
+    """Preserve a primary refusal and retain its failed native release for retry."""
+    retained = error.__dict__.get("_runtime_transport_cleanup")
+    if isinstance(retained, RuntimeTransportCleanup) and retained.resource is resource:
+        return
+    owner = RuntimeTransportCleanup(resource)
+    error.__dict__["_runtime_transport_cleanup"] = owner
+    try:
+        owner.close_now()
+    except BaseException as cleanup_failure:
+        cleanup_error = AsyncResourceCleanupError(
+            (owner,), (cleanup_failure,), retry_task_name="runtime-transport-cleanup", close_attempts=1
+        )
+        previous = error.__dict__.get("async_cleanup_error")
+        if isinstance(previous, AsyncResourceCleanupError):
+            cleanup_error = previous.merged_with(cleanup_error)
+        error.__dict__["async_cleanup_error"] = cleanup_error
+        error.add_note("Transport cleanup also failed; retry through the attached async_cleanup_error")
+
+
+def _read_frame_payload(channel: RuntimeByteChannel, *, kind: bytes, deadline: float) -> bytes:
+    header = channel.read_exact(5, deadline=deadline)
+    size = struct.unpack("!I", header[1:])[0]
+    if header[:1] != kind or not 0 < size <= MAXIMUM_FRAME_BYTES:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return channel.read_exact(size, deadline=deadline)
+
+
 def _read_frame(channel: RuntimeByteChannel, *, kind: bytes, deadline: float) -> bytes:
     try:
-        header = channel.read_exact(5, deadline=deadline)
-        size = struct.unpack("!I", header[1:])[0]
-        if header[:1] != kind or not 0 < size <= MAXIMUM_FRAME_BYTES:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        return channel.read_exact(size, deadline=deadline)
-    except BaseException:
+        return _read_frame_payload(channel, kind=kind, deadline=deadline)
+    except BaseException as error:
         # A partial frame cannot be safely resumed as another document.
-        channel.close()
+        close_runtime_transport_after_failure(channel, error)
         raise
 
 
-def read_document[Model: BaseModel](channel: RuntimeByteChannel, model: type[Model], *, deadline: float) -> Model:
-    """Validate strict typed JSON without copying rejected input into errors."""
-    payload = _read_frame(channel, kind=_DOCUMENT, deadline=deadline)
+def _decode_document[Model: BaseModel](payload: bytes, model: type[Model]) -> Model:
     try:
         document = json.loads(
             payload, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
         )
         return model.model_validate_json(canonical_json_bytes(document))
     except (ValueError, TypeError, RecursionError, ValidationError):
-        channel.close()
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+
+
+def read_document[Model: BaseModel](channel: RuntimeByteChannel, model: type[Model], *, deadline: float) -> Model:
+    """Validate strict typed JSON without copying rejected input into errors."""
+    payload = _read_frame(channel, kind=_DOCUMENT, deadline=deadline)
+    try:
+        return _decode_document(payload, model)
+    except RuntimeRefusalError as error:
+        close_runtime_transport_after_failure(channel, error)
+        raise
+
+
+def _document_frame(document: BaseModel) -> bytes:
+    payload = canonical_json_bytes(document.model_dump(mode="json"))
+    if not 0 < len(payload) <= MAXIMUM_FRAME_BYTES:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return _DOCUMENT + struct.pack("!I", len(payload)) + payload
 
 
 def write_document(channel: RuntimeByteChannel, document: BaseModel, *, deadline: float) -> None:
     """Write one credential-free typed document through the bounded protocol."""
-    payload = canonical_json_bytes(document.model_dump(mode="json"))
-    if not 0 < len(payload) <= MAXIMUM_FRAME_BYTES:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    frame = _document_frame(document)
     try:
-        channel.write_all(_DOCUMENT + struct.pack("!I", len(payload)) + payload, deadline=deadline)
-    except BaseException:
-        channel.close()
+        channel.write_all(frame, deadline=deadline)
+    except BaseException as error:
+        close_runtime_transport_after_failure(channel, error)
         raise
 
 
 def write_profile_status(channel: RuntimeByteChannel, status: RuntimeProfileStatus, *, deadline: float) -> None:
     """Retain the complete effective scope while every individual frame stays bounded."""
-    payload = canonical_json_bytes(status.model_dump(mode="json"))
+    _write_bounded_reply(channel, status, RuntimeProfileStatusTransfer, deadline=deadline)
+
+
+def write_session_inventory(
+    channel: RuntimeByteChannel, inventory: RuntimeSessionInventoryReply, *, deadline: float
+) -> None:
+    """Retain every session and scope fact through the existing bounded transfer."""
+    _write_bounded_reply(channel, inventory, RuntimeSessionInventoryTransfer, deadline=deadline)
+
+
+def _write_bounded_reply(
+    channel: RuntimeByteChannel,
+    reply: RuntimeProfileStatus | RuntimeSessionInventoryReply,
+    transfer_type: type[RuntimeProfileStatusTransfer] | type[RuntimeSessionInventoryTransfer],
+    *,
+    deadline: float,
+) -> None:
+    payload = canonical_json_bytes(reply.model_dump(mode="json"))
     if len(payload) <= MAXIMUM_FRAME_BYTES:
-        write_document(channel, status, deadline=deadline)
+        write_document(channel, reply, deadline=deadline)
         return
     try:
-        header = RuntimeProfileStatusTransfer(
-            request_id=status.request_id,
-            runtime_boot_id=status.runtime_boot_id,
-            connection_id=status.connection_id,
+        header = transfer_type(
+            request_id=reply.request_id,
+            runtime_boot_id=reply.runtime_boot_id,
+            connection_id=reply.connection_id,
             byte_count=len(payload),
             payload_digest=sha256_hex(payload),
         )
@@ -154,11 +253,15 @@ def write_profile_status(channel: RuntimeByteChannel, status: RuntimeProfileStat
                 ),
                 deadline=deadline,
             )
-    except (ValueError, TypeError):
-        channel.close()
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
-    except BaseException:
-        channel.close()
+    except (ValueError, TypeError) as failure:
+        error = RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        for name in ("_runtime_transport_cleanup", "async_cleanup_error"):
+            if name in failure.__dict__:
+                error.__dict__[name] = failure.__dict__[name]
+        close_runtime_transport_after_failure(channel, error)
+        raise error from None
+    except BaseException as error:
+        close_runtime_transport_after_failure(channel, error)
         raise
 
 
@@ -166,6 +269,23 @@ def read_profile_status(
     channel: RuntimeByteChannel, header: RuntimeProfileStatusTransfer, *, deadline: float
 ) -> RuntimeProfileStatus:
     """Release only a complete, strictly decoded status matching its transfer identity."""
+    return _read_bounded_reply(channel, header, RuntimeProfileStatus, deadline=deadline)
+
+
+def read_session_inventory(
+    channel: RuntimeByteChannel, header: RuntimeSessionInventoryTransfer, *, deadline: float
+) -> RuntimeSessionInventoryReply:
+    """Release only a complete inventory matching the admitted native reply identity."""
+    return _read_bounded_reply(channel, header, RuntimeSessionInventoryReply, deadline=deadline)
+
+
+def _read_bounded_reply[Reply: RuntimeProfileStatus | RuntimeSessionInventoryReply](
+    channel: RuntimeByteChannel,
+    header: RuntimeProfileStatusTransfer | RuntimeSessionInventoryTransfer,
+    reply_type: type[Reply],
+    *,
+    deadline: float,
+) -> Reply:
     buffer = SubmissionPayloadBuffer(
         SubmissionPayloadDescriptor(byte_count=header.byte_count, payload_digest=header.payload_digest)
     )
@@ -175,19 +295,23 @@ def read_profile_status(
         document = json.loads(
             buffer.finish(), object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
         )
-        status = RuntimeProfileStatus.model_validate_json(canonical_json_bytes(document))
-        if (status.request_id, status.runtime_boot_id, status.connection_id) != (
+        reply = reply_type.model_validate_json(canonical_json_bytes(document))
+        if (reply.request_id, reply.runtime_boot_id, reply.connection_id) != (
             header.request_id,
             header.runtime_boot_id,
             header.connection_id,
         ):
-            raise ValueError("profile status transfer identity mismatch")
-        return status
-    except (ValueError, TypeError, RecursionError):
-        channel.close()
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
-    except BaseException:
-        channel.close()
+            raise ValueError("runtime reply transfer identity mismatch")
+        return reply
+    except (ValueError, TypeError, RecursionError) as failure:
+        error = RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        for name in ("_runtime_transport_cleanup", "async_cleanup_error"):
+            if name in failure.__dict__:
+                error.__dict__[name] = failure.__dict__[name]
+        close_runtime_transport_after_failure(channel, error)
+        raise error from None
+    except BaseException as error:
+        close_runtime_transport_after_failure(channel, error)
         raise
     finally:
         buffer.close()
@@ -200,8 +324,8 @@ def write_secret(channel: RuntimeByteChannel, secret: bytearray, *, deadline: fl
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         channel.write_all(_SECRET + struct.pack("!I", len(secret)), deadline=deadline)
         channel.write_all(secret, deadline=deadline)
-    except BaseException:
-        channel.close()
+    except BaseException as error:
+        close_runtime_transport_after_failure(channel, error)
         raise
     finally:
         secret[:] = bytes(len(secret))
@@ -231,19 +355,36 @@ class VerifiedRuntimeConnection:
         # write and for failure paths that close while the exchange is held.
         self._exchange_lock = RLock()
         self._closed = True
+        self._channel_closed = False
         self._connection_id: UUID | None = None
         try:
-            write_document(channel, expected, deadline=deadline)
-            hello = read_document(channel, RuntimeServerHello, deadline=deadline)
+            # This constructor owns failed-handshake cleanup. The public frame
+            # helpers close failed exchanges, before an owner can be returned.
+            channel.write_all(_document_frame(expected), deadline=deadline)
+            hello = _decode_document(
+                _read_frame_payload(channel, kind=_DOCUMENT, deadline=deadline), RuntimeServerHello
+            )
             if hello.product_version != expected.product_version:
                 raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
             if hello.storage_identity != expected.storage_identity:
                 raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
             self.hello = hello
             self._closed = False
-        except BaseException:
-            channel.close()
+        except BaseException as error:
+            self._close_after_failure(error)
             raise
+
+    def _close_after_failure(self, error: BaseException) -> None:
+        retained = error.__dict__.get("_runtime_transport_cleanup")
+        if isinstance(retained, RuntimeTransportCleanup) and retained.resource is self._channel:
+            # An inner frame failure already attempted this native release.
+            # Fence exchanges now, and let its retained owner retry through
+            # the connection's success-only channel-close bookkeeping.
+            self._closed = True
+            self._channel_closed = retained.released
+            retained.resource = self
+            return
+        close_runtime_transport_after_failure(self, error)
 
     @contextmanager
     def _exchange(self, *, deadline: float, secret: bytearray | None = None) -> Generator[None]:
@@ -278,8 +419,8 @@ class VerifiedRuntimeConnection:
                 result = read_document(self._channel, RuntimeTransportStatus, deadline=deadline)
                 self._verify_reply(request.request_id, result.request_id, result.runtime_boot_id, result.connection_id)
                 return result
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def send_secret(self, secret: bytearray, *, deadline: float) -> None:
@@ -289,8 +430,8 @@ class VerifiedRuntimeConnection:
                 if self._closed:
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
                 write_secret(self._channel, secret, deadline=deadline)
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
             finally:
                 secret[:] = bytes(len(secret))
@@ -312,8 +453,8 @@ class VerifiedRuntimeConnection:
                 ):
                     return result
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def _reply(self, request_id: UUID, *, deadline: float) -> RuntimeReply:
@@ -323,6 +464,8 @@ class VerifiedRuntimeConnection:
         self._verify_reply(request_id, result.root.request_id, result.root.runtime_boot_id, result.root.connection_id)
         if isinstance(result.root, RuntimeProfileStatusTransfer):
             result = RuntimeReply(read_profile_status(self._channel, result.root, deadline=deadline))
+        elif isinstance(result.root, RuntimeSessionInventoryTransfer):
+            result = RuntimeReply(read_session_inventory(self._channel, result.root, deadline=deadline))
         return result
 
     def _verify_reply(self, expected: UUID, received: UUID, boot: UUID, connection: UUID) -> None:
@@ -356,8 +499,8 @@ class VerifiedRuntimeConnection:
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return result
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
             finally:
                 secret[:] = bytes(len(secret))
@@ -375,8 +518,8 @@ class VerifiedRuntimeConnection:
                 if not isinstance(result, (RuntimeProfileStatus, RuntimeSessionsLocked, RuntimeAccessRefusal)):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return result
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def recovery_prepare(
@@ -394,8 +537,8 @@ class VerifiedRuntimeConnection:
                 if isinstance(reply, RuntimeProfileRecoveryPrepared) and reply.profile_id != request.profile_id:
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return reply
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def deny_automation(
@@ -415,8 +558,8 @@ class VerifiedRuntimeConnection:
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return reply
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def resume_profile(
@@ -445,8 +588,8 @@ class VerifiedRuntimeConnection:
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return reply
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
             finally:
                 password[:] = bytes(len(password))
@@ -468,8 +611,8 @@ class VerifiedRuntimeConnection:
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return reply
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def operation_secret(
@@ -495,8 +638,8 @@ class VerifiedRuntimeConnection:
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return result
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
             finally:
                 secret[:] = bytes(len(secret))
@@ -519,8 +662,8 @@ class VerifiedRuntimeConnection:
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return reply
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def enrollment_submit(
@@ -547,8 +690,8 @@ class VerifiedRuntimeConnection:
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return reply
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def enrollment_inspect(
@@ -569,8 +712,8 @@ class VerifiedRuntimeConnection:
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return reply
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def enrollment_poll(
@@ -625,16 +768,17 @@ class VerifiedRuntimeConnection:
                 if not isinstance(final, RuntimeEnrollmentIdle | RuntimeAccessRefusal):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return reply if isinstance(final, RuntimeEnrollmentIdle) else final
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def close(self) -> None:
-        """Close this connection without changing another client's lifetime."""
+        """Stop exchanges immediately and retry failed owned channel cleanup."""
         with self._exchange_lock:
-            if not self._closed:
-                self._closed = True
+            self._closed = True
+            if not self._channel_closed:
                 self._channel.close()
+                self._channel_closed = True
 
     def operation(
         self, request: RuntimeOperationRequest, *, deadline: float
@@ -668,8 +812,8 @@ class VerifiedRuntimeConnection:
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return result
-            except BaseException:
-                self.close()
+            except BaseException as error:
+                self._close_after_failure(error)
                 raise
 
     def _submit_payload(
@@ -726,6 +870,6 @@ def accept_runtime_handshake(
         if hello.storage_identity != identity.storage_identity:
             raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
         return hello
-    except BaseException:
-        channel.close()
+    except BaseException as error:
+        close_runtime_transport_after_failure(channel, error)
         raise

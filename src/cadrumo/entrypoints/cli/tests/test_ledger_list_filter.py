@@ -31,8 +31,8 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.models import TransactionCatalogue
 from ....tests.inventory import FIXTURES_DIR
 from ...ledger_action_composition import compose_ledger_action_ports
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

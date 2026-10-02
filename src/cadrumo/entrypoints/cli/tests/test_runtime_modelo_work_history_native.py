@@ -29,8 +29,8 @@ from ....tests.cli_envelope import unwrap_cli_result
 from ...adapter_composition import build_modelo_history_ports, build_work_lifecycle_ports
 from ...tests import modelo_operation_test_support
 from ..modelo_aux_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

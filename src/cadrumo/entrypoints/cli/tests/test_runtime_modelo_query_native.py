@@ -17,8 +17,8 @@ from ....core.config import override_settings
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import unwrap_cli_result
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, RuntimeFailureObservation, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, RuntimeFailureObservation, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,
@@ -69,6 +69,7 @@ def test_native_modelo_binding_preview_inventory_and_readiness(
         listed = _invoke(profile, "app", "modelo", "bindings", "list", *scope)
         assert listed.exit_code == 0, listed.output
         listing = unwrap_cli_result(listed)
+        assert listing["authority_generation"] == operation.generation.logical_generation
         rows = listing["bindings"]
         assert isinstance(rows, list) and rows
         with override_settings(cadrumo_output_language="en"):
@@ -95,6 +96,7 @@ def test_native_modelo_binding_preview_inventory_and_readiness(
         )
         assert resolved.exit_code == 0, resolved.output
         preview = unwrap_cli_result(resolved)
+        assert preview["authority_generation"] == operation.generation.logical_generation
         assert preview["override_count"] == 1
         preview_rows = preview["bindings"]
         assert isinstance(preview_rows, list) and len(preview_rows) == len(rows)
@@ -115,6 +117,7 @@ def test_native_modelo_binding_preview_inventory_and_readiness(
         inventory_result = _invoke(profile, "app", "modelo", "requires", "303", "--year", "2025", "--period", "1T")
         assert inventory_result.exit_code == 0, inventory_result.output
         inventory = unwrap_cli_result(inventory_result)
+        assert inventory["authority_generation"] == operation.generation.logical_generation
         assert inventory["profile_checked"] is True
         for bucket in (
             "required_manual",
@@ -135,6 +138,7 @@ def test_native_modelo_binding_preview_inventory_and_readiness(
         readiness_result = _invoke(profile, "app", "modelo", "readiness", *scope)
         assert readiness_result.exit_code in {0, 2}, readiness_result.output
         readiness = unwrap_cli_result(readiness_result)
+        assert readiness["authority_generation"] == operation.generation.logical_generation
         assert readiness_result.exit_code == (0 if readiness["ready"] else 2)
         assert readiness["revision_id"] == preview["revision"] == inventory["revision"]
         assert readiness["ledger_period"] is not None
@@ -158,6 +162,7 @@ def test_native_modelo_binding_preview_inventory_and_readiness(
         )
         assert hungarian_inventory_result.exit_code == 0, hungarian_inventory_result.output
         hungarian_inventory = unwrap_cli_result(hungarian_inventory_result)
+        assert hungarian_inventory["authority_generation"] == operation.generation.logical_generation
         with override_settings(cadrumo_output_language="hu"):
             canonical_casillas = registry_casillas_for_registry_scope(
                 "303", filing_year=2025, period="1T", operation=operation

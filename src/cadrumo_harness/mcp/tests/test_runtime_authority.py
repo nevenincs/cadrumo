@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 from uuid import uuid4
@@ -13,17 +14,52 @@ from cadrumo.application.modelo.registry_discovery import registry_support_matri
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import (
+    IndexedRegistryAuthority,
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
-from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
+from cadrumo.domain.calculations.registry.authority_artifact import (
+    AuthorityArtifact,
+    AuthorityGenerationPin,
+    SnapshotGlobalsComponentQuery,
+)
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreCutoverError
+from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
+    minimal_catalogues,
+    minimal_modelo,
+    minimal_revision,
+    synthetic_legal_identity,
+)
 from cadrumo_harness.mcp import server as mcp_server
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from dev.registry.pipeline.authority_publication import install_validated_authority_database
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _DESCRIPTOR_NAME = "authority.current.json"
+
+
+async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAdapter, code: str) -> None:
+    requests = {
+        "modelos": {},
+        "support": {},
+        "bindings": {"modelo": "100", "filing_year": 2024},
+        "describe": {"modelo": "100", "filing_year": 2024, "period": "0A"},
+        "casillas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
+        "casilla": {"modelo": "100", "filing_year": 2024, "period": "0A", "casilla": "0505"},
+        "formulas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
+    }
+    async with connected_server_and_client_session(build_server(adapter)) as client:
+        tools = (await client.list_tools()).tools
+        authority_tool = next(tool for tool in tools if tool.name == "authority")
+        queries = authority_tool.inputSchema["properties"]["query"]["enum"]
+        assert set(queries) == set(requests)
+        for query in queries:
+            refused = await client.call_tool("authority", {"query": query, **requests[query]})
+            assert refused.is_error is True
+            assert refused.structured_content == {"outcome": "refused", "code": code}
+    assert adapter.client is None
 
 
 @pytest.mark.anyio
@@ -122,12 +158,9 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
     try:
         with override_settings(cadrumo_authority_root=tmp_path):
-            result = await adapter.call("authority", {"query": "support"})
+            await _assert_all_advertised_authority_queries_refuse(adapter, "published_authority_unavailable")
     finally:
         await adapter.close()
-
-    assert result == {"outcome": "refused", "code": "published_authority_unavailable"}
-
 
 def _copy_and_corrupt_published_database(source_descriptor: Path, destination: Path) -> Path:
     """Copy one real publication and alter one database byte in the isolated copy."""
@@ -158,8 +191,63 @@ async def test_corrupt_configured_database_refuses_without_packaged_fallback(
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
     try:
         with override_settings(cadrumo_authority_root=tmp_path):
-            result = await adapter.call("authority", {"query": "support"})
+            await _assert_all_advertised_authority_queries_refuse(adapter, "published_authority_invalid")
     finally:
         await adapter.close()
 
-    assert result == {"outcome": "refused", "code": "published_authority_invalid"}
+
+
+@pytest.mark.anyio
+async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with bundled_indexed_authority().operation() as packaged:
+        profile_schema = packaged.profile_schema()
+    first_artifact = AuthorityArtifact(
+        modelos=(minimal_modelo(minimal_revision()),),
+        catalogues=minimal_catalogues(),
+        identity_digest=synthetic_legal_identity("mcp-first-publication"),
+        profile_schema=profile_schema,
+    )
+    second_artifact = replace(first_artifact, identity_digest=synthetic_legal_identity("mcp-second-publication"))
+    first = install_validated_authority_database(first_artifact, destination=tmp_path, require_current=lambda: None)
+    authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
+    canonical_query = mcp_server.registry_support_matrix
+    with authority.operation() as initial:
+        first_pin = initial.pin()
+        expected = canonical_query(operation=initial).model_dump(mode="json")
+
+    def cut_over_and_query(*, operation: PinnedAuthorityOperation) -> object:
+        assert operation.pin() == first_pin
+        second = install_validated_authority_database(
+            second_artifact, destination=tmp_path, require_current=lambda: None
+        )
+        assert second.logical_generation != first.logical_generation
+        assert operation.profile_decode_context().generation == first_pin
+        return canonical_query(operation=operation)
+
+    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
+    monkeypatch.setattr(mcp_server, "registry_support_matrix", cut_over_and_query)
+    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    try:
+        async with connected_server_and_client_session(build_server(adapter)) as client:
+            result = await client.call_tool("authority", {"query": "support"})
+            assert result.is_error is False
+            assert result.structured_content == {
+                "outcome": "published",
+                "logical_generation": first_pin.logical_generation,
+                "reader_incarnation": first_pin.reader_incarnation,
+                "report": expected,
+            }
+            monkeypatch.setattr(mcp_server, "registry_support_matrix", canonical_query)
+            current = await client.call_tool("authority", {"query": "support"})
+            assert current.is_error is False
+            assert isinstance(current.structured_content, dict)
+            assert current.structured_content["logical_generation"] == second_artifact.identity_digest
+            assert current.structured_content["reader_incarnation"] != first_pin.reader_incarnation
+        with authority.operation() as successor:
+            with pytest.raises(AuthorityStoreCutoverError):
+                successor.load(SnapshotGlobalsComponentQuery(), pin=first_pin)
+    finally:
+        await adapter.close()
+        authority.close()

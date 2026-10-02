@@ -22,6 +22,7 @@ from ....application.live.filed_single_capture_operation import (
     FiledReconciliationNoticeV1,
     FiledReconciliationV1,
 )
+from ....application.live.remote_state_models import FiledCapturePairOutcome
 from ....application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.json_contract import Notice, NoticeSeverity
@@ -47,6 +48,27 @@ def _capture_notice(code: str, *, message: str) -> FiledCaptureNoticeV1:
         code=code,
         message=message,
         context=(("reason", "capture"),),
+    )
+
+
+def _pair(
+    modelo: str,
+    year: int,
+    *,
+    rows: int = 0,
+    reached: int = 0,
+    captured: int = 0,
+    attempted: bool = True,
+    completed: bool = True,
+) -> FiledCapturePairOutcome:
+    return FiledCapturePairOutcome(
+        modelo=modelo,
+        year=year,
+        walk_attempted=attempted,
+        walk_completed=completed,
+        row_count=rows,
+        reached_count=reached,
+        captured_count=captured,
     )
 
 
@@ -84,6 +106,14 @@ def _projection(*, dry_run: bool = False) -> FiledBulkCapturePublicResultV1:
         dry_run=dry_run,
         captured_count=1 if persisted else 0,
         reached_count=3,
+        pair_outcomes=(
+            _pair("303", 2025, rows=2, reached=2, captured=1 if persisted else 0),
+            _pair("303", 2024),
+            _pair("303", 2023),
+            _pair("390", 2025),
+            _pair("390", 2024, rows=1, reached=1),
+            _pair("390", 2023, attempted=False, completed=False),
+        ),
         failed_count=1,
         sync_run_ref=_SYNC_RUN_REF if persisted else None,
         observation_paths=("encrypted-observation",) if persisted else (),
@@ -279,16 +309,18 @@ def test_bulk_capture_rejects_mismatched_receipt_or_scope(monkeypatch: pytest.Mo
     assert error.value.context["reason"] == RuntimeRefusalCode.INVALID_FRAME.value
 
 
-def test_bulk_dry_run_rejects_a_persisted_effect(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_bulk_dry_run_accepts_session_write_effect_without_capturing_observations(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     projection = _projection(dry_run=True)
     _bind(monkeypatch, projection, effect=OperationEffect.UPDATED)
 
-    with pytest.raises(CliRefusedBoundaryError) as error:
-        _read(dry_run=True)
-
-    assert error.value.context is not None
-    assert error.value.context["operation_id"] == _OPERATION_ID
-    assert error.value.context["reason"] == RuntimeRefusalCode.INVALID_FRAME.value
+    read = _read(dry_run=True)
+    assert read.completion.effect is OperationEffect.UPDATED
+    assert read.report.dry_run is True
+    assert read.report.captured_count == 0 and read.report.observation_paths == ()
+    assert all(pair.captured_count == 0 for pair in read.report.pair_outcomes)
+    assert read.report.sync_run_ref is None
 
 
 def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
@@ -334,6 +366,9 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
     result = envelope["result"]
     assert isinstance(result, FiledCaptureResult)
     assert result.reached_count == 3
+    assert result.pair_outcomes == list(read.report.pair_outcomes)
+    assert result.pair_outcomes[-1].walk_attempted is False
+    assert result.pair_outcomes[-1].walk_completed is False
     assert result.sync_run_ref == _SYNC_RUN_REF
     notices = cast("list[Notice]", envelope["notices"])
     recapture = next(notice for notice in notices if notice.code == "live.filed.recapture_test")
@@ -347,3 +382,60 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
     lines = cast("tuple[str, ...]", envelope["lines"])
     assert f"notice\tlive.filed.recapture_test\t{recapture.message}" in lines
     assert skipped.message in lines
+
+
+@pytest.mark.parametrize("mismatch", ["outside_scope", "duplicate", "incomplete_counts", "reached", "captured"])
+def test_bulk_pair_accounting_refuses_contradictions_with_correlated_receipt(
+    monkeypatch: pytest.MonkeyPatch, mismatch: str
+) -> None:
+    projection = _projection()
+    pairs = list(projection.pair_outcomes)
+    if mismatch == "outside_scope":
+        pairs[0] = pairs[0].model_copy(update={"modelo": "721"})
+    elif mismatch == "duplicate":
+        pairs[1] = pairs[0]
+    elif mismatch == "incomplete_counts":
+        pairs[0] = pairs[0].model_copy(update={"walk_completed": False})
+    elif mismatch == "reached":
+        pairs[0] = pairs[0].model_copy(update={"reached_count": 3})
+    else:
+        pairs[0] = pairs[0].model_copy(update={"captured_count": 2})
+    projection = projection.model_copy(update={"pair_outcomes": tuple(pairs)})
+    _bind(monkeypatch, projection, effect=OperationEffect.UPDATED)
+    with pytest.raises(CliRefusedBoundaryError) as caught:
+        _read()
+    assert caught.value.context is not None
+    assert caught.value.context["operation_id"] == _OPERATION_ID
+    assert caught.value.context["reason"] == RuntimeRefusalCode.INVALID_FRAME.value
+
+
+def test_bulk_unvisited_pair_retains_observation_and_persistence_distinctions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _bind(monkeypatch, _projection(), effect=OperationEffect.UPDATED)
+    read = _read()
+    assert read.report.pair_outcomes == _projection().pair_outcomes
+    assert read.report.pair_outcomes[-1].walk_attempted is False
+    assert read.report.pair_outcomes[-1].walk_completed is False
+    assert read.report.reached_count == 3 and read.report.captured_count == 1
+
+
+@pytest.mark.parametrize("mutation", ["captured", "observation", "sync_run"])
+def test_bulk_dry_run_refuses_captured_data_despite_session_write_effect(
+    monkeypatch: pytest.MonkeyPatch, mutation: str
+) -> None:
+    projection = _projection(dry_run=True)
+    if mutation == "captured":
+        pairs = list(projection.pair_outcomes)
+        pairs[0] = pairs[0].model_copy(update={"captured_count": 1})
+        projection = projection.model_copy(update={"captured_count": 1, "pair_outcomes": tuple(pairs)})
+    elif mutation == "observation":
+        projection = projection.model_copy(update={"observation_paths": ("encrypted-observation",)})
+    else:
+        projection = projection.model_copy(update={"sync_run_ref": _SYNC_RUN_REF})
+    _bind(monkeypatch, projection, effect=OperationEffect.UPDATED)
+    with pytest.raises(CliRefusedBoundaryError) as caught:
+        _read(dry_run=True)
+    assert caught.value.context is not None
+    assert caught.value.context["operation_id"] == _OPERATION_ID
+    assert caught.value.context["reason"] == RuntimeRefusalCode.INVALID_FRAME.value

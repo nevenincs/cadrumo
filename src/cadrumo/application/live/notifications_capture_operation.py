@@ -40,7 +40,7 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from ..operations.owner import OperationExecutorContext
+from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -209,7 +209,10 @@ class NotificationsCaptureExecutor:
 
         effect_guard: FiledEffectGuard = fresh_persistence_guard
         session_receipt = LiveSessionWriteReceipt(context.events.effect)
-        with browser_resources.activate():
+        with (
+            retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
+            browser_resources.activate(),
+        ):
             outcome = await capture_notifications_with_outcome(
                 bucket_id=bucket_id,
                 ports=composition.notifications_ports,

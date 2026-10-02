@@ -5,12 +5,13 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
+from datetime import datetime
 from pathlib import Path
-from threading import Event, RLock
+from threading import Event, Lock, RLock, get_ident
 from uuid import UUID
 
-from ...adapters.local_runtime.profile_worker import ProfileWorkerProcess
-from ...application.runtime.contracts import RuntimeRefusalError
+from ...adapters.local_runtime.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.profile_access import RuntimeHumanProof
 from ...application.runtime.profile_worker import ProfileWorkerIdentity
 from ...application.runtime.worker_authorization import WorkerAuthorizationOwner
@@ -18,6 +19,7 @@ from ...application.user_profile.access_contracts import AccessSession
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
 from ...application.user_profile.session_authority import SessionAuthorityFacts
+from ...core.time.clock import now
 
 
 class ProfileWorkerSessionOwner:
@@ -37,6 +39,8 @@ class ProfileWorkerSessionOwner:
         human_secret: Callable[[UUID], AbstractContextManager[RuntimeHumanProof]],
         guard: RLock,
         authorization: WorkerAuthorizationOwner | None = None,
+        worker_script: Path | None = None,
+        wall_clock: Callable[[], datetime] = now,
     ) -> None:
         """Share the profile denial guard with the existing authority and administration."""
         self.identity, self.root = identity, storage_root
@@ -44,12 +48,23 @@ class ProfileWorkerSessionOwner:
         self._worker: ProfileWorkerProcess | None = None
         self._lost = False
         self._authorization = authorization
+        self._worker_script = worker_script
+        self._wall_clock = wall_clock
         self._retiring: list[ProfileWorkerProcess] = []
         self._lifecycle_guard = RLock()
         self._stopping = Event()
         self._construction_done = Event()
         self._construction_done.set()
         self._construction_failure = False
+        self._api_guard = Lock()
+        self._prepared_api_worker: ProfileWorkerProcess | None = None
+        self._api_thread: int | None = None
+        self._api_connection: UUID | None = None
+        self._api_deadline: float | None = None
+        self._human_guard = RLock()
+        self._prepared_human_worker: ProfileWorkerProcess | None = None
+        self._human_thread: int | None = None
+        self._human_connection: UUID | None = None
         self._persist_human_receipt = False
         self._human_receipts: dict[UUID, ProfileHumanLoginReceipt] = {}
 
@@ -61,15 +76,22 @@ class ProfileWorkerSessionOwner:
 
     def facts(self, connection_id: UUID) -> SessionAuthorityFacts:
         """Reobserve native facts without allowing an old lease to survive worker loss."""
-        if self._lost:
-            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        if self._worker is not None:
+        with self._lifecycle_guard:
+            if self._lost:
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+            worker = self._worker
+        if worker is not None:
             try:
-                self._worker.require_alive()
-            except RuntimeRefusalError:
+                worker.require_alive()
+            except RuntimeRefusalError as error:
+                if error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED:
+                    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
                 self.close()
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
         facts = self._observe(connection_id)
+        with self._lifecycle_guard:
+            if self._lost or self._stopping.is_set():
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         if (
             facts.profile.binding != self.identity.binding
             or facts.context.runtime_boot_id != self.identity.runtime_boot_id
@@ -94,49 +116,108 @@ class ProfileWorkerSessionOwner:
     @contextmanager
     def _custody(self) -> Generator[ProfileWorkerProcess]:
         constructing = False
+        candidate: ProfileWorkerProcess | None = None
+        worker: ProfileWorkerProcess | None = None
         try:
             with self._lifecycle_guard:
                 if self._lost or self._stopping.is_set():
                     raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
                 worker = self._worker
                 if worker is None:
+                    if not self._construction_done.is_set():
+                        raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
                     self._construction_done.clear()
                     constructing = True
             if constructing:
                 candidate = ProfileWorkerProcess(
-                    self.identity, storage_root=self.root, authorization=self._authorization
+                    self.identity,
+                    storage_root=self.root,
+                    authorization=self._authorization,
+                    worker_script=self._worker_script,
+                    wall_clock=self._wall_clock,
                 )
                 with self._lifecycle_guard:
                     if self._stopping.is_set():
                         self._retiring.append(candidate)
-                        stopped = True
                     else:
                         self._worker = candidate
                         worker = candidate
-                        stopped = False
-                if stopped:
+                        candidate = None
+                if candidate is not None:
                     candidate.close()
                     raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
             if worker is None:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
             yield worker
-        except RuntimeRefusalError:
-            if constructing and self._stopping.is_set():
+        except BaseException as error:
+            candidate = (unreturned_profile_worker(error) or candidate) if constructing else None
+            if candidate is not None:
+                with self._lifecycle_guard:
+                    if all(candidate is not retained for retained in self._retiring):
+                        self._retiring.append(candidate)
+                # The constructor has attempted immediate containment. Keep
+                # failed releases and callbacks until settlement outside the
+                # profile guard, even after the exception becomes a wire refusal.
+                self.begin_drain()
+            if constructing and self._stopping.is_set() and candidate is None and worker is None:
                 self._construction_failure = True
-            self.close()
-            raise
-        except BaseException:
-            if constructing and self._stopping.is_set():
-                self._construction_failure = True
+            if candidate is None and isinstance(error, RuntimeRefusalError):
+                with self._lifecycle_guard:
+                    undispatched_timeout = (
+                        error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+                        and worker is not None
+                        and worker is self._worker
+                        and not worker.stopping
+                    )
+                # The adapter fences every failed dispatched exchange. A wire
+                # queue timeout leaves the exact healthy worker untouched and
+                # must not retire another connection's admitted custody.
+                if not undispatched_timeout:
+                    self.close()
             raise
         finally:
             if constructing:
                 self._construction_done.set()
 
+    @contextmanager
+    def prepare_api_admission(self, connection_id: UUID) -> Generator[float]:
+        """Prepare one key-free candidate outside the profile denial fence."""
+        if not self._api_guard.acquire(blocking=False):
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        try:
+            with self._custody() as worker:
+                # This is the existing 30-second preparation/install budget,
+                # captured after bounded native construction and never renewed.
+                deadline = time.monotonic() + 30
+                worker.prepare_api_admission(deadline=deadline)
+                self._prepared_api_worker = worker
+                self._api_thread = get_ident()
+                self._api_connection = connection_id
+                self._api_deadline = deadline
+                yield deadline
+        finally:
+            self._prepared_api_worker = None
+            self._api_thread = None
+            self._api_connection = None
+            self._api_deadline = None
+            self._api_guard.release()
+
     def activate(self, session: AccessSession, dek: bytearray) -> None:
-        """Deliver authenticated API custody without selecting a human profile."""
-        with self._custody() as worker:
-            worker.install(session, dek)
+        """Install only into the exact prepared API worker under the denial fence."""
+        with self._lifecycle_guard:
+            worker, deadline = self._prepared_api_worker, self._api_deadline
+            if (
+                self._lost
+                or self._stopping.is_set()
+                or worker is None
+                or worker is not self._worker
+                or self._api_thread != get_ident()
+                or self._api_connection != session.connection_id
+                or deadline is None
+                or time.monotonic() >= deadline
+            ):
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        worker.install(session, dek, deadline=deadline)
 
     def refresh(self, session: AccessSession) -> None:
         """Propagate the authority's current grant-bound deadline into custody."""
@@ -153,21 +234,47 @@ class ProfileWorkerSessionOwner:
     @contextmanager
     def authenticate_human(self, connection_id: UUID) -> Generator[tuple[ProfileLoginOutcome, str]]:
         """Borrow a protected human proof channel and native originating-login identity."""
-        with self._human_secret(connection_id) as proof:
+        # Serialize candidates without holding the profile denial fence while
+        # the existing worker constructs, authenticates or releases proof.
+        with self._human_guard, self._human_secret(connection_id) as proof:
             try:
                 self._persist_human_receipt = proof.persist_receipt
-                with self._custody() as worker, worker.authenticate_human(proof.secret, method=proof.method) as outcome:
-                    yield outcome, proof.originating_login_id
+                with self._custody() as worker:
+                    self._prepared_human_worker = worker
+                    self._human_thread = get_ident()
+                    self._human_connection = connection_id
+                    with worker.authenticate_human(proof.secret, method=proof.method) as outcome:
+                        yield outcome, proof.originating_login_id
             finally:
+                self._prepared_human_worker = None
+                self._human_thread = None
+                self._human_connection = None
                 self._persist_human_receipt = False
                 proof.secret[:] = bytes(len(proof.secret))
 
+    def human_admission_deadline(self, connection_id: UUID) -> float:
+        """Capture the exact candidate's original bound before releasing its context."""
+        worker = self._prepared_human_worker
+        if worker is None or self._human_thread != get_ident() or self._human_connection != connection_id:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        return worker.human_admission_deadline
+
     def bind_human(self, session: AccessSession) -> None:
         """Commit the exact human candidate only after application admission."""
-        with self._custody() as worker:
-            self._human_receipts[session.session_id] = worker.bind_human(
-                session, persist_receipt=self._persist_human_receipt
-            )
+        with self._lifecycle_guard:
+            worker = self._prepared_human_worker
+            if (
+                self._lost
+                or self._stopping.is_set()
+                or worker is None
+                or worker is not self._worker
+                or self._human_thread != get_ident()
+                or self._human_connection != session.connection_id
+            ):
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        self._human_receipts[session.session_id] = worker.bind_human(
+            session, persist_receipt=self._persist_human_receipt
+        )
 
     def take_human_login_receipt(self, session_id: UUID) -> ProfileHumanLoginReceipt | None:
         """Consume the nonsecret acknowledgement after exact-session admission."""

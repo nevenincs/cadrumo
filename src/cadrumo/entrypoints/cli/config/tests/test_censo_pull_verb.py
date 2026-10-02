@@ -402,6 +402,7 @@ def test_reviewed_apply_outcomes_render_the_registered_projection() -> None:
 
     projection = CensalReviewProjectionV1(
         projection_version=1,
+        reviewed_proposal_digest="e" * 64,
         fields=(
             CensalReviewFieldProjectionV1(
                 path="contact.fiscal_address",
@@ -442,6 +443,7 @@ def test_exact_projection_requires_a_real_cli_apply_choice() -> None:
     """The CLI prints every reviewed fact and requires explicit confirmation."""
     projection = CensalReviewProjectionV1(
         projection_version=1,
+        reviewed_proposal_digest="e" * 64,
         fields=(
             CensalReviewFieldProjectionV1(
                 path="contact.postcode",

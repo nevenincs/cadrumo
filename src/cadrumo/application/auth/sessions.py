@@ -29,7 +29,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, TypeAdapter, ValidationError
 
-from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ...core.async_cleanup import close_async_resources
 from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError
 from ...core.identity.documents import IdentityError
@@ -1222,19 +1222,19 @@ async def _authenticate_and_verify_provider(
 @asynccontextmanager
 async def _provider_lifecycle(provider: AuthProvider) -> AsyncGenerator[None]:
     """Close ``provider`` without hiding a primary auth failure."""
+    primary_error: BaseException | None = None
     try:
         yield
+    except BaseException as error:
+        primary_error = error
+        raise
     finally:
-        try:
-            await close_async_resources(
-                provider,
-                task_name="cadrumo-auth-provider-close",
-                close_attempts=2,
-            )
-        except AsyncResourceCleanupError as cleanup_error:
-            raise AuthSessionUnavailableError(
-                translated_message="application.auth.sessions.errors.provider_close_failed",
-            ) from cleanup_error
+        await close_async_resources(
+            provider,
+            task_name="cadrumo-auth-provider-close",
+            close_attempts=2,
+            primary_error=primary_error,
+        )
 
 
 __all__ = [

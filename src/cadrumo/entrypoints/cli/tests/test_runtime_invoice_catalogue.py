@@ -65,11 +65,20 @@ def _client(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_snapshot_reconstructs_exact_existing_cli_record_payload() -> None:
     invoice, snapshot = _record()
-    existing = handler._catalogue_invoice_payload(invoice)
+    expected_fields = {
+        name: getattr(invoice, name)
+        for name in handler.CatalogueInvoiceRecordPayload.model_fields
+        if hasattr(invoice, name)
+    }
+    expected_fields["linked_transaction_ids"] = list(invoice.linked_transaction_ids)
+    expected_fields["lines"] = [line.model_dump(mode="python") for line in invoice.lines]
+    provenance = invoice.provenance
+    expected_fields["source_filename"] = provenance.source_path.name if provenance is not None else None
+    expected_fields["source_sha256"] = provenance.source_sha256 if provenance is not None else None
+    expected_fields["source_row_index"] = provenance.source_row_index if provenance is not None else None
+    existing = handler.CatalogueInvoiceRecordPayload.model_validate(expected_fields)
     reconstructed = handler._snapshot_invoice_payload(snapshot)
-    assert reconstructed.model_dump(mode="python") == handler.CatalogueInvoiceViewResult.model_validate(
-        existing
-    ).model_dump(mode="python")
+    assert reconstructed.model_dump(mode="python") == existing.model_dump(mode="python")
     assert handler._catalogue_invoice_lines(reconstructed) == handler._catalogue_invoice_lines(invoice)
 
 

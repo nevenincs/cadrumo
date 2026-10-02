@@ -46,11 +46,13 @@ def import_ledger_sources_for_cli(
         client,
         LedgerImportRequest(
             profile_id=client.profile_id,
-            files=files,
+            # The worker has its own storage-root cwd. Anchor the caller's
+            # paths without resolving symlinks or changing source labels.
+            files=tuple(path.absolute() for path in files),
             provider=provider,
             dry_run=dry_run,
             verify=verify,
-            verify_source=verify_source,
+            verify_source=verify_source.absolute() if verify_source is not None else None,
             period=PublicPeriod.from_period(period) if period is not None else None,
         ),
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,

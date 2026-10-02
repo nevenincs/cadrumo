@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -11,19 +12,150 @@ from threading import Event
 from uuid import uuid4
 
 import pytest
+import typer
+import typer.main
 
 from ....adapters.local_runtime.server import RuntimeTransportServer
 from ....adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from ....application.operator_surface.command_ports import ProfileAuthenticationPosture
-from ....application.runtime.contracts import RuntimeRefusalCode
+from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.management_status import RuntimeListenerState, RuntimeManagerAvailability
+from ....core.async_cleanup import AsyncResourceCleanupError
 from ....core.config import override_settings
 from ....tests.cli_envelope import require_error_document, unwrap_schema_envelope
+from ...runtime_management import RuntimeStopConsent
+from ...tests.test_runtime_management import StopFixture
 from .._profile_authentication_contract import command_needs_state_tree, profile_authentication_posture
+from ..app_runtime import runtime_stop
+from ..app_runtime_payloads import RuntimeStopResult
 from ..command_specs import COMMAND_GRAPH
+from ..errors import CliRefusedBoundaryError
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.hex_entrypoint]
+
+
+def _stop_context() -> typer.Context:
+    app = typer.Typer()
+    app.command()(runtime_stop)
+    return typer.Context(typer.main.get_command(app))
+
+
+@pytest.mark.unit
+def test_stop_reports_accepted_ack_before_cleanup_failure_and_retains_retry_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = StopFixture(channel_failures=2)
+    results: list[RuntimeStopResult] = []
+    monkeypatch.setattr("cadrumo.entrypoints.cli.app_runtime.preview_installed_runtime_stop", fixture.open)
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.cli.app_runtime.emit_envelope", lambda _ctx, **kwargs: results.append(kwargs["result"])
+    )
+    context = _stop_context()
+    with pytest.raises(AsyncResourceCleanupError) as failed:
+        runtime_stop(context, acknowledge_all_profiles_and_work=True)
+    assert len(results) == 1
+    result = results[0]
+    assert result.runtime_boot_id == fixture.channel.boot
+    assert result.scope == "all_profiles_and_work"
+    assert fixture.consent.accepted is not None
+    assert fixture.channel.close_calls == fixture.endpoint.close_calls == 1
+    with pytest.raises(AsyncResourceCleanupError) as retry_failed:
+        asyncio.run(failed.value.retry_cleanup())
+    asyncio.run(retry_failed.value.retry_cleanup())
+    assert fixture.channel.close_calls == 3 and fixture.endpoint.close_calls == 1
+    assert fixture.channel.confirmations == 1 and fixture.consent.released
+
+
+@pytest.mark.unit
+def test_stop_mapping_keeps_original_refusal_with_native_retry_owners(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = StopFixture(channel_failures=2, outcome="lost")
+    results: list[object] = []
+    monkeypatch.setattr("cadrumo.entrypoints.cli.app_runtime.preview_installed_runtime_stop", fixture.open)
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.cli.app_runtime.emit_envelope", lambda _ctx, **kwargs: results.append(kwargs["result"])
+    )
+    context = _stop_context()
+    with pytest.raises(RuntimeRefusalError) as failed:
+        runtime_stop(context, acknowledge_all_profiles_and_work=True)
+    assert failed.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+    assert results == [] and fixture.consent.uncertain
+    cleanup = failed.value.__dict__.get("async_cleanup_error")
+    assert isinstance(cleanup, AsyncResourceCleanupError)
+    assert fixture.channel.close_calls == 2
+    asyncio.run(cleanup.retry_cleanup())
+    assert fixture.channel.close_calls == 3 and fixture.channel.confirmations == 1
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("outcome", ["lost", "refused"])
+def test_stop_mapping_distinguishes_unknown_dispatch_from_explicit_refusal(
+    monkeypatch: pytest.MonkeyPatch, outcome: str
+) -> None:
+    fixture = StopFixture(outcome="lost" if outcome == "lost" else "refused")
+    monkeypatch.setattr("cadrumo.entrypoints.cli.app_runtime.preview_installed_runtime_stop", fixture.open)
+    with pytest.raises(CliRefusedBoundaryError) as refused:
+        runtime_stop(_stop_context(), acknowledge_all_profiles_and_work=True)
+    assert refused.value.context is not None
+    assert refused.value.context["stop_outcome"] == ("unknown" if outcome == "lost" else "refused")
+    assert fixture.channel.confirmations == 1 and fixture.consent.released
+    assert fixture.channel.close_calls == fixture.endpoint.close_calls == 1
+
+
+@pytest.mark.unit
+def test_stop_output_failure_keeps_pending_cancellation_and_native_cleanup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = StopFixture(channel_failures=1)
+    fixture.channel.continue_reply.clear()
+    observed: list[asyncio.CancelledError] = []
+    cancellers: list[asyncio.Task[None]] = []
+    rendering = OSError("synthetic hidden output detail")
+
+    original_confirm = fixture.consent.confirm
+
+    async def confirm() -> object:
+        try:
+            return await original_confirm()
+        except asyncio.CancelledError as error:
+            observed.append(error)
+            raise
+
+    async def opened() -> RuntimeStopConsent:
+        caller = asyncio.current_task()
+        assert caller is not None
+
+        async def cancel_after_dispatch() -> None:
+            assert await asyncio.to_thread(fixture.channel.confirming.wait, 2)
+            caller.cancel("original-cli-stop-cancellation")
+            fixture.channel.continue_reply.set()
+
+        cancellers.append(asyncio.create_task(cancel_after_dispatch()))
+        return fixture.consent
+
+    def failed_output(_ctx: object, **_kwargs: object) -> None:
+        raise rendering
+
+    monkeypatch.setattr("cadrumo.entrypoints.cli.app_runtime.preview_installed_runtime_stop", opened)
+    monkeypatch.setattr(fixture.consent, "confirm", confirm)
+    monkeypatch.setattr("cadrumo.entrypoints.cli.app_runtime.emit_envelope", failed_output)
+    try:
+        with pytest.raises(asyncio.CancelledError) as cancelled:
+            runtime_stop(_stop_context(), acknowledge_all_profiles_and_work=True)
+        assert observed == [cancelled.value] and observed[0] is cancelled.value
+        assert cancelled.value.args == ("original-cli-stop-cancellation",)
+        assert cancelled.value.__dict__.get("runtime_stop_output_error") is rendering
+        assert fixture.consent.accepted is not None
+        cleanup = cancelled.value.__dict__.get("async_cleanup_error")
+        assert isinstance(cleanup, AsyncResourceCleanupError)
+        assert fixture.channel.close_calls == fixture.endpoint.close_calls == 1
+        asyncio.run(cleanup.retry_cleanup())
+        assert fixture.consent.released and fixture.channel.close_calls == 2
+        assert fixture.channel.confirmations == 1
+    finally:
+        fixture.channel.continue_reply.set()
 
 
 @pytest.mark.unit

@@ -15,8 +15,6 @@ with the registered ledger payload contracts.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
-
 import typer
 from pydantic import ValidationError
 
@@ -37,7 +35,6 @@ from ...domain.transactions.enums import (
     takes_business_share,
 )
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ._date_parsing import _parse_iso_date
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
 from ._ledger_llm_cli import (
@@ -55,11 +52,10 @@ from ._ledger_support import (
     parse_amount_magnitude,
     parse_decimal_option,
     parse_required_decimal,
-    resolve_id,
     validate_business_pct_range,
     validate_category_id,
 )
-from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
+from .common import bad, emit_envelope
 from .ledger_lifecycle_cli import (
     ledger_archive,
     ledger_attach,
@@ -71,10 +67,6 @@ from .ledger_lifecycle_cli import (
     ledger_split,
     ledger_stash,
 )
-from .state_projection_support import authority_operation
-
-if TYPE_CHECKING:
-    from ...application.ledger.action_ports import LedgerActionPorts
 
 __all__ = [
     "ledger_archive",
@@ -456,8 +448,6 @@ def _dispatch_non_direct_classification_route(
 def _dispatch_bulk_classification_route(
     ctx: typer.Context,
     *,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    ports: LedgerActionPorts,
     transaction_id: str | None,
     classification: BusinessClassification | None,
     file: str | None,
@@ -468,8 +458,6 @@ def _dispatch_bulk_classification_route(
         return False
     ledger_classify_bulk_csv(
         ctx,
-        transaction_repository=transaction_repository,
-        ports=ports,
         transaction_id=transaction_id,
         classification=classification,
         file=file,
@@ -550,25 +538,14 @@ def ledger_classify(
         reason=reason or "",
     ):
         return
-    if file is not None:
-        state = current_workflow_state()
-        transaction_repository = transaction_catalogue_repo(state)
-        from ..ledger_action_composition import compose_ledger_action_ports
-
-        ports = compose_ledger_action_ports(
-            bucket_id=transaction_repository.bucket_id,
-            operation=authority_operation(ctx),
-        )
-        if _dispatch_bulk_classification_route(
-            ctx,
-            transaction_repository=transaction_repository,
-            ports=ports,
-            transaction_id=transaction_id,
-            classification=classification,
-            file=file,
-            actor=actor,
-        ):
-            return
+    if file is not None and _dispatch_bulk_classification_route(
+        ctx,
+        transaction_id=transaction_id,
+        classification=classification,
+        file=file,
+        actor=actor,
+    ):
+        return
 
     transaction_id, classification = require_single_ledger_classification_request(
         transaction_id=transaction_id,
@@ -730,23 +707,11 @@ def ledger_allocate(
     )
 
 
-def _link_refusal(exc: Exception) -> typer.BadParameter:
-    """Map one link refusal to the instructive message for its actual cause.
-
-    Only the two operator-caused refusals get a specific message. They are
-    identified by context keys the writer sets for those cases alone:
-    ``invoice_bucket_id`` names the bucket a resolved invoice really belongs
-    to, and ``bucket_id`` accompanies an invoice id that resolved to nothing.
-    Every other link failure -- an invoice missing after its own update, a
-    malformed digest, a catalogue validation error -- is an internal
-    inconsistency the operator cannot act on differently, and keeps the generic
-    message. Matching on ``invoice_id`` alone would be wrong: three unrelated
-    raise sites carry it.
-    """
-    context = cast("dict[str, object]", getattr(exc, "context", None) or {})
-    if "invoice_bucket_id" in context:
+def _link_refusal(reason: str | None) -> typer.BadParameter:
+    """Map the closed worker refusal reason to its existing operator message."""
+    if reason == "cross_bucket_invoice":
         return bad(tr("cli.ledger.link.errors.cross_bucket_invoice"))
-    if "bucket_id" in context:
+    if reason == "missing_invoice":
         return bad(tr("cli.ledger.link.errors.invoice_not_found"))
     return invoice_link_error_bad_parameter()
 
@@ -758,50 +723,33 @@ def ledger_link(
     actor: str | None = None,
 ) -> None:
     """Bind a transaction to one reconciliation-catalogue invoice, atomically."""
-    from ...application.ledger.actions_manual import link_manual_transaction_invoice
-    from ...domain.invoices.errors import InvoiceLinkError
-    from ..ledger_action_composition import compose_ledger_action_ports
+    from .runtime_ledger_export_link import link_ledger_invoice_for_cli
 
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    bucket_id = transaction_repository.bucket_id
-    # Resolving the id decodes stored transactions, so the lease comes first.
-    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    actor_label = (actor or "operator").strip() or "operator"
-
-    try:
-        link_manual_transaction_invoice(
-            bucket_id=bucket_id,
-            transaction_id=resolved_id,
-            invoice_id=invoice_id,
-            actor=actor_label,
-            source_command="aeat app ledger link",
-            ports=ports,
-        )
-    except InvoiceLinkError as exc:
-        # The writer owns the missing/cross-bucket policy and refuses before it
-        # writes anything, so this adapter reads neither the catalogue nor the
-        # record: it maps the refusal it was given back to the instructive
-        # message the operator needs. The two cases are told apart by the
-        # context the writer already supplies -- an invoice that resolved but
-        # belongs elsewhere carries its owning bucket, one that never resolved
-        # cannot.
-        raise _link_refusal(exc) from exc
+    outcome = link_ledger_invoice_for_cli(
+        ctx,
+        transaction_id=transaction_id,
+        invoice_id=invoice_id,
+        actor=actor,
+    )
+    if outcome.outcome == "refused":
+        raise _link_refusal(outcome.reason)
+    projection = outcome.projection
+    if projection is None:
+        raise invoice_link_error_bad_parameter()
 
     payload: dict[str, object] = {
         "operation": "ledger.link",
-        "bucket_id": bucket_id,
-        "transaction_id": resolved_id,
-        "invoice_id": invoice_id,
-        "actor": actor_label,
+        "bucket_id": projection.bucket_id,
+        "transaction_id": projection.transaction_id,
+        "invoice_id": projection.invoice_id,
+        "actor": projection.actor,
     }
     lines = [
         "operation\tledger.link",
-        f"bucket\t{bucket_id}",
-        f"transaction_id\t{resolved_id}",
-        f"actor\t{actor_label}",
-        f"invoice_id\t{invoice_id}",
+        f"bucket\t{projection.bucket_id}",
+        f"transaction_id\t{projection.transaction_id}",
+        f"actor\t{projection.actor}",
+        f"invoice_id\t{projection.invoice_id}",
     ]
     from ._ledger_payloads import LedgerLinkResult
 

@@ -33,6 +33,8 @@ class _OwnerObservation:
     login_id = "synthetic-managed-runtime-owner"
 
     def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
+        if sys.platform != "linux":
+            raise RuntimeError("managed-runtime fixture requires Linux")
         return OsLoginContext(
             login_id=self.login_id,
             os_owner_id=str(os.getuid()),
@@ -44,6 +46,8 @@ class _OwnerObservation:
 
 
 def _binding(root: Path) -> RuntimeServiceBinding:
+    if sys.platform != "linux":
+        raise RuntimeError("managed-runtime fixture requires Linux")
     return RuntimeServiceBinding(
         executable=str(root / "synthetic-runtime"),
         storage_root=str(root),
@@ -63,6 +67,8 @@ def _foreign_stop(root: Path) -> int:
 
 
 def _service(arguments: list[str]) -> int:
+    if sys.platform != "linux":
+        raise RuntimeError("managed-runtime fixture requires Linux")
     parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument("--storage-root", required=True)
     parser.add_argument("--storage-identity", required=True)

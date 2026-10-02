@@ -196,10 +196,10 @@ class _PinnedRevisionedTransactionRepository:
     def replace_if_current_with_secure_object_writes(
         self,
         current: Transaction,
-        replacement_transaction: Transaction,
+        replacement: Transaction,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        _ = current, replacement_transaction, extra_writes
+        _ = current, replacement, extra_writes
         raise LedgerPersistenceConflictError("ledger merge requires the pinned catalogue revision")
 
     def load_revisioned(self) -> tuple[TransactionCatalogue, str]:

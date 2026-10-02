@@ -10,10 +10,12 @@ import sys
 import time
 from collections.abc import Buffer, Callable
 from pathlib import Path
+from threading import RLock
 from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
+from .framing import close_runtime_transport_after_failure
 
 if TYPE_CHECKING:
     from _win32typing import PyOVERLAPPED
@@ -139,6 +141,7 @@ class WindowsRuntimeChannel:
 
     def __init__(self, handle: int | _NativeHandle, *, server: bool, expected_image: Path | None = None) -> None:
         """Verify the kernel-reported peer process/token before exposing I/O."""
+        self._capture_guard = RLock()
         _require_windows()
         import pywintypes
         import win32api
@@ -170,10 +173,11 @@ class WindowsRuntimeChannel:
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
             self._peer = RuntimePeer(os_owner_id=owner, process_id=pid)
         except pywintypes.error:
-            self.close()
-            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED) from None
-        except BaseException:
-            self.close()
+            refusal = RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            close_runtime_transport_after_failure(self, refusal)
+            raise refusal from None
+        except BaseException as error:
+            close_runtime_transport_after_failure(self, error)
             raise
 
     @property
@@ -185,9 +189,10 @@ class WindowsRuntimeChannel:
         """Resolve login provenance from this connection's retained peer handle."""
         from .windows_login import capture_windows_login
 
-        if self._peer_process is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
-        return capture_windows_login(int(self._peer_process), expected_owner=self._peer.os_owner_id)
+        with self._capture_guard:
+            if self._handle is None or self._peer_process is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            return capture_windows_login(int(self._peer_process), expected_owner=self._peer.os_owner_id)
 
     def read_exact(self, count: int, *, deadline: float) -> bytes:
         """Read a bounded frame fragment using cancellable overlapped operations."""
@@ -261,15 +266,30 @@ class WindowsRuntimeChannel:
         """Release this pipe and peer handle, independently of other sessions."""
         import win32api
 
-        if self._handle is not None:
-            if isinstance(self._handle, int):
-                win32api.CloseHandle(self._handle)
-            else:
-                self._handle.Close()
-            self._handle = None
-        if self._peer_process is not None:
-            self._peer_process.Close()
-            self._peer_process = None
+        with self._capture_guard:
+            first_error: BaseException | None = None
+            if self._handle is not None:
+                try:
+                    if isinstance(self._handle, int):
+                        win32api.CloseHandle(self._handle)
+                    else:
+                        self._handle.Close()
+                except BaseException as error:
+                    first_error = error
+                else:
+                    self._handle = None
+            if self._peer_process is not None:
+                try:
+                    self._peer_process.Close()
+                except BaseException as error:
+                    if first_error is None:
+                        first_error = error
+                    else:
+                        first_error.add_note(f"Retained peer handle release also failed ({type(error).__name__})")
+                else:
+                    self._peer_process = None
+            if first_error is not None:
+                raise first_error
 
 
 class WindowsRuntimeEndpoint:

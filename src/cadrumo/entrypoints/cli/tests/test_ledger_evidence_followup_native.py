@@ -19,12 +19,12 @@ from ....application.user_profile.login_session import login_profile, resolve_lo
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import unwrap_cli_result
 from ...tests.evidence_followup_operation_test_support import prepare_evidence_followup_conformance_case
-from ._runtime_profile_cli_fixture import (
+from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )
-from .cli_runner import invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,

@@ -32,7 +32,7 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.owner import OperationExecutorContext
+from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -41,7 +41,6 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_data_capture import capture_filed_data_bulk
@@ -49,6 +48,7 @@ from .filed_history_operation import (
     FiledHistoryBrowserResourcesFactory,
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
+    FiledHistorySyncRunRepositoryFactory,
 )
 from .filed_single_capture_operation import (
     FiledCaptureNoticeV1,
@@ -56,7 +56,7 @@ from .filed_single_capture_operation import (
     public_filed_capture_notice,
     public_filed_reconciliation,
 )
-from .remote_state_models import BulkFiledDataCaptureReport
+from .remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
 from .session import LiveSessionWriteReceipt
 
 FILED_BULK_CAPTURE_DEFINITION_ID = "live.filed-capture.bulk"
@@ -114,6 +114,7 @@ class FiledBulkCapturePublicResultV1(BaseModel):
     dry_run: bool
     captured_count: NonNegativeInt
     reached_count: NonNegativeInt
+    pair_outcomes: tuple[FiledCapturePairOutcome, ...]
     failed_count: NonNegativeInt
     sync_run_ref: str | None
     observation_paths: tuple[str, ...]
@@ -138,6 +139,7 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> Bas
     """Project every report lane, keeping casilla values out of public frames."""
     del receipt
     report = BulkFiledDataCaptureReport.model_validate(result, strict=True)
+    report.require_consistent()
     return FiledBulkCapturePublicResultV1(
         output_root=report.output_root,
         modelos=report.modelos,
@@ -146,6 +148,7 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> Bas
         dry_run=report.dry_run,
         captured_count=report.captured_count,
         reached_count=report.reached_count,
+        pair_outcomes=report.pair_outcomes,
         failed_count=report.failed_count,
         sync_run_ref=report.sync_run_ref,
         observation_paths=report.observation_paths,
@@ -197,7 +200,7 @@ class FiledBulkCaptureExecutor:
         composition_factory: FiledHistoryCompositionFactory,
         browser_resources_factory: FiledHistoryBrowserResourcesFactory,
         provider_preflight: FiledHistoryProviderPreflight,
-        sync_run_repository_factory: type[SyncRunRecordRepositoryProtocol],
+        sync_run_repository_factory: FiledHistorySyncRunRepositoryFactory,
     ) -> None:
         """Bind worker-owned capabilities for each invocation."""
         self._composition_factory = composition_factory
@@ -222,7 +225,10 @@ class FiledBulkCaptureExecutor:
         if not payload.dry_run:
             await context.events.effect(OperationEffect.UNKNOWN)
         session_receipt = LiveSessionWriteReceipt(context.events.effect)
-        with resources.activate():
+        with (
+            retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
+            resources.activate(),
+        ):
             report = await capture_filed_data_bulk(
                 filed_data_port=composition.filed_data_port,
                 year_from=payload.year_from,
@@ -248,7 +254,7 @@ def build_filed_bulk_capture_definition(
     composition_factory: FiledHistoryCompositionFactory,
     browser_resources_factory: FiledHistoryBrowserResourcesFactory,
     provider_preflight: FiledHistoryProviderPreflight,
-    sync_run_repository_factory: type[SyncRunRecordRepositoryProtocol],
+    sync_run_repository_factory: FiledHistorySyncRunRepositoryFactory,
 ) -> OperationDefinition:
     """Declare recorded bulk capture with process cleanup and guarded writes."""
 

@@ -31,7 +31,7 @@ from ....domain.calculations.registry.profile_grounding import build_profile_gro
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ...overview_read_composition import _refusal_requirements
 from ._overview_native_support import invoke_native_overview
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 pytest_plugins = ("cadrumo.entrypoints.cli.tests._overview_native_support",)

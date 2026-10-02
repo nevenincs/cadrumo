@@ -12,8 +12,7 @@ import pytest
 from mcp.types import CallToolResult
 from pydantic import JsonValue
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
+from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.application.auth.read_operation import (
     AUTH_READ_OPERATION_DEFINITION_ID,
     AUTH_READ_RESULT_SCHEMA_ID,
@@ -29,7 +28,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
 )
 from cadrumo.application.user_profile.access_contracts import (
@@ -38,7 +36,6 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
@@ -115,51 +112,96 @@ def _safe_failure_observations(session: NativeApiCliSession[None]) -> tuple[tupl
     )
 
 
-async def _admit_mcp_client(
-    profile_id: UUID, credential_reference: UUID, native_store: AutomationSecretStore
-) -> RuntimeFrontendClient:
-    client = await open_installed_credential_client(
-        profile_id=profile_id,
-        credential_reference=credential_reference,
-        frontend=OperationFrontendProjection.MCP,
-        secrets_store=native_store,
-    )
-    assert client.profile_id == profile_id
-    assert client.frontend is OperationFrontendProjection.MCP
-    return client
-
-
 @pytest.mark.anyio
 async def test_authenticated_mcp_discovers_executes_observes_and_reads_native_result(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The SDK adapter uses exact protected admission and the real result service."""
+    """The SDK authentication tool admits the exact profile before a native operation."""
     with native_api_cli_session(
         tmp_path,
         scope_for_destination=_scope_for_destination,
         prepare_profile=lambda _profile_id, _root: None,
     ) as enrolled:
-        try:
-            client = await _admit_mcp_client(
-                enrolled.profile_id,
-                enrolled.credential_reference,
-                enrolled._client_native,
-            )
-        except Exception as error:
-            error_type = f"{type(error).__module__}.{type(error).__qualname__}"
-            pytest.fail(
-                f"native MCP admission failed ({error_type}); "
-                f"sanitized runtime failures={_safe_failure_observations(enrolled)!r}",
-                pytrace=False,
-            )
-        first_session_id = client.session_id
-        adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=client)
+        # Substitute only the native secret-store composition. MCP credential
+        # resolution, runtime transport, profile worker, and operation services
+        # remain production implementations.
+        monkeypatch.setattr(
+            runtime_credentials,
+            "installed_automation_secret_store",
+            lambda: enrolled._client_native,
+        )
+        adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
+        first_session_id: UUID | None = None
         try:
             async with connected_server_and_client_session(build_server(adapter)) as sdk:
                 tools = (await sdk.list_tools()).tools
                 names = [tool.name for tool in tools]
                 assert len(names) == len(set(names))
-                assert {"search", "describe", "execute", "observe", "result"} <= set(names)
+                assert {"authenticate", "status", "search", "describe", "execute", "observe", "result"} <= set(names)
+
+                unauthenticated = await sdk.call_tool("status", {})
+                assert unauthenticated.is_error is False
+                assert _structured(unauthenticated) == {
+                    "outcome": "status",
+                    "profile_id": str(enrolled.profile_id),
+                    "authenticated": False,
+                    "denial": "authentication_required",
+                }
+                private_before_auth = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                assert private_before_auth.is_error is True
+                assert _structured(private_before_auth) == {
+                    "outcome": "refused",
+                    "code": "authentication_required",
+                }
+
+                authenticated = await sdk.call_tool(
+                    "authenticate",
+                    {"credential_reference": str(enrolled.credential_reference)},
+                )
+                authenticated_result = _structured(authenticated)
+                if authenticated.is_error:
+                    pytest.fail(
+                        "native MCP admission failed; "
+                        f"safe result={authenticated_result!r}; "
+                        f"sanitized runtime failures={_safe_failure_observations(enrolled)!r}",
+                        pytrace=False,
+                    )
+                assert authenticated_result["outcome"] == "authenticated"
+                admitted_status = authenticated_result["status"]
+                assert isinstance(admitted_status, dict)
+                assert admitted_status["profile_id"] == str(enrolled.profile_id)
+                assert admitted_status["credential_authenticated"] is True
+                first_session_value = admitted_status["session_id"]
+                assert isinstance(first_session_value, str)
+                first_session_id = UUID(first_session_value)
+                assert str(enrolled.credential_reference) not in repr(authenticated_result)
+
+                wrong_reference_id = UUID(int=enrolled.credential_reference.int ^ 1)
+                wrong_reference = await sdk.call_tool(
+                    "authenticate",
+                    {"credential_reference": str(wrong_reference_id)},
+                )
+                assert wrong_reference.is_error is True
+                assert _structured(wrong_reference) == {"outcome": "refused", "code": "missing"}
+                assert adapter.client is not None and adapter.client.session_id == first_session_id
+                still_admitted = await sdk.call_tool("status", {})
+                still_admitted_result = _structured(still_admitted)
+                if still_admitted_result["outcome"] != "status":
+                    prior_session_retained = (
+                        adapter.client is not None and adapter.client.session_id == first_session_id
+                    )
+                    pytest.fail(
+                        "previous native MCP session failed after a missing candidate reference; "
+                        f"safe result={still_admitted_result!r}; "
+                        f"previous session retained={prior_session_retained}; "
+                        f"sanitized runtime failures={_safe_failure_observations(enrolled)!r}",
+                        pytrace=False,
+                    )
+                still_admitted_status = still_admitted_result["status"]
+                assert isinstance(still_admitted_status, dict)
+                assert still_admitted_status["profile_id"] == str(enrolled.profile_id)
+                assert still_admitted_status["session_id"] == str(first_session_id)
+                assert still_admitted_status["credential_authenticated"] is True
 
                 search = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
                 assert search.is_error is False
@@ -260,19 +302,31 @@ async def test_authenticated_mcp_discovers_executes_observes_and_reads_native_re
         finally:
             await adapter.close()
 
-        fresh_client = await _admit_mcp_client(
-            enrolled.profile_id,
-            enrolled.credential_reference,
-            enrolled._client_native,
-        )
-        assert fresh_client.session_id != first_session_id
-        fresh_adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=fresh_client)
+        assert first_session_id is not None
+        reconnected_adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
         try:
-            async with connected_server_and_client_session(build_server(fresh_adapter)) as sdk:
+            async with connected_server_and_client_session(build_server(reconnected_adapter)) as sdk:
+                reauthenticated = await sdk.call_tool(
+                    "authenticate",
+                    {"credential_reference": str(enrolled.credential_reference)},
+                )
+                assert reauthenticated.is_error is False
+                reauthenticated_result = _structured(reauthenticated)
+                assert reauthenticated_result["outcome"] == "authenticated"
+                reauthenticated_status = reauthenticated_result["status"]
+                assert isinstance(reauthenticated_status, dict)
+                assert reauthenticated_status["profile_id"] == str(enrolled.profile_id)
+                assert reauthenticated_status["credential_authenticated"] is True
+                reauthenticated_session_value = reauthenticated_status["session_id"]
+                assert isinstance(reauthenticated_session_value, str)
+                assert UUID(reauthenticated_session_value) != first_session_id
+
                 status = await sdk.call_tool("status", {})
                 assert status.is_error is False
                 status_result = _structured(status)
                 assert status_result["outcome"] == "status"
-                assert status_result["status"] is not None
+                readback_status = status_result["status"]
+                assert isinstance(readback_status, dict)
+                assert readback_status["session_id"] == reauthenticated_session_value
         finally:
-            await fresh_adapter.close()
+            await reconnected_adapter.close()

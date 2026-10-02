@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime, timedelta
-from threading import Event
+from threading import Event, get_ident
 from types import SimpleNamespace
 from typing import cast, override
 from uuid import UUID, uuid4
@@ -15,8 +15,20 @@ from textual.widgets import Button, Checkbox, Input, Select, SelectionList
 from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from cadrumo.application.user_profile.access_contracts import AccessAction, DisclosureCategory
-from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
+from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
+from cadrumo.application.user_profile.access_contracts import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    ProfileAccessStatus,
+)
+from cadrumo.application.user_profile.automation_custody_port import (
+    AutomationCustodyCode,
+    AutomationCustodyError,
+    AutomationSecretStore,
+)
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     EnrollmentKind,
@@ -26,7 +38,9 @@ from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
 from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -247,6 +261,7 @@ class _OwnedRequesterClient(RuntimeFrontendClient):
         self._session_id = uuid4()
         self.enrollment = enrollment
         self.closed = False
+        self.close_calls = 0
 
     @override
     def prepare_enrollment(
@@ -258,6 +273,7 @@ class _OwnedRequesterClient(RuntimeFrontendClient):
 
     @override
     def close(self) -> None:
+        self.close_calls += 1
         self.closed = True
 
 
@@ -304,3 +320,419 @@ async def test_close_waits_for_submitted_delivery_before_closing_owned_client() 
     assert outcome.request_id == enrollment.prepared.enrollment_request_id
     assert enrollment.submits == 1
     assert client.closed
+
+
+class _ReviewerClient(_OwnedRequesterClient):
+    """Presentation status port; this fixture cannot approve runtime work."""
+
+    @override
+    def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
+        assert timeout > 0
+        return RuntimeProfileStatus(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            status=ProfileAccessStatus(
+                connected=True,
+                credential_authenticated=True,
+                profile_id=self.profile_id,
+                session_id=self.session_id,
+                session_expires_at=datetime.now(UTC) + timedelta(minutes=5),
+                grant_state=None,
+                grant_expires_at=None,
+                grant_valid=False,
+                profile_bound=True,
+                storage=Availability.AVAILABLE,
+                automation_custody=Availability.AVAILABLE,
+                published_authority=Availability.AVAILABLE,
+                provider=Availability.NOT_REQUIRED,
+                effective_scope=AccessScope(
+                    operations=frozenset(),
+                    actions=frozenset(),
+                    disclosures=frozenset(),
+                    periods=None,
+                    allow_period_independent=True,
+                    allow_delegation=False,
+                ),
+                denial=None,
+            ),
+        )
+
+
+@pytest.mark.asyncio
+async def test_pending_delivery_allows_human_review_and_cancel_preserves_request_ownership() -> None:
+    """Opening/cancelling the real review view neither abandons nor approves delivery."""
+    profile_id = uuid4()
+    enrollment = _HeldEnrollment(profile_id)
+    requester = _OwnedRequesterClient(profile_id, enrollment)
+    reviewer = _ReviewerClient(profile_id, enrollment)
+
+    async def open_client(target: UUID) -> RuntimeFrontendClient:
+        assert target == profile_id
+        return requester
+
+    screen = RuntimeAutomationRequesterScreen(
+        profile_id=profile_id,
+        contracts=_view_contracts(),
+        secrets_store=cast(AutomationSecretStore, object()),
+        open_client=open_client,
+        reviewer_client=reviewer,
+    )
+    app = ScreenHostApp(screen)
+    async with app.run_test(size=(140, 48)) as pilot:
+        await pilot.pause()
+        assert screen.query_one("#automation-request-review", Button).disabled
+        screen.query_one("#automation-request-expiry", Input).value = (
+            datetime.now(UTC) + timedelta(days=30)
+        ).isoformat()
+        screen.query_one("#automation-request-key-expiry", Input).value = (
+            datetime.now(UTC) + timedelta(days=15)
+        ).isoformat()
+        screen.query_one("#automation-request-submit", Button).press()
+        try:
+            async with asyncio.timeout(5):
+                while not enrollment.polling.is_set():
+                    await pilot.pause(0.02)
+            screen.query_one("#automation-request-review", Button).press()
+            await pilot.pause()
+            review_screen = app.screen
+            assert isinstance(review_screen, RuntimeAutomationInventoryScreen)
+            assert review_screen._client is reviewer
+            assert screen._busy and not requester.closed and not reviewer.closed
+            review_screen.action_close()
+            await pilot.pause()
+            assert app.screen is screen
+            assert screen._busy and screen.safe_outcome is None
+            assert enrollment.submits == 1
+            assert not screen.query_one("#automation-request-review", Button).disabled
+        finally:
+            enrollment.release.set()
+        async with asyncio.timeout(5):
+            while screen._busy:
+                await pilot.pause(0.02)
+        assert not screen.query_one("#automation-request-close", Button).disabled
+        assert screen.safe_outcome is not None and screen.safe_outcome.stage is EnrollmentStage.DECLINED
+        app.exit()
+    assert requester.closed and not reviewer.closed
+
+
+@pytest.mark.asyncio
+async def test_review_bridge_refuses_retargeted_human_session() -> None:
+    profile_id = uuid4()
+    enrollment = _HeldEnrollment(profile_id)
+    reviewer = _ReviewerClient(profile_id, enrollment)
+
+    async def open_client(_target: UUID) -> RuntimeFrontendClient:
+        raise AssertionError("request should not be submitted")
+
+    screen = RuntimeAutomationRequesterScreen(
+        profile_id=profile_id,
+        contracts=_view_contracts(),
+        secrets_store=cast(AutomationSecretStore, object()),
+        open_client=open_client,
+        reviewer_client=reviewer,
+    )
+    app = ScreenHostApp(screen)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        screen._submitted = enrollment._receipt(EnrollmentStage.REQUESTED)
+        reviewer._session_id = uuid4()
+        screen._open_review()
+        await pilot.pause()
+        assert app.screen is screen
+        assert screen._owned_client is None and not reviewer.closed
+        app.exit()
+
+
+class _FailedCleanupOwner:
+    def __init__(self, failures: int) -> None:
+        self.failures = failures
+        self.close_calls = 0
+        self.closed = False
+
+    async def close(self) -> None:
+        self.close_calls += 1
+        if self.failures:
+            self.failures -= 1
+            raise OSError("private-close-error-canary")
+        self.closed = True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("cancelled", "close_failures"),
+    [(False, 1), (False, 2), (True, 1)],
+    ids=["uncertain", "teardown-retry", "cancelled"],
+)
+async def test_failed_fresh_admission_keeps_request_uncertain_and_cleanup_retryable(
+    cancelled: bool, close_failures: int
+) -> None:
+    class ReconciliationEnrollment(_HeldEnrollment):
+        @override
+        def inspect(self, *, timeout: float) -> AutomationReceiptProjection:
+            assert timeout > 0
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+
+    class BorrowedClient(_OwnedRequesterClient):
+        @override
+        def prepare_grant_change(
+            self, secrets_store: AutomationSecretStore, *, timeout: float = 10
+        ) -> NativeEnrollmentClient:
+            del secrets_store
+            assert timeout > 0
+            return cast(NativeEnrollmentClient, self.enrollment)
+
+    profile_id, reference = uuid4(), uuid4()
+    enrollment = ReconciliationEnrollment(profile_id)
+    client = BorrowedClient(profile_id, enrollment)
+    failed_owner = _FailedCleanupOwner(close_failures)
+    primary = asyncio.CancelledError() if cancelled else AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    fresh_attempts = 0
+
+    def fresh_opener(target: UUID, received_reference: UUID, timeout: float) -> RuntimeFrontendClient:
+        nonlocal fresh_attempts
+        assert target == profile_id and received_reference == reference
+        assert timeout > 0
+        fresh_attempts += 1
+        asyncio.run(close_async_resources(failed_owner, task_name="test-fresh-admission-close", primary_error=primary))
+        raise primary
+
+    screen = RuntimeAutomationRequesterScreen(
+        profile_id=profile_id,
+        contracts=_view_contracts(),
+        secrets_store=cast(AutomationSecretStore, object()),
+        client=client,
+        fresh_credential_client=fresh_opener,
+    )
+    async with ScreenHostApp(screen).run_test() as pilot:
+        await pilot.pause()
+        cast(
+            "Select[EnrollmentKind]", screen.query_one("#automation-request-kind", Select)
+        ).value = EnrollmentKind.RENEW
+        await pilot.pause()
+        screen.query_one("#automation-request-expiry", Input).value = (
+            datetime.now(UTC) + timedelta(days=30)
+        ).isoformat()
+        screen.query_one("#automation-request-grant", Input).value = str(uuid4())
+        screen.query_one("#automation-request-reference", Input).value = str(reference)
+        draft = screen._draft()
+        if cancelled:
+            with pytest.raises(asyncio.CancelledError):
+                await screen._execute(draft)
+        else:
+            await screen._execute(draft)
+        outcome = screen.safe_outcome
+        assert outcome is not None and outcome.uncertain
+        assert outcome.request_id == enrollment.prepared.enrollment_request_id
+        assert outcome.review_digest == "a" * 64
+        assert outcome.stage is None and outcome.credential_reference is None
+        assert outcome.reason == (None if cancelled else "unavailable")
+        assert enrollment.submits == fresh_attempts == 1
+        assert not failed_owner.closed and failed_owner.close_calls == 1
+        if close_failures == 2:
+            with pytest.raises(AsyncResourceCleanupError) as caught:
+                await screen.on_unmount()
+            assert not failed_owner.closed and failed_owner.close_calls == 2
+            await caught.value.retry_cleanup()
+        else:
+            await screen.on_unmount()
+        assert failed_owner.closed
+        assert failed_owner.close_calls == close_failures + 1
+        await screen.on_unmount()
+        assert failed_owner.close_calls == close_failures + 1
+        assert enrollment.submits == fresh_attempts == 1
+        assert not client.closed and client.close_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_prepare_failure_cleanup_and_originating_owned_client_both_close_on_unmount() -> None:
+    profile_id = uuid4()
+    failed_owner = _FailedCleanupOwner(1)
+    primary = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+    class PreparationFailureClient(_OwnedRequesterClient):
+        @override
+        def prepare_enrollment(
+            self, secrets_store: AutomationSecretStore, *, timeout: float = 10
+        ) -> NativeEnrollmentClient:
+            del secrets_store
+            assert timeout > 0
+            asyncio.run(close_async_resources(failed_owner, task_name="test-prepare-close", primary_error=primary))
+            raise primary
+
+    client = PreparationFailureClient(profile_id, _HeldEnrollment(profile_id))
+
+    async def open_client(target: UUID) -> RuntimeFrontendClient:
+        assert target == profile_id
+        return client
+
+    screen = RuntimeAutomationRequesterScreen(
+        profile_id=profile_id,
+        contracts=_view_contracts(),
+        secrets_store=cast(AutomationSecretStore, object()),
+        open_client=open_client,
+    )
+    async with ScreenHostApp(screen).run_test() as pilot:
+        await pilot.pause()
+        screen.query_one("#automation-request-expiry", Input).value = (
+            datetime.now(UTC) + timedelta(days=30)
+        ).isoformat()
+        screen.query_one("#automation-request-key-expiry", Input).value = (
+            datetime.now(UTC) + timedelta(days=15)
+        ).isoformat()
+        await screen._execute(screen._draft())
+        outcome = screen.safe_outcome
+        assert outcome is not None and not outcome.uncertain
+        assert outcome.request_id is None
+        assert client.enrollment.submits == 0
+        assert not client.closed and not failed_owner.closed
+        await screen.on_unmount()
+        assert client.closed and client.close_calls == 1
+        assert failed_owner.closed and failed_owner.close_calls == 2
+        await screen.on_unmount()
+        assert client.close_calls == 1 and failed_owner.close_calls == 2
+
+
+@pytest.mark.asyncio
+async def test_returned_fresh_client_refusal_keeps_primary_and_retries_failed_close() -> None:
+    primary = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    ui_thread = get_ident()
+    close_threads: list[int] = []
+
+    class ReconciliationEnrollment(_HeldEnrollment):
+        @override
+        def inspect(self, *, timeout: float) -> AutomationReceiptProjection:
+            assert timeout > 0
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+
+    class BorrowedClient(_OwnedRequesterClient):
+        @override
+        def prepare_grant_change(
+            self, secrets_store: AutomationSecretStore, *, timeout: float = 10
+        ) -> NativeEnrollmentClient:
+            del secrets_store
+            assert timeout > 0
+            return cast(NativeEnrollmentClient, self.enrollment)
+
+    class FreshClient(_OwnedRequesterClient):
+        @override
+        def reconcile_enrollment(self, request_id: UUID, *, timeout: float = 10) -> AutomationReceiptProjection:
+            assert request_id == self.enrollment.prepared.enrollment_request_id
+            assert timeout > 0
+            raise primary
+
+        @override
+        def close(self) -> None:
+            close_threads.append(get_ident())
+            self.close_calls += 1
+            if self.close_calls == 1:
+                raise OSError("private-fresh-close-canary")
+            self.closed = True
+
+    profile_id, reference = uuid4(), uuid4()
+    enrollment = ReconciliationEnrollment(profile_id)
+    original = BorrowedClient(profile_id, enrollment)
+    fresh = FreshClient(profile_id, enrollment)
+    fresh_attempts = 0
+
+    def fresh_opener(target: UUID, received_reference: UUID, timeout: float) -> RuntimeFrontendClient:
+        nonlocal fresh_attempts
+        assert target == profile_id and received_reference == reference
+        assert timeout > 0
+        fresh_attempts += 1
+        return fresh
+
+    screen = RuntimeAutomationRequesterScreen(
+        profile_id=profile_id,
+        contracts=_view_contracts(),
+        secrets_store=cast(AutomationSecretStore, object()),
+        client=original,
+        fresh_credential_client=fresh_opener,
+    )
+    async with ScreenHostApp(screen).run_test() as pilot:
+        await pilot.pause()
+        cast(
+            "Select[EnrollmentKind]", screen.query_one("#automation-request-kind", Select)
+        ).value = EnrollmentKind.RENEW
+        await pilot.pause()
+        screen.query_one("#automation-request-expiry", Input).value = (
+            datetime.now(UTC) + timedelta(days=30)
+        ).isoformat()
+        screen.query_one("#automation-request-grant", Input).value = str(uuid4())
+        screen.query_one("#automation-request-reference", Input).value = str(reference)
+        await screen._execute(screen._draft())
+        outcome = screen.safe_outcome
+        assert outcome is not None and outcome.uncertain
+        assert outcome.reason == "unavailable"
+        assert outcome.request_id == enrollment.prepared.enrollment_request_id
+        assert outcome.review_digest == "a" * 64
+        assert outcome.stage is None and outcome.credential_reference is None
+        assert isinstance(primary.__dict__.get("async_cleanup_error"), AsyncResourceCleanupError)
+        assert enrollment.submits == fresh_attempts == 1
+        assert fresh.close_calls == 1 and not fresh.closed
+        assert len(close_threads) == 1 and close_threads[0] != ui_thread
+        await screen.on_unmount()
+        assert fresh.closed and fresh.close_calls == 2
+        assert len(close_threads) == 2 and all(thread != ui_thread for thread in close_threads)
+        await screen.on_unmount()
+        assert fresh.close_calls == 2
+        assert enrollment.submits == fresh_attempts == 1
+        assert not original.closed and original.close_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_unmount_caller_cancellation_drains_native_request_and_releases_owned_client() -> None:
+    async def scenario() -> None:
+        profile_id = uuid4()
+        enrollment = _HeldEnrollment(profile_id)
+        client = _OwnedRequesterClient(profile_id, enrollment)
+
+        async def open_client(target: UUID) -> RuntimeFrontendClient:
+            assert target == profile_id
+            return client
+
+        async def event_loop_checkpoint() -> None:
+            checkpoint = asyncio.Event()
+            asyncio.get_running_loop().call_soon(checkpoint.set)
+            await checkpoint.wait()
+
+        screen = RuntimeAutomationRequesterScreen(
+            profile_id=profile_id,
+            contracts=_view_contracts(),
+            secrets_store=cast(AutomationSecretStore, object()),
+            open_client=open_client,
+        )
+        async with ScreenHostApp(screen).run_test() as pilot:
+            await pilot.pause()
+            screen.query_one("#automation-request-expiry", Input).value = (
+                datetime.now(UTC) + timedelta(days=30)
+            ).isoformat()
+            screen.query_one("#automation-request-key-expiry", Input).value = (
+                datetime.now(UTC) + timedelta(days=15)
+            ).isoformat()
+            screen._request_task = asyncio.create_task(screen._execute(screen._draft()))
+            try:
+                assert await asyncio.to_thread(enrollment.polling.wait, 5)
+                closing = asyncio.create_task(screen.on_unmount())
+                await event_loop_checkpoint()
+                closing.cancel()
+                await event_loop_checkpoint()
+                closing.cancel()
+                await event_loop_checkpoint()
+                assert not closing.done()
+                assert not client.closed and client.close_calls == 0
+                enrollment.release.set()
+                with pytest.raises(asyncio.CancelledError):
+                    await closing
+                assert client.closed and client.close_calls == 1
+                outcome = screen.safe_outcome
+                assert outcome is not None and outcome.stage is EnrollmentStage.DECLINED
+                assert not outcome.uncertain
+                assert outcome.request_id == enrollment.prepared.enrollment_request_id
+                assert enrollment.submits == 1
+                await screen.on_unmount()
+                assert client.close_calls == 1
+            finally:
+                enrollment.release.set()
+
+    await asyncio.wait_for(scenario(), timeout=10)

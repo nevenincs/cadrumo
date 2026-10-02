@@ -69,6 +69,9 @@ from .bundle_export_operation import (
 from .custody_ports import default_profile_bucket_event_history_repository
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.portable_export import UserProfilePortableExport
     from ..workflow.profile_bucket_models import ProfileBucketPointer
@@ -411,6 +414,8 @@ def reconcile_prepared_exports(
     journal: ProfileBundleExportJournalRepository | None = None,
     profile_decode_context: ProfileDecodeContext,
     authorized_profile_id: str | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> ProfileBundleExportReconciliation:
     """Reconcile crash-interrupted exports honestly in a fresh process.
 
@@ -473,6 +478,8 @@ def reconcile_prepared_exports(
                 operation,
                 profile_decode_context=profile_decode_context,
                 authorized_profile_id=authorized_profile_id,
+                mutation_writer=mutation_writer,
+                event_repository=event_repository,
             )
         except Exception as exc:
             get_logger(__name__).warning(
@@ -498,6 +505,8 @@ def _reconcile_one_operation(
     *,
     profile_decode_context: ProfileDecodeContext,
     authorized_profile_id: str | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> ProfileBundleExportOperation | None:
     """Reconcile exactly one operation, or return ``None`` when it is skipped.
 
@@ -538,6 +547,8 @@ def _reconcile_one_operation(
                 current,
                 published=published,
                 profile_decode_context=profile_decode_context,
+                mutation_writer=mutation_writer,
+                event_repository=event_repository,
             )
             return current
     except LockAcquisitionError:
@@ -554,6 +565,8 @@ def _finalise_reconciled_operation(
     *,
     published: bool,
     profile_decode_context: ProfileDecodeContext,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> None:
     """Emit the pending event for a published operation, or clear an orphan.
 
@@ -565,9 +578,12 @@ def _finalise_reconciled_operation(
     (``sensitive-financial-data-secure-storage-only``).
     """
     if published:
-        _emit_export_event(operation, profile_decode_context=profile_decode_context)
-    _remove_orphan_staged_temp(operation)
-    repository.delete(operation.operation_id)
+        _emit_export_event(operation, profile_decode_context=profile_decode_context, event_repository=event_repository)
+    _remove_orphan_staged_temp(operation, mutation_writer=mutation_writer)
+    if mutation_writer is None:
+        repository.delete(operation.operation_id)
+    else:
+        mutation_writer(lambda: repository.delete(operation.operation_id))
 
 
 def _destination_matches_digest(destination: Path, content_sha256: str) -> bool:
@@ -740,10 +756,17 @@ def _orphan_staged_paths(operation: ProfileBundleExportOperation) -> tuple[Path,
     return tuple(path for path in candidates if not is_link_like(path))
 
 
-def _remove_orphan_staged_temp(operation: ProfileBundleExportOperation) -> None:
+def _remove_orphan_staged_temp(
+    operation: ProfileBundleExportOperation,
+    *,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+) -> None:
     """Delete a reconciled operation's orphan cleartext temps, never its target."""
     for path in _orphan_staged_paths(operation):
-        path.unlink(missing_ok=True)
+        if mutation_writer is None:
+            path.unlink(missing_ok=True)
+        else:
+            mutation_writer(lambda path=path: path.unlink(missing_ok=True))
 
 
 def _discard_prepared_operation(
@@ -775,6 +798,7 @@ def _emit_export_event(
     operation: ProfileBundleExportOperation,
     *,
     profile_decode_context: ProfileDecodeContext,
+    event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> None:
     """Emit the ``PROFILE_EXPORTED`` event for one operation, idempotently.
 
@@ -793,7 +817,9 @@ def _emit_export_event(
         profile_decode_context=profile_decode_context,
     )
     emit_bucket_event(
-        repository=default_profile_bucket_event_history_repository(),
+        repository=event_repository
+        if event_repository is not None
+        else default_profile_bucket_event_history_repository(),
         bucket_id=operation.profile_id,
         event_type=BucketEventType.PROFILE_EXPORTED,
         occurred_at=operation.event_occurred_at,

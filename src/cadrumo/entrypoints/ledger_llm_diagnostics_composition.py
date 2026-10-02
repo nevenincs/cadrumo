@@ -7,13 +7,22 @@ Core types:
 from __future__ import annotations
 
 from datetime import date
+from typing import TYPE_CHECKING
+from uuid import UUID
 
 from ..application.ledger.llm_diagnostics_ports import (
     LlmDiagnosticsPorts,
     LlmDiagnosticsReadError,
     LlmUsageDiagnosticRecord,
 )
+from ..application.user_profile.access_contracts import AccessDenialCode
+from ..application.user_profile.access_errors import ProfileAccessRefusedError
+from ..core.bucket_pointer import require_active_bucket_id
+from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.transactions.models import Transaction
+
+if TYPE_CHECKING:
+    from ..application.ledger.llm_diagnostics_operation import LedgerLlmDiagnosticsOperationPorts
 
 
 def compose_ledger_llm_diagnostics_ports(*, bucket_id: str) -> LlmDiagnosticsPorts:
@@ -64,4 +73,19 @@ def compose_ledger_llm_diagnostics_ports(*, bucket_id: str) -> LlmDiagnosticsPor
     )
 
 
-__all__ = ["compose_ledger_llm_diagnostics_ports"]
+def build_ledger_llm_diagnostics_operation_ports(
+    *, profile_id: UUID, operation: PinnedAuthorityOperation
+) -> LedgerLlmDiagnosticsOperationPorts:
+    """Bind canonical accounting readers inside the exact profile worker."""
+    from ..application.ledger.llm_diagnostics_operation import LedgerLlmDiagnosticsOperationPorts
+
+    if require_active_bucket_id() != str(profile_id):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return LedgerLlmDiagnosticsOperationPorts(
+        profile_id=profile_id,
+        operation=operation,
+        diagnostics=compose_ledger_llm_diagnostics_ports(bucket_id=str(profile_id)),
+    )
+
+
+__all__ = ["build_ledger_llm_diagnostics_operation_ports", "compose_ledger_llm_diagnostics_ports"]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -14,6 +15,11 @@ from pydantic import BaseModel
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from cadrumo.application.ledger.evidence import MediaKind
+from cadrumo.application.ledger.evidence_add_operation import (
+    LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+    LedgerEvidenceAddProjection,
+    LedgerEvidenceAddRequest,
+)
 from cadrumo.application.ledger.evidence_read_operation import (
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
     LedgerEvidenceListProjection,
@@ -287,6 +293,53 @@ def _install_runtime(
     monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
     monkeypatch.setattr(RuntimeOperationController, "submit", classmethod(submit))
     return submissions, controllers
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("substituted_source", [False, True])
+async def test_runtime_evidence_add_preserves_caller_directory_and_source_provenance(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    substituted_source: bool,
+) -> None:
+    source_path = "invoices/record.pdf"
+    monkeypatch.chdir(tmp_path)
+    client = _Client()
+    record = LedgerEvidenceRecordProjection.model_construct(
+        evidence_id="f" * 16,
+        bucket_id=str(_PROFILE_ID),
+        source_path="other/record.pdf" if substituted_source else source_path,
+        source_sha256=_SOURCE_DIGEST,
+        attachment_id=_SOURCE_DIGEST,
+        media_kind=MediaKind.PDF,
+        supplier=None,
+        invoice_number=None,
+        created_at=datetime(2026, 3, 16, tzinfo=UTC),
+    )
+    result = LedgerEvidenceAddProjection.model_construct(
+        profile_id=_PROFILE_ID, record=record, bucket_event_ids=("c" * 64,)
+    )
+    submissions, controllers = _install_runtime(
+        monkeypatch,
+        client=client,
+        results=[(LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID, result, OperationEffect.UPDATED)],
+    )
+    door = RuntimeEvidenceTuiDoorV1(cast(RuntimeFrontendClient, client), profile_label="Fixture profile")
+    if substituted_source:
+        with pytest.raises(RuntimeRefusalError) as refused:
+            await door.add(source_path)
+        assert refused.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    else:
+        row = await door.add(source_path)
+        assert row.file_name == "record.pdf"
+        assert row.evidence_id == "f" * 16
+        assert str(tmp_path) not in repr(row)
+    request = cast(LedgerEvidenceAddRequest, submissions[0]["payload"])
+    assert request.source_path == source_path
+    assert Path(request.source_directory) == tmp_path
+    assert request.profile_id == _PROFILE_ID
+    assert submissions[0]["expected_session_id"] == _SESSION_ID
+    assert controllers[0].started
 
 
 @pytest.mark.asyncio

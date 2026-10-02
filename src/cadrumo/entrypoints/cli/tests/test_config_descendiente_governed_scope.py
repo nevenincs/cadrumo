@@ -23,8 +23,8 @@ import pytest
 from ....core.config import load_settings
 from ....domain.calculations.registry.governed_fact_scope import outside_governed_fact_validation
 from ....tests.cli_envelope import require_error_document, unwrap_schema_envelope
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

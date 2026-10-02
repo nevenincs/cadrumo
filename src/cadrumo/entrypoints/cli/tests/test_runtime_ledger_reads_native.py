@@ -52,9 +52,9 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.cli_envelope import require_error_document, unwrap_cli_result
 from ...ledger_action_composition import compose_ledger_action_ports
 from ._modelo_work_ux_support import operator_profile_facts
-from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import native_api_cli_session
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [
     pytest.mark.integration,

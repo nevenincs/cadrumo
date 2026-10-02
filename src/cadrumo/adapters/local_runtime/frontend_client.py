@@ -11,7 +11,7 @@ import json
 import math
 import time
 from dataclasses import dataclass
-from typing import Literal, Self
+from typing import Literal, NoReturn, Self
 from uuid import UUID, uuid4
 
 from pydantic import JsonValue, TypeAdapter, ValidationError
@@ -65,13 +65,14 @@ from ...application.runtime.operation_access import (
     RuntimeOperationSubmitted,
 )
 from ...application.runtime.profile_access import (
+    PROFILE_ADMISSION_TIMEOUT_SECONDS,
     RuntimeAccessRefusal,
     RuntimeProfileLogin,
     RuntimeProfileStatus,
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
-from ...application.runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES, ProjectionPageRequest
+from ...application.runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES, ProjectionPage, ProjectionPageRequest
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.access_projections import PublicAccessSession
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationSecretStore
@@ -95,13 +96,10 @@ from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
 from ...domain.user_profile.values import ProfileSetupState
 from .enrollment_client import NativeEnrollmentClient
-from .framing import VerifiedRuntimeConnection
+from .framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
 from .startup import RuntimeLaunchDoor
 
 _RESULT_DOCUMENT = TypeAdapter(dict[str, JsonValue])
-# Profile admission may launch a cold isolated worker before the first reply.
-# Keep this longer than its bounded pipe-accept and handshake stages.
-_PROFILE_LOGIN_TIMEOUT_SECONDS = 75.0
 
 
 class RuntimeFrontendRefusedError(CadrumoError):
@@ -196,7 +194,7 @@ class RuntimeFrontendClient:
             raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
         reply = self._connection.operation(request, deadline=deadline)
         if isinstance(reply, RuntimeAccessRefusal):
-            raise RuntimeFrontendRefusedError(reply.code.value)
+            self._raise_wire_refusal(reply)
         return reply
 
     @classmethod
@@ -232,15 +230,36 @@ class RuntimeFrontendClient:
         self._session_id = None
         self._connection.close()
 
+    def cleanup_owner(self, *, primary_error: BaseException | None) -> RuntimeTransportCleanup:
+        """Fence this client and retain one owner for its exact connection."""
+        self._session_id = None
+        retained = None if primary_error is None else primary_error.__dict__.get("_runtime_transport_cleanup")
+        if isinstance(retained, RuntimeTransportCleanup) and (
+            retained.resource is self or retained.resource is self._connection
+        ):
+            # The failed exchange already owns this native release. Rebinding
+            # that same owner also clears frontend state without duplicating
+            # the connection's retry path in a merged cleanup attachment.
+            retained.resource = self
+            return retained
+        return RuntimeTransportCleanup(self)
+
     def _session(self) -> UUID:
         if self._session_id is None:
             raise RuntimeFrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
         return self._session_id
 
     @staticmethod
+    def _raise_wire_refusal(reply: RuntimeAccessRefusal) -> NoReturn:
+        """Keep runtime failure provenance distinct from an authoritative access denial."""
+        if isinstance(reply.code, RuntimeRefusalCode):
+            raise RuntimeRefusalError(reply.code)
+        raise RuntimeFrontendRefusedError(reply.code.value)
+
+    @staticmethod
     def _reply[ReplyT](reply: object, expected: type[ReplyT]) -> ReplyT:
         if isinstance(reply, RuntimeAccessRefusal):
-            raise RuntimeFrontendRefusedError(reply.code.value)
+            RuntimeFrontendClient._raise_wire_refusal(reply)
         if not isinstance(reply, expected):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return reply
@@ -284,18 +303,18 @@ class RuntimeFrontendClient:
             secret[:] = bytes(len(secret))
 
     def login_password(
-        self, secret: bytearray, *, timeout: float = _PROFILE_LOGIN_TIMEOUT_SECONDS, persist_receipt: bool = False
+        self, secret: bytearray, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS, persist_receipt: bool = False
     ) -> RuntimeProfileStatus:
         """Consume an explicit password only on the one-use verified secret frame."""
         return self._login("password", secret, timeout=timeout, persist_receipt=persist_receipt)
 
     def login_api_key(
-        self, secret: bytearray, *, timeout: float = _PROFILE_LOGIN_TIMEOUT_SECONDS
+        self, secret: bytearray, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS
     ) -> RuntimeProfileStatus:
         """Consume an explicit key without attempting human receipt fallback."""
         return self._login("api_key", secret, timeout=timeout)
 
-    def resume_receipt(self, *, timeout: float = _PROFILE_LOGIN_TIMEOUT_SECONDS) -> RuntimeProfileStatus:
+    def resume_receipt(self, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS) -> RuntimeProfileStatus:
         """Borrow the exact profile's protected receipt proof for one verified frame."""
         from ...application.user_profile.login_session import borrow_profile_receipt_key
 
@@ -659,6 +678,45 @@ class RuntimeFrontendClient:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return success.projection
 
+    def read_result_page(
+        self,
+        result: OperationResultProjectionRequestV1,
+        page: ProjectionPageRequest,
+        *,
+        deadline: float,
+    ) -> ProjectionPage:
+        """Read one bounded public result page under this connection's current authority."""
+        if not math.isfinite(deadline):
+            raise ValueError("result deadline must be finite")
+        _remaining(deadline)
+        reply = self._reply(
+            self.operation(
+                RuntimeOperationResultPage(
+                    request_id=uuid4(),
+                    profile_id=self.profile_id,
+                    session_id=self._session(),
+                    result=result,
+                    page=page,
+                ),
+                deadline=deadline,
+            ),
+            RuntimeOperationPage,
+        )
+        released = reply.page
+        if (
+            reply.operation_id != result.operation_id
+            or released.offset != page.offset
+            or released.total_bytes > PROJECTION_DOCUMENT_MAX_BYTES
+            or (page.expected_digest is not None and released.document_digest != page.expected_digest)
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        try:
+            released.decode()
+        except ValueError:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+        _remaining(deadline)
+        return released
+
     def read_result_document(
         self, result: OperationResultProjectionRequestV1, *, timeout: float = 60, deadline: float | None = None
     ) -> dict[str, JsonValue]:
@@ -678,27 +736,10 @@ class RuntimeFrontendClient:
         try:
             while total is None or len(collected) < total:
                 _remaining(deadline)
-                reply = self._reply(
-                    self.operation(
-                        RuntimeOperationResultPage(
-                            request_id=uuid4(),
-                            profile_id=self.profile_id,
-                            session_id=self._session(),
-                            result=result,
-                            page=ProjectionPageRequest(offset=len(collected), expected_digest=digest),
-                        ),
-                        deadline=deadline,
-                    ),
-                    RuntimeOperationPage,
+                page = self.read_result_page(
+                    result, ProjectionPageRequest(offset=len(collected), expected_digest=digest), deadline=deadline
                 )
-                page = reply.page
-                if (
-                    reply.operation_id != result.operation_id
-                    or page.offset != len(collected)
-                    or page.total_bytes > PROJECTION_DOCUMENT_MAX_BYTES
-                    or (digest is not None and page.document_digest != digest)
-                    or (total is not None and page.total_bytes != total)
-                ):
+                if total is not None and page.total_bytes != total:
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 digest, total = page.document_digest, page.total_bytes
                 collected.extend(page.decode())

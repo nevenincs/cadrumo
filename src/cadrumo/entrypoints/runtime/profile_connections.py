@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable
-from contextlib import ExitStack, suppress
+from contextlib import ExitStack
+from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from threading import BoundedSemaphore, Event, RLock, Thread
 from uuid import UUID, uuid4
@@ -38,7 +40,7 @@ from ...application.runtime.enrollment_access import (
     RuntimeEnrollmentRequest,
 )
 from ...application.runtime.installation import RuntimeInstallation
-from ...application.runtime.login import RuntimeLoginEvidence
+from ...application.runtime.login import RuntimeLoginEvidence, RuntimeLoginInventory
 from ...application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationContract,
@@ -66,6 +68,7 @@ from ...application.user_profile.access_contracts import (
     AccessDenied,
     AccessSession,
     Availability,
+    LoginEligibility,
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_administration import reconcile_automation_receipt
@@ -83,6 +86,20 @@ from .profile_host import ProfileConnection, RuntimeProfileHost
 from .submission_stream import stream_operation_submission
 
 
+@dataclass
+class _ProfileDrainRecord:
+    """Retain the original worker and its actual shutdown attempts until settlement."""
+
+    host: RuntimeProfileHost
+    worker: ProfileWorkerProcess | None = None
+    begun: bool = False
+    request: Thread | None = None
+    containment: Thread | None = None
+    receipt: ProfileWorkerDrained | None = None
+    contained: bool = False
+    guard: RLock = field(default_factory=RLock, repr=False)
+
+
 class RuntimeProfileConnections:
     """Keep native connection identity distinct from key routing and proof of possession."""
 
@@ -94,12 +111,22 @@ class RuntimeProfileConnections:
         runtime_boot_id: UUID,
         stop: Event,
         capture_login: Callable[[RuntimeByteChannel], RuntimeLoginEvidence] = capture_runtime_login,
+        login_inventory: Callable[[], RuntimeLoginInventory] | None = None,
         secret_store: Callable[[], AutomationSecretStore] = installed_automation_secret_store,
+        worker_script: Path | None = None,
+        wall_clock: Callable[[], datetime] = now,
     ) -> None:
         """Defer installation/profile/store access until an eligible peer requests login."""
         self.root, self.storage_identity, self.boot, self.stop = storage_root, storage_identity, runtime_boot_id, stop
         self._capture, self._secret_store = capture_login, secret_store
+        self._login_inventory = login_inventory
+        self._eligible_login_seen = False
+        self._login_lifecycle_available = False
+        self._worker_script, self._wall_clock = worker_script, wall_clock
         self._guard = RLock()
+        self._drain_guard = RLock()
+        self._drain_records: dict[UUID, _ProfileDrainRecord] | None = None
+        self._drain_result: RuntimeProfileDrainResult | None = None
         self._installation: RuntimeInstallation | None = None
         self._registry: OperationRegistry | None = None
         self._profiles: dict[UUID, RuntimeProfileHost] = {}
@@ -125,10 +152,53 @@ class RuntimeProfileConnections:
 
     def _login_contexts(self) -> tuple[RuntimeLoginEvidence, ...]:
         with self._guard:
-            return tuple(self._logins.values())
+            peers = tuple(self._logins.values())
+        if self._login_inventory is None:
+            return peers
+        inventory = self._login_inventory()
+        logins = {login.login_id: login for login in inventory.logins}
+        # Preserve the original captured incarnation for human/attended leases.
+        # A fresh login cannot replace their originating native proof.
+        logins.update((login.login_id, login) for login in peers)
+        observed = tuple(login.observe(credential_facilities=Availability.UNAVAILABLE) for login in logins.values())
+        eligible = any(login.active and login.unattended is LoginEligibility.ELIGIBLE for login in observed)
+        with self._guard:
+            self._login_lifecycle_available = eligible
+            if eligible:
+                self._eligible_login_seen = True
+            elif self._eligible_login_seen:
+                # Losing every positive witness also retires custody when
+                # absence is UNKNOWN. This availability choice does not prove
+                # logout or change grants; positive locked witnesses survive.
+                # The existing server owns bounded drain and custody release.
+                self.stop.set()
+        return tuple(logins.values())
+
+    def _private_work_available(self) -> bool:
+        return self._admitting() and (self._login_inventory is None or self._login_lifecycle_available)
 
     def _admitting(self) -> bool:
         return not self._closed and not self.stop.is_set()
+
+    def prepare_registry(self) -> OperationRegistry:
+        """Validate the public operation graph before transport readiness.
+
+        This is profile independent and never opens a profile or credential.
+        Repeated preparation retains the one graph used by every host in this
+        runtime process.
+        """
+        with self._guard:
+            if not self._admitting():
+                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+            registry = self._registry
+            if registry is None:
+                registry = build_production_operation_registry()
+                if not self._admitting():
+                    raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+                self._registry = registry
+            if not self._admitting():
+                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+            return registry
 
     def _host(self, profile_id: UUID, context: RuntimeConnectionContext) -> RuntimeProfileHost:
         with self._guard:
@@ -153,16 +223,21 @@ class RuntimeProfileConnections:
                 if existing.store.binding != binding:
                     raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
                 return existing
-            if self._registry is None:
-                self._registry = build_production_operation_registry()
+            registry = self._registry
+            if registry is None:
+                # Direct in-process hosts may omit startup preparation. The
+                # installed server calls prepare_registry before listening.
+                registry = self.prepare_registry()
             host = RuntimeProfileHost(
-                store=AutomationControlStore(root=self.root, binding=binding, secrets_store=self._secret_store()),
+                store=AutomationControlStore(root=self.root, binding=binding, secrets_store_factory=self._secret_store),
                 runtime_boot_id=self.boot,
-                registry=self._registry,
+                registry=registry,
                 connected=self._connected,
                 logins=self._login_contexts,
-                admitting=self._admitting,
+                admitting=self._private_work_available,
                 recipient=self._enrollments.recipient,
+                worker_script=self._worker_script,
+                wall_clock=self._wall_clock,
             )
             if not self._admitting():
                 raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
@@ -416,7 +491,7 @@ class RuntimeProfileConnections:
                 session = host.authority.automation_request_session(
                     connection_id=context.connection_id, session_id=request.session_id
                 )
-                remaining = min(5.0, (session.expires_at - now()).total_seconds())
+                remaining = min(5.0, (session.expires_at - self._wall_clock()).total_seconds())
                 if remaining <= 0:
                     raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
                 write_document(
@@ -473,36 +548,45 @@ class RuntimeProfileConnections:
             deadline=time.monotonic() + 5,
         )
         # Slow/unresponsive secret senders do not hold any profile admission guard.
-        with read_secret(channel, deadline=time.monotonic() + 10) as secret, host.guard:
-            if not self._admitting():
-                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+        with read_secret(channel, deadline=time.monotonic() + 10) as secret:
             if request.method in {"password", "receipt"}:
-                connection.human_secret = secret
+                with host.guard:
+                    if not self._admitting():
+                        raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+                    connection.human_secret = secret
                 try:
                     admitted = host.authority.admit_human(connection_id=context.connection_id)
                 finally:
-                    connection.human_secret = None
+                    with host.guard:
+                        connection.human_secret = None
             else:
-                credential = SecretBytes(bytes(secret))
-                key_id, _ = host.issuer.verifier(credential)
-                snapshot = host.store.snapshot()
-                key = next((item for item in snapshot.keys if item.key_id == key_id), None)
-                grant = next(
-                    (item for item in snapshot.grants if key is not None and item.grant_id == key.grant_id), None
-                )
-                if grant is None:
-                    return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
-                # This is routing from protected state, not proof. No lease is
-                # published until the existing authority verifies and unwraps it.
-                connection.client_id = grant.client_id
+                with host.guard:
+                    if not self._admitting():
+                        raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+                    credential = SecretBytes(bytes(secret))
+                    key_id, _ = host.issuer.verifier(credential)
+                    snapshot = host.store.snapshot()
+                    key = next((item for item in snapshot.keys if item.key_id == key_id), None)
+                    grant = next(
+                        (item for item in snapshot.grants if key is not None and item.grant_id == key.grant_id), None
+                    )
+                    if grant is None:
+                        return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+                    # This is routing from protected state, not proof. No lease is
+                    # published until the existing authority verifies and unwraps it.
+                    connection.client_id = grant.client_id
                 admitted = host.authority.admit_api_key(
                     connection_id=context.connection_id,
                     target=host.store.binding,
                     credential=credential,
                     scope=request.scope or grant.scope,
                 )
+        with host.guard:
             if isinstance(admitted, AccessDenied):
                 return admitted
+            if not self._admitting():
+                host.authority.disconnect(context.connection_id)
+                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
             connection.session_id = admitted.session_id
             receipt = host.owner.take_human_login_receipt(admitted.session_id)
             result = self._status(connection, host, request.request_id, admitted.session_id)
@@ -646,7 +730,7 @@ class RuntimeProfileConnections:
             )
         checked(delivered)
         with host.authorize(delivered.release) as allowed:
-            remaining = (allowed.expires_at - now()).total_seconds()
+            remaining = (allowed.expires_at - self._wall_clock()).total_seconds()
             if remaining <= 0:
                 raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
             write_document(
@@ -733,7 +817,7 @@ class RuntimeProfileConnections:
                     expires_at = allowed.expires_at
                 if expires_at is None:
                     raise ProfileAccessRefusedError(AccessDenialCode.SESSION_INACTIVE)
-                remaining = (expires_at - now()).total_seconds()
+                remaining = (expires_at - self._wall_clock()).total_seconds()
                 if remaining <= 0:
                     raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
                 deadline = time.monotonic() + min(5, remaining)
@@ -769,7 +853,7 @@ class RuntimeProfileConnections:
             if request.definition_id not in scope.operations or AccessAction.SUBMIT not in scope.actions:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             expires_at = status.status.session_expires_at
-            if expires_at is None or expires_at <= now():
+            if expires_at is None or expires_at <= self._wall_clock():
                 raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
 
     def poll(self) -> None:
@@ -778,6 +862,9 @@ class RuntimeProfileConnections:
         if instant - self._last_poll < 0.5:
             return
         self._last_poll = instant
+        self._login_contexts()
+        if not self._admitting():
+            return
         self._enrollments.poll()
         with self._guard:
             if not self._admitting():
@@ -809,121 +896,194 @@ class RuntimeProfileConnections:
 
     def close(self) -> None:
         """Fence all admissions before releasing profile workers and nonsecret state."""
+        if not self._drain_guard.acquire(blocking=False):
+            raise RuntimeShutdownIncompleteError()
+        try:
+            if self._drain_records is not None and self._drain_result is None:
+                # A plain close cannot forget the original daemon threads or
+                # compete with their native containment. Resume through drain.
+                raise RuntimeShutdownIncompleteError()
+            self._close_profiles()
+        finally:
+            self._drain_guard.release()
+
+    def _close_profiles(self) -> None:
         with self._guard:
             self._closed = True
-            hosts = tuple(self._profiles.values())
+            hosts = tuple(self._profiles.items())
         self._enrollments.close()
         failures: list[Exception] = []
-        for host in hosts:
+        for profile_id, host in hosts:
             try:
                 host.close()
             except Exception as error:
                 failures.append(error)
+            else:
+                with self._guard:
+                    if self._profiles.get(profile_id) is host:
+                        self._profiles.pop(profile_id)
         with self._guard:
-            self._profiles.clear()
             self._connections.clear()
             self._logins.clear()
         if failures:
             raise ExceptionGroup("runtime profile cleanup failed", failures)
 
     def drain(self, *, deadline: float) -> RuntimeProfileDrainResult:
-        """Fence first, then concurrently request canonical drain and contain every worker."""
+        """Resume the original fenced shutdown under this attempt's absolute deadline."""
         self.stop.set()
+        if not self._drain_guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
+            raise RuntimeShutdownIncompleteError()
+        try:
+            return self._drain_profiles(deadline=deadline)
+        finally:
+            self._drain_guard.release()
+
+    def _drain_profiles(self, *, deadline: float) -> RuntimeProfileDrainResult:
+        if self._drain_result is not None:
+            return self._drain_result
         if not self._guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
             raise RuntimeShutdownIncompleteError()
         try:
             self._closed = True
-            hosts = tuple(self._profiles.values())
+            if self._drain_records is None:
+                self._drain_records = {
+                    profile_id: _ProfileDrainRecord(host) for profile_id, host in self._profiles.items()
+                }
+            records = tuple(self._drain_records.items())
         finally:
             self._guard.release()
         self._enrollments.close()
-        workers = [(host, host.owner.begin_drain()) for host in hosts]
-        replies: dict[UUID, ProfileWorkerDrained] = {}
-        replies_guard = RLock()
-        threads: list[tuple[UUID, Thread]] = []
-
-        def request_drain(profile_id: UUID, worker: ProfileWorkerProcess) -> None:
-            # A missing receipt is retained below; containment is checked separately.
-            with suppress(Exception):
-                receipt = worker.drain(deadline=deadline)
-                with replies_guard:
-                    replies[profile_id] = receipt
-
-        for host, worker in workers:
-            if worker is None:
-                continue
-            thread = Thread(
-                target=request_drain,
-                args=(host.store.binding.profile_id, worker),
-                name="profile-worker-drain",
-                daemon=True,
-            )
-            thread.start()
-            threads.append((host.store.binding.profile_id, thread))
-        for _, thread in threads:
-            thread.join(timeout=max(0.0, deadline - time.monotonic()))
+        approval_failures: set[UUID] = set()
+        for profile_id, record in records:
+            try:
+                # Retire idle password/DEK proof before containing the worker;
+                # active callback phases retain their own cleanup until settled.
+                record.host.approvals.close()
+            except Exception:
+                approval_failures.add(profile_id)
+            if not record.begun:
+                record.worker = record.host.owner.begin_drain()
+                record.begun = True
+            if record.worker is not None and record.request is None:
+                self._start_drain_request(record, deadline=deadline)
+            # A prior terminal failed containment may have left its request
+            # blocked. Retry containment before joining that original request.
+            if (
+                record.containment is not None
+                and record.containment.ident is not None
+                and not record.containment.is_alive()
+            ):
+                with record.guard:
+                    contained = record.contained
+                if not contained:
+                    self._start_drain_containment(record, deadline=deadline)
+        for _, record in records:
+            if record.request is not None and record.request.ident is not None:
+                record.request.join(timeout=max(0.0, deadline - time.monotonic()))
 
         uncontained: list[UUID] = []
-        unsettled: list[UUID] = []
-        contained: set[UUID] = set()
-        containment_threads: list[tuple[UUID, Thread]] = []
-        with replies_guard:
-            received_at_deadline = set(replies)
+        unsettled: list[UUID] = list(approval_failures)
+        for _, record in records:
+            with record.guard:
+                contained = record.contained
+            if record.worker is not None and not contained and record.containment is None:
+                self._start_drain_containment(record, deadline=deadline)
+        for _, record in records:
+            if record.containment is not None and record.containment.ident is not None:
+                record.containment.join(timeout=max(0.0, deadline - time.monotonic()))
 
-        def contain(profile_id: UUID, worker: ProfileWorkerProcess) -> None:
-            try:
-                worker.close(deadline=deadline)
-            except Exception:
-                return
-            with replies_guard:
-                contained.add(profile_id)
-
-        for host, worker in workers:
-            if worker is None:
-                continue
-            profile_id = host.store.binding.profile_id
-            if profile_id in received_at_deadline:
-                contained.add(profile_id)
-                continue
-            thread = Thread(target=contain, args=(profile_id, worker), name="profile-worker-contain", daemon=True)
-            thread.start()
-            containment_threads.append((profile_id, thread))
-        for _, thread in containment_threads:
-            thread.join(timeout=max(0.0, deadline - time.monotonic()))
-        with replies_guard:
-            contained_at_deadline = set(contained)
-        uncontained.extend(
-            profile_id for profile_id, _ in containment_threads if profile_id not in contained_at_deadline
-        )
-
-        for host, _worker in workers:
-            profile_id = host.store.binding.profile_id
+        received: dict[UUID, ProfileWorkerDrained] = {}
+        for profile_id, record in records:
+            with record.guard:
+                contained, receipt = record.contained, record.receipt
+            if receipt is not None:
+                received[profile_id] = receipt
+            if record.worker is not None and not contained:
+                uncontained.append(profile_id)
+            running = any(
+                thread is not None and (thread.ident is None or thread.is_alive())
+                for thread in (record.request, record.containment)
+            )
+            if running:
+                unsettled.append(profile_id)
             # A pre-fence launch may own a native scope without a published
             # worker. Its incomplete containment retains runtime ownership.
-            if not host.owner.wait_construction(deadline=deadline):
+            if not record.host.owner.wait_construction(deadline=deadline):
                 uncontained.append(profile_id)
+                continue
+            if running or (record.worker is not None and not contained):
+                continue
             try:
-                host.owner.settle(deadline=deadline)
+                record.host.owner.settle(deadline=deadline)
             except Exception:
                 unsettled.append(profile_id)
-        unsettled.extend(profile_id for profile_id, thread in threads if thread.is_alive())
-        with replies_guard:
-            received = dict(replies)
-        if not uncontained and not unsettled:
-            with self._guard:
-                self._profiles.clear()
-                self._connections.clear()
-                self._logins.clear()
-        return RuntimeProfileDrainResult(
+            try:
+                # Callback settlement may complete a retired proof phase. Reap
+                # again and retain this host if any proof still owns cleanup.
+                if record.host.approvals.close():
+                    unsettled.append(profile_id)
+            except Exception:
+                unsettled.append(profile_id)
+        result = RuntimeProfileDrainResult(
             receipts=tuple(received[profile_id] for profile_id in sorted(received)),
             missing_receipts=tuple(
                 sorted(
-                    host.store.binding.profile_id
-                    for host, worker in workers
-                    if worker is not None
-                    if host.store.binding.profile_id not in received
+                    profile_id
+                    for profile_id, record in records
+                    if record.worker is not None and profile_id not in received
                 )
             ),
             uncontained=tuple(sorted(set(uncontained))),
             unsettled=tuple(sorted(set(unsettled))),
         )
+        if not uncontained and not unsettled:
+            if not self._guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
+                raise RuntimeShutdownIncompleteError()
+            try:
+                self._profiles.clear()
+                self._connections.clear()
+                self._logins.clear()
+                self._drain_result = result
+                self._drain_records.clear()
+            finally:
+                self._guard.release()
+        return result
+
+    @staticmethod
+    def _start_drain_request(record: _ProfileDrainRecord, *, deadline: float) -> None:
+        worker = record.worker
+        if worker is None:
+            return
+
+        def request() -> None:
+            try:
+                receipt = worker.drain(deadline=deadline)
+            except BaseException:
+                # The original worker remains owned, regardless of why its
+                # protocol request failed. Only a real receipt may be recorded.
+                return
+            with record.guard:
+                record.receipt = receipt
+                record.contained = True
+
+        thread = Thread(target=request, name="profile-worker-drain", daemon=True)
+        record.request = thread
+        thread.start()
+
+    @staticmethod
+    def _start_drain_containment(record: _ProfileDrainRecord, *, deadline: float) -> None:
+        worker = record.worker
+        if worker is None:
+            return
+
+        def contain() -> None:
+            try:
+                worker.close(deadline=deadline)
+            except BaseException:
+                return
+            with record.guard:
+                record.contained = True
+
+        thread = Thread(target=contain, name="profile-worker-contain", daemon=True)
+        record.containment = thread
+        thread.start()

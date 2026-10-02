@@ -67,6 +67,9 @@ dependencies = [
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
   "keyring>=25.6.0,<26",
+  # Native Secret Service protocol calls and encrypted session codec.
+  "jeepney>=0.9,<0.10; sys_platform == 'linux'",
+  "secretstorage>=3.5,<3.6; sys_platform == 'linux'",
   # The Windows ACL hardening path imports pywin32 directly. Keep it in the
   # base runtime on Windows rather than relying on mcp's transitive supply.
   "pywin32>=311 ; sys_platform == 'win32'",
@@ -413,6 +416,7 @@ exclude = [
 include = [
   "src/cadrumo/py.typed",
   "src/cadrumo/core/external_constants.toml",
+  "src/cadrumo/_data/local_runtime/**",
   "src/cadrumo_harness/py.typed",
   "src/cadrumo_harness/_data/**",
 ]

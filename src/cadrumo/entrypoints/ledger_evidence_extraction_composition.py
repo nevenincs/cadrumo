@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from contextlib import nullcontext
+
 import httpx
 
 from ..adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
@@ -58,6 +61,7 @@ from ..core.config import Settings
 from ..core.config_support import LLMProvider
 from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.optional_extras import MissingOptionalExtraError
+from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.iva.supply_nature import SupplyNature
 
 
@@ -87,7 +91,11 @@ def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
 
 
 def invoice_draft_extraction_ports(
-    *, evidence_ports: LedgerEvidencePorts, consent_ledger: EvidenceConsentLedger | None = None
+    *,
+    evidence_ports: LedgerEvidencePorts,
+    consent_ledger: EvidenceConsentLedger | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+    before_read: Callable[[], None] | None = None,
 ) -> InvoiceDraftExtractionPorts:
     """Bind evidence readers, optionally tracking exact off-host consent writes."""
     evidence_input_ports = EvidenceInputPorts(document_shape_probe=probe_document_shape)
@@ -132,22 +140,24 @@ def invoice_draft_extraction_ports(
         consent_token: EvidenceConsentProof | None,
         authority_values: object,
     ) -> InvoiceDraft:
+        if before_read is not None:
+            before_read()
         try:
             if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
                 raise TypeError("text reader requires resolved invoice extraction authority values")
             from ..domain.calculations.registry.authority import bundled_indexed_authority
 
-            with bundled_indexed_authority().operation() as operation:
+            with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as pinned:
                 if provider is None:
                     return extract_invoice_fields_from_text(
                         transcription,
-                        operation=operation,
+                        operation=pinned,
                         authority_values=authority_values,
                     )
                 return TextInvoiceFieldExtractor(
                     provider=provider,
                     model=settings.cadrumo_llm_cloud_text_model,
-                    operation=operation,
+                    operation=pinned,
                     settings=settings,
                     authority_values=authority_values,
                     consent_token=require_llm_consent_token(consent_token),
@@ -166,6 +176,8 @@ def invoice_draft_extraction_ports(
             raise InvoiceDraftReaderUnavailableError(exc) from exc
 
     def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
+        if before_read is not None:
+            before_read()
         try:
             return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
         except Exception:
@@ -184,6 +196,8 @@ def invoice_draft_extraction_ports(
         provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
     ) -> DocumentTranscription:
+        if before_read is not None:
+            before_read()
         try:
             inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
             if provider is None:

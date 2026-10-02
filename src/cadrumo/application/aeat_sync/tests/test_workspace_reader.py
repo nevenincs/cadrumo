@@ -9,7 +9,6 @@ reader spends all three rather than collapsing the first two.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -80,7 +79,11 @@ def _unrelated_contracts() -> OperationPublicContractSetV1:
 
 def _contracts_with_notifications_list() -> OperationPublicContractSetV1:
     """Add the canonical registered list contract to an unrelated contract."""
-    definition = build_notifications_list_definition(lambda: cast(NotificationsPorts, None))
+
+    def unopened_ports() -> NotificationsPorts:
+        raise AssertionError("contract discovery does not open notification ports")
+
+    definition = build_notifications_list_definition(unopened_ports)
     notification_contract = build_notifications_list_registration(definition).contract
     return OperationPublicContractSetV1.build((*_unrelated_contracts().definitions, notification_contract))
 

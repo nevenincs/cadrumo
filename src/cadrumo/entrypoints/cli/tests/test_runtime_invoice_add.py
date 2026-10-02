@@ -46,7 +46,12 @@ pytestmark = [
 _INVOICE_ADD_OPERATIONS = frozenset({INVOICE_ADD_OPERATION_DEFINITION_ID})
 
 
-def _scope(client_id: UUID, operation_ids: frozenset[str] = _INVOICE_ADD_OPERATIONS) -> AccessScope:
+def _scope(
+    client_id: UUID,
+    operation_ids: frozenset[str] = _INVOICE_ADD_OPERATIONS,
+    *,
+    profile_value_operation_ids: frozenset[str] = frozenset(),
+) -> AccessScope:
     return AccessScope(
         operations=operation_ids,
         actions=frozenset(
@@ -75,6 +80,14 @@ def _scope(client_id: UUID, operation_ids: frozenset[str] = _INVOICE_ADD_OPERATI
                         category=DisclosureCategory.TAX_VALUES,
                     )
                     for definition_id in operation_ids
+                ),
+                *(
+                    DisclosurePermission(
+                        destination_id=client_id,
+                        projection_id=f"{definition_id}.result",
+                        category=DisclosureCategory.PROFILE_VALUES,
+                    )
+                    for definition_id in profile_value_operation_ids
                 ),
             }
         ),
@@ -127,12 +140,17 @@ def native_invoice_runtime_session(
     tmp_path: Path,
     *,
     operation_ids: frozenset[str] = _INVOICE_ADD_OPERATIONS,
+    profile_value_operation_ids: frozenset[str] = frozenset(),
     authority_operation: PinnedAuthorityOperation | None = None,
 ) -> AbstractContextManager[NativeApiCliSession[None]]:
     """Open the native worker with an exact grant for the supplied operation set."""
     return native_api_cli_session(
         tmp_path,
-        scope_for_destination=lambda client_id: _scope(client_id, operation_ids),
+        scope_for_destination=lambda client_id: _scope(
+            client_id,
+            operation_ids,
+            profile_value_operation_ids=profile_value_operation_ids,
+        ),
         prepare_profile=lambda profile_id, root: _prepare_profile(
             profile_id,
             root,

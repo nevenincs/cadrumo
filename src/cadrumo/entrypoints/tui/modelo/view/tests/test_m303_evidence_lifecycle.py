@@ -25,6 +25,7 @@ _ATTACHMENT_ID = "a" * 64
 
 def _door() -> ModeloWorkspaceLifecycleDoor:
     """Build a door whose private submit seam is replaced by each test."""
+
     async def submit(_request: OperationRequest[BaseModel]) -> OperationControllerPort:
         raise AssertionError("submission is not used by this test")
 

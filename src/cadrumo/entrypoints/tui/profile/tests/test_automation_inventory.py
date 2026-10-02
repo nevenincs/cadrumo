@@ -232,6 +232,9 @@ def test_period_restrictions_and_review_validity_are_not_collapsed() -> None:
     assert tr("tui.automation_inventory.all_periods") in "\n".join(subject._scope(unrestricted))
     assert tr("tui.automation_inventory.no_periods") in "\n".join(subject._scope(none_allowed))
     assert "2026/3T" in "\n".join(subject._scope(scope))
+    unattended_notice = tr("tui.automation_inventory.unattended_notice")
+    assert unattended_notice in subject._grant_detail(inventory.grants[0])
+    assert unattended_notice not in subject._grant_detail(inventory.grants[0].model_copy(update={"unattended": False}))
 
     request = inventory.requests[0]
     detail = subject._request_detail(request)
@@ -290,6 +293,7 @@ async def test_parent_opens_human_inventory_without_rebinding_client(monkeypatch
         await _until(pilot, lambda: isinstance(pilot.app.screen, subject.RuntimeAutomationInventoryScreen))
         inventory = pilot.app.screen
         assert isinstance(inventory, subject.RuntimeAutomationInventoryScreen)
+        await _until(pilot, lambda: inventory.is_mounted)
         await _until(pilot, lambda: inventory.query_one("#automation-inventory-grants", DataTable).row_count == 1)
         inventory.action_close()
         await _until(pilot, lambda: pilot.app.screen is parent)

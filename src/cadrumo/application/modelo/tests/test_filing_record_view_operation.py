@@ -16,7 +16,10 @@ from pydantic import BaseModel, ValidationError
 from ....core.casilla_id import validated_casilla_id
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -26,7 +29,13 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
-from ...calculations.observations_repository import ObservationLayers, ObservationSourceKind
+from ...calculations.observations_repository import (
+    ObservationEnvelopePayload,
+    ObservationLayers,
+    ObservationOverride,
+    ObservationSourceKind,
+    ResultDispositionProjection,
+)
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
@@ -101,43 +110,59 @@ def _source() -> tuple[WorkUnit, ModeloRecord]:
     return unit, record
 
 
-def _observation_layers():
-    official = SimpleNamespace(
+def _observation_layers() -> ObservationLayers:
+    casilla_id = validated_casilla_id("01", surface="filing view test")
+
+    def observation(amount: str) -> RegistryModeloObservation:
+        return RegistryModeloObservation(
+            modelo="303",
+            filing_year=2026,
+            period="1T",
+            observations=(
+                CasillaObservation(
+                    casilla_id=casilla_id,
+                    value=Decimal(amount),
+                    legal_refs=("synthetic-legal",),
+                    source_refs=("synthetic-source",),
+                ),
+            ),
+        )
+
+    disposition = ResultDispositionProjection(
+        disposition=ResultDisposition.INGRESO,
+        provenance_kind="source_header",
+        provenance_locator="synthetic-file:declaration-type",
+    )
+    official = ObservationEnvelopePayload(
         source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
         captured_at=_NOW,
         stamped_revision_id="revision-2026",
-        observation=SimpleNamespace(
-            casilla_values={validated_casilla_id("01", surface="filing view test"): Decimal("10.25")}
-        ),
-        override=None,
+        observation=observation("10.25"),
+        result_disposition=disposition,
+        m303_compensation_basis=M303CompensationBasis.RESULTADO,
     )
-    override = SimpleNamespace(
+    override = ObservationOverride(
         actor="operator",
         reason="corrected from supporting evidence",
         recorded_at=_NOW,
         replaced_source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
-        replaced_values={"01": "10.25"},
+        replaced_values={casilla_id: "10.25"},
     )
-    pending = SimpleNamespace(
+    pending = ObservationEnvelopePayload(
         source_kind=ObservationSourceKind.OPERATOR_MANUAL,
         captured_at=_NOW,
         stamped_revision_id="revision-2026",
-        observation=SimpleNamespace(
-            casilla_values={validated_casilla_id("01", surface="filing view test"): Decimal("11.50")}
-        ),
+        observation=observation("11.50"),
         override=override,
+        result_disposition=disposition,
+        m303_compensation_basis=M303CompensationBasis.RESULTADO,
     )
-    return cast(
-        ObservationLayers,
-        SimpleNamespace(
-            modelo="303",
-            filing_year=2026,
-            period="1T",
-            member_nif=None,
-            official=official,
-            pending_local=pending,
-            effective=pending,
-        ),
+    return ObservationLayers(
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        official=official,
+        pending_local=pending,
     )
 
 

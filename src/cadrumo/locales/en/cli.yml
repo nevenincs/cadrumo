@@ -798,6 +798,15 @@ cli:
           or BORRADOR revisions available for comparison.
         no_work_units: No Modelo %{modelo} work units found for year %{filing_year}.
           Create and calculate a work unit first.
+        recover_no_revisions: Check Modelo %{modelo} calculation revisions in both
+          requested years (%{year_a} and %{year_b}); run `aeat app modelo work calculate`
+          for whichever year lacks a revision.
+        recover_no_usable_revisions: Check Modelo %{modelo} BORRADOR or VERIFICADO_COMPLETO
+          revisions in both requested years (%{year_a} and %{year_b}); calculate an
+          eligible work unit in whichever year needs one.
+        recover_no_work_units: Check Modelo %{modelo} work units in both requested
+          years (%{year_a} and %{year_b}); create and calculate a work unit in whichever
+          year lacks one.
         year_help: Filing year to include in the comparison. Specify exactly twice
           (--year 2024 --year 2025).
       compare_help: Compare two filing-year calculation revisions for the same modelo.

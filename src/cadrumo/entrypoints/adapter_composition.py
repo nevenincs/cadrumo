@@ -50,7 +50,6 @@ if TYPE_CHECKING:
         RetencionObservationPortsFactory,
     )
     from ..application.aggregation.withholding_observation_service import WithholdingObservationService
-    from ..application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..application.auth.operator_probe_ports import OperatorProbePorts
     from ..application.auth.operator_scope_ports import OperatorScopePorts
@@ -70,7 +69,6 @@ if TYPE_CHECKING:
     from ..application.ledger.invoice_confirmation_ports import InvoiceConfirmationPortsFactory
     from ..application.live.borrador_100 import (
         Borrador100SnapshotRepository,
-        Borrador100SnapshotRepositoryFactory,
     )
     from ..application.live.censo_ports import CensalFetchPort
     from ..application.live.expedientes_ports import ExpedientesPorts, ExpedientesPortsFactory
@@ -86,10 +84,6 @@ if TYPE_CHECKING:
     from ..application.modelo.iva_wallet_seed_ports import (
         ModeloIvaWalletSeedPorts,
         ModeloIvaWalletSeedPortsFactory,
-    )
-    from ..application.modelo.m036_lifecycle_ports import M036LifecyclePortsFactory
-    from ..application.modelo.m145_communication_records_ports import (
-        M145CommunicationRecordsPortsFactory,
     )
     from ..application.modelo.participation_index_rebuild_ports import (
         ParticipationIndexRebuildPorts,
@@ -115,6 +109,7 @@ if TYPE_CHECKING:
     from ..application.state_projection_ports import StateProjectionReadPorts
     from ..application.storage.calc_sheets.parity_harness import CalcSheetsParityApplyPort
     from ..application.storage.calc_sheets.records import SheetExportPlan
+    from ..application.user_profile.automation_custody_port import AutomationSecretStore
     from ..application.user_profile.custody_ports import ProfileBucketStoragePort, ProfileCustodyPort
     from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
     from ..core.config import Settings
@@ -221,11 +216,6 @@ class ProfileAdapterComposition:
         """Resolve the percepcion observation ports factory on first read."""
         return build_percepcion_observation_ports
 
-    @property
-    def borrador_100_snapshot_repository_factory(self) -> Borrador100SnapshotRepositoryFactory:
-        """Resolve the borrador 100 snapshot repository factory on first read."""
-        return build_borrador_100_snapshot_repository
-
     @cached_property
     def censal_fetch_port(self) -> CensalFetchPort:
         """Resolve the censal fetch port on first read."""
@@ -320,22 +310,6 @@ class ProfileAdapterComposition:
         """Resolve the prorrata register repository factory on first read."""
         return build_prorrata_register_repository
 
-    @cached_property
-    def m145_communication_records_ports_factory(self) -> M145CommunicationRecordsPortsFactory:
-        """Resolve the Modelo 145 communication records ports factory on first read."""
-        from ..adapters.persistence.profile.m145_communication_records import (
-            build_m145_communication_records_ports,
-        )
-
-        return build_m145_communication_records_ports
-
-    @cached_property
-    def m036_lifecycle_ports_factory(self) -> M036LifecyclePortsFactory:
-        """Resolve the Modelo 036 lifecycle ports factory on first read."""
-        from ..adapters.persistence.profile.m036_lifecycle import build_m036_lifecycle_ports
-
-        return build_m036_lifecycle_ports
-
     @property
     def work_lifecycle_ports_factory(self) -> WorkLifecyclePortsFactory:
         """Resolve the work lifecycle ports factory on first read."""
@@ -358,13 +332,6 @@ class ProfileAdapterComposition:
         )
 
         return build_recipient_encryption_capability
-
-    @cached_property
-    def apoderado_config_repository_factory(self) -> ApoderadoConfigurationRepositoryFactory:
-        """Resolve the apoderado config repository factory on first read."""
-        from ..adapters.persistence.profile.apoderado import build_apoderado_config_repository
-
-        return build_apoderado_config_repository
 
 
 def build_operator_probe_ports() -> OperatorProbePorts:
@@ -452,6 +419,8 @@ def build_modelo_export_ports(
     *,
     bucket_id: str,
     m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
+    objects: SecureObjectRepository | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloExportPorts:
     """Compose every persisted authority required by one Modelo export."""
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
@@ -472,7 +441,7 @@ def build_modelo_export_ports(
     from ..domain.filing.software_identity import development_mock_software_identity
 
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     return ModeloExportPorts(
         calculation=CalculationRevisionCatalogueRepository(
             bucket_id=normalized_bucket_id,
@@ -508,8 +477,10 @@ def build_modelo_export_ports(
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),
-        draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
-        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        draft_review_ports=build_draft_review_ports(
+            bucket_id=normalized_bucket_id, operation=operation, objects=objects
+        ),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
         # No AEAT-registered developer identity exists yet; the mock is graded
         # on every export result so no surface presents its file as presentable.
         product_software_identity=development_mock_software_identity(),
@@ -624,7 +595,9 @@ def build_diagnostics_ports(*, bucket_id: str | None = None) -> DiagnosticsPorts
     )
 
 
-def build_draft_review_ports(*, bucket_id: str, operation: PinnedAuthorityOperation | None = None) -> DraftReviewPorts:
+def build_draft_review_ports(
+    *, bucket_id: str, operation: PinnedAuthorityOperation | None = None, objects: SecureObjectRepository | None = None
+) -> DraftReviewPorts:
     """Compose draft review using the caller's authority pin when supplied."""
     from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
@@ -638,7 +611,7 @@ def build_draft_review_ports(*, bucket_id: str, operation: PinnedAuthorityOperat
     from ..domain.user_profile.errors import ProfileNotFoundError
 
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     if operation is not None:
         profile_decode_context = operation.profile_decode_context()
     else:
@@ -811,7 +784,9 @@ def build_inventory_service_ports(*, bucket_id: str) -> InventoryServicePorts:
     )
 
 
-def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100SnapshotRepository:
+def build_borrador_100_snapshot_repository(
+    *, bucket_id: str, objects: SecureObjectRepository | None = None
+) -> Borrador100SnapshotRepository:
     """Bind the encrypted borrador snapshot adapter to one profile bucket."""
     from pydantic import ValidationError
 
@@ -915,13 +890,15 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
         ),
         domain_label="borrador",
         input_error_cls=LiveApplicationInputError,
-        objects=secure_object_repository_for_bucket(normalized_bucket_id),
+        objects=objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id),
         classification_error_factory=translate_classification_refusal,
         version_error_factory=translate_version_refusal,
     )
 
 
-def build_retencion_observation_ports(*, bucket_id: str) -> RetencionObservationPorts:
+def build_retencion_observation_ports(
+    *, bucket_id: str, objects: SecureObjectRepository | None = None
+) -> RetencionObservationPorts:
     """Compose the encrypted retención observation capability for one bucket."""
     from ..adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -930,7 +907,7 @@ def build_retencion_observation_ports(*, bucket_id: str) -> RetencionObservation
     normalized_bucket_id = bucket_id.strip()
     return RetencionObservationPorts(
         repository=RetencionObservationRepositoryAdapter(
-            objects=secure_object_repository_for_bucket(normalized_bucket_id),
+            objects=objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id),
         ),
     )
 
@@ -1002,6 +979,9 @@ def build_attachment_store(bucket_id: str) -> AttachmentStoreProtocol:
 def build_state_projection_read_ports(
     *,
     diagnostics_ports: DiagnosticsPorts | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+    objects: SecureObjectRepository | None = None,
+    bucket_id: str | None = None,
 ) -> StateProjectionReadPorts:
     """Compose the state-projection read ports over the persistence adapters.
 
@@ -1015,7 +995,10 @@ def build_state_projection_read_ports(
     from ..application.state_projection_ports import StateProjectionReadPorts
 
     projection_adapter = StateProjectionPersistenceAdapter(
-        diagnostics_ports=diagnostics_ports or build_diagnostics_ports()
+        diagnostics_ports=diagnostics_ports or build_diagnostics_ports(bucket_id=bucket_id),
+        operation=operation,
+        objects=objects,
+        bucket_id=bucket_id,
     )
     return StateProjectionReadPorts(
         workspace=projection_adapter,
@@ -1029,6 +1012,7 @@ def build_calculation_action_ports(
     bucket_id: str,
     operation: PinnedAuthorityOperation,
     profile_record: object | None = None,
+    objects: SecureObjectRepository | None = None,
 ) -> CalculationActionPorts:
     """Compose every persisted authority required by one Modelo calculation."""
     from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
@@ -1060,7 +1044,7 @@ def build_calculation_action_ports(
     from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
 
     class RelationOverrideMigration:
         """Adapt the existing migration implementation to the application port."""
@@ -1115,7 +1099,9 @@ def build_calculation_action_ports(
         usage_ratio_profile_loader=load_usage_ratios,
         profile_read_ports=build_pinned_profile_read_ports(bucket_id=normalized_bucket_id, operation=operation),
         invoice_repository=invoice_repository,
-        invoice_catalogue_read_ports=build_invoice_catalogue_read_ports(bucket_id=normalized_bucket_id),
+        invoice_catalogue_read_ports=build_invoice_catalogue_read_ports(
+            bucket_id=normalized_bucket_id, objects=objects
+        ),
         invoice_source_ports=InvoiceSourceResolverPorts(
             catalogue_reader=InvoiceCatalogueSourceResolverAdapter(
                 repository=invoice_repository,
@@ -1137,8 +1123,10 @@ def build_calculation_action_ports(
         ),
         iva_compensation_history_repository=IvaCompensationHistoryRepository(objects=objects),
         iva_compensation_decision_repository=IvaWalletDecisionRepository(objects=objects),
-        borrador_snapshot_repository=build_borrador_100_snapshot_repository(bucket_id=normalized_bucket_id),
-        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        borrador_snapshot_repository=build_borrador_100_snapshot_repository(
+            bucket_id=normalized_bucket_id, objects=objects
+        ),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
         relation_override_migration=RelationOverrideMigration(),
     )
 
@@ -1432,7 +1420,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
 
 
 def build_verification_repository_bundle(
-    bucket_id: str, *, operation: PinnedAuthorityOperation
+    bucket_id: str, *, operation: PinnedAuthorityOperation, objects: SecureObjectRepository | None = None
 ) -> VerificationRepositoryBundle:
     """Bind one profile's repositories and rectificativa identity to the held authority."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -1454,7 +1442,7 @@ def build_verification_repository_bundle(
     from ..application.workflow.persistence import WorkflowRunRepository
 
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     taxpayer_tax_id = _export_taxpayer_tax_id(bucket_id=normalized_bucket_id, operation=operation)
     return VerificationRepositoryBundle(
         calculation=CalculationRevisionCatalogueRepository(
@@ -1477,9 +1465,11 @@ def build_verification_repository_bundle(
         participation_index=TransactionParticipationIndexRepository(bucket_id=normalized_bucket_id, objects=objects),
         workflow_run=WorkflowRunRepository(objects=objects),
         justificante=JustificanteRepository(objects=objects),
-        draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
-        workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
-        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        draft_review_ports=build_draft_review_ports(
+            bucket_id=normalized_bucket_id, operation=operation, objects=objects
+        ),
+        workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id, objects=objects),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
     )
 
 
@@ -1643,7 +1633,9 @@ def profile_free_adapter_composition() -> Generator[None]:
 
 
 @contextmanager
-def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
+def profile_adapter_composition(
+    *, automation_secrets_store: AutomationSecretStore | None = None
+) -> Generator[ProfileAdapterComposition]:
     """Bind every adapter port a frontend session resolves, and unbind after.
 
     The imports are function-local because entering this scope is what pulls the
@@ -1681,7 +1673,9 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
 
     with ExitStack() as composition:
         composition.enter_context(bind_tax_identity_admission(RegistryTaxIdentityAdmission()))
-        profile_custody = composition.enter_context(composed_profile_persistence_ports())
+        profile_custody = composition.enter_context(
+            composed_profile_persistence_ports(automation_secrets_store=automation_secrets_store)
+        )
         composition.enter_context(bind_bucket_event_history_repository_factory(_bucket_event_history_repository))
         composition.enter_context(bind_confirmation_record_repository_factory(_confirmation_record_repository))
         composition.enter_context(bind_column_role_mapping_resolver(_resolve_column_roles))

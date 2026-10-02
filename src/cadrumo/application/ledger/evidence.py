@@ -478,6 +478,7 @@ def _ingest_evidence_attachment(
     media_kind: MediaKind,
     now: datetime,
     actor: str,
+    expected_content_digest: ContentDigest | None = None,
 ) -> ContentDigest:
     """Write one admitted evidence file through the application custody port."""
     return ports.attachment_ingestor.ingest(
@@ -488,6 +489,7 @@ def _ingest_evidence_attachment(
             mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
             captured_at=now,
             actor=actor,
+            expected_content_digest=expected_content_digest,
         ),
     )
 
@@ -504,6 +506,7 @@ class PurchaseInvoiceEvidenceService:
         *,
         bucket_id: str,
         source_path: str | Path,
+        source_directory: Path | None = None,
         supplier: str | None = None,
         invoice_number: str | None = None,
         invoice_date: str | None = None,
@@ -513,6 +516,7 @@ class PurchaseInvoiceEvidenceService:
         notes: str = "",
         actor: str = "cli",
         idempotency_key: str | None = None,
+        expected_content_digest: ContentDigest | None = None,
     ) -> PurchaseInvoiceEvidenceResult:
         """Attach a new purchase invoice evidence file to a bucket (ledger).
 
@@ -539,6 +543,9 @@ class PurchaseInvoiceEvidenceService:
                 path stays forward-slash on Windows). A ``Path`` is accepted for
                 programmatic callers and stringified for the echo. Byte access
                 always resolves the path regardless.
+            source_directory: Absolute directory of the submitting frontend.
+                Relative source paths are read from this directory when execution
+                crosses a process boundary; the original breadcrumb is unchanged.
             supplier: Optional vendor name extracted from the invoice.
             invoice_number: Optional invoice identifier from the document.
             invoice_date: Optional issue date string (free-form; typically
@@ -558,6 +565,8 @@ class PurchaseInvoiceEvidenceService:
                 fields. When omitted the verb stays deliberately ADDITIVE --
                 two attachments of one file are two distinct pieces of
                 evidence, and collapsing them would be its own defect.
+            expected_content_digest: Optional planned source identity checked
+                against the single byte allocation entering attachment custody.
 
         Returns:
             :class:`PurchaseInvoiceEvidenceResult`: Carrying the new record and the
@@ -567,7 +576,23 @@ class PurchaseInvoiceEvidenceService:
             ``PurchaseInvoiceEvidenceInputError``: if ``source_path`` is not a
                 readable file or has an unsupported extension.
         """
-        resolved = Path(source_path).expanduser().resolve()
+        try:
+            source = Path(source_path).expanduser()
+            if source_directory is not None:
+                if not source_directory.is_absolute():
+                    raise ValueError("source directory must be absolute")
+                if not source.is_absolute():
+                    source = source_directory / source
+            resolved = source.resolve()
+        except (OSError, RuntimeError, ValueError):
+            raise PurchaseInvoiceEvidenceInputError(
+                translated_message="errors.refused.refused_ledger_evidence_input",
+                context={"source_path": str(source_path)},
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
+                    facts={"source_file_readable": False},
+                ),
+            ) from None
         if not resolved.is_file():
             raise PurchaseInvoiceEvidenceInputError(
                 translated_message="errors.refused.refused_ledger_evidence_input",
@@ -615,6 +640,7 @@ class PurchaseInvoiceEvidenceService:
             media_kind=media_kind,
             now=now,
             actor=actor,
+            expected_content_digest=expected_content_digest,
         )
         last_conflict: LedgerPersistenceConflictError | None = None
         for _attempt in range(_EVIDENCE_MUTATION_ATTEMPTS):

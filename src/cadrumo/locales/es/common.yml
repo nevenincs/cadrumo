@@ -1281,6 +1281,9 @@ tui:
     target_key: Clave de destino
     title: Acceso automatizado
     unattended: Sin supervisión
+    unattended_notice: Con una autorización válida para acceso sin supervisión, esta
+      instalación puede desbloquear el perfil tras cerrar la sesión humana. Se siguen
+      aplicando las reglas de bloqueo y revocación.
     unavailable: El inventario de automatización no está disponible. Actualiza para
       volver a intentarlo.
   automation_request:
@@ -2339,6 +2342,8 @@ tui:
     busy: Procesando…
     close: Cerrar
     completed: Completado.
+    denial_acknowledgement: 'Acceso denegado: {access_denied} · Limpieza de credenciales
+      pendiente: {cleanup_pending}'
     deny_all: Revocar toda la automatización
     deny_grant: Revocar concesión
     deny_key: Revocar clave
@@ -2353,8 +2358,12 @@ tui:
     resume_grants: UUID de las concesiones que se reactivarán
     resume_password: Contraseña del perfil
     revoke_session: Revocar sesión
+    session_details: 'Sesión: {session_id} | Cliente: {client_id} | Sesión padre:
+      {parent_session_id} | Autorización: {grant_id} | Clave: {key_id} | Tipo: {kind}
+      | Estado: {state} | Caduca: {expires_at}'
     sessions: Sesiones
     sessions_empty: No hay sesiones actuales.
+    sessions_locked: 'Sesiones bloqueadas: {session_ids}'
     title: Acceso al perfil
     view_automation: Ver automatización
   runtime_login:

@@ -10,6 +10,7 @@ from ...application.operations.public_period import PublicPeriod
 from ...application.state_projection import ProjectionModeloReadiness
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
+from ...core.identity.digest import ContentDigest
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.ids import RevisionId
@@ -23,6 +24,7 @@ from ._modelo_payloads import (
 )
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_cli_precondition_action
 from .runtime_modelo_query_read import read_modelo_readiness, to_modelo_readiness_report
+from .state_projection_support import authority_operation
 
 
 def modelo_readiness(
@@ -46,6 +48,7 @@ def modelo_readiness(
     resolved_period = _resolve_readiness_period(modelo=modelo, filing_year=filing_year, period=period)
     from uuid import UUID
 
+    operation = authority_operation(ctx)
     projection = read_modelo_readiness(
         ctx,
         ModeloReadinessOperationRequest(
@@ -56,11 +59,13 @@ def modelo_readiness(
             revision_id=revision_id,
             language=OutputLanguage(output_language()),
         ),
+        expected_authority_generation=operation.generation.logical_generation,
     )
     report = to_modelo_readiness_report(projection)
     revision_id = report.revision_id
     readiness_result = _readiness_result(
         report,
+        authority_generation=projection.authority_generation,
         modelo=modelo,
         revision_id=revision_id,
         filing_year=filing_year,
@@ -70,14 +75,17 @@ def modelo_readiness(
         ctx,
         command="modelo.readiness",
         result=readiness_result,
-        lines=_readiness_lines(
-            report,
-            modelo=modelo,
-            revision_id=revision_id,
-            filing_year=filing_year,
-            period=period,
-            profile_action=profile_action,
-        ),
+        lines=[
+            f"authority_generation\t{projection.authority_generation}",
+            *_readiness_lines(
+                report,
+                modelo=modelo,
+                revision_id=revision_id,
+                filing_year=filing_year,
+                period=period,
+                profile_action=profile_action,
+            ),
+        ],
         notices=_readiness_notices(report, profile_action=profile_action),
     )
     if not report.ready:
@@ -98,11 +106,13 @@ def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | No
 def _readiness_result(
     report: ProjectionModeloReadiness,
     *,
+    authority_generation: ContentDigest,
     modelo: str,
     revision_id: RevisionId,
     filing_year: int,
 ) -> ModeloReadinessResult:
     return ModeloReadinessResult(
+        authority_generation=authority_generation,
         profile_id=str(report.profile_id),
         modelo=modelo,
         revision_id=revision_id,

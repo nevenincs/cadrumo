@@ -47,6 +47,7 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.async_cleanup import has_async_cleanup_failure
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_kind import CasillaValueKind
@@ -101,6 +102,7 @@ from .filed_data_ports import (
     FiledDeclarationAvailabilityReportProtocol,
     FiledEffectGuard,
     FiledRegisterDeclarationProtocol,
+    LocalEffectTracker,
 )
 from .filed_observation_persistence import (
     enroll_filed_justificante_evidence,
@@ -110,6 +112,7 @@ from .filed_observation_ports import FiledObservationPersistencePorts, FiledObse
 from .notification_ports import NotificationsPorts
 from .remote_state_models import (
     BulkFiledDataCaptureReport,
+    FiledCapturePairOutcome,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,
     SourceFiledDataCaptureReport,
@@ -402,6 +405,8 @@ async def _walk_or_failure_row(
     except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
         raise
     except Exception as exc:
+        if has_async_cleanup_failure(exc):
+            raise
         failures.append(filed_data_capture_failure_row(modelo=modelo, year=year, error=exc))
         return None
 
@@ -908,6 +913,8 @@ async def _absorb_declarations(
         except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
             raise
         except Exception as exc:
+            if has_async_cleanup_failure(exc):
+                raise
             failures.append(
                 filed_data_capture_failure_row(
                     modelo=modelo,
@@ -954,10 +961,11 @@ def _empty_bulk_filed_capture_report(
     year_from: int,
     year_to: int,
     failures: Sequence[FiledDataCaptureFailureRow],
+    pair_outcomes: Sequence[FiledCapturePairOutcome],
     dry_run: bool = False,
 ) -> BulkFiledDataCaptureReport:
     """Build the local-boundary result when no pair can reach the register."""
-    return BulkFiledDataCaptureReport(
+    report = BulkFiledDataCaptureReport(
         output_root=str(output_root),
         modelos=tuple(modelos),
         year_from=year_from,
@@ -965,6 +973,7 @@ def _empty_bulk_filed_capture_report(
         captured_count=0,
         reached_count=0,
         failed_count=len(failures),
+        pair_outcomes=tuple(pair_outcomes),
         observation_paths=(),
         artefact_refs=(),
         justificante_metadata_count=0,
@@ -979,6 +988,8 @@ def _empty_bulk_filed_capture_report(
         failures=tuple(failures),
         dry_run=dry_run,
     )
+    report.require_consistent()
+    return report
 
 
 @dataclass(slots=True)
@@ -1026,8 +1037,19 @@ async def _capture_filed_data_query_pair(
     pair_completed: int,
     pair_total: int,
     phase_state: _CapturePairPhaseState,
+    pair_outcomes: dict[tuple[str, int], FiledCapturePairOutcome],
 ) -> tuple[int, bool]:
     """Walk and absorb one pair, returning progress and whether the cap is met."""
+    coordinate = (code, year)
+    pair_outcomes[coordinate] = FiledCapturePairOutcome(
+        modelo=code,
+        year=year,
+        walk_attempted=True,
+        walk_completed=False,
+        row_count=0,
+        reached_count=0,
+        captured_count=0,
+    )
     declarations = await _walk_or_failure_row(
         opened_register.walk(modelo=code, ejercicio=year),
         modelo=code,
@@ -1046,6 +1068,15 @@ async def _capture_filed_data_query_pair(
     )
     if declarations is None:
         return pair_completed, False
+    pair_outcomes[coordinate] = FiledCapturePairOutcome(
+        modelo=code,
+        year=year,
+        walk_attempted=True,
+        walk_completed=True,
+        row_count=len(declarations),
+        reached_count=0,
+        captured_count=0,
+    )
     within_limit = _declarations_within_limit(
         declarations,
         limit=limit,
@@ -1053,6 +1084,8 @@ async def _capture_filed_data_query_pair(
     )
     if within_limit is None:
         return pair_completed, True
+    reached_before = accumulator.reached_count
+    captured_before = len(accumulator.observation_paths)
     await _emit_filed_capture_pair_phases(
         events=events,
         declarations=within_limit,
@@ -1073,6 +1106,17 @@ async def _capture_filed_data_query_pair(
         effect_guard=effect_guard,
         events=events,
     )
+    outcome = FiledCapturePairOutcome(
+        modelo=code,
+        year=year,
+        walk_attempted=True,
+        walk_completed=True,
+        row_count=len(declarations),
+        reached_count=accumulator.reached_count - reached_before,
+        captured_count=len(accumulator.observation_paths) - captured_before,
+    )
+    outcome.require_consistent()
+    pair_outcomes[coordinate] = outcome
     return pair_completed, limit is not None and accumulator.reached_count >= limit
 
 
@@ -1087,6 +1131,7 @@ async def _capture_filed_data_query_pairs(
     limit: int | None,
     dry_run: bool,
     failures: list[FiledDataCaptureFailureRow],
+    pair_outcomes: dict[tuple[str, int], FiledCapturePairOutcome],
     effect_guard: FiledEffectGuard | None = None,
     on_session_write: SessionWriteReporter | None = None,
     events: FiledHistoryEventSink | None = None,
@@ -1119,6 +1164,7 @@ async def _capture_filed_data_query_pairs(
                 pair_completed=pair_completed,
                 pair_total=total,
                 phase_state=phase_state,
+                pair_outcomes=pair_outcomes,
             )
             if limit_reached:
                 return pair_completed
@@ -1133,14 +1179,16 @@ def _dry_run_bulk_filed_capture_report(
     year_to: int,
     accumulator: FiledCaptureAccumulator,
     failures: Sequence[FiledDataCaptureFailureRow],
+    pair_outcomes: Sequence[FiledCapturePairOutcome],
 ) -> BulkFiledDataCaptureReport:
     """Project the read-only bulk result without reaching any persistence finalizer."""
-    return BulkFiledDataCaptureReport(
+    report = BulkFiledDataCaptureReport(
         output_root=str(output_root),
         modelos=tuple(modelos),
         year_from=year_from,
         year_to=year_to,
         failed_count=len(failures),
+        pair_outcomes=tuple(pair_outcomes),
         **accumulator.capture_report_fields(),
         calculation_observation_count=0,
         calculation_observation_keys=(),
@@ -1148,6 +1196,8 @@ def _dry_run_bulk_filed_capture_report(
         recapture_notices=tuple(accumulator.recapture_notices),
         dry_run=True,
     )
+    report.require_consistent()
+    return report
 
 
 def _persisted_bulk_filed_capture_report(
@@ -1161,6 +1211,7 @@ def _persisted_bulk_filed_capture_report(
     bucket_id: str,
     sync_run_repository: SyncRunRecordRepositoryProtocol,
     ports: FiledObservationPersistencePorts,
+    pair_outcomes: Sequence[FiledCapturePairOutcome],
 ) -> BulkFiledDataCaptureReport:
     """Finalize persisted observations, then record the completed sweep provenance."""
     finalization = finalize_filed_capture(
@@ -1180,12 +1231,13 @@ def _persisted_bulk_filed_capture_report(
         completed_at=now(),
         repository=sync_run_repository,
     )
-    return BulkFiledDataCaptureReport(
+    report = BulkFiledDataCaptureReport(
         output_root=str(output_root),
         modelos=tuple(modelos),
         year_from=year_from,
         year_to=year_to,
         failed_count=len(failures),
+        pair_outcomes=tuple(pair_outcomes),
         sync_run_ref=sync_run_record_key(
             surface=sync_run.surface,
             bucket_event_id=sync_run.bucket_event_id,
@@ -1197,6 +1249,8 @@ def _persisted_bulk_filed_capture_report(
         skipped_casillas=finalization.skipped_casillas,
         recapture_notices=tuple(accumulator.recapture_notices),
     )
+    report.require_consistent()
+    return report
 
 
 async def _announce_bulk_capture_plan(
@@ -1311,7 +1365,22 @@ async def capture_filed_data_bulk(
                 operation=indexed_operation,
             )
     resolved_modelos = modelos if modelos is not None else operation.modelo_ids()
+    if len(set(resolved_modelos)) != len(resolved_modelos):
+        raise ValueError("filed bulk capture requires unique modelo/year coordinates")
     accumulator = FiledCaptureAccumulator(operation=operation)
+    pair_outcomes = {
+        (code, year): FiledCapturePairOutcome(
+            modelo=code,
+            year=year,
+            walk_attempted=False,
+            walk_completed=False,
+            row_count=0,
+            reached_count=0,
+            captured_count=0,
+        )
+        for code in resolved_modelos
+        for year in range(year_to, year_from - 1, -1)
+    }
     query_pairs, failures = _plan_filed_capture_queries(
         resolved_modelos,
         year_from=year_from,
@@ -1331,6 +1400,7 @@ async def capture_filed_data_bulk(
             year_from=year_from,
             year_to=year_to,
             failures=failures,
+            pair_outcomes=tuple(pair_outcomes.values()),
             dry_run=dry_run,
         )
 
@@ -1354,6 +1424,7 @@ async def capture_filed_data_bulk(
         events=events,
         pair_completed=len(failures),
         pair_total=pair_total,
+        pair_outcomes=pair_outcomes,
     )
 
     if dry_run:
@@ -1364,6 +1435,7 @@ async def capture_filed_data_bulk(
             year_to=year_to,
             accumulator=accumulator,
             failures=failures,
+            pair_outcomes=tuple(pair_outcomes.values()),
         )
     if sync_run_repository is None:
         raise LiveApplicationInputError(
@@ -1384,6 +1456,7 @@ async def capture_filed_data_bulk(
                 bucket_id=bucket_id,
                 sync_run_repository=sync_run_repository,
                 ports=ports,
+                pair_outcomes=tuple(pair_outcomes.values()),
             )
     return _persisted_bulk_filed_capture_report(
         output_root=output_root,
@@ -1395,6 +1468,7 @@ async def capture_filed_data_bulk(
         bucket_id=bucket_id,
         sync_run_repository=sync_run_repository,
         ports=ports,
+        pair_outcomes=tuple(pair_outcomes.values()),
     )
 
 
@@ -1970,8 +2044,9 @@ class FiledHistoryPairOutcome(BaseModel):
 
     ``refused`` is not derivable from ``row_count``. The register walker refuses a
     page whose grid declares more records than it rendered, and that refusal is
-    absorbed into a failure row upstream — so a refused pair also reports zero
-    rows. Reading the zero as "nothing filed" is precisely the silent
+    absorbed into a failure row upstream — so a refused walk reports zero rows,
+    while capture or finalization failures retain the completed walk's positive
+    row count. Reading a failed walk's zero as "nothing filed" is the silent
     under-report this feature exists to remove, which is why the refusal is its
     own field and why the notices below branch on it.
     """
@@ -1981,11 +2056,26 @@ class FiledHistoryPairOutcome(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
+    walk_attempted: bool
+    walk_completed: bool
     row_count: int = Field(default=0, ge=0)
+    reached_count: int = Field(ge=0)
     captured_count: int = Field(default=0, ge=0)
     refused: bool = False
     failure_type: str | None = Field(default=None, min_length=1, max_length=128)
     failure_message: str | None = Field(default=None, min_length=1, max_length=2048)
+
+    def require_consistent(self) -> None:
+        """Require the same actual-walk and counter invariants as bulk accounting."""
+        FiledCapturePairOutcome(
+            modelo=self.modelo,
+            year=self.ejercicio,
+            walk_attempted=self.walk_attempted,
+            walk_completed=self.walk_completed,
+            row_count=self.row_count,
+            reached_count=self.reached_count,
+            captured_count=self.captured_count,
+        ).require_consistent()
 
     @property
     def expected_by_profile(self) -> bool:
@@ -1999,7 +2089,7 @@ class FiledHistoryPairOutcome(BaseModel):
         False for a refused pair however few rows it reported: a refusal is not
         an answer, so it is not an empty one either.
         """
-        return not self.refused and self.row_count == 0
+        return self.walk_completed and not self.refused and self.row_count == 0
 
 
 class FiledHistoryOnboardingRun(BaseModel):
@@ -2200,36 +2290,40 @@ def _filed_history_pair_outcomes(
     capture: BulkFiledDataCaptureReport,
 ) -> tuple[FiledHistoryPairOutcome, ...]:
     """Join the bulk capture's failure and observation facts onto every discovered pair."""
+    capture.require_consistent()
     failures_by_pair: dict[tuple[str, int], FiledDataCaptureFailureRow] = {}
     for failure in capture.failures:
         failures_by_pair.setdefault((failure.modelo, failure.year), failure)
-    captured_by_pair: dict[tuple[str, int], int] = {}
-    for key in capture.calculation_observation_keys:
-        modelo, year_text, _period = key.split(":", 2)
-        coordinate = (modelo, int(year_text))
-        captured_by_pair[coordinate] = captured_by_pair.get(coordinate, 0) + 1
-    return tuple(_filed_history_pair_outcome(pair, failures_by_pair, captured_by_pair) for pair in discovery.pairs)
+    capture_by_pair = {(pair.modelo, pair.year): pair for pair in capture.pair_outcomes}
+    return tuple(_filed_history_pair_outcome(pair, failures_by_pair, capture_by_pair) for pair in discovery.pairs)
 
 
 def _filed_history_pair_outcome(
     pair: FiledHistoryDiscoveryPair,
     failures_by_pair: Mapping[tuple[str, int], FiledDataCaptureFailureRow],
-    captured_by_pair: Mapping[tuple[str, int], int],
+    capture_by_pair: Mapping[tuple[str, int], FiledCapturePairOutcome],
 ) -> FiledHistoryPairOutcome:
     """Project one discovery pair without conflating a typed refusal with a zero row count."""
     coordinate = (pair.modelo, pair.ejercicio)
     failure = failures_by_pair.get(coordinate)
-    captured_count = captured_by_pair.get(coordinate, 0)
-    return FiledHistoryPairOutcome(
+    capture = capture_by_pair.get(coordinate)
+    if capture is None:
+        raise InternalInvariantError("filed-history discovery coordinate has no planned capture accounting")
+    outcome = FiledHistoryPairOutcome(
         modelo=pair.modelo,
         ejercicio=pair.ejercicio,
         signals=pair.signals,
-        row_count=captured_count,
-        captured_count=captured_count,
+        walk_attempted=capture.walk_attempted,
+        walk_completed=capture.walk_completed,
+        row_count=capture.row_count,
+        reached_count=capture.reached_count,
+        captured_count=capture.captured_count,
         refused=failure is not None,
         failure_type=failure.error_type if failure is not None else None,
         failure_message=failure.message if failure is not None else None,
     )
+    outcome.require_consistent()
+    return outcome
 
 
 async def _capture_discovered_filed_history(
@@ -2282,6 +2376,7 @@ async def _capture_filed_history_iva_wallet(
     events: FiledHistoryEventSink | None = None,
 ) -> _FiledHistoryIvaWalletStage:
     """Capture the independent IVA wallet stage, retaining its typed partial-failure boundary."""
+    tracker = LocalEffectTracker(effect_guard) if effect_guard is not None else None
     try:
         from .iva_remote_state import capture_iva_compensation_wallet
 
@@ -2290,12 +2385,14 @@ async def _capture_filed_history_iva_wallet(
             target_year=resolved_today.year,
             target_period=Period.from_year_and_code(resolved_today.year, "1T"),
             output_root=output_root,
-            effect_guard=effect_guard,
+            effect_guard=tracker.enter if tracker is not None else None,
             on_session_write=on_session_write,
         )
     except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
         raise
     except Exception as exc:
+        if has_async_cleanup_failure(exc) or (tracker is not None and (tracker.started or tracker.failed)):
+            raise
         await _emit_filed_history_refusal(events, FILED_HISTORY_IVA_WALLET_REFUSAL_CODE)
         return _FiledHistoryIvaWalletStage(
             status="failed",
@@ -2328,6 +2425,7 @@ async def _capture_filed_history_notifications(
     events: FiledHistoryEventSink | None = None,
 ) -> _FiledHistoryNotificationsStage:
     """Capture notifications without allowing an independent failure to erase filed history."""
+    tracker = LocalEffectTracker(effect_guard) if effect_guard is not None else None
     try:
         from .notifications import capture_notifications
 
@@ -2337,12 +2435,14 @@ async def _capture_filed_history_notifications(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             browser_session_factory=browser_session_factory,
             operator_scope_ports=operator_scope_ports,
-            effect_guard=effect_guard,
+            effect_guard=tracker.enter if tracker is not None else None,
             on_session_write=on_session_write,
         )
     except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
         raise
     except Exception as exc:
+        if has_async_cleanup_failure(exc) or (tracker is not None and (tracker.started or tracker.failed)):
+            raise
         await _emit_filed_history_refusal(events, FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE)
         return _FiledHistoryNotificationsStage(
             status="failed",

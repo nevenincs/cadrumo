@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime
 from typing import TypedDict, cast
 from uuid import UUID
@@ -27,6 +27,7 @@ from .. import runtime_notification_document_capture as capture_bridge
 from .. import runtime_notification_document_read as bridge
 from .._app_live_notifications_payloads import (
     NotificationDocumentHistoryResult,
+    NotificationDocumentPullResult,
     NotificationDocumentViewResult,
 )
 from ..errors import CliRefusedBoundaryError
@@ -167,10 +168,28 @@ def _context() -> typer.Context:
     return cast(typer.Context, cast(object, None))
 
 
-def _capture_envelope(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, object]]:
-    envelopes: list[dict[str, object]] = []
+class _CapturedEnvelope(TypedDict):
+    result: object
+    lines: tuple[str, ...]
+    notices: tuple[Notice, ...]
+
+
+def _capture_envelope(monkeypatch: pytest.MonkeyPatch) -> list[_CapturedEnvelope]:
+    envelopes: list[_CapturedEnvelope] = []
+
+    def capture(
+        _ctx: typer.Context,
+        *,
+        command: str,
+        result: object,
+        lines: Iterable[str],
+        notices: Sequence[Notice] | None = None,
+    ) -> None:
+        del command
+        envelopes.append({"result": result, "lines": tuple(lines), "notices": tuple(notices or ())})
+
     monkeypatch.setattr(handler, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
-    monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: envelopes.append(kwargs))
+    monkeypatch.setattr(handler, "emit_envelope", capture)
     return envelopes
 
 
@@ -221,6 +240,7 @@ def test_document_view_refuses_a_certificado_that_is_not_in_custody(monkeypatch:
     with pytest.raises(CliRefusedBoundaryError) as refused:
         handler.notifications_document_view(_context(), "9999999999999")
 
+    assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID
     assert refused.value.context["reason"] == "notification_document_not_found"
 
@@ -244,7 +264,7 @@ def test_document_view_reports_an_unparsed_document_identically_in_json_and_text
     assert result.sancion_parsed is False
     assert result.parse_refusal == "No extractable text layer"
     assert result.document_sha256 == result.attachment_id
-    notices = cast(list[Notice], emitted["notices"])
+    notices = emitted["notices"]
     unparsed = [notice for notice in notices if notice.code == "live.notifications.document.unparsed"]
     assert len(unparsed) == 1
     assert unparsed[0].severity is NoticeSeverity.INFO
@@ -282,10 +302,11 @@ def test_document_pull_preserves_comparecencia_and_already_in_custody_notices(mo
     assert len(envelopes) == 1
     emitted = envelopes[0]
     result = emitted["result"]
+    assert isinstance(result, NotificationDocumentPullResult)
     assert result.already_in_custody is True
     assert result.certificado_id == _CERT
     assert "already_in_custody\tTrue" in emitted["lines"]
-    notices = cast(list[Notice], emitted["notices"])
+    notices = emitted["notices"]
     by_code = {notice.code: notice for notice in notices}
     assert set(by_code) == {
         "live.notifications.document.comparecencia_guarded",
@@ -359,11 +380,11 @@ def test_document_history_lists_registered_parsed_documents_without_a_total(monk
     assert {row.certificado_id for row in result.documents} == {_CERT, _CERT2}
     dumped = result.model_dump(mode="json")
     assert not any("total" in key.casefold() or "balance" in key.casefold() for key in dumped)
-    notices = cast(list[Notice], emitted["notices"])
+    notices = emitted["notices"]
     history = [notice for notice in notices if notice.code == "live.notifications.document.history_not_balance"]
     assert len(history) == 1
     assert history[0].context == {"document_count": "2", "total_computed": "false"}
-    lines = cast(list[str], emitted["lines"])
+    lines = emitted["lines"]
     for field in (
         "clave_liquidacion",
         "referencia",
@@ -395,5 +416,5 @@ def test_empty_document_history_still_carries_the_no_balance_notice(monkeypatch:
     result = emitted["result"]
     assert isinstance(result, NotificationDocumentHistoryResult)
     assert result.documents == []
-    notices = cast(list[Notice], emitted["notices"])
+    notices = emitted["notices"]
     assert any(notice.code == "live.notifications.document.history_not_balance" for notice in notices)

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -60,6 +61,7 @@ MODELO_COMPARE_OPERATION_DEFINITION_ID = "modelo.compare"
 
 _Token = Annotated[str, Field(min_length=1, max_length=128)]
 _Value = Annotated[str, Field(min_length=1, max_length=16_384)]
+_LOG = get_logger(__name__)
 
 
 class ProjectionOverride(BaseModel):
@@ -159,6 +161,14 @@ class ModeloProjectOperationProjection(BaseModel):
     casilla_observations: tuple[ProjectCasillaObservationProjection, ...]
     m100_projection: ProjectM100SummaryProjection
 
+    @model_validator(mode="after")
+    def _complete_quarters(self) -> Self:
+        if self.quarters_filed != len(self.quarters_available) or len(set(self.quarters_available)) != len(
+            self.quarters_available
+        ):
+            raise ValueError("projected quarter count or identities disagree")
+        return self
+
     @classmethod
     def from_service(cls, profile_id: UUID, result: ModeloProjectServiceResult) -> Self:
         """Carry all canonical values and per-casilla provenance without rounding."""
@@ -240,6 +250,20 @@ class ModeloCompareOperationProjection(BaseModel):
     sections: tuple[CompareSectionProjection, ...]
     delta_rows: tuple[CompareDeltaRowProjection, ...]
 
+    @model_validator(mode="after")
+    def _complete_ordered_rows(self) -> Self:
+        if self.year_a > self.year_b:
+            raise ValueError("comparison years are not canonically ordered")
+        first_seen = tuple(dict.fromkeys(row.section for row in self.delta_rows))
+        if tuple(section.section for section in self.sections) != first_seen:
+            raise ValueError("comparison sections differ from first-seen row order")
+        if any(
+            section.rows != tuple(row for row in self.delta_rows if row.section == section.section)
+            for section in self.sections
+        ):
+            raise ValueError("comparison section rows differ from flat rows")
+        return self
+
     @classmethod
     def from_service(cls, profile_id: UUID, result: ModeloCompareServiceResult) -> Self:
         """Carry duplicate section/flat views with their complete provenance."""
@@ -303,37 +327,53 @@ class _ReadOnlyMigrationGuard:
         self.port.assert_current(repository, operation=operation)
 
 
-def _bound_ports(factory: CalculationActionPortsFactory, *, profile_id: UUID, operation: PinnedAuthorityOperation) -> CalculationActionPorts:
+def _bound_ports(
+    factory: CalculationActionPortsFactory, *, profile_id: UUID, operation: PinnedAuthorityOperation
+) -> CalculationActionPorts:
     profile = str(profile_id)
     ports = factory(bucket_id=profile, operation=operation)
-    if ports.calculation_repository.bucket_id != profile or ports.work_unit_repository.bucket_id != profile:
+    if (
+        ports.operation is not operation
+        or ports.calculation_repository.bucket_id != profile
+        or ports.work_unit_repository.bucket_id != profile
+    ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return ports
 
 
 async def _prepare_and_maybe_commit(
     *,
-    ports: CalculationActionPorts,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     migration: ProjectionMigrationPort,
     context: OperationExecutorContext,
     phase_prefix: str,
 ) -> ProjectionMigrationPlan:
     """Run the pure full-catalogue plan, fencing only its possible CAS write."""
+    await context.events.effect(OperationEffect.NONE)
     await context.events.phase(phase_prefix + ".prepare")
-    plan = await asyncio.to_thread(migration.prepare, ports.calculation_repository, operation=context.authority_operation)
+    plan = await asyncio.to_thread(migration.prepare, calculation_repository, operation=context.authority_operation)
     if not plan.changed:
-        await context.events.effect(OperationEffect.NONE)
         return plan
     async with context.cancellation.irreversible_section():
         await context.events.phase(phase_prefix + ".commit")
         await context.events.effect(OperationEffect.UNKNOWN)
         try:
-            await asyncio.to_thread(migration.commit, ports.calculation_repository, plan)
+            await asyncio.to_thread(migration.commit, calculation_repository, plan)
         except LedgerPersistenceConflictError:
             # A guarded CAS conflict occurs before this singleton write.
             await context.events.effect(OperationEffect.NONE)
             raise
         await context.events.effect(OperationEffect.UPDATED)
+    _LOG.info(
+        "rekeyed persisted calculation-revision relation overrides onto binding ids",
+        extra={
+            "reason": "calculation-revision:relation-override-binding-rekey",
+            "rekeyed_revision_count": len(plan.revision_id_pairs),
+            "rekeyed_override_key_count": len(plan.override_key_pairs),
+            "revision_id_pairs": plan.revision_id_pairs,
+            "override_key_pairs": plan.override_key_pairs,
+        },
+    )
     return plan
 
 
@@ -344,14 +384,23 @@ class ModeloProjectExecutor:
         self._factory = factory
         self._migration = migration
 
-    async def execute(self, request: OperationRequest[ModeloProjectOperationRequest], context: OperationExecutorContext) -> str:
+    async def execute(
+        self, request: OperationRequest[ModeloProjectOperationRequest], context: OperationExecutorContext
+    ) -> str:
         payload = request.payload
-        if not _valid_execution(request, context, profile_id=payload.profile_id, definition_id=MODELO_PROJECT_OPERATION_DEFINITION_ID):
+        if not _valid_execution(
+            request, context, profile_id=payload.profile_id, definition_id=MODELO_PROJECT_OPERATION_DEFINITION_ID
+        ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         ports = _bound_ports(self._factory, profile_id=payload.profile_id, operation=context.authority_operation)
 
         async def run() -> str:
-            await _prepare_and_maybe_commit(ports=ports, migration=self._migration, context=context, phase_prefix="modelo.project")
+            await _prepare_and_maybe_commit(
+                calculation_repository=ports.calculation_repository,
+                migration=self._migration,
+                context=context,
+                phase_prefix="modelo.project",
+            )
             guarded = replace(ports, relation_override_migration=_ReadOnlyMigrationGuard(self._migration))
             result = await asyncio.to_thread(
                 project_modelo_100_from_m130,
@@ -377,14 +426,23 @@ class ModeloCompareExecutor:
         self._factory = factory
         self._migration = migration
 
-    async def execute(self, request: OperationRequest[ModeloCompareOperationRequest], context: OperationExecutorContext) -> str:
+    async def execute(
+        self, request: OperationRequest[ModeloCompareOperationRequest], context: OperationExecutorContext
+    ) -> str:
         payload = request.payload
-        if not _valid_execution(request, context, profile_id=payload.profile_id, definition_id=MODELO_COMPARE_OPERATION_DEFINITION_ID):
+        if not _valid_execution(
+            request, context, profile_id=payload.profile_id, definition_id=MODELO_COMPARE_OPERATION_DEFINITION_ID
+        ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         ports = _bound_ports(self._factory, profile_id=payload.profile_id, operation=context.authority_operation)
 
         async def run() -> str:
-            await _prepare_and_maybe_commit(ports=ports, migration=self._migration, context=context, phase_prefix="modelo.compare")
+            await _prepare_and_maybe_commit(
+                calculation_repository=ports.calculation_repository,
+                migration=self._migration,
+                context=context,
+                phase_prefix="modelo.compare",
+            )
             guarded = replace(ports, relation_override_migration=_ReadOnlyMigrationGuard(self._migration))
             result = await asyncio.to_thread(
                 compare_modelo_years,
@@ -400,8 +458,8 @@ class ModeloCompareExecutor:
         return await await_cancellation_complete(run(), task_name="modelo-compare")
 
 
-def _valid_execution(
-    request: OperationRequest[BaseModel],
+def _valid_execution[Payload: BaseModel](
+    request: OperationRequest[Payload],
     context: OperationExecutorContext,
     *,
     profile_id: UUID,
@@ -451,7 +509,13 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {
+                OperationFrontendProjection.CLI,
+                OperationFrontendProjection.TUI,
+                OperationFrontendProjection.MCP,
+            }
+        ),
     )
 
 
@@ -516,12 +580,14 @@ def _registration(
 
 
 def build_modelo_project_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the annual projection request, result and access contracts."""
     return _registration(
         definition, request_type=ModeloProjectOperationRequest, result_type=ModeloProjectOperationProjection
     )
 
 
 def build_modelo_compare_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the year comparison request, result and access contracts."""
     return _registration(
         definition, request_type=ModeloCompareOperationRequest, result_type=ModeloCompareOperationProjection
     )

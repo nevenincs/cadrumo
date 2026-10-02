@@ -318,10 +318,10 @@ def test_list_executor_preserves_service_filtering_and_capture_order(monkeypatch
         return persistence
 
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
-    request = _request(VERIFY_LIST_DEFINITION_ID).model_copy(
-        update={
-            "payload": VerifyListRequest(profile_id=_PROFILE, surface=VerifySurface.NIF_IVA, nif=_NIF),
-        }
+    request = OperationRequest[VerifyListRequest](
+        definition_id=VERIFY_LIST_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=VerifyListRequest(profile_id=_PROFILE, surface=VerifySurface.NIF_IVA, nif=_NIF),
     )
     context, operands = _executor_context(VERIFY_LIST_DEFINITION_ID)
 
@@ -345,7 +345,7 @@ def test_list_executor_refuses_overflow_without_truncating(monkeypatch: pytest.M
     with pytest.raises(ProfileAccessRefusedError) as error:
         asyncio.run(
             VerifyListExecutor(lambda _bucket_id: persistence).execute(
-                OperationRequest[BaseModel](
+                OperationRequest[VerifyListRequest](
                     definition_id=VERIFY_LIST_DEFINITION_ID,
                     subject_ref=profile_operation_subject(str(_PROFILE)),
                     payload=VerifyListRequest(profile_id=_PROFILE),
@@ -364,7 +364,7 @@ def test_latest_executor_records_an_explicit_empty_result(monkeypatch: pytest.Mo
     persistence = _MemoryPersistence(())
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
     context, operands = _executor_context(VERIFY_LATEST_DEFINITION_ID)
-    request = OperationRequest[BaseModel](
+    request = OperationRequest[VerifyLatestRequest](
         definition_id=VERIFY_LATEST_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=VerifyLatestRequest(profile_id=_PROFILE, surface=VerifySurface.TGVI, nif=_NIF),

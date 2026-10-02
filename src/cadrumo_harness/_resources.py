@@ -1,8 +1,9 @@
 """Single boundary for reading this package's own bundled ``_data`` tree.
 
-Mirrors the shape of ``cadrumo.core.resources.packaged_data``, but rooted at
-``cadrumo_harness`` rather than ``cadrumo`` — the two packages ship independent
-wheels, so each resolves its own bundled data through its own package root.
+Mirrors the shape of ``cadrumo.core.resources.packaged_data``, rooted at
+``cadrumo_harness``. Both packages ship in the ``cadrumo`` distribution and
+resolve their bundled data through their respective package roots. This is a
+Python data accessor; MCP exposure is defined by the current server tools.
 """
 
 from __future__ import annotations

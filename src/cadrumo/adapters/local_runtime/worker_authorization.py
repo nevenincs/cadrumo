@@ -6,7 +6,7 @@ import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
-from datetime import timedelta
+from datetime import datetime, timedelta
 from importlib.metadata import version
 from pathlib import Path
 from threading import BoundedSemaphore, Event, Thread
@@ -48,7 +48,7 @@ from ...application.user_profile.automation_enrollment import AutomationInventor
 from ...core.hashing import canonical_json_bytes
 from ...core.time.clock import now
 from .framing import MAXIMUM_FRAME_BYTES, accept_runtime_handshake, read_document, read_secret, write_document
-from .windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
+from .worker_transport import WorkerChannel, worker_endpoint
 
 
 def worker_authorization_namespace(worker_id: UUID) -> UUID:
@@ -80,13 +80,15 @@ class WorkerAuthorizationServer:
         owns_process: Callable[[int], bool],
         contain: Callable[[], None],
         owner: WorkerAuthorizationOwner | None,
+        wall_clock: Callable[[], datetime] = now,
     ) -> None:
         """Claim a private worker namespace before any operation can request authority."""
         self.identity, self._pid = identity, process_id
         self._owns_process, self._contain, self._owner = owns_process, contain, owner
+        self._wall_clock = wall_clock
         self._stop, self._failed = Event(), Event()
         self._slots = BoundedSemaphore(8)
-        self._endpoint = WindowsRuntimeEndpoint(
+        self._endpoint = worker_endpoint(
             storage_root=root, worker_namespace=worker_authorization_namespace(identity.worker_id)
         )
         self._thread = Thread(target=self._serve, name="profile-operation-authority", daemon=True)
@@ -126,7 +128,7 @@ class WorkerAuthorizationServer:
         finally:
             self._endpoint.close()
 
-    def _connection(self, channel: WindowsRuntimeChannel) -> None:
+    def _connection(self, channel: WorkerChannel) -> None:
         request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest | WorkerApprovalRequest | None = None
         try:
             if (
@@ -179,7 +181,7 @@ class WorkerAuthorizationServer:
                 # shutdown began. It must not publish a new permit then.
                 if self._stop.is_set():
                     raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-                instant = now()
+                instant = self._wall_clock()
                 expires = min(allowed.expires_at, instant + timedelta(seconds=AUTHORITY_SECTION_MAXIMUM_SECONDS))
                 remaining = (expires - instant).total_seconds()
                 if remaining <= 0:
@@ -262,7 +264,7 @@ class WorkerAuthorizationServer:
             channel.close()
             self._slots.release()
 
-    def _approval_phase(self, channel: WindowsRuntimeChannel, request: WorkerApprovalRequest) -> None:
+    def _approval_phase(self, channel: WorkerChannel, request: WorkerApprovalRequest) -> None:
         if self._owner is None or self._stop.is_set():
             raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
         self._owner.approval_preflight(request)
@@ -292,7 +294,7 @@ class WorkerAuthorizationServer:
 
     def _held_body(
         self,
-        channel: WindowsRuntimeChannel,
+        channel: WorkerChannel,
         request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
         *,
         permit_id: UUID,

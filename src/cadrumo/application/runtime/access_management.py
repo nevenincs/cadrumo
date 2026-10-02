@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, RootModel, model_validator
 
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.registry import OperationFrontendProjection
 from ..user_profile.access_projections import PublicAccessSession
@@ -117,6 +118,14 @@ class RuntimeSessionInventoryReply(_RuntimeAccessManagementReplyIdentity):
 
     kind: Literal["session_inventory_reply"] = "session_inventory_reply"
     sessions: tuple[PublicAccessSession, ...]
+
+
+class RuntimeSessionInventoryTransfer(_RuntimeAccessManagementReplyIdentity):
+    """Bounded complete inventory, correlated before receiving any scope chunks."""
+
+    kind: Literal["session_inventory_transfer"] = "session_inventory_transfer"
+    byte_count: Annotated[int, Field(ge=2, le=1_048_576)]
+    payload_digest: ContentDigest
 
 
 type RuntimeAccessManagementReply = Annotated[

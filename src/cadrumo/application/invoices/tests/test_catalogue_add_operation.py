@@ -6,16 +6,18 @@ import asyncio
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
+from typing import Never
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ....core.operations import (
     OperationEffect,
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 from ....domain.iva.classification import InvoiceKind
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -171,7 +173,10 @@ def test_registration_requires_profile_scoped_commit_and_secure_request_storage(
         published_authority=Availability.AVAILABLE,
     )
 
-    access = resolve_operation_access(registry=registry, request=request, context=context)
+    access_request = OperationRequest[BaseModel](
+        definition_id=request.definition_id, subject_ref=request.subject_ref, payload=request.payload
+    )
+    access = resolve_operation_access(registry=registry, request=access_request, context=context)
 
     assert access.policy.actions >= {AccessAction.SUBMIT, AccessAction.COMMIT}
     assert definition.capabilities.request_storage.value == "secure_reference"
@@ -192,10 +197,29 @@ class _Events:
     async def effect(self, effect: OperationEffect) -> None:
         self.effects.append(effect)
 
+    async def progress(self, **_kwargs: object) -> None:
+        raise AssertionError("invoice creation does not publish progress")
+
+    async def log(self, **_kwargs: object) -> None:
+        raise AssertionError("invoice creation does not publish logs")
+
+    async def notice(self, notice_code: str) -> None:
+        raise AssertionError("invoice creation does not publish notices")
+
+    async def diagnostic(self, diagnostic_ref: str) -> None:
+        raise AssertionError("invoice creation does not publish diagnostics")
+
 
 class _Cancellation:
     def __init__(self) -> None:
         self.inside_irreversible_section = False
+
+    @property
+    def cancellation_requested(self) -> bool:
+        return False
+
+    async def acknowledge_cancellation(self) -> None:
+        raise AssertionError("these executions are never cancelled")
 
     @asynccontextmanager
     async def irreversible_section(self):
@@ -212,7 +236,8 @@ class _Operands:
         self._events = events
         self.value: InvoiceAddExecutionResult | None = None
 
-    async def put(self, operand: InvoiceAddExecutionResult, *, written_at):
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
+        assert isinstance(operand, InvoiceAddExecutionResult)
         assert self._cancellation.inside_irreversible_section
         assert not self._events.effects or self._events.effects[-1] in {
             OperationEffect.UPDATED,
@@ -221,9 +246,12 @@ class _Operands:
         self.value = operand
         return "d" * 64
 
+    async def resolve[OperandT: BaseModel](self, reference: str, operand_type: type[OperandT]) -> OperandT:
+        raise AssertionError("invoice creation does not resolve prior operands")
+
 
 class _Context:
-    def __init__(self, authority_operation) -> None:
+    def __init__(self, authority_operation: PinnedAuthorityOperation) -> None:
         self.identity = OperationIdentity(
             operation_id="c" * 64,
             definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
@@ -233,6 +261,30 @@ class _Context:
         self.events = _Events()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation, self.events)
+
+    @property
+    def revision(self) -> int:
+        return 1
+
+    @property
+    def deadlines(self) -> Never:
+        raise AssertionError("invoice creation does not consume deadlines")
+
+    @property
+    def ephemeral_secret(self) -> Never:
+        raise AssertionError("invoice creation does not consume secrets")
+
+    @property
+    def financial_operand(self) -> Never:
+        raise AssertionError("invoice creation does not consume financial submissions")
+
+    @property
+    def cleanup(self) -> Never:
+        raise AssertionError("invoice creation does not acquire resources")
+
+    @property
+    def interactions(self) -> Never:
+        raise AssertionError("invoice creation does not publish interactions")
 
 
 def test_executor_uses_canonical_builder_and_writer_with_commit_fenced_publication(monkeypatch) -> None:
@@ -276,6 +328,7 @@ def test_executor_uses_canonical_builder_and_writer_with_commit_fenced_publicati
     result = execution_result.result
     assert result.outcome == "created"
     assert result.profile_id == _PROFILE
+    assert result.invoice is not None
     assert result.invoice.bucket_id == str(_PROFILE)
     assert result.invoice.invoice_number == "ADD-2026-001"
     assert len(result.bucket_event_ids) == 1

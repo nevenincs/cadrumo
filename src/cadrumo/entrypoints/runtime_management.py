@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from cadrumo.adapters.local_runtime.runtime_manager_composition import installed_runtime_manager
 
-from ..adapters.local_runtime.framing import VerifiedRuntimeConnection
+from ..adapters.local_runtime.framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
 from ..adapters.local_runtime.management_status import probe_runtime_listener
 from ..adapters.local_runtime.posix import PosixRuntimeEndpoint
 from ..adapters.local_runtime.startup import RuntimeEndpointConnector, RuntimeLaunchDoor
@@ -34,7 +34,7 @@ from ..application.runtime.owner_control import (
     RuntimeStopPreviewRequest,
 )
 from ..application.runtime.profile_access import RuntimeAccessRefusal
-from ..core.async_cleanup import await_cancellation_complete
+from ..core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from ..core.paths import effective_storage_root
 
 
@@ -103,7 +103,7 @@ async def inspect_installed_runtime_management(*, timeout: float = 3) -> Runtime
         expected = RuntimeClientHello(product_version=product_version, storage_identity=endpoint.storage_identity)
         manager_state = (
             RuntimeManagerAvailability.UNSUPPORTED
-            if sys.platform not in {"win32", "linux"}
+            if sys.platform not in {"win32", "linux", "darwin"}
             else RuntimeManagerAvailability.UNAVAILABLE
         )
         try:
@@ -175,6 +175,23 @@ async def configure_installed_runtime_management(*, login_autostart: bool) -> Ru
         endpoint.close()
 
 
+def _retain_cleanup(primary: BaseException, *earlier: BaseException | None) -> None:
+    """Keep both canonical attachment fields on the escaping primary."""
+    retained: AsyncResourceCleanupError | None = None
+    seen: set[int] = set()
+    for error in (*earlier, primary):
+        if error is None:
+            continue
+        for candidate in (error, error.__dict__.get("async_cleanup_error"), error.__dict__.get("cleanup_error")):
+            if isinstance(candidate, AsyncResourceCleanupError) and id(candidate) not in seen:
+                seen.add(id(candidate))
+                retained = candidate if retained is None else retained.merged_with(candidate)
+    if retained is not None and retained is not primary:
+        primary.__dict__["async_cleanup_error"] = retained
+        if isinstance(primary.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
+            primary.__dict__["cleanup_error"] = retained
+
+
 class RuntimeStopConsent:
     """Own one preview and its dedicated verified connection until confirmation."""
 
@@ -190,10 +207,42 @@ class RuntimeStopConsent:
         self._endpoint = endpoint
         self._connection = connection
         self._closed = False
+        self._connection_cleanup = RuntimeTransportCleanup(connection)
+        self._endpoint_cleanup = RuntimeTransportCleanup(endpoint)
+        self._confirmation: asyncio.Task[RuntimeStopAccepted | BaseException] | None = None
+        self._confirmation_error: BaseException | None = None
+        self._accepted: RuntimeStopAccepted | None = None
+        self._refused = False
+
+    @property
+    def accepted(self) -> RuntimeStopAccepted | None:
+        """Retain a validated acknowledgement, independently of native release."""
+        return self._accepted
+
+    @property
+    def confirmation_started(self) -> bool:
+        """Report a single-use dispatch that must never be replayed automatically."""
+        return self._confirmation is not None
+
+    @property
+    def uncertain(self) -> bool:
+        """Report a dispatched confirmation without acceptance or a typed refusal."""
+        return self.confirmation_started and self._accepted is None and not self._refused
+
+    @property
+    def released(self) -> bool:
+        """Report successful release of both actual native owners."""
+        return self._connection_cleanup.released and self._endpoint_cleanup.released
+
+    def _adopt_cleanup(self, error: BaseException | None) -> None:
+        if error is not None:
+            retained = error.__dict__.get("_runtime_transport_cleanup")
+            if isinstance(retained, RuntimeTransportCleanup) and retained.resource is self._connection:
+                self._connection_cleanup = retained
 
     async def confirm(self) -> RuntimeStopAccepted:
         """Acknowledge all profiles and work on the same native connection."""
-        if self._closed:
+        if self._closed or self.confirmation_started:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
         request = RuntimeStopConfirm(
             request_id=uuid4(),
@@ -201,28 +250,71 @@ class RuntimeStopConsent:
             preview_id=self.preview.preview_id,
             acknowledge_all_profiles_and_work=True,
         )
-        try:
-            reply = await await_cancellation_complete(
-                asyncio.to_thread(self._connection.owner_control, request, deadline=time.monotonic() + 5),
-                task_name="runtime-stop-confirm",
-            )
-            if isinstance(reply, RuntimeAccessRefusal):
-                reason = reply.code if isinstance(reply.code, RuntimeRefusalCode) else RuntimeRefusalCode.PEER_UNTRUSTED
-                raise RuntimeRefusalError(reason)
-            if not isinstance(reply, RuntimeStopAccepted):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            return reply
-        finally:
-            self.close()
+        deadline = time.monotonic() + 5
 
-    def close(self) -> None:
-        """Discard a preview without changing the shared runtime."""
-        if not self._closed:
-            self._closed = True
+        async def exchange() -> RuntimeStopAccepted | BaseException:
             try:
-                self._connection.close()
-            finally:
-                self._endpoint.close()
+                reply = await asyncio.to_thread(self._connection.owner_control, request, deadline=deadline)
+                if isinstance(reply, RuntimeAccessRefusal):
+                    self._refused = True
+                    reason = (
+                        reply.code if isinstance(reply.code, RuntimeRefusalCode) else RuntimeRefusalCode.PEER_UNTRUSTED
+                    )
+                    raise RuntimeRefusalError(reason)
+                if (
+                    not isinstance(reply, RuntimeStopAccepted)
+                    or reply.request_id != request.request_id
+                    or reply.runtime_boot_id != self.preview.runtime_boot_id
+                    or reply.connection_id != self.preview.connection_id
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                # Publish before the cancellation-complete boundary can re-raise
+                # caller cancellation. Acceptance never certifies settled drain.
+                self._accepted = reply
+                return reply
+            except BaseException as error:
+                self._confirmation_error = error
+                self._adopt_cleanup(error)
+                return error
+
+        self._confirmation = asyncio.create_task(exchange(), name="runtime-stop-confirm-exchange")
+        try:
+            outcome = await await_cancellation_complete(self._confirmation, task_name="runtime-stop-confirm")
+            if isinstance(outcome, BaseException):
+                raise outcome
+            return outcome
+        except BaseException as error:
+            _retain_cleanup(error, self._confirmation_error)
+            raise
+
+    async def release(self, *, primary_error: BaseException | None = None) -> None:
+        """Fence confirmation and release native owners without replaying stop."""
+        self._closed = True
+        cancellation: asyncio.CancelledError | None = None
+        confirmation = self._confirmation
+        if confirmation is not None and not confirmation.done():
+            try:
+                await await_cancellation_complete(confirmation, task_name="runtime-stop-settle")
+            except asyncio.CancelledError as error:
+                cancellation = error
+        self._adopt_cleanup(self._confirmation_error)
+        self._adopt_cleanup(primary_error)
+        if primary_error is not None:
+            _retain_cleanup(primary_error, self._confirmation_error)
+        try:
+            await close_async_resources(
+                self._connection_cleanup,
+                self._endpoint_cleanup,
+                task_name="runtime-stop-release",
+                primary_error=primary_error,
+                cancellation=cancellation,
+            )
+        except BaseException as error:
+            _retain_cleanup(error, primary_error, self._confirmation_error)
+            raise
+        finally:
+            if primary_error is not None:
+                _retain_cleanup(primary_error)
 
 
 async def preview_installed_runtime_stop(*, timeout: float = 5) -> RuntimeStopConsent:
@@ -242,7 +334,14 @@ async def preview_installed_runtime_stop(*, timeout: float = 5) -> RuntimeStopCo
     connection: VerifiedRuntimeConnection | None = None
     try:
         expected = RuntimeClientHello(product_version=product_version, storage_identity=endpoint.storage_identity)
-        connection = await RuntimeLaunchDoor(endpoint, expected=expected).open(timeout=timeout)
+
+        async def open_connection() -> None:
+            nonlocal connection
+            connection = await RuntimeLaunchDoor(endpoint, expected=expected).open(timeout=timeout)
+
+        await await_cancellation_complete(open_connection(), task_name="runtime-stop-open")
+        if connection is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         reply = await await_cancellation_complete(
             asyncio.to_thread(
                 connection.owner_control,
@@ -257,10 +356,27 @@ async def preview_installed_runtime_stop(*, timeout: float = 5) -> RuntimeStopCo
         if not isinstance(reply, RuntimeStopPreview):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return RuntimeStopConsent(endpoint=endpoint, connection=connection, preview=reply)
-    except BaseException:
+    except BaseException as primary:
+        connection_owner: RuntimeTransportCleanup | None = None
         if connection is not None:
-            connection.close()
-        endpoint.close()
+            retained = primary.__dict__.get("_runtime_transport_cleanup")
+            connection_owner = (
+                retained
+                if isinstance(retained, RuntimeTransportCleanup) and retained.resource is connection
+                else RuntimeTransportCleanup(connection)
+            )
+        _retain_cleanup(primary)
+        try:
+            await close_async_resources(
+                connection_owner,
+                RuntimeTransportCleanup(endpoint),
+                task_name="runtime-stop-preview-release",
+                primary_error=primary,
+            )
+        except BaseException as error:
+            _retain_cleanup(error, primary)
+            raise
+        _retain_cleanup(primary)
         raise
 
 

@@ -844,6 +844,10 @@ errors:
       puede exportarse: contiene un registro que paga rendimientos devengados en un
       ejercicio anterior y ninguna fuente oficial determina la base y la retención
       que declara ese registro.'
+    canonical_modelo_binding_value_contract_unsupported: El vínculo no tiene un formato
+      oficial de valor compatible con la vista previa automatizada.
+    canonical_modelo_binding_value_invalid: El valor proporcionado no cumple el formato
+      oficial del vínculo.
     canonical_modelo_lifecycle_clock_precedes: El reloj de la acción es anterior a
       un registro que actualizaría, así que no se ha guardado nada. Vuelva a intentarlo
       con la hora actual.

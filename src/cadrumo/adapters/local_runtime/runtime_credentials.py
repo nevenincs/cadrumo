@@ -6,6 +6,7 @@ import asyncio
 import math
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
 
@@ -19,9 +20,20 @@ from cadrumo.adapters.persistence.storage.custody.automation_profile import curr
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
-from cadrumo.core.async_cleanup import await_cancellation_complete
+from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.paths import effective_storage_root
+
+
+@dataclass(frozen=True, slots=True)
+class _CredentialClientCleanup:
+    """Keep a failed admission's native connection available for cleanup retry."""
+
+    client: RuntimeFrontendClient
+
+    async def close(self) -> None:
+        await asyncio.to_thread(self.client.close)
 
 
 def _remaining(deadline: float) -> float:
@@ -72,7 +84,7 @@ async def open_installed_credential_client(
     profile_id: UUID,
     credential_reference: UUID,
     frontend: OperationFrontendProjection,
-    timeout: float = 30,
+    timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS,
     secrets_store: AutomationSecretStore | None = None,
 ) -> RuntimeFrontendClient:
     """Own a newly admitted exact-profile client without exporting its key.
@@ -103,6 +115,8 @@ async def open_installed_credential_client(
             task_name="runtime-credential-admission",
         )
         return client
-    except BaseException:
-        await await_cancellation_complete(asyncio.to_thread(client.close), task_name="runtime-credential-cleanup")
+    except BaseException as error:
+        await close_async_resources(
+            _CredentialClientCleanup(client), task_name="runtime-credential-cleanup", primary_error=error
+        )
         raise

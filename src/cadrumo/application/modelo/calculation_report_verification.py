@@ -35,12 +35,14 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ValidationError
 
 from ...core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
+from ...core.identity.bucket import canonical_bucket_id
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -70,11 +72,12 @@ from .calculation_summary_presentation import (
     CalculationSummaryChromeUnavailableError,
     build_calculation_summary_presentation,
 )
+from .review_package_signing import ReviewPackageSigningError, ReviewPackageSigningKeypair
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from .export_ports import ModeloExportPorts
-    from .review_package_signing_ports import ReviewPackageSigningKeypairCapability
+    from .review_package_signing_ports import ReviewPackageSigningKeypairReader
 
 _UTF_8: Final[str] = "utf-8"
 _REPORT_PAYLOAD_KEYS: Final[frozenset[str]] = frozenset({"content_version", "header", "rows"})
@@ -541,24 +544,49 @@ def _filing_record_ids(revision: CalculationRevision, *, export_ports: ModeloExp
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _ExistingSigningKeypairCapability:
+    """Keep report reconstruction bound to the keypair already read."""
+
+    keypair: ReviewPackageSigningKeypair
+
+    def ensure_keypair(
+        self,
+        *,
+        bucket_id: str,
+        generated_at: datetime | None = None,
+    ) -> ReviewPackageSigningKeypair:
+        """Return the retained keypair only for its original bucket."""
+        if canonical_bucket_id(bucket_id) != self.keypair.bucket_id:
+            raise ReviewPackageSigningError(
+                "review-package signing capability is bound to a different bucket",
+            )
+        return self.keypair
+
+
 def _trace_against_store(
     reading: _DocumentReading,
     *,
     active_bucket_id: str,
     export_ports: ModeloExportPorts,
-    signing_keypair: ReviewPackageSigningKeypairCapability,
+    signing_keypair: ReviewPackageSigningKeypairReader,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationSummaryVerificationCheck, ...]:
     """Run the store layer for a document whose statement and report were read."""
     from .calculation_report_export import build_modelo_calculation_report_for_revision
-    from .review_package_signing import ensure_review_package_signing_keypair
 
     statement = reading.statement
     report = reading.report
     checks = _Checks(CalculationSummaryVerificationLayer.STORE)
     if statement is None or report is None:
         return ()
-    keypair = ensure_review_package_signing_keypair(bucket_id=active_bucket_id, signing_keypair=signing_keypair)
+    keypair = signing_keypair.load_keypair(bucket_id=active_bucket_id)
+    if keypair is None:
+        checks.failed(
+            CalculationSummaryCheckName.SIGNING_KEY_PROFILE,
+            CalculationSummaryVerificationReason.SIGNING_KEY_NOT_THIS_PROFILE,
+        )
+        return tuple(checks.rows)
     checks.expect(
         CalculationSummaryCheckName.SIGNING_KEY_PROFILE,
         statement.signing_key.public_key_hex == keypair.public_key_hex,
@@ -629,7 +657,7 @@ def _trace_against_store(
             revision.calculation_revision_id,
             active_bucket_id=active_bucket_id,
             export_ports=export_ports,
-            signing_keypair=signing_keypair,
+            signing_keypair=_ExistingSigningKeypairCapability(keypair),
             operation=operation,
             report_language=report.header.report_language,
             exported_at=statement.exported_at,
@@ -690,7 +718,7 @@ class CalculationSummaryStoreContext:
 
     active_bucket_id: str
     export_ports: ModeloExportPorts
-    signing_keypair: ReviewPackageSigningKeypairCapability
+    signing_keypair: ReviewPackageSigningKeypairReader
     operation: PinnedAuthorityOperation
 
 

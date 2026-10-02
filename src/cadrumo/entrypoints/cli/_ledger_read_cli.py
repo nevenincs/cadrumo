@@ -21,7 +21,6 @@ import typer
 
 from ...application.export.tabular import ExportSerializationFormat
 from ...application.operator_actions.models import ActionReference
-from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.i18n.render import tr
 from ...core.json_contract import (
@@ -36,10 +35,8 @@ from ._decimal_parsing import optional_decimal_text
 from .common import (
     active_profile_label,
     bad,
-    current_workflow_state,
     emit_envelope,
     resolve_notice_action,
-    transaction_catalogue_repo,
 )
 from .period_parsing import _canonical_period, _optional_canonical_period
 from .state_projection_support import authority_operation
@@ -62,19 +59,16 @@ def ledger_llm_diagnostics(
     ctx: typer.Context, since: str | None = None, until: str | None = None, low_confidence_below: float = 0.5
 ) -> None:
     """Report existing LLM usage, cost, and classification-confidence metrics."""
-    from ...application.ledger.llm_diagnostics import build_llm_diagnostics_report
     from ...core.unit_proportion import is_unit_proportion
-    from ..ledger_llm_diagnostics_composition import compose_ledger_llm_diagnostics_ports
-    from .common import active_bucket_id_or_refuse
+    from .runtime_ledger_llm_diagnostics import read_ledger_llm_diagnostics_for_cli
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
     threshold = coerce_decimal_strict(low_confidence_below)
     if not is_unit_proportion(threshold):
         raise bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
-    ports = compose_ledger_llm_diagnostics_ports(bucket_id=active_bucket_id_or_refuse())
-    report = build_llm_diagnostics_report(
-        ports=ports,
+    report = read_ledger_llm_diagnostics_for_cli(
+        ctx,
         since=since_date,
         until=until_date,
         low_confidence_threshold=threshold,
@@ -463,32 +457,29 @@ def ledger_export(
     year: int | None = None,
     actor: str | None = None,
 ) -> None:
-    """Export canonical bucket-scoped ledger rows through the backend."""
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    from ...application.ledger.actions_export import export_ledger_transactions
-    from ...application.ledger.models import LedgerExportCommand
-    from ..ledger_action_composition import compose_ledger_action_ports
+    """Export canonical exact-profile ledger rows through the authenticated worker."""
+    from .runtime_ledger_export_link import export_ledger_for_cli
 
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    result = export_ledger_transactions(
-        LedgerExportCommand(
-            bucket_id=transaction_repository.bucket_id,
-            export_format=export_kind,
-            include_inactive=include_inactive,
-            output_path=output,
-            period=_optional_canonical_period(period, year=year),
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger export",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
+    projection = export_ledger_for_cli(
+        ctx,
+        output=output,
+        export_format=export_kind,
+        include_inactive=include_inactive,
+        period=_optional_canonical_period(period, year=year),
+        actor=actor,
     )
     from ._ledger_payloads import LedgerExportPayload
 
+    result = LedgerExportPayload.model_validate(
+        {
+            **projection.model_dump(mode="json", exclude={"profile_id", "output_path"}),
+            "output_path": str(output),
+        }
+    )
     emit_envelope(
         ctx,
         command="ledger.export",
-        result=LedgerExportPayload.from_result(result, output_path=str(output)),
+        result=result,
         lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
             f"{tr('cli.ledger.labels.export_id')}\t{result.export_id}",

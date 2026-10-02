@@ -3,13 +3,12 @@ tags:
   - '#research'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-26'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a442a4e5d188589e3cadd7d806e70a224af4e66a5e91e93b58601c663d9265e'
+body_hash: 'sha256:dab606251a82c3a3a86b2fbc6a99f93d3420da86f182172c9882b26c6b9610c9'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
 ---
-
 # mcp-purpose-authentication research: local automation authorization and lifecycle options
 
 The question is how local Cadrumo automation can resume over months or years while human profile login expires and several agent sessions share one user's authorization. The user confirmed local deployment, concurrent agents with separately tracked sessions, durable API-credential capability, and replacement of the old MCP implementation. Evidence favors separating durable authorization, short-lived access, encrypted key custody and durable work. Exact API-token formats and cryptographic mechanisms remain implementation research.
@@ -64,6 +63,20 @@ Windows TASK_LOGON_INTERACTIVE_TOKEN uses an already logged-on user's interactiv
 
 Platform documentation is not cross-platform execution evidence. Native store behavior, user-supervisor installation, socket peer APIs, descendant cleanup and sign-out/suspend behavior remain required real-platform acceptance tests.
 
+### Examined Darwin process mechanisms do not yet provide an owned descendant scope
+
+ADR128 requires retirement through registration races, independent descendant groups and guardian loss. Current `src/cadrumo/adapters/local_runtime/profile_worker.py:178` refuses Darwin before private worker launch. The existing scalar process watch and LaunchAgent manager are not evidence of that complete scope.
+
+LaunchAgent `AbandonProcessGroup=false` kills remaining members of the job's same PGID. It does not establish ownership of regrouped descendants. Apple launchd commit `d448a1c8f70a61202f8705f94337f686b87c30c4`, `man/launchd.plist.5:363-367`: https://github.com/apple-oss-distributions/launchd/blob/d448a1c8f70a61202f8705f94337f686b87c30c4/man/launchd.plist.5.
+
+XNU rejects kqueue NOTE_TRACK, NOTE_TRACKERR and NOTE_CHILD with ENOTSUP. These flags cannot supply recursive child tracking on the examined implementation. Apple XNU commit `f6217f891ac0bb64f3d375211650a4c1ff8ca1ea`, `bsd/kern/kern_event.c:1037-1039`: https://github.com/apple-oss-distributions/xnu/blob/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/bsd/kern/kern_event.c#L1037.
+
+Coalition termination requests prevent new explicit spawn admissions and arrange empty notification; existing members may still fork. Lifecycle calls require privileged-coalition membership. The examined API is not a member-kill or owner-death cleanup contract. Same XNU commit, `bsd/kern/sys_coalition.c:88-99,208-232`: https://github.com/apple-oss-distributions/xnu/blob/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/bsd/kern/sys_coalition.c#L88.
+
+Initial spawn PGID selection and inherited App Sandbox resource rights do not establish an immutable-group policy in the reviewed public contracts. Current Playwright Unix browser launch uses detached processes, so a proposed group restriction also needs a supported browser integration and native proof: https://github.com/microsoft/playwright/blob/v1.63.0/packages/utils/processLauncher.ts and https://nodejs.org/api/child_process.html#optionsdetached. These are bounded findings about examined mechanisms, not proof that no supported Darwin solution exists.
+
+The remaining implementation needs a supported admission, exact termination and runtime/guardian-death lifetime contract. Signing, entitlement or OS-floor changes would require decision coverage before adoption. No architectural option is selected here; no Darwin enablement follows. Actual native Mac custody evidence is separately qualified in the feature Reference's S11 macOS unsigned Login Keychain custody section and does not close this gap.
+
 ## Sources
 
 - 2026-09-26-mcp-purpose-authentication-reference.
@@ -73,3 +86,11 @@ Platform documentation is not cross-platform execution evidence. Native store be
 - https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation
 - https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects
 - https://claude.com/docs/connectors/building/authentication
+- `src/cadrumo/adapters/local_runtime/profile_worker.py:178`
+- https://github.com/apple-oss-distributions/launchd/blob/d448a1c8f70a61202f8705f94337f686b87c30c4/man/launchd.plist.5
+- https://github.com/apple-oss-distributions/xnu/blob/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/bsd/kern/kern_event.c#L1037
+- https://github.com/apple-oss-distributions/xnu/blob/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/bsd/kern/sys_coalition.c#L88
+- https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/EnablingAppSandbox.html
+- https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/posix_spawnattr_setpgroup.3.html
+- https://github.com/microsoft/playwright/blob/v1.63.0/packages/utils/processLauncher.ts
+- https://nodejs.org/api/child_process.html#optionsdetached

@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
 
-import click
 import pytest
 import typer
+from typer.core import TyperCommand
 
 from ....application.ledger.evidence import MediaKind, derive_keyed_purchase_invoice_evidence_id
 from ....application.ledger.evidence_add_operation import (
@@ -79,8 +80,10 @@ def _bind(
 
 
 def test_add_bridge_uses_canonical_decimal_wire_text_and_correlates_record(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.chdir(tmp_path)
     projection = LedgerEvidenceAddProjection(
         profile_id=_PROFILE,
         record=_record(),
@@ -89,7 +92,7 @@ def test_add_bridge_uses_canonical_decimal_wire_text_and_correlates_record(
     captured = _bind(monkeypatch, projection=projection, effect=OperationEffect.UPDATED)
 
     result = bridge.run_ledger_evidence_add(
-        typer.Context(click.Command("test")),
+        typer.Context(TyperCommand("test")),
         source_path="invoices/invoice.pdf",
         supplier="Supplier SL",
         invoice_number="INV-2026-05",
@@ -102,6 +105,8 @@ def test_add_bridge_uses_canonical_decimal_wire_text_and_correlates_record(
     )
 
     assert len(captured) == 1
+    assert captured[0].source_path == "invoices/invoice.pdf"
+    assert captured[0].source_directory == str(tmp_path)
     assert captured[0].taxable_base == "100"
     assert captured[0].iva_rate == "21"
     assert captured[0].iva_amount == "21"
@@ -122,7 +127,7 @@ def test_keyed_add_replay_allows_original_path_and_empty_event_but_requires_upda
     captured = _bind(monkeypatch, projection=projection, effect=OperationEffect.UPDATED)
 
     result = bridge.run_ledger_evidence_add(
-        typer.Context(click.Command("test")),
+        typer.Context(TyperCommand("test")),
         source_path="newer/location/same.pdf",
         supplier="Supplier SL",
         invoice_number="INV-2026-05",

@@ -20,6 +20,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import override_settings
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -259,6 +260,7 @@ class ModeloBindingsListProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     result_version: Literal[1] = 1
     operation: Literal["modelo.bindings.list"] = "modelo.bindings.list"
+    authority_generation: ContentDigest
     profile_id: UUID
     modelo_filter: str | None
     year_filter: int | None
@@ -276,6 +278,7 @@ class ModeloBindingsResolveProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     result_version: Literal[1] = 1
     operation: Literal["modelo.bindings.resolve"] = "modelo.bindings.resolve"
+    authority_generation: ContentDigest
     profile_id: UUID
     modelo: str
     revision: str
@@ -318,6 +321,7 @@ class ModeloRequiresProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     result_version: Literal[1] = 1
     operation: Literal["modelo.requires"] = "modelo.requires"
+    authority_generation: ContentDigest
     profile_id: UUID
     language: OutputLanguage
     modelo: str
@@ -338,13 +342,21 @@ class ModeloRequiresProjection(BaseModel):
     profile_checked: bool
 
     @classmethod
-    def from_checklist(cls, profile_id: UUID, checklist: DataInventoryChecklist, *, language: OutputLanguage) -> Self:
+    def from_checklist(
+        cls,
+        profile_id: UUID,
+        checklist: DataInventoryChecklist,
+        *,
+        language: OutputLanguage,
+        authority_generation: ContentDigest,
+    ) -> Self:
         """Preserve every canonical checklist section in declaration order."""
 
         def rows(source: tuple[DataInventoryCasilla, ...]) -> tuple[ModeloInventoryCasillaV1, ...]:
             return tuple(ModeloInventoryCasillaV1.from_casilla(row) for row in source)
 
         return cls(
+            authority_generation=authority_generation,
             profile_id=profile_id,
             language=language,
             modelo=checklist.modelo,
@@ -402,6 +414,7 @@ class ModeloReadinessProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     result_version: Literal[1] = 1
     operation: Literal["modelo.readiness"] = "modelo.readiness"
+    authority_generation: ContentDigest
     profile_id: UUID
     language: OutputLanguage
     modelo: str
@@ -425,11 +438,19 @@ class ModeloReadinessProjection(BaseModel):
     ledger_issues: tuple[ModeloReadinessLedgerIssueV1, ...]
 
     @classmethod
-    def from_report(cls, profile_id: UUID, report: ProjectionModeloReadiness, *, language: OutputLanguage) -> Self:
+    def from_report(
+        cls,
+        profile_id: UUID,
+        report: ProjectionModeloReadiness,
+        *,
+        language: OutputLanguage,
+        authority_generation: ContentDigest,
+    ) -> Self:
         """Copy all readiness axes from the canonical report."""
         if str(report.profile_id) != str(profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return cls(
+            authority_generation=authority_generation,
             profile_id=profile_id,
             language=language,
             modelo=report.modelo,
@@ -484,9 +505,10 @@ class ModeloReadinessProjection(BaseModel):
         )
 
 
-def _require_worker_identity[PayloadT: BaseModel](
+def require_modelo_query_worker_identity[PayloadT: BaseModel](
     definition_id: str, profile_id: UUID, request: OperationRequest[PayloadT], context: OperationExecutorContext
 ) -> str:
+    """Require one exact-profile subject and active bucket for a query executor."""
     bucket_id = str(profile_id)
     if (
         request.definition_id != definition_id
@@ -521,6 +543,7 @@ def _read_bindings_list(
     known_codes = registry_modelo_codes(operation=operation)
     if payload.catalogue_only:
         return ModeloBindingsListProjection(
+            authority_generation=operation.generation.logical_generation,
             profile_id=payload.profile_id,
             modelo_filter=None,
             year_filter=None,
@@ -566,6 +589,7 @@ def _read_bindings_list(
                 continue
             rows.append(ModeloBindingRowV1.from_report_row(report, row))
     return ModeloBindingsListProjection(
+        authority_generation=operation.generation.logical_generation,
         profile_id=payload.profile_id,
         modelo_filter=payload.modelo,
         year_filter=payload.year,
@@ -578,9 +602,10 @@ def _read_bindings_list(
     )
 
 
-def _read_bindings_resolve(
+def read_modelo_bindings_resolve(
     payload: ModeloBindingsResolveRequest, *, operation: PinnedAuthorityOperation
 ) -> ModeloBindingsResolveProjection:
+    """Read the complete canonical unsaved binding preview once."""
     report = registry_bindings_for_scope(
         payload.modelo, period=payload.period.to_period(), as_of=payload.as_of, operation=operation
     )
@@ -603,6 +628,7 @@ def _read_bindings_resolve(
         ModeloBindingRowV1.from_report_row(report, row, override=overrides.get(row.binding_id)) for row in report.rows
     )
     return ModeloBindingsResolveProjection(
+        authority_generation=operation.generation.logical_generation,
         profile_id=payload.profile_id,
         modelo=report.code,
         revision=report.revision,
@@ -623,15 +649,21 @@ def _read_requires(payload: ModeloRequiresRequest, *, operation: PinnedAuthority
             bucket_id=str(payload.profile_id),
             operation=operation,
         )
-    return ModeloRequiresProjection.from_checklist(payload.profile_id, checklist, language=payload.language)
+    return ModeloRequiresProjection.from_checklist(
+        payload.profile_id,
+        checklist,
+        language=payload.language,
+        authority_generation=operation.generation.logical_generation,
+    )
 
 
-def _read_readiness(
+def read_modelo_readiness(
     payload: ModeloReadinessOperationRequest,
     factory: ModeloQueryReadPortsFactory,
     *,
     operation: PinnedAuthorityOperation,
-) -> ModeloReadinessProjection:
+) -> ProjectionModeloReadiness:
+    """Evaluate one canonical readiness report under the retained authority pin."""
     bucket_id = str(payload.profile_id)
     ports = factory(bucket_id=bucket_id)
     if ports.bucket_id != bucket_id:
@@ -665,7 +697,7 @@ def _read_readiness(
         )
     if len(reports) != 1:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    return ModeloReadinessProjection.from_report(payload.profile_id, reports[0], language=payload.language)
+    return reports[0]
 
 
 class ModeloBindingsListExecutor:
@@ -675,7 +707,7 @@ class ModeloBindingsListExecutor:
         self, request: OperationRequest[ModeloBindingsListRequest], context: OperationExecutorContext
     ) -> str:
         """Read through the retained authority and publish a NONE-effect result."""
-        _require_worker_identity(
+        require_modelo_query_worker_identity(
             MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID, request.payload.profile_id, request, context
         )
         await context.events.phase(MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID)
@@ -698,14 +730,14 @@ class ModeloBindingsResolveExecutor:
         self, request: OperationRequest[ModeloBindingsResolveRequest], context: OperationExecutorContext
     ) -> str:
         """Read the preview without saving its temporary values."""
-        _require_worker_identity(
+        require_modelo_query_worker_identity(
             MODELO_BINDINGS_RESOLVE_OPERATION_DEFINITION_ID, request.payload.profile_id, request, context
         )
         await context.events.phase(MODELO_BINDINGS_RESOLVE_OPERATION_DEFINITION_ID)
 
         async def capture() -> str:
             result = await asyncio.to_thread(
-                _read_bindings_resolve, request.payload, operation=context.authority_operation
+                read_modelo_bindings_resolve, request.payload, operation=context.authority_operation
             )
             ref = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)
@@ -719,7 +751,9 @@ class ModeloRequiresExecutor:
 
     async def execute(self, request: OperationRequest[ModeloRequiresRequest], context: OperationExecutorContext) -> str:
         """Read one canonical inventory without a write section."""
-        _require_worker_identity(MODELO_REQUIRES_OPERATION_DEFINITION_ID, request.payload.profile_id, request, context)
+        require_modelo_query_worker_identity(
+            MODELO_REQUIRES_OPERATION_DEFINITION_ID, request.payload.profile_id, request, context
+        )
         await context.events.phase(MODELO_REQUIRES_OPERATION_DEFINITION_ID)
 
         async def capture() -> str:
@@ -742,12 +776,20 @@ class ModeloReadinessExecutor:
         self, request: OperationRequest[ModeloReadinessOperationRequest], context: OperationExecutorContext
     ) -> str:
         """Read every readiness axis under the retained authority pin."""
-        _require_worker_identity(MODELO_READINESS_OPERATION_DEFINITION_ID, request.payload.profile_id, request, context)
+        require_modelo_query_worker_identity(
+            MODELO_READINESS_OPERATION_DEFINITION_ID, request.payload.profile_id, request, context
+        )
         await context.events.phase(MODELO_READINESS_OPERATION_DEFINITION_ID)
 
         async def capture() -> str:
-            result = await asyncio.to_thread(
-                _read_readiness, request.payload, self._factory, operation=context.authority_operation
+            report = await asyncio.to_thread(
+                read_modelo_readiness, request.payload, self._factory, operation=context.authority_operation
+            )
+            result = ModeloReadinessProjection.from_report(
+                request.payload.profile_id,
+                report,
+                language=request.payload.language,
+                authority_generation=context.authority_operation.generation.logical_generation,
             )
             ref = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)
@@ -756,7 +798,8 @@ class ModeloReadinessExecutor:
         return await await_cancellation_complete(capture(), task_name="modelo-readiness")
 
 
-def _read_capabilities(*, sensitive: bool = False) -> OperationCapabilities:
+def modelo_query_read_capabilities(*, sensitive: bool = False) -> OperationCapabilities:
+    """Keep all read-only modelo query custody and effect guarantees aligned."""
     return OperationCapabilities(
         durability=OperationDurability.RECORDED,
         cancellation=OperationCancellation.UNSUPPORTED,
@@ -786,6 +829,9 @@ def _read_definition(
     build_executor: Callable[[], object],
     *,
     sensitive: bool = False,
+    permitted_frontends: frozenset[OperationFrontendProjection] = frozenset(
+        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
+    ),
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -798,9 +844,9 @@ def _read_definition(
         ),
         phase_codes=(definition_id,),
         interaction_kinds=frozenset(),
-        capabilities=_read_capabilities(sensitive=sensitive),
+        capabilities=modelo_query_read_capabilities(sensitive=sensitive),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=permitted_frontends,
     )
 
 
@@ -812,6 +858,13 @@ def build_modelo_bindings_list_definition() -> OperationDefinition:
         ModeloBindingsListProjection,
         ModeloBindingsListExecutor,
         ModeloBindingsListExecutor,
+        permitted_frontends=frozenset(
+            {
+                OperationFrontendProjection.CLI,
+                OperationFrontendProjection.TUI,
+                OperationFrontendProjection.MCP,
+            }
+        ),
     )
 
 
@@ -835,6 +888,13 @@ def build_modelo_requires_definition() -> OperationDefinition:
         ModeloRequiresProjection,
         ModeloRequiresExecutor,
         ModeloRequiresExecutor,
+        permitted_frontends=frozenset(
+            {
+                OperationFrontendProjection.CLI,
+                OperationFrontendProjection.TUI,
+                OperationFrontendProjection.MCP,
+            }
+        ),
     )
 
 
@@ -864,7 +924,7 @@ def _requested_scope(payload: BaseModel) -> tuple[frozenset[Period], bool, bool]
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
-def _resolve_read_access(
+def resolve_modelo_query_read_access(
     request: OperationRequest[BaseModel],
     context: OperationAccessContext,
     *,
@@ -872,6 +932,7 @@ def _resolve_read_access(
     payload_type: type[BaseModel],
     result_category: DisclosureCategory,
 ) -> ResolvedOperationAccess:
+    """Resolve an exact modelo query scope and public result category."""
     payload = request.payload
     if (
         request.definition_id != definition_id
@@ -982,7 +1043,7 @@ def _read_registration(
             schema_version=1,
             model_type=result_type,
         ),
-        access_resolver=lambda request, context: _resolve_read_access(
+        access_resolver=lambda request, context: resolve_modelo_query_read_access(
             request,
             context,
             definition_id=definition.definition_id,

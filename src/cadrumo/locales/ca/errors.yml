@@ -853,6 +853,10 @@ errors:
       es pot exportar: conté un registre que paga rendiments meritats en un exercici
       anterior i cap font oficial no determina la base i la retenció que declara aquest
       registre.'
+    canonical_modelo_binding_value_contract_unsupported: La vinculació no té cap format
+      oficial de valor compatible amb la previsualització automatitzada.
+    canonical_modelo_binding_value_invalid: El valor indicat no compleix el format
+      oficial de la vinculació.
     canonical_modelo_lifecycle_clock_precedes: El rellotge de l'acció és anterior
       a un registre que actualitzaria, així que no s'ha desat res. Torneu-ho a provar
       amb l'hora actual.

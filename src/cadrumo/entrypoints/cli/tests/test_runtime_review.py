@@ -190,6 +190,7 @@ def test_bridge_refuses_a_foreign_profile_projection_with_its_submitted_receipt(
             rows=foreign.rows,
         )
     else:
+        assert isinstance(foreign, ReviewViewReadProjection)
         projection = ReviewViewReadProjection.model_construct(
             profile_id=_OTHER_PROFILE,
             request=request,
@@ -211,7 +212,9 @@ def test_bridge_refuses_a_foreign_profile_projection_with_its_submitted_receipt(
             bridge.run_review_view(cast(typer.Context, cast(object, None)), cast(ReviewViewReadRequest, request))
 
     assert submitted == [request]
-    assert exc_info.value.context["operation_id"] == _OPERATION_ID
-    assert exc_info.value.context["reason"] == RuntimeRefusalCode.INVALID_FRAME.value
-    assert exc_info.value.context["terminal_condition"] == OperationTerminalCondition.SUCCEEDED.value
-    assert exc_info.value.context["effect"] == OperationEffect.NONE.value
+    refusal_context = exc_info.value.context
+    assert refusal_context is not None
+    assert refusal_context["operation_id"] == _OPERATION_ID
+    assert refusal_context["reason"] == RuntimeRefusalCode.INVALID_FRAME.value
+    assert refusal_context["terminal_condition"] == OperationTerminalCondition.SUCCEEDED.value
+    assert refusal_context["effect"] == OperationEffect.NONE.value

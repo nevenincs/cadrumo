@@ -13,6 +13,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, lease, worker_profiles
+from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
@@ -74,7 +75,9 @@ def _running_host(
         admitting=manager._admitting,
     )
     manager._profiles[identity.binding.profile_id] = host
-    host.owner.activate(lease(identity), bytearray(key))
+    candidate = lease(identity)
+    with host.owner.prepare_api_admission(candidate.connection_id):
+        host.owner.activate(candidate, bytearray(key))
     context = RuntimeConnectionContext(
         uuid4(), identity.runtime_boot_id, RuntimePeer(os_owner_id=identity.binding.os_owner_id, process_id=1234)
     )
@@ -113,7 +116,9 @@ def test_changed_binding_waits_for_guard_then_drains_actual_worker_before_succes
         root, ((identity, key), _) = profiles
         manager, host, context = _running_host(root=root, identity=identity, key=key)
         worker = host.owner.operation_worker()
-        process_handle = worker._process._handle
+        process = worker._process
+        assert isinstance(process, WindowsOwnedProcess)
+        process_handle = process._handle
         assert process_handle is not None
         retained_handle = win32api.DuplicateHandle(
             win32api.GetCurrentProcess(),

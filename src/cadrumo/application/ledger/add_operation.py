@@ -403,7 +403,7 @@ class _SourceJurisdictionRequiredError(Exception):
         code: Literal["source_jurisdiction_required_irnr", "source_jurisdiction_required_beckham"],
         message: str,
     ) -> None:
-        self.code = code
+        self.code: Literal["source_jurisdiction_required_irnr", "source_jurisdiction_required_beckham"] = code
         self.message = message
 
 

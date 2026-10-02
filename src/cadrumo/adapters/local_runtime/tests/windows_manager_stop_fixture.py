@@ -80,6 +80,23 @@ def _run(root: Path, scenario: str) -> int:
     if scenario == "fail_start":
         time.sleep(0.2)
         return 71
+    if scenario == "fail_start_hresult":
+        from ctypes import wintypes
+
+        # Separate control for native scheduler HRESULT failure classification.
+        # Preserve the original positive exit-71 scenario and its evidence.
+        time.sleep(0.2)
+        kernel = _win_library("kernel32")
+        current = kernel.GetCurrentProcess
+        current.argtypes = ()
+        current.restype = wintypes.HANDLE
+        terminate = kernel.TerminateProcess
+        terminate.argtypes = (wintypes.HANDLE, wintypes.UINT)
+        terminate.restype = wintypes.BOOL
+        _record(event_path, kind="native_hresult_failure", start_identity=process_start)
+        if not terminate(current(), 0x80004005):
+            raise OSError("native HRESULT failure control unavailable")
+        raise RuntimeError("native HRESULT failure control returned without termination")
 
     drain_release_path = root / f"release-drain-{os.getpid()}-{process_start}.request"
     draining = False
@@ -152,7 +169,7 @@ def main() -> int:
         return 64
     root = Path(sys.argv[2])
     scenario = sys.argv[4]
-    if not root.is_absolute() or scenario not in {"graceful", "fail_on_close", "fail_start"}:
+    if not root.is_absolute() or scenario not in {"graceful", "fail_on_close", "fail_start", "fail_start_hresult"}:
         return 64
     resolved = root.resolve(strict=True)
     if resolved != root or root.is_symlink() or not root.is_dir():

@@ -461,7 +461,7 @@ def test_discovery_classifies_the_live_offered_options_at_its_owning_boundary() 
 
     class _DiscoveryPort(UnavailableFiledDataCapturePort):
         @override
-        async def discover_availability(self, *, operation: str) -> _AvailabilityReport:
+        async def discover_availability(self, *, operation: str, **_kwargs: object) -> _AvailabilityReport:
             assert operation == "live-expedientes-read"
             return availability
 

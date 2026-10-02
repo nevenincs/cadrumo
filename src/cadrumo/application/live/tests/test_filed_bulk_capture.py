@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -12,28 +12,46 @@ from typing import cast
 
 import pytest
 
+from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.buckets.event import BucketEvent
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...storage.sync_runs.records import SyncRunRecord
 from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ...user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ..errors import LiveApplicationError, LiveIvaSurfaceTimeoutError
 from ..filed_data_capture import (
     FiledCaptureAccumulator,
+    FiledHistoryDiscoveryPair,
+    FiledHistoryDiscoveryReport,
+    FiledHistoryOnboardingRun,
     _absorb_declarations,
     _await_filed_register_walk,
+    _filed_history_pair_outcomes,
     _walk_or_failure_row,
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
+    expected_but_not_found_notice,
     filed_data_capture_failure_row,
     list_filed_data_bulk,
 )
-from ..filed_data_ports import FiledDataCapturePort, FiledDataRegisterPort, FiledRegisterDeclarationProtocol
+from ..filed_data_ports import (
+    FiledDataCapturePort,
+    FiledDataRegisterPort,
+    FiledEffectGuard,
+    FiledRegisterDeclarationProtocol,
+)
+from ..filed_observation_ports import FiledObservationArtefactProtocol, FiledObservedCasillaProtocol
 from ..remote_state_models import (
     BulkFiledDataCaptureReport,
+    FiledCapturePairOutcome,
     FiledDataCaptureFailureRow,
 )
+from ..session import SessionWriteReporter
 from .filed_observation_test_support import in_memory_filed_observation_test_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -144,8 +162,17 @@ def test_single_capture_revocation_after_remote_fetch_discards_bytes(
 
     class Port:
         @asynccontextmanager
-        async def open_register(self, *, operation: str) -> AsyncIterator[Register]:
+        async def open_register(
+            self,
+            *,
+            operation: str,
+            authority_operation: PinnedAuthorityOperation | None = None,
+            effect_guard: FiledEffectGuard | None = None,
+            on_session_write: SessionWriteReporter | None = None,
+        ) -> AsyncIterator[Register]:
             assert operation == "live-filed-read"
+            assert effect_guard is DeniedGuard
+            assert on_session_write is None
             yield Register()
 
     class DeniedGuard:
@@ -190,9 +217,20 @@ def test_source_capture_revocation_after_remote_fetch_discards_batch(
             raise AssertionError("revoked source capture persisted artefacts")
 
     class Port:
-        async def capture_source_observations_deferred(self, revision, *, filing_year, period, operation):
+        async def capture_source_observations_deferred(
+            self,
+            revision,
+            *,
+            filing_year,
+            period,
+            operation,
+            effect_guard: FiledEffectGuard | None = None,
+            on_session_write: SessionWriteReporter | None = None,
+        ):
             del revision
             assert (filing_year, period, operation) == (2025, Period.from_year_and_code(2025, "1T"), "live-filed-read")
+            assert effect_guard is DeniedGuard
+            assert on_session_write is None
             events.append("remote")
             return Staged()
 
@@ -239,8 +277,19 @@ def test_source_capture_revocation_before_finalization_preserves_first_fence(
             return ()
 
     class Port:
-        async def capture_source_observations_deferred(self, revision, *, filing_year, period, operation):
+        async def capture_source_observations_deferred(
+            self,
+            revision,
+            *,
+            filing_year,
+            period,
+            operation,
+            effect_guard: FiledEffectGuard | None = None,
+            on_session_write: SessionWriteReporter | None = None,
+        ):
             del revision, filing_year, period, operation
+            assert effect_guard is Guard
+            assert on_session_write is None
             events.append("remote")
             return Staged()
 
@@ -354,6 +403,27 @@ def test_bulk_report_counts_successes_and_failures_explicitly() -> None:
         year_from=2025,
         year_to=2025,
         captured_count=1,
+        reached_count=1,
+        pair_outcomes=(
+            FiledCapturePairOutcome(
+                modelo="130",
+                year=2025,
+                walk_attempted=True,
+                walk_completed=False,
+                row_count=0,
+                reached_count=0,
+                captured_count=0,
+            ),
+            FiledCapturePairOutcome(
+                modelo="303",
+                year=2025,
+                walk_attempted=True,
+                walk_completed=True,
+                row_count=1,
+                reached_count=1,
+                captured_count=1,
+            ),
+        ),
         failed_count=1,
         observation_paths=("303/2025/1T/manifest.json",),
         artefact_refs=("sha256:abc123",),
@@ -367,6 +437,7 @@ def test_bulk_report_counts_successes_and_failures_explicitly() -> None:
     assert report.captured_count == 1
     assert report.failed_count == 1
     assert report.failures[0].modelo == "130"
+    report.require_consistent()
 
 
 @pytest.mark.parametrize("dry_run", [False, True])
@@ -560,3 +631,261 @@ def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -
 
     assert healthy == (_declaration(),), "a healthy walk must return its rows unchanged"
     assert len(failures) == 1, "a healthy walk must not add a failure row"
+
+
+@dataclass(frozen=True, slots=True)
+class _AccountingObservation:
+    """Synthetic declaration observations consumed by the real persistence funnel."""
+
+    modelo: str
+    ejercicio: int
+    period: Period
+    expediente_id: str
+    presented_at: datetime
+    status: str = "ALTA"
+    authenticated_identity: str = "X1234567L"
+    artefacts: tuple[FiledObservationArtefactProtocol, ...] = ()
+    casillas: tuple[FiledObservedCasillaProtocol, ...] = ()
+    headers: tuple[ObservedHeaderFact, ...] = ()
+    metadata: Mapping[str, str] = field(default_factory=dict)
+
+    @property
+    def registry_snapshot_ref(self) -> RegistrySnapshotRef:
+        """Identify the existing annual Modelo 100 fixture revision."""
+        return RegistrySnapshotRef(
+            modelo=self.modelo,
+            revision_id=str(self.ejercicio),
+            modelo_year=self.ejercicio,
+            period=self.period.registry_token,
+        )
+
+
+class _AccountingRegister:
+    """Control only register rows and remote capture failures for actual orchestration."""
+
+    walk_timeout_ms = 1000
+
+    def __init__(
+        self,
+        rows: Mapping[tuple[str, int], tuple[_Declaration, ...]],
+        *,
+        fail_walk: bool = False,
+        fail_capture: str | None = None,
+    ) -> None:
+        self.rows = rows
+        self.fail_walk = fail_walk
+        self.fail_capture = fail_capture
+        self.walks: list[tuple[str, int]] = []
+        self.captures: list[str] = []
+        self.opened = 0
+
+    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[_Declaration, ...]:
+        """Return independent full register counts before the use case applies a cap."""
+        self.walks.append((modelo, ejercicio))
+        if self.fail_walk:
+            raise RuntimeError("synthetic register walk refusal")
+        return self.rows.get((modelo, ejercicio), ())
+
+    async def capture_observation(
+        self, declaration: FiledRegisterDeclarationProtocol, *, artefact_sink=None
+    ) -> _AccountingObservation:
+        """Return captured facts or a deterministic remote acquisition failure."""
+        self.captures.append(declaration.expediente_id)
+        if declaration.expediente_id == self.fail_capture:
+            raise RuntimeError("synthetic declaration capture failure")
+        return _AccountingObservation(
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
+            period=declaration.period,
+            expediente_id=declaration.expediente_id,
+            presented_at=declaration.presented_at,
+        )
+
+    @asynccontextmanager
+    async def open_register(self, **_kwargs: object) -> AsyncIterator[_AccountingRegister]:
+        """Supply one explicit synthetic acquisition session, without authentication or network."""
+        self.opened += 1
+        yield self
+
+
+class _AccountingRunRepository:
+    """Retain provenance written by the actual bulk finalizer."""
+
+    def __init__(self) -> None:
+        self.records: list[SyncRunRecord] = []
+        self.events: list[BucketEvent] = []
+
+    def save_with_bucket_event(self, record: SyncRunRecord, event: BucketEvent) -> None:
+        """Accept the writer's exact record and event together."""
+        self.records.append(record)
+        self.events.append(event)
+
+
+def _annual_declaration(year: int, suffix: str) -> _Declaration:
+    """Create distinct real rows for one annual filed period."""
+    return _Declaration(
+        modelo="100",
+        ejercicio=year,
+        period=Period.from_year_and_code(year, "0A"),
+        expediente_id="1234567890123456789" + suffix,
+    )
+
+
+@pytest.mark.parametrize("dry_run", [False, True], ids=["persisted", "preview"])
+def test_bulk_pair_accounting_distinguishes_preview_rows_and_unattempted_cap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, dry_run: bool
+) -> None:
+    """The cap cannot turn present or unwalked filings into proven remote emptiness."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    register = _AccountingRegister({("100", 2025): (_annual_declaration(2025, "1"), _annual_declaration(2025, "2"))})
+    repository = _AccountingRunRepository()
+    bundle = in_memory_filed_observation_test_bundle()
+    report = asyncio.run(
+        capture_filed_data_bulk(
+            filed_data_port=cast(FiledDataCapturePort, register),
+            ports=bundle.ports,
+            year_from=2024,
+            year_to=2025,
+            modelos=("100",),
+            output_root=tmp_path,
+            limit=1,
+            dry_run=dry_run,
+            sync_run_repository=repository,
+        )
+    )
+    report.require_consistent()
+    assert register.walks == [("100", 2025)]
+    assert register.captures == ["12345678901234567891"]
+    assert [(pair.modelo, pair.year) for pair in report.pair_outcomes] == [("100", 2025), ("100", 2024)]
+    first, capped = report.pair_outcomes
+    assert first.walk_attempted and first.walk_completed
+    assert (first.row_count, first.reached_count, first.captured_count) == (2, 1, 0 if dry_run else 1)
+    assert not capped.walk_attempted and not capped.walk_completed
+    assert (capped.row_count, capped.reached_count, capped.captured_count) == (0, 0, 0)
+    assert report.reached_count == 1
+    assert report.captured_count == (0 if dry_run else 1)
+    assert len(repository.records) == (0 if dry_run else 1)
+    assert report.calculation_observation_count == (0 if dry_run else 1)
+    discovery = FiledHistoryDiscoveryReport(
+        pairs=(
+            FiledHistoryDiscoveryPair(
+                modelo="100", ejercicio=2025, signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
+            ),
+            FiledHistoryDiscoveryPair(
+                modelo="100", ejercicio=2024, signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
+            ),
+        )
+    )
+    pairs = _filed_history_pair_outcomes(discovery, report)
+    run = FiledHistoryOnboardingRun(
+        pairs=pairs, dry_run=dry_run, reached_count=report.reached_count, captured_count=report.captured_count
+    )
+    assert [pair.row_count for pair in pairs] == [2, 0]
+    assert [pair.walk_completed for pair in pairs] == [True, False]
+    assert run.genuinely_empty_pairs == ()
+    assert expected_but_not_found_notice(run) is None
+
+
+@pytest.mark.parametrize("failed_capture", [False, True], ids=["same-period", "remote-failure"])
+def test_bulk_pair_accounting_preserves_same_period_and_failed_capture_counts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failed_capture: bool
+) -> None:
+    """Independent row and capture facts survive latest-per-period calculation selection."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    register = _AccountingRegister(
+        {("100", 2025): (_annual_declaration(2025, "1"), _annual_declaration(2025, "2"))},
+        fail_capture="12345678901234567892" if failed_capture else None,
+    )
+    repository = _AccountingRunRepository()
+    bundle = in_memory_filed_observation_test_bundle()
+    report = asyncio.run(
+        capture_filed_data_bulk(
+            filed_data_port=cast(FiledDataCapturePort, register),
+            ports=bundle.ports,
+            year_from=2025,
+            year_to=2025,
+            modelos=("100",),
+            output_root=tmp_path,
+            sync_run_repository=repository,
+        )
+    )
+    report.require_consistent()
+    (pair,) = report.pair_outcomes
+    assert pair.walk_attempted and pair.walk_completed
+    assert pair.row_count == 2
+    assert pair.reached_count == pair.captured_count == (1 if failed_capture else 2)
+    assert report.calculation_observation_keys == ("100:2025:0A",)
+    assert report.calculation_observation_count == 1
+    assert len(report.observation_paths) == (1 if failed_capture else 2)
+    assert len(register.captures) == 2
+    assert report.failed_count == (1 if failed_capture else 0)
+    if failed_capture:
+        assert report.failures[0].expediente_id == "12345678901234567892"
+    assert len(repository.records) == 1
+    assert repository.records[0].unit_count == report.reached_count
+    discovery = FiledHistoryDiscoveryReport(
+        pairs=(
+            FiledHistoryDiscoveryPair(
+                modelo="100", ejercicio=2025, signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
+            ),
+        )
+    )
+    (history_pair,) = _filed_history_pair_outcomes(discovery, report)
+    assert history_pair.row_count == 2
+    assert history_pair.captured_count == (1 if failed_capture else 2)
+    assert history_pair.reached_count == report.reached_count
+    assert not history_pair.is_a_genuine_empty
+
+
+def test_bulk_pair_accounting_keeps_planning_refusals_and_failed_walks_distinct(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A locally refused pair and a contacted unreadable pair retain their actual walk facts."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    register = _AccountingRegister({}, fail_walk=True)
+    report = asyncio.run(
+        capture_filed_data_bulk(
+            filed_data_port=cast(FiledDataCapturePort, register),
+            ports=in_memory_filed_observation_test_bundle().ports,
+            year_from=2025,
+            year_to=2025,
+            modelos=("151", "100"),
+            output_root=tmp_path,
+            dry_run=True,
+        )
+    )
+    report.require_consistent()
+    local, remote = report.pair_outcomes
+    assert (local.modelo, remote.modelo) == ("151", "100")
+    assert not local.walk_attempted and not local.walk_completed
+    assert remote.walk_attempted and not remote.walk_completed
+    assert [(pair.row_count, pair.reached_count, pair.captured_count) for pair in report.pair_outcomes] == [
+        (0, 0, 0)
+    ] * 2
+    assert register.walks == [("100", 2025)]
+    assert report.failed_count == 2
+
+
+def test_bulk_capture_refuses_duplicate_coordinates_before_register_contact(tmp_path: Path) -> None:
+    """Repeated caller coordinates must be refused rather than overwritten in the accounting join."""
+    register = _AccountingRegister({})
+    with pytest.raises(ValueError, match="unique modelo/year"):
+        asyncio.run(
+            capture_filed_data_bulk(
+                filed_data_port=cast(FiledDataCapturePort, register),
+                ports=in_memory_filed_observation_test_bundle().ports,
+                year_from=2025,
+                year_to=2025,
+                modelos=("100", "100"),
+                output_root=tmp_path,
+                dry_run=True,
+            )
+        )
+    assert register.opened == 0
+    assert register.walks == []

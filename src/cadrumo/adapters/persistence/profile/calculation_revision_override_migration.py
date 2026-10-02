@@ -425,16 +425,6 @@ class GuardedCalculationRevisionMigration:
             (),
             expected_revision_id=plan.expected_revision_id,
         )
-        _LOGGER.info(
-            "rekeyed persisted calculation-revision relation overrides onto binding ids",
-            extra={
-                "reason": _WRITE_PROVENANCE_REASON,
-                "rekeyed_revision_count": len(plan.revision_id_pairs),
-                "rekeyed_override_key_count": len(plan.override_key_pairs),
-                "revision_id_pairs": plan.revision_id_pairs,
-                "override_key_pairs": plan.override_key_pairs,
-            },
-        )
 
     def assert_current(
         self,

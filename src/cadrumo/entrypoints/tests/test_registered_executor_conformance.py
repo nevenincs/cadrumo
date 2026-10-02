@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import csv
 import hashlib
 from collections.abc import Awaitable, Callable, Generator, Mapping
 from contextlib import AbstractContextManager, contextmanager, nullcontext
@@ -124,12 +125,21 @@ from ...application.invoices.catalogue_update_operation import (
     InvoiceUpdateResult,
 )
 from ...application.ledger.actions_import import LedgerProviderID
-from ...application.ledger.actions_manual import create_manual_transaction
+from ...application.ledger.actions_manual import (
+    command_from_patch,
+    create_manual_transaction,
+    prepare_manual_transaction_update,
+)
 from ...application.ledger.actions_split_merge import split_transaction
 from ...application.ledger.add_operation import LedgerAddOperationResult, LedgerAddRequest
 from ...application.ledger.allocate_operation import LedgerAllocateOperationResult, LedgerAllocateRequest
 from ...application.ledger.attachment_mutation_operation import (
     LedgerAttachmentOperationResult,
+)
+from ...application.ledger.bulk_classify_operation import (
+    LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
+    LedgerBulkClassifyProjection,
+    LedgerBulkClassifyRequest,
 )
 from ...application.ledger.check_operation import LedgerCheckProjection, LedgerCheckRequest
 from ...application.ledger.classify_operation import (
@@ -157,11 +167,15 @@ from ...application.ledger.history_operation import LedgerHistoryProjection, Led
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
 from ...application.ledger.import_operation import LedgerImportRequest, LedgerImportResultProjection
 from ...application.ledger.invoice_evidence_operation import LedgerEvidenceConfirmProjection
+from ...application.ledger.lifecycle_mutation_operation import (
+    LedgerLifecycleOperationId,
+    LedgerLifecycleOperationResult,
+)
 from ...application.ledger.list_operation import LedgerListProjection, LedgerListRequest
 from ...application.ledger.llm_classification import reject_llm_suggestion
 from ...application.ledger.llm_classification_ports import LLMClassificationSuggestion
 from ...application.ledger.merge_operation import LedgerMergeOperationResult, LedgerMergeRequest
-from ...application.ledger.models import ManualLedgerTransactionCommand, SplitChildCommand
+from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch, SplitChildCommand
 from ...application.ledger.participation_operation import (
     LedgerParticipationProjection as LedgerParticipationLookupProjection,
 )
@@ -177,6 +191,7 @@ from ...application.ledger.preflight_operation import LedgerPreflightProjection,
 from ...application.ledger.remove_operation import LedgerRemoveOperationResult, LedgerRemoveRequest
 from ...application.ledger.reset_operation import LedgerResetOperationResult, LedgerResetRequest
 from ...application.ledger.review_operation import LedgerReviewProjection, LedgerReviewRequest
+from ...application.ledger.rule_operation import LedgerRuleAddProjection
 from ...application.ledger.split_operation import (
     LedgerSplitOperationResult,
     LedgerSplitRequest,
@@ -209,6 +224,17 @@ from ...application.local_reader_operation import LOCAL_READER_OPERATION_SUBJECT
 from ...application.modelo.aggregate_operation import ModeloAggregateOperationRequest, ModeloAggregateProjection
 from ...application.modelo.amendment_action_ports import AmendmentActionPorts, AmendmentActionPortsFactory
 from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.calculation_report_verification import (
+    CalculationSummaryCheckName,
+    CalculationSummaryVerificationLayer,
+    CalculationSummaryVerificationOutcome,
+    CalculationSummaryVerificationReason,
+)
+from ...application.modelo.calculation_report_verification_operation import (
+    MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID,
+    ModeloCalculationReportVerificationProjection,
+    ModeloCalculationReportVerificationRequest,
+)
 from ...application.modelo.dependency_operation import (
     MODELO_DEPENDENCY_OPERATION_DEFINITION_ID,
     ModeloDependencyProjection,
@@ -233,9 +259,19 @@ from ...application.modelo.m303_attestation_operation import (
     ModeloWorkM303AttestationPublicResultV2,
     ModeloWorkM303AttestationRequest,
 )
+from ...application.modelo.mcp_query_operation import (
+    ModeloBindingsResolveTypedProjection,
+    ModeloReadinessSummaryProjection,
+)
 from ...application.modelo.operation_definitions import (
     ModeloWorkCalculateRequest,
     resolve_active_workflow_profile,
+)
+from ...application.modelo.query_read_operation import (
+    ModeloBindingsListProjection,
+    ModeloBindingsResolveProjection,
+    ModeloReadinessProjection,
+    ModeloRequiresProjection,
 )
 from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 from ...application.modelo.review_package_operation import (
@@ -395,7 +431,7 @@ from ...domain.attachments.m303_filing_evidence import (
     M303Exonerado390ApplicabilityAssertion,
     parse_m303_exonerado_390_applicability_attestation,
 )
-from ...domain.buckets.event import BucketEventType
+from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
@@ -405,6 +441,7 @@ from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ...domain.invoices.service import LinkInconsistency
 from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import IvaCategory
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
@@ -413,6 +450,7 @@ from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.notifications.sancion import SancionLiquidacion
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.usage_ratios.model import UsageRatioProfile
 from ...domain.user_profile.plantilla_media import PlantillaMediaState
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -458,6 +496,16 @@ from .ledger_attachment_operation_test_support import (
     assert_ledger_attachment_operation_conformance_result,
     prepare_ledger_attachment_operation_conformance_case,
 )
+from .ledger_lifecycle_operation_test_support import (
+    LedgerLifecycleOperationConformanceCase,
+    assert_ledger_lifecycle_operation_conformance_result,
+    prepare_ledger_lifecycle_operation_conformance_case,
+)
+from .ledger_rule_operation_test_support import (
+    assert_ledger_rule_operation_conformance_result,
+    prepare_ledger_rule_operation_conformance_case,
+)
+from .modelo_projection_history_conformance_support import prepare_modelo_projection_history_conformance_case
 from .modelo_query_operation_test_support import prepare_modelo_query_conformance_case
 from .profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -476,6 +524,7 @@ from .recipient_operation_test_support import (
     assert_recipient_operation_conformance_result,
     prepare_recipient_operation_case,
 )
+from .review_read_operation_test_support import prepare_review_read_conformance_case
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -520,16 +569,46 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
     for case in (
         *(
             _RegisteredExecutorConformanceCase(
+                f"ledger.rule.{action}",
+                OperationTerminalCondition.SUCCEEDED,
+                OperationEffect.NONE if action == "list" else OperationEffect.UPDATED,
+                (f"ledger.rule.{action}",),
+            )
+            for action in ("add", "list", "apply")
+        ),
+        *(
+            _RegisteredExecutorConformanceCase(
+                definition_id, OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, phase_codes
+            )
+            for definition_id, phase_codes in (
+                ("modelo.history", ("modelo.history",)),
+                ("modelo.history.timeline", ("modelo.history.timeline",)),
+                ("modelo.project", ("modelo.project.prepare", "modelo.project.result")),
+                ("modelo.compare", ("modelo.compare.prepare", "modelo.compare.result")),
+            )
+        ),
+        *(
+            _RegisteredExecutorConformanceCase(
+                f"ledger.{action}", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, (f"ledger.{action}",)
+            )
+            for action in ("archive", "stash", "restore", "exclude")
+        ),
+        *(
+            _RegisteredExecutorConformanceCase(
                 definition_id,
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.NONE,
                 (definition_id,),
             )
             for definition_id in (
+                "app.review.queue",
+                "app.review.view",
                 "modelo.bindings.list",
                 "modelo.bindings.resolve",
+                "modelo.bindings.resolve.typed",
                 "modelo.requires",
                 "modelo.readiness",
+                "modelo.readiness.summary",
                 "ledger.evidence.attachment_queue",
                 "ledger.evidence.attachment_view",
                 "ledger.evidence.consent.list",
@@ -1016,6 +1095,12 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             ("ledger.classify.single",),
         ),
         _RegisteredExecutorConformanceCase(
+            LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            (LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,),
+        ),
+        _RegisteredExecutorConformanceCase(
             "ledger.evidence.add",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
@@ -1275,6 +1360,11 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
         ),
         _RegisteredExecutorConformanceCase(
             "modelo.export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
         ),
         _RegisteredExecutorConformanceCase(
             "modelo.work.amend", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
@@ -1887,6 +1977,21 @@ def _seeded_notification_document(profile_id: UUID) -> NotificationDocumentRecor
     )
     notification_document_repository(str(profile_id), load_settings()).save(record)
     return record
+
+
+def _ledger_lifecycle_case(
+    definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
+) -> LedgerLifecycleOperationConformanceCase:
+    operation_ids: tuple[LedgerLifecycleOperationId, ...] = (
+        "ledger.archive",
+        "ledger.stash",
+        "ledger.restore",
+        "ledger.exclude",
+    )
+    for operation_id in operation_ids:
+        if definition_id == operation_id:
+            return prepare_ledger_lifecycle_operation_conformance_case(operation_id, profile_id, operation=operation)
+    raise ValueError(f"unsupported ledger lifecycle conformance case: {definition_id}")
 
 
 def _prorrata_case(
@@ -2694,6 +2799,44 @@ def _payload(
                 "patch": LedgerClassifyPatch(business_classification="BUSINESS"),
                 "patch_fields": ("business_classification",),
             }
+        case "ledger.classify.bulk":
+            ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
+            created_valid = create_manual_transaction(
+                ManualLedgerTransactionCommand(
+                    bucket_id=str(profile_id),
+                    booked_date=date(2025, 1, 20),
+                    amount=Decimal("23.00"),
+                    direction=TransactionDirection.OUTGOING,
+                    description=f"conformance bulk classification valid {profile_id.hex}",
+                    business_classification=BusinessClassification.NOT_YET_PROCESSED,
+                    actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
+                ),
+                ports=ports,
+                occurred_at=now(),
+            )
+            created_invalid = create_manual_transaction(
+                ManualLedgerTransactionCommand(
+                    bucket_id=str(profile_id),
+                    booked_date=date(2025, 1, 20),
+                    amount=Decimal("24.00"),
+                    direction=TransactionDirection.OUTGOING,
+                    description=f"conformance bulk classification invalid {profile_id.hex}",
+                    business_classification=BusinessClassification.NOT_YET_PROCESSED,
+                    actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
+                ),
+                ports=ports,
+                occurred_at=now(),
+            )
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {
+                "profile_id": profile_id,
+                "csv_text": (
+                    "transaction_id,classification,iva_category\n"
+                    f"{created_valid.ref.transaction_id},BUSINESS,domestic_general\n"
+                    f"{created_invalid.ref.transaction_id},BUSINESS,not-a-declared-category\n"
+                ),
+                "actor": None,
+            }
         case "ledger.evidence.add":
             evidence_file = tmp_path / "conformance-purchase-invoice-add.pdf"
             evidence_file.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
@@ -3149,6 +3292,17 @@ def _payload(
             )
             subject_ref = profile_operation_subject(str(profile_id))
             values = {"profile_id": profile_id, "transaction_prefix": created.ref.transaction_id[:12]}
+        case "modelo.work.report_verify":
+            tmp_path.mkdir(parents=True, exist_ok=True)
+            source = (tmp_path / "malformed-calculation-summary.pdf").resolve()
+            source_bytes = b"synthetic malformed calculation summary PDF"
+            source.write_bytes(source_bytes)
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {
+                "profile_id": profile_id,
+                "source_path": str(source),
+                "source_sha256": hashlib.sha256(source_bytes).hexdigest(),
+            }
         case "modelo.export":
             # A DRAFT revision is not exportable. `_require_exportable_revision_state`
             # admits only SEALED states (VERIFICADO_COMPLETO, PRESENTADO,
@@ -3487,6 +3641,153 @@ def test_every_registered_definition_has_a_conformance_scenario() -> None:
     )
 
 
+def _assert_ledger_track_result(
+    driver: _ExecutionDriver,
+    registry: OperationRegistry,
+    *,
+    profile_id: UUID,
+    operation: PinnedAuthorityOperation,
+    payload: BaseModel,
+    operation_id: str,
+    terminal_revision: int,
+) -> None:
+    assert isinstance(payload, LedgerTrackRequest)
+    track = _resolve_result_projection(
+        driver,
+        registry,
+        definition_id="ledger.track",
+        operation_id=operation_id,
+        terminal_revision=terminal_revision,
+        projection_type=LedgerTrackProjection,
+    )
+    assert isinstance(track, LedgerTrackProjection)
+    transaction_id = resolve_lineage_transaction_id(
+        payload.transaction_prefix,
+        TransactionCatalogueRepository(bucket_id=str(profile_id)).load(),
+    )
+    assert track.profile_id == profile_id
+    assert track.transaction_prefix == payload.transaction_prefix
+    assert track.transaction.transaction_id == transaction_id
+    assert track.tracking.transaction_id == transaction_id
+    assert track.participated_in is not None
+    index = TransactionParticipationIndexRepository(bucket_id=str(profile_id)).load(transaction_id)
+    assert len(index.participations) == 1
+    participation = index.participations[0]
+    assert track.participated_in == (LedgerParticipationEntryProjection.from_participation(participation),)
+    assert participation.filing_record_id is None
+    assert participation.justificante_reference is None
+    assert participation.revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
+    revision = (
+        CalculationRevisionCatalogueRepository().load(operation=operation).get(participation.calculation_revision_id)
+    )
+    assert revision is not None
+    assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert transaction_id in revision.source_transaction_ids
+    assert revision.work_unit_id == participation.work_unit_id
+    unit = WorkUnitCatalogueRepository().load().get(participation.work_unit_id)
+    assert unit is not None
+    assert participation.modelo == str(unit.modelo)
+    assert participation.filing_year == unit.filing_year
+    assert participation.period == unit.period
+
+
+def _assert_ledger_participation_lookup_result(
+    driver: _ExecutionDriver,
+    registry: OperationRegistry,
+    *,
+    profile_id: UUID,
+    payload: LedgerParticipationRequest,
+    operation_id: str,
+    terminal_revision: int,
+) -> None:
+    participation_result = _resolve_result_projection(
+        driver,
+        registry,
+        definition_id="ledger.participation",
+        operation_id=operation_id,
+        terminal_revision=terminal_revision,
+        projection_type=LedgerParticipationLookupProjection,
+    )
+    assert isinstance(participation_result, LedgerParticipationLookupProjection)
+    transaction_id = resolve_lineage_transaction_id(
+        payload.transaction_prefix,
+        TransactionCatalogueRepository(bucket_id=str(profile_id)).load(),
+    )
+    assert participation_result.profile_id == profile_id
+    assert participation_result.transaction_prefix == payload.transaction_prefix
+    assert participation_result.transaction_id == transaction_id
+    index = TransactionParticipationIndexRepository(bucket_id=str(profile_id)).load(transaction_id)
+    assert len(index.participations) == 1
+    assert participation_result.participations == (
+        LedgerParticipationEntryProjection.from_participation(index.participations[0]),
+    )
+    assert index.participations[0].revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
+
+
+def _assert_ledger_participation_rebuild_result(
+    driver: _ExecutionDriver,
+    registry: OperationRegistry,
+    *,
+    profile_id: UUID,
+    operation: PinnedAuthorityOperation,
+    operation_id: str,
+    terminal_revision: int,
+) -> None:
+    rebuild_result = _resolve_result_projection(
+        driver,
+        registry,
+        definition_id="ledger.participation.rebuild",
+        operation_id=operation_id,
+        terminal_revision=terminal_revision,
+        projection_type=LedgerParticipationRebuildProjection,
+    )
+    assert isinstance(rebuild_result, LedgerParticipationRebuildProjection)
+    assert rebuild_result.profile_id == profile_id
+    assert rebuild_result.transaction_count == 1
+    assert rebuild_result.participation_count == 1
+    persisted_revisions = CalculationRevisionCatalogueRepository().load(operation=operation).revisions
+    assert rebuild_result.revision_count == len(persisted_revisions) > 0
+    assert rebuild_result.stale_removed_count == 0
+    transactions = tuple(TransactionCatalogueRepository(bucket_id=str(profile_id)).load())
+    assert len(transactions) == 1
+    index = TransactionParticipationIndexRepository(bucket_id=str(profile_id)).load(transactions[0].transaction_id)
+    assert len(index.participations) == 1
+    assert index.participations[0].revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
+
+
+def _assert_canonical_bulk_classification_update(
+    *,
+    profile_id: UUID,
+    operation: PinnedAuthorityOperation,
+    before: Transaction,
+    after: Transaction,
+    patch: ManualLedgerTransactionPatch,
+    actor: str,
+    event: BucketEvent,
+) -> None:
+    """Compare a persisted batch row and event to canonical manual-update meaning."""
+    bucket_id = str(profile_id)
+    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=operation)
+    command = command_from_patch(
+        bucket_id=bucket_id,
+        current=before,
+        patch=patch,
+        actor=actor,
+        source_command="aeat app ledger classify --file",
+    )
+    prepared = prepare_manual_transaction_update(
+        current=before,
+        command=command,
+        previous_transaction_id=before.transaction_id,
+        now=event.occurred_at,
+        ports=ports,
+    )
+    assert prepared is not None
+    expected_transaction, expected_events = prepared
+    assert after == expected_transaction
+    assert expected_events == (event,)
+
+
 def _assert_ledger_review_projection(payload: BaseModel, review: BaseModel, *, profile_id: UUID) -> None:
     assert isinstance(payload, LedgerReviewRequest)
     assert isinstance(review, LedgerReviewProjection)
@@ -3500,6 +3801,26 @@ def _assert_ledger_review_projection(payload: BaseModel, review: BaseModel, *, p
     assert row.transaction.description == row.description
     assert payload.transaction_prefix is not None
     assert row.transaction.transaction_id.startswith(payload.transaction_prefix)
+
+
+def _assert_calculation_report_verification_projection(
+    payload: BaseModel, projection: BaseModel, *, profile_id: UUID
+) -> None:
+    assert isinstance(payload, ModeloCalculationReportVerificationRequest)
+    assert isinstance(projection, ModeloCalculationReportVerificationProjection)
+    assert projection.profile_id == profile_id == payload.profile_id
+    assert projection.source_sha256 == payload.source_sha256
+    assert projection.source_sha256 == hashlib.sha256(Path(payload.source_path).read_bytes()).hexdigest()
+    assert payload.trusted_public_key_hex is None
+    verdict = projection.verification
+    assert verdict.outcome is CalculationSummaryVerificationOutcome.REFUSED
+    assert verdict.store_checked is False
+    assert verdict.signing_key_fingerprint is None
+    assert len(verdict.checks) == 1
+    check = verdict.checks[0]
+    assert check.check is CalculationSummaryCheckName.PDF
+    assert check.layer is CalculationSummaryVerificationLayer.DOCUMENT
+    assert check.reason is CalculationSummaryVerificationReason.PDF_UNREADABLE
 
 
 @pytest.mark.parametrize("definition_id", _registered_definition_ids())
@@ -3530,10 +3851,29 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
+        projection_history_case = (
+            prepare_modelo_projection_history_conformance_case(
+                case.definition_id, profile_id=profile_id, operation=operation
+            )
+            if case.definition_id in {"modelo.history", "modelo.history.timeline", "modelo.project", "modelo.compare"}
+            else None
+        )
         query_case = (
             prepare_modelo_query_conformance_case(case.definition_id, profile_id=profile_id, operation=operation)
             if case.definition_id
-            in {"modelo.bindings.list", "modelo.bindings.resolve", "modelo.requires", "modelo.readiness"}
+            in {
+                "modelo.bindings.list",
+                "modelo.bindings.resolve",
+                "modelo.bindings.resolve.typed",
+                "modelo.requires",
+                "modelo.readiness",
+                "modelo.readiness.summary",
+            }
+            else None
+        )
+        review_case = (
+            prepare_review_read_conformance_case(case.definition_id, profile_id=profile_id, operation=operation)
+            if case.definition_id in {"app.review.queue", "app.review.view"}
             else None
         )
         followup_case = (
@@ -3558,6 +3898,16 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             if case.definition_id in {"ledger.attach", "ledger.detach"}
             else None
         )
+        lifecycle_case = (
+            _ledger_lifecycle_case(case.definition_id, profile_id=profile_id, operation=operation)
+            if case.definition_id in {"ledger.archive", "ledger.stash", "ledger.restore", "ledger.exclude"}
+            else None
+        )
+        rule_case = (
+            prepare_ledger_rule_operation_conformance_case(case.definition_id, profile_id, operation=operation)
+            if case.definition_id in {"ledger.rule.add", "ledger.rule.list", "ledger.rule.apply"}
+            else None
+        )
         prorrata_case = (
             _prorrata_case(case.definition_id, profile_id=profile_id, operation=operation)
             if case.definition_id.startswith("ledger.prorrata.")
@@ -3571,12 +3921,24 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         )
         if query_case is not None:
             subject_ref, payload, secret = profile_operation_subject(str(profile_id)), query_case.request, None
+        elif projection_history_case is not None:
+            subject_ref, payload, secret = (
+                profile_operation_subject(str(profile_id)),
+                projection_history_case.request,
+                None,
+            )
+        elif review_case is not None:
+            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), review_case.request, None
         elif followup_case is not None:
             subject_ref, payload, secret = profile_operation_subject(str(profile_id)), followup_case.request, None
         elif recipient_case is not None:
             subject_ref, payload, secret = profile_operation_subject(str(profile_id)), recipient_case.request, None
         elif attachment_case is not None:
             subject_ref, payload, secret = profile_operation_subject(str(profile_id)), attachment_case.request, None
+        elif lifecycle_case is not None:
+            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), lifecycle_case.request, None
+        elif rule_case is not None:
+            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), rule_case.request, None
         elif evidence_case is not None:
             subject_ref, payload, secret = profile_operation_subject(str(profile_id)), evidence_case.request, None
         elif prorrata_case is None:
@@ -3585,6 +3947,14 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             )
         else:
             subject_ref, payload, secret = profile_operation_subject(str(profile_id)), prorrata_case.request, None
+        bulk_classify_before = (
+            (
+                TransactionCatalogueRepository(bucket_id=str(profile_id)).load(),
+                bucket_event_history_repository(bucket_id=str(profile_id)).load(),
+            )
+            if case.definition_id == LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID
+            else None
+        )
         prorrata_before = (
             read_prorrata_operation_conformance_register(
                 profile_id, repository_factory=build_prorrata_register_repository, operation=operation
@@ -3689,7 +4059,9 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         assert observed.projection.effect is case.expected_effect, case.definition_id
         assert observed.projection.refusal_ref == case.expected_refusal_ref, case.definition_id
         for expected_read in (
+            projection_history_case.expected_projection if projection_history_case is not None else None,
             query_case.expected_projection if query_case is not None else None,
+            review_case.expected_read if review_case is not None else None,
             followup_case.expected_read if followup_case is not None else None,
         ):
             if expected_read is not None:
@@ -3701,6 +4073,19 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
                     terminal_revision=observed.projection.revision,
                     projection_type=type(expected_read),
                 )
+                if query_case is not None:
+                    assert isinstance(
+                        actual_read,
+                        (
+                            ModeloBindingsListProjection,
+                            ModeloBindingsResolveProjection,
+                            ModeloBindingsResolveTypedProjection,
+                            ModeloRequiresProjection,
+                            ModeloReadinessProjection,
+                            ModeloReadinessSummaryProjection,
+                        ),
+                    )
+                    assert actual_read.authority_generation == operation.generation.logical_generation
                 actual_fields = actual_read.model_dump(mode="json")
                 expected_fields = expected_read.model_dump(mode="json")
                 assert actual_read == expected_read, {
@@ -3722,6 +4107,37 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             assert attachment_result.result is not None
             assert_ledger_attachment_operation_conformance_result(
                 attachment_case, attachment_result.result, operation_run_id=submitted.receipt.operation_id
+            )
+        if lifecycle_case is not None:
+            lifecycle_result = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=LedgerLifecycleOperationResult,
+            )
+            assert isinstance(lifecycle_result, LedgerLifecycleOperationResult)
+            assert lifecycle_result.outcome == "updated"
+            assert lifecycle_result.result is not None
+            assert_ledger_lifecycle_operation_conformance_result(
+                lifecycle_case, lifecycle_result.result, operation_run_id=submitted.receipt.operation_id
+            )
+        if rule_case is not None:
+            rule_result = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=(
+                    type(rule_case.expected_projection)
+                    if rule_case.expected_projection is not None
+                    else LedgerRuleAddProjection
+                ),
+            )
+            assert_ledger_rule_operation_conformance_result(
+                rule_case, rule_result, operation_run_id=submitted.receipt.operation_id
             )
         if recipient_case is not None:
             recipient_result = _resolve_result_projection(
@@ -4345,6 +4761,16 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             assert inventory.work_unit_id_filter is None
             assert {row.calculation_revision_id for row in inventory.revisions} == set(stored_revisions)
             assert len(inventory.revisions) == len(stored_revisions)
+        if case.definition_id == MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID:
+            verification = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=ModeloCalculationReportVerificationProjection,
+            )
+            _assert_calculation_report_verification_projection(payload, verification, profile_id=profile_id)
         if case.definition_id == "modelo.review_package.build":
             assert isinstance(payload, ModeloReviewPackageBuildRequest)
             result = _resolve_result_projection(
@@ -4477,6 +4903,73 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             )
             assert persisted_classification is not None
             assert persisted_classification.business_classification is BusinessClassification.BUSINESS
+        if case.definition_id == LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID:
+            assert isinstance(payload, LedgerBulkClassifyRequest)
+            bulk_projection = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=LedgerBulkClassifyProjection,
+            )
+            assert isinstance(bulk_projection, LedgerBulkClassifyProjection)
+            assert bulk_projection.profile_id == profile_id
+            assert bulk_projection.outcome == "classified"
+            assert bulk_projection.result is not None
+            result = bulk_projection.result
+            assert result.total == 2
+            assert result.applied == 1
+            assert result.skipped == 0
+            assert len(result.failures) == 1
+
+            csv_rows = tuple(csv.DictReader(payload.csv_text.splitlines()))
+            assert len(csv_rows) == 2
+            valid_row, invalid_row = csv_rows
+            valid_transaction_id = valid_row["transaction_id"]
+            invalid_transaction_id = invalid_row["transaction_id"]
+            assert valid_transaction_id is not None
+            assert invalid_transaction_id is not None
+            assert valid_row["iva_category"] == "domestic_general"
+            assert invalid_row["iva_category"] == "not-a-declared-category"
+            assert result.failures[0].row_index == 1
+            assert result.failures[0].transaction_id == invalid_transaction_id
+            assert "not declared by the facts registry" in result.failures[0].reason
+
+            assert bulk_classify_before is not None
+            transactions_before, history_before = bulk_classify_before
+            transactions_after = TransactionCatalogueRepository(bucket_id=str(profile_id)).load()
+            history_after = bucket_event_history_repository(bucket_id=str(profile_id)).load()
+            assert transactions_after.transactions.keys() == transactions_before.transactions.keys()
+            assert transactions_after.get(invalid_transaction_id) == transactions_before.get(invalid_transaction_id)
+            assert all(history_after.events.get(event_id) == event for event_id, event in history_before.events.items())
+            new_events = tuple(
+                event for event_id, event in history_after.events.items() if event_id not in history_before.events
+            )
+            assert len(new_events) == 1
+            event = new_events[0]
+            assert result.bucket_event_ids == (event.event_id,)
+
+            before_transaction = transactions_before.get(valid_transaction_id)
+            after_transaction = transactions_after.get(valid_transaction_id)
+            assert before_transaction is not None
+            assert after_transaction is not None
+            _assert_canonical_bulk_classification_update(
+                profile_id=profile_id,
+                operation=operation,
+                before=before_transaction,
+                after=after_transaction,
+                patch=ManualLedgerTransactionPatch(
+                    business_classification=BusinessClassification.BUSINESS,
+                    iva_category=IvaCategory("domestic_general"),
+                ),
+                actor=payload.actor or str(profile_id),
+                event=event,
+            )
+
+            expected_transactions = dict(transactions_before.transactions)
+            expected_transactions[valid_transaction_id] = after_transaction
+            assert transactions_after == TransactionCatalogue.from_transactions(expected_transactions.values())
         if case.definition_id == "ledger.evidence.add":
             assert isinstance(payload, LedgerEvidenceAddRequest)
             added_evidence = _resolve_result_projection(
@@ -5108,96 +5601,37 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             )
             assert journal_file.is_file()
             assert _LEDGER_LIST_PRIVATE_FILTER_SENTINEL.encode() not in journal_file.read_bytes()
-        if case.definition_id == "ledger.track":
-            assert isinstance(payload, LedgerTrackRequest)
-            track = _resolve_result_projection(
+        if definition_id == "ledger.track":
+            _assert_ledger_track_result(
                 driver,
                 registry,
-                definition_id=case.definition_id,
+                profile_id=profile_id,
+                operation=operation,
+                payload=payload,
                 operation_id=submitted.receipt.operation_id,
                 terminal_revision=observed.projection.revision,
-                projection_type=LedgerTrackProjection,
             )
-            assert isinstance(track, LedgerTrackProjection)
-            transaction_id = resolve_lineage_transaction_id(
-                payload.transaction_prefix,
-                TransactionCatalogueRepository(bucket_id=str(profile_id)).load(),
-            )
-            assert track.profile_id == profile_id
-            assert track.transaction_prefix == payload.transaction_prefix
-            assert track.transaction.transaction_id == transaction_id
-            assert track.tracking.transaction_id == transaction_id
-            assert track.participated_in is not None
-            index = TransactionParticipationIndexRepository(bucket_id=str(profile_id)).load(transaction_id)
-            assert len(index.participations) == 1
-            participation = index.participations[0]
-            assert track.participated_in == (LedgerParticipationEntryProjection.from_participation(participation),)
-            assert participation.filing_record_id is None
-            assert participation.justificante_reference is None
-            assert participation.revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
-            revision = (
-                CalculationRevisionCatalogueRepository()
-                .load(operation=operation)
-                .get(participation.calculation_revision_id)
-            )
-            assert revision is not None
-            assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-            assert transaction_id in revision.source_transaction_ids
-            assert revision.work_unit_id == participation.work_unit_id
-            unit = WorkUnitCatalogueRepository().load().get(participation.work_unit_id)
-            assert unit is not None
-            assert participation.modelo == str(unit.modelo)
-            assert participation.filing_year == unit.filing_year
-            assert participation.period == unit.period
-        if case.definition_id == "ledger.participation":
+        if definition_id == "ledger.participation":
             assert isinstance(payload, LedgerParticipationRequest)
-            participation_result = _resolve_result_projection(
+            _assert_ledger_participation_lookup_result(
                 driver,
                 registry,
-                definition_id=case.definition_id,
+                profile_id=profile_id,
+                payload=payload,
                 operation_id=submitted.receipt.operation_id,
                 terminal_revision=observed.projection.revision,
-                projection_type=LedgerParticipationLookupProjection,
             )
-            assert isinstance(participation_result, LedgerParticipationLookupProjection)
-            transaction_id = resolve_lineage_transaction_id(
-                payload.transaction_prefix,
-                TransactionCatalogueRepository(bucket_id=str(profile_id)).load(),
-            )
-            assert participation_result.profile_id == profile_id
-            assert participation_result.transaction_prefix == payload.transaction_prefix
-            assert participation_result.transaction_id == transaction_id
-            index = TransactionParticipationIndexRepository(bucket_id=str(profile_id)).load(transaction_id)
-            assert len(index.participations) == 1
-            assert participation_result.participations == (
-                LedgerParticipationEntryProjection.from_participation(index.participations[0]),
-            )
-            assert index.participations[0].revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
-        if case.definition_id == "ledger.participation.rebuild":
+        if definition_id == "ledger.participation.rebuild":
             assert isinstance(payload, LedgerParticipationRebuildRequest)
-            rebuild_result = _resolve_result_projection(
+            _assert_ledger_participation_rebuild_result(
                 driver,
                 registry,
-                definition_id=case.definition_id,
+                profile_id=profile_id,
+                operation=operation,
                 operation_id=submitted.receipt.operation_id,
                 terminal_revision=observed.projection.revision,
-                projection_type=LedgerParticipationRebuildProjection,
             )
-            assert isinstance(rebuild_result, LedgerParticipationRebuildProjection)
-            assert rebuild_result.profile_id == profile_id
-            assert rebuild_result.transaction_count == 1
-            assert rebuild_result.participation_count == 1
-            persisted_revisions = CalculationRevisionCatalogueRepository().load(operation=operation).revisions
-            assert rebuild_result.revision_count == len(persisted_revisions) > 0
-            assert rebuild_result.stale_removed_count == 0
-            transactions = tuple(TransactionCatalogueRepository(bucket_id=str(profile_id)).load())
-            assert len(transactions) == 1
-            index = TransactionParticipationIndexRepository(bucket_id=str(profile_id)).load(
-                transactions[0].transaction_id
-            )
-            assert len(index.participations) == 1
-            assert index.participations[0].revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
-        if case.definition_id == "ledger.review":
+        if definition_id == "ledger.review":
             review = _resolve_result_projection(
                 driver,
                 registry,
