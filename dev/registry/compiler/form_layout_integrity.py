@@ -23,12 +23,12 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterator
 
-from ....core.aggregation import BindingSourceKind
-from ....core.hashing import canonical_json_bytes, sha256_hex
-from .binding_value_contract import BindingValueChannel
-from .export import derive_export_layouts_from_bindings
-from .schema import ModeloRevision
-from .schema_form_layouts import (
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
+from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
     FormCellKind,
     FormFieldBlock,

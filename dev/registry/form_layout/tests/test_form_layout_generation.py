@@ -12,7 +12,6 @@ from functools import cache
 
 import pytest
 
-from cadrumo.domain.calculations.registry.form_layout_integrity import form_layout_failures
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
@@ -23,6 +22,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
+from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_registry_tree
 from ...record_design_labels import DATA_ROOT, read_record_design, record_design_sidecars
 from ..cli import REGISTRY_ROOT, synchronise_form_layouts

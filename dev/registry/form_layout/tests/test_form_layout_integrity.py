@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormFieldBlock,
@@ -28,6 +27,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormSectionDefinition,
 )
 
+from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory, load_registry_tree
 from ...compiler.validate_form_layouts import validate_form_layout_section
 from ...record_design_labels import DATA_ROOT

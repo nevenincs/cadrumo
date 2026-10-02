@@ -48,7 +48,6 @@ from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
-from cadrumo.domain.calculations.registry.form_layout_integrity import form_layout_source_digest
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import (
@@ -84,6 +83,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
+from ..compiler.form_layout_integrity import form_layout_source_digest
 from ..record_design_labels import (
     RecordDesignRow,
     RecordDesignUnavailableError,
