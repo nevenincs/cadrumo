@@ -10,19 +10,25 @@ those differences against it.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from datetime import date
+from decimal import Decimal
 from functools import cache
 
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import validated_casilla_id_map
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import (
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
 )
+from cadrumo.domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
 
@@ -117,6 +123,68 @@ def test_every_formula_cites_the_instructions_of_its_own_era() -> None:
     revision = _selected(_year())
     for formula in revision.formulas:
         assert {str(citation.source_ref) for citation in formula.source_citations} == {_INSTRUCTIONS}, formula.id
+
+
+def _calculate(year: int, values: Mapping[str, str]) -> dict[str, Decimal]:
+    """Run the real engine over the year's snapshot with every unnamed manual box at zero."""
+    snapshot = compiled_bundled_authority().snapshot(
+        "222", filing_year=year, period="1P", grade=RegistryAuthorityGrade.CALCULATION
+    )
+    manual: dict[object, Decimal] = {
+        str(casilla.id): Decimal(values.get(str(casilla.id), "0"))
+        for casilla in snapshot.revision.casillas
+        if casilla.input_kind is not InputKind.COMPUTED and casilla.data_type in NUMERIC_CASILLA_DATA_TYPES
+    }
+    assert set(values) <= set(manual)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=validated_casilla_id_map(manual, surface="modelo 222 manual boxes"),
+        date_context={"filing_period": date(year, 4, 20)},
+    )
+    return {str(entry.target_casilla_id): entry.value for entry in result.entries}
+
+
+# Hand-worked from the printed formulas: [16] and [19] are both
+# [13] + [44] + [45] - [46] - [14] - [15] + [47] - [48], and B.2 splits that base
+# as [23] = [19] - [20]. The following edition adds [59] - [60] into [10]:
+#   2019-2022: [13] = 100000;               base 100000 - 10000 = 90000; [23] = 60000
+#   2023-2024: [13] = 100000 + 5000 - 2000; base 103000 - 10000 = 93000; [23] = 63000
+# [22] = 30000 x 15 / 100 = 4500, [25] = [23] x 24 / 100, [26] = [22] + [25], and
+# [32] = [26] x 100 / 100 - 1000.
+@pytest.mark.parametrize(
+    ("following", "extra", "expected"),
+    [
+        (0, {}, {"16": "90000", "19": "90000", "23": "60000", "25": "14400", "26": "18900", "32": "17900"}),
+        (
+            1,
+            {"59": "5000", "60": "2000"},
+            {"16": "93000", "19": "93000", "23": "63000", "25": "15120", "26": "19620", "32": "18620"},
+        ),
+    ],
+    ids=["2019-2022 design", "2023-2024 design"],
+)
+def test_several_rates_group_splits_the_same_base_the_single_rate_lane_uses(
+    following: int, extra: Mapping[str, str], expected: Mapping[str, str]
+) -> None:
+    computed = _calculate(
+        _year() + following,
+        {"04": "100000", "14": "10000", "20": "30000", "21": "15", "24": "24", "29": "100", "30": "1000", **extra},
+    )
+
+    assert {box: computed[box] for box in expected} == {box: Decimal(value) for box, value in expected.items()}
+    assert computed["22"] == Decimal("4500")
+    assert computed["18"] == Decimal("0")  # no single percentage [17] is declared
+    assert computed["34"] == computed["32"]  # the minimum [33] is zero
+
+
+def test_single_rate_group_settles_through_the_b1_lane() -> None:
+    computed = _calculate(_year(), {"04": "100000", "14": "10000", "17": "24", "29": "100"})
+
+    assert computed["16"] == Decimal("90000")  # 100000 - 10000
+    assert computed["18"] == Decimal("21600")  # 90000 x 24 / 100
+    assert computed["26"] == Decimal("0")  # no B.2 percentage is declared
+    assert computed["32"] == Decimal("21600")
+    assert computed["34"] == Decimal("21600")
 
 
 def test_the_modalidad_rate_covers_the_year() -> None:

@@ -945,12 +945,14 @@ class ModeloRevision(RegistryRevisionDeclaration):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_identity_keyed_families(self) -> ModeloRevision:
-        """Refuse a revision declaring two members of one keyed family under one id.
+        """Refuse a revision declaring two members of one family under one id.
 
         The identity is what names the same member across editions, so a
         revision holding it twice leaves the inheritance merge with no answer
         about which member a successor supersedes or a retirement withdraws.
-        Refused here, at the revision boundary that owns both families, rather
+        A continuity evolution is authored only in its target revision, so two
+        evolutions sharing an id there name two chains under one statement.
+        Refused here, at the revision boundary that owns these families, rather
         than resolved downstream by picking one.
         """
         validate_family_identity_uniqueness(
@@ -960,6 +962,10 @@ class ModeloRevision(RegistryRevisionDeclaration):
         validate_family_identity_uniqueness(
             "verification_predicates",
             [predicate.id for predicate in self.verification_predicates],
+        )
+        validate_family_identity_uniqueness(
+            "casilla_continuidad_evolutions",
+            [evolution.id for evolution in self.casilla_continuidad_evolutions],
         )
         return self
 
