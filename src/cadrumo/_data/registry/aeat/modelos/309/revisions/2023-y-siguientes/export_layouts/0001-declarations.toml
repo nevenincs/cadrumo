@@ -128,6 +128,22 @@ signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2023"]
 
+# Design 'Nota 1' slot 'Version del Programa', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-309-page-00-version-programa"
+offset = 93
+length = 4
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "program_identifier" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
 # Design row 'Reservado para la Administracion. Rellenar con blancos'.
 [[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-309-page-00-reservado-97"
@@ -138,6 +154,22 @@ data_type = "text"
 required = false
 padding = "right_space"
 justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+# Design 'Nota 1' slot 'NIF Empresa Desarrollo', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-309-page-00-nif-empresa-desarrollo"
+offset = 101
+length = 9
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "developer_tax_id" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2023"]

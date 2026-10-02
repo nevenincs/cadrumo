@@ -6,11 +6,11 @@
 # none is derived, inferred or rounded. This revision's design differs from its
 # sibling's and is transcribed against its own.
 #
-# Two positions of the file envelope are deliberately left unwritten: AEAT's
-# 'Version del Programa' and 'NIF Empresa Desarrollo' are its Nota 1 slots, to
-# be filled by the entidad desarrolladora del software. No such identity is
-# declared anywhere in this project, so writing either one would be inventing
-# it. Modelo 131 leaves the same two slots unwritten.
+# The file envelope's 'Version del Programa' (@93+4) and 'NIF Empresa Desarrollo'
+# (@101+9) are the design's Nota 1 slots for the entidad desarrolladora. Cadrumo
+# holds no AEAT developer registration, so both take the all-zero development
+# mock identity from the governed fact aeat-eedd:development-mock-software-identity,
+# and an export carrying it is graded as not presentable at AEAT.
 
 [[revisions."2019-2023".export_layouts]]
 id = "modelo-123-fichero-boe"
@@ -127,6 +127,21 @@ justification = "left"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13"]
+# Design 'Nota 1' slot 'Version del Programa', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-2023-envelope-header-version-programa"
+offset = 93
+length = 4
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "program_identifier" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
 [[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-123-2019-2023-envelope-reserved-2"
 offset = 97
@@ -136,6 +151,21 @@ data_type = "text"
 required = false
 padding = "right_space"
 justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+# Design 'Nota 1' slot 'NIF Empresa Desarrollo', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-2023-envelope-header-nif-empresa-desarrollo"
+offset = 101
+length = 9
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "developer_tax_id" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13"]

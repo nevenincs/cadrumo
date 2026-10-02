@@ -7,7 +7,7 @@ revision_id = "2019-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "c131489145342b8307806005e071fe35a4755484a32f7db1280b8280b7313387"
+source_state_digest = "2aff3bef253da13524482561abbb973ec459f62ed8411eac633ed246ac6ffee0"
 placements = [
     { casilla_id = "01", kind = "on_form", box_number = "01" },
     { casilla_id = "02", kind = "on_form", box_number = "02" },

@@ -3802,6 +3802,22 @@ signed = false
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
+# Design 'Nota 1' slot 'Version del Programa', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = "modelo-322-envelope-header-version-programa"
+offset = 93
+length = 4
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "program_identifier" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
 [[revisions.2026-y-siguientes.export_layouts.records.fields]]
 id = "modelo-322-envelope-header-97"
 offset = 97
@@ -3811,6 +3827,22 @@ data_type = "text"
 required = false
 padding = "right_space"
 justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Design 'Nota 1' slot 'NIF Empresa Desarrollo', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = "modelo-322-envelope-header-nif-empresa-desarrollo"
+offset = 101
+length = 9
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "developer_tax_id" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]

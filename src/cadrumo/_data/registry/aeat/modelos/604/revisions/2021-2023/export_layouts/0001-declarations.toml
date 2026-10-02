@@ -16,11 +16,11 @@
 # contiguous, so it is a labelling defect in the published spreadsheet rather than
 # a layout ambiguity; this layout is keyed on offset, never on ordinal.
 #
-# @93+4 (Version del Programa) and @101+9 (NIF Empresa Desarrollo) are LEFT
-# UNWRITTEN, as on the 2024 sibling: AEAT marks both for the entidad
-# desarrolladora -- the software house, neither the presenter nor the taxpayer.
-# Modelo 390 writes presenter.tax_id at @101+9; that is a known defect and is not
-# copied here.
+# The file envelope's 'Version del Programa' (@93+4) and 'NIF Empresa Desarrollo'
+# (@101+9) are the design's Nota 1 slots for the entidad desarrolladora. Cadrumo
+# holds no AEAT developer registration, so both take the all-zero development
+# mock identity from the governed fact aeat-eedd:development-mock-software-identity,
+# and an export carrying it is graded as not presentable at AEAT.
 
 [[revisions."2021-2023".export_layouts]]
 id = "modelo-604-fichero-boe"
@@ -174,6 +174,22 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
+# Design 'Nota 1' slot 'Version del Programa', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2021-2023".export_layouts.records.fields]]
+id = "modelo-604-2021-604-00-version-programa"
+offset = 93
+length = 4
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "program_identifier" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2021"]
+
 [[revisions."2021-2023".export_layouts.records.fields]]
 id = "modelo-604-2021-604-00-reservado-97"
 offset = 97
@@ -181,6 +197,22 @@ length = 4
 kind = "filler"
 data_type = "text"
 required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2021"]
+
+# Design 'Nota 1' slot 'NIF Empresa Desarrollo', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2021-2023".export_layouts.records.fields]]
+id = "modelo-604-2021-604-00-nif-empresa-desarrollo"
+offset = 101
+length = 9
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "developer_tax_id" }
+data_type = "text"
+required = true
 padding = "none"
 justification = "none"
 signed = false

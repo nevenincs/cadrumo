@@ -36,9 +36,8 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.filing.software_identity import (
-    DEVELOPMENT_MOCK_DEVELOPER_TAX_ID,
-    DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER,
     AeatSoftwareIdentityGrade,
+    development_mock_software_identity,
 )
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
@@ -289,10 +288,11 @@ def _sections(report: ModeloCalculationReport, *, chrome: _Chrome) -> tuple[Calc
 
 def _software_identity_notice(grade: AeatSoftwareIdentityGrade | None, *, chrome: _Chrome) -> str:
     if grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
+        mock = development_mock_software_identity()
         return chrome.text(
             IDENTITY_DEVELOPMENT_MOCK_LOCALE_KEY,
-            program=DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER,
-            developer_tax_id=DEVELOPMENT_MOCK_DEVELOPER_TAX_ID,
+            program=mock.program_identifier,
+            developer_tax_id=mock.developer_tax_id,
         )
     if grade is AeatSoftwareIdentityGrade.REVIEWED:
         return chrome.raw(IDENTITY_REVIEWED_LOCALE_KEY)

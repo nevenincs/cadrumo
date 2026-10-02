@@ -4,12 +4,12 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:ar
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 # Pag. 0 of the Diseno de Registros: the file envelope. Positions 1-328 carry
 # the modelo/ejercicio/periodo identifier followed by the <AUX>...</AUX>
-# administration block. Positions 93-96 (Version del Programa) and 101-109 (NIF
-# Empresa Desarrollo) are the design's "Nota 1" slots: "A cumplimentar por las
-# entidades desarrolladoras (EEDD)". No developer identity is declared in
-# registry data -- AeatProductSoftwareIdentity is supplied at runtime with
-# reviewed evidence and is reachable from a layout only through the M303-scoped
-# filing-envelope declaration -- so they are left unwritten rather than guessed.
+# administration block.
+# The file envelope's 'Version del Programa' (@93+4) and 'NIF Empresa Desarrollo'
+# (@101+9) are the design's Nota 1 slots for the entidad desarrolladora. Cadrumo
+# holds no AEAT developer registration, so both take the all-zero development
+# mock identity from the governed fact aeat-eedd:development-mock-software-identity,
+# and an export carrying it is graded as not presentable at AEAT.
 [[revisions."2019-2023".export_layouts.records]]
 id = "modelo-131-2019-2023-envelope-header"
 record_type = "envelope_header"
@@ -119,6 +119,21 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
+# Design 'Nota 1' slot 'Version del Programa', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-envelope-header-version-programa"
+offset = 93
+length = 4
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "program_identifier" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".export_layouts.records.fields]]
 id = "modelo-131-2019-2023-envelope-reserved-2"
 offset = 97
@@ -128,6 +143,21 @@ data_type = "text"
 required = false
 padding = "right_space"
 justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+# Design 'Nota 1' slot 'NIF Empresa Desarrollo', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-envelope-header-nif-empresa-desarrollo"
+offset = 101
+length = 9
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "developer_tax_id" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]

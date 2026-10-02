@@ -29,7 +29,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.filing.software_identity import DEVELOPMENT_MOCK_DEVELOPER_TAX_ID
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -649,12 +648,16 @@ def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomple
     assert not out.exists()
 
 
-def test_export_without_an_envelope_prefix_reports_no_software_identity(
+def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A layout without an envelope prefix carries no developer header, so no identity grade is reported."""
+    """Modelo 111 authors its envelope as a fixed record whose EEDD slots take the development mock identity.
+
+    The file carries the all-zero identity, so the operator must be told it is
+    not presentable at AEAT exactly as for an envelope-prefix layout.
+    """
     _set_emilio_legal_entity_export_profile()
     _seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
@@ -687,9 +690,11 @@ def test_export_without_an_envelope_prefix_reports_no_software_identity(
 
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
-    assert envelope["result"]["software_identity_grade"] is None
-    assert "modelo.export.development_software_identity" not in {notice["code"] for notice in envelope["notices"]}
-    assert DEVELOPMENT_MOCK_DEVELOPER_TAX_ID.encode("ascii") not in out.read_bytes()
+    assert envelope["result"]["software_identity_grade"] == "development_mock"
+    assert "modelo.export.development_software_identity" in {notice["code"] for notice in envelope["notices"]}
+    written = out.read_bytes()
+    assert written[92:96] == b"0000"
+    assert written[100:109] == b"X0000000T"
 
 
 def _export_through_the_operation(

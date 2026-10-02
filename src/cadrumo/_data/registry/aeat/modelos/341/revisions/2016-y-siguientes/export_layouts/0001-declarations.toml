@@ -18,17 +18,10 @@
 # Nota 1 fixes the only admitted tipo de declaracion for batch presentation:
 # "D (Devolucion)".
 #
-# COVERAGE: 30 of the 33 positions the official design requires. The three
-# unwritten positions are named gaps, each marked KNOWN GAP below, and each is a
-# slot for which this project holds no honest value:
-#   @93+4   Version del Programa      (Nota 1, entidad desarrolladora)
-#   @101+9  NIF Empresa Desarrollo    (Nota 1, entidad desarrolladora)
-#   @277+11 SWIFT                     (no BIC producer key exists)
-# None is filled with a filler. A filler at these coordinates would emit the
-# identical bytes -- the renderer space-fills every record before writing fields
-# -- while making the coverage gate count the position as written. The gate
-# cannot see through that, so the honest figure is 30/33 with three gaps rather
-# than 33/33 with three blanks.
+# COVERAGE: every position the official design requires is written. The two
+# entidad-desarrolladora slots, @93+4 Version del Programa and @101+9 NIF Empresa
+# Desarrollo (Nota 1), take the all-zero development mock identity from the
+# governed fact aeat-eedd:development-mock-software-identity.
 
 [[revisions."2016-y-siguientes".export_layouts]]
 id = "modelo-341-fichero-boe"
@@ -154,19 +147,21 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-# KNOWN GAP 1 of 3, deliberate and reported. Positions 93-96, "Version del
-# Programa", are one of this design's two "Nota 1" slots; Nota 1 assigns both to
-# the entidad desarrolladora del software ("Debe consignarse el identificador de
-# la version del SW desarrollado por la ED"). No entidad-desarrolladora identity
-# is declared anywhere in this project, so the slot is left UNWRITTEN rather than
-# guessed -- the treatment Modelo 131 committed for the same two slots of the
-# same AEAT envelope grammar.
-#
-# Unwritten rather than filler, deliberately. The record renderer pre-fills every
-# record with spaces and writes fields at their offsets, so an omitted span and a
-# right_space filler emit byte-identical output. The only thing a filler would
-# change is that the coverage gate would count the position as WRITTEN. That is
-# coverage no datum earned, so the position is omitted and reported as a gap.
+# Design 'Nota 1' slot 'Version del Programa', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-header-version-programa"
+offset = 93
+length = 4
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "program_identifier" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
 
 [[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-reserved-2"
@@ -181,12 +176,21 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-# KNOWN GAP 2 of 3, deliberate and reported. Positions 101-109, "NIF Empresa
-# Desarrollo", are the second "Nota 1" slot: the NIF of the entidad
-# desarrolladora del SW. The presenter is NOT the software developer, so writing
-# presenter.tax_id here would put a wrong identity into a slot AEAT defines for
-# someone else -- inventing an identity by misattribution rather than by making
-# one up, but inventing it either way. Left UNWRITTEN, as Modelo 131 does.
+# Design 'Nota 1' slot 'NIF Empresa Desarrollo', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2016-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-header-nif-empresa-desarrollo"
+offset = 101
+length = 9
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "developer_tax_id" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
 
 [[revisions."2016-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-reserved-3"

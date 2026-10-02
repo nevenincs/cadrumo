@@ -26,6 +26,7 @@ from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.identity.digest import ContentDigest
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from .errors import RegistryValidationError
+from .export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
 from .export_semantics import (
     ExportComputedKey,
     ExportDraftAttribute,
@@ -40,6 +41,7 @@ from .fixed_width_codec import (
     ExportSignPositionValue,
     validate_fixed_width_shape,
 )
+from .governed_fact_scope import governed_facts_in_scope
 from .ids import BindingId, ExportFieldId, ExportLayoutId, ProjectionEndpointId, RecordId, SourceRefId
 from .schema_base import CasillaDataType, LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
 
@@ -498,6 +500,13 @@ class ExportFieldDefinition(RegistryModel):
     casilla_id: CasillaId | None = None
     binding: BindingId | None = None
     literal: str | None = None
+    literal_fact: ExportLiteralFact | None = None
+    """The governed mapping-fact entry a ``literal`` field's value is resolved from.
+
+    Authored in place of ``literal``; the registry build materialises the value
+    into ``literal`` and keeps this reference as its provenance. See
+    :mod:`.export_literal_fact`.
+    """
     producer_key: FilingProducerKey | None = None
     projection_ref: FilingProjectionRef | None = None
     draft_attribute: ExportDraftAttribute | None = None
@@ -541,6 +550,32 @@ class ExportFieldDefinition(RegistryModel):
             return None
         return filing_projection_ref_casilla_id(self.projection_ref)
 
+    @model_validator(mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _materialise_literal_fact(cls, data: object) -> object:
+        """Resolve an authored ``literal_fact`` into the literal it names.
+
+        Inside a registry validation the governed facts are in scope, so the
+        value is read from them and an inline ``literal`` disagreeing with it is
+        refused. Outside one -- re-reading a compiled authority -- the literal
+        was materialised when that authority was built and is taken as stored.
+        """
+        if not isinstance(data, Mapping) or data.get("literal_fact") is None:
+            return data
+        authority = governed_facts_in_scope()
+        if authority is None:
+            return data
+        reference = ExportLiteralFact.model_validate(data["literal_fact"])
+        resolved = resolve_export_literal_fact(reference, authority=authority)
+        declared = data.get("literal")
+        if declared is not None and declared != resolved:
+            raise RegistryValidationError(
+                f"export field {data.get('id')!r} declares literal {declared!r} but its literal_fact "
+                f"{reference.fact_id!r}.{reference.key!r} resolves to {resolved!r}",
+            )
+        return {**data, "literal": resolved}
+
     @field_validator("allowed_values")
     @classmethod
     @pydantic_validation_boundary
@@ -571,6 +606,10 @@ class ExportFieldDefinition(RegistryModel):
     @pydantic_validation_boundary
     def _validate_field_kind(self) -> ExportFieldDefinition:
         _validate_field_semantic_payload(self)
+        if self.literal_fact is not None and self.kind != CasillaFieldKind.LITERAL:
+            raise RegistryValidationError(
+                f"export field {self.id!r} declares literal_fact on kind {self.kind.value!r}; only a literal can",
+            )
         _validate_field_render_shape(self)
         _validate_required_for(self)
         _validate_design_type(self)

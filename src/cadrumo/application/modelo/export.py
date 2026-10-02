@@ -85,7 +85,11 @@ from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing.errors import FilingExportError
 from ...domain.filing.protocols import ModeloInputs
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
-from ...domain.filing.software_identity import AeatProductSoftwareIdentity, AeatSoftwareIdentityGrade
+from ...domain.filing.software_identity import (
+    DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID,
+    AeatProductSoftwareIdentity,
+    AeatSoftwareIdentityGrade,
+)
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import (
     SEALED_REVISION_STATES,
@@ -450,7 +454,9 @@ def envelope_stamped_software_identity(
     """Return the identity the selected layout's header reserves, or ``None``.
 
     AEAT reserves the program identifier and developer NIF slots in an envelope
-    prefix or auxiliary envelope header. A layout that renders neither carries no
+    prefix or auxiliary envelope header. A fixed-record layout that authors its
+    envelope as an ordinary record stamps them through literals bound to the
+    development mock identity fact instead. A layout doing neither carries no
     software identity at all, and claiming one for it would state a header fact
     the file does not hold. Both the fichero-BOE writer and the calculation
     report answer the question here so a report cannot name a grade the filing
@@ -458,9 +464,31 @@ def envelope_stamped_software_identity(
     """
     if export_layout is None:
         return None
-    if export_layout.filing_envelope is None and export_layout.auxiliary_envelope_header is None:
-        return None
-    return product_software_identity
+    if export_layout.filing_envelope is not None or export_layout.auxiliary_envelope_header is not None:
+        return product_software_identity
+    if _stamps_development_mock_identity(export_layout):
+        return product_software_identity
+    return None
+
+
+def _renders_envelope_prefix(export_layout: ExportLayoutDefinition | None) -> bool:
+    """Whether the renderer composes an envelope prefix that takes the identity as input.
+
+    A layout stamping the identity through fact-bound literals already carries
+    the bytes, so the renderer is not handed an identity it has no slot for.
+    """
+    return export_layout is not None and (
+        export_layout.filing_envelope is not None or export_layout.auxiliary_envelope_header is not None
+    )
+
+
+def _stamps_development_mock_identity(export_layout: ExportLayoutDefinition) -> bool:
+    """Whether any record field takes its literal from the development mock identity fact."""
+    return any(
+        field.literal_fact is not None and field.literal_fact.fact_id == DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID
+        for record in export_layout.records
+        for field in record.fields
+    )
 
 
 def _sha256_ref(value: str) -> str:
@@ -1069,7 +1097,7 @@ def _persist_exported_draft(
             producer_snapshot=producer_snapshot,
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election.election,
-            product_software_identity=software_identity,
+            product_software_identity=software_identity if _renders_envelope_prefix(export_layout) else None,
             schema_provider=schema_provider,
         )
         event = _emit_export_event(

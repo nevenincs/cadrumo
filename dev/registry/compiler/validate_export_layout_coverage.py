@@ -337,10 +337,10 @@ def _eedd_delegated_reason(field: RecordDesignField, sheet: RecordDesignSheet) -
     Two independent signals must agree: the field's own naming cell cites a
     note, and THAT note's body -- as printed on the same sheet -- delegates the
     position to the entidad desarrolladora. A position identifying the software
-    house that produced the file has no value this application could write:
-    Cadrumo holds no EEDD registration, so writing one would invent a
-    regulatory identity and writing blank would assert an empty EEDD rather
-    than an absent one.
+    house that produced the file is never the taxpayer's datum, so the design
+    cannot require it of the filing: Cadrumo holds no EEDD registration and
+    writes the all-zero development mock identity its governed fact declares,
+    which no reader can take for a registration.
     """
     citation = _NOTE_CITATION.search(field.description or "")
     if citation is None:

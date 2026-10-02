@@ -64,8 +64,6 @@ from cadrumo.domain.deadlines.models import (
     TaxpayerProfile,
 )
 from cadrumo.domain.filing.software_identity import (
-    DEVELOPMENT_MOCK_DEVELOPER_TAX_ID,
-    DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER,
     AeatProductSoftwareEvidence,
     AeatProductSoftwareIdentity,
     AeatSoftwareIdentityGrade,
@@ -221,8 +219,9 @@ def test_export_modelo_303_stamps_the_development_identity_into_the_developer_he
 
         written = output_path.read_bytes()
         prefix_start = written.index(b"<T3030")
-        assert written[prefix_start + 92 : prefix_start + 96] == DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER.encode("ascii")
-        assert written[prefix_start + 100 : prefix_start + 109] == DEVELOPMENT_MOCK_DEVELOPER_TAX_ID.encode("ascii")
+        # The all-zero values the development mock identity fact declares.
+        assert written[prefix_start + 92 : prefix_start + 96] == b"0000"
+        assert written[prefix_start + 100 : prefix_start + 109] == b"X0000000T"
         assert taxpayer_nif.encode("ascii") not in written[prefix_start + 100 : prefix_start + 109]
         assert result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK
         assert event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
