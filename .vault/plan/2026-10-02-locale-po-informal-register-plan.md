@@ -9,7 +9,7 @@ related:
   - '[[2026-07-12-multilang-externalization-adr]]'
 modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:c6d400e5d8fe8c0dfdeb39a7923d4401d44693c270e21e1f84ef5690208cec1f'
+body_hash: 'sha256:7349fe8cbe4b9d1ffef98391e063ae7e3170fd3d92e3d8c3deb7e7eb03d5d319'
 ---
 
 # Documentation PO informal register and runtime commit
@@ -21,10 +21,10 @@ Approved 2026-10-02. The operator requested committing the completed runtime loc
 ## Steps
 
 - [x] `S01` - Review fresh runtime drift and commit only the completed owned corrections; `owned runtime catalogue coordinates, tests, locale rule and prior vault records`.
-- [ ] `S02` - Discover and normalize Catalan documentation address; `docs/locales/ca/LC_MESSAGES/**/*.po`.
+- [x] `S02` - Discover and normalize Catalan documentation address; `docs/locales/ca/LC_MESSAGES/**/*.po`.
 - [ ] `S03` - Discover and normalize Spanish documentation address; `docs/locales/es/LC_MESSAGES/**/*.po`.
 - [ ] `S04` - Discover and normalize Hungarian documentation address; `docs/locales/hu/LC_MESSAGES/**/*.po`.
-- [ ] `S05` - Review residual signals, verify documentation integrity and commit the PO corrections; `scratch PO detector, owning docs verification, PO catalogues and plan/audit/ledger`.
+- [ ] `S05` - Review residual signals, repair the scoped pre-existing source delta, verify documentation integrity and commit the PO corrections; `scratch PO detector, owning docs verification, how-to/review-calculation-values PO synchronization, PO catalogues and plan/audit/ledger`.
 
 ## Parallelization
 

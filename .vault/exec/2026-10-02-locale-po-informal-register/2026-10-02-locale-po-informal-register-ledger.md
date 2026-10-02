@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2356a52ea185b18807605402fb5db745a41d591e8dc0d1ea00e9750bfa055b3'
+body_hash: 'sha256:fefa0a03feee290aba83487cfa0f8ccd7125d3d308d54abc7604849dc6fffa70'
 related:
   - "[[2026-10-02-locale-po-informal-register-plan]]"
 ---
@@ -49,7 +49,14 @@ related:
 - `S01` `verify:` `uv run --no-sync python -m scratch_locale_tone.convergence gate` -> `pass`
 - `S01` `verify:` `uv run --no-sync pytest -n 0 -p no:randomly -m "unit or integration" <188-test runtime localization selection>` -> `pass`
 - `S01` `by:` `root`
+- `S02` `M` `docs/locales/ca/LC_MESSAGES/how-to/review-calculation-values.po`
+- `S02` `verify:` `uv run --no-sync python -m scratch_locale_tone.po_review seal parent_ca_adjudications.json` -> `pass`
+- `S02` `verify:` `uv run --no-sync pytest -q -n 0 -p no:randomly -m unit dev/docs/tests/test_docs_build_localized_ca.py dev/docs/tests/test_docs_build_localized_es.py` -> `pass`
+- `S02` `by:` `root; Luna Max discovery; independent contextual adjudication`
+- `S02` `verify:` `uv run --no-sync python -m scratch_locale_tone.po_review seal parent_ca_adj_01.json --adjudications` -> `pass`
+- `S02` `verify:` `uv run --no-sync pytest -q -n 0 -m integration dev/docs/tests/test_docs_catalogue_drift.py` -> `pass`
 
 ## Notes
 
 - `S01` Four corrected Hungarian strings use keys absent from HEAD and remain with concurrent uncommitted TUI caller work; they are excluded from the isolated runtime commit. The original 18-pilot/1371-fleet immutable baselines and accepted official-corpus update receipts remain intact.
+- `S02` Correction to the earlier S02 verification label: `parent_ca_adjudications.json` was a misrecorded filename. The actual independently reviewed exact-span packet is `parent_ca_adj_01.json,` and its owning seal command with --adjudications passes.
