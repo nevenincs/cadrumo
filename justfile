@@ -36,6 +36,15 @@ export CADRUMO_LOCAL_STORAGE_ROOT := env_var_or_default(
     justfile_directory() / "var" / "storage",
 )
 
+# Direct product commands use the same published generation as the developer
+# tooling. Blank overrides are unset, as they are in the product settings.
+authority_root := trim(env_var_or_default("CADRUMO_AUTHORITY_ROOT", ""))
+export CADRUMO_AUTHORITY_ROOT := if authority_root == "" {
+    justfile_directory() / ".authority"
+} else {
+    authority_root
+}
+
 # List available recipes.
 [group('meta')]
 default:
@@ -53,13 +62,13 @@ default:
 [doc('Fully initialize a new worktree: Python, browsers, Vaultspec, RAG, and runtime authority.')]
 [group('setup')]
 init:
-    uv run --isolated --no-project --python 3.13 -- python -m dev.init all
+    just setup
     just setup-browser
     uv run --no-sync vaultspec-rag install --upgrade --yes
     uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
     -uv run --no-sync aeat config check
 
-# Canonical checkout setup. This is the minimal convergence facade: it creates
+# Minimal checkout setup, shared by init and CI. It creates
 # the pinned Python environment, installs repository tooling, and materializes
 # local environment configuration. Workstation tools and browser binaries are
 # optional to the minimal setup; full init provisions browsers as well.
@@ -68,11 +77,6 @@ init:
 [group('setup')]
 setup:
     uv run --isolated --no-project --python 3.13 -- python -m dev.init all
-
-[doc('Synchronize the pinned Python environment from uv.lock.')]
-[group('setup')]
-setup-python:
-    uv run --isolated --no-project --python 3.13 -- python -m dev.init python
 
 [doc('Install repository tooling, including pinned actionlint, after the Python environment is available.')]
 [group('setup')]
@@ -104,25 +108,10 @@ setup-workstation-tools:
 setup-env:
     uv run --no-sync python -m dev.env setup
 
-[doc('Diagnose the developer toolchain by PATH inspection; does not install or write anything.')]
-[group('doctor')]
-doctor-dev:
-    uv run --no-sync python -m dev.env doctor
-
 [doc('Verify the product capability configuration without changing it.')]
 [group('doctor')]
 doctor-product:
     uv run --no-sync aeat config check
-
-[doc('Verify Python package consistency without modifying the environment.')]
-[windows]
-doctor-python:
-    uv pip check --python .venv/Scripts/python.exe
-
-[doc('Verify Python package consistency without modifying the environment.')]
-[unix]
-doctor-python:
-    uv pip check --python .venv/bin/python
 
 # Provision Playwright's bundled Chromium (the post-install step `uv sync` does
 # not perform): it is the default AEAT channel and the browser tests launch it
