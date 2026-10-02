@@ -95,7 +95,7 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2023".family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "modelo-222-base-pago-fraccionado-b1"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["La clave [ 16 ] ser", "= clave [13] + clave [44] + clave [45]", "sin poder ser negativa"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["La clave [ 16 ] ser", "= clave [13] + clave [44] + clave [45] – clave [46] – clave [14] – clave [15] + clave [47] – clave [48], sin poder ser negativa"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2023".family_overrides]]
