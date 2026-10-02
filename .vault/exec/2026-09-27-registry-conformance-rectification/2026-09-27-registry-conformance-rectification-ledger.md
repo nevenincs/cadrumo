@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5c4ce93637386b96234a2a2f02eceb6988df83e8b19c003e3f20d4ed88ae95ae'
+body_hash: 'sha256:87f43b37897dc96cff6852df7ba601300149588d15f3323f03271b3bc2702ee9'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1755,6 +1755,40 @@ related:
 - `S50` `verify:` `uv run --no-sync ruff format --check dev/corpus/fetch_boe_normative.py dev/tests/test_fetch_boe_normative.py` -> `pass`
 - `S50` `verify:` `just check-types` -> `pass`
 - `S50` `verify:` `canonical prospective BOE HTTP capture with explicit destination_root` -> `pass`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0016-dp200013.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0025-dp200018b.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0016-dp200013.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0026-dp200018b.toml`
+- `S50` `M` `dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-11-2020-da-76.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-11-2020-da-76.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-11-2020-da-76.html.extracted.md`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-36-full.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-36-full.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-36-full.html.extracted.md`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/casilla_continuidad_evolutions/0002-p05-s50-0309-0316.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casilla_continuidad_evolutions/0002-p05-s50-0309-0316.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0026-record-m200-page-013.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0027-record-m200-page-013.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0050-record-m200-page-018b.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/casilla_continuidad_evolutions/0002-p05-s50-0309-0316.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0026-record-m200-page-013.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0051-record-m200-page-018b.toml`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/locales/tests/test_modelo_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/corpus/tests/test_extract_boe_article.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/registry/tests/test_legal_article_anchor_grounding.py dev/registry/tests/test_legal_required_text_reaches_the_provision.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `fail`
+- `S50` `verify:` `just check-registry` -> `pass`
+- `S50` `verify:` `just check-bindings` -> `pass`
+- `S50` `verify:` `just check-registry-gate` -> `pass`
+- `S50` `verify:` `just check-style` -> `pass`
+- `S50` `verify:` `just check-format` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\prove_delta.py live noop` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `git diff --check` -> `pass`
+- `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py` -> `pass`
+- `S50` `verify:` `binding warning identity/severity baseline comparison` -> `pass`
 
 ## Notes
 
@@ -1860,3 +1894,4 @@ related:
 - `S50` S50 remains open for the remaining semantic mapping and declaration inventory. Isolated construct legal-closure and locale preflight refusals were corrected before live installation; no intermediate pytest ran. Installed-package adoption remains unverified.
 - `S50` S50 remains open for the remaining semantic inventory. Isolated retained-order refusal was corrected; no pytest ran on intermediate registry inputs. Installed-package adoption remains unverified.
 - `S50` S50 continues. Prospective corpus artifacts remain isolated; registry inputs and published authority are unchanged. The temporary caller plural-wording assertion was corrected against actual operative text.
+- `S50` S50 remains open for the wider mapping/declaration inventory. One stale literal-caption assertion was corrected through grounded official evolution paths and isolated negative tests; only the affected module was repeated. Authority was published before pytest. Installed-package adoption remains unverified.

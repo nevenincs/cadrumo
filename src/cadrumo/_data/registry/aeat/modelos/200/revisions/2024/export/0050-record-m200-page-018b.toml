@@ -80,7 +80,7 @@ id = 'm200-2024.dp200018b.f0067'
 offset = 1050
 length = 17
 kind = 'casilla'
-casilla_id = '00315'
+casilla_id = 'DP200018B:00315'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'
@@ -89,11 +89,8 @@ decimals = 2
 signed = false
 design_type = 'Num'
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-36-2',
+    'orden-hac-657-2025:modelo-200',
 ]
 source_refs = ['aeat-dr-200-2024']
 
@@ -102,7 +99,7 @@ id = 'm200-2024.dp200018b.f0068'
 offset = 1067
 length = 17
 kind = 'casilla'
-casilla_id = '00316'
+casilla_id = 'DP200018B:00316'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'
@@ -111,11 +108,8 @@ decimals = 2
 signed = false
 design_type = 'Num'
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-36-2',
+    'orden-hac-657-2025:modelo-200',
 ]
 source_refs = ['aeat-dr-200-2024']
 

@@ -6570,6 +6570,36 @@ modelo:
             label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
               de l’assegurança de vida - Inversions afectes a assegurances en què
               el prenedor assumeix el risc d’inversió [00308]
+          is-aseguradoras-vida-cuenta-tecnica-otros-ingresos-tecnicos:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Altres ingressos tècnics [00309]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-gastos-pagados:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Prestacions i despeses pagades [00311]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-aceptado:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Prestacions i despeses pagades - Reassegurança
+              acceptada [00313]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-cedido:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Prestacions i despeses pagades - Reassegurança
+              cedida (-) [00314]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-seguro-directo:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Prestacions i despeses pagades - Assegurança
+              directa [00312]
+          is-aseguradoras-vida-cuenta-tecnica-siniestralidad-neta-reaseguro:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Sinistralitat de l’exercici, neta de reassegurança
+              [00310]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-directo:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Variació de la provisió per prestacions (+
+              o -) - Assegurança directa [00316]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-prestaciones:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Variació de la provisió per prestacions (+
+              o -) [00315]
           is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
             label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
               de l’assegurança de vida - Aplicació de correccions de valor per deteriorament
@@ -8516,6 +8546,14 @@ modelo:
           is-deduccion-cap-iv-tit-vi-suma-periodo:
             label: Deduccions per incentivar determ. activitats - 2008 Suma deduccions
               - Aplicat en aquesta liquidació [00181]
+          is-deduccion-centenario-rugby-aplicado-periodo:
+            label: Deduccions per incentivar determ. activitats - 2022 Centenari del
+              Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Aplicat en
+              aquesta liquidació [00316]
+          is-deduccion-centenario-rugby-pendiente-generada:
+            label: Deduccions per incentivar determ. activitats - 2022 Centenari del
+              Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Deducció pendent/generada
+              [00315]
           is-deduccion-cinematografica-extranjera-aplicado-periodo:
             label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
               (art. 36.2 LIS i DA 14a Llei 19/1994) - 2025(*) - Import abonat per
@@ -8756,6 +8794,12 @@ modelo:
               cinematogràfiques espanyoles (PC)'
             label: 'Productor: produccions cinematogràfiques espanyoles (PC). Pendent
               d''aplicació en períodes futurs'
+          is-deduccion-produccion-extranjera-cinematografica-aplicado-periodo:
+            label: Deduccions per produccions cinematogràfiques estrangeres (art.
+              36.2 LIS) - 2024 - Aplicat en aquesta liquidació [00316]
+          is-deduccion-produccion-extranjera-cinematografica-pendiente-generada:
+            label: Deduccions per produccions cinematogràfiques estrangeres (art.
+              36.2 LIS) - 2024 - Deducció pendent/generada [00315]
           is-deduccion-reinversion-beneficios-dt24a7-periodo:
             label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
               - Deducció pendent/generada [00696]
@@ -8815,10 +8859,30 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estat de canvis en el patrimoni net (II) - Ajustos per errors d'exercicis
               anteriors - Capital - Escripturat [00408]
+          is-ecpn-bde-correccion-errores-acciones-propias:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Efectes de la correcció d’errors
+              - (-) Accions pròpies [00312]
           is-ecpn-bde-correccion-errores-capital:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Efectes de la correcció d’errors
               - Capital [00305]
+          is-ecpn-bde-correccion-errores-dividendos-cuenta:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Efectes de la correcció d’errors
+              - (-) Dividends a compte [00314]
+          is-ecpn-bde-correccion-errores-ganancias-acumuladas:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Efectes de la correcció d’errors
+              - Guanys acumulats [00309]
+          is-ecpn-bde-correccion-errores-otras-reservas:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Efectes de la correcció d’errors
+              - Altres reserves [00311]
+          is-ecpn-bde-correccion-errores-otro-resultado-global-acumulado:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Efectes de la correcció d’errors
+              - Altre resultat global acumulat [00315]
           is-ecpn-bde-correccion-errores-otros-elementos-patrimonio-neto:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Efectes de la correcció d’errors
@@ -8831,6 +8895,18 @@ modelo:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Efectes de la correcció d’errors
               - Prima d'emissió [00306]
+          is-ecpn-bde-correccion-errores-reservas-revalorizacion:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Efectes de la correcció d’errors
+              - Reserves de revaloració [00310]
+          is-ecpn-bde-correccion-errores-resultado-ejercicio:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Efectes de la correcció d’errors
+              - Resultat de l'exercici [00313]
+          is-ecpn-bde-correccion-errores-total:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Efectes de la correcció d’errors
+              - Total [00316]
           is-ecpn-bde-saldo-apertura-dividendos-cuenta:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Saldo d’obertura [abans de la reexpressió]
@@ -9469,6 +9545,14 @@ modelo:
             label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
               - Amortització de l’immobilitzat afecte a recerca i desenvolupament
               (art. 12.3.b) LIS) - Disminucions [00306]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-aumentos:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Altres supòsits de llibertat d’amortització (art. 12.3 a) i d) i DA
+              16ª LIS) - Augments [00309]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-disminuciones:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Altres supòsits de llibertat d’amortització (art. 12.3 a) i d) i DA
+              16ª LIS) - Disminucions [00310]
           is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
             label: Liquidació I - Resultat del compte de pèrdues i guanys - Correccions
               per l’impost sobre societats - Augments [00301]
@@ -9487,6 +9571,22 @@ modelo:
             label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
               - Llibertat d’amortització de despeses de recerca i desenvolupament
               (art. 12.3.c) LIS) - Disminucions [00308]
+          is-liquidacion-ii-erd-amortizacion-art102-aumentos:
+            label: 'Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+              - Empreses de reduïda dimensió: llibertat d''amortització (art. 102
+              LIS) - Augments [00311]'
+          is-liquidacion-ii-erd-amortizacion-art102-disminuciones:
+            label: 'Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+              - Empreses de reduïda dimensió: llibertat d''amortització (art. 102
+              LIS) - Disminucions [00312]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-aumentos:
+            label: 'Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+              - Empreses de reduïda dimensió: amortització accelerada (art. 103 LIS
+              i DT 28a LIS) - Augments [00313]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-disminuciones:
+            label: 'Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+              - Empreses de reduïda dimensió: amortització accelerada (art. 103 LIS
+              i DT 28a LIS) - disminucions [00314]'
           is-liquidacion-iii-base-imponible:
             label: Liquidació III - base imposable - Base imposable [00552]
           is-liquidacion-iii-base-imponible-postnivelacion:
@@ -10073,13 +10173,36 @@ modelo:
           is-sgr-otras-variaciones-total:
             label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
               net - Altres variacions del patrimoni net - Total [00306]
+          is-sgr-saldo-final-ajustes-cambio-valor:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Saldo, final de l’exercici - Ajustos per canvis de valor [00313]
           is-sgr-saldo-final-capital-no-exigido:
             label: 'Societats de garantia recíproca - Estat total de canvis en el
               patrimoni net - SALDO, FINAL DE L''EXERCICI - Capital - Menys: no exigit
               [00308]'
+          is-sgr-saldo-final-capital-reembolsable:
+            label: 'Societats de garantia recíproca - Estat total de canvis en el
+              patrimoni net - SALDO, FINAL DE L''EXERCICI - Capital - Menys: reemborsable
+              [00309]'
           is-sgr-saldo-final-capital-suscrito:
             label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
               net - SALDO, FINAL DE L'EXERCICI - Capital - Subscrit [00307]
+          is-sgr-saldo-final-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Saldo, final de l’exercici - Fons de provisions tècniques - Aportacions
+              de tercers [00314]
+          is-sgr-saldo-final-reservas:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - SALDO, FINAL DE L'EXERCICI - Reserves [00310]
+          is-sgr-saldo-final-resultado-ejercicio:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Saldo, final de l’exercici - Resultat de l’exercici [00312]
+          is-sgr-saldo-final-resultados-ejercicios-anteriores:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - SALDO, FINAL DE L'EXERCICI - Resultats exercicis anteriors [00311]
+          is-sgr-saldo-final-total:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Saldo, final de l’exercici - Total [00315]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Indicador de societat de garantia recíproca o de refiançament [00036].
             label: Societat de garantia recíproca o de refiançament [00036]
@@ -11844,6 +11967,22 @@ modelo:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
                 no residents (art. 21.3, 21.10 i DT 40a LIS) - Disminucions [02185]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d) i
+                DA 16a i 17a LIS) - Augments [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d) i
+                DA 16a i 17a LIS) - Disminucions [00310]
+            x-8h834c1g60ojgehg60pj2d8:
+              label: Deduccions per incentivar determ. activitats - 2023 Centenari
+                del Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Deducció
+                pendent/generada [00315]
+            x-8h834c1g60ojgehg60pj2dg:
+              label: Deduccions per incentivar determ. activitats - 2023 Centenari
+                del Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Aplicat
+                en aquesta liquidació [00316]
           field:
             label: Model 200, exercici 2023
         '2024':
@@ -12432,6 +12571,14 @@ modelo:
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
                 de conversió d''AID després de regularització: Compensació - Total
                 [03320]'
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d),
+                DA 16a i 17a LIS) - Augments [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d),
+                DA 16a i 17a LIS) - Disminucions [00310]
           field:
             label: Model 200, exercici 2024
         2025-y-siguientes:
@@ -15218,5 +15365,19 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Societat matriu última d'un grup multinacional o grup nacional
                 de gran magnitud [00082]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d),
+                DA 16a i 17a LIS) - Augments [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d),
+                DA 16a i 17a LIS) - Disminucions [00310]
+            x-8h834c1g60ojgghq60o36c9l:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2025(*) - Deducció pendent/generada [00315]
+            x-8h834c1g60ojgghq60o36c9m:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2025(*) - Aplicat en aquesta liquidació [00316]
           field:
             label: Model 200, exercicis 2025 i següents

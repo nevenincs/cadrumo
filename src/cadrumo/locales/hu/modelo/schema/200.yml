@@ -6670,6 +6670,35 @@ modelo:
             label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
               számlája - Olyan biztosítási szerződésekhez kapcsolódó befektetések,
               amelyeknél a szerződő viseli a befektetési kockázatot [00308]
+          is-aseguradoras-vida-cuenta-tecnica-otros-ingresos-tecnicos:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Egyéb technikai bevételek [00309]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-gastos-pagados:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Kifizetett szolgáltatások és költségek [00311]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-aceptado:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Kifizetett szolgáltatások és költségek - Vállalt viszontbiztosítás
+              [00313]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-cedido:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Kifizetett szolgáltatások és költségek - Átadott viszontbiztosítás
+              (-) [00314]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-seguro-directo:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Kifizetett szolgáltatások és költségek - Közvetlen biztosítás
+              [00312]
+          is-aseguradoras-vida-cuenta-tecnica-siniestralidad-neta-reaseguro:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Tárgyévi kárráfordítások viszontbiztosítással csökkentve
+              [00310]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-directo:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Szolgáltatási tartalék változása (+ vagy -) - Közvetlen biztosítás
+              [00316]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-prestaciones:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Szolgáltatási tartalék változása (+ vagy -) [00315]
           is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
             label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
               számlája - Tárgyi eszközök és befektetések értékvesztési korrekcióinak
@@ -8603,6 +8632,14 @@ modelo:
           is-deduccion-cap-iv-tit-vi-suma-periodo:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2008 Levonások
               összege - Ebben az elszámolásban alkalmazva [00181]
+          is-deduccion-centenario-rugby-aplicado-periodo:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 A spanyol
+              rögbi és az Unió Esportiva Santboiana centenáriuma (CRE) - Ebben az
+              elszámolásban alkalmazva [00316]
+          is-deduccion-centenario-rugby-pendiente-generada:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 A spanyol
+              rögbi és az Unió Esportiva Santboiana centenáriuma (CRE) - Függőben
+              lévő vagy keletkezett levonás [00315]
           is-deduccion-cinematografica-extranjera-aplicado-periodo:
             label: Külföldi filmprodukciók levonásai a Kanári-szigeteken (LIS 36.2.
               cikk és 19/1994. törvény 14. kiegészítő rendelkezés) - 2025(*) - Elégtelen
@@ -8847,6 +8884,12 @@ modelo:
             help: 'Jövőbeli időszakokban alkalmazandó - Producer: spanyol filmprodukciók
               (PC)'
             label: 'Producer: spanyol filmprodukciók (PC). Jövőbeli időszakokban alkalmazandó'
+          is-deduccion-produccion-extranjera-cinematografica-aplicado-periodo:
+            label: Külföldi filmgyártási produkciók levonásai (LIS 36.2. cikk) - 2024
+              - Ebben az elszámolásban alkalmazva [00316]
+          is-deduccion-produccion-extranjera-cinematografica-pendiente-generada:
+            label: Külföldi filmgyártási produkciók levonásai (LIS 36.2. cikk) - 2024
+              - Függőben lévő/keletkezett levonás [00315]
           is-deduccion-reinversion-beneficios-dt24a7-periodo:
             label: LIS 24.7. átmeneti rendelkezés szerinti levonások - LIS 24.7. átmeneti
               rendelkezés 2023. évi levonása - Függőben lévő/keletkezett levonás [00696]
@@ -8908,10 +8951,30 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Saját tőke változásainak kimutatása (II) - Előző időszakok hibái
               miatti kiigazítások - Tőke - Jegyzett [00408]
+          is-ecpn-bde-correccion-errores-acciones-propias:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
+              - (-) Saját részvények [00312]
           is-ecpn-bde-correccion-errores-capital:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
               - Tőke [00305]
+          is-ecpn-bde-correccion-errores-dividendos-cuenta:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
+              - (-) Osztalékelőleg [00314]
+          is-ecpn-bde-correccion-errores-ganancias-acumuladas:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
+              - Felhalmozott nyereség [00309]
+          is-ecpn-bde-correccion-errores-otras-reservas:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
+              - Egyéb tartalékok [00311]
+          is-ecpn-bde-correccion-errores-otro-resultado-global-acumulado:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
+              - Halmozott egyéb átfogó jövedelem [00315]
           is-ecpn-bde-correccion-errores-otros-elementos-patrimonio-neto:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
@@ -8924,6 +8987,18 @@ modelo:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
               - Ázsió [00306]
+          is-ecpn-bde-correccion-errores-reservas-revalorizacion:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
+              - Átértékelési tartalék [00310]
+          is-ecpn-bde-correccion-errores-resultado-ejercicio:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
+              - Tárgyévi eredmény [00313]
+          is-ecpn-bde-correccion-errores-total:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
+              - Összesen [00316]
           is-ecpn-bde-saldo-apertura-dividendos-cuenta:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Nyitó egyenleg [az újramegállapítás
@@ -9552,6 +9627,14 @@ modelo:
             label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Kutatási és fejlesztési tevékenységhez használt befektetett
               eszközök értékcsökkenése (LIS 12.3.b) cikk) - Csökkentések [00306]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-aumentos:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3 a) és
+              d) cikk és 16. kiegészítő rendelkezés) - Növelések [00309]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-disminuciones:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3 a) és
+              d) cikk és 16. kiegészítő rendelkezés) - Csökkentések [00310]
           is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
             label: Elszámolás I - Eredménykimutatás eredménye - Társasági adó miatti
               korrekciók - Növelések [00301]
@@ -9569,6 +9652,22 @@ modelo:
             label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Kutatási és fejlesztési ráfordítások szabad értékcsökkenése
               (LIS 12.3.c) cikk) - Csökkentések [00308]
+          is-liquidacion-ii-erd-amortizacion-art102-aumentos:
+            label: 'Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - Kisvállalkozások: szabad értékcsökkenés (LIS 102. cikk)
+              - Növelések [00311]'
+          is-liquidacion-ii-erd-amortizacion-art102-disminuciones:
+            label: 'Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - Kisvállalkozások: szabad értékcsökkenés (LIS 102. cikk)
+              - Csökkentések [00312]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-aumentos:
+            label: 'Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - Kisvállalkozások: gyorsított értékcsökkenés (LIS 103.
+              cikk és DT 28. cikk) - Növelések [00313]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-disminuciones:
+            label: 'Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - Kisvállalkozások: gyorsított értékcsökkenés (LIS 103.
+              cikk és DT 28. cikk) - csökkenések [00314]'
           is-liquidacion-iii-base-imponible:
             label: Elszámolás III - adóalap - Adóalap [00552]
           is-liquidacion-iii-base-imponible-postnivelacion:
@@ -10152,13 +10251,38 @@ modelo:
           is-sgr-otras-variaciones-total:
             label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
               teljes kimutatása - Saját tőke egyéb változásai - Összesen [00306]
+          is-sgr-saldo-final-ajustes-cambio-valor:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Egyenleg, az év végén - Értékváltozások miatti korrekciók
+              [00313]
           is-sgr-saldo-final-capital-no-exigido:
             label: 'Kölcsönös garanciavállaló társaságok - Saját tőke változásának
               teljes kimutatása - EGYENLEG, IDŐSZAK VÉGÉN - Tőke - Levonva: be nem
               hívott [00308]'
+          is-sgr-saldo-final-capital-reembolsable:
+            label: 'Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - EGYENLEG, IDŐSZAK VÉGÉN - Tőke - Levonva: visszafizetendő
+              [00309]'
           is-sgr-saldo-final-capital-suscrito:
             label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
               teljes kimutatása - EGYENLEG, IDŐSZAK VÉGÉN - Tőke - Jegyzett [00307]
+          is-sgr-saldo-final-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Egyenleg, az év végén - Technikai tartalékalapok
+              - Harmadik felek hozzájárulásai [00314]
+          is-sgr-saldo-final-reservas:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - EGYENLEG, IDŐSZAK VÉGÉN - Tartalékok [00310]
+          is-sgr-saldo-final-resultado-ejercicio:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Egyenleg, az év végén - Időszak eredménye [00312]
+          is-sgr-saldo-final-resultados-ejercicios-anteriores:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - EGYENLEG, IDŐSZAK VÉGÉN - Előző időszakok eredményei
+              [00311]
+          is-sgr-saldo-final-total:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Egyenleg, az év végén - Összesen [00315]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Jelölő kölcsönös garanciavállaló vagy viszontgarancia-társaság esetén
               [00036].
@@ -12001,6 +12125,22 @@ modelo:
                 részletezése - Nem belföldi illetőségű jogalanyok értékpapír-átruházásából
                 származó jövedelem mentessége (LIS 21.3., 21.10. cikk és 40. átmeneti
                 rendelkezés) - Csökkentések [02185]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
+                és d) cikk, valamint DA 16. és 17. cikk) - Növelések [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
+                és d) cikk, valamint DA 16. és 17. cikk) - Csökkentések [00310]
+            x-8h834c1g60ojgehg60pj2d8:
+              label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2023 A
+                spanyol rögbi és az Unió Esportiva Santboiana centenáriuma (CRE) -
+                Függőben lévő vagy keletkezett levonás [00315]
+            x-8h834c1g60ojgehg60pj2dg:
+              label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2023 A
+                spanyol rögbi és az Unió Esportiva Santboiana centenáriuma (CRE) -
+                Ebben az elszámolásban alkalmazva [00316]
           field:
             label: 200-es modelo, 2023. adóév
         '2024':
@@ -12621,6 +12761,14 @@ modelo:
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
                 Az AID átalakításának eredménye a rendezés után: Beszámítás - Összesen
                 [03320]'
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
+                és d) cikk; DA 16. és 17. cikk) - Növelések [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
+                és d) cikk; DA 16. és 17. cikk) - Csökkentések [00310]
           field:
             label: 200-es modelo, 2024. adóév
         2025-y-siguientes:
@@ -15465,5 +15613,19 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Multinacionális csoport vagy nagy méretű belföldi csoport végső
                 anyavállalata [00082]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
+                és d) cikk; DA 16. és 17. cikk) - Növelések [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
+                és d) cikk; DA 16. és 17. cikk) - Csökkentések [00310]
+            x-8h834c1g60ojgghq60o36c9l:
+              label: Külföldi filmgyártási produkciók levonásai (LIS 36.2. cikk) -
+                2025(*) - Függőben lévő/keletkezett levonás [00315]
+            x-8h834c1g60ojgghq60o36c9m:
+              label: Külföldi filmgyártási produkciók levonásai (LIS 36.2. cikk) -
+                2025(*) - Ebben az elszámolásban alkalmazva [00316]
           field:
             label: 200-es modelo, 2025. adóévtől

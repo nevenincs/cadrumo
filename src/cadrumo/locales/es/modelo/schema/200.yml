@@ -6625,6 +6625,33 @@ modelo:
             label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
               seguro de vida - Inversiones afectas a seguros el tomador asume riesgo
               de inversión [00308]
+          is-aseguradoras-vida-cuenta-tecnica-otros-ingresos-tecnicos:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Otros ingresos ténicos [00309]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-gastos-pagados:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Prestaciones y gastos pagados [00311]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-aceptado:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Prestaciones y gastos pagados - Reaseguro aceptado
+              [00313]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-cedido:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Prestaciones y gastos pagados - Reaseguro cedido (-)
+              [00314]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-seguro-directo:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Prestaciones y gastos pagados - Seguro directo [00312]
+          is-aseguradoras-vida-cuenta-tecnica-siniestralidad-neta-reaseguro:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Siniestralidad del ejercicio, neta de reaseguro [00310]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-directo:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Variación provisión prestaciones (+ ó -) - Seguro directo
+              [00316]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-prestaciones:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Variación provisión prestaciones (+ ó -) [00315]
           is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
             label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
               seguro de vida - Aplic. correc. de valor por deterioro inmov. material
@@ -8608,6 +8635,14 @@ modelo:
           is-deduccion-cap-iv-tit-vi-suma-periodo:
             label: Deducc. para incentivar determ.actividades - 2008 Suma deducciones
               - Aplicado en esta liquidación [00181]
+          is-deduccion-centenario-rugby-aplicado-periodo:
+            label: Deducc. para incentivar determ.actividades - 2022 Centenario del
+              Rugby en España y de la Unió Esportiva Santboiana (CRE) - Aplicado en
+              esta liquidación [00316]
+          is-deduccion-centenario-rugby-pendiente-generada:
+            label: Deducc. para incentivar determ.actividades - 2022 Centenario del
+              Rugby en España y de la Unió Esportiva Santboiana (CRE) - Deducción
+              pendiente/generada [00315]
           is-deduccion-cinematografica-extranjera-aplicado-periodo:
             label: Deducciones por producciones cinematográficas extranjeras en Canarias
               (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2025(*) - Importe abonado por
@@ -8850,6 +8885,12 @@ modelo:
               cinematográficas españolas (PC)'
             label: 'Productor: producciones cinematográficas españolas (PC). Pendiente
               de aplicación en periodos futuros'
+          is-deduccion-produccion-extranjera-cinematografica-aplicado-periodo:
+            label: Deducciones por producciones cinematográficas extranjeras (art.
+              36.2 LIS) - 2024 - Aplicado en esta liquidación [00316]
+          is-deduccion-produccion-extranjera-cinematografica-pendiente-generada:
+            label: Deducciones por producciones cinematográficas extranjeras (art.
+              36.2 LIS) - 2024 - Deducción pendiente/generada [00315]
           is-deduccion-reinversion-beneficios-dt24a7-periodo:
             label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023
               - Deducción pendiente/generada [00696]
@@ -8909,10 +8950,30 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estado de cambios patrimonio neto (II) - Ajustes por errores de
               ejercicios anteriores - Capital - Escriturado [00408]
+          is-ecpn-bde-correccion-errores-acciones-propias:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - (-) Acciones
+              propias [00312]
           is-ecpn-bde-correccion-errores-capital:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Efectos de la corrección de errores - Capital
               [00305]
+          is-ecpn-bde-correccion-errores-dividendos-cuenta:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - (-) Dividendos
+              a cuenta [00314]
+          is-ecpn-bde-correccion-errores-ganancias-acumuladas:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Ganancias
+              acumuladas [00309]
+          is-ecpn-bde-correccion-errores-otras-reservas:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Otras
+              reservas [00311]
+          is-ecpn-bde-correccion-errores-otro-resultado-global-acumulado:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Otro
+              resultado global acumulado [00315]
           is-ecpn-bde-correccion-errores-otros-elementos-patrimonio-neto:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Efectos de la corrección de errores - Otros
@@ -8925,6 +8986,18 @@ modelo:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Efectos de la corrección de errores - Prima
               de emisión [00306]
+          is-ecpn-bde-correccion-errores-reservas-revalorizacion:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Reservas
+              de revalorización [00310]
+          is-ecpn-bde-correccion-errores-resultado-ejercicio:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Resultado
+              del ejercicio [00313]
+          is-ecpn-bde-correccion-errores-total:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de la corrección de errores - Total
+              [00316]
           is-ecpn-bde-saldo-apertura-dividendos-cuenta:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Saldo de apertura [antes de la reexpresión]
@@ -9568,6 +9641,14 @@ modelo:
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Amortización inmovilizado afecto investigación y desarrollo
               (art. 12.3.b) LIS) - Disminuciones [00306]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-aumentos:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Otros supuestos de libertad de amortización (art. 12.3 a)
+              y d) y DA 16ª LIS) - Aumentos [00309]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-disminuciones:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Otros supuestos de libertad de amortización (art. 12.3 a)
+              y d) y DA 16ª LIS) - Disminuciones [00310]
           is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
             label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
               - Correcciones por Impuesto Sociedades - Aumentos [00301]
@@ -9586,6 +9667,22 @@ modelo:
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Libertad de amortización de gastos de investigación y desarrollo
               (art. 12.3.c) LIS) - Disminuciones [00308]
+          is-liquidacion-ii-erd-amortizacion-art102-aumentos:
+            label: 'Liquidación II - Detalle correcciones resultado cta. pérdidas
+              y ganancias - Empresas de reducida dimensión: libertad de amortización
+              (art. 102 LIS) - Aumentos [00311]'
+          is-liquidacion-ii-erd-amortizacion-art102-disminuciones:
+            label: 'Liquidación II - Detalle correcciones resultado cta. pérdidas
+              y ganancias - Empresas de reducida dimensión: libertad de amortización
+              (art. 102 LIS) - Disminuciones [00312]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-aumentos:
+            label: 'Liquidación II - Detalle correcciones resultado cta. pérdidas
+              y ganancias - Empresas de reducida dimensión: amortización acelerada
+              (art. 103 LIS y DT 28ª LIS) - Aumentos [00313]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-disminuciones:
+            label: 'Liquidación II - Detalle correcciones resultado cta. pérdidas
+              y ganancias - Empresas de reducida dimensión: amortización acelerada
+              (art. 103 LIS y DT 28ª LIS) - disminuciones [00314]'
           is-liquidacion-iii-base-imponible:
             label: Liquidación III - Base imponible - Base imponible [00552]
           is-liquidacion-iii-base-imponible-postnivelacion:
@@ -10180,12 +10277,35 @@ modelo:
           is-sgr-otras-variaciones-total:
             label: Sociedades de garantia recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Total [00306]
+          is-sgr-saldo-final-ajustes-cambio-valor:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Saldo, final del ejercicio - Ajustes cambio valor [00313]
           is-sgr-saldo-final-capital-no-exigido:
             label: 'Sociedades de garantia recíproca - Estado total cambios patrimonio
               neto - SALDO, FINAL DEL EJERCICIO - Capital - Menos: no exigido [00308]'
+          is-sgr-saldo-final-capital-reembolsable:
+            label: 'Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - SALDO, FINAL DEL EJERCICIO - Capital - Menos: reembolsable [00309]'
           is-sgr-saldo-final-capital-suscrito:
             label: Sociedades de garantia recíproca - Estado total cambios patrimonio
               neto - SALDO, FINAL DEL EJERCICIO - Capital - Suscrito [00307]
+          is-sgr-saldo-final-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Saldo, final del ejercicio - Fondos provisiones técnicas. Aportaciones
+              de terceros [00314]
+          is-sgr-saldo-final-reservas:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - SALDO, FINAL DEL EJERCICIO - Reservas [00310]
+          is-sgr-saldo-final-resultado-ejercicio:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Saldo, final del ejercicio - Resultado ejercicio [00312]
+          is-sgr-saldo-final-resultados-ejercicios-anteriores:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - SALDO, FINAL DEL EJERCICIO - Resultados ejercicios anteriores
+              [00311]
+          is-sgr-saldo-final-total:
+            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+              neto - Saldo, final del ejercicio - Total [00315]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Indicador de sociedad de garantía recíproca o de reafianzamiento
               [00036].
@@ -12017,6 +12137,22 @@ modelo:
                 y ganancias - Exención sobre la renta obtenida en la transmisión de
                 valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) -
                 Disminuciones [02185]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Liquidación I - Detalle correcciones resultado cta. pérdidas
+                y ganancias - Otros supuestos de libertad de amortización (art. 12.3
+                a) y d) y DA 16ª y 17ª LIS) - Aumentos [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Liquidación I - Detalle correcciones resultado cta. pérdidas
+                y ganancias - Otros supuestos de libertad de amortización (art. 12.3
+                a) y d) y DA 16ª y 17ª LIS) - Disminuciones [00310]
+            x-8h834c1g60ojgehg60pj2d8:
+              label: Deducc. para incentivar determ.actividades - 2023 Centenario
+                del Rugby en España y de la Unió Esportiva Santboiana (CRE) - Deducción
+                pendiente/generada [00315]
+            x-8h834c1g60ojgehg60pj2dg:
+              label: Deducc. para incentivar determ.actividades - 2023 Centenario
+                del Rugby en España y de la Unió Esportiva Santboiana (CRE) - Aplicado
+                en esta liquidación [00316]
           field:
             label: Modelo 200, ejercicio 2023
         '2024':
@@ -12639,6 +12775,14 @@ modelo:
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
                 - Resultado de conversión de AID tras regularización: Compensación
                 - Total [03320]'
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Liquidación I - Detalle correcciones resultado cta. pérdidas
+                y ganancias - Otros supuestos de libertad de amortización (art. 12.3
+                a) y d) DA 16ª y 17ª LIS) - Aumentos [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Liquidación I - Detalle correcciones resultado cta. pérdidas
+                y ganancias - Otros supuestos de libertad de amortización (art. 12.3
+                a) y d) DA 16ª y 17ª LIS) - Disminuciones [00310]
           field:
             label: Modelo 200, ejercicio 2024
         2025-y-siguientes:
@@ -15434,5 +15578,19 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Sociedad matriz última grupo multinacional o grupo nacional de
                 gran magnitud [00082]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Liquidación I - Detalle correcciones resultado cta. pérdidas
+                y ganancias - Otros supuestos de libertad de amortización (art. 12.3
+                a) y d) DA 16ª y 17ª LIS) - Aumentos [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Liquidación I - Detalle correcciones resultado cta. pérdidas
+                y ganancias - Otros supuestos de libertad de amortización (art. 12.3
+                a) y d) DA 16ª y 17ª LIS) - Disminuciones [00310]
+            x-8h834c1g60ojgghq60o36c9l:
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2025(*) - Deducción pendiente/generada [00315]
+            x-8h834c1g60ojgghq60o36c9m:
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2025(*) - Aplicado en esta liquidación [00316]
           field:
             label: Modelo 200, ejercicios 2025 y siguientes

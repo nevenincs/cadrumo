@@ -769,7 +769,7 @@ id = 'm200-2025.dp200012.f0037'
 offset = 540
 length = 17
 kind = 'casilla'
-casilla_id = '00309'
+casilla_id = 'DP200012:00309'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'
@@ -778,11 +778,12 @@ decimals = 2
 signed = false
 design_type = 'Num'
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-12-3-a',
+    'ley-27-2014:art-12-3-d',
+    'ley-27-2014:da-16',
+    'ley-27-2014:da-17',
+    'orden-hac-529-2026:art-1',
+    'orden-hac-529-2026:df-segunda',
 ]
 source_refs = ['aeat-dr-200-2025']
 
@@ -791,7 +792,7 @@ id = 'm200-2025.dp200012.f0038'
 offset = 557
 length = 17
 kind = 'casilla'
-casilla_id = '00310'
+casilla_id = 'DP200012:00310'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'
@@ -800,11 +801,12 @@ decimals = 2
 signed = false
 design_type = 'Num'
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-12-3-a',
+    'ley-27-2014:art-12-3-d',
+    'ley-27-2014:da-16',
+    'ley-27-2014:da-17',
+    'orden-hac-529-2026:art-1',
+    'orden-hac-529-2026:df-segunda',
 ]
 source_refs = ['aeat-dr-200-2025']
 

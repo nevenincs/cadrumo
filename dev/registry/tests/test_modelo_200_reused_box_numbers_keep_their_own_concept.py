@@ -481,6 +481,47 @@ def test_the_new_concepts_follow_the_selected_design(filing_year: int) -> None:
         "DP200053:00308",
         "DP200054:00305",
         "DP200054:00306",
+        "DP200008:00309",
+        "DP200008:00310",
+        "DP200008:00311",
+        "DP200008:00312",
+        "DP200008:00313",
+        "DP200008:00314",
+        "DP200008:00315",
+        "DP200008:00316",
+        "DP200012:00309",
+        "DP200012:00310",
+        "DP200013:00311",
+        "DP200013:00312",
+        "DP200013:00313",
+        "DP200013:00314",
+        "DP200018:00315",
+        "DP200018:00316",
+        "DP200018B:00315",
+        "DP200018B:00316",
+        "DP200032:00309",
+        "DP200032:00310",
+        "DP200033:00311",
+        "DP200033:00312",
+        "DP200033:00313",
+        "DP200033:00314",
+        "DP200033:00315",
+        "DP200033:00316",
+        "DP200039:00309",
+        "DP200039:00310",
+        "DP200039:00311",
+        "DP200039:00312",
+        "DP200039:00313",
+        "DP200039:00314",
+        "DP200039:00315",
+        "DP200039:00316",
+        "DP200053:00309",
+        "DP200053:00310",
+        "DP200053:00311",
+        "DP200054:00312",
+        "DP200054:00313",
+        "DP200054:00314",
+        "DP200054:00315",
     }
     with bundled_indexed_authority().operation() as operation:
         snapshot = operation.snapshot(
@@ -498,6 +539,27 @@ def test_the_new_concepts_follow_the_selected_design(filing_year: int) -> None:
         for concept in concepts:
             sheet, number = concept.split(":")
             assert (concept in ids) == ((sheet, number) in printed)
+
+
+@pytest.mark.parametrize("filing_year", _supported_years())
+def test_aggregate_free_amortization_keeps_the_designs_da17_scope(filing_year: int) -> None:
+    """The aggregate adds DA17 where its official caption cites the paired dispositions."""
+    with bundled_indexed_authority().operation() as operation:
+        revision = operation.snapshot(
+            _MODELO, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
+        ).revision
+        source = _design_source(revision)
+        (sheet,) = [
+            sheet
+            for sheet in extract_record_design(bundled_path() / source.corpus_path).require_complete()
+            if sheet.name.strip() == "DP200012"
+        ]
+        casillas = _casillas(revision)
+        for number in ("00309", "00310"):
+            (field,) = [field for field in sheet.fields if number in _PRINTED_BOX.findall(field.description)]
+            refs = set(map(str, casillas[f"DP200012:{number}"].legal_refs))
+            assert {"ley-27-2014:art-12-3-a", "ley-27-2014:art-12-3-d", "ley-27-2014:da-16"} <= refs
+            assert ("ley-27-2014:da-17" in refs) == ("17ª" in field.description)
 
 
 @pytest.mark.parametrize("revision", authored_revisions(_MODELO), ids=lambda revision: str(revision.id))

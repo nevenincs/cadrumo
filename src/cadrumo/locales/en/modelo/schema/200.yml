@@ -6657,6 +6657,34 @@ modelo:
             label: Insurance undertakings - Profit and loss (II) - Life insurance
               technical account - Investments linked to insurance contracts where
               the policyholder bears the investment risk [00308]
+          is-aseguradoras-vida-cuenta-tecnica-otros-ingresos-tecnicos:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Other technical income [00309]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-gastos-pagados:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Benefits and expenses paid [00311]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-aceptado:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Benefits and expenses paid - Reinsurance accepted
+              [00313]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-cedido:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Benefits and expenses paid - Reinsurance ceded (-)
+              [00314]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-seguro-directo:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Benefits and expenses paid - Direct insurance [00312]
+          is-aseguradoras-vida-cuenta-tecnica-siniestralidad-neta-reaseguro:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Claims incurred for the year, net of reinsurance
+              [00310]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-directo:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Change in provision for benefits (+ or -) - Direct
+              insurance [00316]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-prestaciones:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Change in provision for benefits (+ or -) [00315]
           is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
             label: Insurance undertakings - Profit and loss (II) - Life insurance
               technical account - Application of impairment adjustments to tangible
@@ -8643,6 +8671,14 @@ modelo:
           is-deduccion-cap-iv-tit-vi-suma-periodo:
             label: Deductions to incentivise certain activities - 2008 Sum of deductions
               - Applied in this settlement [00181]
+          is-deduccion-centenario-rugby-aplicado-periodo:
+            label: Deductions to incentivise certain activities - 2022 Centenary of
+              Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Applied
+              in this return [00316]
+          is-deduccion-centenario-rugby-pendiente-generada:
+            label: Deductions to incentivise certain activities - 2022 Centenary of
+              Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Deduction
+              carried forward/generated [00315]
           is-deduccion-cinematografica-extranjera-aplicado-periodo:
             label: Deductions for foreign film productions in the Canary Islands (art.
               36.2 LIS and DA 14 Law 19/1994) - 2025(*) - Amount paid due to insufficient
@@ -8881,6 +8917,12 @@ modelo:
               productions (PC)'
             label: 'Producer: Spanish film productions (PC). Pending application in
               future periods'
+          is-deduccion-produccion-extranjera-cinematografica-aplicado-periodo:
+            label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+              - Applied in this return [00316]
+          is-deduccion-produccion-extranjera-cinematografica-pendiente-generada:
+            label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+              - Deduction carried forward/generated [00315]
           is-deduccion-reinversion-beneficios-dt24a7-periodo:
             label: Deductions under Transitional Provision 24.7 LIS - Deduction DT
               24.7 LIS 2023 - Pending/generated deduction [00696]
@@ -8943,10 +8985,30 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Statement of changes in equity (II) - Adjustments for errors from
               previous periods - Capital - Subscribed [00408]
+          is-ecpn-bde-correccion-errores-acciones-propias:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - (-)
+              Own shares [00312]
           is-ecpn-bde-correccion-errores-capital:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Effects of corrections of errors - Capital
               [00305]
+          is-ecpn-bde-correccion-errores-dividendos-cuenta:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - (-)
+              Interim dividends [00314]
+          is-ecpn-bde-correccion-errores-ganancias-acumuladas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Retained
+              earnings [00309]
+          is-ecpn-bde-correccion-errores-otras-reservas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Other
+              reserves [00311]
+          is-ecpn-bde-correccion-errores-otro-resultado-global-acumulado:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Accumulated
+              other comprehensive income [00315]
           is-ecpn-bde-correccion-errores-otros-elementos-patrimonio-neto:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Effects of corrections of errors - Other
@@ -8959,6 +9021,18 @@ modelo:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Effects of corrections of errors - Share
               premium [00306]
+          is-ecpn-bde-correccion-errores-reservas-revalorizacion:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Revaluation
+              reserves [00310]
+          is-ecpn-bde-correccion-errores-resultado-ejercicio:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Profit
+              or loss for the year [00313]
+          is-ecpn-bde-correccion-errores-total:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Total
+              [00316]
           is-ecpn-bde-saldo-apertura-dividendos-cuenta:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Opening balance [before restatement]
@@ -9584,6 +9658,14 @@ modelo:
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Depreciation of fixed assets used for research and development
               (art. 12.3.b) LIS) - Decreases [00306]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Other cases of free depreciation (art. 12.3 a) and d) and Additional
+              Provision 16 LIS) - Increases [00309]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Other cases of free depreciation (art. 12.3 a) and d) and Additional
+              Provision 16 LIS) - Decreases [00310]
           is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
             label: Settlement I - Profit and loss account result - Adjustments for
               corporate income tax - Increases [00301]
@@ -9601,6 +9683,22 @@ modelo:
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Free depreciation of research and development expenditure (art.
               12.3.c) LIS) - Decreases [00308]
+          is-liquidacion-ii-erd-amortizacion-art102-aumentos:
+            label: 'Settlement II - Detail of adjustments to the profit and loss account
+              result - Small enterprises: free depreciation (art. 102 LIS) - Increases
+              [00311]'
+          is-liquidacion-ii-erd-amortizacion-art102-disminuciones:
+            label: 'Settlement II - Detail of adjustments to the profit and loss account
+              result - Small enterprises: free depreciation (art. 102 LIS) - Decreases
+              [00312]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-aumentos:
+            label: 'Settlement II - Detail of adjustments to the profit and loss account
+              result - Small enterprises: accelerated depreciation (art. 103 LIS and
+              Transitional Provision 28 LIS) - Increases [00313]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-disminuciones:
+            label: 'Settlement II - Detail of adjustments to the profit and loss account
+              result - Small enterprises: accelerated depreciation (art. 103 LIS and
+              Transitional Provision 28 LIS) - decreases [00314]'
           is-liquidacion-iii-base-imponible:
             label: Settlement III - Taxable base - Taxable base [00552]
           is-liquidacion-iii-base-imponible-postnivelacion:
@@ -10175,12 +10273,34 @@ modelo:
           is-sgr-otras-variaciones-total:
             label: Mutual guarantee companies - Total statement of changes in equity
               - Other changes in equity - Total [00306]
+          is-sgr-saldo-final-ajustes-cambio-valor:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Balance, end of the year - Adjustments for changes in value [00313]
           is-sgr-saldo-final-capital-no-exigido:
             label: 'Mutual guarantee companies - Total statement of changes in equity
               - BALANCE, END OF THE PERIOD - Capital - Less: uncalled [00308]'
+          is-sgr-saldo-final-capital-reembolsable:
+            label: 'Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Capital - Less: repayable [00309]'
           is-sgr-saldo-final-capital-suscrito:
             label: Mutual guarantee companies - Total statement of changes in equity
               - BALANCE, END OF THE PERIOD - Capital - Subscribed [00307]
+          is-sgr-saldo-final-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Balance, end of the year - Technical provision funds - Third-party
+              contributions [00314]
+          is-sgr-saldo-final-reservas:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Reserves [00310]
+          is-sgr-saldo-final-resultado-ejercicio:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Balance, end of the year - Profit or loss for the period [00312]
+          is-sgr-saldo-final-resultados-ejercicios-anteriores:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Results from previous periods [00311]
+          is-sgr-saldo-final-total:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Balance, end of the year - Total [00315]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Flag indicating a mutual guarantee or re-guarantee company [00036].
             label: Mutual guarantee or re-guarantee company [00036]
@@ -12025,6 +12145,22 @@ modelo:
                 account result - Exemption on income obtained from the transfer of
                 securities of non-resident entities (art. 21.3, 21.10 and Transitional
                 Provision 40 LIS) - Decreases [02185]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d) and
+                Additional Provisions 16 and 17 LIS) - Increases [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d) and
+                Additional Provisions 16 and 17 LIS) - Decreases [00310]
+            x-8h834c1g60ojgehg60pj2d8:
+              label: Deductions to incentivise certain activities - 2023 Centenary
+                of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Deduction
+                carried forward/generated [00315]
+            x-8h834c1g60ojgehg60pj2dg:
+              label: Deductions to incentivise certain activities - 2023 Centenary
+                of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Applied
+                in this return [00316]
           field:
             label: Modelo 200, tax year 2023
         '2024':
@@ -12637,6 +12773,14 @@ modelo:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
                 result after regularisation: offset - Total [03320]'
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d), Additional
+                Provisions 16 and 17 LIS) - Increases [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d), Additional
+                Provisions 16 and 17 LIS) - Decreases [00310]
           field:
             label: Modelo 200, tax year 2024
         2025-y-siguientes:
@@ -15531,5 +15675,19 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Ultimate parent company of a multinational group or large-scale
                 domestic group [00082]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d), Additional
+                Provisions 16 and 17 LIS) - Increases [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d), Additional
+                Provisions 16 and 17 LIS) - Decreases [00310]
+            x-8h834c1g60ojgghq60o36c9l:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2025(*)
+                - Deduction carried forward/generated [00315]
+            x-8h834c1g60ojgghq60o36c9m:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2025(*)
+                - Applied in this return [00316]
           field:
             label: Modelo 200, tax years 2025 onwards

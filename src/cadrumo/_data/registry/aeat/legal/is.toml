@@ -3185,3 +3185,102 @@ reviewed_at = 2026-10-02
 reviewed_by = "Codex agent; checked against captured 2022, 2026-01-28 and current BOE Article 12; operator review pending"
 notes = "LIS article 12.3(c): free amortization of research and development expenses capitalized as intangible fixed assets, excluding amortization of assets that already enjoy free amortization. This reference is limited to subsection 3(c)."
 required_text = ["3. No obstante, podrán amortizarse libremente:", "c) Los gastos de investigación y desarrollo activados como inmovilizado intangible, excluidas las amortizaciones de los elementos que disfruten de libertad de amortización."]
+
+[legal."ley-27-2014:art-12-3-a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; exact clause resolved from enrolled full Article 12; 2022/current held text comparison recorded separately"
+notes = "LIS Article 12.3(a): free amortization for qualifying assets of worker-owned limited/public companies acquired during the first five years after qualification. The printed aggregate field cites this precise clause; taxpayer eligibility is not inferred."
+effective_from = 2015-01-01
+section = "3.a"
+required_text = ["3. No obstante, podrán amortizarse libremente:", "a) Los elementos del inmovilizado material, intangible e inversiones inmobiliarias de las sociedades anónimas laborales y de las sociedades limitadas laborales afectos a la realización de sus actividades, adquiridos durante los cinco primeros años a partir de la fecha de su calificación como tales."]
+
+[legal."ley-27-2014:art-12-3-d"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; exact clause resolved from enrolled full Article 12; 2022/current held text comparison recorded separately"
+notes = "LIS Article 12.3(d): free amortization for qualifying assets of priority associative agricultural holdings acquired during the first five years after recognition. The printed aggregate field cites this precise clause; taxpayer eligibility is not inferred."
+effective_from = 2015-01-01
+section = "3.d"
+required_text = ["3. No obstante, podrán amortizarse libremente:", "d) Los elementos del inmovilizado material o intangible de las entidades que tengan la calificación de explotaciones asociativas prioritarias de acuerdo con lo dispuesto en la Ley 19/1995, de 4 de julio, de modernización de las explotaciones agrarias, adquiridos durante los cinco primeros años a partir de la fecha de su reconocimiento como explotación prioritaria."]
+
+[legal."ley-27-2014:da-16"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#da"
+document_id = "BOE-A-2014-12328"
+article = "DA-16"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#da"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; native #da uniquely resolves the DA 16 title and operative limits; amendment provenance and entry-into-force note verified in held BOE text"
+notes = "LIS DA 16, introduced by RDL 23/2020 and amended by RDL 34/2020: automotive mobility-chain free amortization. The held text confines entry into service to 2 April 2020 through 30 June 2021 and imposes workforce and qualifying-report conditions. Later filed adjustments do not assert that new investments in 2022+ qualify. Investment/programme dates are not statute repeal dates."
+effective_from = 2020-06-25
+required_text = ["Libertad de amortización en inversiones realizadas en la cadena de valor de movilidad eléctrica, sostenible o conectada.", "entre el 2 de abril de 2020 y el 30 de junio de 2021", "deberán aportar informe motivado"]
+
+[legal."ley-27-2014:dt-28"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dtvigesimaoctava"
+document_id = "BOE-A-2014-12328"
+article = "DT-28"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dtvigesimaoctava"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; complete operative DT28 clause resolved at the held BOE anchor and checked against the predecessor-regime and tax-period wording"
+notes = "LIS DT28 continues the former TRLIS Article 113 reinvestment amortization regime for entities applying it under the wording in tax periods beginning before 1 January 2015, subject to the requirements and conditions of that regime."
+effective_from = 2015-01-01
+required_text = ["Las entidades que estuviesen aplicando lo dispuesto en el artículo 113 del texto refundido de la Ley del Impuesto sobre Sociedades, aprobado por el Real Decreto Legislativo 4/2004, de 5 de marzo, según redacción vigente en períodos impositivos iniciados con anterioridad a 1 de enero de 2015, podrán continuar su aplicación, con los requisitos y condiciones establecidos en aquel."]
+
+[legal."ley-27-2014:art-36-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-36-full.html#a36"
+document_id = "BOE-A-2014-12328"
+article = "36"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a36"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; full Article 36 captured through canonical BOE acquisition/extraction; foreign criterion corroborated against 2024/2025 redactions in saved BOE API history receipt"
+notes = "LIS Article 36.2 grounds the foreign-production identity for qualifying Spanish expenses of registered producers executing a foreign audiovisual production. This reference identifies the statutory regime, not rates or eligibility limits for another vintage. The captured current full article and actual BOE redactions effective at the end of 2024 and 2025 share the identity criterion; no unchanged numeric-rate claim is made."
+section = "2"
+effective_from = 2015-01-01
+required_text = ["ejecución de una producción extranjera", "gastos realizados en territorio español"]
+
+[legal."ley-11-2020:da-76"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-11-2020-da-76.html#da-77"
+document_id = "BOE-A-2020-17339"
+article = "DA-76"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-17339#da-77"
+published_at = 2020-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; canonical whole-document BOE capture, actual titled #da-77 selected and exact DA 76 extracted; programme end distinguished from legal effective_to"
+notes = "Ley 11/2020 DA 76 declares the Centenario del Rugby en España y de la Unió Esportiva Santboiana programme an event of exceptional public interest. Its support programme ends 31 December 2023. This is not a claim that all carried-forward deductions expire then. The native BOE locator is #da-77 despite the legal ordinal 76."
+effective_from = 2021-01-01
+required_text = ["Centenario del Rugby en España y de la Unió Esportiva Santboiana", "acontecimiento de excepcional interés público", "31 de diciembre de 2023"]

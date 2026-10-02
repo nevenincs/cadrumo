@@ -6,10 +6,16 @@ in isolation; the resolution rule itself is the runtime one.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 import yaml
+
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CasillaContinuidadEvolutionDefinition,
+    CasillaEvolutionKind,
+)
 
 from ..modelo_casilla_catalogue import (
     CasillaOccurrence,
@@ -329,6 +335,77 @@ def test_an_authored_removal_falls_back_and_an_edition_split_is_refused(tmp_path
     agreeing = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales))
     with pytest.raises(CollapseVerificationError, match="continuity evolution"):
         agreeing.author({"es": {_OCC_2024: "Base imponible del ejercicio"}}, locales, pending)
+    assert not pending.exists()
+
+
+@pytest.mark.parametrize(
+    ("kind", "lineage", "target", "accepted"),
+    [
+        (CasillaEvolutionKind.LABEL_EVOLVED, "base", "later", True),
+        (CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED, "base", "later", True),
+        (CasillaEvolutionKind.LEGAL_REFS_EVOLVED, "base", "later", False),
+        (CasillaEvolutionKind.REPURPOSED, "base", "later", False),
+        (CasillaEvolutionKind.LABEL_EVOLVED, "another-base", "later", False),
+        (CasillaEvolutionKind.LABEL_EVOLVED, "base", "unrelated", False),
+    ],
+)
+def test_authoring_requires_the_matching_typed_label_evolution(
+    tmp_path: Path, kind: CasillaEvolutionKind, lineage: str, target: str, accepted: bool
+) -> None:
+    locales, pending = tmp_path / "locales", tmp_path / "pending"
+    _write_catalogue(locales, {"es": {_LINEAGE: "Base imponible"}, "en": {}})
+    before = load_casilla_values(locales)
+    occurrences = tuple(
+        replace(row, revision=revision) for row, revision in zip(_chains(), ("floor", "later"), strict=True)
+    )
+    evolution = CasillaContinuidadEvolutionDefinition(
+        id="label-transition",
+        continuidad_id=lineage,
+        from_revision="floor",
+        to_revision=target,
+        evolution_kind=kind,
+        legal_refs=("ley-27-2014:art-10",),
+        source_refs=("aeat-test-design",),
+    )
+    catalogue = ModeloCasillaCatalogue(occurrences, before, label_evolutions={"999": (evolution,)})
+    manifest = {"es": {_OCC_2024: "Base imponible del ejercicio"}}
+    if accepted:
+        assert catalogue.author(manifest, locales, pending) == {"es": 1, "en": 1}
+        installed = ModeloCasillaCatalogue(occurrences, load_casilla_values(locales))
+        assert installed.resolve(0, "label", "es") == "Base imponible"
+        assert installed.resolve(1, "label", "es") == "Base imponible del ejercicio"
+    else:
+        with pytest.raises(CollapseVerificationError, match="continuity evolution"):
+            catalogue.author(manifest, locales, pending)
+        assert load_casilla_values(locales) == before
+    assert not pending.exists()
+
+
+def test_a_label_evolution_covers_inherited_text_but_not_a_further_split(tmp_path: Path) -> None:
+    locales, pending = tmp_path / "locales", tmp_path / "pending"
+    _write_catalogue(locales, {"es": {_LINEAGE: "Base imponible"}, "en": {}})
+    first, second = (
+        replace(row, revision=revision) for row, revision in zip(_chains(), ("floor", "changed"), strict=True)
+    )
+    latest_key = "modelo.schema.999.revision.latest.casilla.01.label"
+    third = replace(second, revision="latest", label_chain=(latest_key, *second.label_chain))
+    evolution = CasillaContinuidadEvolutionDefinition(
+        id="label-transition",
+        continuidad_id="base",
+        from_revision="floor",
+        to_revision="changed",
+        evolution_kind=CasillaEvolutionKind.LABEL_EVOLVED,
+        legal_refs=("ley-27-2014:art-10",),
+        source_refs=("aeat-test-design",),
+    )
+    rows = (first, second, third)
+    catalogue = ModeloCasillaCatalogue(rows, load_casilla_values(locales), label_evolutions={"999": (evolution,)})
+    assert catalogue.author({"es": {_OCC_2024: "Base imponible del ejercicio"}}, locales, pending) == {"es": 2, "en": 2}
+    installed = ModeloCasillaCatalogue(rows, load_casilla_values(locales), label_evolutions={"999": (evolution,)})
+    before = load_casilla_values(locales)
+    with pytest.raises(CollapseVerificationError, match="continuity evolution"):
+        installed.author({"es": {latest_key: "Otra base imponible"}}, locales, pending)
+    assert load_casilla_values(locales) == before
     assert not pending.exists()
 
 

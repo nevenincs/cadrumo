@@ -6942,3 +6942,31 @@ semantic_role = "is_liquidacion_iv_importe"
 legal_refs = ["ley-27-2014:art-124", "orden-hac-657-2025:modelo-200"]
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 DP200014B has no administrative-discrepancy Estado numbered [00032]. aeat-dr-200-2024 DP200014B row 71, field 66 first prints the monetary rectifying-self-assessment amount. DP200001 Sociedades desarrollo industrial regional [00032] is an unrelated one-byte entity character, not its predecessor."
+# Official design aeat-dr-200-2024: DP200018B field 67, row 72, offset 1050, length 17, type Num; Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024 - Deducción pendiente/generada [00315]
+[[revisions."2024".casillas]]
+id = "DP200018B:00315"
+number = "00315"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-produccion-extranjera-cinematografica-pendiente-generada"
+section = ["deducciones_por_producciones_cinematograficas_extr", "producciones_extranjeras"]
+data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"
+semantic_role_cardinality = "shared"
+source_refs = ["aeat-dr-200-2024"]
+legal_refs = ["ley-27-2014:art-36-2", "orden-hac-657-2025:modelo-200"]
+continuidad_origin = "new_on_form"
+continuidad_evidence = "Grounded first appearance within the legal-support-derived coverage: aeat-dr-200-2023 has no parsed DP200018B field printing [00315], while aeat-dr-200-2024 prints 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024 - Deducción pendiente/generada [00315]' at row 72, field 67, offset 1050, length 17, type Num. This records only the first observed supported design; it makes no claim about earlier unsupported editions. The same printed number on another sheet is an independent form identity and is not treated as its predecessor."
+# Official design aeat-dr-200-2024: DP200018B field 68, row 73, offset 1067, length 17, type Num; Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024 - Aplicado en esta liquidación [00316]
+[[revisions."2024".casillas]]
+id = "DP200018B:00316"
+number = "00316"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-produccion-extranjera-cinematografica-aplicado-periodo"
+section = ["deducciones_por_producciones_cinematograficas_extr", "producciones_extranjeras"]
+data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+semantic_role_cardinality = "shared"
+source_refs = ["aeat-dr-200-2024"]
+legal_refs = ["ley-27-2014:art-36-2", "orden-hac-657-2025:modelo-200"]
+continuidad_origin = "new_on_form"
+continuidad_evidence = "Grounded first appearance within the legal-support-derived coverage: aeat-dr-200-2023 has no parsed DP200018B field printing [00316], while aeat-dr-200-2024 prints 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024 - Aplicado en esta liquidación [00316]' at row 73, field 68, offset 1067, length 17, type Num. This records only the first observed supported design; it makes no claim about earlier unsupported editions. The same printed number on another sheet is an independent form identity and is not treated as its predecessor."

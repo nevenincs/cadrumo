@@ -4,8 +4,8 @@ AEAT publishes one diseno de registro per ejercicio for Modelo 200 and the desig
 differ year to year: sheets are added, boxes are added and reused, captions change.
 A supported year whose design is held is answered by its own edition rather than a
 projection of a later one. The editions share storage from the support floor
-forward; a row carried from one edition into the next is printed with the same
-caption on the same box by both designs, and a row that first appears in an edition
+forward; a carried row keeps its official caption or has a grounded label evolution,
+and a row that first appears in an edition
 says on the row why the edition before it does not carry it, citing that edition's
 design.
 """
@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.schema import (
     SupportedFilingYearsCatalogue,
 )
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaEvolutionKind
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
@@ -190,8 +191,61 @@ def test_the_storage_chain_is_rooted_at_the_support_floor() -> None:
     assert [str(root.id) for root in roots] == [str(_selected(_support().floor).id)]
 
 
-def test_a_row_carried_into_the_next_edition_is_printed_alike_by_both_designs() -> None:
-    """Only from an applicability edition, whose rows exist because its design prints them as the next one does."""
+def _caption_evolution_covers(
+    modelo: ModeloDefinition, earlier: ModeloRevision, later: ModeloRevision, casilla_id: str
+) -> bool:
+    """Connect actual design captions only through grounded label changes."""
+    _, catalogues = _modelo()
+    occurrences = {
+        str(revision.id): (revision, casilla)
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+        if str(casilla.id) == casilla_id
+    }
+    captions = {
+        rid: _printed_with(_design_of(revision), casilla.segmento, str(casilla.number))
+        for rid, (revision, casilla) in occurrences.items()
+    }
+    links: dict[str, set[str]] = {rid: set() for rid in occurrences}
+    for left, (_, left_row) in occurrences.items():
+        for right, (_, right_row) in occurrences.items():
+            if left_row.continuidad_id == right_row.continuidad_id and captions[left] & captions[right]:
+                links[left].add(right)
+    for revision in modelo.revisions.values():
+        for evolution in revision.casilla_continuidad_evolutions:
+            left, right = str(evolution.from_revision), str(evolution.to_revision)
+            if left not in occurrences or right not in occurrences:
+                continue
+            if evolution.evolution_kind not in (
+                CasillaEvolutionKind.LABEL_EVOLVED,
+                CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED,
+            ):
+                continue
+            if not evolution.legal_refs or any(ref not in catalogues.legal for ref in evolution.legal_refs):
+                continue
+            if any(
+                row.continuidad_id != evolution.continuidad_id
+                or not captions[rid]
+                or _design_of(edition) not in evolution.source_refs
+                for rid in (left, right)
+                for edition, row in (occurrences[rid],)
+            ):
+                continue
+            links[left].add(right)
+            links[right].add(left)
+    pending = [str(earlier.id)]
+    reached: set[str] = set()
+    while pending:
+        node = pending.pop()
+        if node not in reached:
+            reached.add(node)
+            pending.extend(links[node] - reached)
+    return str(later.id) in reached
+
+
+def test_a_carried_row_keeps_its_caption_or_has_grounded_label_evolution() -> None:
+    """Storage reuse preserves the printed concept; real caption changes require evidence."""
+    modelo, _ = _modelo()
     checked = 0
     for earlier, later in _storage_pairs():
         if earlier.effective_authority_grade is not RegistryAuthorityGrade.APPLICABILITY:
@@ -203,9 +257,45 @@ def test_a_row_carried_into_the_next_edition_is_printed_alike_by_both_designs() 
             shared = _printed_with(_design_of(earlier), casilla.segmento, str(casilla.number)) & _printed_with(
                 _design_of(later), casilla.segmento, str(casilla.number)
             )
-            assert shared, f"{later.id} carries {casilla.id} from {earlier.id} without a caption both designs print"
+            assert shared or _caption_evolution_covers(modelo, earlier, later, str(casilla.id)), (
+                f"{later.id} carries {casilla.id} from {earlier.id} "
+                "without a shared caption or grounded label evolution"
+            )
             checked += 1
     assert checked, "no applicability edition hands rows on, so this check proves nothing"
+
+
+@pytest.mark.parametrize("defect", ("missing", "wrong_kind", "missing_endpoint_source"))
+def test_a_changed_caption_cannot_be_carried_without_its_label_evidence(defect: str) -> None:
+    modelo, _ = _modelo()
+    earlier, later, row = next(
+        (earlier, later, row)
+        for earlier, later in _storage_pairs()
+        for row in later.casillas
+        if any(old.id == row.id for old in earlier.casillas)
+        and not (
+            _printed_with(_design_of(earlier), row.segmento, str(row.number))
+            & _printed_with(_design_of(later), row.segmento, str(row.number))
+        )
+        and _caption_evolution_covers(modelo, earlier, later, str(row.id))
+    )
+    revisions = {}
+    for rid, revision in modelo.revisions.items():
+        evolutions = []
+        for evolution in revision.casilla_continuidad_evolutions:
+            if evolution.continuidad_id == row.continuidad_id:
+                if defect == "missing":
+                    continue
+                update = (
+                    {"evolution_kind": CasillaEvolutionKind.LEGAL_REFS_EVOLVED}
+                    if defect == "wrong_kind"
+                    else {"source_refs": ()}
+                )
+                evolution = evolution.model_copy(update=update)
+            evolutions.append(evolution)
+        revisions[rid] = revision.model_copy(update={"casilla_continuidad_evolutions": tuple(evolutions)})
+    broken = modelo.model_copy(update={"revisions": revisions})
+    assert not _caption_evolution_covers(broken, earlier, later, str(row.id))
 
 
 def test_a_row_new_in_an_edition_says_why_citing_the_previous_design() -> None:
