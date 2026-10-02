@@ -32,7 +32,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
-from ...core.auth_provider import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.time.clock import now
@@ -111,6 +111,7 @@ from .operator_scope import (
 )
 from .operator_scope import resolve_auth_operation_scope
 from .operator_scope_ports import OperatorScopePorts
+from .preferences import clear_profile_auth_preference, set_profile_auth_preference
 from .protocols import BrowserSessionFactoryPort
 from .sessions import (
     ensure_authenticated_aeat_session,
@@ -132,10 +133,13 @@ def configure_operator_auth(
     provider: str,
     *,
     certificate_path: Path | None = None,
+    clave_movil_route: ClaveMovilRoute | None = None,
+    expected_profile_revision: int | None = None,
+    expected_profile_digest: str | None = None,
     operator_scope_ports: OperatorScopePorts,
     operation: PinnedAuthorityOperation,
 ) -> AuthConfigureResult:
-    """Configure the active auth provider in workflow state.
+    """Configure profile intent and operational auth state through one owner.
 
     The active profile is resolved through
     :func:`application.workflow.profile_health.assess_active_profile_health` before the
@@ -156,6 +160,9 @@ def configure_operator_auth(
             ``"certificate"``).
         certificate_path: Optional filesystem path to the operator's
             certificate file. Recorded in the event payload when supplied.
+        clave_movil_route: Explicit QR or app-request route, saved with the method.
+        expected_profile_revision: Optional revision of the profile being edited.
+        expected_profile_digest: Digest accompanying the optional edit revision.
         operator_scope_ports: Caller-composed profile and auth storage scope.
         operation: Caller-owned authority pin used for profile health.
 
@@ -199,8 +206,10 @@ def configure_operator_auth(
             operator_scope_ports=operator_scope_ports,
         ):
             state_repo = workflow_state_repository()
+            changed = False
 
             def mutate(current_state: WorkflowState) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
+                nonlocal changed
                 _assert_auth_recovery_not_in_progress(current_state)
                 profile_health = assess_active_profile_health(current_state, operation=operation)
                 active_bucket_id = profile_health.active_profile
@@ -223,6 +232,20 @@ def configure_operator_auth(
                         },
                         precondition_verdict=profile_health.precondition_verdict,
                     )
+                _, preference_changed = set_profile_auth_preference(
+                    profile_id=active_bucket_id,
+                    provider=AuthProviderKind(listing.id),
+                    route=clave_movil_route,
+                    profile_decode_context=operation.profile_decode_context(),
+                    expected_revision=expected_profile_revision,
+                    expected_content_digest=expected_profile_digest,
+                )
+                operational_changed = current_state.auth.provider != listing.id or (
+                    certificate_path is not None and current_state.auth.certificate_path != str(certificate_path)
+                )
+                changed = preference_changed or operational_changed
+                if not changed:
+                    return current_state, ()
                 next_state = _append_bucket_event(
                     update_auth(
                         current_state,
@@ -250,7 +273,10 @@ def configure_operator_auth(
     return _auth_configure_result(
         state=next_state,
         provider=listing.id,
-        certificate_path=certificate_path,
+        certificate_path=(
+            certificate_path or (Path(next_state.auth.certificate_path) if next_state.auth.certificate_path else None)
+        ),
+        changed=changed,
     )
 
 
@@ -1083,6 +1109,12 @@ def reset_operator_auth(
                 intent.session_provider_ids,
                 bucket_id=bucket_id,
             )
+            with bundled_indexed_authority().operation() as authority:
+                preference_cleared = clear_profile_auth_preference(
+                    profile_id=bucket_id,
+                    providers=intent.provider_ids,
+                    profile_decode_context=authority.profile_decode_context(),
+                )
             # `auth reset` keeps its existing clearance for now. The ruling that
             # produced the held-lock refusal flagged this caller too -- the
             # profile survives here, so nothing compensates for an aborted
@@ -1146,7 +1178,7 @@ def reset_operator_auth(
         bucket_id=intent.bucket_id,
         providers=intent.provider_ids,
         removed_sessions=len(intent.session_provider_ids),
-        cleared_provider_configuration=bool(cleared_provider_ids or removed_source_names),
+        cleared_provider_configuration=bool(cleared_provider_ids or removed_source_names or preference_cleared),
         cleared_locks=len(intent.lock_provider_ids),
         removed_certificate_sources=len(removed_source_names),
         removed_certificate_secrets=len(intent.secret_source_names),

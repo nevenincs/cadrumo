@@ -55,6 +55,7 @@ def auth_configure_result(
     state: WorkflowState,
     provider: str,
     certificate_path: Path | None,
+    changed: bool = True,
 ) -> AuthConfigureResult:
     """Build a redacted configuration result that exposes identity readiness."""
     from ..user_profile.projections import record_to_path_values
@@ -90,6 +91,7 @@ def auth_configure_result(
         incomplete_reason = alignment_detail
     return AuthConfigureResult(
         provider=provider,
+        changed=changed,
         file=str(certificate_path) if certificate_path is not None else "",
         complete=complete,
         incomplete_reason=incomplete_reason,
