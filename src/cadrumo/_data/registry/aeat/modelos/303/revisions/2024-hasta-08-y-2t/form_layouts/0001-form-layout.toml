@@ -7,7 +7,7 @@ revision_id = "2024-hasta-08-y-2t"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "7596d99b71f61824488995ea1657f52ad94f49f942761a43e4dd97dbb781962a"
+source_state_digest = "e57c182bf0d03241dd55ad3ed64fe88156065ca659f7e084029d8a0b57d13335"
 design_sources = [
     { source_ref = "aeat-dr-303-2024-early", sha256 = "28dcb7194c148b02b5687c08d4fecb76f6af6fcdf0d3f7dfbac6043a1f838be9" },
 ]

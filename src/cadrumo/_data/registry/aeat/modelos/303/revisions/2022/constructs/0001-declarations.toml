@@ -124,7 +124,6 @@ bindings = [
     "modelo-303-autoconsumo-promotor-base",
     "modelo-303-recargo-equivalencia-general-cuota",
     "modelo-303-recargo-equivalencia-reducido-cuota",
-    "modelo-303-recargo-equivalencia-super-reducido-cuota",
     "modelo-303-casilla-59-entregas-intracomunitarias-base",
     "modelo-303-casilla-60-exportaciones-base",
     "modelo-303-iva-repercutido-general-base",

@@ -361,6 +361,21 @@ _M390_DEDUCIBLE_AIC_2024_RATE_BINDING_IDS: tuple[str, ...] = tuple(
     for rate in ("2", "7-5")
     for fact in ("base", "cuota")
 )
+#: The 2 % and 7,5 % devengado and intra-community rate boxes, with the 0,26 % and
+#: 1 % recargo boxes that pair with them, which the 2024 design adds.
+_M390_2024_RATE_BINDING_IDS: tuple[str, ...] = (
+    *(f"modelo-390-iva-repercutido-tipo-{rate}-{fact}" for rate in ("2", "7-5") for fact in ("base", "cuota")),
+    *(
+        f"modelo-390-iva-aic-{block}-tipo-{rate}-{fact}"
+        for block in ("bienes", "servicios")
+        for rate in ("2", "7-5")
+        for fact in ("base", "cuota")
+    ),
+    "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota",
+    "modelo-390-iva-recargo-equivalencia-tipo-1-cuota",
+)
+#: The 0,62 % recargo box the 2023 design adds.
+_M390_2023_RECARGO_BINDING_ID = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"
 
 
 @pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
@@ -397,14 +412,10 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revisio
         "modelo-390-iva-repercutido-tipo-21-cuota",
         "modelo-390-iva-repercutido-tipo-10-base",
         "modelo-390-iva-repercutido-tipo-10-cuota",
-        "modelo-390-iva-repercutido-tipo-7-5-base",
-        "modelo-390-iva-repercutido-tipo-7-5-cuota",
         "modelo-390-iva-repercutido-tipo-5-base",
         "modelo-390-iva-repercutido-tipo-5-cuota",
         "modelo-390-iva-repercutido-tipo-4-base",
         "modelo-390-iva-repercutido-tipo-4-cuota",
-        "modelo-390-iva-repercutido-tipo-2-base",
-        "modelo-390-iva-repercutido-tipo-2-cuota",
         "modelo-390-iva-repercutido-tipo-0-base",
         "modelo-390-iva-repercutido-tipo-0-cuota",
         "modelo-390-iva-soportado-interiores-cuota",
@@ -422,38 +433,27 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revisio
         "modelo-390-iva-recargo-equivalencia-super-reducido-cuota",
         "modelo-390-iva-recargo-equivalencia-tipo-5-2-cuota",
         "modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota",
-        "modelo-390-iva-recargo-equivalencia-tipo-1-cuota",
-        "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota",
         "modelo-390-iva-recargo-equivalencia-tipo-0-5-cuota",
-        "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota",
         "modelo-390-volumen-entregas-intracomunitarias-base",
         "modelo-390-volumen-exportaciones-exentas-base",
         # AIC (adquisiciones intracomunitarias) rate-specific box layer -- see
         # civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml.
         "modelo-390-iva-aic-bienes-tipo-0-base",
         "modelo-390-iva-aic-bienes-tipo-0-cuota",
-        "modelo-390-iva-aic-bienes-tipo-2-base",
-        "modelo-390-iva-aic-bienes-tipo-2-cuota",
         "modelo-390-iva-aic-bienes-tipo-4-base",
         "modelo-390-iva-aic-bienes-tipo-4-cuota",
         "modelo-390-iva-aic-bienes-tipo-5-base",
         "modelo-390-iva-aic-bienes-tipo-5-cuota",
-        "modelo-390-iva-aic-bienes-tipo-7-5-base",
-        "modelo-390-iva-aic-bienes-tipo-7-5-cuota",
         "modelo-390-iva-aic-bienes-tipo-10-base",
         "modelo-390-iva-aic-bienes-tipo-10-cuota",
         "modelo-390-iva-aic-bienes-tipo-21-base",
         "modelo-390-iva-aic-bienes-tipo-21-cuota",
         "modelo-390-iva-aic-servicios-tipo-0-base",
         "modelo-390-iva-aic-servicios-tipo-0-cuota",
-        "modelo-390-iva-aic-servicios-tipo-2-base",
-        "modelo-390-iva-aic-servicios-tipo-2-cuota",
         "modelo-390-iva-aic-servicios-tipo-4-base",
         "modelo-390-iva-aic-servicios-tipo-4-cuota",
         "modelo-390-iva-aic-servicios-tipo-5-base",
         "modelo-390-iva-aic-servicios-tipo-5-cuota",
-        "modelo-390-iva-aic-servicios-tipo-7-5-base",
-        "modelo-390-iva-aic-servicios-tipo-7-5-cuota",
         "modelo-390-iva-aic-servicios-tipo-10-base",
         "modelo-390-iva-aic-servicios-tipo-10-cuota",
         "modelo-390-iva-aic-servicios-tipo-21-base",
@@ -475,6 +475,8 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revisio
         "modelo-390-iva-autorepercutido-interior-cuota",
         *_M390_DEDUCIBLE_BLOCK_BINDING_IDS,
         *(_M390_DEDUCIBLE_AIC_2024_RATE_BINDING_IDS if revision_id >= "2024" else ()),
+        *(_M390_2024_RATE_BINDING_IDS if revision_id >= "2024" else ()),
+        *((_M390_2023_RECARGO_BINDING_ID,) if revision_id >= "2023" else ()),
     }
 
 

@@ -253,13 +253,10 @@ def _validate_computed_input_kind(
     casilla_id: CasillaId,
     input_kind: InputKind,
     formula: FormulaId | None,
-    binding: BindingId | None,
 ) -> None:
-    """Enforce the formula/binding requirements for computed casillas."""
+    """Enforce the formula requirement for computed casillas."""
     if input_kind == InputKind.COMPUTED and formula is None:
         raise RegistryValidationError(f"computed casilla {casilla_id!r} must declare formula")
-    if input_kind == InputKind.COMPUTED and binding is not None:
-        raise RegistryValidationError(f"computed casilla {casilla_id!r} must not declare binding")
 
 
 def _validate_binding_declarations(
@@ -268,7 +265,13 @@ def _validate_binding_declarations(
     binding: BindingId | None,
     alternate_bindings: tuple[BindingId, ...],
 ) -> None:
-    """Enforce that only bound casillas carry primary or alternate bindings."""
+    """Enforce that only bound casillas carry primary or alternate bindings.
+
+    Every consumer reads a casilla's binding only when the casilla is bound, so
+    a binding named by any other input kind is a source nothing resolves.
+    """
+    if input_kind != InputKind.BOUND and binding is not None:
+        raise RegistryValidationError(f"non-bound casilla {casilla_id!r} must not declare binding")
     if input_kind != InputKind.BOUND and alternate_bindings:
         raise RegistryValidationError(f"non-bound casilla {casilla_id!r} must not declare alternate_bindings")
     if input_kind == InputKind.BOUND and binding is None:
@@ -303,14 +306,10 @@ def _validate_projection_only(
     casilla_id: CasillaId,
     input_kind: InputKind,
     formula: FormulaId | None,
-    binding: BindingId | None,
-    alternate_bindings: tuple[BindingId, ...],
 ) -> None:
-    """Reject calculation inputs on projection-only casillas."""
-    if input_kind == InputKind.PROJECTION_ONLY and any((formula, binding, alternate_bindings)):
-        raise RegistryValidationError(
-            f"projection-only casilla {casilla_id!r} must not declare formula, binding, or alternate_bindings",
-        )
+    """Reject a formula on projection-only casillas; bindings are refused for every non-bound kind."""
+    if input_kind == InputKind.PROJECTION_ONLY and formula is not None:
+        raise RegistryValidationError(f"projection-only casilla {casilla_id!r} must not declare formula")
 
 
 class CasillaDefinition(RegistryModel):
@@ -453,11 +452,11 @@ class CasillaDefinition(RegistryModel):
         # catalogue has been selected. Constructing a schema from an arbitrary
         # test or operator-supplied root must not consult the bundled catalogue;
         # the structural validator still enforces every non-localized rule here.
-        _validate_computed_input_kind(self.id, self.input_kind, self.formula, self.binding)
+        _validate_computed_input_kind(self.id, self.input_kind, self.formula)
         _validate_binding_declarations(self.id, self.input_kind, self.binding, self.alternate_bindings)
         _validate_binding_uniqueness(self.id, self.binding, self.alternate_bindings)
         _validate_bound_formula(self.id, self.input_kind, self.formula)
-        _validate_projection_only(self.id, self.input_kind, self.formula, self.binding, self.alternate_bindings)
+        _validate_projection_only(self.id, self.input_kind, self.formula)
         self._validate_export_exposure()
         self._validate_singleton_role_declaration()
         self._validate_lineage_origin()

@@ -75,6 +75,12 @@ purposes, and neither takes its figures from the other. Inapplicable by this mod
 legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13", "orden-hfp-816-2017:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure", "boe-modelo-232-2017-form"]
 
+[revisions."2016-2017".family_dispositions.bindings]
+reason = """
+A binding names the source of a value this revision writes, and this revision writes none through one. Its diseno is byte-identical to the 2018-y-siguientes design, but its generated export tree predates the binding identifier rename and its filing years lie below the supported floor, so revision selection admits no coordinate to regenerate it and it names no current binding. The manual-input bindings for these positions are declared by 2018-y-siguientes, the first edition whose layout reads them."""
+legal_refs = ["orden-hfp-816-2017:art-3", "orden-hfp-816-2017:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
+
 [revisions."2016-2017".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint's projection_ref accepts only FilingProjectionRef, a CLOSED discriminated union in cadrumo.core whose seven members are every one an m303_ engine-computed IVA fact, so no declaration naming this modelo's rows can validate against it and the family is empty by construction. Modelo 232 is an Impuesto sobre Sociedades informative return and shares no surface with the m303 IVA projections at all. Its repetition -- one row per vinculada operation and per paraiso operation -- is \

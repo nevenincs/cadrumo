@@ -219,6 +219,7 @@ def _calculate_303(
         dict(relation_values),
         period=period,
     )
+    declared = {str(binding.id) for binding in snapshot.revision.bindings}
     binding_values = {
         # Casilla 110 is a bound casilla: the engine requires its binding fact
         # to always be present. Default it to zero (no prior-period carry) so
@@ -228,7 +229,7 @@ def _calculate_303(
         _CARRY_BINDING: Decimal("0"),
         _AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
         _STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
-        **{binding: Decimal("0") for binding in _LEDGER_CUOTA_BINDINGS},
+        **{binding: Decimal("0") for binding in _LEDGER_CUOTA_BINDINGS if binding in declared},
         **cuota_binding_overrides,
         **relation_binding_values,
     }

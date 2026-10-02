@@ -166,7 +166,7 @@ def test_a_changed_literal_scale_requires_regenerating_its_form_companion() -> N
 
 
 def test_a_repeating_group_over_a_scalar_binding_is_refused() -> None:
-    revision = _revision("360", "2010-y-siguientes")
+    revision = _revision("232", "2018-y-siguientes")
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     scalar = next(binding.id for binding in revision.bindings if binding.value.channel.value != "row_set")

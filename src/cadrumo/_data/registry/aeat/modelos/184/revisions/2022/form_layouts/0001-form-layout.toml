@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "6483c59020303e4e6d06c1c135be387782a06d70e7bfc69c53c87bbfe99a4775"
+source_state_digest = "fdaf8ecbc0736c15c23ca7b0d7df2f63bf9f0957204f8b8d0f588d02b2551eab"
 placements = [
     { casilla_id = "decl.complementaria-sustitutiva", kind = "working_figure" },
     { casilla_id = "decl.ejercicio", kind = "working_figure" },

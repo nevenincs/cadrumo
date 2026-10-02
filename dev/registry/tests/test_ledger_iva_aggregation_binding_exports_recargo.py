@@ -367,7 +367,10 @@ def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_led
     # Recargo cuotas now aggregate by tier (0 before the back-fill).
     assert values["modelo-303-recargo-equivalencia-general-cuota"] == Decimal("52.00")
     assert values["modelo-303-recargo-equivalencia-reducido-cuota"] == Decimal("14.00")
-    assert values["modelo-303-recargo-equivalencia-super-reducido-cuota"] == Decimal("5.00")
+    # The 2022 design leaves every recargo row's tipo free; the rate-specific
+    # super-reduced row [16]-[18] first appears in the 2023 design, so 2022 declares
+    # no super-reduced recargo binding and its box [18] stays an entered value.
+    assert "modelo-303-recargo-equivalencia-super-reducido-cuota" not in values
     # Intra-community / export base now aggregate (0 before the back-fill).
     assert values["modelo-303-casilla-59-entregas-intracomunitarias-base"] == Decimal("2000")
     assert values["modelo-303-casilla-60-exportaciones-base"] == Decimal("3000")
