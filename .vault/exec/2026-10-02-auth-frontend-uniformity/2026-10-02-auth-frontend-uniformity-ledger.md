@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:30361c4148b8a8f652418d03dee1b220ba0b9bba68a9774b66277b4ebcafd8d6'
+body_hash: 'sha256:edd0204fa72fa6acc38fc6cd95e96ca2bf685f832b0cf607ff00002a7bf6c98c'
 related:
   - "[[2026-10-02-auth-frontend-uniformity-plan]]"
 ---
@@ -58,8 +58,25 @@ related:
 - `S02` `verify:` `corrected profile-switch refusal test (20261002T082549.846008Z-pytest-90368-1642040d; 1 passed)` -> `pass`
 - `S02` `verify:` `scoped Ruff lint and format (9 paths)` -> `pass`
 - `S02` `verify:` `scoped ty (9 paths)` -> `pass`
+- `S03` `M` `.vault/audit/2026-10-02-auth-frontend-uniformity-audit.md`
+- `S03` `verify:` `auth/profile/admission/CLI architecture targeted suite (219 tests)` -> `pass`
+- `S03` `verify:` `profile fixture and editor integration suite (64 tests)` -> `pass`
+- `S03` `verify:` `public operation contracts and registry suite (119 tests)` -> `pass`
+- `S03` `verify:` `combined core errors / auth frontend suite (61 passed, 1 failed due to original-profile read after switching)` -> `fail`
+- `S03` `verify:` `corrected original-profile verification after reauthentication (1 focused test)` -> `pass`
+- `S03` `verify:` `scoped Ruff lint and format plus ty (16 paths)` -> `pass`
+- `S03` `verify:` `canonical dev.docs CLI reference generation (20 pages)` -> `pass`
+- `S03` `by:` `Codex`
+- `S03` `M` `.vault/index/auth-frontend-uniformity.index.md`
+- `S03` `verify:` `auth verification captures (16) and localized wizard/profile captures (130)` -> `pass`
+- `S03` `verify:` `all 146 capture source fingerprints, geometry, glyph and artifact checks` -> `pass`
+- `S03` `verify:` `existing webserver API discovery and HTTP byte/hash equality for every PNG` -> `pass`
+- `S03` `verify:` `integrated review (both high findings resolved)` -> `pass`
+- `S03` `verify:` `scoped vault check (0 errors and 0 warnings)` -> `pass`
 
 ## Notes
 
 - `S02` CLI and installed TUI auth selection use the same registered request, public observation, result projector and failure metadata. TUI reuses its running graph. Repeated configuration reports NONE effect. Safe public result omits paths, identities and localized prose. New CLI route option uses the same closed schema. Sensitive typed inputs are masked. Test log 20261002T080150.404448Z-pytest-79772-2965d6ec.
 - `S02` Integrated review reopened S02 for exact displayed-profile subject binding and preserving the public failure taxonomy. Both corrected. The preceding 62-test run had 61 passing and one failure only in reading the original profile after a switch; that test now reauthenticates before checking unchanged facts and passed separately. Core error registry/envelope/inventory checks remain applicable and passed. Public failure code/category/retryability/runbook are retained, with only validated opaque diagnostic references.
+- `S03` Required core error checks were the passing 49 cases in the combined run; 12 frontend cases also passed. The only failing test was corrected to reauthenticate before inspecting the original encrypted record, then passed separately. Production code did not change after those 61 passing cases. Preserve this failed invocation as history rather than reporting the entire command as passing. Final visual and HTTP evidence will be appended once every locale finishes.
+- `S03` Gallery runs: profile-auth-uniformity-2026-10-02-en and profile-setup-auth-uniformity-2026-10-02-es/en/ca/hu. ES 52 frames, other setup locales 26 each; auth 16. Both appearances; 80x24 and added 120x40 for Spanish/setup and auth. Review server http://100.84.254.21:8740 remained active. No live AEAT login.

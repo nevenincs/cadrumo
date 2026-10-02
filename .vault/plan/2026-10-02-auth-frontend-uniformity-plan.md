@@ -10,7 +10,7 @@ related:
   - '[[2026-08-13-auth-certificate-lifecycle-successor-adr]]'
 modified: '2026-10-02'
 body_schema: body-v2
-body_hash: 'sha256:70845b07f8b4712d594bea580650ef0f8493c14a4979b68be8dd87df599d2b07'
+body_hash: 'sha256:b0a135036ce42178a1316b70474f7ccd9d18fdfcea9337fe503a44585ce9876b'
 ---
 
 # `auth-frontend-uniformity` plan
@@ -25,7 +25,7 @@ The user explicitly requested uniform backend use from CLI and TUI, removal of d
 
 - [x] `S01` - Unify provider configuration with encrypted profile preference, baseline checks, reset, and idempotent application results; `src/cadrumo/application/auth and src/cadrumo/application/user_profile/fact_write.py and owning tests`.
 - [x] `S02` - Dispatch CLI and TUI authentication selection through the same registered operation and safe public contracts, binding the displayed profile and preserving canonical failure metadata; `src/cadrumo/entrypoints/cli/config and src/cadrumo/entrypoints/tui/profile and installed account composition and core error projection and owning tests`.
-- [ ] `S03` - Prove cross-frontend persistence, refusals and sanitization, refresh captures, and finish integrated review; `dev/tui/harness and auth/profile integration tests and generated CLI reference and scoped audit`.
+- [x] `S03` - Prove cross-frontend persistence, refusals and sanitization, refresh captures, and finish integrated review; `dev/tui/harness and auth/profile integration tests and generated CLI reference and scoped audit`.
 
 ## Parallelization
 
