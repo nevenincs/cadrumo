@@ -1368,9 +1368,10 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         return stops, (stops.index(stop) if stop in stops else None), column
 
     def action_move(self, delta: int) -> None:
-        """Move the cursor to the field above or below; in a table, to the same column of the next row."""
+        """Move among fields, or scroll a read-only view without selectable fields."""
         stops, position, column = self._current_stop()
         if not stops:
+            self.scroll_to(y=self.scroll_y + delta, animate=False)
             return
         target = (0 if delta > 0 else len(stops) - 1) if position is None else position + delta
         if 0 <= target < len(stops):
@@ -1393,11 +1394,14 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             self._move_cursor_to(cell, column=target)
 
     def action_page(self, direction: int) -> None:
-        """Move the cursor about one screen of lines."""
+        """Move the cursor about one screen, or scroll read-only content by that distance."""
         stops, position, column = self._current_stop()
+        remaining = max(self.scrollable_content_region.height - 2, 1)
+        if not stops:
+            self.scroll_to(y=self.scroll_y + direction * remaining, animate=False)
+            return
         if position is None:
             return
-        remaining = max(self.scrollable_content_region.height - 2, 1)
         target = position
         while remaining > 0 and 0 <= target + direction < len(stops):
             target += direction
@@ -1405,8 +1409,11 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._go_to_stop(stops[target], column)
 
     def action_ends(self, direction: int) -> None:
-        """Move the cursor to the first or last field; in a table's row, to its first or last cell."""
+        """Move to an end field or cell; a view without fields scrolls to its content's start or end."""
         self._layout()
+        if not self._stops():
+            self.scroll_to(y=0 if direction < 0 else self.max_scroll_y, animate=False)
+            return
         current = self._cursor_index()
         if current is not None and current in self._cell_of:
             row = self._tables[self._cell_of[current][0]]

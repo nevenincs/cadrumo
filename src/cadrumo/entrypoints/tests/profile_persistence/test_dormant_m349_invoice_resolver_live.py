@@ -25,6 +25,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from cadrumo.application.modelo.value_presentation import format_casilla_value
 from cadrumo.application.modelo.work_form_models import ModeloFormRepeatingBlock
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -369,24 +370,46 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             )
             assert listing.scrollable_content_region.width <= listing.region.width
             assert not listing.show_horizontal_scrollbar
+            assert app.focused is listing
+            await pilot.press("home", "down")
+            await pilot.pause()
+            assert listing.scroll_y == min(1, listing.max_scroll_y)
+            await pilot.press("up")
+            await pilot.pause()
+            assert listing.scroll_y == 0
             drawn: dict[int, str] = {}
-            for offset in range(0, listing.max_scroll_y + listing.size.height, max(listing.size.height - 1, 1)):
-                listing.scroll_to(y=offset, animate=False)
-                await pilot.pause()
+            for _ in range(listing.virtual_size.height + 1):
                 for y in range(listing.size.height):
                     drawn[int(listing.scroll_y) + y] = listing.render_line(y).text
+                if listing.scroll_y == listing.max_scroll_y:
+                    break
+                before_scroll = listing.scroll_y
+                await pilot.press("pagedown")
+                await pilot.pause()
+                assert listing.scroll_y > before_scroll
+            assert listing.scroll_y == listing.max_scroll_y
             rendered_rows = "\n".join(line for _, line in sorted(drawn.items()))
             assert "EU Customer GmbH" in " ".join(rendered_rows.split())
             for identifier in ("123456789", "12345678901"):
                 assert identifier in rendered_rows
             for column_heading in records[0].headings:
                 assert " ".join(column_heading.split()) in " ".join(rendered_rows.split())
+            for *_, amount in _M349_INVOICES:
+                shown = format_casilla_value(amount, data_type="money", language=language)
+                assert " ".join(shown.split()) in " ".join(rendered_rows.split())
+            end_scroll = listing.scroll_y
+            await pilot.press("pageup")
+            await pilot.pause()
+            assert listing.scroll_y == max(end_scroll - max(listing.scrollable_content_region.height - 2, 1), 0)
+            await pilot.press("home")
+            await pilot.pause()
+            assert listing.scroll_y == 0
             assert listing.focus_address(("casilla", "op.base-imponible"))
             assert listing.highlighted is None
             await pilot.press("enter")
             await pilot.pause()
             assert app.screen is screen
-            listing.scroll_end(animate=False)
+            await pilot.press("end")
             await pilot.pause()
             assert listing.scroll_y == listing.max_scroll_y
             assert screen.form is not None and screen.form.calculation_revision_id == calculated.calculation_revision_id

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:626f95e0fe4926f4d16ffb349e7006cf59d8a75a933be2a51c2570f561fa6dbe'
+body_hash: 'sha256:de52e19e92737ebaf127e136868186ac84b56df1153e4c859ea3c96247929785'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1818,6 +1818,11 @@ related:
 - `S17` `verify:` `S17 nine-path Ruff check/format/canonical ty/diff check` -> `pass`
 - `S17` `verify:` `S17 two application owner strict Basedpyright` -> `pass`
 - `S17` `verify:` `S17 independent final source review` -> `pass`
+- `S17` `verify:` `20261002T025555.254915Z-pytest-84332-a98de5c2 actual16 key-only record journeys` -> `pass`
+- `S17` `verify:` `20261002T025615.588412Z-pytest-6120-a14bfdd3 unchanged24 real grid cases` -> `pass`
+- `S17` `verify:` `20261002T025703.261469Z-pytest-37844-caa76698 unchanged7 cursor cases` -> `pass`
+- `S17` `verify:` `S17 keyboard two-path Ruff/format/canonical ty/diff check` -> `pass`
+- `S17` `verify:` `S17 keyboard independent narrow source review` -> `pass`
 
 ## Notes
 
@@ -1934,3 +1939,4 @@ related:
 - `S17` Reopened S17 for confirmed generic `binding_rows` projection defect. Preserve the current frozen render as failing provenance; S50/S30 remain open until corrected integrated evidence.
 - `S62` Reconciled obsolete None assertion with already published typed rate scale; no new publication or production behavior change.
 - `S17` Source correction verified and closed; immutable before-fix 712 capture remains failure evidence. S50/S30 still require corrected frozen integrated capture and final broad gates.
+- `S17` Closed root-confirmed no-cursor keyboard trap; prior programmatic scroll proof did not cover keyboard reachability. Initial a7 frozen run intentionally terminated and retained; final capture and stable-tree broad gates remain S50/S30.

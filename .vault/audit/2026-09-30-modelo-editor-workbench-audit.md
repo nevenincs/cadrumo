@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:34fac255cdd5e708edfa792152e28ae362583c213a47de17afa23b67ed0e88a8'
+body_hash: 'sha256:bc3a98a2025726632061988048e6e3ceb8c01e949a99f45ba0a3c6961ba14ce3'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -554,6 +554,16 @@ The related header/help defect is resolved with existing four-locale read-only/u
 Applicable verification passes: 88 owning form units; 32 owning form integrations including every real registry revision; 17 record and encrypted-store cases including omitted/explicit-empty load and ghost-row exclusion; 24 real grid cases; 16 actual installed TUI cases in es/en/ca/hu at 80x24 and 120x40 in both themes, proving all saved operator identities/amounts remain reachable, no horizontal overflow and no scalar editing; six structural docstring gates within a 41-case bundle. Ruff, format, canonical ty across all nine paths and strict Basedpyright for both application owners pass. Exact native run.log/run.json paths and checker tool receipts are in `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/s17-final-verification-receipt.json`. Root inspected the actual native receipts. Independent final source review is PASS with no critical/high finding.
 
 The immutable cb04a1021c capture completed 712 frames, nine matching goldens, no capture failure, skip, glyph issue or fingerprint drift. Its 82 advisory geometry readings classify as 36 valid independent sibling-pane readings and 46 hidden-underlying-pane detections; no overflow or detector relaxation is involved. Twenty additional blocked/incomplete PNGs were independently reviewed with no new critical/high/medium finding; Sources counts scalar fields intentionally and row issues have a real table/source correction path. Before-fix capture is installed under `closing-cb04a1021c-before-record-fix`, with the review HTML unchanged. That capture remains REVISION REQUIRED evidence for the resolved defect; corrected frozen capture and broad gates remain S50/S30 closure work.
+
+### record-only keyboard navigation | high | standard navigation keys did not scroll saved records
+
+Root's integrated trace after a7a7f0360c found that the list overrides arrows, Page Up/Down and Home/End with field-cursor actions. With no selectable field, each returned without scrolling. The earlier programmatic scroll-end proof established complete rendering but not keyboard reachability. S17 was reopened. The initial a7a7f0360c frozen capture was stopped by its verified owning render process; its immutable source, partial artifacts and actual termination exit 4294967295 remain under `corrected-source-snapshot` and `corrected-sequences-execution.json`. It is not completed capture evidence. Source/authority digest before and after remains f0e92db8d8bc8e24da41631827f16448d97031da5985ee36a954c62846b88165.
+
+### record-only keyboard correction | low | all saved values now reachable with ordinary keys
+
+When the list has no selectable fields, arrows now scroll one line, Page Up/Down scroll a visible page with overlap, and Home/End scroll to content bounds. Field and official-grid cursor branches retain their behavior; records remain read-only. Sixteen real encrypted installed cases now use pilot key presses exclusively to traverse records in all four languages, small/medium terminals and both themes, proving forward progress, boundary clamping, every column label, all operator identities and locale-formatted amounts, unchanged calculation identity and no edit on Enter. Actual run `20261002T025555.254915Z-pytest-84332-a98de5c2` passes; unchanged owning grid 24 and cursor 7 cases also pass. Two-path Ruff, format, canonical ty and diff check pass. Root inspected the native receipts and saved checker logs in `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/s17-keyboard-verification-receipt.json`; independent narrow review is PASS with no critical/high finding.
+
+S17's source correction is verified again. S50/S30 still require the final committed keyboard-corrected frozen capture. The broad unit run begun before this keyboard correction will be retained with its actual scope; final canonical broad verification must use the stable corrected tree. Documentation CLI replay/goldens/build inputs are unchanged by this keyboard delta.
 
 ## Recommendations
 
