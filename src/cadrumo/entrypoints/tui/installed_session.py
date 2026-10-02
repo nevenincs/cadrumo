@@ -98,6 +98,7 @@ def compose_authenticated_account_inputs(
     profile_label: str,
     login_choices: Sequence[ProfileLoginChoice],
     operation: PinnedAuthorityOperation,
+    operation_runtime: TuiOperationCompositionV1 | None = None,
 ) -> InstalledWorkbenchAccountInputsV1:
     """Bind the account doors of one already-authenticated profile.
 
@@ -137,6 +138,28 @@ def compose_authenticated_account_inputs(
         expected_revision: int,
         expected_content_digest: str,
     ) -> ProfileOverview:
+        if path in {"auth.provider", "auth.clave_movil_route"}:
+            from ...application.auth.operation_definitions import AuthConfigureOperationRequest
+            from ...application.user_profile.projections import record_to_path_values
+            from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
+            from ..auth_configuration import run_auth_configuration
+
+            current = repository.load(profile_id)
+            values = record_to_path_values(current)
+            provider = value if path == "auth.provider" else values.get("auth.provider", "")
+            if provider and (path == "auth.provider" or provider == "clave_movil"):
+                run_auth_configuration(
+                    AuthConfigureOperationRequest(
+                        provider=AuthProviderKind(provider),
+                        clave_movil_route=(ClaveMovilRoute(value) if path == "auth.clave_movil_route" else None),
+                        expected_profile_revision=expected_revision,
+                        expected_profile_digest=expected_content_digest,
+                    ),
+                    operation=operation,
+                    services=operation_runtime.services if operation_runtime is not None else None,
+                    event_loop=operation_runtime.event_loop if operation_runtime is not None else None,
+                )
+                return reloaded_overview()
         applied = apply_manager_profile_field_mutation(
             profile_id=profile_id,
             path=path,
@@ -312,6 +335,7 @@ def compose_authenticated_root_inputs_provider(
                 profile_label=profile_label,
                 login_choices=login_choices,
                 operation=operation,
+                operation_runtime=operation_runtime,
             ),
             profile_admission=WorkbenchDestinationAdmission(
                 destination="workbench.profile",

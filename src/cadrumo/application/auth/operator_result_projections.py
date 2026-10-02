@@ -102,7 +102,7 @@ def auth_configure_result(
         precondition_verdict=(
             incomplete_auth_configuration_verdict(
                 provider=provider,
-                certificate_path=certificate_path,
+                certificate_file_provided=certificate_path is not None,
                 profile_tax_id_present=bool(profile_tax_id),
                 provider_identity_present=bool(provider_identity),
                 identity_alignment=alignment,
@@ -116,7 +116,7 @@ def auth_configure_result(
 def incomplete_auth_configuration_verdict(
     *,
     provider: str,
-    certificate_path: Path | None,
+    certificate_file_provided: bool,
     profile_tax_id_present: bool,
     provider_identity_present: bool,
     identity_alignment: str,
@@ -132,7 +132,7 @@ def incomplete_auth_configuration_verdict(
         condition_id = "auth.certificate.file_ready"
         evidence_id = "auth.configure.certificate.file_readiness"
         facts = {
-            "certificate_file_provided": certificate_path is not None,
+            "certificate_file_provided": certificate_file_provided,
             "certificate_file_resolves": False,
             "provider": provider,
         }

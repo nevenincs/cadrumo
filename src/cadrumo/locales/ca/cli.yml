@@ -196,8 +196,8 @@ cli:
           tal com és.'
         field_anchor_not_found: '{field}: el lector assenyala ''{anchor}'', que no
           apareix en la transcripció del document. Un valor normalitzat pot fallar
-          aquesta cerca legítimament, així que reviseu el camp en lloc de suposar
-          que va ser corroborat. {detail}'
+          aquesta cerca legítimament, així que revisa el camp en lloc de suposar que
+          va ser corroborat. {detail}'
         field_anchor_self_reported: '{field}: el lector afirma haver-ho llegit de
           ''{anchor}'', però aquesta afirmació prové del mateix lector que va produir
           el valor, així que res independent no ho ha confirmat.'
@@ -802,7 +802,7 @@ cli:
           retencion: retenció
           withholding296_perceptor: perceptor de la declaració de retencions
         relation_input_channel: "%{binding_id}\talimentada per la relació %{relation_id}\t\
-          useu --relation %{relation_id}=VALUE"
+          fes servir --relation %{relation_id}=VALUE"
         relation_input_guidance: Alguns orígens següents s'alimenten de relacions
           de les definicions dels models (agregacions entre models o entre períodes),
           no de valors --binding directes. Indica cadascun amb --relation RELATION_ID=VALUE
@@ -1031,8 +1031,8 @@ cli:
         override_reason_required: Indica --reason explicant per que se sobreescriu
           l'arrossegament de compensació prèvia; no pot estar buit.
         seed_amount_help: Import inicial de la compensació d'IVA en decimal.
-        seed_confirm_help: Confirmeu l'operació d'import inicial.
-        seed_confirm_required: Proporcioneu el modificador --confirm per confirmar
+        seed_confirm_help: Confirma l'operació d'import inicial.
+        seed_confirm_required: Proporciona el modificador --confirm per confirmar
           l'operació d'import inicial.
         seed_conflict: Ja existeix un estat de compensació d'IVA per a %{filing_year}/%{period};
           no se'n pot crear un altre.
@@ -1089,7 +1089,7 @@ cli:
           inequívoc).
         create_help: Crea un registre local de comunicació al pagador del Modelo 145.
         errors:
-          casilla_required: Proporcioneu almenys una entrada --casilla ID=VALOR.
+          casilla_required: Proporciona almenys una entrada --casilla ID=VALOR.
         export_help: Exporta un registre local de comunicació al pagador del Modelo
           145.
         group_help: Gestiona els registres locals de comunicació al pagador del Modelo
@@ -1210,7 +1210,7 @@ cli:
           feedback_envelope_not_found: No s'ha trobat el sobre de comentaris a {envelope_path}.
           invalid_valid_for_days: --valid-for-days ha de ser un enter estrictament
             positiu.
-          output_required: Indiqueu --output CAMÍ per al ZIP del paquet de revisió.
+          output_required: Indica --output CAMÍ per al ZIP del paquet de revisió.
           package_not_found: No s'ha trobat el paquet de revisió a {package_path}.
           receipt_not_found: No s'ha trobat el rebut a {receipt_path}.
           signature_not_found: No s'ha trobat el sobre de signatura a {signature_path}.
@@ -1245,14 +1245,14 @@ cli:
         operator_public_key_help: Clau pública del declarant (signant original), en
           64 caràcters hexadecimals en minúscula.
         originator_id_help: Id d'originador registrat la clau pública del qual segella
-          els comentaris (vegeu `aeat config collab recipient add`).
+          els comentaris (consulta `aeat config collab recipient add`).
         output_help: Camí on escriure el ZIP del paquet de revisió.
         package_path_help: Camí del ZIP del paquet de revisió a verificar.
         public_key_help: Clau pública del signant, en 64 caràcters hexadecimals en
           minúscula.
         receipt_path_help: Camí del rebut contrasignat en format JSON generat per
           `counter-sign`.
-        recipient_id_help: Id del destinatari registrat (vegeu `aeat config collab
+        recipient_id_help: Id del destinatari registrat (consulta `aeat config collab
           recipient add`).
         review_only_help: Marca el paquet segellat com a mancat d'autoritat de presentació
           (el destinatari el pot llegir i verificar, però no és prova que el càlcul
@@ -1265,8 +1265,8 @@ cli:
           sobre de signatura a --output. Només local; mai contacta amb l'AEAT.
         sign_output_help: Camí on escriure el sobre de signatura en format JSON.
         signature_path_help: Camí del sobre de signatura JSON generat per `sign`.
-        valid_for_days_help: Finestra de validesa opcional en dies; ometeu-la per
-          a un paquet que mai caduqui.
+        valid_for_days_help: Finestra de validesa opcional en dies; omet-la per a
+          un paquet que mai caduqui.
         verify_help: Verifica el manifest de checksum d'un paquet de revisió (només
           integritat; no certifica qui l'ha construït). Només local; mai contacta
           amb l'AEAT.
@@ -1312,7 +1312,7 @@ cli:
           prefill_relations_help: Preomple els valors de relacions entre revisions
             des del magatzem local d'observacions abans d'exportar (resums anuals,
             arrossegament de trimestres anteriors, etc.)
-          root_folder_required: No hi ha cap carpeta arrel de Drive configurada; executeu
+          root_folder_required: No hi ha cap carpeta arrel de Drive configurada; executa
             `aeat config google folder set <id>` primer
           snapshot_failure: No es pot construir la instantània de les definicions
             dels models per al model {modelo} ({period} {year}).
@@ -1405,7 +1405,7 @@ cli:
           el 21% (art. 90 LISIVA) per calcular la quota meritada. Només aplicable
           al Model 303.'
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de
-          ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com a separador
+          ser un import decimal; s''ha rebut: {value}. Utilitza el punt com a separador
           decimal i sense separador de milers, p. ex. 1234.56.'
         borrador_help: Id del snapshot de l'esborrany del Model 100 (complet o prefix
           no ambigu). Els seus valors només emplenen les caselles l'origen de les
@@ -1429,7 +1429,7 @@ cli:
         causante_ccaa_help: CCAA de residència habitual del causant (ISD Model 650/660)
           o CCAA on s'ubica el bé transmès (ITPyAJD Model 600/620). Determina la Hisenda
           competent (Llei 22/2009 Art. 32). País Basc i Navarra són règims forals;
-          consulteu la Hisenda autonòmica corresponent.
+          consulta la Hisenda autonòmica corresponent.
         compare_taxation_error: 'La comparació conjunta vs. individual no és disponible:
           {detail}'
         compare_taxation_help: 'Compara la quota de l''IRPF en tributació conjunta
@@ -1478,7 +1478,7 @@ cli:
         dependencies_period_requires_modelo: L'opció --period requereix --modelo.
         discard_help: Marcar una declaració com a descartada (el canvi d'estat queda
           al registre d'auditoria)
-        discard_requires_yes: El descart és una transició d'estat auditable. Torneu
+        discard_requires_yes: El descart és una transició d'estat auditable. Torna
           a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
         discard_yes_help: Confirmar explícitament l'operació de descart
         document_format_help: 'Format de document de l''informe de càlcul: csv, o
@@ -1534,9 +1534,9 @@ cli:
           en minúscules de 64 caràcters; s'ha rebut {value}.
         invalid_work_unit_lookup_id: work_unit_id ha de ser un identificador SHA-256
           hexadecimal en minúscules o un prefix inequívoc
-        joint_return_elected_help: 'Model 303: indiqueu expressament si és una autoliquidació
-          conjunta; useu --no-joint-return-elected per a «no». Obligatori per al Model
-          303 i mai no es pressuposa.'
+        joint_return_elected_help: 'Model 303: indica expressament si és una autoliquidació
+          conjunta; fes servir --no-joint-return-elected per a «no». Obligatori per
+          al Model 303 i mai no es pressuposa.'
         kv_empty_key_error: La clau de {flag} no pot estar buida; s'ha rebut {spec}.
         kv_format_error: '{flag} s''ha d''escriure com {key_label}={value_label}.
           És una entrada clau-valor: posa el nom del camp a l''esquerra d''un únic
@@ -1950,6 +1950,8 @@ cli:
       reset_requires_yes: El restabliment retira la configuració i les credencials
         desades. Torna a executar l'ordre amb --yes per confirmar.
       reset_yes_help: Confirmar el restabliment destructiu de l'autenticació
+      route_help: 'Via d''aprovació de Cl@ve Móvil: qr o app_request. Requereix --provider
+        clave_movil.'
       status_help: Mostrar l'estat d'autenticació configurat
       status_summary_configured: L'autenticació està configurada però encara no hi
         ha cap sessió activa disponible.

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.auth.operator_results import AuthConfigureResult
+from ....application.auth.configuration_result import AuthConfigurePublicResultV1
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
+from ....core.auth_provider import AuthProviderKind
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..common import resolve_cli_precondition_action
 from ..config_payloads import AuthConfigurePayload
@@ -33,13 +34,14 @@ def test_auth_configure_result_does_not_duplicate_the_envelope_profile_identity(
         conditionality=ActionConditionality.NOT_APPLICABLE,
         no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
-    result = AuthConfigureResult(
-        provider="clave_movil",
+    result = AuthConfigurePublicResultV1(
+        provider=AuthProviderKind.CLAVE_MOVIL,
+        changed=True,
+        certificate_file_provided=False,
         complete=False,
         profile_tax_id_present=True,
         provider_identity_present=False,
         identity_alignment="clave_identity_missing",
-        precondition_verdict=verdict,
     )
 
     payload = AuthConfigurePayload.from_result(

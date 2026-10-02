@@ -1832,6 +1832,7 @@ cli:
       output_language_help: Output language for the response text (es, en, ca, hu).
       provider_help: Authentication provider id (e.g. certificate)
       providers_help: List supported authentication providers
+      route_help: 'Cl@ve Móvil approval route: qr or app_request. Requires --provider clave_movil.'
       reset_all_help: Reset every known authentication provider
       reset_help: Remove local provider configuration, sessions, locks, certificate
         registrations, and stored certificate secrets

@@ -19,8 +19,8 @@ from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
     from ....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ....application.auth.configuration_result import AuthConfigurePublicResultV1
     from ....application.auth.operator_probe_ports import OperatorProbePorts
-    from ....application.auth.operator_results import AuthConfigureResult
     from ....application.auth.operator_scope_ports import OperatorScopePorts
     from ....application.operator_actions.models import PreconditionVerdict
     from ....application.state_projection_ports import StateProjectionReadPorts
@@ -28,20 +28,22 @@ if TYPE_CHECKING:
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
-def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
+def _auth_configure_lines(configure_result: AuthConfigurePublicResultV1) -> list[str]:
     """Render the operator text dump for a completed auth configure.
 
     Cl@ve Móvil is the only provider that binds a taxpayer identity, so its
-    three identity lines (and the alignment detail, when the backend states
-    one) are emitted for that provider alone.
+    three identity-readiness lines are emitted for that provider alone.
     """
     lines = [
         f"provider\t{configure_result.provider}",
-        f"file\t{configure_result.file}",
+        f"changed\t{configure_result.changed}",
+        f"certificate_file_provided\t{configure_result.certificate_file_provided}",
         f"status\t{'configured' if configure_result.complete else 'incomplete'}",
     ]
     if not configure_result.complete:
-        lines.append(f"incomplete_reason\t{configure_result.incomplete_reason}")
+        verdict = configure_result.precondition_verdict
+        if verdict is not None:
+            lines.append(f"incomplete_condition\t{verdict.failed_condition_id}")
     if configure_result.provider != "clave_movil":
         return lines
     lines.extend(
@@ -51,8 +53,6 @@ def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
             f"identity_alignment\t{configure_result.identity_alignment}",
         ),
     )
-    if configure_result.identity_alignment_detail:
-        lines.append(f"identity_alignment_detail\t{configure_result.identity_alignment_detail}")
     return lines
 
 
@@ -144,30 +144,26 @@ def auth_configure(
     ctx: typer.Context,
     provider: str,
     file: Path | None = None,
+    clave_movil_route: str | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Configure the active authentication provider."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.operator import configure_operator_auth
-    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import authority_operation, operator_scope_ports
+    from ....application.auth.operation_definitions import AuthConfigureOperationRequest
+    from ...auth_configuration import run_auth_configuration
+    from ..state_projection_support import authority_operation
 
-    try:
-        result = configure_operator_auth(
-            provider,
-            certificate_path=file,
-            operator_scope_ports=operator_scope_ports(ctx),
-            operation=authority_operation(ctx),
-        )
-    except KeyError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider},
-        ) from exc
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
+    # Parsing is the existing CLI schema boundary: invalid choices expose the
+    # field/rule, never echo the supplied value into a refusal envelope.
+    request = AuthConfigureOperationRequest.model_validate(
+        {
+            "provider": provider,
+            "certificate_path": file,
+            "clave_movil_route": clave_movil_route,
+        },
+        strict=False,
+    )
+    result = run_auth_configuration(request, operation=authority_operation(ctx))
     from ..config_payloads import AuthConfigurePayload as _AuthConfigurePayload
 
     configure_result = result

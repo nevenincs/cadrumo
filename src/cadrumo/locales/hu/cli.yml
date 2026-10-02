@@ -1949,6 +1949,7 @@ cli:
       output_language_help: A válasz szövegének nyelve (es, en, ca, hu).
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificate).
       providers_help: Támogatott hitelesítési szolgáltatók listázása.
+      route_help: 'Cl@ve Móvil jóváhagyási mód: qr vagy app_request. A --provider clave_movil kapcsoló szükséges.'
       reset_all_help: Minden ismert hitelesítési szolgáltató visszaállítása
       reset_help: A helyi szolgáltatóbeállítások, munkamenetek, zárolások, tanúsítvány-regisztrációk
         és tárolt titkok eltávolítása

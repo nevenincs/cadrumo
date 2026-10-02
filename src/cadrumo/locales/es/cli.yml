@@ -1961,6 +1961,7 @@ cli:
       output_language_help: Idioma del texto de salida (es, en, ca, hu).
       provider_help: Identificador del proveedor (p.ej. certificate)
       providers_help: Listar proveedores de autenticación soportados
+      route_help: 'Vía de aprobación de Cl@ve Móvil: qr o app_request. Requiere --provider clave_movil.'
       reset_all_help: Restablecer todos los proveedores de autenticación conocidos
       reset_help: Retirar la configuración local del proveedor, las sesiones, los
         bloqueos, los certificados registrados y sus secretos guardados

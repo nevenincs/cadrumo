@@ -232,7 +232,11 @@ class FieldEditScreen(ModalScreen[str | None]):
                         id="edit-options",
                     )
                 else:
-                    yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
+                    yield Input(
+                        value="" if self._field.masked else (self._field.value or ""),
+                        password=self._field.masked,
+                        id="edit-input",
+                    )
                     hint = profile_field_shape_hint(self._field.field_type)
                     if hint:
                         yield Static(hint, id="edit-hint")

@@ -161,6 +161,7 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_WRITE,
         (
             _option("provider", ("--provider",), TEXT_VALUE, "cli.config.auth.provider_help", required=True),
+            _option("clave_movil_route", ("--clave-movil-route",), TEXT_VALUE, "cli.config.auth.route_help"),
             _option(
                 "file",
                 ("--file",),

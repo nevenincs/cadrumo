@@ -9,9 +9,9 @@ from datetime import timedelta
 from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 
-from ...core.auth_provider import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
@@ -44,11 +44,13 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
+    OperationSchemaBindingV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..user_profile.login_session import ProfileLoginOutcome, login_profile
 from ..user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome, rotate_profile_passphrase
 from .certificate_secret_backend import CertificateSecretBackendFactory
+from .configuration_result import AuthConfigurePublicResultV1, project_auth_configuration
 from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
 from .operator_probe_ports import OperatorProbePorts
 from .operator_results import AuthConfigureResult, AuthLoginResult, AuthLogoutResult, AuthResetResult
@@ -85,6 +87,17 @@ class AuthConfigureOperationRequest(BaseModel):
 
     provider: AuthProviderKind
     certificate_path: Path | None = None
+    clave_movil_route: ClaveMovilRoute | None = None
+    expected_profile_revision: int | None = Field(default=None, ge=0)
+    expected_profile_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def _complete_baseline(self) -> AuthConfigureOperationRequest:
+        if (self.expected_profile_revision is None) != (self.expected_profile_digest is None):
+            raise ValueError("authentication edit requires a complete baseline")
+        if self.clave_movil_route is not None and self.provider is not AuthProviderKind.CLAVE_MOVIL:
+            raise ValueError("Cl@ve Móvil route requires the Cl@ve Móvil provider")
+        return self
 
 
 class AuthSessionAcquireOperationRequest(BaseModel):
@@ -236,10 +249,13 @@ class AuthConfigureOperationExecutor:
         result = self._configure(
             request.payload.provider.value,
             certificate_path=request.payload.certificate_path,
+            clave_movil_route=request.payload.clave_movil_route,
+            expected_profile_revision=request.payload.expected_profile_revision,
+            expected_profile_digest=request.payload.expected_profile_digest,
             operator_scope_ports=self._ports.operator_scope_ports,
             operation=context.authority_operation,
         )
-        await context.events.effect(OperationEffect.UPDATED)
+        await context.events.effect(OperationEffect.UPDATED if result.changed else OperationEffect.NONE)
         await context.events.phase("auth.configure.settlement")
         return await _result_reference(result, context)
 
@@ -476,9 +492,26 @@ def build_auth_operation_registrations(
     return tuple(
         sorted(
             (
-                OperationPublicDefinitionRegistrationV1.compose_request_only(
-                    definition=definition,
-                    request_schema_id=f"{definition.definition_id}.request",
+                (
+                    OperationPublicDefinitionRegistrationV1.compose(
+                        definition=definition,
+                        request_schema=OperationSchemaBindingV1.bind(
+                            schema_id=f"{definition.definition_id}.request",
+                            schema_version=1,
+                            model_type=definition.request_type,
+                        ),
+                        result_schema=OperationSchemaBindingV1.bind(
+                            schema_id=f"{definition.definition_id}.result",
+                            schema_version=1,
+                            model_type=AuthConfigurePublicResultV1,
+                        ),
+                        result_projector=project_auth_configuration,
+                    )
+                    if definition.definition_id == AUTH_CONFIGURE_OPERATION_DEFINITION_ID
+                    else OperationPublicDefinitionRegistrationV1.compose_request_only(
+                        definition=definition,
+                        request_schema_id=f"{definition.definition_id}.request",
+                    )
                 )
                 for definition in definitions
             ),
