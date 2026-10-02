@@ -17,14 +17,14 @@ id = "modelo-200-base-imponible-previa"
 target_casilla_id = "DP200014:00550"
 expression = { op = "subtract", args = [
     { op = "add", args = [
-        { casilla_id = "00501" },
+        { casilla_id = "DP200012:00501" },
         { casilla_id = "DP200013:00417" },
     ] },
     { casilla_id = "DP200013:00418" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-11", "ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -57,7 +57,7 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -78,7 +78,7 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -183,7 +183,7 @@ expression = { op = "if_then_else", args = [
     ] },
 ] }
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-31-2022:art-39", "ley-49-2002:art-10"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -301,7 +301,7 @@ expression = { op = "if_then_else", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-27-2014:art-101", "ley-49-2002:art-10"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -332,7 +332,7 @@ expression = { op = "max", args = [
             { casilla_id = "01280" },
             { casilla_id = "DP200014:00572" },
             { casilla_id = "DP200014:00571" },
-            { casilla_id = "00573" },
+            { casilla_id = "DP200014:00573" },
             { casilla_id = "DP200014:00575" },
             { casilla_id = "DP200014:00577" },
             { casilla_id = "DP200014:00581" },
@@ -342,7 +342,7 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-39"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -381,7 +381,7 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-36", "ley-27-2014:art-39"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -413,7 +413,7 @@ expression = { op = "multiply", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -439,7 +439,7 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -467,7 +467,7 @@ expression = { op = "min", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"

@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
-from typing import Final, cast, override
+from typing import Final, assert_never, cast, override
 
 from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Input, Select, Static
 
+from ....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.iva.classification import InvoiceKind
 from ..components.widgets import ContentDataTable, ContentScroll
@@ -41,13 +42,18 @@ _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
 
 
 def draft_lines(draft: LedgerEvidenceDraftV1) -> tuple[str, ...]:
-    """Show what the reader found; a field it could not ground reads as unread, not as zero."""
+    """Show what the reader found; a field it could not ground reads as unread, not as zero.
+
+    When the fields read as unread because the model fill did not run, a last
+    line says so and names what stopped it, so the operator knows the page may
+    well print them.
+    """
     unread = ledger_copy("tui.ledger.evidence.draft.unread")
 
     def shown(value: str | None) -> str:
         return unread if value is None else value
 
-    return (
+    lines = (
         ledger_copy(
             "tui.ledger.evidence.draft.supplier",
             name=shown(draft.supplier_name),
@@ -68,6 +74,24 @@ def draft_lines(draft: LedgerEvidenceDraftV1) -> tuple[str, ...]:
         ),
         ledger_copy("tui.ledger.evidence.draft.discrepancies", count=draft.discrepancies),
     )
+    fallback = draft.label_reading_fallback
+    if fallback is None:
+        return lines
+    return (*lines, _label_reading_line(fallback))
+
+
+def _label_reading_line(fallback: LabelReadingFallback) -> str:
+    """Name what stopped the model fill and the fields it left unread, one remedy per cause."""
+    match fallback.cause:
+        case LabelReadingFallbackCause.READER_UNAVAILABLE:
+            key = "tui.ledger.evidence.draft.label_reading.reader_unavailable"
+        case LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED:
+            key = "tui.ledger.evidence.draft.label_reading.headroom_refused"
+        case LabelReadingFallbackCause.INFERENCE_SLOT_BUSY:
+            key = "tui.ledger.evidence.draft.label_reading.busy_refused"
+        case unhandled:
+            assert_never(unhandled)
+    return ledger_copy(key, count=len(fallback.unread_fields), fields=", ".join(fallback.unread_fields))
 
 
 class LedgerEvidenceScreen(LedgerWorkspaceScreen):

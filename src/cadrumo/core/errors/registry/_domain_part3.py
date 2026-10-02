@@ -78,6 +78,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.renta.actividad_asset.errors.ActividadAssetAcceleratedDa18DepreciationError",
+        ErrorCode(
+            code="REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_actividad_asset_accelerated_da18_depreciation_not_computed",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.renta.actividad_asset.errors.ActividadAssetIncompleteError",
         ErrorCode(
             code="REFUSED_ACTIVIDAD_ASSET_INCOMPLETE",

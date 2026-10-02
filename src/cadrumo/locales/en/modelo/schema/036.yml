@@ -1273,7 +1273,7 @@ modelo:
           deregistration in the Register of entrepreneurs, professionals and withholders.
         title: Register of entrepreneurs, professionals and withholders
       revision:
-        2023-hasta-2025-02-02:
+        2022-hasta-2023-04-24:
           casilla:
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
               label: Identification. Internet domain or address (second)
@@ -1340,7 +1340,10 @@ modelo:
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13f)
           field:
-            label: Modelo 036, from 2023 until 2 February 2025
+            label: Modelo 036, from 2022 until 24 April 2023
+        2023-hasta-2025-02-02:
+          field:
+            label: Modelo 036, from 25 April 2023 until 2 February 2025
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:

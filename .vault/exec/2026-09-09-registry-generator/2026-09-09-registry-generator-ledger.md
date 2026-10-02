@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-generator'
 date: '2026-09-09'
-modified: '2026-09-17'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbd05b8a9dc119b808184f5f1af352acf00831842194d4abed5be8e79d71aad4'
+body_hash: 'sha256:7ce799bbc314ed4bb18c5084b7a232ba9a395b54ac91447805b09fe5371f7a36'
 related:
   - "[[2026-09-09-registry-generator-plan]]"
 ---
@@ -31,6 +31,10 @@ related:
 - `S79` `verify:` `uv run --no-sync pytest dev/corpus/tests/test_record_design_support.py` -> `pass`
 - `S79` `verify:` `uv run --no-sync ruff check dev/corpus/sync_aeat_record_design_corpus.py dev/corpus/tests/test_record_design_support.py` -> `pass`
 - `S79` `verify:` `uv run --no-sync ty check dev/corpus/sync_aeat_record_design_corpus.py dev/corpus/tests/test_record_design_support.py` -> `pass`
+- `S51` `A` `.vault/reference/2026-09-09-registry-generator-consumer-behaviour-reference.md`
+- `S53` `A` `.vault/reference/2026-09-09-registry-generator-consumer-behaviour-reference.md`
+- `S54` `A` `.vault/reference/2026-09-09-registry-generator-consumer-behaviour-reference.md`
+- `S55` `A` `.vault/reference/2026-09-09-registry-generator-consumer-behaviour-reference.md`
 
 ## Notes
 
@@ -51,3 +55,7 @@ related:
 - `S79` `_authority_failures` was refactored to take its off-host declaration, corpus root and sidecar
 - `S79` census as arguments so the planted defects run on a temporary tree with no monkeypatching of
 - `S79` the production module and no mutation of the committed corpus.
+- `S51` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/reference/2026-09-09-registry-generator-consumer-behaviour-reference.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.
+- `S53` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/reference/2026-09-09-registry-generator-consumer-behaviour-reference.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.
+- `S54` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/reference/2026-09-09-registry-generator-consumer-behaviour-reference.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.
+- `S55` 2026-10-01 reconciliation: recovered a missing ledger receipt; this is not a new source change or a rerun of historical tests. Evidence: .vault/reference/2026-09-09-registry-generator-consumer-behaviour-reference.md. The retained artifact supports the historical investigation or review outcome; no current test run is claimed. A denotes recovery of this retained artifact into the Step ledger, not creation of a new artifact today.

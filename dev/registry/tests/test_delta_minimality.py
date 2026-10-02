@@ -70,8 +70,20 @@ _OVERRIDE = (
     'fields = { legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }\n'
     "removed_fields = []\n\n"
 )
-_NEXT_ROW = '[[revisions."2024".casillas]]\nid = "modulos-1-unidades"'
-_PREDECESSOR_LEGAL_REFS = f'legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]\n\n{_NEXT_ROW}'
+_ROOT = "2019-2023"
+_ROOT_NEXT_ROW = '[[revisions."2019-2023".casillas]]\nid = "modulos-1-unidades"'
+_ROOT_LEGAL_REFS = (
+    f'legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]\n\n{_ROOT_NEXT_ROW}'
+)
+_NEXT_OVERRIDE = (
+    'removed_fields = []\n\n[[revisions."2024".casilla_overrides]]\n'
+    'selector = { revision = "2019-2023", id = "modulos-1-unidades" }'
+)
+_PREDECESSOR_LEGAL_REFS = (
+    f'continuidad_origin = "grounded", legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]}}\n'
+    f"{_NEXT_OVERRIDE}"
+)
+_PREDECESSOR_WITHOUT_LEGAL_REFS = f'continuidad_origin = "grounded"}}\n{_NEXT_OVERRIDE}'
 
 
 @pytest.fixture(scope="module")
@@ -107,9 +119,10 @@ class _Inheritance:
 
     ``delta`` is the minimal form: its 2025 edition inherits the row. ``row`` is
     the row the loader materialised for it, the value a restating edition would
-    have to state. ``redefaulted`` is the same tree with the 2024 row's own
-    ``legal_refs`` dropped too, so that row takes its edition's ordenes and the
-    inheriting edition re-defaults it to its own.
+    have to state. ``redefaulted`` is the same tree with the row's own
+    ``legal_refs`` dropped too -- from the 2019-2023 edition that states it and
+    from the 2024 override that cites 2024's orden -- so the 2024 row takes its
+    edition's ordenes and the inheriting edition re-defaults it to its own.
     """
 
     delta: ModeloDefinition
@@ -128,8 +141,13 @@ def inheritance(tmp_path_factory: pytest.TempPathFactory) -> _Inheritance:
     _rewrite(modelo_dir / "revisions" / _SUCCESSOR / "revision.toml", _OVERRIDE, "")
     delta = load_modelo_directory(modelo_dir)
 
-    predecessor_rows = modelo_dir / "revisions" / _PREDECESSOR / "casillas" / "0001-declarations.toml"
-    _rewrite(predecessor_rows, _PREDECESSOR_LEGAL_REFS, _NEXT_ROW)
+    root_rows = modelo_dir / "revisions" / _ROOT / "casillas" / "0001-declarations.toml"
+    _rewrite(root_rows, _ROOT_LEGAL_REFS, _ROOT_NEXT_ROW)
+    _rewrite(
+        modelo_dir / "revisions" / _PREDECESSOR / "revision.toml",
+        _PREDECESSOR_LEGAL_REFS,
+        _PREDECESSOR_WITHOUT_LEGAL_REFS,
+    )
     redefaulted = load_modelo_directory(modelo_dir)
     return _Inheritance(
         delta=delta,

@@ -121,6 +121,11 @@ _OFFICIAL_CUOTA_DEDUCIBLE_TOTAL: CasillaId = validated_casilla_id("45")
 _M303_REPERCUTIDO_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.repercutido.general")
 _M303_REPERCUTIDO_REDUCIDO_CASILLA: CasillaId = validated_casilla_id("iva.repercutido.reducido")
 _M303_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: CasillaId = validated_casilla_id("iva.repercutido.super-reducido")
+# Each rate row's cuota carrier: the ledger's cuota at the row's rate plus the
+# promotor's autoconsumo declared at that rate, which boxes 09, 06 and 03 copy.
+_M303_DEVENGADA_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada.general")
+_M303_DEVENGADA_REDUCIDO_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada.reducido")
+_M303_DEVENGADA_SUPER_REDUCIDO_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada.super-reducido")
 _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
     "iva.autorepercutido.intracomunitaria.devengado"
 )
@@ -145,9 +150,9 @@ _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_i
 # projection-populated from the single semantic source it copies, so on any
 # calculate box == source must hold (the projection contract).
 _BOX_SOURCE_MAP: dict[CasillaId, CasillaId] = {
-    _OFFICIAL_DEVENGADO_GENERAL_CUOTA: _M303_REPERCUTIDO_GENERAL_CASILLA,
-    _OFFICIAL_REPERCUTIDO_REDUCIDO_CUOTA: _M303_REPERCUTIDO_REDUCIDO_CASILLA,
-    _OFFICIAL_REPERCUTIDO_SUPER_REDUCIDO_CUOTA: _M303_REPERCUTIDO_SUPER_REDUCIDO_CASILLA,
+    _OFFICIAL_DEVENGADO_GENERAL_CUOTA: _M303_DEVENGADA_GENERAL_CASILLA,
+    _OFFICIAL_REPERCUTIDO_REDUCIDO_CUOTA: _M303_DEVENGADA_REDUCIDO_CASILLA,
+    _OFFICIAL_REPERCUTIDO_SUPER_REDUCIDO_CUOTA: _M303_DEVENGADA_SUPER_REDUCIDO_CASILLA,
     _OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO: _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,
     _OFFICIAL_AUTOREPERCUTIDO_INTERIOR_DEVENGADO: _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA,
     _OFFICIAL_CUOTA_DEVENGADA_TOTAL: _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
@@ -561,8 +566,13 @@ def test_equals_consistency_predicate_blocks_a_drifted_box() -> None:
 
     auth = _authority_for_303()
     snap = auth.snapshot("303", filing_year=2026, period="1T")
+    # The box-equals-source guards; the promotor's autoconsumo reconciliation is
+    # an equality between two semantic casillas, not a box and its source.
     equals_predicates = tuple(
-        p for p in snap.revision.verification_predicates if p.expression.strip().startswith("equals(")
+        p
+        for p in snap.revision.verification_predicates
+        if p.expression.strip().startswith('equals(["')
+        and p.expression.strip()[len('equals(["') :].split('"', 1)[0] in _BOX_SOURCE_MAP
     )
     assert len(equals_predicates) == len(_BOX_SOURCE_MAP), "every single-source box must carry an equals predicate"
 
@@ -648,7 +658,14 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     # PATH A: live bucket-aggregation calculate.
     result = _seeded_calculation(secure_objects, operation=operation)
     live = {box: Decimal(result.revision.casilla_values[box]) for box in _PROJECTED_BOXES}
-    sources = (*_BOX_SOURCE_MAP.values(), *(src for parts in _BOX_COMPONENT_MAP.values() for src in parts))
+    sources = (
+        *_BOX_SOURCE_MAP.values(),
+        *(src for parts in _BOX_COMPONENT_MAP.values() for src in parts),
+        # The ledger cuotas the rate rows' computed carriers are built from.
+        _M303_REPERCUTIDO_GENERAL_CASILLA,
+        _M303_REPERCUTIDO_REDUCIDO_CASILLA,
+        _M303_REPERCUTIDO_SUPER_REDUCIDO_CASILLA,
+    )
     live_sources = {src: Decimal(result.revision.casilla_values[src]) for src in sources}
 
     # PATH B: standalone engine run over the same snapshot, seeded with the same

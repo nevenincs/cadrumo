@@ -44,6 +44,13 @@ RETIRED_INVOCATIONS: tuple[str, ...] = tuple(
         "devcontainer",
         "runner-image",
     )
+) + tuple(
+    "just " + verb + "-" + subject
+    for verb, subject in (
+        ("setup", "python"),
+        ("doctor", "dev"),
+        ("doctor", "python"),
+    )
 )
 
 #: The contexts a real citation appears in. Bare prose is deliberately NOT one
@@ -175,16 +182,19 @@ def test_no_live_source_cites_a_retired_invocation() -> None:
     assert not offenders, f"these cite a retired invocation {RETIRED_INVOCATIONS}: {sorted(offenders)}"
 
 
-def test_the_sweep_can_actually_fail(tmp_path: Path) -> None:
+@pytest.mark.parametrize("invocation", RETIRED_INVOCATIONS)
+def test_the_sweep_can_actually_fail(tmp_path: Path, invocation: str) -> None:
     """A guard that cannot fail reports nothing. Prove this one can.
 
     Args:
         tmp_path: A scratch tree the sweep is pointed at.
+        invocation: A retired command planted as a workflow step.
     """
-    planted = tmp_path / "doc.md"
-    planted.write_text(f"Run {RETIRED_INVOCATIONS[0]}something.\n", encoding="utf-8")
+    planted = tmp_path / ".github" / "workflows" / "probe.yml"
+    planted.parent.mkdir(parents=True)
+    planted.write_text(f"run: {invocation} something\n", encoding="utf-8")
     swept = _sweepable(tmp_path)
     assert planted in swept, "the planted file must be inside the sweep's scope"
-    assert any(retired in planted.read_text(encoding="utf-8") for retired in RETIRED_INVOCATIONS), (
+    assert any(citation in planted.read_text(encoding="utf-8") for citation in _retired_citations()), (
         "the planted citation must be one the sweep looks for"
     )

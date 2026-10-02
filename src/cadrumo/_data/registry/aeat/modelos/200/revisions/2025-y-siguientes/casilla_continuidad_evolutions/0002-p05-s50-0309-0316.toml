@@ -1,0 +1,16 @@
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "m200-dp200018b-00315-2024-2025-y-siguientes-label_evolved"
+continuidad_id = "is-deduccion-produccion-extranjera-cinematografica-pendiente-generada"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-36-2"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+[[revisions.2025-y-siguientes.casilla_continuidad_evolutions]]
+id = "m200-dp200018b-00316-2024-2025-y-siguientes-label_evolved"
+continuidad_id = "is-deduccion-produccion-extranjera-cinematografica-aplicado-periodo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-36-2"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]

@@ -23,11 +23,11 @@ modelo:
             label: Base liquidable general (règim d'impatriats, exclosa la part de
               l'estalvi art. 25.1.f TRLIRNR)
           impatriado-cuota-integra-ahorro:
-            label: 'Quota íntegra de l''estalvi (escala art. 93.2.e.2n: 19/21/23/27/30
-              sobre la base liquidable de l''estalvi, redacció vigent Ley 7/2024)'
+            label: Quota íntegra de l'estalvi (escala de l'art. 93.2.e).2n LIRPF sobre
+              la base liquidable de l'estalvi, en la redacció aplicable a cada exercici)
           impatriado-cuota-integra-general:
-            label: 'Quota íntegra general (escala art. 93.2.e.1r: 24% fins a 600.000
-              €, 47% sobre l''excés)'
+            label: 'Quota íntegra general (escala de l''art. 93.2.e).1r LIRPF: 24
+              % fins a 600.000 € i el tipus superior de l''exercici sobre l''excés)'
           impatriado-retenciones:
             label: Retencions i ingressos a compte (pagaments a compte, art. 93.2.f)
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12:
@@ -1145,9 +1145,9 @@ modelo:
             x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
               label: Valor de transmissió [2]
           field:
-            label: Model 151 exercicis 2015 a 2022 (règim d'impatriats, escala general
-              plana 24/47 després de la Llei 26/2014; la part de l'estalvi no està
-              modelada en aquesta revisió)
+            label: Model 151 exercicis 2015 a 2022 (règim d'impatriats; escala general
+              de l'art. 93.2.e).1r i escala de l'estalvi de l'art. 93.2.e).2n en la
+              redacció de cada exercici)
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

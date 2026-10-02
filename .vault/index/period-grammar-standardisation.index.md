@@ -4,13 +4,12 @@ tags:
   - '#index'
   - '#period-grammar-standardisation'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:70cb4ae02eab25b4b9ae85e5166224bbb92e609d3cf6c22a33bf24251671b865'
+body_hash: 'sha256:4a03f43d09e333c8cefc10b27590f4579f9d75519db12665001a42ed3359313b'
 related:
   - '[[2026-06-11-period-grammar-standardisation-adr]]'
   - '[[2026-06-11-period-grammar-standardisation-code-review-audit]]'
-  - '[[2026-06-11-period-grammar-standardisation-exec]]'
   - '[[2026-06-11-period-grammar-standardisation-ledger]]'
   - '[[2026-06-11-period-grammar-standardisation-plan]]'
   - '[[2026-06-11-period-grammar-standardisation-research]]'
@@ -34,7 +33,6 @@ Auto-generated index of all documents tagged with `#period-grammar-standardisati
 
 ### exec
 
-- `2026-06-11-period-grammar-standardisation-exec` - period-grammar-standardisation <display-path>
 - `2026-06-11-period-grammar-standardisation-ledger` - `period-grammar-standardisation` ledger
 
 ### plan

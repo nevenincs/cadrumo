@@ -86,7 +86,7 @@ devengada / cuota deducible total?".
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Self, override
 
 from ...core.registry_token import StrictRegistryToken
 from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
@@ -108,10 +108,12 @@ class IvaFlowDirection(StrictRegistryToken):
 
     __slots__ = ()
 
+    @override
     def __copy__(self) -> Self:
         """Share an immutable token without repeating membership admission."""
         return self
 
+    @override
     def __deepcopy__(self, memo: dict[int, object]) -> Self:
         """Preserve the admitted token when copying a containing projection."""
         return self

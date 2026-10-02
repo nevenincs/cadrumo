@@ -21,6 +21,8 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "05"
 number = "05"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [05] del bloque I rentas sometidas, columna dividendos y otras rentas de participacion en fondos propios de entidades; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_sometidas", "numero_rentas"]
 data_type = "integer"
 semantic_role = "irnr_retencion_numero_rentas_dividendos"
@@ -32,6 +34,8 @@ additional_source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "06"
 number = "06"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [06] del bloque I rentas sometidas, columna resto de rentas; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_sometidas", "numero_rentas"]
 data_type = "integer"
 semantic_role = "irnr_retencion_numero_rentas_resto"
@@ -43,6 +47,8 @@ additional_source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "07"
 number = "07"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [07], total del bloque I rentas sometidas sobre el desglose dividendos / resto que introduce la Orden HAC/56/2024. aeat-dr-216-2020-2023 imprime 'Num. Rentas' en las partidas 1 y 4 sin nombrar el bloque de cada una, de modo que no se afirma continuidad con ninguna partida anterior."
 section = ["rentas_sometidas", "numero_rentas"]
 data_type = "integer"
 semantic_role = "irnr_retencion_numero_rentas_total"
@@ -56,6 +62,8 @@ additional_source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "14"
 number = "14"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [14] del bloque II rentas no sometidas, columna dividendos y otras rentas de participacion en fondos propios de entidades; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_no_sometidas", "numero_rentas"]
 data_type = "integer"
 semantic_role = "irnr_no_retencion_numero_rentas_dividendos"
@@ -67,6 +75,8 @@ additional_source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "15"
 number = "15"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [15] del bloque II rentas no sometidas, columna resto de rentas; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_no_sometidas", "numero_rentas"]
 data_type = "integer"
 semantic_role = "irnr_no_retencion_numero_rentas_resto"
@@ -78,6 +88,8 @@ additional_source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "16"
 number = "16"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [16], total del bloque II rentas no sometidas sobre el desglose dividendos / resto que introduce la Orden HAC/56/2024. aeat-dr-216-2020-2023 imprime 'Num. Rentas' en las partidas 1 y 4 sin nombrar el bloque de cada una, de modo que no se afirma continuidad con ninguna partida anterior."
 section = ["rentas_no_sometidas", "numero_rentas"]
 data_type = "integer"
 semantic_role = "irnr_no_retencion_numero_rentas_total"
@@ -91,6 +103,8 @@ additional_source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "17"
 number = "17"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [17] del bloque II rentas no sometidas, columna dividendos y otras rentas de participacion en fondos propios de entidades; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_no_sometidas", "base"]
 semantic_role = "irnr_no_retencion_base_dividendos"
 semantic_role_cardinality = "intentional_singleton"
@@ -101,6 +115,8 @@ additional_source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "18"
 number = "18"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [18] del bloque II rentas no sometidas, columna resto de rentas; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_no_sometidas", "base"]
 semantic_role = "irnr_no_retencion_base_resto"
 semantic_role_cardinality = "intentional_singleton"
@@ -111,6 +127,8 @@ additional_source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "19"
 number = "19"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [19], total del bloque II rentas no sometidas sobre el desglose dividendos / resto que introduce la Orden HAC/56/2024. aeat-dr-216-2020-2023 imprime 'Base ret. ing. cuenta.' en las partidas 2 y 5 sin nombrar el bloque de cada una, de modo que no se afirma continuidad con ninguna partida anterior."
 section = ["rentas_no_sometidas", "base"]
 semantic_role = "irnr_no_retencion_base_total"
 semantic_role_cardinality = "intentional_singleton"
@@ -138,6 +156,8 @@ additional_source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "08"
 number = "08"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [08] del bloque I rentas sometidas, columna dividendos y otras rentas de participacion en fondos propios de entidades; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_sometidas", "base"]
 semantic_role = "irnr_retencion_base_dividendos"
 semantic_role_cardinality = "intentional_singleton"
@@ -147,6 +167,8 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "09"
 number = "09"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [09] del bloque I rentas sometidas, columna resto de rentas; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_sometidas", "base"]
 semantic_role = "irnr_retencion_base_resto"
 semantic_role_cardinality = "intentional_singleton"
@@ -156,6 +178,8 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "10"
 number = "10"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [10], total del bloque I rentas sometidas sobre el desglose dividendos / resto que introduce la Orden HAC/56/2024. aeat-dr-216-2020-2023 imprime 'Base ret. ing. cuenta.' en las partidas 2 y 5 sin nombrar el bloque de cada una, de modo que no se afirma continuidad con ninguna partida anterior."
 section = ["rentas_sometidas", "base"]
 semantic_role = "irnr_retencion_base_total"
 semantic_role_cardinality = "intentional_singleton"
@@ -167,6 +191,8 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "11"
 number = "11"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [11] del bloque I rentas sometidas, columna dividendos y otras rentas de participacion en fondos propios de entidades; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_sometidas", "retenciones"]
 semantic_role = "irnr_retencion_cuota_dividendos"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
@@ -174,6 +200,8 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "12"
 number = "12"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-216-2024 Pag. 1: casilla [12] del bloque I rentas sometidas, columna resto de rentas; el desglose dividendos / resto lo introduce la Orden HAC/56/2024 (art. segundo, anexo II). aeat-dr-216-2020-2023 imprime siete partidas sin ese desglose ni numeracion de casillas."
 section = ["rentas_sometidas", "retenciones"]
 semantic_role = "irnr_retencion_cuota_resto"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
@@ -181,6 +209,9 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "13"
 number = "13"
+continuidad_id = "irnr-retencion-cuota-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-216-2020-2023 Pag. 1 campo 14 (posicion 143, longitud 17): Liquidacion - Partida 3 - Retenciones ingresos a cuenta, la unica partida de retenciones de ese diseno; aeat-dr-216-2024 Pag. 1 campo 19 (posicion 245): Liquidacion - I Rentas sometidas - Totales - Retenciones e ingresos a cuenta [13]. Mismo importe total de retenciones e ingresos a cuenta del periodo; el diseno 2024 lo desglosa ademas en dividendos [11] y resto de rentas [12]."
 section = ["rentas_sometidas", "retenciones"]
 semantic_role = "irnr_retencion_cuota_total"
 input_kind = "computed"
@@ -190,6 +221,9 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "20"
 number = "20"
+continuidad_id = "irnr-retencion-resultados-anteriores"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-216-2020-2023 Pag. 1 campo 17 (posicion 194, longitud 17): Liquidacion - Partida 6 - Resultado ing. anteriores declaraciones; aeat-dr-216-2024 Pag. 1 campo 26 (posicion 364): Resultados a ingresar de anteriores autoliquidaciones por el mismo concepto, ejercicio y periodo [20]. Mismo concepto, restado del total en ambos disenos."
 section = ["totales"]
 semantic_role = "irnr_retencion_resultados_anteriores"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
@@ -197,6 +231,9 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "21"
 number = "21"
+continuidad_id = "cuota-a-ingresar"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-216-2020-2023 Pag. 1 campo 18 (posicion 211, longitud 17): Liquidacion - Partida 7 - Resultado ingresar; aeat-dr-216-2024 Pag. 1 campo 27 (posicion 381): Resultado a ingresar ([13] - [20]) [21]. Mismo resultado de la autoliquidacion."
 section = ["totales"]
 semantic_role = "cuota_a_ingresar"
 constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"] }

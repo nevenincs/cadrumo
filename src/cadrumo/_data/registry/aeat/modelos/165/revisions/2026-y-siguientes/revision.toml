@@ -3,9 +3,10 @@ predecessor = "2023-2025"
 casilla_source_refs = ["aeat-dr-165-2026"]
 reviewed_against = "2023-2025"
 authority_grade = "filing"
-# AEAT's current source is itself headed "Ejercicio 2026". Its type-1 record
-# introduces EMPRESA EMERGENTE at offset 184, so this layout cannot be used for
-# either the complete 2016-2022 design or the unevidenced 2023-2025 interval.
+# AEAT's current source is headed "Ejercicio 2026", but it is the design
+# Orden HFP/1284/2023 applies from ejercicio 2023, so this edition inherits its
+# casillas, export layout and workbook pin from 2023-2025 and keys only its own
+# deadline window and calendar grounding.
 valid_from = 2026-01-01
 period_selector = { year_from = 2026, periods = ["0A"] }
 orden_aplicabilidad = ["orden-hap-2455-2013:art-1"]
@@ -23,6 +24,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent: current AEAT design headed Ejercicio 2026, with the post-2016 EMPRESA EMERGENTE field and two complete 500-byte records"
 reviewed_at = 2026-08-26
 family_storage_baseline = "2023-2025"
+scoped_families = ["export_layouts", "workbook_parity_refs"]
 
 [revisions."2026-y-siguientes".family_dispositions.applicability]
 reason = "Modelo 165's registered scope is established by the approving Orden and is consumed through its temporal selector. This informative emitter declaration has no taxpayer-profile predicate or alternative applicability branch to model, so no applicability rule can be authored without inventing one."
@@ -96,15 +98,11 @@ origin = "seeded"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-165-procedure"]
 
-[[revisions."2026-y-siguientes".casilla_overrides]]
-selector = { revision = "2023-2025", id = "decl.ejercicio" }
-fields = { source_refs = ["enrolled-modelo-165-procedure"] }
-removed_fields = []
-
-[[revisions."2026-y-siguientes".casilla_overrides]]
-selector = { revision = "2023-2025", id = "decl.tipo-declaracion" }
-fields = { source_refs = ["enrolled-modelo-165-procedure"] }
-removed_fields = []
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2023-2025", id = "modelo-165-informative"}
+fields = {deadline_windows = ["modelo-165-2026-0a"]}
+sequence_additions = {source_refs = ["aeat-calendario-contribuyente-2026-hasta-2-febrero"]}
 
 [[revisions."2026-y-siguientes".family_removals]]
 family = "deadline_windows"

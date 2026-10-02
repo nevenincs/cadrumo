@@ -75,6 +75,8 @@ def _professional_services_invoice(
     kind: InvoiceKind = InvoiceKind.RECEIVED,
     number: str = "F-PROV-900",
     issued_at: date = date(2025, 3, 15),
+    counterparty_country: str = "ES",
+    counterparty_tax_id: str = "B12345674",
 ) -> Invoice:
     subtotal = Decimal("1000.00")
     rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
@@ -94,8 +96,8 @@ def _professional_services_invoice(
             "invoice_number": number,
             "issued_at": issued_at,
             "counterparty_name": "Asesoría Profesional SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
+            "counterparty_tax_id": counterparty_tax_id,
+            "counterparty_country": counterparty_country,
             "base_total": subtotal,
             "iva_total": line.iva_amount,
             "grand_total": subtotal + line.iva_amount,
@@ -501,6 +503,73 @@ def test_issued_invoice_retencion_is_refused_and_not_routed(tmp_path: Path) -> N
 
         assert result.exit_code == 2, result.output
         assert "not_a_retenedor_liability" in result.output
+
+        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
+            "111",
+            Period.from_year_and_code(2025, "1T"),
+        )
+        assert stored == ()
+
+
+@pytest.mark.parametrize(
+    ("language", "credit_reason", "non_resident_reason"),
+    (
+        ("en", "the retención on an issued invoice is a credit", "The supplier is not resident in Spain"),
+        ("es", "la retención de una factura emitida es un crédito", "El proveedor no es residente en España"),
+    ),
+)
+def test_an_invoice_with_two_defects_is_refused_naming_both(
+    tmp_path: Path, language: str, credit_reason: str, non_resident_reason: str
+) -> None:
+    """An issued invoice from a non-resident is refused once, with both defects, in the operator's language.
+
+    The refusal reaches the registered error envelope rather than a flattened
+    argument error, so a machine reads every defect token and a person reads
+    every explanation, and nothing reaches the per-perceptor store.
+    """
+    issued_abroad = _professional_services_invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        number="F-CLI-003",
+        counterparty_country="PT",
+        counterparty_tax_id="PT123456789",
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 invoice retencion") as profile:
+        objects: SecureObjectRepository = profile.repository
+        InvoiceCatalogueRepository(objects=objects).save(build_invoice_catalogue([issued_abroad]))
+
+        result = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "--language",
+                language,
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                "111",
+                "--year",
+                "2025",
+                "--period",
+                "1T",
+                "--received-invoice-retencion",
+                _withholding_evidence_payload(
+                    issued_abroad,
+                    allocation_id="allocation-issued-abroad",
+                    payment_event_id="payment-issued-abroad",
+                    idempotency_key="capture-issued-abroad",
+                ),
+            ],
+        )
+
+        assert result.exit_code == 2, result.output
+        error = json.loads(result.output)["error"]
+        assert error["code"] == "REFUSED_INVOICE_WITHHOLDING_DEFECTS", error
+        assert error["context"]["refusal_code"] == "not_a_retenedor_liability,non_resident_supplier"
+        assert credit_reason in error["context"]["defect_reasons"]
+        assert non_resident_reason in error["context"]["defect_reasons"]
 
         stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
             "111",

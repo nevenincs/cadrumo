@@ -24,6 +24,7 @@ from ._modelo_100_registry_support import (
     _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
     _STATE_DEDUCTION_ART_67_REF,
     _STATE_INTEGRAL_QUOTA_ART_62_REF,
+    _governing_redaction,
     _modelo_100_revision,
 )
 from .authored_edition_support import newest_authored_edition
@@ -301,7 +302,10 @@ def test_modelo_100_extraction_profile_legal_refs_match_target_casillas() -> Non
 
         assert set(profiles_by_surface) == set(_M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE)
         for surface, profile in profiles_by_surface.items():
-            expected_refs = _M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE[surface]
+            expected_refs = frozenset(
+                _governing_redaction(reference_id, revision)
+                for reference_id in _M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE[surface]
+            )
             target_refs = frozenset(
                 legal_ref
                 for target in profile.target_casillas

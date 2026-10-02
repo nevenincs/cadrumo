@@ -73,12 +73,6 @@ source_refs = [
     "boe-modelo-151-layout",
     "aeat-dr-151-2015",
 ]
-[revisions."2015-2022".family_dispositions.deadline_windows]
-reason = """
-DEFERRED, not inapplicable: this modelo has a real filing window every year it covers. Orden HAP/2783/2015 art. 3.1 fixes it by REMISSION -- the plazo 'sera el mismo que se apruebe cada ejercicio, con caracter general, para las declaraciones del IRPF' -- so the orden that governs this revision states no date of its own, and each year's concrete opens_on/closes_on is a separate factual claim about that year's Renta campaign orden. Those ordenes are not bundled for 2015-2022, and modelo 100's own \
-declared windows begin at 2020, so five of this revision's eight years have no in-repository authority at all. A window written from memory is a filing-grade harm, so none is written. Bundling each ejercicio's Renta campaign orden, or extending modelo 100's windows back to 2015 and carrying them across under art. 3.1, is the change that makes this family authorable."""
-legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-3"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 
 [revisions."2015-2022".family_dispositions.dependency_classifications]
 reason = """

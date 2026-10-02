@@ -1,0 +1,55 @@
+[revisions."2022"]
+casilla_source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
+# Applicability-grade edition for ejercicio 2022, and the modelo's storage
+# baseline: it sits at the support floor, so its payload is stated here in full
+# and the 2023 edition stores only its differences against it (storage
+# baselines select payload only; they claim no legal succession).
+#
+# THE 2022 RECORD LAYOUT. AEAT publishes no separate modelo 296 diseno for 2022.
+# The layout in force is Anexo III of Orden EHA/3290/2008 as Orden HFP/1351/2021
+# left it (first applied to the 2021 declarations) and as Orden HFP/1284/2023
+# found it (first applied to 2023): boe-modelo-296-2021-2022-layout, BOE's
+# consolidated redaction of 4 December 2021. Measured against the 2023 redaction,
+# the only differences are those HFP/1284/2023 art. 9 made: positions 77-90 of
+# the tipo-2 record are blancos (2023 puts the IDENTIFICADOR DE REGISTRO O NUMERO
+# DE ORDEN at 77-84), and there is no Anexo de desglose (tipo de hoja F).
+#
+# WHY APPLICABILITY. The layout text is complete, but the export generator renders
+# only AEAT record designs, and none exists for 2022, so no export layout, no
+# export link and no projection endpoints are declared here, and no filing grade
+# is claimed. The completeness manifest lists the same closure as 2023's but is
+# keyed to this year's layout, which the filing schedule cites too.
+authority_grade = "applicability"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+period_selector = { year_from = 2022, year_to = 2022, periods = ["0A"] }
+orden_aplicabilidad = ["orden-eha-3290-2008:art-6"]
+legal_refs = ["orden-eha-3290-2008:art-6", "orden-hfp-1351-2021:art-quinto", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "boe-modelo-296-2021-2022-layout"]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-09-30
+
+[revisions."2022".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 296 applies none: its hoja-resumen prints four boxes and computes none of them, and the IRNR retencion rate is applied by the retenedor at payment time, reaching this annual summary as an amount already withheld."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[revisions."2022".family_dispositions.live_cross_references]
+reason = """
+A live cross-reference declares an AEAT surface this application READS at runtime. Cadrumo operates no live surface for modelo 296 and never performs live AEAT submission, so there is no host to allow, no method to bound and no guard policy to name. Should an adapter ever read this modelo, the family becomes applicable and this disposition must be revisited."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[revisions."2022".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact and must be grounded against an AEAT-published document that PRINTS those labels. This edition's layout authority, boe-modelo-296-2021-2022-layout, is a record description printing no form labels, and no label-printing specimen is bundled, so authoring patterns would invent them."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-2021-2022-layout"]
+
+[revisions."2022".family_dispositions.formulas]
+reason = """
+The hoja-resumen approved as ANEXO II of Orden EHA/3290/2008 prints four boxes and computes none of them: each is an aggregation the declarante performs over its own tipo-2 perceptor records, none an arithmetic relation between the boxes. Box 04 counts only some of the perceptores box 03 counts, so no formula may relate the two."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]

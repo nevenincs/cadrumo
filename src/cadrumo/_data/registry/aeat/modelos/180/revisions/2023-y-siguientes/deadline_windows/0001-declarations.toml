@@ -1,3 +1,17 @@
+# Ejercicio 2023, filed in January 2024: AEAT's Calendario del Contribuyente
+# 2024 lists "Resumen anual 2023: 180, 188, 190, 193, 193-S, 194, 196, 270"
+# under "Hasta el 31 de enero", the same nominal January window as the other
+# years of this edition.
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-180-2023-0a"
+filing_year = 2023
+period = "2023 0A"
+period_kind = "annual"
+opens_on = 2024-01-01
+closes_on = 2024-01-31
+legal_refs = ["orden-hfp-1284-2023:art-7", "ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-108", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form", "aeat-calendario-contribuyente-2024"]
+
 [[revisions."2023-y-siguientes".deadline_windows]]
 id = "modelo-180-2024-0a"
 filing_year = 2024

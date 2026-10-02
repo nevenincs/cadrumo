@@ -226,10 +226,15 @@ def test_modelo_aggregate_module_no_longer_exposes_direct_retencion_persistence(
 
 
 def test_modelo_aggregate_keeps_capital_out_of_the_raw_mutation_path() -> None:
-    """The 123 transport remains gated until its annual and count contracts are complete."""
+    """The 123 transport remains gated until its annual and count contracts are complete.
+
+    Its window is only read back, never written from invoice evidence: capital
+    withholding enters through the paying ledger transaction.
+    """
     from .. import _modelo_aggregate_cli
 
-    assert "123" in _modelo_aggregate_cli._INVOICE_WITHHOLDING_MODELOS
+    assert "123" in _modelo_aggregate_cli._PERIODIC_WINDOW_MODELOS
+    assert "123" not in _modelo_aggregate_cli._INVOICE_EVIDENCE_MODELOS
 
 
 def test_rent_cli_evidence_refuses_missing_property_detail() -> None:

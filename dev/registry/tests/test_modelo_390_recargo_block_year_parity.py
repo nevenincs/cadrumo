@@ -31,9 +31,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..compiler.authority import compiled_bundled_authority
@@ -97,6 +99,15 @@ def _design_boxes(revision: ModeloRevision) -> set[str]:
     return printed
 
 
+def _cites_a_record_design(revision: ModeloRevision) -> bool:
+    """Whether the edition's casillas cite a diseño de registro rather than only the approving form."""
+    sources = compiled_bundled_authority().catalogues.sources
+    return any(
+        (source := sources.get(str(ref))) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN
+        for ref in revision.casilla_source_refs or revision.source_refs
+    )
+
+
 def _sections(revision: ModeloRevision) -> set[tuple[str, ...]]:
     return {tuple(row.section) for row in _rate_rows(revision).values()}
 
@@ -111,10 +122,27 @@ def _m390_from(root: Path) -> ModeloDefinition:
 
 
 def test_every_declared_recargo_rate_box_is_printed_in_that_editions_own_design() -> None:
-    """Grounding: the block the registry declares is the block the design prints."""
+    """Grounding: the block the registry declares is the block the design prints.
+
+    An edition whose diseño AEAT has not published yet is authored from the form
+    its orden approves. It stays at applicability grade, so it claims no filing
+    layout, and it may declare only rate boxes its predecessor's design prints.
+    """
+    printed_by_predecessor: set[str] = set()
     for revision in _editions_declaring_the_block(_bundled_definition()):
-        printed = _design_boxes(revision)
         declared = {str(row.number) for row in _rate_rows(revision).values()}
+        if not _cites_a_record_design(revision):
+            assert revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY, (
+                f"edition {revision.id} cites no diseño de registro yet claims "
+                f"{revision.effective_authority_grade} grade"
+            )
+            assert declared <= printed_by_predecessor, (
+                f"edition {revision.id} declares recargo rate box(es) "
+                f"{sorted(declared - printed_by_predecessor)} that no predecessor design prints"
+            )
+            continue
+        printed = _design_boxes(revision)
+        printed_by_predecessor = printed
         assert declared <= printed, (
             f"edition {revision.id} declares recargo rate box(es) {sorted(declared - printed)} "
             "that its own design does not print under the recargo block"

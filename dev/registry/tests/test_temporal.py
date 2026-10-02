@@ -62,12 +62,6 @@ def _committed_modelo_100() -> ModeloDefinition:
     )
 
 
-def _committed_modelo_390() -> ModeloDefinition:
-    return load_modelo_directory(
-        Path(__file__).parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "390"
-    )
-
-
 def test_select_revision_returns_the_matching_year_revision() -> None:
     modelo = _committed_modelo_100()
 
@@ -375,12 +369,16 @@ def test_no_revision_raises_typed_subclass_with_structured_natural_key() -> None
     assert err.revision_id == "r9"
 
 
-def test_modelo_390_horizon_projects_the_nearest_authored_revision() -> None:
-    """The absent horizon edition projects from the newest authored one instead of becoming a support gap."""
+def test_an_absent_horizon_edition_projects_the_nearest_authored_revision() -> None:
+    """The absent horizon edition projects from the newest authored one instead of becoming a support gap.
+
+    Modelo 100 authors no edition for the horizon year: AEAT has not released that
+    Renta form, so the year is answered from the newest edition it has.
+    """
     support = committed_supported_filing_years()
-    newest_authored = newest_authored_edition("390")
+    newest_authored = newest_authored_edition("100")
     assert newest_authored < support.horizon
-    revision = select_revision(_committed_modelo_390(), filing_year=support.horizon, period="0A", support=support)
+    revision = select_revision(_committed_modelo_100(), filing_year=support.horizon, period="0A", support=support)
     resolution = revision_temporal_resolution(
         revision,
         filing_year=support.horizon,

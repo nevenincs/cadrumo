@@ -50,13 +50,26 @@ finding_kind = "ADVISORY"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105"]
 
 # Box-equals-source consistency for the official boxes this revision projects
-# from a single semantic carrier: [27] from the devengado total, [33] and [37]
-# from their deducible carriers and [45] from the deducible total. The 2022
+# from a single semantic carrier: [11] and [13] from their inversion del sujeto
+# pasivo devengado carriers, [27] from the devengado total, [33] and [37] from
+# their deducible carriers and [45] from the deducible total. The 2022
 # design prints each box with the same content as every later design, so the
 # projection and its guard hold from this revision on. A projection cannot
 # drift from its source within one evaluation; the predicate catches a future
 # mis-edit that re-flips a box to manual or points it at the wrong source. [29]
 # is not guarded this way: it projects the sum of two carriers.
+[[revisions.2022.verification_predicates]]
+id = "equals:dr303-11-equals-iva-autorepercutido-intracomunitaria-devengado"
+predicate_id = "modelo-303-dr303-11-equals-iva-autorepercutido-intracomunitaria-devengado"
+expression = 'equals(["11", "iva.autorepercutido.intracomunitaria.devengado"])'
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.verification_predicates]]
+id = "equals:dr303-13-equals-iva-autorepercutido-interior-devengado"
+predicate_id = "modelo-303-dr303-13-equals-iva-autorepercutido-interior-devengado"
+expression = 'equals(["13", "iva.autorepercutido.interior.devengado"])'
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
 [[revisions.2022.verification_predicates]]
 id = "equals:dr303-27-equals-iva-cuota-devengada-total"
 predicate_id = "modelo-303-dr303-27-equals-iva-cuota-devengada-total"
@@ -80,3 +93,15 @@ id = "equals:dr303-45-equals-iva-cuota-deducible-total"
 predicate_id = "modelo-303-dr303-45-equals-iva-cuota-deducible-total"
 expression = 'equals(["45", "iva.cuota-deducible-total"])'
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# The profile states the promotor's autoconsumo base as one rate-less total,
+# while the return declares it in the régimen general row of the rate its
+# building bears (LIVA arts. 9.1º, 79.Tres, 90 and 91). A total the rate rows
+# do not account for would leave autoconsumo undeclared, and rows that exceed
+# it would declare more than the profile states, so the filing is refused until
+# the rows' bases sum to the profile's total.
+[[revisions.2022.verification_predicates]]
+id = "equals:iva-autoconsumo-promotor-base-equals-por-tipo"
+predicate_id = "modelo-303-iva-autoconsumo-promotor-base-equals-por-tipo"
+expression = 'equals(["iva.autoconsumo.promotor.base", "iva.autoconsumo.promotor.base.por-tipo"])'
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

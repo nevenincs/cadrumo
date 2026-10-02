@@ -109,7 +109,51 @@ class _CadrumoEnvSettingsSource(EnvSettingsSource):
             self.env_vars = original_env_vars
 
 
-class Settings(CadrumoLlmSettings):
+class AuthorityRootSettings(BaseSettings):
+    """The registry authority location, read from the process environment alone.
+
+    The published authority is product data, not taxpayer state, so locating it
+    must not depend on the storage root or the active-profile pointer. Both of
+    those refuse on a machine that still carries retired ``aeat`` state, and a
+    :class:`Settings` construction resolves both; reading the authority root
+    through it would stop the command surface and the MCP server from starting
+    on such a machine even though neither touches storage to describe itself.
+
+    :class:`Settings` inherits the field, so the variable has one declaration
+    and one parse whichever model reads it. Both models normalise it through
+    the same path normaliser: :class:`Settings` names it in its own
+    ``_normalize_repo_relative_paths``, which replaces this one there, because
+    that validator is where every path setting's normalisation is enumerated.
+    :func:`configured_authority_root` is the reader that constructs this model
+    and nothing else.
+    """
+
+    model_config = SettingsConfigDict(
+        env_ignore_empty=True,
+    )
+
+    cadrumo_authority_root: Path | None = Field(
+        default=None,
+        description=(
+            "Directory holding the published registry authority descriptor "
+            "``authority.current.json`` and the content-addressed SQLite "
+            "generation it selects. The ``None`` default is the installed "
+            "posture: the authority ships inside the distribution and "
+            "resolves through the bundled-data boundary, so an unset "
+            "``CADRUMO_AUTHORITY_ROOT`` leaves resolution exactly as the "
+            "packaged product performs it. A development checkout sets it to "
+            "the generated authority tree it keeps outside the packaged "
+            "location; the descriptor must exist under the named directory."
+        ),
+    )
+
+    @field_validator("cadrumo_authority_root", mode="after")
+    @classmethod
+    def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
+        return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
+
+
+class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     """Application settings populated from process environment variables.
 
     Field names map directly to env var names (uppercased). For example,
@@ -419,22 +463,6 @@ class Settings(CadrumoLlmSettings):
             "Directory for the corpus-search lexical index (a SQLite database "
             "built from bundled normative extractions and rebuilt when their "
             "exact content identity changes)"
-        ),
-    )
-
-    # ── Registry authority artifact ─────────────────────────────────────────
-    cadrumo_authority_root: Path | None = Field(
-        default=None,
-        description=(
-            "Directory holding the published registry authority descriptor "
-            "``authority.current.json`` and the content-addressed SQLite "
-            "generation it selects. The ``None`` default is the installed "
-            "posture: the authority ships inside the distribution and "
-            "resolves through the bundled-data boundary, so an unset "
-            "``CADRUMO_AUTHORITY_ROOT`` leaves resolution exactly as the "
-            "packaged product performs it. A development checkout sets it to "
-            "the generated authority tree it keeps outside the packaged "
-            "location; the descriptor must exist under the named directory."
         ),
     )
 
@@ -988,6 +1016,7 @@ class Settings(CadrumoLlmSettings):
         mode="after",
     )
     @classmethod
+    @override
     def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
         return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
@@ -1105,6 +1134,23 @@ def load_settings() -> Settings:
         pointer.bucket_id,
         pointer.transition_revision,
     )
+
+
+def configured_authority_root() -> Path | None:
+    """Return the configured registry authority root, or ``None`` for the packaged one.
+
+    Inside an :func:`override_settings` block the override answers, as it does
+    for every field. Outside one the answer comes from the process environment
+    through :class:`AuthorityRootSettings`, without deriving the storage root or
+    reading the active-profile pointer. That is what lets the product read its
+    own registry on a machine whose storage refuses to resolve; every storage
+    and profile access still goes through :func:`load_settings` and still
+    refuses there.
+    """
+    override = settings_override.get()
+    if override is not None:
+        return override.cadrumo_authority_root
+    return AuthorityRootSettings().cadrumo_authority_root
 
 
 @contextmanager

@@ -146,6 +146,9 @@ selector = { revision = "2024", id = "tipo2.recurrencia" }
 fields = { legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93", "orden-hac-1430-2025:art-2"] }
 removed_fields = []
 
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024", id = "modelo-182-2024-0a"}
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-182-informative"}
+fields = {verification_expectations = ["modelo-182-informative-summary-verification"], workbook_parity_refs = ["modelo-182-orden-static-layout"]}
+sequence_additions = {deadline_windows = ["modelo-182-2025-0a"], source_refs = ["aeat-dr-182-2025"]}
+sequence_removals = {deadline_windows = [0], source_refs = [2]}

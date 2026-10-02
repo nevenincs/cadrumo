@@ -69,6 +69,11 @@ cli:
           and a reviewable draft, one typed result row per document.
         batch_items_refused_message: Some documents were refused. Every other document
           in the run still completed; the refused rows name what was seen.
+        batch_label_reading_degraded_message: '{count} stored draft(s) stand on their
+          label reading alone because the model fill did not run; the fields it was
+          to read are empty in those drafts, not missing from the documents, and each
+          row names the reason. Confirming a document reads it again, so those fields
+          are filled then once the reason has cleared, or you can supply them yourself.'
         batch_pending_review_message: Some drafts carry a finding a person must adjudicate
           before an invoice is minted. They are held, not failed.
         batch_progress_message: 'processed %{source}: %{status}'
@@ -205,6 +210,19 @@ cli:
         invoice_number_help: Supplier invoice number
         iva_amount_help: Invoice IVA amount
         iva_rate_help: Applied IVA rate as a percentage, for example 21
+        label_reading_busy_refused: 'Another on-host reading was already using this
+          machine''s inference slot, so the reading model was not run. The {count}
+          field(s) the label rules left unread stay empty: {fields}. The label reading
+          stands; extract again once the other reading finishes, or supply those fields
+          yourself.'
+        label_reading_headroom_refused: 'The on-host reading model was not loaded:
+          this machine showed no measured memory headroom for it. The {count} field(s)
+          the label rules left unread stay empty: {fields}. The label reading stands;
+          free memory and extract again, or supply those fields yourself.'
+        label_reading_reader_unavailable: 'The on-host semantic reader could not be
+          run ({error_type}), so the {count} field(s) the label rules left unread
+          stay empty: {fields}. The label reading stands, and those fields are yours
+          to supply.'
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
         pull_actor_help: Operator label.
@@ -648,21 +666,24 @@ cli:
       year_help: Filing year
     modelo:
       aggregate:
+        calculation_rows_absent: 'Modelo {modelo} {filing_year} {period}: no stored
+          rows exist for the {source_family} source its calculation reads, so this
+          report is empty because the data is missing, not because it is zero.'
         counterpart_observation_help: JSON CounterpartObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
         foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
-        invoice_retencion_wrong_modelo: --received-invoice-retencion routes into the
-          retenciones per-perceptor store; modelo %{modelo} is not one of 111, 115,
-          123, 180, 190, 193.
+        invoice_retencion_wrong_modelo: --received-invoice-retencion records received-invoice
+          withholding for Modelos %{accepted_modelos} only; modelo %{modelo} does
+          not accept invoice evidence.
         json_not_object: '{flag} must be a JSON object.'
         json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
         json_validation_error: 'The value of {flag} is not a valid observation object:
           {details}.'
         ledger_payment_withholding_exclusive: --ledger-payment-withholding cannot
-          be combined with --received-invoice-retencion or --retencion-observation.
+          be combined with --received-invoice-retencion.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
           one payroll (Modelo 111) or movable-capital income (Modelo 123) allocation
           paid by a ledger transaction.'
@@ -675,7 +696,7 @@ cli:
           modelo %{modelo} is not accepted.
         m123_ledger_payment_only: Modelo 123 accepts withholding evidence only from
           its paying ledger transaction through --ledger-payment-withholding; invoice
-          and hand-typed retenciones are refused, and nothing was written.
+          evidence is refused, and nothing was written.
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'
@@ -683,18 +704,10 @@ cli:
           one withholding allocation from a received invoice, with its payment or
           exigibility evidence. One allocation per command; the scheme is a legal
           fact about the perceptor''s activity and is never inferred from the invoice.'
-        retencion_observation_help: 'JSON RetencionObservation object. The source_kind
-          value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
-          or collectible_invoice. For Modelo 111 trabajo, scheme rendimientos_trabajo
-          is the empleado progressive rate (LIRPF art. 101.1) and rendimientos_trabajo_administrador
-          is the fixed administrador/consejero rate (LIRPF art. 101.2: 35 percent,
-          or 19 percent when the entity''s net turnover is below 100,000 EUR). Repeat
-          for multiple observations.'
-        withholding_observation_help: Per-perceptor-clave withholding observation
-          (JSON) for the Modelo 190 percepciones count; repeatable.
-      aggregate_help: Run the backend per-modelo aggregation service from explicit
-        canonical observations. Accepted source_kind values are ledger_transaction,
-        purchase_invoice_evidence, payable_invoice, and collectible_invoice.
+      aggregate_help: Run the per-modelo aggregation service for one modelo and period.
+        Counterpart and foreign-asset observations are passed as JSON options. Withholding
+        modelos read the rows already stored for the period, after recording the single
+        received-invoice or ledger-payment withholding allocation a command may carry.
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       audit:
         bundle_id_help: Evidence bundle id (full SHA-256 or unambiguous prefix).

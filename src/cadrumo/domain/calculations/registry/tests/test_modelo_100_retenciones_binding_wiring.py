@@ -35,7 +35,7 @@ from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import newest_authored_editions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -43,8 +43,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # The two newest Modelo 100 editions the registry authors. Both are exercised
 # because each carries its own credit-casilla declarations.
 _PRIOR_EDITION, _REVIEWED_EDITION = newest_authored_editions("100", 2)
-
-_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 
 @pytest.fixture
@@ -100,7 +98,7 @@ def _prior_base_binding_values(*, certificado_trabajo: Decimal | None = None) ->
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81.1 LIRPF maternity deduction: zero in these retenciones scenarios,
         # which declare no qualifying descendant.
-        **_M100_2024_MATERNIDAD_BINDINGS,
+        **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         # Art. 81.2 LIRPF guarderia bindings: zero in non-guarderia scenarios.
         "renta-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-profile-incremento-guarderia": Decimal("0"),
@@ -125,7 +123,6 @@ def _reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None)
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),
@@ -138,6 +135,9 @@ def _reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None)
         "renta-maritime-gross-navigation-income": Decimal("0"),
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
+        # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+        # neutral zero for a scenario with no descendants.
+        **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
     }
     if certificado_trabajo is not None:
         values["renta-certificado-trabajo-retenciones"] = certificado_trabajo

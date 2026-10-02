@@ -30,7 +30,7 @@ from ..draft_construction import _string_inputs_for_ids, filing_binding_values
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
-    "00501",
+    "DP200012:00501",
     surface="_M200_RESULTADO_CONTABLE_CASILLA",
 )
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
@@ -58,8 +58,7 @@ def _m200_snapshot() -> RegistrySnapshot:
     channel consumes, how string inputs resolve to enum bindings, what the
     calculation does with a compensation value. None of them renders a fichero
     record or reads an export layout, so the calculation rung is the authority
-    they exercise. Modelo 200 declares exactly that rung and deliberately
-    withholds filing while its revision spans two AEAT layouts.
+    they exercise.
     """
     return published_snapshot(
         "200",

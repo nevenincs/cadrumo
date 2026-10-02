@@ -5,12 +5,33 @@ modelo:
         modelo-216-calculation-construct:
           field:
             title: '216-os nyomtatvány: az IRNR forrásadójának számítása'
+        modelo-216-liquidacion:
+          field:
+            title: '216-os nyomtatvány: az IRNR forrásadójának elszámolása'
       field:
         official_name: Modelo 216. A külföldi illetőségűek jövedelemadója. Állandó
           telephely közbenjárása nélkül elért jövedelmek. Adóelőleg-levonások és -befizetések.
           Bevallás és befizetési dokumentum.
         title: IRNR adóelőleg-levonások és -befizetések
       revision:
+        2020-2023:
+          casilla:
+            '1':
+              label: Elszámolás. Tétel 1. Jövedelmek száma
+            '2':
+              label: Elszámolás. Tétel 2. Levonások és előlegfizetések adóalapja
+            '3':
+              label: Elszámolás. Tétel 3. Forrásadó és részletfizetés
+            '4':
+              label: Elszámolás. Tétel 4. Jövedelmek száma
+            '5':
+              label: Elszámolás. Tétel 5. Levonások és előlegfizetések adóalapja
+            '6':
+              label: Elszámolás. Tétel 6. Korábbi bevallásokból befizetendő összeg
+            '7':
+              label: Elszámolás. Tétel 7. Befizetendő eredmény
+          field:
+            label: EHA/3290/2008 rendelet, 2020–2023. adóévek
         2024-y-siguientes:
           casilla:
             '05':

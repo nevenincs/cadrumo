@@ -1,10 +1,10 @@
 # Continuity from revision 2019-2023 into 2024, one row per concept both
-# revisions declare. Every one is "unchanged", and that is a MEASURED result
-# rather than a default: for all 16 shared continuidad_ids the legal_refs
-# tuples are identical between the two revisions and the Spanish labels are
-# byte-identical in the locale catalogue. The nine module-unit concepts the
-# 2024 revision introduces (irpf-pf-modulos-*) get no row: a concept with no
-# prior revision has no transition to declare, and none was retired.
+# revisions declare. The 16 form concepts are "unchanged", a MEASURED result:
+# their legal_refs tuples are identical between the two revisions and their
+# Spanish labels are byte-identical in the locale catalogue. The 19 módulos
+# engine concepts cite each year's own Orden de módulos, so their legal_refs
+# evolve from Orden HFP/1335/2021 and Orden HFP/1172/2022 to Orden HFP/1359/2023,
+# and the eight whose labels cite the Orden or the year evolve their label too.
 
 [[revisions."2024".casilla_continuidad_evolutions]]
 id = "m131-irpf-pf-modulos-diferencia-2019-2023-2024-unchanged"
@@ -148,4 +148,175 @@ from_revision = "2019-2023"
 to_revision = "2024"
 evolution_kind = "unchanged"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-epigrafe-iae-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-epigrafe-iae"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-1-unidades-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-1-unidades"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-1-unidades-anterior-2019-2023-2024-label-and-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-1-unidades-anterior"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:instruccion-2-2-a"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-2-unidades-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-2-unidades"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-3-unidades-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-3-unidades"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-4-unidades-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-4-unidades"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-5-unidades-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-5-unidades"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-6-unidades-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-6-unidades"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-7-unidades-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-7-unidades"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-minoracion-inversion-2019-2023-2024-label-and-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-minoracion-inversion"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:instruccion-2-2-b"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-indice-pequena-dimension-2019-2023-2024-label-and-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-indice-pequena-dimension"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-1"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-indice-temporada-2019-2023-2024-label-and-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-indice-temporada"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-2"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-indice-inicio-actividad-2019-2023-2024-label-and-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-indice-inicio-actividad"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-pequena-dimension-ignorado-flag-2019-2023-2024-label-and-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-pequena-dimension-ignorado-flag"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-temporada-inicio-actividad-conflicto-flag-2019-2023-2024-label-and-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-rendimiento-neto-previo-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-previo"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-rendimiento-neto-minorado-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-minorado"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:instruccion-2-2-a", "orden-hfp-1359-2023:instruccion-2-2-b"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-rendimiento-neto-modulos-2019-2023-2024-label-and-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-modulos"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:instruccion-2-3-b-3", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m131-modulos-rendimiento-neto-actividad-2019-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-actividad"
+from_revision = "2019-2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:da-1"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]

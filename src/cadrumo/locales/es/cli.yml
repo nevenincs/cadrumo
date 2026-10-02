@@ -76,6 +76,12 @@ cli:
         batch_items_refused_message: Se rechazaron algunos documentos. El resto de
           documentos de la ejecución se completaron igualmente; las filas rechazadas
           indican qué se encontró.
+        batch_label_reading_degraded_message: '{count} borradores almacenados se basan
+          solo en la lectura por etiquetas porque no se ejecutó el relleno del modelo;
+          los campos que debía leer están vacíos en esos borradores, no ausentes de
+          los documentos, y cada fila indica el motivo. Al confirmar un documento
+          se vuelve a leer, así que esos campos se rellenan entonces si el motivo
+          ya se ha resuelto, o puede indicarlos usted.'
         batch_pending_review_message: Algunos borradores contienen un hallazgo que
           una persona debe resolver antes de crear una factura. Están retenidos, no
           fallidos.
@@ -223,6 +229,20 @@ cli:
         invoice_number_help: Número de factura del proveedor
         iva_amount_help: Importe de IVA de la factura
         iva_rate_help: Tipo de IVA aplicado como porcentaje, por ejemplo 21
+        label_reading_busy_refused: 'Otra lectura local ya estaba usando la inferencia
+          de este equipo, así que no se ejecutó el modelo de lectura. Los {count}
+          campos que las reglas de etiquetas no leyeron quedan vacíos: {fields}. La
+          lectura por etiquetas se mantiene; vuelva a extraer cuando termine la otra
+          lectura, o indique usted esos campos.'
+        label_reading_headroom_refused: 'No se cargó el modelo de lectura local: este
+          equipo no mostró margen de memoria medido para él. Los {count} campos que
+          las reglas de etiquetas no leyeron quedan vacíos: {fields}. La lectura por
+          etiquetas se mantiene; libere memoria y vuelva a extraer, o indique usted
+          esos campos.'
+        label_reading_reader_unavailable: 'No se pudo ejecutar el lector semántico
+          local ({error_type}), así que los {count} campos que las reglas de etiquetas
+          no leyeron quedan vacíos: {fields}. La lectura por etiquetas se mantiene
+          y esos campos quedan pendientes de que usted los indique.'
         list_help: Lista los justificantes de facturas de compra registrados
         notes_help: Notas internas sobre el justificante
         pull_actor_help: Etiqueta del operador.
@@ -706,22 +726,25 @@ cli:
       year_help: Ejercicio de presentación
     modelo:
       aggregate:
+        calculation_rows_absent: 'Modelo {modelo} {filing_year} {period}: no hay filas
+          almacenadas para la fuente {source_family} que lee su cálculo, así que este
+          informe está vacío porque faltan los datos, no porque sean cero.'
         counterpart_observation_help: Objeto JSON CounterpartObservation. El valor
           source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
         foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor
           source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
-        invoice_retencion_wrong_modelo: --received-invoice-retención enruta al almacén
-          de retenciones por perceptor; el modelo %{modelo} no es uno de 111, 115,
-          123, 180, 190, 193.
+        invoice_retencion_wrong_modelo: --received-invoice-retencion solo registra
+          retenciones de facturas recibidas para los modelos %{accepted_modelos};
+          el modelo %{modelo} no admite retenciones de facturas.
         json_not_object: '{flag} debe ser un objeto JSON.'
         json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte
           {pos}.'
         json_validation_error: 'El valor de {flag} no es un objeto de observación
           válido: {details}.'
         ledger_payment_withholding_exclusive: --ledger-payment-withholding no puede
-          combinarse con --received-invoice-retencion ni --retencion-observation.
+          combinarse con --received-invoice-retencion.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
           una asignación de nómina (Modelo 111) o de rendimientos del capital mobiliario
           (Modelo 123) pagada por un movimiento del libro.'
@@ -734,8 +757,7 @@ cli:
           en el Modelo 123; no se admite el modelo %{modelo}.
         m123_ledger_payment_only: El Modelo 123 solo admite retenciones acreditadas
           por su movimiento de pago del libro mediante --ledger-payment-withholding;
-          se rechazan las retenciones de facturas o introducidas a mano y no se ha
-          registrado nada.
+          se rechazan las retenciones de facturas y no se ha registrado nada.
         modelo_help: Código de modelo soportado por el servicio backend de agregación
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: 'Token de periodo de agregación: 0A anual, 1T-4T trimestres,
@@ -744,14 +766,11 @@ cli:
           una asignación de retención de una factura recibida, con su prueba de pago
           o de exigibilidad. Una asignación por comando; el scheme es un hecho legal
           sobre la actividad del perceptor y nunca se infiere de la factura.'
-        retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind
-          debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
-          o collectible_invoice. Repetible para varias observaciones.
-        withholding_observation_help: Observación de retención por perceptor y clave
-          (JSON) para el recuento de percepciones del Modelo 190; repetible.
-      aggregate_help: Ejecuta el servicio backend de agregación por modelo con observaciones
-        canónicas explicitas. Los valores source_kind aceptados son ledger_transaction,
-        purchase_invoice_evidence, payable_invoice y collectible_invoice.
+      aggregate_help: Ejecuta el servicio de agregación por modelo para un modelo
+        y un periodo. Las observaciones de contraparte y de bienes en el extranjero
+        se pasan como opciones JSON. Los modelos de retenciones leen las filas ya
+        almacenadas para el periodo, después de registrar la única asignación de retención
+        de factura recibida o de pago del libro que puede llevar cada comando.
       app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
       audit:
         bundle_id_help: Identificador del paquete de evidencia (SHA-256 completo o

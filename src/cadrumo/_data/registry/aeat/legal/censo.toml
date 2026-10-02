@@ -121,6 +121,45 @@ required_text = [
     "Quienes desarrollen o vayan a desarrollar en territorio español actividades empresariales o profesionales",
 ]
 
+[legal."orden-hfp-381-2023:art-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-381-2023.html#articulo-primero"
+document_id = "BOE-A-2023-9634"
+article = "primero"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-9634"
+published_at = 2023-04-20
+effective_from = 2023-04-25
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-9634 articulo primero; pending operator re-stamp)"
+notes = "Articulo primero de la Orden HFP/381/2023: anade la letra f) al articulo 11.2 de la Orden EHA/1274/2007 (solicitud de inclusion en el Registro de extractores de depositos fiscales) y sustituye su anexo I, el modelo 036. AEAT's record design for the replaced form adds boxes [716.a/b] and [717.a/b] for that registry and [744]."
+required_text = [
+    "Se añade una letra f) al apartado 2 del artículo 11",
+    "Registro de extractores de depósitos fiscales",
+    "El anexo I se sustituye por el anexo de esta orden.",
+]
+
+[legal."orden-hfp-381-2023:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-381-2023.html#disposicion-final-unica"
+document_id = "BOE-A-2023-9634"
+article = "disposición final única"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-9634"
+published_at = 2023-04-20
+effective_from = 2023-04-25
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-9634 disposicion final unica and its BOE analysis; pending operator re-stamp)"
+notes = "Orden HFP/381/2023 disposicion final unica: entra en vigor el mismo dia que el Real Decreto 249/2023, which BOE's analysis of this orden records as 25/04/2023 (its articulo segundo from 1 July 2023). That day closes the modelo 036 design of Orden HAC/609/2021 and opens the one this orden's anexo replaces it with."
+required_text = [
+    "La presente orden entrará en vigor el mismo día de la entrada en vigor del Real Decreto 249/2023",
+    "No obstante, el artículo 2 entrará en vigor el 1 de julio de 2023.",
+]
+
 [legal."orden-hac-1526-2024:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -173,8 +212,12 @@ retrieved_at = 2026-05-03
 # AEAT titles this "Ejercicio 2023 y siguientes" -- open-ended when published,
 # and closed here the day before aeat-dr-036-2025 takes effect (2025-02-03).
 # The title's open end states what AEAT knew at publication, not that the
-# design still governs after its successor.
-applies_from = 2023-01-01
+# design still governs after its successor. It opens on 2023-04-25, not on
+# 1 January: its own VERSION field dates it to April 2023 and it adds boxes
+# [744], [716.a/b] and [717.a/b], which aeat-dr-036-v35 does not print. Orden
+# HFP/381/2023, which replaced the modelo 036 form (anexo I of Orden
+# EHA/1274/2007), entered into force on 2023-04-25.
+applies_from = 2023-04-25
 applies_to = 2025-02-02
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v41.xlsx"
 review_status = "pending_review"
@@ -223,10 +266,19 @@ retrieved_at = 2026-05-03
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v40.xlsx"
 review_status = "pending_review"
 
+# vers. 3.8, whose VERSION field states entrada en vigor 20210701 -- the day
+# Orden HAC/609/2021 replaced the modelo 036 and 037 forms. It governs until
+# Orden HFP/381/2023 replaced the form again on 2023-04-25; the next design,
+# aeat-dr-036-v40 and its re-issue aeat-dr-036-2023, prints the same records
+# with boxes [744], [716.a/b] and [717.a/b] added in reserved space, every other
+# field at the same position.
 [sources."aeat-dr-036-v35"]
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2021"
+applies_from = 2021-07-01
+applies_to = 2023-04-24
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/05-036-ejercicio-2021-y-siguientes-actualizado-13-05-2021-102-kb-xlsx.xlsx"
 sha256 = "fd9b1379b78f6bdcefd4d3392f224bbd9bbeb4c22a41d70ac391385366ff8d30"
 bytes = 104353

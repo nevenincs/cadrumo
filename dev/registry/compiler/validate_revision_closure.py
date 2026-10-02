@@ -27,7 +27,11 @@ from collections.abc import Mapping
 from cadrumo.domain.calculations.registry.casilla_structural_succession import endpoint_source_context_failures
 from cadrumo.domain.calculations.registry.orden_applicability import orden_aplicabilidad_hard_failures
 from cadrumo.domain.calculations.registry.revision_context import ConstructMemberObject, RevisionValidationContext
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    ModeloRevision,
+    SupportedFilingYearsCatalogue,
+)
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.temporal import revision_endpoint_source_ids
 
@@ -52,6 +56,7 @@ def validate_revision_closure_sections(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
+    support: SupportedFilingYearsCatalogue | None,
 ) -> None:
     """Append section-closure failures for one registry revision.
 
@@ -59,11 +64,12 @@ def validate_revision_closure_sections(
     with its precomputed
     :class:`~domain.calculations.registry._validate_revision_context.RevisionValidationContext`
     so member ids, application links, constructs, formula dependencies, and
-    revision rules share one closure view.
+    revision rules share one closure view. ``support`` bounds the temporal
+    coverage the revision must prove to the filing years the registry supports.
     """
     failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo_id))
     failures.extend(validate_reconciliation_total_closure(prefix, revision))
-    failures.extend(validate_bracket_table_temporal_coverage(prefix, revision))
+    failures.extend(validate_bracket_table_temporal_coverage(prefix, revision, support=support))
     # orden_aplicabilidad gate.
     failures.extend(orden_aplicabilidad_hard_failures(prefix, modelo_id, revision, legal_refs))
     failures.extend(

@@ -116,7 +116,6 @@ _BASE_BINDINGS = {
     # These scenarios are salaried couples (trabajo income only, per the
     # module docstring), not economic-activity filers.
     "renta-profile-has-economic-activity": Decimal("0"),
-    "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     # declaration_type is intentionally absent — compare_taxation_modes injects it.
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
     "renta-profile-marriage-full-year": Decimal("1"),  # married full year
@@ -141,6 +140,9 @@ _BASE_BINDINGS = {
     "renta-maritime-gross-navigation-income": Decimal("0"),
     "renta-maritime-annual-salary": Decimal("0"),
     "renta-maritime-qualifying-days": Decimal("0"),
+    # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+    # neutral zero for a scenario with no descendants.
+    "renta-profile-deduccion-maternidad": Decimal("0"),
 }
 
 # Art. 75 Ley 19/1994 maritime-worker exemption path: these couples are not

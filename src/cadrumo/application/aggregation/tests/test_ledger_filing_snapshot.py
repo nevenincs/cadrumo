@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _CAPTURED = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
 
 
-_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00501")
+_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("DP200012:00501")
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-modelo-303-2025-form",)
 

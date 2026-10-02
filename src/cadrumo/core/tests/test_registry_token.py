@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
@@ -42,6 +44,17 @@ def test_a_projected_token_is_its_text_and_carries_no_instance_dict() -> None:
     assert projected.value == "general"
     assert projected.name == "general"
     assert not hasattr(projected, "__dict__")
+
+
+def test_a_projected_token_survives_copy_and_deep_copy_as_itself() -> None:
+    """Copying a model that holds a token must not re-enter the projection guard."""
+    projected = _Strict.from_registry("general")
+
+    assert copy.copy(projected) is projected
+    assert copy.deepcopy(projected) is projected
+    (held,) = copy.deepcopy((projected,))
+    assert held is projected
+    assert type(held) is _Strict
 
 
 def test_unprojected_construction_names_the_class_and_its_authority() -> None:

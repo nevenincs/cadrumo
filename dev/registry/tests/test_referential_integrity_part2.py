@@ -271,7 +271,7 @@ def test_bundled_manifest_rejects_omitted_non_internal_closure_casilla() -> None
     """A bundled-corpus manifest cannot omit one of its non-internal closure casillas."""
     modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "200")
-    revision = next(iter(modelo.revisions.values()))
+    revision = next(revision for revision in modelo.revisions.values() if revision.completeness_manifest is not None)
     manifest = revision.completeness_manifest
     assert manifest is not None
 
@@ -356,7 +356,7 @@ def test_bundled_manifest_refuses_internal_only_closure_casillas() -> None:
     """Internal calculation nodes cannot become official manifest denominator rows."""
     modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "200")
-    revision = next(iter(modelo.revisions.values()))
+    revision = next(revision for revision in modelo.revisions.values() if revision.completeness_manifest is not None)
     manifest = revision.completeness_manifest
     assert manifest is not None
 

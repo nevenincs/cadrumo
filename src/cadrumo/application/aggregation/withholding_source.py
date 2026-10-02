@@ -41,10 +41,10 @@ covers), the source refuses rather than total the quarters it can see.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import sha256_hex
@@ -82,9 +82,13 @@ from .source_mesh import (
 )
 from .source_resolution_operations import storage_degradation_resolution
 from .withholding_filing_cadence import (
+    WithholdingFilerCadence,
     require_quarterly_withholding_source,
     withholding_filer_cadence_for_work_profile,
 )
+
+if TYPE_CHECKING:
+    from ...core.period import Period
 
 _WITHHOLDING_SOURCE = BindingSourceKind.WITHHOLDING
 
@@ -268,8 +272,30 @@ def _settled_amount_authority_diagnostics(
     return tuple(diagnostics)
 
 
+@dataclass(frozen=True, slots=True)
+class AnnualWithholdingDetail:
+    """The stored per-perceptor-clave rows one modelo's calculation reads.
+
+    ``window`` is the percepción window its composition reads. ``phase_rows``
+    are the disclosure phases materialised beside it from the captured
+    allocations of ``phase_source_modelo``, which is ``None`` when the
+    composition adds no phase rows.
+    """
+
+    window: tuple[WithholdingObservation, ...]
+    phase_rows: tuple[Modelo193PhaseRow, ...]
+    phase_source_modelo: Modelo | None
+
+    @property
+    def observations(self) -> tuple[WithholdingObservation, ...]:
+        """Return every row the calculation materialises: the window, then each phase row's annual detail."""
+        return (*self.window, *(row.annual_detail for row in self.phase_rows))
+
+
 def _refuse_allocation_collisions(
-    context: CalculationSourceContext,
+    *,
+    modelo: str,
+    filing_year: int,
     window: tuple[WithholdingObservation, ...],
     phase_rows: tuple[Modelo193PhaseRow, ...],
 ) -> None:
@@ -290,8 +316,8 @@ def _refuse_allocation_collisions(
         raise AggregationValidationError(
             tr("aggregation.retenciones.errors.m193_phase_allocation_collision"),
             context={
-                "modelo": str(context.modelo),
-                "filing_year": str(context.filing_year),
+                "modelo": modelo,
+                "filing_year": str(filing_year),
                 "source_allocations": ", ".join(
                     f"{source_id}/{allocation_id}" for source_id, allocation_id in colliding
                 ),
@@ -301,23 +327,29 @@ def _refuse_allocation_collisions(
 
 def _refuse_unscheduled_quarters(
     composition: _AnnualWithholdingSource,
-    context: CalculationSourceContext,
+    *,
+    modelo: str,
+    cadence: Callable[[], WithholdingFilerCadence],
 ) -> None:
     """Refuse an annual composition whose periodic modelo the filer does not file quarterly all year."""
     source_modelo = composition.periodic_source
     if source_modelo is None:
         return
+    require_quarterly_withholding_source(
+        cadence(),
+        annual_modelo=modelo,
+        source_modelo=source_modelo.value,
+    )
+
+
+def _work_profile_cadence(context: CalculationSourceContext) -> WithholdingFilerCadence:
+    """Resolve the filer cadence from the profile the calculation loaded."""
     with bundled_indexed_authority().operation() as operation:
-        cadence = withholding_filer_cadence_for_work_profile(
+        return withholding_filer_cadence_for_work_profile(
             context.profile,
             filing_year=context.filing_year,
             operation=operation,
         )
-    require_quarterly_withholding_source(
-        cadence,
-        annual_modelo=str(context.modelo),
-        source_modelo=source_modelo.value,
-    )
 
 
 class WithholdingSourceResolver:
@@ -342,44 +374,87 @@ class WithholdingSourceResolver:
     def _window(
         self,
         composition: _AnnualWithholdingSource,
-        context: CalculationSourceContext,
+        *,
+        modelo: str,
+        period: Period,
     ) -> tuple[WithholdingObservation, ...]:
         repository = self._ports.repository
         if composition.periodic_percepciones is not None:
             return repository.load_annual_source_observations(
                 composition.periodic_percepciones.value,
-                context.filing_year,
+                period.filing_year,
             )
-        return repository.load_observations(str(context.modelo), context.period)
+        return repository.load_observations(modelo, period)
 
     def _disclosure_phase_rows(
         self,
         composition: _AnnualWithholdingSource,
-        context: CalculationSourceContext,
+        *,
+        filing_year: int,
     ) -> tuple[Modelo193PhaseRow, ...]:
         if composition.capital_disclosure_retenciones is None:
             return ()
         allocations = self._retencion_ports.repository.load_source_observations_through_year(
             composition.capital_disclosure_retenciones.value,
-            context.filing_year,
+            filing_year,
         )
         with bundled_indexed_authority().operation() as operation:
             pending_disclosure_years = modelo_193_pending_disclosure_years(operation)
         return materialize_modelo_193_disclosure_phases(
             allocations,
-            filing_year=context.filing_year,
+            filing_year=filing_year,
             pending_disclosure_years=pending_disclosure_years,
+        )
+
+    def load_calculation_detail(
+        self,
+        *,
+        modelo: str,
+        period: Period,
+        revision: ModeloRevision,
+        cadence: Callable[[], WithholdingFilerCadence],
+    ) -> AnnualWithholdingDetail | None:
+        """Return the stored per-perceptor-clave rows the calculation reads for ``modelo`` in ``period``.
+
+        ``None`` when ``revision`` declares no withholding binding: the
+        calculation then reads nothing from this store, which is a different
+        fact from reading an empty window. Otherwise the modelo's declared
+        composition decides the rows, and ``cadence`` is asked for the filer's
+        schedule only when that composition reads periodic windows, which must
+        then cover all four quarters. A phase row repeating an allocation the
+        window already declares is refused.
+
+        :meth:`resolve` and the per-modelo aggregate report both read through
+        here, so the report projects exactly the rows the calculation
+        materialises rather than a window of its own choosing.
+        """
+        if not _revision_declares_withholding_scalar(revision):
+            return None
+        composition = _ANNUAL_WITHHOLDING_SOURCES.get(modelo, _OWN_WINDOW)
+        _refuse_unscheduled_quarters(composition, modelo=modelo, cadence=cadence)
+        window = self._window(composition, modelo=modelo, period=period)
+        phase_rows = self._disclosure_phase_rows(composition, filing_year=period.filing_year)
+        _refuse_allocation_collisions(
+            modelo=modelo,
+            filing_year=period.filing_year,
+            window=window,
+            phase_rows=phase_rows,
+        )
+        return AnnualWithholdingDetail(
+            window=window,
+            phase_rows=phase_rows,
+            phase_source_modelo=composition.capital_disclosure_retenciones,
         )
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve withholding totals from the bucket-scoped observation store."""
-        if not _revision_declares_withholding_scalar(context.revision):
-            return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
-        composition = _ANNUAL_WITHHOLDING_SOURCES.get(str(context.modelo), _OWN_WINDOW)
-        _refuse_unscheduled_quarters(composition, context)
         try:
-            window = self._window(composition, context)
-            phase_rows = self._disclosure_phase_rows(composition, context)
+            detail = self.load_calculation_detail(
+                modelo=str(context.modelo),
+                period=context.period,
+                revision=context.revision,
+                cadence=lambda: _work_profile_cadence(context),
+            )
         except (PercepcionObservationPersistenceError, RetencionObservationPersistenceError) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
@@ -387,8 +462,9 @@ class WithholdingSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        _refuse_allocation_collisions(context, window, phase_rows)
-        observations = (*window, *(row.annual_detail for row in phase_rows))
+        if detail is None:
+            return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
+        observations = detail.observations
         # resolve_withholding_binding_values over an EMPTY set materialises the
         # scalar facts as zero (distinct of nothing) — the bound casilla still gets
         # its fact, so a nil-percepciones filer can calculate; the advisory below
@@ -418,22 +494,23 @@ class WithholdingSourceResolver:
                 ),
             )
         phase_provenance: tuple[CalculationSourceProvenance, ...] = ()
-        if composition.capital_disclosure_retenciones is not None:
+        if detail.phase_source_modelo is not None:
             phase_provenance = _phase_contributor_provenance(
-                phase_rows,
-                source_modelo=composition.capital_disclosure_retenciones,
+                detail.phase_rows,
+                source_modelo=detail.phase_source_modelo,
             )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             row_binding_values=resolve_withholding_binding_row_values(context.revision, observations),
-            diagnostics=(*diagnostics, *_settled_amount_authority_diagnostics(phase_rows)),
+            diagnostics=(*diagnostics, *_settled_amount_authority_diagnostics(detail.phase_rows)),
             provenance=(*_provenance(observations), *phase_provenance),
         )
 
 
 __all__ = [
+    "AnnualWithholdingDetail",
     "WithholdingSourceResolver",
     "annual_withholding_periodic_source",
     "withholding_binding_grounding",

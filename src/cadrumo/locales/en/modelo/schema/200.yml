@@ -38,9 +38,6 @@ modelo:
               account statements applicable to credit institutions [00068].
             label: 'Credit institution account statements: entities that are not credit
               institutions but use the account statements applicable to them [00068]'
-          00081:
-            label: Subsidiary of a multinational group or large-scale domestic group
-              [00081]
           00095:
             label: Reserve for investments in the Balearic Islands (DA 70 Law 31/2022)
               - Increase - Adjustments for the tax year - Permanent [00095]
@@ -6547,6 +6544,9 @@ modelo:
           incentive-deductions-detail-total-applied:
             label: Deductions to incentivise certain activities - Total - applied
               in this settlement [00588]
+          is-abono-deducciones-id-i-insuficiencia-cuota-estado:
+            label: Settlement IV - Self-assessment result - Credit of R&D&I deductions
+              due to insufficient tax liability - State [00083]
           is-agrupacion-de-interes-economico-espanola:
             help: Flag indicating a Spanish economic interest grouping [00013].
             label: Spanish economic interest grouping [00013]
@@ -6641,6 +6641,66 @@ modelo:
           is-arrendamiento-financiero-ajuste-disminucion:
             label: 'Finance lease: special regime (art. 106 LIS) - Decrease - Adjustments
               for the tax year - Temporary (originating in this tax year) [03217]'
+          is-aseguradora-vida-beneficios-realizacion-inmovilizado-inversiones:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Gains on disposal of tangible fixed assets and investments
+              [00305]
+          is-aseguradora-vida-beneficios-realizacion-inmovilizado-material-inversiones-inmobiliarias:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Gains on disposal of tangible fixed assets and investments
+              - Tangible fixed assets and investment property [00306]
+          is-aseguradora-vida-beneficios-realizacion-inversiones-financieras:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Gains on disposal of tangible fixed assets and investments
+              - Financial investments [00307]
+          is-aseguradora-vida-inversiones-riesgo-tomador:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Investments linked to insurance contracts where
+              the policyholder bears the investment risk [00308]
+          is-aseguradoras-vida-cuenta-tecnica-otros-ingresos-tecnicos:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Other technical income [00309]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-gastos-pagados:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Benefits and expenses paid [00311]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-aceptado:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Benefits and expenses paid - Reinsurance accepted
+              [00313]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-reaseguro-cedido:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Benefits and expenses paid - Reinsurance ceded (-)
+              [00314]
+          is-aseguradoras-vida-cuenta-tecnica-prestaciones-seguro-directo:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Benefits and expenses paid - Direct insurance [00312]
+          is-aseguradoras-vida-cuenta-tecnica-siniestralidad-neta-reaseguro:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Claims incurred for the year, net of reinsurance
+              [00310]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-directo:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Change in provision for benefits (+ or -) - Direct
+              insurance [00316]
+          is-aseguradoras-vida-cuenta-tecnica-variacion-provision-prestaciones:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Change in provision for benefits (+ or -) [00315]
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Application of impairment adjustments to tangible
+              fixed assets and investments [00302]
+          is-aseguradoras-vida-deterioro-inmovilizado-inversiones-inmovilizado-inmobiliarias:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Application of impairment adjustments to tangible
+              fixed assets and investments - Tangible fixed assets and investment
+              property [00303]
+          is-aseguradoras-vida-deterioro-inversiones-financieras:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Application of impairment adjustments to tangible
+              fixed assets and investments - Financial investments [00304]
+          is-aseguradoras-vida-ingresos-inversiones-financieras:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Income from financial investments [00301]
           is-atribucion-rentas-hibridos-aumento:
             label: 'Entity under the income-attribution regime: hybrid mismatches
               (art. 15 bis.12 LIS) - Increase - Adjustments for the tax year - Permanent
@@ -7773,6 +7833,9 @@ modelo:
           is-correccion-gastos-retribucion-fondos-propios-art15a-permanente-aumento:
             label: Non-deductible expenses treated as remuneration of equity (art.
               15 a) LIS) - Increase - Adjustments for the tax year - Permanent [02761]
+          is-correccion-impuesto-complementario:
+            label: Settlement I - Profit and loss account result - Complementary tax
+              [00004]
           is-correccion-impuesto-extranjero-deduccion-doble-imposicion-permanente-aumento:
             label: Foreign tax borne by the taxpayer, non-deductible as it relates
               to income subject to a double-taxation deduction (art. 31.2 LIS) - Increase
@@ -7950,6 +8013,14 @@ modelo:
             label: Free depreciation of certain vehicles and new charging infrastructure
               (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments for
               the tax year - Permanent [01885]
+          is-correccion-libertad-amortizacion-vehiculos-recarga-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Free depreciation of certain vehicles and new charging infrastructure
+              (Additional Provision 18 LIS, RDL 4/2024) - Increases [00005]
+          is-correccion-libertad-amortizacion-vehiculos-recarga-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Free depreciation of certain vehicles and new charging infrastructure
+              (Additional Provision 18 LIS, RDL 4/2024) - Decreases [00006]
           is-correccion-libertad-amortizacion-vehiculos-saldo-final:
             label: Free depreciation of certain vehicles and new charging infrastructure
               (Additional Provision 18 LIS, RDL 4/2024) - Increase - Balance carried
@@ -8600,6 +8671,14 @@ modelo:
           is-deduccion-cap-iv-tit-vi-suma-periodo:
             label: Deductions to incentivise certain activities - 2008 Sum of deductions
               - Applied in this settlement [00181]
+          is-deduccion-centenario-rugby-aplicado-periodo:
+            label: Deductions to incentivise certain activities - 2022 Centenary of
+              Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Applied
+              in this return [00316]
+          is-deduccion-centenario-rugby-pendiente-generada:
+            label: Deductions to incentivise certain activities - 2022 Centenary of
+              Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Deduction
+              carried forward/generated [00315]
           is-deduccion-cinematografica-extranjera-aplicado-periodo:
             label: Deductions for foreign film productions in the Canary Islands (art.
               36.2 LIS and DA 14 Law 19/1994) - 2025(*) - Amount paid due to insufficient
@@ -8838,6 +8917,12 @@ modelo:
               productions (PC)'
             label: 'Producer: Spanish film productions (PC). Pending application in
               future periods'
+          is-deduccion-produccion-extranjera-cinematografica-aplicado-periodo:
+            label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+              - Applied in this return [00316]
+          is-deduccion-produccion-extranjera-cinematografica-pendiente-generada:
+            label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+              - Deduction carried forward/generated [00315]
           is-deduccion-reinversion-beneficios-dt24a7-periodo:
             label: Deductions under Transitional Provision 24.7 LIS - Deduction DT
               24.7 LIS 2023 - Pending/generated deduction [00696]
@@ -8900,6 +8985,167 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Statement of changes in equity (II) - Adjustments for errors from
               previous periods - Capital - Subscribed [00408]
+          is-ecpn-bde-correccion-errores-acciones-propias:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - (-)
+              Own shares [00312]
+          is-ecpn-bde-correccion-errores-capital:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Capital
+              [00305]
+          is-ecpn-bde-correccion-errores-dividendos-cuenta:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - (-)
+              Interim dividends [00314]
+          is-ecpn-bde-correccion-errores-ganancias-acumuladas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Retained
+              earnings [00309]
+          is-ecpn-bde-correccion-errores-otras-reservas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Other
+              reserves [00311]
+          is-ecpn-bde-correccion-errores-otro-resultado-global-acumulado:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Accumulated
+              other comprehensive income [00315]
+          is-ecpn-bde-correccion-errores-otros-elementos-patrimonio-neto:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Other
+              components of equity [00308]
+          is-ecpn-bde-correccion-errores-otros-instrumentos-patrimonio:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Equity
+              instruments issued other than share capital [00307]
+          is-ecpn-bde-correccion-errores-prima-emision:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Share
+              premium [00306]
+          is-ecpn-bde-correccion-errores-reservas-revalorizacion:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Revaluation
+              reserves [00310]
+          is-ecpn-bde-correccion-errores-resultado-ejercicio:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Profit
+              or loss for the year [00313]
+          is-ecpn-bde-correccion-errores-total:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of corrections of errors - Total
+              [00316]
+          is-ecpn-bde-saldo-apertura-dividendos-cuenta:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Opening balance [before restatement]
+              - (-) Interim dividends [00302]
+          is-ecpn-bde-saldo-apertura-otro-resultado-global-acumulado:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Opening balance [before restatement]
+              - Accumulated other comprehensive income [00303]
+          is-ecpn-bde-saldo-apertura-resultado-ejercicio:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Opening balance [before restatement]
+              - Profit or loss for the year [00301]
+          is-ecpn-bde-saldo-apertura-total:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Opening balance [before restatement]
+              - Total [00304]
+          is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Conversion of debt into equity - Retained
+              earnings [00417]
+          is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - (-)
+              Interim dividends [00566]
+          is-ecpn-bde-total-cambios-saldo-cierre-otras-reservas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Other
+              reserves [00563]
+          is-ecpn-bde-total-cambios-saldo-cierre-otro-resultado-global-acumulado:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Accumulated
+              other comprehensive income [00567]
+          is-ecpn-bde-total-cambios-saldo-cierre-prima-emision:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Share
+              premium [00558]
+          is-ecpn-bde-total-cambios-saldo-cierre-reservas-revalorizacion:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Revaluation
+              reserves [00562]
+          is-ecpn-bde-total-cambios-saldo-cierre-resultado-ejercicio:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Profit
+              or loss for the year [00565]
+          is-ecpn-bde-total-cambios-saldo-cierre-total:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Total
+              [00568]
+          is-ecpn-bde-transferencias-ganancias-acumuladas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Transfers between equity components -
+              Retained earnings [00501]
+          is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Interim
+              dividend [00584]
+          is-ecpn-iii-acciones-propias-otros-instrumentos-patrimonio-neto:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Other
+              equity instruments [00585]
+          is-ecpn-iii-acciones-propias-resultado-ejercicio:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Result
+              for the period [00583]
+          is-ecpn-iii-acciones-propias-subvenciones-donaciones-legados:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Grants,
+              donations and legacies received [00588]
+          is-ecpn-iii-ajustes-errores-ajustes-cambios-valor:
+            label: Statement of changes in equity (III) - Adjustments for errors from
+              previous periods - Adjustments for changes in value [00418]
+          is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto:
+            label: Statement of changes in equity (III) - Adjustments for errors from
+              previous periods - Other equity instruments [00417]
+          is-ecpn-iii-combinacion-negocios-otros-instrumentos-patrimonio-neto:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Increase (reduction) in equity from business combination
+              - Other equity instruments [00599]
+          is-ecpn-iii-combinacion-negocios-total:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Increase (reduction) in equity from business combination
+              - Total [00603]
+          is-ecpn-iii-conversion-pasivos-ajustes-cambios-valor:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Conversion of liabilities into equity - Adjustments for
+              changes in value [00558]
+          is-ecpn-iii-distribucion-dividendos-ajustes-cambios-valor:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Adjustments for change in
+              value [00572]
+          is-ecpn-iii-distribucion-dividendos-dividendo-a-cuenta:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Interim dividend [00570]
+          is-ecpn-iii-distribucion-dividendos-otros-instrumentos-patrimonio-neto:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Other equity instruments
+              [00571]
+          is-ecpn-iii-distribucion-dividendos-resultado-ejercicio:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Result for the period [00569]
+          is-ecpn-iii-distribucion-dividendos-total:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Total [00575]
+          is-ecpn-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Other transactions with shareholders or owners - Result
+              for the period [00611]
+          is-ecpn-iii-otras-variaciones-resultado-ejercicio:
+            label: Statement of changes in equity (III) - Other changes in equity
+              - Result for the period [00625]
+          is-ecpn-iii-reducciones-capital-total:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Capital reductions - Total [00547]
           is-ecpn-imputacion-directa-activos-no-corrientes-pasivos-vinculados-mantenidos-venta:
             label: Statement of changes in equity (I) - Income and expenses recognized
               in equity - From non-current assets and associated liabilities held
@@ -8960,19 +9206,24 @@ modelo:
             label: Statement of changes in equity (II) - Transactions with shareholders
               or owners - Increase (reduction) in equity from business combination
               - Capital - Subscribed [00590]
+          is-ecpn-total-cambios-combinacion-negocios-prima-emision:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Increase (reduction) in equity from business combination
+              - Share premium [00592]
           is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
             label: Statement of changes in equity (II) - Transactions with shareholders
               or owners - Conversion of liabilities into equity - Treasury shares
               and equity holdings [00552]
           is-ecpn-total-cambios-conversion-pasivos-prima-emision:
-            label: Settlement III - Tax base - Tax base before offsetting negative
-              tax bases [00550]
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Conversion of liabilities into equity - Share premium [00550]
           is-ecpn-total-cambios-distribucion-dividendos-acciones-participaciones-propias:
             label: Statement of changes in equity (II) - Transactions with shareholders
               or owners - (-) Distribution of dividends - Own shares and equity interests
               [00566]
           is-ecpn-total-cambios-distribucion-dividendos-capital-escriturado:
-            label: Settlement III - Tax base - Gross tax liability [00562]
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Capital - Subscribed [00562]
           is-ecpn-total-cambios-distribucion-dividendos-capital-no-exigido:
             label: Statement of changes in equity (II) - Transactions with shareholders
               or owners - (-) Distribution of dividends - Capital - Uncalled [00563]
@@ -9044,6 +9295,151 @@ modelo:
           is-ecpn-transferencia-pyg-valoracion-instrumentos-otros-ingresos-gastos:
             label: Statement of changes in equity (I) - Transfers to the profit and
               loss account - Other income/expenses [00348]
+          is-ecpp-aseguradoras-aumentos-capital-ajustes-valor:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Capital or mutual
+              fund increases - Valuation adjustments [00501]
+          is-ecpp-aseguradoras-i-ingresos-gastos-reconocidos-importes-transferidos-cuenta-perdidas-ganancias:
+            label: Insurance undertakings - Statement of changes in own equity (I)
+              - Recognised income and expense - Amounts transferred to the profit
+              and loss account [00399]
+          is-ecpp-aseguradoras-ii-acciones-propias-netas-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Transactions with
+              own shares or equity interests (net). (Own shares in equity) [00547]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination. Other contributions
+              from shareholders or mutual members [00562]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-prima-emision:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination. Share premium [00558]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-escriturado:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. Subscribed [00569]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-no-exigido:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. (Uncalled) [00570]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-otras-aportaciones-socios-mutualistas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. Other contributions from shareholders
+              or mutual members [00575]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-prima-emision:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. Share premium [00571]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-reservas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. Reserves [00572]
+          is-ecpp-aseguradoras-ii-otras-variaciones-escriturado:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Subscribed [00582]
+          is-ecpp-aseguradoras-ii-otras-variaciones-no-exigido:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - (Uncalled) [00583]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-aportaciones-socios-mutualistas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Other contributions from shareholders or
+              mutual members [00588]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-variaciones-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Other changes - (Own shares in equity) [00625]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Share-based payments - (Own shares in equity)
+              [00599]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-otras-aportaciones-socios-mutualistas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Share-based payments - Other contributions
+              from shareholders or mutual members [00601]
+          is-ecpp-aseguradoras-ii-otras-variaciones-prima-emision:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Share premium [00584]
+          is-ecpp-aseguradoras-ii-otras-variaciones-reservas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Reserves [00585]
+          is-ecpp-aseguradoras-ii-otras-variaciones-traspasos-reservas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Transfers between equity items - Reserves
+              [00611]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Balance, end of the previous year - (Own shares in equity) [00417]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-resultados-ejercicios-anteriores:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Balance, end of the previous year - Prior years' results [00418]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-otros-instrumentos-patrimonio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Transactions with
+              own shares or equity interests (net) - Other equity instruments [00552]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-resultado-ejercicio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Transactions with
+              own shares or equity interests (net) - Profit or loss for the year [00550]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-ajustes-cambios-valor:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Valuation adjustments
+              [00566]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-otros-instrumentos-patrimonio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Other equity instruments
+              [00565]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-resultado-ejercicio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Profit or loss for
+              the year [00563]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-subvenciones-donaciones-legados:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Grants, donations
+              and bequests [00567]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-total:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Total [00568]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-dividendo-cuenta:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members - (Interim dividend) [00577]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members - Profit or loss for the year [00576]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-total:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members - Total [00581]
+          is-ecpp-aseguradoras-iii-otras-variaciones-ajustes-cambios-valor:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - Valuation adjustments [00592]
+          is-ecpp-aseguradoras-iii-otras-variaciones-dividendo-cuenta:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - (Interim dividend) [00590]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-ajustes-cambios-valor:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - Share-based payments - Valuation adjustments
+              [00605]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-dividendo-cuenta:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - Share-based payments - (Interim dividend)
+              [00603]
+          is-ecpp-aseguradoras-iii-otras-variaciones-traspasos-subvenciones-donaciones-legados:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - Transfers between equity items - Grants,
+              donations and bequests [00619]
+          is-ecpp-aseguradoras-otras-operaciones-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              -Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members (treasury shares) [00573]
           is-entidad-aseguradora:
             help: Flag indicating an insurance entity [00025].
             label: Insurance entity [00025]
@@ -9219,6 +9615,16 @@ modelo:
             label: 'Account statements of collective investment institutions: entities
               using account statements applicable to CIIs (except codes 00003, 00004
               and 00008) [00061]'
+          is-iic-patrimonio-final:
+            label: Collective investment institutions - Statement of changes in net
+              assets (II) - CLOSING NET ASSETS [00303]
+          is-iic-revalorizacion-inmuebles-resultados-enajenacion:
+            label: Collective investment institutions - Statement of changes in net
+              assets (II) - Revaluation of owner-occupied property and gains or losses
+              on disposal of fixed assets [00302]
+          is-iic-variacion-patrimonial-otros:
+            label: Collective investment institutions - Statement of changes in net
+              assets (II) - Other [00301]
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
             help: Flag indicating inclusion of positive income in the tax base under
               article 100 of the Corporate Income Tax Law [00007].
@@ -9236,9 +9642,63 @@ modelo:
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
             label: Early investments - reserve for investments in the Balearic Islands
               (DA 70.Four.10 Law 31/2022) [00087]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Differences between accounting and tax depreciation (arts.
+              12.1 LIS) - Increases [00303]
+          is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Differences between accounting and tax depreciation (arts.
+              12.1 LIS) - Decreases [00304]
+          is-liquidacion-i-amortizacion-inmovilizado-id-art-12-3-b-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Depreciation of fixed assets used for research and development
+              (art. 12.3.b) LIS) - Increases [00305]
+          is-liquidacion-i-amortizacion-inmovilizado-id-art-12-3-b-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Depreciation of fixed assets used for research and development
+              (art. 12.3.b) LIS) - Decreases [00306]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Other cases of free depreciation (art. 12.3 a) and d) and Additional
+              Provision 16 LIS) - Increases [00309]
+          is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Other cases of free depreciation (art. 12.3 a) and d) and Additional
+              Provision 16 LIS) - Decreases [00310]
+          is-liquidacion-i-correcciones-impuesto-sociedades-aumentos:
+            label: Settlement I - Profit and loss account result - Adjustments for
+              corporate income tax - Increases [00301]
+          is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
+            label: Settlement I - Profit and loss account result - Adjustments for
+              corporate income tax - Decreases [00302]
           is-liquidacion-i-importe:
             label: Settlement I - Profit and loss account result - Profit and loss
               account result before Corporate Income Tax and Complementary Tax [00501]
+          is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Free depreciation of research and development expenditure (art.
+              12.3.c) LIS) - Increases [00307]
+          is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Free depreciation of research and development expenditure (art.
+              12.3.c) LIS) - Decreases [00308]
+          is-liquidacion-ii-erd-amortizacion-art102-aumentos:
+            label: 'Settlement II - Detail of adjustments to the profit and loss account
+              result - Small enterprises: free depreciation (art. 102 LIS) - Increases
+              [00311]'
+          is-liquidacion-ii-erd-amortizacion-art102-disminuciones:
+            label: 'Settlement II - Detail of adjustments to the profit and loss account
+              result - Small enterprises: free depreciation (art. 102 LIS) - Decreases
+              [00312]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-aumentos:
+            label: 'Settlement II - Detail of adjustments to the profit and loss account
+              result - Small enterprises: accelerated depreciation (art. 103 LIS and
+              Transitional Provision 28 LIS) - Increases [00313]'
+          is-liquidacion-ii-erd-amortizacion-art103-dt28-disminuciones:
+            label: 'Settlement II - Detail of adjustments to the profit and loss account
+              result - Small enterprises: accelerated depreciation (art. 103 LIS and
+              Transitional Provision 28 LIS) - decreases [00314]'
           is-liquidacion-iii-base-imponible:
             label: Settlement III - Taxable base - Taxable base [00552]
           is-liquidacion-iii-base-imponible-postnivelacion:
@@ -9696,6 +10156,14 @@ modelo:
           is-pyg-resultado-cuenta-perdidas-ganancias:
             label: Profit and loss account (II) - Discontinued operations - PROFIT
               AND LOSS ACCOUNT RESULT [00500]
+          is-rectificativa-discrepancia-criterio-administrativo-estado:
+            label: Settlement IV - Self-assessment result - Disagreement with the
+              administrative position for certain corrective self-assessment cases
+              that do not belong in other boxes - State [00032]
+          is-rectificativa-discrepancia-criterio-administrativo-total:
+            label: Settlement IV - Self-assessment result - Disagreement with the
+              administrative position for certain corrective self-assessment cases
+              that do not belong in other boxes - Total [00031]
           is-reg-fiscal-de-operac-de-aportacion-de-activos-a-sdades-para-la-gestion-de-activos-ley-8-2012:
             help: Flag indicating the tax regime for asset contributions to companies
               for asset management under Law 8/2012 [00062].
@@ -9786,6 +10254,53 @@ modelo:
           is-sal-reserva-especial-dotacion:
             label: Settlement III - Taxable base - Employee-owned companies - Special
               reserve allocation, Law 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
+          is-sgr-otras-variaciones-ajustes-cambio-valor:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Adjustments for changes in value [00304]
+          is-sgr-otras-variaciones-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Technical provision funds - Third-party
+              contributions [00305]
+          is-sgr-otras-variaciones-reservas:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Reserves [00301]
+          is-sgr-otras-variaciones-resultado-ejercicio:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Profit or loss for the period [00303]
+          is-sgr-otras-variaciones-resultados-ejercicios-anteriores:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Results from previous periods [00302]
+          is-sgr-otras-variaciones-total:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Other changes in equity - Total [00306]
+          is-sgr-saldo-final-ajustes-cambio-valor:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Balance, end of the year - Adjustments for changes in value [00313]
+          is-sgr-saldo-final-capital-no-exigido:
+            label: 'Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Capital - Less: uncalled [00308]'
+          is-sgr-saldo-final-capital-reembolsable:
+            label: 'Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Capital - Less: repayable [00309]'
+          is-sgr-saldo-final-capital-suscrito:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Capital - Subscribed [00307]
+          is-sgr-saldo-final-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Balance, end of the year - Technical provision funds - Third-party
+              contributions [00314]
+          is-sgr-saldo-final-reservas:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Reserves [00310]
+          is-sgr-saldo-final-resultado-ejercicio:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Balance, end of the year - Profit or loss for the period [00312]
+          is-sgr-saldo-final-resultados-ejercicios-anteriores:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - BALANCE, END OF THE PERIOD - Results from previous periods [00311]
+          is-sgr-saldo-final-total:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Balance, end of the year - Total [00315]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Flag indicating a mutual guarantee or re-guarantee company [00036].
             label: Mutual guarantee or re-guarantee company [00036]
@@ -10273,6 +10788,18 @@ modelo:
               Islands investment reserve 2024 - Applied/materialised in this settlement
               - Advance investments treated as materialising the RIC in this settlement
               [03312]
+          ric-inversiones-anticipadas-2020-pendiente-dotar-inicio:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2020 - Canary Islands investment reserve pending allocation
+              at start of period [01176]
+          ric-inversiones-anticipadas-2024-previstas-letras-a-b:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2024 - Investments provided for in letters A and B, art.
+              27.4, Law 19/1994 [03352]
+          ric-inversiones-anticipadas-2024-previstas-letras-b-bis-c-d:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2024 - Investments provided for in letters B bis, C and
+              D, art. 27.4, Law 19/1994 [03353]
           riib-2024-advance-investment-a-b:
             label: Special regime for the Balearic Islands investment reserve - Advance
               investments 2024 - Investments provided for in letters A and B, Additional
@@ -10308,102 +10835,14 @@ modelo:
           territory). Return-settlement.
         title: IS annual self-assessment
       revision:
-        '2024':
+        '2022':
           casilla:
-            '00077':
-              label: Accelerated depreciation of certain vehicles and new charging
-                infrastructure (DA 18 LIS RDL 5/2023 and RDL 7/2026) - Increase -
-                Adjustments for the tax year - Temporary (originating in this tax
-                year) [00077]
-            00091:
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the special taxable base for 2024 - Pending application in future
-                periods [00091]'
-            00092:
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the taxable base for other activities for 2024 - Pending application
-                at the beginning of the period/generated in the period [00092]'
-            00097:
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the taxable base for other activities for 2024 - Applied in this
-                settlement [00097]'
-            00098:
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the taxable base for other activities for 2024 - Pending application
-                in future periods [00098]'
-            '00370':
-              label: Settlement II - Detail of adjustments to the profit and loss
-                account result - Exemption on dividends or profit-sharing income from
-                resident entities (art. 21.1, 21.10 and Transitional Provision 40
-                LIS) - Decreases [00370]
+            00081:
+              label: Subsidiary of a multinational group [00081]
             00496:
               label: Statement of changes in equity (II) - Income and expenses recognized
                 in equity - Other income and expenses recognized in equity - Own shares
                 and equity interests [00496]
-            '00775':
-              label: Settlement I - Detail of adjustments to the profit and loss account
-                result - Accelerated depreciation of certain vehicles and new charging
-                infrastructure (Additional Provision 18 LIS, RDL 5/2023) - Increases
-                [00775]
-            '00776':
-              label: Settlement I - Detail of adjustments to the profit and loss account
-                result - Accelerated depreciation of certain vehicles and new charging
-                infrastructure (Additional Provision 18 LIS, RDL 5/2023) - Decreases
-                [00776]
-            00796:
-              label: Profit and loss account (II) - Continuing operations - Interest
-                and compulsory return on contributions to share capital and other
-                funds classified as debt-like (cooperatives) [00796]
-            00812:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2025(*) - DTAs pending application in future periods
-                - With a right of conversion into a claimable credit, excess tax due
-                [00812]
-            00816:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2025(*) - DTAs pending application in future periods
-                - Without a right of conversion into a claimable credit [00816]
-            00817:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2025(*) - Excess positive net tax due outstanding at the start
-                of the period [00817]
-            00878:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2025(*) - Excess positive net tax due applied in tax periods
-                2008 to 2015 [00878]
-            00879:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2025(*) - Excess positive net tax due applied in tax periods
-                beginning from 2016 [00879]
-            00881:
-              label: Deductions to incentivise certain activities - 2023 Investments
-                in West African territories and advertising and publicity expenses
-                (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
-                in future periods [00881]
-            00882:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2025(*) - Excess positive net tax due pending application in
-                future periods [00882]
-            00925:
-              label: Settlement III - Taxable base - Income that does not limit the
-                offsetting of negative taxable bases - Income from the reversal of
-                impairment losses on securities representing holdings in capital or
-                equity (Transitional Provision 16.3 LIS). - Decreases [00925]
-            00932:
-              label: Settlement III - Taxable base - Only cooperative companies -
-                Income from the reversal of impairment losses on securities representing
-                holdings in capital or equity, cooperatives (at tax-due level) (TP
-                16.3 LIS) -decreases [00932]
             00933:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -10548,21 +10987,6 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2020 Without repeated donations to the same entity - Carried forward
                 for application in future periods [00985]
-            00987:
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the special taxable base for 2023 - Pending application at the
-                beginning of the period/generated in the period [00987]'
-            00988:
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the special taxable base for 2023 - Applied in this settlement
-                [00988]'
-            00989:
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the special taxable base for 2023 - Pending application in future
-                periods [00989]'
             '01000':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -10588,26 +11012,11 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2021 Without repeated donations to the same entity - Deduction carried
                 forward/generated [01008]
-            '01010':
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the taxable base for other activities for 2023 - Pending application
-                at the beginning of the period/generated in the period [01010]'
             '01017':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - 2021 Without repeated donations to the same entity - Applied in
                 this settlement [01017]
-            '01020':
-              label: Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Credit for converting deferred
-                tax assets into a credit claimable against the tax administration
-                (art. 130 LIS) - State [01020]
-            '01021':
-              label: Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Offset for converting deferred
-                tax assets into a credit claimable against the tax administration
-                (art. 130 LIS) - State [01021]
             '01022':
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Temporary business consortium, adjustments for income
@@ -10638,105 +11047,10 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2021 - With repeated donations to the same entity - Carried forward
                 for application in future periods [01036]
-            '01043':
-              label: Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Credit for converting deferred
-                tax assets into a credit claimable against the tax administration
-                (art. 130 LIS) - Regional (foral) administrations/Navarre (Totals)
-                [01043]
-            '01044':
-              label: Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Offset for converting deferred
-                tax assets into a credit claimable against the tax administration
-                (art. 130 LIS) - Regional (foral) administrations/Navarre (Totals)
-                [01044]
-            '01061':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2022 without repeated donations to the same entity - Deduction carried
-                forward/generated [01061]
-            '01062':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2022 without repeated donations to the same entity - Applied in
-                this settlement [01062]
-            '01072':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2022 without repeated donations to the same entity - Carried forward
-                for application in future periods [01072]
-            '01073':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2022 - With repeated donations to the same entity - Deduction carried
-                forward/generated [01073]
-            '01074':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2022 - With repeated donations to the same entity - Applied in this
-                settlement [01074]
-            01078:
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2022 - With repeated donations to the same entity - Carried forward
-                for application in future periods [01078]
             01081:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - Total - Carried forward for application in future periods [01081]
-            '01117':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - Total DTAs (art. 130.6 a) pending application
-                at the start of the period [01117]
-            01119:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTAs pending application at the start of
-                the period - With a right of conversion into a claimable credit [01119]
-            '01120':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTAs pending application at the start of
-                the period - With a right of conversion into a claimable credit for
-                excess tax due [01120]
-            '01121':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTAs pending application at the start of
-                the period - Without a right of conversion into a claimable credit
-                [01121]
-            '01122':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTAs converted into a claimable credit in
-                the period [01122]
-            '01131':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTAs pending application in future periods
-                - With a right of conversion into a claimable credit [01131]
-            '01132':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTAs pending application in future periods
-                - With a right of conversion into a claimable credit, excess tax due
-                [01132]
-            '01133':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTAs pending application in future periods
-                - Without a right of conversion into a claimable credit [01133]
-            '01177':
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the taxable base for other activities for 2023 - Applied in this
-                settlement [01177]'
-            '01200':
-              label: 'Special regime for ships and shipping companies in the Canary
-                Islands: breakdown of the offsetting of negative taxable bases - Offset
-                of the taxable base for other activities for 2023 - Pending application
-                in future periods [01200]'
             '01240':
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - a) Finance costs of the tax period arising from
@@ -10752,30 +11066,6 @@ modelo:
                 16.5 and/or 83 LIS - d) Finance costs pending deduction from earlier
                 periods, affected by art. 16.5 and/or 83 LIS, deductible after this
                 limit ([b≥c1+d], ≥ 0] [01244]
-            01258:
-              label: Limitation on deductibility of financial expenses - Limit art.
-                16.1 and 16.2 LIS - m) Finance costs pending deduction from earlier
-                tax periods, affected by art. 16.5 and/or 83 LIS, deductible after
-                applying both limits (≤ [d], ≥ 0) [01258]
-            01259:
-              label: Limitation on deductibility of financial expenses - Limit art.
-                16.1 and 16.2 LIS - n) Finance costs pending deduction from earlier
-                tax periods, not affected by art. 16.5 and/or 83 LIS, applied [01259]
-            '01300':
-              label: Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Credit for asset conversion -
-                Araba/Alava [01300]
-            '01301':
-              label: Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Credit for asset conversion -
-                Gipuzkoa [01301]
-            '01302':
-              label: Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Credit for asset conversion -
-                Bizkaia [01302]
             '01303':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -10786,36 +11076,6 @@ modelo:
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Offset for asset conversion -
                 Navarre [01308]
-            01329:
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2023 - Without repeated donations to the same entity - Deduction
-                carried forward/generated [01329]
-            '01372':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2023 - Without repeated donations to the same entity - Applied in
-                this settlement [01372]
-            '01373':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2023 - Without repeated donations to the same entity - Carried forward
-                for application in future periods [01373]
-            '01374':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2023 - With repeated donations to the same entity - Deduction carried
-                forward/generated [01374]
-            '01375':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2023 - With repeated donations to the same entity - Applied in this
-                settlement [01375]
-            '01376':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - 2023 - With repeated donations to the same entity - Carried forward
-                for application in future periods [01376]
             01408:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
@@ -10824,64 +11084,6 @@ modelo:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
                 of period - That have met tax deductibility conditions [01409]
-            '01414':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - Total DTAs (art. 130.6 a) pending application
-                at the start of the period [01414]
-            '01416':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTAs pending application at the start of
-                the period - With a right of conversion into a claimable credit [01416]
-            '01417':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTAs pending application at the start of
-                the period - With a right of conversion into a claimable credit for
-                excess tax due [01417]
-            01418:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTAs pending application at the start of
-                the period - Without a right of conversion into a claimable credit
-                [01418]
-            01419:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTAs converted into a claimable credit in
-                the period [01419]
-            '01420':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTAs pending application in future periods
-                - With a right of conversion into a claimable credit [01420]
-            '01421':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTAs pending application in future periods
-                - With a right of conversion into a claimable credit, excess tax due
-                [01421]
-            '01422':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTAs pending application in future periods
-                - Without a right of conversion into a claimable credit [01422]
-            '01423':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2023 - Excess positive net tax due outstanding at the start
-                of the period [01423]
-            '01424':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2023 - Excess positive net tax due applied in tax periods 2008
-                to 2015 [01424]
-            '01425':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2023 - Excess positive net tax due applied in tax periods beginning
-                from 2016 [01425]
             '01473':
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
@@ -11102,24 +11304,6 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - Total - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [01570]
-            '01575':
-              label: Settlement II - Detail of adjustments to the profit and loss
-                account result - Transactions under art. 19 LIS other than change
-                of residence to European Union or EEA Member States - Decreases [01575]
-            '01576':
-              label: Settlement III - Taxable base - Special regime for ships and
-                shipping companies in the Canary Islands - Part of the taxable base
-                arising from activities under the special regime, after the levelling
-                reserve - Decreases [01576]
-            '01577':
-              label: Settlement III - Taxable base - Special regime for ships and
-                shipping companies in the Canary Islands - Part of the taxable base
-                arising from other activities, after the levelling reserve -decreases
-                [01577]
-            01578:
-              label: Settlement IV - Corrective return - Amount payable as a result
-                of processing prior self-assessments or administrative assessments
-                corresponding to the 2025 tax period - State [01578]
             01579:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
@@ -11140,20 +11324,6 @@ modelo:
                 the Tax Administration - Excess positive net tax liability - Generation
                 year - Total - Excess positive net tax due pending application in
                 future periods [01582]
-            01583:
-              label: Settlement IV - Corrective return - Amount payable as a result
-                of processing prior self-assessments or administrative assessments
-                corresponding to the 2025 tax period - Regional (foral) administrations/Navarre
-                (Totals) [01583]
-            01584:
-              label: Settlement IV - Corrective return - Refund agreed by the Tax
-                Agency as a result of processing prior self-assessments or administrative
-                assessments corresponding to the 2025 tax period - State [01584]
-            01585:
-              label: Settlement IV - Corrective return - Refund agreed by the Tax
-                Agency as a result of processing prior self-assessments or administrative
-                assessments corresponding to the 2025 tax period - Regional (foral)
-                administrations/Navarre (Totals) [01585]
             01589:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Foreign tax borne by the taxpayer, not deductible
@@ -11169,119 +11339,16 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
                 to 2015 - DTA converted into credit [01591]
-            '01611':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: refund agreed by the Tax Agency as a result of processing
-                prior self-assessments or administrative assessments corresponding
-                to the 2025 tax period - Araba/Alava [01611]'
-            '01612':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: refund agreed by the Tax Agency as a result of processing
-                prior self-assessments or administrative assessments corresponding
-                to the 2025 tax period - Gipuzkoa [01612]'
-            '01613':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: refund agreed by the Tax Agency as a result of processing
-                prior self-assessments or administrative assessments corresponding
-                to the 2025 tax period - Bizkaia [01613]'
-            '01623':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: refund agreed by the Tax Agency as a result of processing
-                prior self-assessments or administrative assessments corresponding
-                to the 2025 tax period - Navarre [01623]'
-            '01650':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: self-assessment result including the first instalment
-                under art. 19.1 LIS arising from an earlier self-assessment or administrative
-                assessment for tax period 2025 - Araba/Alava [01650]'
-            '01651':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: self-assessment result including the first instalment
-                under art. 19.1 LIS arising from an earlier self-assessment or administrative
-                assessment for tax period 2025 - Gipuzkoa [01651]'
-            '01652':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: self-assessment result including the first instalment
-                under art. 19.1 LIS arising from an earlier self-assessment or administrative
-                assessment for tax period 2025 - Bizkaia [01652]'
-            '01653':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: self-assessment result including the first instalment
-                under art. 19.1 LIS arising from an earlier self-assessment or administrative
-                assessment for tax period 2025 - Navarre [01653]'
-            01658:
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Corrective: refund - Araba/Alava
-                [01658]'
-            01659:
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Corrective: refund - Gipuzkoa
-                [01659]'
-            '01660':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Corrective: refund - Bizkaia [01660]'
-            '01661':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Corrective: refund - Navarre [01661]'
-            '01662':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: credit - Araba/Alava
-                [01662]'
-            '01663':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: credit - Gipuzkoa
-                [01663]'
-            '01664':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: credit - Bizkaia
-                [01664]'
             '01665':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Conversion result: credit - Navarre
                 [01665]'
-            '01666':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: Offset - Araba/Alava
-                [01666]'
-            '01667':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: Offset - Gipuzkoa
-                [01667]'
-            01668:
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: Offset - Bizkaia
-                [01668]'
             01669:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Conversion result: Offset - Navarre
                 [01669]'
-            '01670':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: Payable - Araba/Alava
-                [01670]'
-            '01671':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: Payable - Gipuzkoa
-                [01671]'
-            '01672':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: Payable - Bizkaia
-                [01672]'
             '01673':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -11291,55 +11358,10 @@ modelo:
               label: Transactions under art. 19 LIS other than change of residence
                 to European Union or EEA Member States - Increase - Adjustments for
                 the tax year - Temporary (originating in prior tax years) [01679]
-            01683:
-              label: Deductions to incentivise certain activities - 2025(****) other
-                deductions relating to support programmes for events of exceptional
-                public interest - Deduction pending or generated [01683]
-            01684:
-              label: Deductions to incentivise certain activities - 2025(****) other
-                deductions relating to support programmes for events of exceptional
-                public interest - Applied in this settlement [01684]
-            01685:
-              label: Deductions to incentivise certain activities - 2025(****) other
-                deductions relating to support programmes for events of exceptional
-                public interest - Carried forward for application in future periods
-                [01685]
             01687:
               label: Transactions under art. 19 LIS other than change of residence
                 to European Union or EEA Member States - Decrease - Adjustments for
                 the tax year - Temporary (originating in prior tax years) [01687]
-            01694:
-              label: Deduction for donations to non-profit entities - General donations
-                - Donations subtotal 2015 to 2025 without repeated donations to the
-                same entity. - Carried forward for application in future periods [01694]
-            01697:
-              label: Deduction for donations to non-profit entities - General donations
-                - Donations subtotal 2015 to 2025 with repeated donations to the same
-                entity - Carried forward for application in future periods [01697]
-            '01704':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - Donations subtotal 2015 to 2025 without repeated donations to the
-                same entity - Deduction carried forward/generated [01704]
-            '01705':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - Donations subtotal 2015 to 2025 without repeated donations to the
-                same entity - Applied in this settlement [01705]
-            '01706':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - Donations subtotal 2015 to 2025 without repeated donations to the
-                same entity - Carried forward for application in future periods [01706]
-            01729:
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - Donations subtotal 2015 to 2025 with repeated donations to the same
-                entity - Deduction carried forward/generated [01729]
-            '01742':
-              label: Free depreciation of certain vehicles and new charging infrastructure
-                (Additional Provision 18 LIS, RDL 4/2024) - Increase - Adjustments
-                for the tax year - Temporary (originating in this tax year) [01742]
             '01754':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
@@ -11393,10 +11415,6 @@ modelo:
                 Withholdings on items other than investment income or urban property
                 leases, attributed by income-attribution entities - Attributed by
                 economic interest groupings and business consortia [01794]
-            01820:
-              label: Free depreciation of certain vehicles and new charging infrastructure
-                (Additional Provision 18 LIS, RDL 4/2024) - Increase - Adjustments
-                for the tax year - Temporary (originating in prior tax years) [01820]
             01824:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Income from the transfer of fixed assets obtained
@@ -11407,11 +11425,6 @@ modelo:
                 Islands: breakdown of the offsetting of negative taxable bases - Subtotal
                 of the special taxable base offset - Pending application at the beginning
                 of the period/generated in the period [01886]'
-            01887:
-              label: Settlement III - Taxable base - Special regime for ships and
-                shipping companies in the Canary Islands - Offset of negative taxable
-                bases from earlier periods for the special-regime part of the taxable
-                base [01887]
             01888:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offsetting of negative taxable bases - Subtotal
@@ -11422,21 +11435,11 @@ modelo:
                 Islands: breakdown of the offsetting of negative taxable bases - Subtotal
                 of the other-activities taxable base offset - Pending application
                 at the beginning of the period/generated in the period [01889]'
-            01890:
-              label: Settlement III - Taxable base - Special regime for ships and
-                shipping companies in the Canary Islands - Offset of negative taxable
-                bases from earlier periods for the other-activities part of the taxable
-                base [01890]
             01891:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offsetting of negative taxable bases - Subtotal
                 of the other-activities taxable base offset - Pending application
                 in future periods [01891]'
-            01899:
-              label: Deductions to incentivise certain activities - 2022 Investments
-                in Western Africa territory and advertising and promotion expenses
-                (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
-                in future periods [01899]
             01918:
               label: Deductions to incentivise certain activities - 2018 Investments
                 in Western Africa territory and advertising and promotion expenses
@@ -11457,33 +11460,6 @@ modelo:
                 in Western Africa territory and advertising and promotion expenses
                 (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
                 in future periods [01927]
-            01930:
-              label: Deductions to incentivise certain activities - 2025(*) Investments
-                in Western Africa territory and advertising and promotion expenses
-                (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
-                in future periods [01930]
-            01935:
-              label: R&D&i deductions excluded from the limit - Additional information
-                for calculating deduction limits - Commercial group (only for entities
-                that have marked code 00039 of the characteristics of the return)
-                - Annual amount of the research and development expenses deduction
-                applied or paid by the rest of the group [01935]
-            01961:
-              label: Free depreciation of certain vehicles and new charging infrastructure
-                (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
-                for the tax year - Temporary (originating in this tax year) [01961]
-            01962:
-              label: Free depreciation of certain vehicles and new charging infrastructure
-                (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
-                for the tax year - Temporary (originating in prior tax years) [01962]
-            02079:
-              label: 'Additional information for calculating deduction limits - 2024:
-                financier: deduction for Spanish film productions in the Canary Islands
-                generated in the tax period [02079]'
-            02080:
-              label: 'Additional information for calculating deduction limits - 2024:
-                financier: deduction for live performing arts and musical shows in
-                the Canary Islands generated in the tax period [02080]'
             02083:
               label: Deductions to incentivise certain activities - 2015 Investments
                 in Western Africa territory and advertising and promotion expenses
@@ -11542,31 +11518,6 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2019 - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [02108]
-            02181:
-              label: Settlement II - Detail of adjustments to the profit and loss
-                account result - Exemption on dividends or profit-sharing income from
-                non-resident entities (art. 21.1, 21.10 and Transitional Provision
-                40 LIS) - Decreases [02181]
-            02182:
-              label: Settlement II - Detail of adjustments to the profit and loss
-                account result - Exemption on income obtained from the transfer of
-                securities of resident entities (art. 21.3, 21.10 and Transitional
-                Provision 40 LIS) - Increases [02182]
-            02183:
-              label: Settlement II - Detail of adjustments to the profit and loss
-                account result - Exemption on income obtained from the transfer of
-                securities of resident entities (art. 21.3, 21.10 and Transitional
-                Provision 40 LIS) - Decreases [02183]
-            02184:
-              label: Settlement II - Detail of adjustments to the profit and loss
-                account result - Exemption on income obtained from the transfer of
-                securities of non-resident entities (art. 21.3, 21.10 and Transitional
-                Provision 40 LIS) - Increases [02184]
-            02185:
-              label: Settlement II - Detail of adjustments to the profit and loss
-                account result - Exemption on income obtained from the transfer of
-                securities of non-resident entities (art. 21.3, 21.10 and Transitional
-                Provision 40 LIS) - Decreases [02185]
             02186:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on income obtained in the cases of art.
@@ -11630,24 +11581,6 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2020 - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [02276]
-            02287:
-              label: 'Additional information for calculating deduction limits - 2024:
-                deduction for research and development in the Canary Islands generated
-                in the tax period [02287]'
-            02288:
-              label: 'Additional information for calculating deduction limits - 2024:
-                deduction for technological innovation in the Canary Islands generated
-                in the tax period [02288]'
-            '02301':
-              label: Detail of adjustments to the profit and loss result - Adjustments
-                to the profit and loss account result for the tax year - Permanent
-                adjustment (excluding adjustments for corporate income tax and Complementary
-                Tax) - Increases [02301]
-            '02302':
-              label: Detail of adjustments to the profit and loss result - Adjustments
-                to the profit and loss account result for the tax year - Permanent
-                adjustment (excluding adjustments for corporate income tax and Complementary
-                Tax) - Decreases [02302]
             '02304':
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Temporary
@@ -11664,22 +11597,6 @@ modelo:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Expenses subject to the deduction for investments made by
                 port authorities (art. 15 n) LIS) - Increases [02311]
-            02369:
-              label: Limitation on deductibility of financial expenses - Limit art.
-                16.1 and 16.2 LIS - k) Overall limit on the deduction of net finance
-                costs, in any case EUR 1 million if the limit on the deduction of
-                net finance costs plus the additional limit entered under letter j)
-                is below 1 million [02369]
-            02378:
-              label: Joint taxation of State and provincial tax administrations -
-                Disagreement with the administrative position for certain corrective
-                self-assessment cases that do not belong in other boxes - Araba/Alava
-                [02378]
-            02379:
-              label: Joint taxation of State and provincial tax administrations -
-                Disagreement with the administrative position for certain corrective
-                self-assessment cases that do not belong in other boxes - Gipuzkoa
-                [02379]
             02418:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
@@ -11738,51 +11655,11 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2017 Without repeated donations to the same entity - Carried forward
                 for application in future periods [02474]
-            '02475':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - Donations subtotal 2015 to 2025 with repeated donations to the same
-                entity - Applied in this settlement [02475]
-            '02476':
-              label: Deduction for donations to non-profit entities - Donations for
-                priority patronage activities and others entitled to increased deduction
-                - Donations subtotal 2015 to 2025 with repeated donations to the same
-                entity - Carried forward for application in future periods [02476]
             02486:
               label: Settlement IV - Instalment option in cases of change of residence
                 (art. 19.1 LIS) - Result of the self-assessment including the first
                 instalment under art. 19.1 LIS - Regional (foral) administrations/Navarre
                 (Totals) [02486]
-            02490:
-              label: 'Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
-                result after regularisation: offset - State [02490]'
-            02491:
-              label: 'Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
-                result after regularisation: offset - Regional (foral) administrations/Navarre
-                (Totals) [02491]'
-            02492:
-              label: 'Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
-                result after regularisation: payable - Total [02492]'
-            02493:
-              label: 'Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
-                result after regularisation: payable - State [02493]'
-            02494:
-              label: 'Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
-                result after regularisation: payable - Regional (foral) administrations/Navarre
-                (Totals) [02494]'
-            02495:
-              label: 'Additional information for calculating deduction limits - 2024:
-                producer: deduction for Spanish film productions in the Canary Islands
-                generated in the tax period [02495]'
-            02496:
-              label: 'Additional information for calculating deduction limits - 2024:
-                producer: deduction for live performing arts and musical shows in
-                the Canary Islands generated in the tax period [02496]'
             02578:
               label: 30% deduction on the amount of accounting depreciation expense
                 (excluding small enterprises) (art. 7 Law 16/2012) - Decrease - Adjustments
@@ -11878,69 +11755,6 @@ modelo:
                 under art. 13.1 LIS and to provisions and expenses (art. 14.1 and
                 14.2 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
                 in prior tax years) [02728]
-            02786:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2024 - Total DTAs (art. 130.6 a) pending application
-                at the start of the period [02786]
-            02788:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2024 - DTAs pending application at the start of
-                the period - With a right of conversion into a claimable credit [02788]
-            02789:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2024 - DTAs pending application at the start of
-                the period - With a right of conversion into a claimable credit for
-                excess tax due [02789]
-            02790:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2024 - DTAs pending application at the start of
-                the period - Without a right of conversion into a claimable credit
-                [02790]
-            02792:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2024 - DTAs converted into a claimable credit in
-                the period [02792]
-            02793:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2024 - DTAs pending application in future periods
-                - With a right of conversion into a claimable credit [02793]
-            02794:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2024 - DTAs pending application in future periods
-                - With a right of conversion into a claimable credit, excess tax due
-                [02794]
-            02795:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2024 - DTAs pending application in future periods
-                - Without a right of conversion into a claimable credit [02795]
-            02796:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2024 - Excess positive net tax due outstanding at the start
-                of the period [02796]
-            02797:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2024 - Excess positive net tax due applied in tax periods 2008
-                to 2015 [02797]
-            02798:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2024 - Excess positive net tax due applied in tax periods beginning
-                from 2016 [02798]
-            02799:
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2024 - Excess positive net tax due pending application in future
-                periods [02799]
             02855:
               label: Impairment losses on securities representing holdings in capital
                 or equity (art. 15 k) LIS) - Increase - Balance carried forward at
@@ -12176,6 +11990,767 @@ modelo:
               label: Valuation of assets and rights. Special regime for restructuring
                 transactions (chapter VII of title VII LIS) - Decrease - Adjustments
                 for the tax year - Temporary (originating in prior tax years) [03148]
+            '03362':
+              label: Entities under the income-attribution regime incorporated abroad
+                with a presence in Spanish territory (art. 38 TRLIRNR) - Increase
+                - Adjustments for the tax year - Temporary (originating in this tax
+                year) [03362]
+            '03363':
+              label: Entities under the income-attribution regime incorporated abroad
+                with a presence in Spanish territory (art. 38 TRLIRNR) - Increase
+                - Adjustments for the tax year - Temporary (originating in prior tax
+                years) [03363]
+            '03367':
+              label: Entities under the income-attribution regime incorporated abroad
+                with a presence in Spanish territory (art. 38 TRLIRNR) - Decrease
+                - Adjustments for the tax year - Temporary (originating in this tax
+                year) [03367]
+            03368:
+              label: Entities under the income-attribution regime incorporated abroad
+                with a presence in Spanish territory (art. 38 TRLIRNR) - Decrease
+                - Adjustments for the tax year - Temporary (originating in prior tax
+                years) [03368]
+            x-8h834c1g60o32ehg60o3gcg:
+              label: Ultimate parent company of a multinational group [00082]
+          field:
+            label: Modelo 200, tax year 2022
+        '2023':
+          casilla:
+            '00370':
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on dividends or profit-sharing income from
+                resident entities (art. 21.1, 21.10 and Transitional Provision 40
+                LIS) - Decreases [00370]
+            '01020':
+              label: Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Credit for converting deferred
+                tax assets into a credit claimable against the tax administration
+                (art. 130 LIS) - State [01020]
+            '01021':
+              label: Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Offset for converting deferred
+                tax assets into a credit claimable against the tax administration
+                (art. 130 LIS) - State [01021]
+            '01061':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Deduction carried
+                forward/generated [01061]
+            '01062':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Applied in
+                this settlement [01062]
+            '01072':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Carried forward
+                for application in future periods [01072]
+            '01074':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Applied in this
+                settlement [01074]
+            01078:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Carried forward
+                for application in future periods [01078]
+            '01117':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [01117]
+            01119:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit [01119]
+            '01120':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit for
+                excess tax due [01120]
+            '01121':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - Without a right of conversion into a claimable credit
+                [01121]
+            '01122':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs converted into a claimable credit in
+                the period [01122]
+            '01131':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [01131]
+            '01132':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [01132]
+            '01133':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [01133]
+            01887:
+              label: Settlement III - Taxable base - Special regime for ships and
+                shipping companies in the Canary Islands - Offset of negative taxable
+                bases from earlier periods for the special-regime part of the taxable
+                base [01887]
+            01890:
+              label: Settlement III - Taxable base - Special regime for ships and
+                shipping companies in the Canary Islands - Offset of negative taxable
+                bases from earlier periods for the other-activities part of the taxable
+                base [01890]
+            01899:
+              label: Deductions to incentivise certain activities - 2022 Investments
+                in Western Africa territory and advertising and promotion expenses
+                (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
+                in future periods [01899]
+            01935:
+              label: R&D&i deductions excluded from the limit - Additional information
+                for calculating deduction limits - Commercial group (only for entities
+                that have marked code 00039 of the characteristics of the return)
+                - Annual amount of the research and development expenses deduction
+                applied or paid by the rest of the group [01935]
+            02181:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on dividends or profit-sharing income from
+                non-resident entities (art. 21.1, 21.10 and Transitional Provision
+                40 LIS) - Decreases [02181]
+            02182:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on income obtained from the transfer of
+                securities of resident entities (art. 21.3, 21.10 and Transitional
+                Provision 40 LIS) - Increases [02182]
+            02183:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on income obtained from the transfer of
+                securities of resident entities (art. 21.3, 21.10 and Transitional
+                Provision 40 LIS) - Decreases [02183]
+            02184:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on income obtained from the transfer of
+                securities of non-resident entities (art. 21.3, 21.10 and Transitional
+                Provision 40 LIS) - Increases [02184]
+            02185:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on income obtained from the transfer of
+                securities of non-resident entities (art. 21.3, 21.10 and Transitional
+                Provision 40 LIS) - Decreases [02185]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d) and
+                Additional Provisions 16 and 17 LIS) - Increases [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d) and
+                Additional Provisions 16 and 17 LIS) - Decreases [00310]
+            x-8h834c1g60ojgehg60pj2d8:
+              label: Deductions to incentivise certain activities - 2023 Centenary
+                of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Deduction
+                carried forward/generated [00315]
+            x-8h834c1g60ojgehg60pj2dg:
+              label: Deductions to incentivise certain activities - 2023 Centenary
+                of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Applied
+                in this return [00316]
+          field:
+            label: Modelo 200, tax year 2023
+        '2024':
+          casilla:
+            '00077':
+              label: Accelerated depreciation of certain vehicles and new charging
+                infrastructure (DA 18 LIS RDL 5/2023 and RDL 7/2026) - Increase -
+                Adjustments for the tax year - Temporary (originating in this tax
+                year) [00077]
+            00091:
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the special taxable base for 2024 - Pending application in future
+                periods [00091]'
+            00092:
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the taxable base for other activities for 2024 - Pending application
+                at the beginning of the period/generated in the period [00092]'
+            00097:
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the taxable base for other activities for 2024 - Applied in this
+                settlement [00097]'
+            00098:
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the taxable base for other activities for 2024 - Pending application
+                in future periods [00098]'
+            '00775':
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Accelerated depreciation of certain vehicles and new charging
+                infrastructure (Additional Provision 18 LIS, RDL 5/2023) - Increases
+                [00775]
+            '00776':
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Accelerated depreciation of certain vehicles and new charging
+                infrastructure (Additional Provision 18 LIS, RDL 5/2023) - Decreases
+                [00776]
+            00796:
+              label: Profit and loss account (II) - Continuing operations - Interest
+                and compulsory return on contributions to share capital and other
+                funds classified as debt-like (cooperatives) [00796]
+            00812:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2025(*) - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [00812]
+            00816:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2025(*) - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [00816]
+            00817:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2025(*) - Excess positive net tax due outstanding at the start
+                of the period [00817]
+            00878:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2025(*) - Excess positive net tax due applied in tax periods
+                2008 to 2015 [00878]
+            00879:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2025(*) - Excess positive net tax due applied in tax periods
+                beginning from 2016 [00879]
+            00881:
+              label: Deductions to incentivise certain activities - 2023 Investments
+                in West African territories and advertising and publicity expenses
+                (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
+                in future periods [00881]
+            00882:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2025(*) - Excess positive net tax due pending application in
+                future periods [00882]
+            00925:
+              label: Settlement III - Taxable base - Income that does not limit the
+                offsetting of negative taxable bases - Income from the reversal of
+                impairment losses on securities representing holdings in capital or
+                equity (Transitional Provision 16.3 LIS). - Decreases [00925]
+            00932:
+              label: Settlement III - Taxable base - Only cooperative companies -
+                Income from the reversal of impairment losses on securities representing
+                holdings in capital or equity, cooperatives (at tax-due level) (TP
+                16.3 LIS) -decreases [00932]
+            00987:
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the special taxable base for 2023 - Pending application at the
+                beginning of the period/generated in the period [00987]'
+            00988:
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the special taxable base for 2023 - Applied in this settlement
+                [00988]'
+            00989:
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the special taxable base for 2023 - Pending application in future
+                periods [00989]'
+            '01010':
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the taxable base for other activities for 2023 - Pending application
+                at the beginning of the period/generated in the period [01010]'
+            '01043':
+              label: Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Credit for converting deferred
+                tax assets into a credit claimable against the tax administration
+                (art. 130 LIS) - Regional (foral) administrations/Navarre (Totals)
+                [01043]
+            '01044':
+              label: Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Offset for converting deferred
+                tax assets into a credit claimable against the tax administration
+                (art. 130 LIS) - Regional (foral) administrations/Navarre (Totals)
+                [01044]
+            '01073':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Deduction carried
+                forward/generated [01073]
+            '01177':
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the taxable base for other activities for 2023 - Applied in this
+                settlement [01177]'
+            '01200':
+              label: 'Special regime for ships and shipping companies in the Canary
+                Islands: breakdown of the offsetting of negative taxable bases - Offset
+                of the taxable base for other activities for 2023 - Pending application
+                in future periods [01200]'
+            01258:
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - m) Finance costs pending deduction from earlier
+                tax periods, affected by art. 16.5 and/or 83 LIS, deductible after
+                applying both limits (≤ [d], ≥ 0) [01258]
+            01259:
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - n) Finance costs pending deduction from earlier
+                tax periods, not affected by art. 16.5 and/or 83 LIS, applied [01259]
+            '01300':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Credit for asset conversion -
+                Araba/Alava [01300]
+            '01301':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Credit for asset conversion -
+                Gipuzkoa [01301]
+            '01302':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Credit for asset conversion -
+                Bizkaia [01302]
+            01329:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - Without repeated donations to the same entity - Deduction
+                carried forward/generated [01329]
+            '01372':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - Without repeated donations to the same entity - Applied in
+                this settlement [01372]
+            '01373':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - Without repeated donations to the same entity - Carried forward
+                for application in future periods [01373]
+            '01374':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - With repeated donations to the same entity - Deduction carried
+                forward/generated [01374]
+            '01375':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - With repeated donations to the same entity - Applied in this
+                settlement [01375]
+            '01376':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - With repeated donations to the same entity - Carried forward
+                for application in future periods [01376]
+            '01414':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [01414]
+            '01416':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit [01416]
+            '01417':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit for
+                excess tax due [01417]
+            01418:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - Without a right of conversion into a claimable credit
+                [01418]
+            01419:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs converted into a claimable credit in
+                the period [01419]
+            '01420':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [01420]
+            '01421':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [01421]
+            '01422':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [01422]
+            '01423':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due outstanding at the start
+                of the period [01423]
+            '01424':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due applied in tax periods 2008
+                to 2015 [01424]
+            '01425':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due applied in tax periods beginning
+                from 2016 [01425]
+            '01575':
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Transactions under art. 19 LIS other than change
+                of residence to European Union or EEA Member States - Decreases [01575]
+            '01576':
+              label: Settlement III - Taxable base - Special regime for ships and
+                shipping companies in the Canary Islands - Part of the taxable base
+                arising from activities under the special regime, after the levelling
+                reserve - Decreases [01576]
+            '01577':
+              label: Settlement III - Taxable base - Special regime for ships and
+                shipping companies in the Canary Islands - Part of the taxable base
+                arising from other activities, after the levelling reserve -decreases
+                [01577]
+            01578:
+              label: Settlement IV - Corrective return - Amount payable as a result
+                of processing prior self-assessments or administrative assessments
+                corresponding to the 2025 tax period - State [01578]
+            01583:
+              label: Settlement IV - Corrective return - Amount payable as a result
+                of processing prior self-assessments or administrative assessments
+                corresponding to the 2025 tax period - Regional (foral) administrations/Navarre
+                (Totals) [01583]
+            01584:
+              label: Settlement IV - Corrective return - Refund agreed by the Tax
+                Agency as a result of processing prior self-assessments or administrative
+                assessments corresponding to the 2025 tax period - State [01584]
+            01585:
+              label: Settlement IV - Corrective return - Refund agreed by the Tax
+                Agency as a result of processing prior self-assessments or administrative
+                assessments corresponding to the 2025 tax period - Regional (foral)
+                administrations/Navarre (Totals) [01585]
+            '01611':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: refund agreed by the Tax Agency as a result of processing
+                prior self-assessments or administrative assessments corresponding
+                to the 2025 tax period - Araba/Alava [01611]'
+            '01612':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: refund agreed by the Tax Agency as a result of processing
+                prior self-assessments or administrative assessments corresponding
+                to the 2025 tax period - Gipuzkoa [01612]'
+            '01613':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: refund agreed by the Tax Agency as a result of processing
+                prior self-assessments or administrative assessments corresponding
+                to the 2025 tax period - Bizkaia [01613]'
+            '01623':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: refund agreed by the Tax Agency as a result of processing
+                prior self-assessments or administrative assessments corresponding
+                to the 2025 tax period - Navarre [01623]'
+            '01650':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: self-assessment result including the first instalment
+                under art. 19.1 LIS arising from an earlier self-assessment or administrative
+                assessment for tax period 2025 - Araba/Alava [01650]'
+            '01651':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: self-assessment result including the first instalment
+                under art. 19.1 LIS arising from an earlier self-assessment or administrative
+                assessment for tax period 2025 - Gipuzkoa [01651]'
+            '01652':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: self-assessment result including the first instalment
+                under art. 19.1 LIS arising from an earlier self-assessment or administrative
+                assessment for tax period 2025 - Bizkaia [01652]'
+            '01653':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: self-assessment result including the first instalment
+                under art. 19.1 LIS arising from an earlier self-assessment or administrative
+                assessment for tax period 2025 - Navarre [01653]'
+            01658:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Corrective: refund - Araba/Alava
+                [01658]'
+            01659:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Corrective: refund - Gipuzkoa
+                [01659]'
+            '01660':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Corrective: refund - Bizkaia [01660]'
+            '01661':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Corrective: refund - Navarre [01661]'
+            '01662':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: credit - Araba/Alava
+                [01662]'
+            '01663':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: credit - Gipuzkoa
+                [01663]'
+            '01664':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: credit - Bizkaia
+                [01664]'
+            '01666':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Offset - Araba/Alava
+                [01666]'
+            '01667':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Offset - Gipuzkoa
+                [01667]'
+            01668:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Offset - Bizkaia
+                [01668]'
+            '01670':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Payable - Araba/Alava
+                [01670]'
+            '01671':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Payable - Gipuzkoa
+                [01671]'
+            '01672':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Payable - Bizkaia
+                [01672]'
+            01683:
+              label: Deductions to incentivise certain activities - 2025(****) other
+                deductions relating to support programmes for events of exceptional
+                public interest - Deduction pending or generated [01683]
+            01684:
+              label: Deductions to incentivise certain activities - 2025(****) other
+                deductions relating to support programmes for events of exceptional
+                public interest - Applied in this settlement [01684]
+            01685:
+              label: Deductions to incentivise certain activities - 2025(****) other
+                deductions relating to support programmes for events of exceptional
+                public interest - Carried forward for application in future periods
+                [01685]
+            01694:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2015 to 2025 without repeated donations to the
+                same entity. - Carried forward for application in future periods [01694]
+            01697:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2015 to 2025 with repeated donations to the same
+                entity - Carried forward for application in future periods [01697]
+            '01704':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2015 to 2025 without repeated donations to the
+                same entity - Deduction carried forward/generated [01704]
+            '01705':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2015 to 2025 without repeated donations to the
+                same entity - Applied in this settlement [01705]
+            '01706':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2015 to 2025 without repeated donations to the
+                same entity - Carried forward for application in future periods [01706]
+            01729:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2015 to 2025 with repeated donations to the same
+                entity - Deduction carried forward/generated [01729]
+            '01742':
+              label: Free depreciation of certain vehicles and new charging infrastructure
+                (Additional Provision 18 LIS, RDL 4/2024) - Increase - Adjustments
+                for the tax year - Temporary (originating in this tax year) [01742]
+            01820:
+              label: Free depreciation of certain vehicles and new charging infrastructure
+                (Additional Provision 18 LIS, RDL 4/2024) - Increase - Adjustments
+                for the tax year - Temporary (originating in prior tax years) [01820]
+            01930:
+              label: Deductions to incentivise certain activities - 2025(*) Investments
+                in Western Africa territory and advertising and promotion expenses
+                (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
+                in future periods [01930]
+            01961:
+              label: Free depreciation of certain vehicles and new charging infrastructure
+                (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
+                for the tax year - Temporary (originating in this tax year) [01961]
+            01962:
+              label: Free depreciation of certain vehicles and new charging infrastructure
+                (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
+                for the tax year - Temporary (originating in prior tax years) [01962]
+            02079:
+              label: 'Additional information for calculating deduction limits - 2024:
+                financier: deduction for Spanish film productions in the Canary Islands
+                generated in the tax period [02079]'
+            02080:
+              label: 'Additional information for calculating deduction limits - 2024:
+                financier: deduction for live performing arts and musical shows in
+                the Canary Islands generated in the tax period [02080]'
+            02287:
+              label: 'Additional information for calculating deduction limits - 2024:
+                deduction for research and development in the Canary Islands generated
+                in the tax period [02287]'
+            02288:
+              label: 'Additional information for calculating deduction limits - 2024:
+                deduction for technological innovation in the Canary Islands generated
+                in the tax period [02288]'
+            '02301':
+              label: Detail of adjustments to the profit and loss result - Adjustments
+                to the profit and loss account result for the tax year - Permanent
+                adjustment (excluding adjustments for corporate income tax and Complementary
+                Tax) - Increases [02301]
+            '02302':
+              label: Detail of adjustments to the profit and loss result - Adjustments
+                to the profit and loss account result for the tax year - Permanent
+                adjustment (excluding adjustments for corporate income tax and Complementary
+                Tax) - Decreases [02302]
+            02369:
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - k) Overall limit on the deduction of net finance
+                costs, in any case EUR 1 million if the limit on the deduction of
+                net finance costs plus the additional limit entered under letter j)
+                is below 1 million [02369]
+            02378:
+              label: Joint taxation of State and provincial tax administrations -
+                Disagreement with the administrative position for certain corrective
+                self-assessment cases that do not belong in other boxes - Araba/Alava
+                [02378]
+            02379:
+              label: Joint taxation of State and provincial tax administrations -
+                Disagreement with the administrative position for certain corrective
+                self-assessment cases that do not belong in other boxes - Gipuzkoa
+                [02379]
+            '02475':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2015 to 2025 with repeated donations to the same
+                entity - Applied in this settlement [02475]
+            '02476':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2015 to 2025 with repeated donations to the same
+                entity - Carried forward for application in future periods [02476]
+            02490:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
+                result after regularisation: offset - State [02490]'
+            02491:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
+                result after regularisation: offset - Regional (foral) administrations/Navarre
+                (Totals) [02491]'
+            02492:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
+                result after regularisation: payable - Total [02492]'
+            02493:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
+                result after regularisation: payable - State [02493]'
+            02494:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
+                result after regularisation: payable - Regional (foral) administrations/Navarre
+                (Totals) [02494]'
+            02495:
+              label: 'Additional information for calculating deduction limits - 2024:
+                producer: deduction for Spanish film productions in the Canary Islands
+                generated in the tax period [02495]'
+            02496:
+              label: 'Additional information for calculating deduction limits - 2024:
+                producer: deduction for live performing arts and musical shows in
+                the Canary Islands generated in the tax period [02496]'
+            02786:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2024 - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [02786]
+            02788:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2024 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit [02788]
+            02789:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2024 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit for
+                excess tax due [02789]
+            02790:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2024 - DTAs pending application at the start of
+                the period - Without a right of conversion into a claimable credit
+                [02790]
+            02792:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2024 - DTAs converted into a claimable credit in
+                the period [02792]
+            02793:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2024 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [02793]
+            02794:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2024 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [02794]
+            02795:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2024 - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [02795]
+            02796:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2024 - Excess positive net tax due outstanding at the start
+                of the period [02796]
+            02797:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2024 - Excess positive net tax due applied in tax periods 2008
+                to 2015 [02797]
+            02798:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2024 - Excess positive net tax due applied in tax periods beginning
+                from 2016 [02798]
+            02799:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2024 - Excess positive net tax due pending application in future
+                periods [02799]
             '03245':
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - Amending
@@ -12198,26 +12773,14 @@ modelo:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
                 result after regularisation: offset - Total [03320]'
-            '03362':
-              label: Entities under the income-attribution regime incorporated abroad
-                with a presence in Spanish territory (art. 38 TRLIRNR) - Increase
-                - Adjustments for the tax year - Temporary (originating in this tax
-                year) [03362]
-            '03363':
-              label: Entities under the income-attribution regime incorporated abroad
-                with a presence in Spanish territory (art. 38 TRLIRNR) - Increase
-                - Adjustments for the tax year - Temporary (originating in prior tax
-                years) [03363]
-            '03367':
-              label: Entities under the income-attribution regime incorporated abroad
-                with a presence in Spanish territory (art. 38 TRLIRNR) - Decrease
-                - Adjustments for the tax year - Temporary (originating in this tax
-                year) [03367]
-            03368:
-              label: Entities under the income-attribution regime incorporated abroad
-                with a presence in Spanish territory (art. 38 TRLIRNR) - Decrease
-                - Adjustments for the tax year - Temporary (originating in prior tax
-                years) [03368]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d), Additional
+                Provisions 16 and 17 LIS) - Increases [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d), Additional
+                Provisions 16 and 17 LIS) - Decreases [00310]
           field:
             label: Modelo 200, tax year 2024
         2025-y-siguientes:
@@ -12227,6 +12790,9 @@ modelo:
                 infrastructure (DA 18 LIS RDL 5/2023 and RDL 7/2026) - Increase -
                 Adjustments for the tax year - Temporary (originating in the current
                 tax year)
+            00081:
+              label: Subsidiary of a multinational group or large-scale domestic group
+                [00081]
             00091:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offsetting of negative taxable bases - Offset
@@ -15109,64 +15675,19 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Ultimate parent company of a multinational group or large-scale
                 domestic group [00082]
-            x-8h834c1g60oj2ehg60q32do:
-              label: Statement of changes in equity (III) - Adjustments for errors
-                from previous periods - Total corrections to the profit and loss account
-                result (increases) [00417]
-            x-8h834c1g60oj2ehg60q32e0:
-              label: Statement of changes in equity (III) - Adjustments for errors
-                from previous periods - Adjustments for changes in value [00418]
-            x-8h834c1g60oj2ehg60qj8do:
-              label: Settlement III - Tax base - Offset of negative tax bases from
-                previous periods [00547]
-            x-8h834c1g60oj2ehg60qjae0:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Conversion of liabilities into equity - Adjustments for
-                changes in value [00558]
-            x-8h834c1g60oj2ehg60qjce8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Result for the period
-                [00569]
-            x-8h834c1g60oj2ehg60qjec0:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Interim dividend [00570]
-            x-8h834c1g60oj2ehg60qjec8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Other equity instruments
-                [00571]
-            x-8h834c1g60oj2ehg60qjecg:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Adjustments for change
-                in value [00572]
-            x-8h834c1g60oj2ehg60qjed8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Total [00575]
-            x-8h834c1g60oj2ehg60qjgco:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Result
-                for the period [00583]
-            x-8h834c1g60oj2ehg60qjgd0:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Interim
-                dividend [00584]
-            x-8h834c1g60oj2ehg60qjgd8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Other
-                equity instruments [00585]
-            x-8h834c1g60oj2ehg60qjge0:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Grants,
-                donations and legacies received [00588]
-            x-8h834c1g60oj2ehg60r30co:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Increase (reduction) in equity from business combination
-                - Total [00603]
-            x-8h834c1g60oj2ehg60r32c8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Other transactions with shareholders or owners - Result
-                for the period [00611]
-            x-8h834c1g60oj2ehg60r34d8:
-              label: Statement of changes in equity (III) - Other changes in equity
-                - Result for the period [00625]
+            x-8h834c1g60oj4ehg60pj0e8:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d), Additional
+                Provisions 16 and 17 LIS) - Increases [00309]
+            x-8h834c1g60oj4ehg60pj2c0:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Other cases of free depreciation (art. 12.3 a) and d), Additional
+                Provisions 16 and 17 LIS) - Decreases [00310]
+            x-8h834c1g60ojgghq60o36c9l:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2025(*)
+                - Deduction carried forward/generated [00315]
+            x-8h834c1g60ojgghq60o36c9m:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2025(*)
+                - Applied in this return [00316]
           field:
             label: Modelo 200, tax years 2025 onwards

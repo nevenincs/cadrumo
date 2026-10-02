@@ -54,7 +54,6 @@ _BASE_BINDINGS = {
     # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
     "renta-profile-has-economic-activity": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-    "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
     "renta-profile-marriage-month-end": Decimal("0"),

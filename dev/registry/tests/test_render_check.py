@@ -106,7 +106,7 @@ def test_a_published_revision_uses_its_source_defect_adjudication(
 
 def test_a_republished_attestation_matches_its_current_authorities(authority: ValidatedRegistryAuthority) -> None:
     """A repaired tree reproduces both its records and its generation manifest."""
-    comparison = compare_revision_against_committed(authority, modelo="296", revision="2024-y-siguientes")
+    comparison = compare_revision_against_committed(authority, modelo="296", revision="2024-2025")
     assert comparison.reproduced
     assert comparison.semantically_reproduced
     assert comparison.record_differing == ()

@@ -77,6 +77,7 @@ from ....application.calculations.tests.filing_evidence import general_m303_fili
 from ....application.live.filed_observation_persistence import persist_filed_calculation_observation
 from ....application.live.filed_observation_ports import FiledObservationPersistencePorts
 from ....application.modelo.filed_revision_observation import persist_filed_revision_observation
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.config import Settings
@@ -484,9 +485,16 @@ def _carry_ingress_census(*, operation: PinnedAuthorityOperation) -> _PathCensus
             continue
         reconstructed = period_state_from_303_envelope(payload, operation=operation)
         rows.append(reconstructed)
+        # The partition reads only the edition's bindings, which do not depend on
+        # its grade; the year's edition may be authored below filing grade.
         partition = resolve_iva_compensation_annual_partition_binding_values(
             published_authority_operation()
-            .snapshot(Modelo("390").value, filing_year=period.filing_year, period="0A")
+            .snapshot(
+                Modelo("390").value,
+                filing_year=period.filing_year,
+                period="0A",
+                grade=RegistryAuthorityGrade.APPLICABILITY,
+            )
             .revision,
             (payload,),
             filing_year=period.filing_year,

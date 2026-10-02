@@ -53,6 +53,7 @@ from ..authority import PinnedAuthorityOperation
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import authored_revisions_where
 from .published_authority import (
     PublishedGovernedFactSource,
@@ -143,7 +144,16 @@ def _run(
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        # Casillas 0245-0247 are computed from the marriage facts in every edition
+        # from 2022; an unmarried filer supplies them as neutral zeros.
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
     }
+    # An edition that computes the maternity deducción (casilla 0611) needs its
+    # binding; neutral zero for a filer with no descendants.
+    if set(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS) <= {binding.id for binding in snapshot.revision.bindings}:
+        binding_values.update(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS)
     relation_values = {
         "renta-modelo-130-pagos-fraccionados": Decimal("0"),
         "renta-modelo-131-pagos-fraccionados": Decimal("0"),

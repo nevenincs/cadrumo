@@ -34,6 +34,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
@@ -139,14 +140,24 @@ def test_each_total_is_exported_to_its_own_position_in_every_revision() -> None:
     Where a layout does declare the page-02 offset-1628 slot, that slot is the
     box-34 slot, which is the exact identity the original defect inverted.
 
-    A revision that exports neither total is a failure here, not an excused case.
+    A revision with an export layout that exports neither total is a failure
+    here, not an excused case. A revision with no export layout at all writes no
+    record, so it cannot misplace either total; it is admitted only below filing
+    grade, where no filing is emitted from it.
     The shipped 2024 and 2025 layouts place [34] at
     ``modelo-390-page-02:1628`` and [47] at
     ``modelo-390-page-02b:353``.  The formula mutation below proves that [34]
     remains recargo-sensitive; the position assertions prove each total reaches
     its own official field.
     """
+    exporting = 0
     for revision_id, revision in sorted(_m390_revisions(_bundled_registry_root()).items()):
+        if not revision.export_layouts:
+            assert revision.authority_grade is not RegistryAuthorityGrade.FILING, (
+                f"{revision_id} claims filing grade with no export layout"
+            )
+            continue
+        exporting += 1
         positions_34 = _positions(revision, _CASILLA_BOX_34)
         positions_47 = _positions(revision, _CASILLA_BOX_47)
 
@@ -161,6 +172,7 @@ def test_each_total_is_exported_to_its_own_position_in_every_revision() -> None:
             assert ("modelo-390-page-02", 1628) in positions_34, (
                 f"{revision_id} prints the recargo-inclusive total at the box-34 slot"
             )
+    assert exporting, "no Modelo 390 revision declaring box 34 carries an export layout; this gate checked nothing"
 
 
 def test_box_34_formula_excludes_every_recargo_term() -> None:

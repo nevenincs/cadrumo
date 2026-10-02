@@ -16,6 +16,9 @@ modelo:
           en registres públics. Declaració informativa.
         title: Operacions d'entitats inscrites en registres públics (informativa mensual)
       revision:
+        2022-hasta-2024-05:
+          field:
+            label: Model 038, de 2022 a maig de 2024
         2024-desde-06:
           field:
             label: Model 038, des de juny de 2024

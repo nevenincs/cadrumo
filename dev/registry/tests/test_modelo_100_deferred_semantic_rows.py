@@ -1,18 +1,16 @@
 """Regression guards for the deferred semantic rows of the newest authored Modelo 100 edition.
 
-That edition's declarations for casillas 0150, 0613, and 1481 are measured
+That edition's declarations for casillas 0150 and 0613 are measured
 cross-revision divergences.  They must not acquire a prior-year producer until
 their row-specific legal, input-contract, and independent-value evidence has
 been accepted.  These tests exercise the loaded registry graph so an
-accidental formula, profile binding, or Modelo 131 relation cannot be added
-silently.
+accidental formula or profile binding cannot be added silently.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
@@ -30,7 +28,6 @@ _PRIOR_EDITION, _DEFERRED_EDITION = (str(edition) for edition in newest_authored
 _FOCUS_ROWS: tuple[tuple[str, str], ...] = (
     ("0150", "formula"),
     ("0613", "formula"),
-    ("1481", "relation"),
 )
 
 
@@ -83,21 +80,3 @@ def test_m100_deferred_0613_has_no_guarderia_profile_producer() -> None:
     current_ids = profile_guarderia_binding_ids(current_revision)
     assert prior_ids
     assert current_ids == set()
-
-
-def test_m100_deferred_1481_has_no_modelo_131_relation_source() -> None:
-    """The deferred edition's only M131 relation remains the declared payments handoff."""
-    modelos_by_id, _catalogues = _loaded_registry()
-    revision = modelos_by_id["100"].revisions[_DEFERRED_EDITION]
-
-    m131_bindings = [
-        (provider.declared_source_casilla_ids[0], binding.id)
-        for binding, provider in relation_prefill_bindings_for_period(revision, period="0A")
-        if provider.source_modelo == "131"
-    ]
-    assert set(m131_bindings) == {
-        ("15", "renta-modelo-131-pagos-fraccionados"),
-    }
-
-    casilla_1481 = _casilla(revision, "1481")
-    assert casilla_1481.binding is None

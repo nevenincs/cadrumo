@@ -791,6 +791,9 @@ modelo:
           iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
             label: Különös ügyletek - Belföldön teljesített, fordított adózás alá
               eső szolgáltatások [523]
+          iva-pago-cuenta-carburantes-deposito-fiscal:
+            label: Az állami adóhatóságnak betudható, az adóévben levont adóelőleg
+              benzin, gázolaj és bioüzemanyag értékesítése után
           iva-recargo-equivalencia-tipo-0-5-base:
             label: Egyenértékűségi felár 0.5% kulccsal - adóalap
           iva-recargo-equivalencia-tipo-1-4-base:
@@ -3854,3 +3857,7 @@ modelo:
           field:
             label: 390-es modelo, 2025. adóév (EHA/3111/2009 rendelet, a HAP/2373/2014
               rendeletet is magába foglaló további rendeletekkel módosítva)
+        '2026':
+          field:
+            label: 390-es modelo, 2026. adóév (EHA/3111/2009 rendelet, a HAC/27/2026
+              rendelettel módosítva)

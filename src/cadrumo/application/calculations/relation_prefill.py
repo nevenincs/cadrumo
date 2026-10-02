@@ -255,7 +255,7 @@ def _economic_activity_conditional_source_modelos(snapshot: RegistrySnapshot) ->
 
     Deliberately NARROWER than the clean-state gate's ``_non_filer_modelos``,
     which also carries the ``taxpayer_files_source = false`` arm (the suffered
-    retenciones sources - 111, 123, 184, 190, 193 on Modelo 100). Those sources
+    retenciones sources a payer files, such as Modelo 184 on Modelo 100). Those sources
     must never reach the zero-resolution below: they are absent because the
     PAYER files them, not because no obligation exists, and the retención the
     taxpayer suffered is a real credit that must be declared. Their relations

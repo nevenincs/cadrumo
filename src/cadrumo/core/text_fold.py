@@ -21,7 +21,6 @@ import unicodedata
 
 __all__ = [
     "COMBINING_MARK_RANGES",
-    "COMBINING_MARK_UNIDATA_VERSION",
     "ascii_slug",
     "fold_diacritics",
     "fold_for_matching",
@@ -35,12 +34,8 @@ __all__ = [
 #: caller in the PDF label reader names its pattern for what it does.
 _WHITESPACE_RUN_RE = re.compile(r"\s+")
 
-#: Unicode database version :data:`COMBINING_MARK_RANGES` was derived from: the
-#: one the oldest supported interpreter ships (CPython 3.13).
-COMBINING_MARK_UNIDATA_VERSION = "15.1.0"
-
 #: Inclusive codepoint ranges of Unicode category ``Mn`` (Mark, nonspacing) as
-#: of :data:`COMBINING_MARK_UNIDATA_VERSION`, and the exact set the fold strips
+#: of Unicode 15.1.0 (CPython 3.13), and the exact set the fold strips
 #: on EVERY interpreter. A later database moves marks between categories (Ahom
 #: U+1171E is ``Mn`` in 15.1 and ``Mc`` in 16.0), so a set taken from whichever
 #: interpreter runs would make the same text fold differently under 3.13 and
@@ -410,7 +405,7 @@ def fold_diacritics(text: str) -> str:
     """Return *text* with combining diacritical marks removed.
 
     NFKD-decomposes *text*, then drops every character in Unicode category
-    ``Mn`` (Mark, nonspacing) as of :data:`COMBINING_MARK_UNIDATA_VERSION` —
+    ``Mn`` (Mark, nonspacing) as of Unicode 15.1.0 —
     the combining accents NFKD decomposition exposes (``"ó"`` -> ``"o"`` +
     U+0301 COMBINING ACUTE ACCENT, which this function then drops). The mark
     set is pinned rather than read from the running interpreter, and Unicode

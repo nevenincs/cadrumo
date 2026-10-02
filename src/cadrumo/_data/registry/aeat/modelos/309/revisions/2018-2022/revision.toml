@@ -1,7 +1,11 @@
 [revisions."2018-2022"]
 binding_source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 formula_source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
-predecessor = { none = { cause = "official_structure_differs", reason = "Stated in full: the official record structure is reordered against the edition before it, so supersede-in-place would not reproduce it. Measured against '2016-2017': casillas differ from index 28 ('decl.transmitente-nif-iva' -> 'decl.rg-base-01'); every other family is byte-identical.", legal_refs = ["orden-hac-3625-2003:apartado-1"], source_refs = ["aeat-dr-309-2018"] } }
+predecessor = { none = { cause = "official_structure_differs", reason = "aeat-dr-309-2018 reorders the aeat-dr-309-2016 record: its field order differs from index 28 ('decl.transmitente-nif-iva' -> 'decl.rg-base-01') and 4 fields are new, so supersede-in-place would not reproduce it and no predecessor is declared. The payload is stored against the 2016-2017 edition through casilla_storage_baseline and family_storage_baseline: what both designs share is inherited, this edition's differences are overrides, positions restate this design's field order, its export layout stays stated per edition, and its parity anchor, verification expectation and completeness manifest are the baseline's, adopted through scoped_families. Storage reuse makes no continuity claim.", legal_refs = ["orden-hac-3625-2003:apartado-1"], source_refs = ["aeat-dr-309-2018"] } }
+# Storage reuse only, not legal continuity: casillas and keyed families are
+# stored as differences from the 2016-2017 edition's effective members.
+casilla_storage_baseline = "2016-2017"
+family_storage_baseline = "2016-2017"
 casilla_source_refs = ["aeat-dr-309-2018"]
 live_cross_reference_source_refs = ["aeat-modelo-309-procedure"]
 application_link_source_refs = ["aeat-modelo-309-procedure"]
@@ -49,6 +53,7 @@ source_refs = [
     "aeat-modelo-309-procedure",
     "boe-modelo-309-2003-form",
 ]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
 
@@ -81,3 +86,432 @@ source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure"]
 reason = "Modelo 309's record design declares two fixed pages with no repeated projection record and no field of kind 'projection'. The family has no repeated endpoint to admit; authoring a projection row into the layout is what would make it apply."
 legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure"]
+
+[[revisions."2018-2022".casilla_positions]]
+id = "decl.transmitente-nif-iva"
+position = 28
+
+[[revisions."2018-2022".casilla_positions]]
+id = "decl.adjudicatario-nif"
+position = 29
+
+[[revisions."2018-2022".casilla_positions]]
+id = "decl.adjudicatario-apellidos"
+position = 30
+
+[[revisions."2018-2022".casilla_positions]]
+id = "decl.adjudicatario-nombre"
+position = 31
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.ejercicio" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 identify the declaration's tax year in its header, separately from the aircraft manufacture year. Ejercicio / Ejercicio devengo continues to identify the same non-periodic IVA return's tax year under Orden HAC/3625/2003 apartado 1.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.tipo-trigger" }
+fields = { continuidad_evidence = "Internal Modelo 309 authority preserves this virtual application concept across 2016-2017 and 2018-2022: the required text informational row retains id decl.tipo-trigger, semantic_role motivo_declaracion_no_periodica, section declarante, and the same modelo-309-iva-no-periodica construct enrollment; no formula, binding, or consumer contract addresses or changes this row.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.periodo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.tipo-declaracion" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the declaration type, with note 1 defining I as ingreso. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.nombre" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the declarant's given name, separate from surnames or corporate name. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.transmitente-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.transmitente-apellidos" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the transferor's surnames or corporate name, separate from the given-name field. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.transmitente-nombre" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the transferor's given name, separate from the surnames or corporate-name field. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.transmitente-pais" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the transferor's two-character country field. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.situacion-tributaria" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the taxpayer-status selection: agriculture, equivalence surcharge, no deduction, non-business legal person, non-business individual, or other. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.hecho-imponible" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the taxable-event selection: intra-EU goods, new means of transport, reverse charge, immovable investment goods, administrative/judicial proceedings, or other. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.vehiculo-marca" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.vehiculo-tipo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.vehiculo-modelo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.vehiculo-bastidor" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.vehiculo-clasificacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.embarcacion-fabricante" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.embarcacion-tipo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.embarcacion-identificacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.embarcacion-eslora" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.aeronave-fabricante" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.aeronave-marca" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.aeronave-serie" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.aeronave-ano" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.aeronave-peso" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.complementaria" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.justificante-anterior" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.iban" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.rg-base-01" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.rg-tipo-02" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.rg-cuota-03" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.rg-base-04" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.rg-tipo-05" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.rg-cuota-06" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.rg-base-07" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.rg-tipo-08" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.rg-cuota-09" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-base-10" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-tipo-11" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-cuota-12" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-base-13" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-tipo-14" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-cuota-15" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-base-16" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-tipo-17" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-cuota-18" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-base-19" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-tipo-20" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.re-cuota-21" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.cuota-devengada-22" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.a-deducir-23" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "decl.resultado-24" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "iva.autorepercutido.intracomunitaria" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 preserve the same Modelo 309 non-periodic IVA liquidation and its intra-community acquisition/reverse-charge role under Orden HAC/3625/2003 apartado 1 and LIVA art. 84. This reviewed cuota leaf remains money, bound, in the same inversion_sujeto_pasivo section, with the same binding id.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "iva.soportado.recargo-equivalencia" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 preserve the same Modelo 309 non-periodic IVA liquidation and its recargo de equivalencia quota role: the official instructions retain the 10–21 recargo-equivalencia quota lines. This reviewed cuota leaf remains money, bound, in the same soportado section, with the same binding id.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".casilla_overrides]]
+selector = { revision = "2016-2017", id = "iva.cuota-no-periodica-total" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 preserve the same Modelo 309 liquidation totals, including the printed [22] total cuota devengada and [24] result. The reviewed internal non-periodic total keeps the same money/computed role, target formula, two cuota-leaf inputs, and legal/source grounding in both revisions.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2018-2022".family_overrides]]
+family = "formulas"
+selector = {revision = "2016-2017", id = "modelo-309-cuota-devengada-total"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "formulas"
+selector = {revision = "2016-2017", id = "modelo-309-iva-cuota-no-periodica-total"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "formulas"
+selector = {revision = "2016-2017", id = "modelo-309-resultado"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "constructs"
+selector = {revision = "2016-2017", id = "modelo-309-iva-no-periodica"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [3, 0, 1, 2]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "application_links"
+selector = {revision = "2016-2017", id = "modelo-309-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "application_links"
+selector = {revision = "2016-2017", id = "modelo-309-export"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "application_links"
+selector = {revision = "2016-2017", id = "modelo-309-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "bindings"
+selector = {revision = "2016-2017", id = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "bindings"
+selector = {revision = "2016-2017", id = "modelo-309-iva-soportado-recargo-equivalencia-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2016-2017", id = "modelo-309-dr"}
+fields = {fixture_id = "modelo-309-2018-record-design-layout", workbook_source = "aeat-dr-309-2018"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2016-2017", id = "modelo-309-iva-chain-verification"}
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2018-2022".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2016-2017", id = "aeat-dr-309-2016"}
+replacement_id = "aeat-dr-309-2018"
+sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
+sequence_removals = {source_refs = [0]}

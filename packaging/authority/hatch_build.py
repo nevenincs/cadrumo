@@ -116,10 +116,10 @@ def _runtime_build_hook_base() -> Any:
     spelling unconditionally prevents one of the supported isolated backends
     from importing this hook.
 
-    The dynamic values only bridge the third-party runtime type API.  The
-    ``TYPE_CHECKING`` base below keeps the 1.32.3 protocol fully described to
-    static checkers, and unknown future shapes fail before any build data is
-    changed.
+    The dynamic values only bridge the third-party runtime type API. The
+    ``TYPE_CHECKING`` base below describes the installed Hatchling 1.32.4
+    protocol to static checkers; the runtime branch still accepts the admitted
+    1.32.3 protocol. Unknown future shapes fail before any build data is changed.
     """
     hook_parameter_count = len(getattr(BuildHookInterface, "__parameters__", ()))
     config_parameter_count = len(getattr(BuilderConfig, "__parameters__", ()))
@@ -137,8 +137,8 @@ def _runtime_build_hook_base() -> Any:
 
 if TYPE_CHECKING:
 
-    class _CustomBuildHookBase(BuildHookInterface[BuilderConfig[PluginManager], PluginManager]):
-        """Static view of the Hatchling 1.32.3 hook protocol."""
+    class _CustomBuildHookBase(BuildHookInterface[BuilderConfig]):
+        """Static view of the installed Hatchling 1.32.4 hook protocol."""
 else:
     _CustomBuildHookBase = _runtime_build_hook_base()
 

@@ -14,7 +14,7 @@
 # procedimiento_especial_de_retenciones, clave_de_mercado and
 # codigo_lei_del_perceptor. In the 2023 design those five positions are declared
 # BLANCOS: 85-90 and 402-432. They are removed here rather than left pointing at a
-# design that does not contain them; the 2024-y-siguientes edition declares them
+# design that does not contain them; the 2024-2025 edition declares them
 # against aeat-dr-296-2024, which does.
 
 [[revisions."2023".projection_endpoints]]

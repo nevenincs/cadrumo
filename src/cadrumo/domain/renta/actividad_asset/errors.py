@@ -18,6 +18,18 @@ class ActividadAssetUnsupportedError(ActividadAssetError):
     """Raised when a requested asset shape has no enrolled authority."""
 
 
+class ActividadAssetAcceleratedDa18DepreciationError(ActividadAssetUnsupportedError):
+    """Raised when LIS DA 18 grants the tax period accelerated rather than free depreciation.
+
+    For new electric vehicles and charging points, LIS DA 18 has granted a
+    coefficient of twice the maximum linear coefficient in some tax periods
+    and free depreciation in others.  Only the free regime is an amortization
+    method; the accelerated one stays outside the method set, so a claim that
+    falls under it is refused with this identity instead of the generic
+    unenrolled-method refusal, and nothing is charged.
+    """
+
+
 @dataclass(frozen=True, slots=True)
 class VehicleAffectationRecovery:
     """The asset revision an operator must correct with a vehicle declaration."""
@@ -58,6 +70,7 @@ class ActividadAssetClaimConflictError(ActividadAssetError):
 
 
 __all__ = [
+    "ActividadAssetAcceleratedDa18DepreciationError",
     "ActividadAssetClaimConflictError",
     "ActividadAssetError",
     "ActividadAssetIncompleteError",

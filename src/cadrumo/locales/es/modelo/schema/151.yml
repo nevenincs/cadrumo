@@ -23,11 +23,11 @@ modelo:
             label: Base liquidable general (régimen impatriados, excluida la parte
               del ahorro art. 25.1.f TRLIRNR)
           impatriado-cuota-integra-ahorro:
-            label: 'Cuota integra del ahorro (escala art. 93.2.e.2º: 19/21/23/27/30
-              sobre la base liquidable del ahorro, redacción vigente Ley 7/2024)'
+            label: Cuota íntegra del ahorro (escala del art. 93.2.e).2.º LIRPF sobre
+              la base liquidable del ahorro, en la redacción aplicable a cada ejercicio)
           impatriado-cuota-integra-general:
-            label: 'Cuota integra general (escala art. 93.2.e.1º: 24% hasta 600.000
-              €, 47% sobre el exceso)'
+            label: 'Cuota íntegra general (escala del art. 93.2.e).1.º LIRPF: 24 %
+              hasta 600.000 € y el tipo superior del ejercicio sobre el exceso)'
           impatriado-retenciones:
             label: Retenciones e ingresos a cuenta (pagos a cuenta, art. 93.2.f)
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12:
@@ -1156,9 +1156,9 @@ modelo:
             x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
               label: Valor de transmisión [2]
           field:
-            label: Modelo 151 ejercicios 2015 a 2022 (régimen impatriados, escala
-              general plana 24/47 tras Ley 26/2014; parte del ahorro no modelada en
-              esta revisión)
+            label: Modelo 151 ejercicios 2015 a 2022 (régimen impatriados; escala
+              general del art. 93.2.e).1.º y escala del ahorro del art. 93.2.e).2.º
+              en la redacción de cada ejercicio)
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

@@ -155,13 +155,24 @@ def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it()
 def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(tmp_path: Path) -> None:
     """Removing zero on a scratch registry makes the real base assertion fail."""
     scratch_root = scratch_registry_tree(tmp_path, "303")
+    # The support-floor edition's selector admits the rate tiers of its own
+    # design; the zero tier joins from 2023 as an override on that selector,
+    # so the mutation drops the zero tier from that override.
     mutate_declaration(
         scratch_root / "modelos" / "303",
         revision_id=_REVISION_ID,
         section="bindings",
         member=f'id = "{_BINDING_BASE}"',
-        find='rate_kinds = ["zero", "general", "reduced", "super_reduced"]',
-        replace='rate_kinds = ["general", "reduced", "super_reduced"]',
+        find=(
+            'sequence_additions = {"provider.rate_kinds" = ["zero"], source_refs = ["aeat-dr-303-2023"]}\n'
+            "sequence_removals = {source_refs = [0]}\n"
+            'sequence_order = {"provider.rate_kinds" = [3, 0, 1, 2], source_refs = [2, 0, 1]}\n'
+        ),
+        replace=(
+            'sequence_additions = {source_refs = ["aeat-dr-303-2023"]}\n'
+            "sequence_removals = {source_refs = [0]}\n"
+            "sequence_order = {source_refs = [2, 0, 1]}\n"
+        ),
     )
 
     aic_row = IvaLedgerObservation(
@@ -192,14 +203,14 @@ def test_mutation_reverting_box_10_to_manual_reds_the_gate(tmp_path: Path) -> No
     above would have caught it.
     """
     scratch_root = scratch_registry_tree(tmp_path, "303")
-    # Box 10's derivation is delta-authored as a casilla override, so the
-    # revert drops the formula from that override rather than from a row.
+    # Box 10's derivation is stated on the row of the edition that first prints
+    # the box, and every later edition inherits it, so the revert lands there.
     mutate_declaration(
         scratch_root / "modelos" / "303",
         revision_id=_REVISION_ID,
         section="casillas",
-        find=f'formula = "{_FORMULA_BOX_10}", input_kind = "computed"',
-        replace='input_kind = "manual"',
+        find=f'input_kind = "computed"\nformula = "{_FORMULA_BOX_10}"\n',
+        replace='input_kind = "manual"\n',
     )
 
     mutated_revision = _m303_revision(scratch_root)

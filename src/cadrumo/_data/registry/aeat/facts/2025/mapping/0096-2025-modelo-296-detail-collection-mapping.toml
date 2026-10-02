@@ -17,7 +17,7 @@ required_text = ["M296"]
 kind = "mapping"
 entries = [
   { key = "modelo", value = "296" },
-  { key = "revision", value = "2024-y-siguientes" },
+  { key = "revision", value = "2024-2025" },
   { key = "modelo.296.projection.m296_perceptor.collection", value = "perceptor_rows" },
   { key = "modelo.296.projection.m296_perceptor_intereses.collection", value = "perceptor_intereses_rows" },
   { key = "modelo.296.projection.m296_anexo_pago.collection", value = "anexo_pago_rows" },

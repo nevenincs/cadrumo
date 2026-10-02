@@ -1,0 +1,7 @@
+[[revisions."2022".constructs]]
+id = "modelo-220-declaration-construct"
+legal_refs = ["orden-hfp-523-2023:art-1", "orden-hfp-523-2023:art-6-3", "orden-hfp-523-2023:art-3", "ley-27-2014:art-124"]
+source_refs = ["aeat-modelo-200-manual-2022", "boe-modelo-220-2022-form", "aeat-dr-220-2022"]
+casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
+application_links = ["modelo-220-deadline", "modelo-220-filing", "modelo-220-workflow"]
+deadline_windows = ["modelo-220-2022-0a"]

@@ -58,7 +58,8 @@ _CCAA_BINDING = "renta-profile-tax-residence-ccaa"
 # the CCAA binding: minimo por descendientes estatal + autonomico (Art. 58/61
 # LIRPF, with the autonomico half carrying a CCAA-conditional Madrid override),
 # Madrid nacimiento/adopcion (casilla 1039, DL 1/2010), and the anualidades sin
-# minimo separate-escala eligibility flag (Art. 64/75 LIRPF).
+# minimo separate-escala eligibility flag (Art. 64/75 LIRPF), and the maternity
+# deduction (Art. 81.1 LIRPF, casilla 0611), zero without children under three.
 _DERIVED_FACT_PROFILE_BINDINGS = frozenset(
     {
         "renta-profile-minimo-descendientes-estatal",
@@ -67,6 +68,7 @@ _DERIVED_FACT_PROFILE_BINDINGS = frozenset(
         "renta-profile-madrid-nacimiento-adopcion-eligible-count",
         "renta-profile-unidad-familiar-otros-miembros-base",
         "renta-profile-anualidades-sin-minimo-descendientes",
+        "renta-profile-deduccion-maternidad",
         "renta-maritime-path-rebeca",
         "renta-maritime-gross-navigation-income",
         "renta-maritime-annual-salary",

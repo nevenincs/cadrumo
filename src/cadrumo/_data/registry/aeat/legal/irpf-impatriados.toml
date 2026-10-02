@@ -102,6 +102,99 @@ required_text = [
     "71.880",
 ]
 
+[legal."ley-35-2006:art-93-ahorro-2021"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-93-2021.html#a93"
+document_id = "BOE-A-2006-20764"
+article = "93"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20201231&tn=1#a93"
+published_at = 2006-11-29
+effective_from = 2021-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-review"
+corpus_tier = "provision_excerpt"
+notes = """\
+LIRPF Art. 93.2.e).2.º — escala del ahorro del régimen especial de impatriados, redacción en vigor \
+del 1-1-2021 al 31-12-2022: la fija el art. 61 de la Ley 11/2020, de 30 de diciembre (BOE-A-2020-17339), \
+que modifica las letras e) y f) del apartado 2 con efectos desde 1 de enero de 2021, y la sustituye la \
+redacción de la Ley 31/2022 con efectos 1-1-2023 (ley-35-2006:art-93-ahorro-2023). Es la redacción que \
+rige el ejercicio 2022. Cuatro tramos: 19% hasta 6.000, 21% hasta 50.000 (cuota 1.140), 23% hasta \
+200.000 (10.380), 26% en adelante (44.880). Capturada del texto consolidado en la versión que el \
+selector de BOE marca para 2020-12-31 (act.php?p=20201231); el API de legislación consolidada \
+(texto/bloque/a93) sirve esa misma redacción con fecha_vigencia 20210101 y la siguiente con 20230101."""
+required_text = [
+    "Se modifican las letras e) y f) del apartado 2, con efectos desde 1 de enero de 2021, por el art. 61 de la Ley 11/2020",
+    "200.000,00",
+    "44.880",
+    "En adelante",
+]
+
+[legal."ley-35-2006:art-93-2015"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-93-2015.html#a93"
+document_id = "BOE-A-2006-20764"
+article = "93"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn=1#a93"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+effective_to = 2020-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-review"
+corpus_tier = "provision_excerpt"
+notes = """\
+LIRPF Art. 93 en la redacción del art. 1.59 de la Ley 26/2014, de 27 de noviembre (BOE-A-2014-12327), \
+en vigor desde el 1-1-2015 hasta que el art. 61 de la Ley 11/2020 modifica las letras e) y f) del \
+apartado 2 con efectos 1-1-2021 (ley-35-2006:art-93-ahorro-2021). Escala del número 1.º de la letra e): \
+24% hasta 600.000 euros y 45% desde 600.000,01 en adelante. Escala del número 2.º: 19% hasta 6.000 \
+(cuota 0), 21% hasta 50.000 (cuota 1.140) y 23% en adelante (cuota 10.380). Para el período impositivo \
+2015 ambas escalas las sustituye la disposición adicional trigésima primera (ley-35-2006:da-31), de modo \
+que esta redacción rige las escalas de los ejercicios 2016 a 2020. Capturada del texto consolidado en la \
+versión que el selector de BOE marca para 2014-11-28 (act.php?p=20141128); el API de legislación \
+consolidada (texto/bloque/a93) sirve esa misma redacción con fecha_vigencia 20150101 y la siguiente con \
+20210101."""
+required_text = [
+    "Se modifica por el art. 1.59 de la Ley 26/2014",
+    "Desde 600.000,01 euros en adelante",
+    "el porcentaje de retención aplicable al exceso será el 45 por ciento",
+    "10.380",
+]
+
+[legal."ley-35-2006:da-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#datrigesimaprimera"
+document_id = "BOE-A-2006-20764"
+article = "DA-31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#datrigesimaprimera"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+effective_to = 2015-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-review"
+notes = """\
+LIRPF disposición adicional trigésima primera, escalas aplicables en 2015 (añadida por la Ley 26/2014 y \
+modificada con efectos 1-1-2015 por el art. 1.4 del Real Decreto-ley 9/2015). Su apartado 1.f) fija para \
+el período impositivo 2015 la escala del número 1.º de la letra e) del apartado 2 del art. 93 en 24% hasta \
+600.000 euros y 47% desde 600.000,01; su apartado 1.g) fija la del número 2.º en 19,5% hasta 6.000 (cuota \
+0), 21,5% hasta 50.000 (cuota 1.170) y 23,5% en adelante (cuota 10.630). Desde 2016 rige la redacción \
+del art. 93 de la Ley 26/2014 (ley-35-2006:art-93-2015). Verificada contra el texto consolidado incluido \
+(ley-35-2006.html#datrigesimaprimera)."""
+required_text = [
+    "Escalas y tipos de retención aplicables en 2015",
+    "La escala a que se refiere el número 1.º de la letra e) del apartado 2 del artículo 93 de esta Ley será la siguiente",
+    "La escala a que se refiere el número 2.º de la letra e) del apartado 2 del artículo 93 de esta Ley será la siguiente",
+    "10.630",
+]
+
 [legal."rd-439-2007:art-113"]
 evidence_tier = "legal_authority"
 authority = "boe"

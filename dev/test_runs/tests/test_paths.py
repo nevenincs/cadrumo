@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import os
+import shutil
+import stat
 import tempfile
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -12,9 +15,13 @@ from dev._paths import REPO_ROOT
 from ..paths import (
     SCRATCH_BASE_ENV,
     SCRATCH_PATH_BUDGET,
+    SCRATCH_PREFIX,
     SCRATCH_SEPARATOR,
+    ScratchAllocation,
+    ScratchOwnershipError,
     allocate_run_directory,
     allocate_scratch_directory,
+    remove_scratch_directory,
     run_log_bases,
     run_log_families,
     run_log_roots,
@@ -120,3 +127,96 @@ def test_a_base_too_deep_for_the_temp_budget_is_refused(tmp_path: Path, monkeypa
         allocate_scratch_directory()
 
     assert not deep.exists()
+
+
+@pytest.fixture
+def scratch() -> Iterator[Path]:
+    """Allocate a real scratch beside this run's, and remove whatever a refusal left of it."""
+    allocated = allocate_scratch_directory()
+    try:
+        yield allocated
+    finally:
+        if allocated.is_symlink() or allocated.is_junction():
+            allocated.unlink()
+        elif allocated.exists():
+            shutil.rmtree(allocated)
+
+
+def test_a_scratch_is_removed_whole_without_following_a_link_out_of_it(scratch: Path, tmp_path: Path) -> None:
+    """Everything inside goes, a read-only member included; what a link inside points at stays."""
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "kept.txt").write_text("not the scratch's to remove", encoding="utf-8")
+    nested = scratch / "pytest" / "gw0" / "test_case0"
+    nested.mkdir(parents=True)
+    (nested / "payload.bin").write_bytes(b"\0" * 4096)
+    read_only = scratch / "read-only.txt"
+    read_only.write_text("read-only member", encoding="utf-8")
+    read_only.chmod(stat.S_IREAD)
+    # Unguarded: a host that cannot create a directory symlink reports a red
+    # naming the OS refusal, rather than a skip that retires this proof.
+    (scratch / "link-out").symlink_to(outside, target_is_directory=True)
+    allocation = ScratchAllocation.record(scratch)
+
+    remove_scratch_directory(allocation)
+
+    assert not scratch.exists()
+    assert (outside / "kept.txt").read_text(encoding="utf-8") == "not the scratch's to remove"
+
+
+def test_a_scratch_another_process_allocated_is_refused_and_left_intact(scratch: Path, tmp_path: Path) -> None:
+    """An xdist worker or nested pytest inherits its controller's scratch; it may never remove it."""
+    foreign = tmp_path / SCRATCH_SEPARATOR.join((SCRATCH_PREFIX, str(os.getpid() + 1), "abc123"))
+    foreign.mkdir()
+    with pytest.raises(ScratchOwnershipError, match="not a scratch directory named for process"):
+        ScratchAllocation.record(foreign)
+    status = foreign.stat()
+    as_seen_by_another_owner = ScratchAllocation(foreign, os.getpid(), (status.st_dev, status.st_ino))
+    with pytest.raises(ScratchOwnershipError, match="not named as the scratch of process"):
+        remove_scratch_directory(as_seen_by_another_owner)
+    assert foreign.is_dir()
+
+    recorded = ScratchAllocation.record(scratch)
+    with pytest.raises(ScratchOwnershipError, match="belongs to process"):
+        remove_scratch_directory(ScratchAllocation(scratch, os.getpid() + 1, recorded.identity))
+    assert scratch.is_dir()
+
+
+def test_a_path_outside_the_allocation_is_refused_and_left_intact(tmp_path: Path) -> None:
+    unrelated = tmp_path / "not-a-scratch"
+    unrelated.mkdir()
+    (unrelated / "precious.txt").write_text("keep", encoding="utf-8")
+    status = unrelated.stat()
+
+    with pytest.raises(ScratchOwnershipError, match="not named as the scratch"):
+        remove_scratch_directory(ScratchAllocation(unrelated, os.getpid(), (status.st_dev, status.st_ino)))
+
+    assert (unrelated / "precious.txt").read_text(encoding="utf-8") == "keep"
+
+
+def test_a_directory_replacing_the_allocation_under_its_name_is_refused(scratch: Path) -> None:
+    allocation = ScratchAllocation.record(scratch)
+    scratch.rmdir()
+    scratch.mkdir()
+    (scratch / "someone-elses.txt").write_text("keep", encoding="utf-8")
+
+    with pytest.raises(ScratchOwnershipError, match="no longer the directory this run allocated"):
+        remove_scratch_directory(allocation)
+
+    assert (scratch / "someone-elses.txt").read_text(encoding="utf-8") == "keep"
+
+
+def test_a_link_standing_in_for_the_scratch_is_refused_and_its_target_left_intact(
+    scratch: Path, tmp_path: Path
+) -> None:
+    target = tmp_path / "target"
+    target.mkdir()
+    (target / "precious.txt").write_text("keep", encoding="utf-8")
+    allocation = ScratchAllocation.record(scratch)
+    scratch.rmdir()
+    scratch.symlink_to(target, target_is_directory=True)
+
+    with pytest.raises(ScratchOwnershipError, match="is a link"):
+        remove_scratch_directory(allocation)
+
+    assert (target / "precious.txt").read_text(encoding="utf-8") == "keep"

@@ -1,0 +1,114 @@
+[revisions."2022"]
+id = "2022"
+authority_grade = "applicability"
+casilla_source_refs = ["boe-modelo-189-base-order"]
+# Modelo 189, ejercicio 2022, presented in marzo 2023, and the modelo's storage
+# baseline: the 2023 edition stores only its differences against it.
+#
+# WHICH DESIGN. aeat-dr-189-2021-2022 is AEAT's design "Orden EHA/3481/2008
+# actualizada por la Orden HFP/115/2022", headed Ejercicio 2021. The BOE
+# analysis of the base orden (BOE-A-2008-19523) lists its anexo II amendments:
+# Orden HFP/1351/2021 (first applicable to the 2021 declarations presented in
+# 2022), Orden HFP/115/2022 (in force 2022-02-26), then Orden HFP/1180/2023 and
+# Orden HFP/1284/2023, both first applicable to ejercicio 2023. Ejercicio 2022 is
+# therefore filed on this design.
+#
+# WHAT 2023 CHANGES, measured against aeat-dr-189-2023: NUMERO DE VALORES moves
+# from 130-145 to 130-146 and NOMINAL UNITARIO DE LOS VALORES from 146-163 to
+# 147-164 (Orden HFP/1284/2023 art. 11); CLAVE DE VALOR gains clave F, seguros de
+# vida sin valor de rescate, with its valuation rule (Orden HFP/1180/2023); and
+# the CODIGO PAIS description is reworded. Every other field sits at the same
+# position with the same width.
+#
+# Grade: applicability. The evidence is on the same footing as the 2023
+# edition's filing grade -- the export layout is transcribed from this edition's
+# own bundled design and aeat-modelo-189-procedure (applies_from 2020-01-01) is
+# the procedure evidence reaching this ejercicio -- but a filing-grade snapshot
+# requires a reviewed revision and this one has not been reviewed, so it is not
+# claimed. No binding or formula is declared, for the reasons the family
+# dispositions below state.
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+period_selector = { year_from = 2022, year_to = 2022, periods = ["0A"] }
+orden_aplicabilidad = [
+    "orden-eha-3481-2008:art-1",
+    "orden-hfp-1351-2021:art-sexto",
+    "orden-hfp-115-2022:df-primera",
+]
+legal_refs = [
+    "orden-eha-3481-2008:art-1",
+    "orden-eha-3481-2008:art-5",
+    "orden-hfp-1351-2021:art-sexto",
+    "orden-hfp-115-2022:df-primera",
+]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "aeat-dr-189-2021-2022",
+    "aeat-modelo-189-procedure",
+]
+review_status = "pending_review"
+
+[revisions."2022".family_dispositions.live_cross_references]
+reason = """
+A live cross-reference records an AEAT surface this application reads at runtime, and the registry
+requires a portal application link beside it. aeat-modelo-189-procedure does describe a consultas y
+bajas service for ejercicio 2020 onward, so the evidence for such a surface exists, but this edition
+declares no portal link and no guarded adapter for it. Declaring the surface here would assert a
+runtime read capability the application has not built and would oblige a portal link on every edition
+of this chain. Empty because the adapter does not exist, not because the evidence is missing."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["aeat-modelo-189-procedure"]
+
+[revisions."2022".family_dispositions.applicability]
+reason = """
+Modelo 189's registered scope is established by Orden EHA/3481/2008 art. 1 and is consumed through this revision's temporal selector. Its declarante is the entidad that issues, manages or holds the valores, not the taxpayer whose profile this application models, so there is no taxpayer-profile predicate and no alternative applicability branch to encode. No payer fact in this application describes that declarante, and authoring one would assert an obligation test the product cannot evaluate. Empty because the predicate does not exist here, not because it is unbuilt."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2021-2022", "aeat-modelo-189-procedure"]
+
+[revisions."2022".family_dispositions.bindings]
+reason = """
+The design supplies fixed wire positions, while this informative declaration's values are supplied by its declarante. The declarado records report third-party holdings of valores at 31 December, which no ledger, profile, relation or calculated source of this application holds, so no binding source or selector exists to author. The casillas are input_kind 'manual' for that reason and leave no binding reference dangling."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2021-2022", "aeat-modelo-189-procedure"]
+
+[revisions."2022".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification records how another modelo's declarations reach this one. This edition declares no relation and no relation-prefill binding, and the two declarante totals its design states are taken over its own type-2 records rather than over another modelo, so no cross-modelo edge exists to classify."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2021-2022", "aeat-modelo-189-procedure"]
+
+[revisions."2022".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile reads values back out of a filed declaration, and its label patterns must be authored against a specimen of the printed layout for the edition they claim. The bundled aeat-dr-189-2021-2022 is a wire record design, not a completed modelo 189 justificante, and the corpus holds no such justificante for this exercise. Authoring patterns from the wire design would claim a reading capability against a printed layout nobody checked."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2021-2022", "aeat-modelo-189-procedure"]
+
+[revisions."2022".family_dispositions.formulas]
+reason = """
+The design does state two computations on the declarante record -- NUMERO TOTAL DE DECLARADOS (136-144) is the count of type-2 records and VALORACION (145-167) is their signed sum over VALORACION A 31 DE DICIEMBRE -- so this family is NOT inapplicable by the modelo's nature, and the earlier reason recorded here, that an informative declaration computes no liability, was too broad. It is empty for a narrower and checkable reason: a formula must sum a declared binding, this edition declares none because the application holds no source for the declarado rows, and a formula over absent rows would report a total of zero where the true figure is unknown. The filer supplies both totals as manual casillas, which keeps the absence visible instead of resolving it to a silent zero."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2021-2022", "aeat-modelo-189-procedure"]
+
+[revisions."2022".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. This edition declares no formula, and the two totals its design states are a count and a sum, which apply nothing to what they count or add. Empty by the shape of this modelo rather than by omission."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2021-2022", "aeat-modelo-189-procedure"]
+
+[revisions."2022".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["aeat-dr-189-2021-2022"]
+
+[revisions."2022".family_dispositions.verification_expectations]
+reason = """
+A verification expectation compares a declared calculation outcome against an independent figure. This edition declares no formula and no binding, and the corpus holds no official worked modelo 189 example for this exercise, so there is no computed outcome and no independent oracle to assert one against."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2021-2022", "aeat-modelo-189-procedure"]
+
+[revisions."2022".family_dispositions.verification_predicates]
+reason = """
+A verification predicate expresses a conditional check over verification expectations. With no expectation declared in this edition there is no predicate subject. An advisory tying the declarados count to the valoracion total was considered and rejected as unsound: the design admits a zero or negative sum against a positive count, because VALORACION A 31 DE DICIEMBRE carries its own 'N' sign field, so the two disagreeing is not by itself a finding."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1351-2021:art-sexto", "orden-hfp-115-2022:df-primera"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2021-2022", "aeat-modelo-189-procedure"]

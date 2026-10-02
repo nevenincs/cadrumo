@@ -107,12 +107,14 @@ def test_noncanonical_reference_targets_expose_ambiguous_reused_printed_number(
 
     assert ecpn_casilla.number == liquidacion_casilla.number
     targets = casilla_noncanonical_reference_targets(snapshot.revision, ecpn_casilla.number)
+    # Every sheet that prints the number has its own casilla, and each is a candidate.
+    printing_the_number = {
+        casilla.id for casilla in snapshot.revision.casillas if casilla.number == ecpn_casilla.number
+    }
 
-    assert targets == (
-        _M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA,
-        _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA,
-    )
+    assert {_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA, _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA} <= set(targets)
+    assert set(targets) == printing_the_number
+    assert len(targets) == len(printing_the_number)
     assert format_noncanonical_casilla_reference(ecpn_casilla.number, targets) == (
-        f"{ecpn_casilla.number!r} is ambiguous; candidate casilla.id values: "
-        f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
+        f"{ecpn_casilla.number!r} is ambiguous; candidate casilla.id values: {', '.join(targets)}"
     )

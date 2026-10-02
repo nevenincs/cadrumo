@@ -1452,3 +1452,54 @@ to_revision = "2025-y-siguientes"
 evolution_kind = "section_evolved"
 legal_refs = ["ley-27-2014:art-39"]
 source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+# AEAT aeat-dr-200-2024 DP200022 campo 33 (posicion 472): Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2020 - Pendiente de dotar RIC a principio del período [01176].
+# aeat-dr-200-2025 DP200022 no imprime esta celda de cohorte; se retira la celda, no el regimen RIC.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-01176-2024-2025-retired"
+continuidad_id = "ric-inversiones-anticipadas-2020-pendiente-dotar-inicio"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-19-1994:art-27"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+# AEAT aeat-dr-200-2024 DP200022 campo 34 (posicion 489): Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2024 - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [03352].
+# aeat-dr-200-2025 DP200022 no imprime esta celda de cohorte; se retira la celda, no el regimen RIC.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03352-2024-2025-retired"
+continuidad_id = "ric-inversiones-anticipadas-2024-previstas-letras-a-b"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-19-1994:art-27"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+# AEAT aeat-dr-200-2024 DP200022 campo 35 (posicion 506): Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2024 - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [03353].
+# aeat-dr-200-2025 DP200022 no imprime esta celda de cohorte; se retira la celda, no el regimen RIC.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-03353-2024-2025-retired"
+continuidad_id = "ric-inversiones-anticipadas-2024-previstas-letras-b-bis-c-d"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-19-1994:art-27"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+# AEAT DP200001 campo 78: 2024 'Sociedad matriz ultima grupo multinacional'; 2025 amplia el literal a
+# '... o grupo nacional de gran magnitud' (manual Sociedades 2025, novedades: art. 6 Ley 7/2024).
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00082-2024-2025-label-evolved"
+continuidad_id = "is-sociedad-matriz-ultima-grupo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-7-2024:art-6"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
+
+# AEAT DP200001 campo 77: 2024 'Filial grupo multinacional'; 2025 amplia el literal a
+# '... o grupo nacional de gran magnitud' (manual Sociedades 2025, novedades: art. 6 Ley 7/2024).
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-00081-2024-2025-label-evolved"
+continuidad_id = "is-filial-grupo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-7-2024:art-6"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

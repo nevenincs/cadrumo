@@ -60,7 +60,6 @@ from ..relation_dependency import RelationDependencyRole, RelationKind
 from ..relations import (
     RegistryFoldRequirement,
     relation_prefill_bindings_for_period,
-    relation_prefill_values_as_binding_values,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
@@ -71,7 +70,9 @@ from ._cross_dependency_calculation_support import (
     _casilla_inputs,
     _grounded_observations,
     _observations_from_requirements,
+    source_editions_calculate,
 )
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import authored_revisions_where
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
 
@@ -181,6 +182,10 @@ _M190_RETENCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
 #: exercised against more than one (perceptor, clave) pair. "A" is trabajo
 #: (empleados) against the fixture perceptor's "G" actividades profesionales.
 _M190_SECOND_CLAVE = "A"
+# The first exercise whose Modelo 190 totals route through the Modelo 111
+# relation prefills: they rest on the 2025 instrucciones, and the 2024 edition
+# totals its own type-2 records as its design states.
+_M190_RELATION_YEAR = 2025
 _M190_REL_111_ACTIVIDADES_DINERARIO = "modelo-190-111-actividades-dinerario-importe-anual"
 _M190_REL_111_RETENCIONES = "modelo-190-111-retenciones-anual"
 _M190_EXPECTED_RELATION_IDS = frozenset(
@@ -341,7 +346,7 @@ def _withholding_observation(
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
-        transaction_date=date(2024, 6, 1),
+        transaction_date=date(_M190_RELATION_YEAR, 6, 1),
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=percibido_dinerario,
         retencion_practicada=retencion_practicada,
@@ -377,6 +382,10 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
             for filing_year, period in _full_relation_filing_year_periods(
                 revision=revision, relation_ids=relation_ids, floor=supported_years.floor
             ):
+                if not source_editions_calculate(
+                    relation_source_requirements(revision, filing_year=filing_year, period=period)
+                ):
+                    continue
                 exercised += 1
                 _assert_relations_resolve_from_observations(
                     target_modelo=modelo.id,
@@ -484,13 +493,14 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "193",
         2024,
         # The closed `2024` edition is the last whose annual totals resolve from
-        # the quarterly modelo 123 filings; from `2025-y-siguientes` the design
-        # sums and counts the type-2 records and keeps 123 as a reconciliation
+        # the quarterly modelo 123 filings (its perceptor count already counts the
+        # type-2 records); from `2025-y-siguientes` the design also sums the
+        # type-2 records and keeps 123 as a reconciliation
         # check. This value is ASSERTED against the law-determined pick, never
         # injected into resolution.
         "2024",
         _m193_relation_source_values,
-        "modelo-193-123-perceptores-anual",
+        "modelo-193-perceptores-anual",
         frozenset({"modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"}),
         "modelo-193-123-base-anual",
         "modelo-193-123-retenciones-anual",
@@ -612,8 +622,8 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     detail_nif, detail_clave, _placeholder_percepcion, _placeholder_retencion = _m190_fixture_detail_observation()
     assert detail_clave == "G"
 
-    snapshot = registry_snapshot("190", 2024, "0A")
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2024, period="0A")
+    snapshot = registry_snapshot("190", _M190_RELATION_YEAR, "0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=_M190_RELATION_YEAR, period="0A")
     observations = _observations_from_requirements(
         requirements,
         lambda requirement, period_index: _m190_fixture_relation_source_value(
@@ -627,7 +637,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         observations,
-        filing_year=2024,
+        filing_year=_M190_RELATION_YEAR,
         period="0A",
     )
     observed_source_casillas = {requirement.source_casilla_ids[0] for requirement in requirements}
@@ -648,21 +658,21 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     # binding replaced.
     withholding_observations = (
         _withholding_observation(
-            "m190-2024-0A-detail-1",
+            f"m190-{_M190_RELATION_YEAR}-0A-detail-1",
             detail_nif,
             detail_clave,
             percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[0],
             retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[0],
         ),
         _withholding_observation(
-            "m190-2024-0A-detail-2",
+            f"m190-{_M190_RELATION_YEAR}-0A-detail-2",
             detail_nif,
             detail_clave,
             percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[1],
             retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[1],
         ),
         _withholding_observation(
-            "m190-2024-0A-detail-3",
+            f"m190-{_M190_RELATION_YEAR}-0A-detail-3",
             detail_nif,
             _M190_SECOND_CLAVE,
             percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[2],
@@ -678,7 +688,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": _registry_filing_date(2024, "0A")},
+        date_context={"filing_period": _registry_filing_date(_M190_RELATION_YEAR, "0A")},
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -728,6 +738,9 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+            # neutral zero for a scenario with no descendants.
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -739,7 +752,6 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
     assert set(relation_values) == {
         "renta-modelo-130-pagos-fraccionados",
         "renta-modelo-131-pagos-fraccionados",
-        "renta-modelo-184-atribucion-actividades-economicas",
     }
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert entries[_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA].operand_refs == (
@@ -748,62 +760,60 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
     )
 
 
-def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
+def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    """Régimen de atribución de rentas fold-in (LIRPF art. 86).
+    """Casilla 1577 is the member's share, which no Modelo 184 total supplies (LIRPF art. 89).
 
-    The entidad en régimen de atribución files Modelo 184 and the partner
-    declares the attributed share in Modelo 100. The entidad's attributed
-    economic-activity net income — Modelo 184 source casilla
-    ``tipo2.renta-atribuible-importe`` — folds into the partner's Modelo 100
-    casilla 1577 (``Rendimiento neto de actividad economica atribuido por
-    entidades en regimen de atribucion de rentas``) through the canonical
-    cross-modelo relation ``renta-modelo-184-atribucion-actividades-economicas``
-    whose ``relation_prefill`` target binding materialises the value.
-
-    The expected 1577 value is the SEEDED Modelo 184 observation, NOT a registry
-    formula output: a distinct seed (``777.77``, unrelated to any registry
-    formula) discriminates the live fold-in from a silent default-zero blank and
-    proves the relation -> materialise -> bound-casilla chain carries the real
-    attributed amount end to end.
+    The 2025 manual's comunidad de bienes example has comunero Y declare a
+    rendimiento neto atribuido of 15.000, half the entity's 30.000. Modelo 184
+    files the entity's type-2 attribution records for every member and income
+    class, and a relation prefill sums them with no member or class filter, so a
+    fold into 1577 would report the entity's aggregate as the member's share.
+    The edition declares no Modelo 184 fold, a filed Modelo 184 moves no
+    relation value, and the member's own figure reaches 1577 unchanged.
     """
-    attributed_income = Decimal("777.77")
-    m184_relation = "renta-modelo-184-atribucion-actividades-economicas"
-    m184_target_binding = "renta-modelo-184-atribucion-actividades-economicas"
-    casilla_1577 = validated_casilla_id("1577", surface="modelo-184 attribution fold-in target")
-
+    member_share = Decimal("15000")
+    casilla_1577 = validated_casilla_id("1577", surface="modelo-100 member attributed activity yield")
     snapshot = registry_snapshot("100", 2025, "0A")
 
-    def _value_for(requirement: RegistryFoldRequirement, period_index: int) -> Decimal:
-        if requirement.target_bindings[0] == m184_relation:
-            return attributed_income
-        return _renta_relation_observed_value(requirement, period_index)
-
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
-    observations = _observations_from_requirements(requirements, _value_for)
+    assert all(requirement.source_modelo != "184" for requirement in requirements)
+    observations = _observations_from_requirements(requirements, _renta_relation_observed_value)
+    m184_entity_filing = RegistryModeloObservation(
+        modelo="184",
+        filing_year=2025,
+        period="0A",
+        observations=_grounded_observations(
+            modelo="184",
+            filing_year=2025,
+            period="0A",
+            casilla_values={
+                validated_casilla_id("tipo2.renta-atribuible-importe", surface="modelo-184 entity total"): Decimal(
+                    "30000"
+                ),
+            },
+        ),
+    )
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         observations,
         filing_year=2025,
         period="0A",
     )
-    assert relation_values[m184_relation] == attributed_income
-
-    # Materialise ONLY the M184 attribution relation into its declared
-    # ``relation_prefill`` target binding. The retencion relations (111/123/...)
-    # feed other casillas and are out of scope for this fold-in; restricting the
-    # materialisation isolates the M184 -> 1577 path under test.
-    materialized = relation_prefill_values_as_binding_values(
-        snapshot.revision,
-        {m184_relation: relation_values[m184_relation]},
-        period="0A",
+    assert (
+        resolve_relation_values_from_observations(
+            snapshot.revision,
+            (*observations, m184_entity_filing),
+            filing_year=2025,
+            period="0A",
+        )
+        == relation_values
     )
-    assert materialized[m184_target_binding] == attributed_income
 
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={},
+        inputs={casilla_1577: member_share},
         date_context={"filing_period": _registry_filing_date(2025, "0A")},
         relation_values=relation_values,
         binding_values={
@@ -811,7 +821,6 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            **materialized,
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -825,13 +834,16 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+            # neutral zero for a scenario with no descendants.
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
         boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
 
-    assert result.values[casilla_1577] == attributed_income
+    assert result.values[casilla_1577] == member_share
 
 
 def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_registry_results(
@@ -891,7 +903,6 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -906,6 +917,9 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+            # neutral zero for a scenario with no descendants.
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -924,7 +938,6 @@ _OBSERVED_RENTA_RELATIONS = frozenset(
     {
         "renta-modelo-131-pagos-fraccionados",
         "renta-modelo-130-pagos-fraccionados",
-        "renta-modelo-131-rendimiento-neto-modulos",
     }
 )
 _RELATION_SET_EDITIONS = tuple(
@@ -1156,8 +1169,6 @@ def _renta_relation_observed_value(requirement: RegistryFoldRequirement, period_
         return (Decimal("100"), Decimal("200"), Decimal("300"), Decimal("400"))[period_index]
     if relation_id == "renta-modelo-131-pagos-fraccionados":
         return Decimal("5")
-    if relation_id == "renta-modelo-184-atribucion-actividades-economicas":
-        return Decimal("60")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
 
 
@@ -1173,8 +1184,6 @@ def _renta_quarterly_relation_observed_value(
         return m131_quarterly_amounts[period_index]
     if relation_id == "renta-modelo-130-pagos-fraccionados":
         return m130_quarterly_amounts[period_index]
-    if relation_id == "renta-modelo-131-rendimiento-neto-modulos":
-        return Decimal("0")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
 
 
