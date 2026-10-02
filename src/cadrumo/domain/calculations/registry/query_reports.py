@@ -39,6 +39,7 @@ from typing import Literal
 from pydantic import BaseModel, NonNegativeInt
 
 from ....core.aggregation import BindingSourceKind
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
 from ....core.identity.aeat_box import AeatBoxNumber
@@ -90,10 +91,12 @@ class ModeloDescribeReport(BaseModel):
     """Full describe view for one resolved modelo revision.
 
     Every field here is regulatory grounding an operator may need to justify a
-    revision selection, so the counts are bounded and ``filing_year`` shares the
-    :class:`~core.period.Period` year range: a describe view is projected verbatim into
-    the CLI ``--json`` envelope, and a negative count or an out-of-range year
-    reaching that surface is a defect in the projection, not a legitimate value.
+    revision selection, including the revision's declared authority grade. An
+    absent grade remains ``None``; the query does not promote it. Counts are
+    bounded and ``filing_year`` shares the :class:`~core.period.Period` year
+    range: a describe view is projected verbatim into the CLI ``--json``
+    envelope, and a negative count or an out-of-range year reaching that
+    surface is a defect in the projection, not a legitimate value.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -105,6 +108,7 @@ class ModeloDescribeReport(BaseModel):
     cadence: str
     jurisdiction: str
     revision: str
+    authority_grade: RegistryAuthorityGrade | None
     revision_ids: tuple[str, ...]
     filing_year: FilingYear | None
     filing_period: Period | None = None

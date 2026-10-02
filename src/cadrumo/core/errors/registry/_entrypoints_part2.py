@@ -28,6 +28,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.tui.profile.runtime_errors.ProfileManagerCompletedViewUnavailableError",
+        ErrorCode(
+            code="FAIL_TUI_PROFILE_COMPLETED_VIEW_UNAVAILABLE",
+            category=ErrorCategory.FAIL,
+            message_key="flows.manager.edit.completed_refresh_unavailable",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.tui.components.theme.UnknownDesignTokenError",
         ErrorCode(
             code="REFUSED_TUI_UNKNOWN_DESIGN_TOKEN",

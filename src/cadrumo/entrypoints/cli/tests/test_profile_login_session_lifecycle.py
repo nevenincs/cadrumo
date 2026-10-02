@@ -1,27 +1,16 @@
-"""End-to-end profile session lifecycle over the real CLI entrypoint.
+"""Opt-in OS-keychain lifecycle through installed runtime and real CLI processes.
 
-Real subprocesses, real storage, real custody: every invocation below
-spawns a fresh interpreter running the production ``main()`` against a
-per-test storage root, so "a later process resumes without prompting" is
-observed rather than simulated. No mocks, stubs, or monkeypatching, and no
-verb is driven through an in-process shortcut.
-
-The suite deliberately does NOT assume the host can custody a session
-key. ``aeat config login`` reports ``session_persisted`` per the
-documented degradation rule: a host with no usable OS keychain mints no
-persisted artefact and logs in for that process only. Both branches are real
-product behaviour, so the load-bearing assertion here is the COUPLING —
-the envelope's ``session_persisted`` claim must match what is actually on
-disk, and the follow-on process must behave the way that claim implies
-(silent resume when persisted, a typed keychain-unavailable refusal when
-the current receipt cannot be accelerated). That coupling fails loudly if
-either half drifts, on a healthy host and a degraded one alike.
+Each invocation owns its runtime connection. Logout later clears only the
+captured CLI default; the separately held receipt remains available to a
+fresh, exact-profile login. These cases require an interactive Windows
+credential store and clean up their isolated profile UUIDs on every exit.
 """
 
 from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -35,9 +24,16 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 
 from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
+from ....tests.os_keychain_hook import require_os_credential_store
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from .subprocess_cli import run_cadrumo_subprocess
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires installed Windows runtime"),
+]
 
 _CREDENTIAL_INPUT = "lifecycle-session-passphrase"
 
@@ -130,18 +126,26 @@ def _session_record(storage_root: Path, bucket_id: str) -> Path:
     return profile_session_path(storage_root=storage_root, profile_id=UUID(bucket_id))
 
 
+@pytest.fixture
+def runtime_profile(tmp_path: Path) -> Iterator[tuple[Path, str]]:
+    """Register before opening the exact native runtime for each CLI process."""
+    require_os_credential_store()
+    storage_root = tmp_path / _STORAGE_DIRNAME
+    storage_root.mkdir()
+    bucket_id = _create_profile(storage_root)
+    with native_profile_view_server(storage_root):
+        yield storage_root, bucket_id
+
+
+@pytest.mark.os_keychain
 class TestSessionLifecycle:
-    """Login, resume, and logout driven end-to-end through real processes."""
+    """Actual OS-held receipt continuity across independently admitted commands."""
 
-    def test_login_resume_and_logout_lifecycle(self, tmp_path: Path) -> None:
+    def test_login_resume_and_logout_lifecycle(self, runtime_profile: tuple[Path, str]) -> None:
         """One full pass: gate, login, follow-on process, logout idempotence."""
-        storage_root = tmp_path / _STORAGE_DIRNAME
-        storage_root.mkdir()
-        bucket_id = _create_profile(storage_root)
+        storage_root, bucket_id = runtime_profile
 
-        # Start from a clean slate. logout is a STRONG close: it clears the
-        # active-profile pointer too, so the login below must name its
-        # target rather than relying on a selection that no longer exists.
+        # Logout clears the prior CLI default, so the login names its target.
         first_logout = _run(storage_root, ("config", "logout"), as_json=True)
         assert first_logout.returncode == 0, _output(first_logout)
 
@@ -170,81 +174,44 @@ class TestSessionLifecycle:
         #    writing one -- or writes one while reporting otherwise --
         #    fails here on any host.
         persisted = result["session_persisted"]
-        assert isinstance(persisted, bool)
+        assert persisted is True
         record = _session_record(storage_root, bucket_id)
-        assert record.is_file() is persisted, f"session_persisted={persisted} disagrees with on-disk record at {record}"
+        assert record.is_file()
 
-        # 3. The follow-on process must behave the way that claim implies.
+        # 3. A later process admits through the existing receipt.
         follow_on = _run(storage_root, ("config", "profile", "view"))
-        if persisted:
-            # Resumed silently: no prompt, no re-authentication.
-            assert follow_on.returncode == 0, _output(follow_on)
-            assert "aeat config login" not in _output(follow_on), _output(follow_on)
-        else:
-            # A pointer may still name the current profile, so a degraded
-            # host projects the explicit acceleration outcome rather than
-            # pretending the profile selection is absent.
-            assert follow_on.returncode != 0, _output(follow_on)
-            assert "OS keychain is unavailable for profile-session acceleration" in _output(follow_on)
+        assert follow_on.returncode == 0, _output(follow_on)
+        assert "aeat config login" not in _output(follow_on), _output(follow_on)
 
-        # 4. Logout is a strong close, and a second logout is a clean
-        #    idempotent no-op rather than a refusal.
+        # 4. Logout clears selection without revoking the receipt or another
+        #    process's independently owned authority.
+        original_receipt = record.read_bytes()
         logged_out = _run(storage_root, ("config", "logout"), as_json=True)
         assert logged_out.returncode == 0, _output(logged_out)
-        assert not record.exists(), "logout left the persisted session record behind"
+        logout_document = _envelope(logged_out)
+        assert logout_document["result"]["scope"] == "cli_context"
+        assert logout_document["result"]["human_receipt_revoked"] is False
+        assert logout_document["result"]["automation_revoked"] is False
+        assert "config.logout.remaining_access" in {notice["code"] for notice in logout_document["notices"]}
+        assert record.read_bytes() == original_receipt
 
         again = _run(storage_root, ("config", "logout"), as_json=True)
         assert again.returncode == 0, _output(again)
         repeat = _envelope(again)["result"]
         assert repeat["already_logged_out"] is True
         assert repeat["logged_out_profile"] is None
+        assert record.read_bytes() == original_receipt
 
-    def test_login_reports_persistence_warning_when_it_cannot_persist(
+        resumed = _run(storage_root, ("config", "login", bucket_id), as_json=True)
+        assert resumed.returncode == 0, _output(resumed)
+        assert _envelope(resumed)["result"]["already_authenticated"] is True
+
+    def test_repeat_login_resumes_existing_receipt_without_new_secret(
         self,
-        tmp_path: Path,
+        runtime_profile: tuple[Path, str],
     ) -> None:
-        """A non-persisted login MUST warn; a persisted one MUST NOT.
-
-        The warning is the operator's only signal that the session will
-        not outlive the command, so its presence is bound to the same
-        ``session_persisted`` flag the record on disk is bound to.
-        """
-        storage_root = tmp_path / _STORAGE_DIRNAME
-        storage_root.mkdir()
-        bucket_id = _create_profile(storage_root)
-        _run(storage_root, ("config", "logout"))
-
-        logged_in = _run(
-            storage_root,
-            ("config", "login", bucket_id, "--secrets-stdin"),
-            as_json=True,
-            stdin_payload=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
-        )
-        assert logged_in.returncode == 0, _output(logged_in)
-        envelope = _envelope(logged_in)
-        codes = {notice["code"] for notice in envelope.get("notices", ())}
-
-        if envelope["result"]["session_persisted"]:
-            assert "config.login.session_not_persisted" not in codes
-            assert envelope["status"] == "success"
-        else:
-            assert "config.login.session_not_persisted" in codes
-            assert envelope["status"] == "warning"
-
-    def test_repeat_login_is_an_idempotent_no_op_when_the_session_persists(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        """A second login for the same profile resumes rather than re-minting.
-
-        Only reachable where the session actually persists: with no
-        keychain there is nothing for the retry to resume, so the second
-        login is a genuine fresh authentication and the idempotence
-        contract does not apply.
-        """
-        storage_root = tmp_path / _STORAGE_DIRNAME
-        storage_root.mkdir()
-        bucket_id = _create_profile(storage_root)
+        """A second CLI process resumes a persisted receipt without a password channel."""
+        storage_root, bucket_id = runtime_profile
         _run(storage_root, ("config", "logout"))
 
         payload = json.dumps({"passphrase": _CREDENTIAL_INPUT})
@@ -256,21 +223,18 @@ class TestSessionLifecycle:
         )
         assert first.returncode == 0, _output(first)
         first_result = _envelope(first)["result"]
+        assert first_result["session_persisted"] is True
+        record = _session_record(storage_root, bucket_id)
+        original_receipt = record.read_bytes()
 
         second = _run(
             storage_root,
-            ("config", "login", bucket_id, "--secrets-stdin"),
+            ("config", "login", bucket_id),
             as_json=True,
-            stdin_payload=payload,
         )
         assert second.returncode == 0, _output(second)
         second_result = _envelope(second)["result"]
 
-        if first_result["session_persisted"]:
-            # The retry resumed: no new record, and the original login
-            # instant is never re-stamped.
-            assert second_result["already_authenticated"] is True
-            assert second_result["authenticated_at"] == first_result["authenticated_at"]
-        else:
-            # Nothing to resume, so this is a fresh authentication.
-            assert second_result["already_authenticated"] is False
+        assert second_result["already_authenticated"] is True
+        assert second_result["authenticated_at"] == first_result["authenticated_at"]
+        assert record.read_bytes() == original_receipt

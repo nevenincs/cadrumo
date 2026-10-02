@@ -28,6 +28,7 @@ source diagnostics rather than silently blanking the filed calculation.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from contextlib import nullcontext
 from datetime import date
 from decimal import Decimal
 from typing import ClassVar
@@ -323,6 +324,7 @@ class LedgerIvaAggregationSourceResolver:
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         investment_asset_register: BienesInversionIvaRegister | None = None,
         investment_asset_profile_id: str | None = None,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Bind repositories used to resolve IVA ledger sources."""
         self._transaction_repository = transaction_repository
@@ -330,6 +332,7 @@ class LedgerIvaAggregationSourceResolver:
         self._prorrata_register_repository = prorrata_register_repository
         self._investment_asset_register = investment_asset_register
         self._investment_asset_profile_id = investment_asset_profile_id
+        self._operation = operation
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve IVA ledger observations for one calculation context."""
@@ -340,7 +343,11 @@ class LedgerIvaAggregationSourceResolver:
             filing_year=context.filing_year,
             code=context.period.registry_token,
         )
-        with bundled_indexed_authority().operation() as operation:
+        with (
+            nullcontext(self._operation)
+            if self._operation is not None
+            else bundled_indexed_authority().operation() as operation
+        ):
             try:
                 aggregation = aggregate_iva_ledger_observations_from_repositories(
                     bucket_id=context.bucket_id,
@@ -552,9 +559,11 @@ class LedgerRentaIncomeAggregationSourceResolver:
         self,
         *,
         ports: InvoiceCatalogueReadPorts,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Bind invoice-catalogue ports used by the Renta income resolver."""
         self._ports = ports
+        self._operation = operation
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve Renta activity-income observations for one context."""
@@ -572,7 +581,11 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # narrows the rows first -- to the art. 110.1.c activity set, and away from
         # the subvenciones de capital and indemnizaciones that article excludes.
         target_casilla_id = _renta_income_target_casilla(context)
-        with bundled_indexed_authority().operation() as operation:
+        with (
+            nullcontext(self._operation)
+            if self._operation is not None
+            else bundled_indexed_authority().operation() as operation
+        ):
             profile_decode_context = operation.profile_decode_context()
             activity_category_matcher = _activity_category_matcher(operation)
             employment_category_matcher = _employment_category_matcher(operation)
@@ -1031,8 +1044,14 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
     resolver_id: ClassVar[str] = "ledger_impatriado_income_aggregation"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol) -> None:
+    def __init__(
+        self,
+        *,
+        transaction_repository: TransactionCatalogueRepositoryProtocol,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> None:
         self._transaction_repository = transaction_repository
+        self._operation = operation
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not revision_has_binding_source(context.revision, "ledger_impatriado_income_aggregation"):
@@ -1042,7 +1061,7 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
             filing_year=context.filing_year,
             code=context.period.registry_token,
         )
-        declarations = _resolve_impatriado_registry_declarations(context)
+        declarations = _resolve_impatriado_registry_declarations(context, operation=self._operation)
         if declarations is None:
             return empty_source_resolution(self.resolver_id, self.owned_sources)
         modelo, target_casilla_id, source_jurisdictions, eligible_income_categories = declarations
@@ -1129,8 +1148,14 @@ class LedgerIrnrIncomeAggregationSourceResolver:
     resolver_id: ClassVar[str] = "ledger_irnr_income_aggregation"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol) -> None:
+    def __init__(
+        self,
+        *,
+        transaction_repository: TransactionCatalogueRepositoryProtocol,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> None:
         self._transaction_repository = transaction_repository
+        self._operation = operation
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if context.m210_gross_income_source_mode is not M210GrossIncomeSourceMode.LEDGER:
@@ -1164,7 +1189,11 @@ class LedgerIrnrIncomeAggregationSourceResolver:
             code=context.period.registry_token,
         )
         target_casilla_id = _irnr_income_target_casilla(context)
-        with bundled_indexed_authority().operation() as operation:
+        with (
+            nullcontext(self._operation)
+            if self._operation is not None
+            else bundled_indexed_authority().operation() as operation
+        ):
             try:
                 aggregation = aggregate_irnr_income_ledger_from_repositories(
                     bucket_id=context.bucket_id,
@@ -1285,11 +1314,13 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         transaction_repository: TransactionCatalogueRepositoryProtocol,
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         activity_asset_history_repository: ActivityAssetHistoryRepository,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Bind repositories used to resolve Renta expense sources."""
         self._transaction_repository = transaction_repository
         self._prorrata_register_repository = prorrata_register_repository
         self._activity_asset_history_repository = activity_asset_history_repository
+        self._operation = operation
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve Renta expense observations for one calculation context."""
@@ -1311,6 +1342,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 transaction_repository=self._transaction_repository,
                 profile_record=context.profile.record if context.profile is not None else None,
                 prorrata_register_repository=self._prorrata_register_repository,
+                operation=self._operation,
             )
         except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(

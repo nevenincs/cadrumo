@@ -21,50 +21,25 @@ from typing import Final
 
 import typer
 
-from ...application.modelo.action_errors import (
-    CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
-    WorkUnitNotFoundError,
-)
 from ...application.modelo.calculation_report_document import require_calculation_summary_pdf_available
 from ...application.modelo.calculation_report_export import (
-    ModeloCalculationReportCommand,
     ModeloCalculationReportResult,
-    ModeloCalculationReportTaxpayerUnknownError,
-    export_modelo_calculation_report,
 )
 from ...application.modelo.calculation_report_verification import (
-    CalculationSummaryStoreContext,
     CalculationSummaryVerification,
     CalculationSummaryVerificationOutcome,
     verify_calculation_summary,
 )
-from ...application.modelo.calculation_summary_presentation import CalculationSummaryChromeUnavailableError
-from ...application.modelo.export import (
-    ModeloExportCrossBucketRefusedError,
-    ModeloExportNoActiveBucketError,
-)
-from ...application.modelo.export_sink import ModeloExportOutputPathError
-from ...application.workflow.persistence import workflow_state_repository
 from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.external_constants import OutputLanguage
+from ...core.hashing import hash_file
 from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
-from ._modelo_cli_support import (
-    bad_parameter_from_error,
-    resolve_explicit_or_active_bucket_id,
-    validate_trusted_public_key,
-)
+from ._modelo_cli_support import validate_trusted_public_key
 from ._modelo_payloads import WorkReportResult, WorkReportVerifyResult
-from .common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
-from .state_projection_support import (
-    authority_operation,
-    modelo_export_ports_factory,
-    review_package_signing_keypair_capability_factory,
-)
+from .common import activate_subcommand_output_language, emit_envelope
 
 __all__ = ["work_report", "work_report_verify"]
 
@@ -139,69 +114,58 @@ def work_report(
 ) -> None:
     """Publish the addressed work target's sealed revision as a calculation report."""
     activate_subcommand_output_language(ctx, output_language)
-    pdf_writer = None
     if document_format is CalculationReportDocumentFormat.PDF:
         # Refused before the store is opened, as its own registered refusal: an
         # installation that cannot write the summary learns so, and how to fix
         # it, before any figure is read.
         require_calculation_summary_pdf_available()
-        from ...adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
+    from ...application.modelo.operation_definitions import ModeloExportRequest
+    from ...application.modelo.selectors import ModeloCalculationRevisionSelector
+    from ...application.runtime.contracts import RuntimeRefusalCode
+    from ...core.modelo_export_artefact import ModeloExportArtefact
+    from ._modelo_cli_support import resolve_default_actor
+    from .runtime_modelo_export import run_modelo_export
+    from .runtime_modelo_verification import select_modelo_work_revision_for_cli
+    from .runtime_registered_operation import submitted_operation_error
 
-        pdf_writer = write_calculation_summary_pdf
-    require_active_profile()
-    # An unusable destination -- blank, an existing directory, a missing parent,
-    # an occupied path -- is the export sink's refusal, raised before any
-    # taxpayer figure is assembled. Restating it here would be a second
-    # admission rule for the same question.
-    unit = resolve_work_unit_for_cli(
+    client, selection = select_modelo_work_revision_for_cli(
+        ctx,
+        calculation_revision_id=None,
         work_unit_id=work_unit_id,
         modelo=modelo,
         year=year,
         period=period,
         revision=revision,
         bucket_id=bucket_id,
+        selector=ModeloCalculationRevisionSelector.CURRENT,
+        default_for=None,
     )
-    if unit.current_calculation_revision_id is None:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.report.errors.calculation_required",
-                work_unit_id=unit.work_unit_id,
-                modelo=str(unit.modelo),
-            ),
+    artefact = {
+        CalculationReportDocumentFormat.CSV: ModeloExportArtefact.CALCULATION_REPORT_CSV,
+        CalculationReportDocumentFormat.PDF: ModeloExportArtefact.CALCULATION_REPORT_PDF,
+    }[document_format]
+    completed = run_modelo_export(
+        client,
+        ModeloExportRequest(
+            calculation_revision_id=selection.calculation_revision_id,
+            output_path=str(output.resolve()),
+            artefact=artefact,
+            report_language=OutputLanguage(active_output_language()),
+            replace_existing=replace_existing,
+            actor=resolve_default_actor(),
+        ),
+        work_unit_id=selection.unit.work_unit_id,
+    )
+    receipt = completed.projection.calculation_report
+    if receipt is None:
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
         )
-    workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
-    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    try:
-        result = export_modelo_calculation_report(
-            ModeloCalculationReportCommand(
-                calculation_revision_id=unit.current_calculation_revision_id,
-                document_format=document_format,
-                # The report's language is the language this invocation renders
-                # in, resolved once here so the artefact and the messages about
-                # it cannot be in two different languages.
-                report_language=OutputLanguage(active_output_language()),
-                output_path=output,
-                replace_existing=replace_existing,
-            ),
-            export_ports=modelo_export_ports_factory(ctx)(
-                bucket_id=resolved_bucket_id,
-                m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-            ),
-            signing_keypair=review_package_signing_keypair_capability_factory(ctx)(bucket_id=resolved_bucket_id),
-            operation=authority_operation(ctx),
-            pdf_writer=pdf_writer,
-        )
-    except (
-        CalculationRevisionNotFoundError,
-        CalculationRevisionStateError,
-        CalculationSummaryChromeUnavailableError,
-        ModeloCalculationReportTaxpayerUnknownError,
-        ModeloExportCrossBucketRefusedError,
-        ModeloExportNoActiveBucketError,
-        ModeloExportOutputPathError,
-        WorkUnitNotFoundError,
-    ) as exc:
-        raise bad_parameter_from_error(exc) from exc
+    result = receipt.to_result()
     emit_envelope(
         ctx,
         command="modelo.work.report",
@@ -280,28 +244,34 @@ def work_report_verify(
     trusted_public_key_hex = validate_trusted_public_key(trusted_key)
     if not path.is_file():
         raise typer.BadParameter(tr("cli.app.modelo.work.report_verify.errors.file_not_found", path=str(path)))
-    from ...adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
+    if document_only:
+        from ...adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
 
-    store = None
-    if not document_only:
-        require_active_profile()
-        workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
-        bucket_id = resolve_explicit_or_active_bucket_id(None)
-        store = CalculationSummaryStoreContext(
-            active_bucket_id=bucket_id,
-            export_ports=modelo_export_ports_factory(ctx)(
-                bucket_id=bucket_id,
-                m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-            ),
-            signing_keypair=review_package_signing_keypair_capability_factory(ctx)(bucket_id=bucket_id),
-            operation=authority_operation(ctx),
+        verification = verify_calculation_summary(
+            path.read_bytes(),
+            reader=read_calculation_summary_pdf,
+            trusted_public_key_hex=trusted_public_key_hex,
         )
-    verification = verify_calculation_summary(
-        path.read_bytes(),
-        reader=read_calculation_summary_pdf,
-        trusted_public_key_hex=trusted_public_key_hex,
-        store=store,
-    )
+    else:
+        from ...application.modelo.calculation_report_verification_operation import (
+            ModeloCalculationReportVerificationRequest,
+        )
+        from .runtime_modelo_calculation_report_verify import run_modelo_calculation_report_verify
+        from .runtime_profile_binding import bound_profile_client
+
+        client = bound_profile_client(ctx)
+        source_path = path.resolve()
+        source_sha256, _ = hash_file(source_path)
+        completed = run_modelo_calculation_report_verify(
+            client,
+            ModeloCalculationReportVerificationRequest(
+                profile_id=client.profile_id,
+                source_path=str(source_path),
+                source_sha256=source_sha256,
+                trusted_public_key_hex=trusted_public_key_hex,
+            ),
+        )
+        verification = completed.projection.verification.to_verification()
     emit_envelope(
         ctx,
         command="modelo.work.report_verify",

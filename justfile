@@ -52,46 +52,33 @@ default:
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
 
-# Complete new-worktree provisioning. The first command owns the locked Python
-# sync and default Vaultspec enrollment. Browser provisioning reuses installed
-# channels or installs missing resources. RAG then provisions its managed models,
-# Qdrant binary, and MCP integration. Authority publication runs so the
-# installed application consumes a generation compiled from the final tree.
-# The configuration report comes last so it describes what was provisioned; it
-# is advisory, never a reason to call provisioning failed.
-[doc('Fully initialize a new worktree: Python, browsers, Vaultspec, RAG, and runtime authority.')]
+# Everything a developer needs in a new worktree: `setup`, then the RAG service
+# with its models and MCP integration, then the runtime authority. The editable
+# build inside `uv sync` usually publishes the authority already, so publication
+# runs only when the published generation is stale for this tree.
+[doc('Initialize a new worktree for development: setup, RAG, and the runtime authority.')]
 [group('setup')]
-init:
-    just setup
-    just setup-browser
+init: setup setup-browser
     uv run --no-sync vaultspec-rag install --upgrade --yes
     uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
     -uv run --no-sync aeat config check
 
-# Minimal checkout setup, shared by init and CI. It creates
-# the pinned Python environment, installs repository tooling, and materializes
-# local environment configuration. Workstation tools and browser binaries are
-# optional to the minimal setup; full init provisions browsers as well.
-# `just doctor-product` reports the resulting configuration.
-[doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
+# The locked Python environment, local configuration, and repository tooling.
+# CI and the devcontainer run this; each step is idempotent, so re-running it
+# converges an existing checkout. Browser and workstation tools are optional
+# and have their own recipes below.
+[doc('Sync the locked Python environment, env/.env, and repository tooling.')]
 [group('setup')]
 setup:
-    uv run --isolated --no-project --python 3.13 -- python -m dev.init all
-
-[doc('Install repository tooling, including pinned actionlint, after the Python environment is available.')]
-[group('setup')]
-setup-repository-tools:
-    uv run --isolated --no-project --python 3.13 -- python -m dev.init tools
+    uv sync --locked --extra workbook-windows --group dev
+    uv run --no-sync python -m dev.env setup
+    uv run --no-sync vaultspec-core install --upgrade
+    uv run --no-sync python -m dev.actionlint --install
 
 [doc('Install the pinned Hunspell dictionaries used by check-locales.')]
 [group('setup')]
 setup-locale-spelling:
     npm ci --ignore-scripts --no-audit --no-fund
-
-[doc('Check checkout setup state without writing a report or changing files.')]
-[group('setup')]
-setup-check:
-    uv run --isolated --no-project --python 3.13 -- python -m dev.init check
 
 # Optional workstation CLI prerequisites for non-Python audit recipes. This is
 # deliberately outside the minimal checkout setup.
@@ -102,8 +89,9 @@ setup-workstation-tools:
 
 # ── Environment Setup and Doctor ─────────────────────────────────────────────
 
-# Copy env/.env.example → env/.env if the latter is missing. No-op otherwise.
-[doc('Copy env/.env.example to env/.env if the latter is missing; no-op otherwise.')]
+# Create env/.env from env/.env.example when missing, then port the values set
+# in the main worktree's env/.env. Values this worktree sets are never replaced.
+[doc('Create env/.env when missing and port the values set in the main worktree; never prints a value.')]
 [group('setup')]
 setup-env:
     uv run --no-sync python -m dev.env setup
@@ -113,30 +101,29 @@ setup-env:
 doctor-product:
     uv run --no-sync aeat config check
 
-# Provision Playwright's bundled Chromium (the post-install step `uv sync` does
-# not perform): it is the default AEAT channel and the browser tests launch it
-# directly. When the missing piece is a Linux shared library rather than the
-# binary, `playwright install-deps chromium` adds it, which needs root or
-# passwordless sudo. An operator who sets `CADRUMO_BROWSER_CHANNEL` to a system
-# channel such as `chrome` gets that channel provisioned too; Playwright then
-# installs the SYSTEM browser through the OS package manager. Verify the result
-# with `just doctor-browser`.
-#
-# Installs run with `CI` removed from their environment. Under `CI` Playwright
-# reinstalls a system channel even when it is already present, which needs root
-# that a CI runner cannot escalate to.
+[doc('Verify Python package consistency without modifying the environment.')]
+[windows]
+doctor-python:
+    uv pip check --python .venv/Scripts/python.exe
 
-[doc('Check Playwright browser channels and install missing binaries or Linux libraries.')]
+[doc('Verify Python package consistency without modifying the environment.')]
+[unix]
+doctor-python:
+    uv pip check --python .venv/bin/python
+
+# Provision Playwright's bundled Chromium (the post-install step `uv sync` does
+# not perform): it is the only browser AEAT automation and the browser tests
+# launch. Verify the result with `just doctor-browser`.
+
+[doc('Provision the Playwright Chromium browser.')]
 [group('setup')]
 setup-browser:
     uv run --no-sync python -m dev.env.playwright_setup
 
-# Verify the local environment is correctly provisioned with the CONFIGURED
-# Playwright browser channel (per `cadrumo_browser_channel`, default bundled
-# `chromium`) and its dependencies. Performs a real headless launch-and-close
-# of that channel (reads the live setting rather than hardcoding a channel) and
-# prints the exact remediation command on failure.
-[doc('Probe the configured browser channel with a real read-only launch.')]
+# Verify the local environment is correctly provisioned with Playwright's
+# bundled Chromium and its dependencies. Performs a real headless
+# launch-and-close and prints the exact remediation command on failure.
+[doc('Probe the bundled Chromium with a real read-only launch.')]
 [group('doctor')]
 doctor-browser:
     uv run --no-sync python -m dev.env.playwright_doctor
@@ -367,16 +354,15 @@ check-persistence-write-paths:
 
 # ── Repository/control-plane checks ─────────────────────────────────────────
 
-[doc('Run identity, API-stub, workflow, and gate-contract checks as one read-only repository aggregate.')]
+[doc('Run identity, API-stub, and workflow checks as one read-only repository aggregate.')]
 [group('check')]
 check-repository:
     @uv run --no-sync python -m dev.identity
     @just check-docs-api
     @uv run --no-sync python -m dev.actionlint
-    @uv run --no-sync python -m dev.ci_contract
 
 # Verify workflow syntax and shell contracts without changing workflows. If
-# actionlint is unavailable, the check reports `just setup-repository-tools`.
+# actionlint is unavailable, `just setup` installs the pinned version.
 [doc('Verify workflow syntax and shell contracts without changing workflows.')]
 [group('check')]
 check-workflows:
@@ -389,11 +375,6 @@ check-workflows:
 [group('check')]
 check-workflow-security:
     @uvx --from zizmor==1.30.1 zizmor --offline --min-severity medium .github/
-
-[doc('Verify workflow-to-recipe gate contracts without changing repository files.')]
-[group('check')]
-check-gate-contracts:
-    @uv run --no-sync python -m dev.ci_contract
 
 # Manual replay of the uninstalled prek configuration. `--all-files` is
 # mandatory: staged-file replay may use prek's stash/restore isolation.
@@ -899,8 +880,8 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service" dev/acceptance dev/agent_eval/tests
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]
@@ -1093,15 +1074,15 @@ test-integration-serial:
 # expression is what scopes the directory, so a future `os_keychain` case added
 # beside them is selected the moment it lands rather than silently reading as
 # coverage.
-[doc('Run the Windows-only packaging and registry publication tests.')]
+[doc('Run Windows-only packaging, registry publication, and authentication frontend tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m windows_only dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py
+    uv run --no-sync pytest -v -n0 -m windows_only dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py src/cadrumo/entrypoints/cli/config/tests src/cadrumo/entrypoints/cli/tests/test_ledger_llm_classify.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_autosplit.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_split.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_saturate.py src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_review_native.py src/cadrumo/entrypoints/tui dev/agent_eval/tests/test_runtime_automation_management_parity.py
 
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]
 test-os-keychain:
-    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
+    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/agent_eval/tests
 
 [doc('Reindex the running resident search service, then run its retrieval contracts.')]
 [group('test')]

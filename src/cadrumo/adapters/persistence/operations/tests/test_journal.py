@@ -596,7 +596,7 @@ def test_operation_journal_refuses_intent_only_tamper_during_strict_hydration(tm
         asyncio.run(repository.load(accepted.operation_id))
 
 
-@pytest.mark.parametrize("schema_version", (1, 2, 3, 4, 5))
+@pytest.mark.parametrize("schema_version", (1, 2, 3, 4, 5, 6, 7))
 def test_operation_journal_refuses_every_superseded_snapshot_schema_without_byte_mutation(
     tmp_path: Path, schema_version: int
 ) -> None:
@@ -604,7 +604,7 @@ def test_operation_journal_refuses_every_superseded_snapshot_schema_without_byte
     repository, snapshots = _create_history(tmp_path)
     path = tmp_path / "operation-journals" / f"{snapshots[-1].operation_id}.json"
     document = json.loads(path.read_text(encoding="utf-8"))
-    assert document["snapshot"]["schema_version"] == 6
+    assert document["snapshot"]["schema_version"] == 8
     document["snapshot"]["schema_version"] = schema_version
     path.write_text(json.dumps(document), encoding="utf-8")
     original_bytes = path.read_bytes()

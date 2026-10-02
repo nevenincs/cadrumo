@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime
 
 from ...core.async_cleanup import AsyncCloseable
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationLifecycle
+from .authorization import OperationExecutionAuthority
 from .capabilities import OperationOwnedResource
 from .errors import OperationDeclarationError
 from .events import OperationEventCode, OperationLogSeverity
@@ -39,6 +42,8 @@ class _Cancellation:
         self._acknowledge = acknowledge
         self._set_deferred = set_deferred
         self._irreversible_section_depth = 0
+        self._irreversible_owner: asyncio.Task[object] | None = None
+        self._irreversible_lock = asyncio.Lock()
 
     @property
     def cancellation_requested(self) -> bool:
@@ -60,17 +65,31 @@ class _Cancellation:
     @asynccontextmanager
     async def irreversible_section(self) -> AsyncGenerator[None]:
         """Protect one executor-owned mutation boundary from an unsafe stop."""
-        if self.cancellation_requested:
-            raise ValueError("cancellation was requested before the irreversible section began")
-        if self._irreversible_section_depth == 0:
-            self._context.snapshot = await self._set_deferred(self._context.snapshot, True)
-        self._irreversible_section_depth += 1
-        try:
-            yield
-        finally:
-            self._irreversible_section_depth -= 1
+        task = asyncio.current_task()
+        if task is None:
+            raise InternalInvariantError("irreversible section requires an owning async task")
+        async with AsyncExitStack() as authority:
+            if task is not self._irreversible_owner:
+                await authority.enter_async_context(self._irreversible_lock)
+            if self.cancellation_requested:
+                raise ValueError("cancellation was requested before the irreversible section began")
             if self._irreversible_section_depth == 0:
-                self._context.snapshot = await self._set_deferred(self._context.snapshot, False)
+                if self._context.execution_authority is not None:
+                    await authority.enter_async_context(
+                        self._context.execution_authority.commit_guard(self._context.identity)
+                    )
+                self._context.snapshot = await self._set_deferred(self._context.snapshot, True)
+                self._irreversible_owner = task
+            self._irreversible_section_depth += 1
+            try:
+                yield
+            finally:
+                self._irreversible_section_depth -= 1
+                if self._irreversible_section_depth == 0:
+                    try:
+                        self._context.snapshot = await self._set_deferred(self._context.snapshot, False)
+                    finally:
+                        self._irreversible_owner = None
 
 
 class _Deadlines:
@@ -100,6 +119,7 @@ class DefinitionBoundContext:
         advance: Callable[..., Awaitable[OperationPersistedSnapshot]],
         acknowledge_cancellation: Callable[[OperationPersistedSnapshot], Awaitable[OperationPersistedSnapshot]],
         set_cancellation_deferred: Callable[[OperationPersistedSnapshot, bool], Awaitable[OperationPersistedSnapshot]],
+        execution_authority: OperationExecutionAuthority | None = None,
     ) -> None:
         self.registry = registry
         self.clock = clock
@@ -107,6 +127,7 @@ class DefinitionBoundContext:
         self.advance_transition = advance
         self.snapshot = snapshot
         self.identity = snapshot.identity
+        self.execution_authority = execution_authority
         self.cancellation = _Cancellation(
             context=self,
             acknowledge=acknowledge_cancellation,

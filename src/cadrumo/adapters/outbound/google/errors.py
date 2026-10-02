@@ -12,6 +12,7 @@ secret material handled by :mod:`adapters.outbound.google.oauth_flow`.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 
 from ....application.operator_actions.models import PreconditionVerdict
@@ -92,8 +93,36 @@ class GoogleAuthExpiredError(GoogleAuthError):
     """Raised when a Testing-project refresh token has aged past Google's 7-day cap."""
 
 
+@dataclass(frozen=True, slots=True)
+class GoogleScopeFailure:
+    """Canonical scope-check values, independent of generic diagnostic context."""
+
+    missing_scopes: tuple[str, ...]
+    account_email: str
+
+
 class GoogleAuthScopeInsufficientError(GoogleAuthError):
-    """Raised when the granted scope set does not include every scope required by the call site."""
+    """Raised when the granted scope set does not include every required scope."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+        scope_failure: GoogleScopeFailure | None = None,
+    ) -> None:
+        """Preserve ordinary defaults and optionally retain the canonical scope check."""
+        super().__init__(
+            message, context=context, translated_message=translated_message, precondition_verdict=precondition_verdict
+        )
+        self._scope_failure = scope_failure
+
+    @property
+    def scope_failure(self) -> GoogleScopeFailure | None:
+        """Return immutable owning scope facts, never an unchecked context map."""
+        return self._scope_failure
 
 
 class GoogleAuthNetworkError(GoogleAuthError):
@@ -147,5 +176,6 @@ __all__ = [
     "GoogleAuthRevokedError",
     "GoogleAuthScopeInsufficientError",
     "GoogleAuthValidationError",
+    "GoogleScopeFailure",
     "google_auth_no_action_verdict",
 ]

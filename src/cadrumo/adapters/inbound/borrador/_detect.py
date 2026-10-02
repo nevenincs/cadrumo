@@ -46,6 +46,11 @@ def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
             (VISTA PREVIA watermark, BORRADOR header, CSV stamp) match.
     """
     pages = extract_pages_text(pdf_path)
+    return detect_artefact_kind_from_pages(pages)
+
+
+def detect_artefact_kind_from_pages(pages: tuple[str, ...]) -> ArtefactKind:
+    """Apply the same marker precedence to already extracted page text."""
     text = "\n".join(pages)
 
     if _VISTA_PREVIA_RE.search(text):

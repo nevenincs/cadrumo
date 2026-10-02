@@ -1,59 +1,43 @@
 """Behavior handlers for live notification snapshot commands.
 
-The pull command delegates the live DEHú read to :func:`capture_notifications`;
-the list, view, and latest commands read bucket-local
-:class:`PersistedNotificationsSnapshot` records through
-:class:`NotificationsService`. Every command emits a typed app-live payload and
-does not acknowledge, mark, submit, or mutate notifications in AEAT.
+The pull command submits the live DEHú read through its exact-profile registered
+operation; the list, view, and latest commands read bucket-local notification
+snapshots through registered profile operations. Every command emits a typed
+app-live payload and does not acknowledge, mark, submit, or mutate notifications
+in AEAT.
 
 The ``document`` subgroup reaches one notification's served content.
 ``document pull`` is the only verb in this module that can cause an AEAT
-request for a document, and it is guarded by
-:func:`~adapters.outbound.aeat.sede.notifications.assert_notification_content_readable`:
-AEAT serves a notification's content and performs its *comparecencia* through
-the same control, so driving it on an unread notification is the act that makes
-the notification legally served, starts the appeal and payment periods, and
-requires the taxpayer's own signature. That signature is theirs alone to give,
-so the guard admits nothing but a notification AEAT already reports as read and
-this module adds no flag, option or branch that can widen it. ``document view``
-reads the encrypted local record and contacts AEAT not at all.
+request for a document. Its registered capture operation enforces the content
+read guard before making that request: AEAT serves a notification's content
+and performs its *comparecencia* through the same control, so driving it on an
+unread notification is the act that makes the notification legally served,
+starts the appeal and payment periods, and requires the taxpayer's own
+signature. That signature is theirs alone to give, so the guard admits nothing
+but a notification AEAT already reports as read. ``document view`` reads the
+encrypted local record and contacts AEAT not at all.
 """
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import Literal, TypedDict
+from uuid import UUID
 
 import typer
 
-from ...adapters.inbound.notificacion.document_reader import NotificationDocumentReader
-from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from ...adapters.outbound.aeat.sede.notifications import (
-    assert_notification_content_readable,
-    fetch_notification_document,
+from ...application.live.notification_document_read_operation import (
+    NotificationDocumentSancionPublicV1,
+    NotificationDocumentViewPublicResultV1,
 )
-from ...adapters.persistence.profile.notification_documents import notification_document_repository
-from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...application.live.notification_documents import (
-    NotificationDocumentRecord,
-    NotificationDocumentService,
-)
-from ...application.live.notifications import (
-    NotificationsService,
-    capture_notifications,
-    pull_notification_document,
-)
-from ...core.config import Settings, load_settings
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ..live_state_composition import compose_notifications_ports
 from ._app_live_auth_preflight import emit_live_auth_preflight
 from ._app_live_notifications_payloads import (
     NotificationDocumentHistoryEntry,
     NotificationDocumentHistoryResult,
+    NotificationDocumentPayload,
     NotificationDocumentPullResult,
     NotificationDocumentViewResult,
     NotificationRowPayload,
@@ -65,61 +49,60 @@ from ._app_live_notifications_payloads import (
     SancionReadingPayload,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope, notice_lines
-from .state_projection_support import certificate_secret_backend_factory, operator_scope_ports
-
-if TYPE_CHECKING:
-    from ...domain.notifications.sancion import SancionLiquidacion
-
-
-def _notification_document_service(settings: Settings) -> NotificationDocumentService:
-    """Compose the notification-document use case with its real adapters."""
-
-    def repository_factory(bucket_id: str) -> SecureSnapshotRepository[NotificationDocumentRecord]:
-        return notification_document_repository(bucket_id, settings)
-
-    return NotificationDocumentService(
-        settings=settings,
-        attachment_store=AttachmentStore(),
-        repository_factory=repository_factory,
-        content_guard=assert_notification_content_readable,
-        document_fetcher=fetch_notification_document,
-        document_reader=NotificationDocumentReader(),
-    )
+from .runtime_notification_document_capture import capture_notification_document_for_cli
+from .runtime_notification_document_read import (
+    read_notification_document_history_for_cli,
+    read_notification_document_view_for_cli,
+)
+from .runtime_notifications_capture import read_notifications_capture_for_cli
+from .runtime_notifications_read import (
+    read_notifications_latest_for_cli,
+    read_notifications_list_for_cli,
+    read_notifications_show_for_cli,
+)
 
 
 def notifications_pull(ctx: typer.Context) -> None:
-    """Drive the live DEHu fetch and persist flow.
+    """Drive the live DEHu fetch and persist flow through its profile worker.
 
-    The live read is performed by :func:`capture_notifications`, persisted as a
-    :class:`PersistedNotificationsSnapshot`, and emitted through
-    :class:`NotificationsCaptureResult`.
+    The registered exact-profile operation persists a
+    :class:`PersistedNotificationsSnapshot` and emits the existing
+    :class:`NotificationsCaptureResult` presentation.
     """
     bucket_id = active_bucket_id_or_refuse()
-    notifications_ports = compose_notifications_ports(settings=load_settings())
     emit_live_auth_preflight(ctx)
-    persisted = asyncio.run(
-        capture_notifications(
+    profile_id = UUID(bucket_id)
+    read = read_notifications_capture_for_cli(ctx, profile_id=profile_id)
+    projection = read.projection
+    try:
+        if UUID(projection.bucket_id) != profile_id:
+            raise ValueError("notification capture result does not match its active profile")
+        result = NotificationsCaptureResult(
             bucket_id=bucket_id,
-            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-            browser_session_factory=default_browser_session_factory,
-            operator_scope_ports=operator_scope_ports(ctx),
-            ports=notifications_ports,
+            snapshot_id=projection.snapshot_id,
+            captured_at=projection.captured_at,
+            persisted_at=projection.persisted_at,
+            row_count=projection.row_count,
+            source_url=projection.source_url,
         )
-    )
-    result = NotificationsCaptureResult(
-        bucket_id=bucket_id,
-        snapshot_id=persisted.snapshot_id,
-        captured_at=persisted.captured_at,
-        persisted_at=persisted.persisted_at,
-        row_count=len(persisted.rows),
-        source_url=persisted.source_url,
-    )
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
     lines = [
         f"bucket\t{bucket_id}",
-        f"snapshot_id\t{persisted.snapshot_id}",
-        f"captured_at\t{persisted.captured_at.isoformat()}",
-        f"row_count\t{len(persisted.rows)}",
-        f"source_url\t{persisted.source_url}",
+        f"snapshot_id\t{projection.snapshot_id}",
+        f"captured_at\t{projection.captured_at.isoformat()}",
+        f"row_count\t{projection.row_count}",
+        f"source_url\t{projection.source_url}",
     ]
     emit_envelope(ctx, command="app.live.notifications.pull", result=result, lines=lines)
 
@@ -127,28 +110,26 @@ def notifications_pull(ctx: typer.Context) -> None:
 def notifications_list(ctx: typer.Context) -> None:
     """List persisted DEHu notification snapshots without contacting AEAT.
 
-    The command reads :class:`NotificationsService` storage for the active
-    bucket and emits :class:`NotificationsListResult` summaries rather than
-    expanding notification rows.
+    The registered exact-profile read emits :class:`NotificationsListResult`
+    summaries rather than expanding notification rows.
     """
-    bucket_id = active_bucket_id_or_refuse()
-    notifications_ports = compose_notifications_ports(settings=load_settings())
-    rows = NotificationsService(ports=notifications_ports).list_snapshots(bucket_id=bucket_id)
+    projection = read_notifications_list_for_cli(ctx).projection
+    bucket_id = projection.bucket_id
     result = NotificationsListResult(
         bucket_id=bucket_id,
-        count=len(rows),
+        count=projection.count,
         rows=[
             NotificationSnapshotListingPayload(
-                snapshot_id=r.snapshot_id,
-                captured_at=r.captured_at,
-                row_count=len(r.rows),
+                snapshot_id=row.snapshot_id,
+                captured_at=row.captured_at,
+                row_count=row.row_count,
             )
-            for r in rows
+            for row in projection.rows
         ],
     )
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    for r in rows:
-        lines.append(f"{r.snapshot_id}\t{r.captured_at.isoformat()}\trows={len(r.rows)}")
+    lines = [f"bucket\t{bucket_id}", f"count\t{projection.count}"]
+    for row in projection.rows:
+        lines.append(f"{row.snapshot_id}\t{row.captured_at.isoformat()}\trows={row.row_count}")
     emit_envelope(ctx, command="app.live.notifications.list", result=result, lines=lines)
 
 
@@ -158,61 +139,59 @@ def notifications_show(
 ) -> None:
     """Show one persisted DEHu notification snapshot by id prefix.
 
-    The id is resolved through :class:`NotificationsService` ``show``, then
+    The id prefix is resolved by the registered exact-profile operation, then
     projected as :class:`NotificationsViewResult`. This local view does not
     acknowledge, submit, or mark notifications remotely.
     """
-    bucket_id = active_bucket_id_or_refuse()
-    notifications_ports = compose_notifications_ports(settings=load_settings())
-    record = NotificationsService(ports=notifications_ports).show(bucket_id=bucket_id, snapshot_id=snapshot_id)
+    projection = read_notifications_show_for_cli(ctx, snapshot_id=snapshot_id).projection
+    bucket_id = projection.bucket_id
     result = NotificationsViewResult(
         bucket_id=bucket_id,
-        snapshot_id=record.snapshot_id,
-        captured_at=record.captured_at,
-        source_url=record.source_url,
-        row_count=len(record.rows),
+        snapshot_id=projection.snapshot_id,
+        captured_at=projection.captured_at,
+        source_url=projection.source_url,
+        row_count=projection.row_count,
         rows=[
             NotificationRowPayload(
-                certificado_id=r.certificado_id,
-                tipo=r.tipo,
-                concepto=r.concepto,
-                titular_nif=r.titular_nif,
-                titular_nombre=r.titular_nombre,
-                destinatario_nif=r.destinatario_nif,
-                destinatario_nombre=r.destinatario_nombre,
-                fecha_emision=r.fecha_emision.isoformat(),
-                fecha_notificacion=r.fecha_notificacion.isoformat() if r.fecha_notificacion else None,
-                modo_notificacion=r.modo_notificacion,
-                leida=r.leida,
-                source_url=str(r.source_url),
-                mode=r.mode,
+                certificado_id=row.certificado_id,
+                tipo=row.tipo,
+                concepto=row.concepto,
+                titular_nif=row.titular_nif,
+                titular_nombre=row.titular_nombre,
+                destinatario_nif=row.destinatario_nif,
+                destinatario_nombre=row.destinatario_nombre,
+                fecha_emision=row.fecha_emision.isoformat(),
+                fecha_notificacion=row.fecha_notificacion.isoformat() if row.fecha_notificacion else None,
+                modo_notificacion=row.modo_notificacion,
+                leida=row.leida,
+                source_url=row.source_url,
+                mode=row.mode,
             )
-            for r in record.rows
+            for row in projection.rows
         ],
     )
     lines = [
         f"bucket\t{bucket_id}",
-        f"snapshot_id\t{record.snapshot_id}",
-        f"captured_at\t{record.captured_at.isoformat()}",
-        f"source_url\t{record.source_url}",
-        f"row_count\t{len(record.rows)}",
+        f"snapshot_id\t{projection.snapshot_id}",
+        f"captured_at\t{projection.captured_at.isoformat()}",
+        f"source_url\t{projection.source_url}",
+        f"row_count\t{projection.row_count}",
     ]
-    for r in record.rows:
-        lines.append("\t".join(f"{k}={v}" for k, v in r.model_dump(mode="json").items()))
+    for row in result.rows:
+        lines.append("\t".join(f"{k}={v}" for k, v in row.model_dump(mode="json").items()))
     emit_envelope(ctx, command="app.live.notifications.view", result=result, lines=lines)
 
 
 def notifications_latest(ctx: typer.Context) -> None:
     """Show the most recent DEHu notification snapshot, or report none.
 
-    A missing snapshot from :class:`NotificationsService` still emits
-    :class:`NotificationsLatestResult` with ``snapshot_id=None`` so automation
-    can distinguish no local capture from a live-read failure.
+    A missing snapshot still emits :class:`NotificationsLatestResult` with
+    ``snapshot_id=None`` so automation can distinguish no local capture from a
+    live-read failure.
     """
-    bucket_id = active_bucket_id_or_refuse()
-    notifications_ports = compose_notifications_ports(settings=load_settings())
-    record = NotificationsService(ports=notifications_ports).latest(bucket_id=bucket_id)
-    if record is None:
+    projection = read_notifications_latest_for_cli(ctx).projection
+    bucket_id = projection.bucket_id
+    if projection.snapshot_id is None:
         empty = NotificationsLatestResult(bucket_id=bucket_id, snapshot_id=None)
         emit_envelope(
             ctx,
@@ -223,35 +202,40 @@ def notifications_latest(ctx: typer.Context) -> None:
         return
     result = NotificationsLatestResult(
         bucket_id=bucket_id,
-        snapshot_id=record.snapshot_id,
-        captured_at=record.captured_at,
-        source_url=record.source_url,
-        row_count=len(record.rows),
+        snapshot_id=projection.snapshot_id,
+        captured_at=projection.captured_at,
+        source_url=projection.source_url,
+        row_count=projection.row_count,
     )
+    captured_at = projection.captured_at
+    source_url = projection.source_url
+    row_count = projection.row_count
+    if captured_at is None or source_url is None or row_count is None:
+        raise ValueError("latest notification projection is missing snapshot details")
     lines = [
         f"bucket\t{bucket_id}",
-        f"snapshot_id\t{record.snapshot_id}",
-        f"captured_at\t{record.captured_at.isoformat()}",
-        f"row_count\t{len(record.rows)}",
+        f"snapshot_id\t{projection.snapshot_id}",
+        f"captured_at\t{captured_at.isoformat()}",
+        f"row_count\t{row_count}",
     ]
     emit_envelope(ctx, command="app.live.notifications.latest", result=result, lines=lines)
 
 
-def _sancion_payload(sancion: SancionLiquidacion) -> SancionReadingPayload:
-    """Project a stored reading, rendering every amount as its canonical decimal string."""
+def _public_sancion_payload(sancion: NotificationDocumentSancionPublicV1) -> SancionReadingPayload:
+    """Adapt the operation's already-redacted reading to the CLI payload."""
     return SancionReadingPayload(
-        certificado_id=str(sancion.certificado_id),
-        clave_liquidacion=str(sancion.clave_liquidacion),
+        certificado_id=sancion.certificado_id,
+        clave_liquidacion=sancion.clave_liquidacion,
         referencia=sancion.referencia,
         nif=sancion.nif,
         objeto_tributario=sancion.objeto_tributario,
-        base_sancion=str(sancion.base_sancion),
-        porcentaje_minimo=str(sancion.porcentaje_minimo),
-        sancion_resultante=str(sancion.sancion_resultante),
-        reduccion_conformidad=None if sancion.reduccion_conformidad is None else str(sancion.reduccion_conformidad),
-        reduccion_pronto_pago=None if sancion.reduccion_pronto_pago is None else str(sancion.reduccion_pronto_pago),
-        diferencia=None if sancion.diferencia is None else str(sancion.diferencia),
-        importe_a_ingresar=str(sancion.importe_a_ingresar),
+        base_sancion=sancion.base_sancion,
+        porcentaje_minimo=sancion.porcentaje_minimo,
+        sancion_resultante=sancion.sancion_resultante,
+        reduccion_conformidad=sancion.reduccion_conformidad,
+        reduccion_pronto_pago=sancion.reduccion_pronto_pago,
+        diferencia=sancion.diferencia,
+        importe_a_ingresar=sancion.importe_a_ingresar,
         document_sha256=sancion.document_sha256,
     )
 
@@ -272,40 +256,40 @@ class _NotificationDocumentPayloadFields(TypedDict):
     mode: Literal["read"]
 
 
-def _document_payload_fields(
+def _document_projection_fields(
     bucket_id: str,
-    record: NotificationDocumentRecord,
+    projection: NotificationDocumentViewPublicResultV1,
 ) -> _NotificationDocumentPayloadFields:
-    """Build the fields both document leaves share, from the one stored record."""
+    """Adapt one registered safe projection to the existing CLI result fields."""
     return {
         "bucket_id": bucket_id,
-        "certificado_id": str(record.certificado_id),
-        "attachment_id": record.attachment_id,
-        "document_sha256": record.document_sha256,
-        "byte_size": record.byte_size,
-        "source_url": record.source_url,
-        "fetched_at": record.fetched_at,
-        "sancion_parsed": record.sancion is not None,
-        "sancion": None if record.sancion is None else _sancion_payload(record.sancion),
-        "parse_refusal": record.parse_refusal,
-        "mode": "read",
+        "certificado_id": str(projection.certificado_id),
+        "attachment_id": projection.attachment_id,
+        "document_sha256": projection.document_sha256,
+        "byte_size": projection.byte_size,
+        "source_url": projection.source_url,
+        "fetched_at": projection.fetched_at,
+        "sancion_parsed": projection.sancion_parsed,
+        "sancion": None if projection.sancion is None else _public_sancion_payload(projection.sancion),
+        "parse_refusal": projection.parse_refusal,
+        "mode": projection.mode,
     }
 
 
-def _document_lines(bucket_id: str, record: NotificationDocumentRecord) -> list[str]:
-    """Render the stored record's own figures as text lines, values included."""
+def _document_lines(result: NotificationDocumentPayload) -> list[str]:
+    """Render the existing document payload's figures as text lines."""
     lines = [
-        f"bucket\t{bucket_id}",
-        f"certificado_id\t{record.certificado_id}",
-        f"attachment_id\t{record.attachment_id}",
-        f"document_sha256\t{record.document_sha256}",
-        f"byte_size\t{record.byte_size}",
-        f"source_url\t{record.source_url}",
-        f"fetched_at\t{record.fetched_at.isoformat()}",
-        f"sancion_parsed\t{record.sancion is not None}",
+        f"bucket\t{result.bucket_id}",
+        f"certificado_id\t{result.certificado_id}",
+        f"attachment_id\t{result.attachment_id}",
+        f"document_sha256\t{result.document_sha256}",
+        f"byte_size\t{result.byte_size}",
+        f"source_url\t{result.source_url}",
+        f"fetched_at\t{result.fetched_at.isoformat()}",
+        f"sancion_parsed\t{result.sancion_parsed}",
     ]
-    if record.sancion is not None:
-        reading = record.sancion
+    if result.sancion is not None:
+        reading = result.sancion
         lines.extend(
             [
                 f"clave_liquidacion\t{reading.clave_liquidacion}",
@@ -320,7 +304,7 @@ def _document_lines(bucket_id: str, record: NotificationDocumentRecord) -> list[
     return lines
 
 
-def _comparecencia_notice(record: NotificationDocumentRecord) -> Notice:
+def _comparecencia_notice(result: NotificationDocumentPayload) -> Notice:
     """State the legal constraint the fetch honoured, on every successful pull.
 
     The refusal on an unread notification is designed behaviour, not a fault,
@@ -336,11 +320,11 @@ def _comparecencia_notice(record: NotificationDocumentRecord) -> Notice:
         message=tr(
             "cli.app.live.notifications.document.comparecencia_notice",
         ),
-        context={"certificado_id": str(record.certificado_id), "comparecencia_performed": "false"},
+        context={"certificado_id": str(result.certificado_id), "comparecencia_performed": "false"},
     )
 
 
-def _already_in_custody_notice(record: NotificationDocumentRecord) -> Notice:
+def _already_in_custody_notice(result: NotificationDocumentPullResult) -> Notice:
     """Say plainly that the retry stored nothing, so a no-op is not read as an ingest."""
     return Notice(
         severity=NoticeSeverity.INFO,
@@ -349,14 +333,14 @@ def _already_in_custody_notice(record: NotificationDocumentRecord) -> Notice:
             "cli.app.live.notifications.document.already_in_custody_notice",
         ),
         context={
-            "certificado_id": str(record.certificado_id),
-            "document_sha256": record.document_sha256,
-            "fetched_at": record.fetched_at.isoformat(),
+            "certificado_id": str(result.certificado_id),
+            "document_sha256": result.document_sha256,
+            "fetched_at": result.fetched_at.isoformat(),
         },
     )
 
 
-def _unparsed_document_notice(record: NotificationDocumentRecord) -> Notice | None:
+def _unparsed_document_notice(result: NotificationDocumentPayload) -> Notice | None:
     """Report a document the reader refused, rather than presenting it as figureless.
 
     A document with no reading is NOT a document with no figures. The bytes are
@@ -364,7 +348,7 @@ def _unparsed_document_notice(record: NotificationDocumentRecord) -> Notice | No
     convenience reading is missing, and the operator has to be told so they read
     the document themselves instead of concluding the act carried no amounts.
     """
-    if record.parse_refusal is None:
+    if result.parse_refusal is None:
         return None
     return Notice(
         severity=NoticeSeverity.INFO,
@@ -372,14 +356,14 @@ def _unparsed_document_notice(record: NotificationDocumentRecord) -> Notice | No
         message=tr(
             "cli.app.live.notifications.document.unparsed_notice",
         ),
-        context={"certificado_id": str(record.certificado_id), "parse_refusal": record.parse_refusal},
+        context={"certificado_id": str(result.certificado_id), "parse_refusal": result.parse_refusal},
     )
 
 
-def _document_notices(record: NotificationDocumentRecord, *, notices: Sequence[Notice]) -> list[Notice]:
+def _document_notices(result: NotificationDocumentPayload, *, notices: Sequence[Notice]) -> list[Notice]:
     """Append the shared unparsed-document report to a leaf's own notices."""
     collected = list(notices)
-    unparsed = _unparsed_document_notice(record)
+    unparsed = _unparsed_document_notice(result)
     if unparsed is not None:
         collected.append(unparsed)
     return collected
@@ -398,32 +382,39 @@ def notifications_document_pull(
     """
     bucket_id = active_bucket_id_or_refuse()
     emit_live_auth_preflight(ctx)
-    settings = load_settings()
-    service = _notification_document_service(settings)
-    notifications_ports = compose_notifications_ports(settings=settings)
-    custody = asyncio.run(
-        pull_notification_document(
-            bucket_id=bucket_id,
-            certificado_id=certificado_id,
-            service=service,
-            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-            browser_session_factory=default_browser_session_factory,
-            operator_scope_ports=operator_scope_ports(ctx),
-            ports=notifications_ports,
+    profile_id = UUID(bucket_id)
+    read = capture_notification_document_for_cli(
+        ctx,
+        profile_id=profile_id,
+        certificado_id=certificado_id,
+    )
+    projection = read.projection
+    try:
+        if UUID(projection.bucket_id) != profile_id or projection.certificado_id != certificado_id:
+            raise ValueError("notification-document capture result does not match its active profile and certificado")
+        result = NotificationDocumentPullResult(
+            already_in_custody=projection.already_in_custody,
+            **_document_projection_fields(bucket_id, projection),
         )
-    )
-    record = custody.record
-    result = NotificationDocumentPullResult(
-        already_in_custody=custody.already_in_custody,
-        **_document_payload_fields(bucket_id, record),
-    )
-    leaf_notices: list[Notice] = [_comparecencia_notice(record)]
-    if custody.already_in_custody:
-        leaf_notices.append(_already_in_custody_notice(record))
-    notices = _document_notices(record, notices=leaf_notices)
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
+    leaf_notices: list[Notice] = [_comparecencia_notice(result)]
+    if result.already_in_custody:
+        leaf_notices.append(_already_in_custody_notice(result))
+    notices = _document_notices(result, notices=leaf_notices)
     lines = [
-        *_document_lines(bucket_id, record),
-        f"already_in_custody\t{custody.already_in_custody}",
+        *_document_lines(result),
+        f"already_in_custody\t{result.already_in_custody}",
         *notice_lines(notices),
     ]
     emit_envelope(
@@ -446,13 +437,31 @@ def notifications_document_view(
     the act that serves a notification. It runs with no AEAT session at all.
     """
     bucket_id = active_bucket_id_or_refuse()
-    record = _notification_document_service(load_settings()).show(
-        bucket_id=bucket_id,
+    profile_id = UUID(bucket_id)
+    read = read_notification_document_view_for_cli(
+        ctx,
+        profile_id=profile_id,
         certificado_id=certificado_id,
     )
-    result = NotificationDocumentViewResult(**_document_payload_fields(bucket_id, record))
-    notices = _document_notices(record, notices=())
-    lines = [*_document_lines(bucket_id, record), *notice_lines(notices)]
+    projection = read.projection
+    try:
+        if UUID(projection.bucket_id) != profile_id or projection.certificado_id != certificado_id:
+            raise ValueError("notification-document view result does not match its active profile and certificado")
+        result = NotificationDocumentViewResult(**_document_projection_fields(bucket_id, projection))
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
+    notices = _document_notices(result, notices=())
+    lines = [*_document_lines(result), *notice_lines(notices)]
     emit_envelope(
         ctx,
         command="app.live.notifications.document.view",
@@ -477,21 +486,37 @@ def _history_notice(*, count: int) -> Notice:
 def notifications_document_history(ctx: typer.Context) -> None:
     """List parsed documents in encrypted custody without asserting a balance."""
     bucket_id = active_bucket_id_or_refuse()
-    records = tuple(
-        record
-        for record in _notification_document_service(load_settings()).list_documents(bucket_id=bucket_id)
-        if record.sancion is not None
-    )
-    documents = [
-        NotificationDocumentHistoryEntry(
-            certificado_id=str(record.certificado_id),
-            fetched_at=record.fetched_at,
-            sancion=_sancion_payload(record.sancion),
+    profile_id = UUID(bucket_id)
+    read = read_notification_document_history_for_cli(ctx, profile_id=profile_id)
+    projection = read.projection
+    try:
+        if UUID(projection.bucket_id) != profile_id or projection.count != len(projection.documents):
+            raise ValueError("notification-document history does not match its active profile and rows")
+        documents = [
+            NotificationDocumentHistoryEntry(
+                certificado_id=str(row.certificado_id),
+                fetched_at=row.fetched_at,
+                sancion=_public_sancion_payload(row.sancion),
+            )
+            for row in projection.documents
+        ]
+        result = NotificationDocumentHistoryResult(
+            bucket_id=bucket_id,
+            count=projection.count,
+            documents=documents,
         )
-        for record in records
-        if record.sancion is not None
-    ]
-    result = NotificationDocumentHistoryResult(bucket_id=bucket_id, count=len(documents), documents=documents)
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
     notices = [_history_notice(count=len(documents))]
     lines = [f"bucket\t{bucket_id}", f"count\t{len(documents)}"]
     for document in documents:

@@ -210,6 +210,13 @@
             },
             "message": "Casilla '06' was filed with the value you supplied (100.00), not the 0 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {

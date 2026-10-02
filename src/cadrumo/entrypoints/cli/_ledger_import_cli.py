@@ -2,47 +2,31 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.ledger.actions_import import (
-    LedgerProviderID,
-    aggregate_ledger_import_results,
-    import_ledger_source,
-    plan_ledger_import_sources,
+from ...application.ledger.actions_import import LedgerProviderID, plan_ledger_import_sources
+from ...application.ledger.import_operation import (
+    MAX_LEDGER_IMPORT_FILES,
+    LedgerImportFileRefusal,
+    LedgerImportResultProjection,
+    LedgerImportSourceProjection,
+    LedgerImportValidationProjection,
 )
-from ...application.ledger.import_ports import LedgerImportPorts
-from ...application.ledger.models import (
-    LedgerSourceImportCommand,
-    LedgerSourceImportResult,
-    LedgerSourceValidationReport,
-    LedgerSourceVerificationReport,
-)
-from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
-from ..ledger_action_composition import compose_ledger_action_ports, compose_ledger_import_ports
-from ._ledger_support import ledger_transaction_validation_no_recovery
-from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
+from ._ledger_payloads import LedgerImportPayload
+from .common import bad, emit_envelope
 from .period_parsing import _optional_canonical_period
-from .state_projection_support import authority_operation
-
-if TYPE_CHECKING:
-    from ...application.ledger.protocols import (
-        BucketEventHistoryCoCommitWriterProtocol,
-        TransactionCatalogueCoCommitWriterProtocol,
-    )
-    from ...domain.currency.service import CurrencyNormalizationService
+from .runtime_ledger_import import import_ledger_sources_for_cli
 
 
 def _known_import_providers() -> tuple[str, ...]:
     """Return the tuple of recognised provider ids from the canonical enum."""
-    return tuple(p.value for p in LedgerProviderID)
+    return tuple(provider.value for provider in LedgerProviderID)
 
 
 def _provider_catalogue_text() -> str:
@@ -50,16 +34,8 @@ def _provider_catalogue_text() -> str:
     return ", ".join(_known_import_providers())
 
 
-def _validate_import_provider(provider: str) -> str:
-    """Normalise a recognised import provider to its canonical id string.
-
-    The ``--provider`` option is typed as the :class:`LedgerProviderID` enum, so
-    Typer renders ``Choice([auto, csv, ...])`` and refuses an unrecognised value
-    at parse time with the accepted set (the CLI-boundary rule), and any external
-    input schema surfaces the closed set as a JSON ``enum``. This normaliser keeps
-    the strip + lowercase pass and stays a defence-in-depth membership backstop for
-    any non-``Choice`` caller.
-    """
+def _validate_import_provider(provider: str) -> LedgerProviderID:
+    """Normalise a provider id and retain a closed-set CLI backstop."""
     normalised = provider.strip().lower()
     if normalised not in _known_import_providers():
         raise bad(
@@ -69,139 +45,36 @@ def _validate_import_provider(provider: str) -> str:
                 providers=_provider_catalogue_text(),
             ),
         )
-    return normalised
+    return LedgerProviderID(normalised)
 
 
-@dataclass(frozen=True, slots=True)
-class _ImportBucketContext:
-    """Where an import writes, and who it is recorded as."""
-
-    bucket_id: str | None
-    actor: str
-    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None
-
-
-@dataclass(frozen=True, slots=True)
 class _ImportReport:
     """The text projection and canonical non-blocking notices."""
 
-    lines: list[str]
-    notices: list[Notice]
+    def __init__(self, lines: list[str], notices: list[Notice]) -> None:
+        self.lines = lines
+        self.notices = notices
 
 
-def _import_bucket_context(*, dry_run: bool) -> _ImportBucketContext:
-    """Resolve the bucket an import writes to, and the actor it is recorded under.
-
-    A real import requires an active profile. A dry run resolves the active
-    bucket when one exists so the preview can count rows against the stored
-    catalogue, but it still works on a cold workspace.
-    """
-    if not dry_run:
-        transaction_repository = transaction_catalogue_repo(current_workflow_state())
-        return _ImportBucketContext(
-            bucket_id=transaction_repository.bucket_id,
-            actor=resolve_active_bucket_id() or "operator",
-            transaction_repository=transaction_repository,
-        )
-    if resolve_active_bucket_id() is None:
-        return _ImportBucketContext(bucket_id=None, actor="operator", transaction_repository=None)
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    return _ImportBucketContext(
-        bucket_id=transaction_repository.bucket_id,
-        actor="operator",
-        transaction_repository=transaction_repository,
-    )
-
-
-@dataclass(frozen=True, slots=True)
-class _RefusedImportFile:
-    """One statement in a folder that could not be read, and the refusal it raised."""
-
-    path: Path
-    error: TransactionValidationError
-
-
-@dataclass(frozen=True, slots=True)
-class _ImportedFolder:
-    """What a folder import produced: the statements read, and the ones refused."""
-
-    results: list[LedgerSourceImportResult]
-    refusals: list[_RefusedImportFile]
-
-
-def _imported_files(
-    import_paths: Sequence[Path],
-    *,
-    command: Callable[[Path], LedgerSourceImportCommand],
-    import_ports: LedgerImportPorts,
-    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
-    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None,
-    currency_normalizer: CurrencyNormalizationService,
-) -> _ImportedFolder:
-    """Import each statement file, containing a per-file failure to that file.
-
-    The guard here used to catch a file's refusal and immediately re-raise it,
-    which converted the error's type without containing it: the first
-    unreadable statement still ended the run and discarded every result already
-    produced. An operator importing a quarter of statements lost the whole run
-    to one bad file.
-
-    A LONE unreadable file must still be a hard refusal — reporting an import
-    that imported nothing as a success is worse than refusing — but that is NOT
-    decided here. Collecting its refusal leaves ``results`` empty, and the
-    caller refuses on exactly that: there is a total to report only if
-    something was read. One rule covers the lone file and the folder whose
-    every statement is unreadable, so this loop needs no special case for
-    either.
-
-    Only the project's own failure taxonomy is caught. A ``TypeError`` here is
-    a defect and must still crash rather than be reported as a bad statement.
-    """
-    results: list[LedgerSourceImportResult] = []
-    refusals: list[_RefusedImportFile] = []
-    for file_path in import_paths:
-        try:
-            results.append(
-                import_ledger_source(
-                    command(file_path),
-                    ports=import_ports,
-                    transaction_repository=transaction_repository,
-                    bucket_event_repository=bucket_event_repository,
-                    currency_normalizer=currency_normalizer,
-                ),
-            )
-        except TransactionValidationError as exc:
-            refusals.append(_RefusedImportFile(path=file_path, error=exc))
-    return _ImportedFolder(results=results, refusals=refusals)
-
-
-def _refused_file_report(refusals: Sequence[_RefusedImportFile]) -> _ImportReport:
-    """Render every refused statement so a folder never loses one silently.
-
-    Both channels, because they reach different readers: a machine line for the
-    terminal, keyed by the file's own name so an operator can find it, and a
-    notice so the refusal survives ``--format json`` rather than existing only
-    in prose.
-    """
+def _refused_file_report(refusals: Sequence[LedgerImportFileRefusal]) -> _ImportReport:
+    """Render every refused statement using a safe filename and reason code."""
     lines: list[str] = []
     notices: list[Notice] = []
     for refusal in refusals:
-        # MACHINE-FORMAT-RATIONALE-LEDGER-IMPORT-REFUSED-FILE: tab-separated
-        # machine record (name, reason), matching the bulk-classify failure line.
-        lines.append(f"  refused	{refusal.path.name}	{refusal.error}")
+        lines.append(f"  refused\t{refusal.file_name}\t{refusal.reason_code}")
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="ledger.import.file_refused",
-                message=tr("cli.ledger.import.file_refused", file=refusal.path.name),
-                context={"file": refusal.path.name},
+                message=tr("cli.ledger.import.file_refused", file=refusal.file_name),
+                context={"file": refusal.file_name, "reason_code": refusal.reason_code},
             ),
         )
     return _ImportReport(lines=lines, notices=notices)
 
 
-def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: bool) -> _ImportReport:
-    """Render the counted totals, and every notice line they imply, for one import."""
+def _import_report(result: LedgerImportResultProjection, *, verbose: bool, verify: bool) -> _ImportReport:
+    """Render counted totals and bounded validation facts for one import."""
     lines = [
         f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
         f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
@@ -236,15 +109,9 @@ def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: b
             ),
         )
     if verbose or verify:
-        # Every file's report, not just the first. A directory import folds
-        # several results into one and used to show one file's validation as
-        # though it spoke for the import.
         for validation, source in zip(result.validations, result.sources, strict=True):
             lines.extend(_validation_lines(validation, source))
-    return _ImportReport(
-        lines=lines,
-        notices=notices,
-    )
+    return _ImportReport(lines=lines, notices=notices)
 
 
 def ledger_import(
@@ -258,74 +125,51 @@ def ledger_import(
     period: str | None = None,
     year: int | None = None,
 ) -> None:
-    """Import a financial-statement file via the existing provider registry."""
+    """Import statement files through the exact-profile operation registry."""
     normalised_provider = _validate_import_provider(provider)
-    context = _import_bucket_context(dry_run=dry_run)
-    from ...application.exchange_rate_provider import exchange_rate_provider
-    from ...domain.currency.service import CurrencyNormalizationService
-
-    currency_normalizer = CurrencyNormalizationService(rate_provider=exchange_rate_provider())
-    canonical_period = _optional_canonical_period(period, year=year)
-    import_ports = compose_ledger_import_ports()
-    action_ports = (
-        compose_ledger_action_ports(
-            bucket_id=context.transaction_repository.bucket_id,
-            operation=authority_operation(ctx),
+    import_paths = _resolve_import_paths(file)
+    if len(import_paths) > MAX_LEDGER_IMPORT_FILES:
+        raise bad(
+            tr(
+                "cli.ledger.errors.command_input_invalid",
+                details=f"ledger import accepts at most {MAX_LEDGER_IMPORT_FILES} files per operation",
+            ),
         )
-        if context.transaction_repository is not None
-        else None
+    canonical_period = _optional_canonical_period(period, year=year)
+    completed = import_ledger_sources_for_cli(
+        ctx,
+        files=import_paths,
+        provider=normalised_provider,
+        dry_run=dry_run,
+        verify=verify,
+        verify_source=verify_source,
+        period=canonical_period,
     )
-    imported = _imported_files(
-        _resolve_import_paths(file),
-        command=lambda file_path: LedgerSourceImportCommand(
-            bucket_id=context.bucket_id,
-            path=file_path,
-            provider=normalised_provider,
-            dry_run=dry_run,
-            verify=verify,
-            source=verify_source,
-            period=canonical_period,
-            actor=context.actor,
-            source_command="aeat app ledger import",
-        ),
-        import_ports=import_ports,
-        transaction_repository=context.transaction_repository,
-        bucket_event_repository=None if action_ports is None else action_ports.bucket_event_repository,
-        currency_normalizer=currency_normalizer,
-    )
-    if not imported.results:
-        # Nothing was read, so there is no total to report. Refusing with the
-        # first file's own error keeps the operator pointed at a cause rather
-        # than at an aggregate of zero.
-        raise ledger_transaction_validation_no_recovery(imported.refusals[0].error) from None
-    results = imported.results
-    result = results[0] if len(results) == 1 else aggregate_ledger_import_results(results)
+    result = completed.projection
+    if not result.validations and result.refused_files:
+        raise bad(tr("cli.ledger.import.file_refused", file=result.refused_files[0].file_name))
     report = _import_report(result, verbose=verbose, verify=verify)
-    refused = _refused_file_report(imported.refusals)
+    refused = _refused_file_report(result.refused_files)
     report.lines.extend(refused.lines)
     report.notices.extend(refused.notices)
-    from ._ledger_payloads import LedgerImportPayload
-
     emit_envelope(
         ctx,
         command="ledger.import",
-        result=LedgerImportPayload.from_result(result),
+        result=_ledger_import_payload(result),
         lines=report.lines,
         notices=report.notices,
     )
 
 
 def _resolve_import_paths(path: Path) -> tuple[Path, ...]:
-    """Resolve the import target, mapping the refusal to its operator message."""
-    from ...domain.transactions.errors import TransactionValidationError
-
+    """Resolve a file/folder using the canonical source-selection contract."""
     try:
         return plan_ledger_import_sources(path)
     except TransactionValidationError as exc:
         raise bad(tr("cli.ledger.import.empty_directory", path=str(path))) from exc
 
 
-def _empty_import_notice(result: LedgerSourceImportResult) -> tuple[str, Notice] | None:
+def _empty_import_notice(result: LedgerImportResultProjection) -> tuple[str, Notice] | None:
     """Return an explanatory line when a parsed import yields zero rows."""
     if result.dry_run or result.imported > 0:
         return None
@@ -353,18 +197,68 @@ def _empty_import_notice(result: LedgerSourceImportResult) -> tuple[str, Notice]
 
 
 def _validation_lines(
-    validation: LedgerSourceValidationReport,
-    source_verification: LedgerSourceVerificationReport,
+    validation: LedgerImportValidationProjection,
+    source_verification: LedgerImportSourceProjection,
 ) -> list[str]:
-    validation_payload = validation.model_dump(mode="json")
-    source_payload = source_verification.model_dump(mode="json")
-    valid_label = tr("cli.ledger.labels.yes") if validation_payload["valid"] else tr("cli.ledger.labels.no")
+    valid_label = tr("cli.ledger.labels.yes") if validation.valid else tr("cli.ledger.labels.no")
     lines = [
         f"{tr('cli.ledger.labels.valid')}\t{valid_label}",
-        f"{tr('cli.ledger.labels.dialect')}\t{validation_payload['dialect'] or '-'}",
+        f"{tr('cli.ledger.labels.dialect')}\t-",
     ]
-    if validation_payload["warnings"]:
-        lines.append(f"{tr('cli.ledger.labels.warnings')}\t{'; '.join(validation_payload['warnings'])}")
-    if source_payload["requested"]:
-        lines.append(f"{tr('cli.ledger.labels.source')}\t{source_payload['path'] or '-'}")
+    if validation.warning_count:
+        lines.append(
+            f"{tr('cli.ledger.labels.warnings')}\t{validation.warning_count} validation warning(s); details withheld",
+        )
+    if source_verification.requested:
+        source_value = source_verification.sha256 or "-"
+        lines.append(f"{tr('cli.ledger.labels.source')}\t{source_value}")
     return lines
+
+
+def _ledger_import_payload(result: LedgerImportResultProjection) -> LedgerImportPayload:
+    """Adapt the allowlisted operation result to the stable CLI envelope."""
+    return LedgerImportPayload.model_validate(
+        {
+            "rows": result.rows,
+            "imported": result.imported,
+            "skipped": result.skipped,
+            "likely_duplicates": result.likely_duplicates,
+            "dry_run": result.dry_run,
+            "verify": result.verify,
+            "period": result.period.to_period() if result.period is not None else None,
+            "bucket_id": result.bucket_id,
+            "import_batch_id": result.import_batch_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "imported_transaction_refs": [item.model_dump(mode="json") for item in result.imported_transaction_refs],
+            "skipped_transaction_refs": [item.model_dump(mode="json") for item in result.skipped_transaction_refs],
+            "likely_duplicate_transaction_refs": [
+                item.model_dump(mode="json") for item in result.likely_duplicate_transaction_refs
+            ],
+            "validations": [
+                {
+                    "valid": item.valid,
+                    "warnings": (
+                        [f"{item.warning_count} validation warning(s); details withheld"] if item.warning_count else []
+                    ),
+                    "encoding": item.encoding,
+                    "dialect": None,
+                }
+                for item in result.validations
+            ],
+            "sources": [{"requested": item.requested, "path": None, "sha256": item.sha256} for item in result.sources],
+            "diagnostics": [
+                {
+                    "kind": item.kind,
+                    "severity": item.severity,
+                    "message": item.message,
+                    "source_path": None,
+                    "source_locator": None,
+                    "affected_transaction_ids": list(item.affected_transaction_ids),
+                }
+                for item in result.diagnostics
+            ],
+        },
+    )
+
+
+__all__ = ["ledger_import"]

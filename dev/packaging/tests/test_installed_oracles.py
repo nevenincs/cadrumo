@@ -1,10 +1,9 @@
-"""Bind the installed CLI and MCP tax oracles to one real wheel cohort.
+"""Check the installed CLI oracle and MCP protocol launch in one wheel cohort.
 
 The test builds one closed-world cohort, installs it once into a single
-environment, records the installed metadata origins and hashes, then runs both
-public tax-work oracles from that same environment. This closes the gap where
-independently passing probes could accidentally exercise different virtual
-environments, rebuilt wheels, or ambient commands.
+environment and records the installed metadata origins and hashes. It runs
+the public tax-work oracle and checks the MCP server's current stdio contract
+from that same installation.
 
 Both console scripts come from the one ``cadrumo`` distribution. The wheel
 target packs the ``cadrumo`` and ``cadrumo_harness`` source packages together,
@@ -15,7 +14,6 @@ harness wheel to build, install, or attest.
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import inspect
 import json
 import os
@@ -24,6 +22,7 @@ import shutil
 import sqlite3
 import sys
 import zipfile
+from contextlib import ExitStack
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -36,7 +35,6 @@ from dev.source_tree import repository_files, snapshot
 from .._distribution_names import normalise_distribution_name
 from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
 from ..hashing import sha256_path
-from ..installed_mcp_oracle import InstalledMcpOracleError, isolated_mcp_environment, run_installed_mcp_oracle
 from ..installed_tax_oracle import (
     InstalledTaxOracleError,
     isolated_product_environment,
@@ -255,27 +253,6 @@ print(json.dumps({
     "logical_generation": selected.logical_generation,
 }, sort_keys=True))
 """
-_ORACLE_AUTHORITY_PROBE = """
-import hashlib
-import json
-
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
-from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
-
-descriptor_path = bundled_authority_descriptor_path().resolve(strict=True)
-selected = AuthorityDescriptor.read(descriptor_path)
-database = descriptor_path.with_name(selected.database).resolve(strict=True)
-print(json.dumps({
-    "descriptor": str(descriptor_path),
-    "descriptor_sha256": hashlib.sha256(descriptor_path.read_bytes()).hexdigest(),
-    "database": database.name,
-    "database_sha256": hashlib.sha256(database.read_bytes()).hexdigest(),
-    "logical_generation": selected.logical_generation,
-}, sort_keys=True))
-"""
-#: One JSON-RPC message is one stdout line, and the tools/list answer alone is
-#: larger than asyncio's 64 KiB default line limit.
-_STDIO_LINE_LIMIT = 16 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -392,41 +369,6 @@ def _installed_authority_resource(
     )
 
 
-def _oracle_authority_generation(
-    oracle: str,
-    venv: Path,
-    *,
-    environment: dict[str, str],
-    cwd: Path,
-    descriptor_sha256: str,
-    database_sha256: str,
-) -> dict[str, str]:
-    """Name the authority generation one oracle run read, and pin it to the expected pair.
-
-    The installed commands do not print the generation they consumed, so the
-    installation's own interpreter resolves it through the product's descriptor
-    selector under the exact environment the oracle ran with -- the same
-    selector, files and variables the oracle's commands resolved. The identity
-    goes to the run log and back to the caller for retained evidence, and a
-    generation other than the expected one fails with both identities named.
-    """
-    observed = json.loads(
-        run_checked(
-            [str(venv_python_path(venv)), "-I", "-c", _ORACLE_AUTHORITY_PROBE],
-            cwd=cwd,
-            env=environment,
-        ).stdout
-    )
-    generation = {"oracle": oracle, **{str(key): str(value) for key, value in observed.items()}}
-    print("installed-oracle-authority=" + json.dumps(generation, sort_keys=True))
-    assert (generation["descriptor_sha256"], generation["database_sha256"]) == (descriptor_sha256, database_sha256), (
-        f"the {oracle} oracle read authority generation {generation['logical_generation']} "
-        f"(descriptor sha256 {generation['descriptor_sha256']}, database {generation['database']}), "
-        f"not the expected pair (descriptor sha256 {descriptor_sha256}, database sha256 {database_sha256})"
-    )
-    return generation
-
-
 def _assert_no_durable_calculation_work(storage_root: Path) -> None:
     """Prove a refused workflow wrote no work/calculation secure object."""
     forbidden = {
@@ -449,10 +391,6 @@ def _requirement_name(requirement: str) -> str:
     """Return the distribution name of one core-metadata ``Requires-Dist`` line."""
     match = _REQUIREMENT_NAME_PATTERN.match(requirement)
     return normalise_distribution_name(match.group(0)) if match else ""
-
-
-def _text_sha256(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 def _write_evidence(path: Path, document: dict[str, Any]) -> None:
@@ -748,102 +686,13 @@ def test_installed_consumers_use_pinned_profile_fact_model_and_evidence_componen
     assert observed["m303_export_money_fields"] > 0
 
 
-def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
-    installed_cohort: InstalledCohort,
-) -> None:
-    """One installation completes the direct and protocol tax-work claims."""
-    cohort = installed_cohort
-    execution_root = cohort.work_dir / "outside-checkout"
-    execution_root.mkdir()
-
-    cli_evidence = run_installed_tax_oracle(
-        cohort.cli,
-        storage_root=cohort.work_dir / "cli-state",
-        work_dir=execution_root / "cli",
-        cohort_source_digest=cohort.source_digest,
-        cohort_manifest_sha256=sha256_path(cohort.evidence_path),
-        cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
-        timeout_seconds=240.0,
-    )
-    mcp_evidence = run_installed_mcp_oracle(
-        cohort.mcp_server,
-        storage_root=cohort.work_dir / "mcp-state",
-        work_dir=execution_root / "mcp",
-        cohort_source_digest=cohort.source_digest,
-        cohort_manifest_sha256=sha256_path(cohort.python_cohort.manifest),
-        cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
-        cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo"],
-        timeout_seconds=240.0,
-    )
-
-    assert Path(cli_evidence.resolved_executable) == cohort.cli
-    assert Path(mcp_evidence.resolved_executable) == cohort.mcp_server
-    assert (
-        Path(cli_evidence.resolved_executable).parent
-        == Path(
-            mcp_evidence.resolved_executable,
-        ).parent
-    )
-    assert cli_evidence.target_casilla == mcp_evidence.target_casilla
-    assert cli_evidence.target_value == mcp_evidence.target_value == "23000.00"
-    assert cli_evidence.formula_id == mcp_evidence.formula_id == "modelo-200-cuota-integra"
-    assert cli_evidence.legal_refs == mcp_evidence.legal_refs
-    assert cli_evidence.source_refs == mcp_evidence.source_refs
-    assert cli_evidence.notice_codes == mcp_evidence.notice_codes
-    expected_cli_sha256 = _text_sha256(str(cohort.cli))
-    assert mcp_evidence.invoked_cli_sha256 == expected_cli_sha256
-    assert mcp_evidence.invoked_cli_sha256_by_command == {
-        "modelo.work.calculate": expected_cli_sha256,
-        "modelo.work.create": expected_cli_sha256,
-        "modelo.work.observations": expected_cli_sha256,
-    }
-    assert any(call.command_key == "modelo.work.calculate" for call in mcp_evidence.calls)
-    cli_authority = _oracle_authority_generation(
-        "cli",
-        cohort.venv,
-        environment=isolated_product_environment(cohort.work_dir / "cli-state"),
-        cwd=execution_root / "cli",
-        descriptor_sha256=cohort.authority_descriptor_sha256,
-        database_sha256=cohort.authority_database_sha256,
-    )
-    mcp_authority = _oracle_authority_generation(
-        "mcp",
-        cohort.venv,
-        environment=isolated_mcp_environment(cohort.work_dir / "mcp-state"),
-        cwd=execution_root / "mcp",
-        descriptor_sha256=cohort.authority_descriptor_sha256,
-        database_sha256=cohort.authority_database_sha256,
-    )
-
-    _write_evidence(
-        cohort.evidence_path,
-        {
-            "artifact_sha256": cohort.artifact_sha256,
-            "cli_oracle": cli_evidence.to_jsonable(),
-            "cli_oracle_authority": cli_authority,
-            "mcp_oracle": mcp_evidence.to_jsonable(),
-            "mcp_oracle_authority": mcp_authority,
-            "source_digest": cohort.source_digest,
-        },
-    )
-    retained = json.loads(cohort.evidence_path.read_text(encoding="utf-8"))
-    assert retained["cli_oracle_authority"] == cli_authority
-    assert retained["mcp_oracle_authority"] == mcp_authority
-    assert retained["mcp_oracle"]["invoked_cli_sha256"] == expected_cli_sha256
-    assert retained["mcp_oracle"]["invoked_cli_sha256_by_command"] == {
-        "modelo.work.calculate": expected_cli_sha256,
-        "modelo.work.create": expected_cli_sha256,
-        "modelo.work.observations": expected_cli_sha256,
-    }
-
-
 @pytest.mark.parametrize("damage", ["missing", "corrupt"])
-def test_installed_cli_and_mcp_refuse_an_unusable_authority_before_durable_work(
+def test_installed_cli_refuses_an_unusable_authority_before_durable_work(
     installed_cohort: InstalledCohort,
     tmp_path: Path,
     damage: str,
 ) -> None:
-    """Real installed workflows fail closed when their sole authority is unusable."""
+    """The installed CLI fails closed when its sole authority is unusable."""
     installation = _fresh_installation(installed_cohort, tmp_path / damage)
     assert sha256_path(installation.authority_descriptor) == installation.authority_descriptor_sha256
     assert sha256_path(installation.authority_database) == installation.authority_database_sha256
@@ -856,33 +705,7 @@ def test_installed_cli_and_mcp_refuse_an_unusable_authority_before_durable_work(
         cohort_root_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
         timeout_seconds=240.0,
     )
-    baseline_mcp = run_installed_mcp_oracle(
-        installation.mcp_server,
-        storage_root=installation.root / "mcp-baseline-state",
-        work_dir=installation.root / "mcp-baseline",
-        cohort_source_digest=installed_cohort.source_digest,
-        cohort_manifest_sha256=sha256_path(installed_cohort.python_cohort.manifest),
-        cohort_root_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
-        cohort_harness_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
-        timeout_seconds=240.0,
-    )
-    assert baseline_cli.target_value == baseline_mcp.target_value == "23000.00"
-    _oracle_authority_generation(
-        "cli-baseline",
-        installation.venv,
-        environment=isolated_product_environment(installation.root / "cli-baseline-state"),
-        cwd=installation.root / "cli-baseline",
-        descriptor_sha256=installation.authority_descriptor_sha256,
-        database_sha256=installation.authority_database_sha256,
-    )
-    _oracle_authority_generation(
-        "mcp-baseline",
-        installation.venv,
-        environment=isolated_mcp_environment(installation.root / "mcp-baseline-state"),
-        cwd=installation.root / "mcp-baseline",
-        descriptor_sha256=installation.authority_descriptor_sha256,
-        database_sha256=installation.authority_database_sha256,
-    )
+    assert baseline_cli.target_value == "23000.00"
     if damage == "missing":
         installation.authority_database.unlink()
         assert not installation.authority_database.exists()
@@ -916,24 +739,6 @@ def test_installed_cli_and_mcp_refuse_an_unusable_authority_before_durable_work(
         )
     assert "23000.00" not in str(cli_refusal.value)
     _assert_no_durable_calculation_work(cli_storage)
-
-    mcp_storage = installation.root / "mcp-refusal-state"
-    with pytest.raises(
-        InstalledMcpOracleError,
-        match=refusal_pattern,
-    ) as mcp_refusal:
-        run_installed_mcp_oracle(
-            installation.mcp_server,
-            storage_root=mcp_storage,
-            work_dir=installation.root / "mcp-refusal",
-            cohort_source_digest=installed_cohort.source_digest,
-            cohort_manifest_sha256=sha256_path(installed_cohort.python_cohort.manifest),
-            cohort_root_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
-            cohort_harness_wheel_sha256=installed_cohort.artifact_sha256["cadrumo"],
-            timeout_seconds=240.0,
-        )
-    assert "23000.00" not in str(mcp_refusal.value)
-    _assert_no_durable_calculation_work(mcp_storage)
 
 
 def _operative_oracle_identity(evidence: Any) -> tuple[object, ...]:
@@ -982,37 +787,6 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
         cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
         timeout_seconds=240.0,
     )
-    mcp_before = run_installed_mcp_oracle(
-        cohort.mcp_server,
-        storage_root=cohort.work_dir / "source-isolation-mcp-before-state",
-        work_dir=execution_root / "mcp-before",
-        cohort_source_digest=cohort.source_digest,
-        cohort_manifest_sha256=sha256_path(cohort.python_cohort.manifest),
-        cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
-        cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo"],
-        timeout_seconds=240.0,
-    )
-    for oracle, environment, cwd in (
-        (
-            "cli-before",
-            isolated_product_environment(cohort.work_dir / "source-isolation-cli-before-state"),
-            execution_root / "cli-before",
-        ),
-        (
-            "mcp-before",
-            isolated_mcp_environment(cohort.work_dir / "source-isolation-mcp-before-state"),
-            execution_root / "mcp-before",
-        ),
-    ):
-        _oracle_authority_generation(
-            oracle,
-            cohort.venv,
-            environment=environment,
-            cwd=cwd,
-            descriptor_sha256=installed_descriptor_digest,
-            database_sha256=installed_database_digest,
-        )
-
     original = authored.read_bytes()
     try:
         authored.write_bytes(original + b"\n# post-build isolation probe\n")
@@ -1030,41 +804,10 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
             cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
             timeout_seconds=240.0,
         )
-        mcp_after = run_installed_mcp_oracle(
-            cohort.mcp_server,
-            storage_root=cohort.work_dir / "source-isolation-mcp-after-state",
-            work_dir=execution_root / "mcp-after",
-            cohort_source_digest=cohort.source_digest,
-            cohort_manifest_sha256=sha256_path(cohort.python_cohort.manifest),
-            cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
-            cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo"],
-            timeout_seconds=240.0,
-        )
-        for oracle, environment, cwd in (
-            (
-                "cli-after",
-                isolated_product_environment(cohort.work_dir / "source-isolation-cli-after-state"),
-                execution_root / "cli-after",
-            ),
-            (
-                "mcp-after",
-                isolated_mcp_environment(cohort.work_dir / "source-isolation-mcp-after-state"),
-                execution_root / "mcp-after",
-            ),
-        ):
-            _oracle_authority_generation(
-                oracle,
-                cohort.venv,
-                environment=environment,
-                cwd=cwd,
-                descriptor_sha256=installed_descriptor_digest,
-                database_sha256=installed_database_digest,
-            )
     finally:
         authored.write_bytes(original)
 
     assert _operative_oracle_identity(cli_after) == _operative_oracle_identity(cli_before)
-    assert _operative_oracle_identity(mcp_after) == _operative_oracle_identity(mcp_before)
     assert sha256_path(installed_descriptor) == installed_descriptor_digest
     assert sha256_path(installed_database) == installed_database_digest
 
@@ -1081,10 +824,10 @@ def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort
 
     work = installed_cohort.work_dir / "owned-launch-capture"
     work.mkdir()
-    environment = isolated_mcp_environment(work / "state")
-    environment["CADRUMO_CLI_EXECUTABLE"] = str(installed_cohort.cli)
+    environment = isolated_product_environment(work / "state")
     transcript = capture_owned_server_launch(
         server=installed_cohort.mcp_server,
+        server_args=("--profile-id", "00000000-0000-4000-8000-000000000001"),
         env=environment,
         cwd=work,
         timeout_seconds=180.0,
@@ -1099,8 +842,9 @@ def _retired_state_environment(base: Path, venv: Path) -> dict[str, str]:
     """A per-OS platform-data root whose retired ``aeat`` state triggers the refusal.
 
     Mirrors the ``smoke_mcpb`` hostile-platform fixture: the resolver refuses on
-    the retired directory's existence alone, whenever no explicit storage root
-    is configured, so this environment carries none of the ``CADRUMO_`` settings.
+    the retired directory's existence alone, and refusal fires only in INSTALLED
+    run mode - which this file's wheel-installed cohort guarantees, unlike an
+    editable checkout whose resolver never inspects the platform data dir.
 
     The search path is the one a client of this installation has: the cohort's
     own scripts directory first, then the inherited entries with every other
@@ -1144,17 +888,18 @@ async def _read_mcp_response_async(stdout: asyncio.StreamReader, target_id: int)
 async def _drive_mcp_server(
     executable: Path,
     *,
+    server_args: tuple[str, ...],
     environment: dict[str, str],
 ) -> tuple[dict[str, Any], dict[str, Any], str]:
     """Drive the installed stdio server until tools are listed, then stop it."""
     process = await asyncio.create_subprocess_exec(
         str(executable),
+        *server_args,
         cwd=str(Path.cwd()),
         env=environment,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
-        limit=_STDIO_LINE_LIMIT,
     )
     assert process.stdin is not None
     assert process.stdout is not None
@@ -1205,9 +950,192 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     """
     cohort = installed_cohort
     environment = _retired_state_environment(cohort.work_dir / "storage-root-refusal", cohort.venv)
-    initialize, tools, stderr_text = asyncio.run(_drive_mcp_server(cohort.mcp_server, environment=environment))
+    initialize, tools, stderr_text = asyncio.run(
+        _drive_mcp_server(
+            cohort.mcp_server,
+            server_args=("--profile-id", "00000000-0000-4000-8000-000000000001"),
+            environment=environment,
+        )
+    )
     assert initialize["result"]["serverInfo"]["name"] == "cadrumo"
-    assert len(tools["result"]["tools"]) > 0
+    tool_names = [tool["name"] for tool in tools["result"]["tools"]]
+    assert len(tool_names) == len(set(tool_names))
+    assert set(tool_names) == {
+        "status",
+        "authorization_prepare",
+        "authorization_request",
+        "authorization_poll",
+        "authenticate",
+        "authority",
+        "search",
+        "describe",
+        "execute",
+        "observe",
+        "result",
+        "result_page",
+        "review",
+        "respond",
+        "control",
+    }
     # The degradation is visible, never silent: the startup note names the
     # storage-root refusal on stderr, which the client's MCP log captures.
     assert "serving without telemetry" in stderr_text
+
+
+async def _call_dev_installed_mcp_authenticate(
+    executable: Path,
+    *,
+    storage_root: Path,
+    profile_id: str,
+    credential_reference: str,
+) -> tuple[bool, dict[str, Any], bool, dict[str, Any]]:
+    """Call authenticate and status on the active development environment's stdio process."""
+    from mcp import ClientSession
+    from mcp.client.stdio import StdioServerParameters, stdio_client
+
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
+    environment.pop("VIRTUAL_ENV", None)
+    environment.update({"CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
+    server = StdioServerParameters(
+        command=str(executable.resolve(strict=True)),
+        args=["--profile-id", profile_id],
+        env=environment,
+        cwd=storage_root,
+    )
+    async with asyncio.timeout(120):
+        with open(os.devnull, "w", encoding="utf-8") as stderr:
+            try:
+                async with (
+                    stdio_client(server, errlog=stderr) as (read_stream, write_stream),
+                    ClientSession(read_stream, write_stream, read_timeout_seconds=90) as client,
+                ):
+                    await client.initialize()
+                    authentication = await client.call_tool(
+                        "authenticate", {"credential_reference": credential_reference}
+                    )
+                    status = await client.call_tool("status", {})
+            except Exception:
+                raise AssertionError("installed MCP process exited before protocol response") from None
+    assert isinstance(authentication.structured_content, dict)
+    assert isinstance(status.structured_content, dict)
+    return authentication.is_error, authentication.structured_content, status.is_error, status.structured_content
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires installed Windows MCP and runtime launchers")
+def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missing_reference(
+    tmp_path: Path,
+) -> None:
+    """Exercise the console process's real auth door with a synthetic profile and absent credential.
+
+    This drives the current development environment's installed console scripts.
+    It verifies a native-store refusal or an exact-reference miss; it does not
+    attest the hashed-wheel cohort built by ``installed_cohort``.
+    """
+    import sysconfig
+    import time
+    from importlib.metadata import version
+    from uuid import uuid4
+
+    from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
+    from cadrumo.adapters.local_runtime.installation import runtime_installation
+    from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+    from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
+    from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+    from cadrumo.adapters.persistence.storage.custody.automation_store_composition import (
+        installed_automation_secret_store,
+    )
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+    from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+    from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+
+    mcp_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-mcp.exe"
+    runtime_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-runtime.exe"
+    assert mcp_executable.is_file(), "install the current development environment entry points first"
+    assert runtime_executable.is_file(), "install the current development environment entry points first"
+
+    profile_id, credential_reference = uuid4(), uuid4()
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root, ExitStack() as cleanup:
+        storage_root.mkdir(parents=True, exist_ok=True)
+        endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
+        cleanup.callback(endpoint.close)
+        process_scope = WindowsProcessScope()
+        cleanup.callback(process_scope.terminate, timeout=5)
+        runtime_installation(
+            storage_root=storage_root,
+            os_owner_id=endpoint.os_owner_id,
+            storage_identity=endpoint.storage_identity,
+        )
+        with composed_profile_persistence_ports():
+            publish_test_profile_capsule(
+                profile_id,
+                label="Installed MCP synthetic acceptance",
+                root=storage_root,
+            )
+        native = installed_automation_secret_store()
+        try:
+            native.read(CLIENT_NAMESPACE, str(credential_reference))
+        except AutomationCustodyError as error:
+            expected_refusal = error.reason.value
+        else:
+            expected_refusal = "missing"
+        assert expected_refusal in {"missing", "unavailable"}
+
+        runtime_environment = {
+            key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
+        }
+        runtime_environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
+        process_scope.launch(
+            executable=runtime_executable.resolve(strict=True),
+            arguments=(
+                "--storage-root",
+                str(storage_root),
+                "--storage-identity",
+                endpoint.storage_identity,
+                "--expected-version",
+                version("cadrumo"),
+            ),
+            directory=storage_root,
+            environment=runtime_environment,
+        )
+
+        deadline = time.monotonic() + 30
+        while True:
+            try:
+                connection = VerifiedRuntimeConnection(
+                    endpoint.connect(timeout=0.2),
+                    expected=RuntimeClientHello(
+                        product_version=version("cadrumo"), storage_identity=endpoint.storage_identity
+                    ),
+                    deadline=deadline,
+                )
+                connection.close()
+                break
+            except RuntimeRefusalError as error:
+                if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+                    raise
+                time.sleep(0.05)
+
+        authentication_error, authentication, status_error, status = asyncio.run(
+            _call_dev_installed_mcp_authenticate(
+                mcp_executable,
+                storage_root=storage_root,
+                profile_id=str(profile_id),
+                credential_reference=str(credential_reference),
+            )
+        )
+        assert authentication_error is True
+        assert authentication == {"outcome": "refused", "code": expected_refusal}
+        assert status_error is False
+        assert status == {
+            "outcome": "status",
+            "profile_id": str(profile_id),
+            "authenticated": False,
+            "denial": "authentication_required",
+        }

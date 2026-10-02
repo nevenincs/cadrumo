@@ -22,6 +22,7 @@ from time import monotonic, sleep
 from typing import Any, Literal, cast
 
 from dev.acceptance.assets.oracles import first_year_machinery_constant_percentage
+from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildError, admit_installed_session
 
 _SCHEMA_VERSION = "activity-asset-installed-tui-child-v3"
 _RECEIPT_REPLACE_SECONDS = 2.0
@@ -832,65 +833,6 @@ async def _exercise_cli_created_asset_readback(*, pilot: Any, progress: Callable
     return {"cli_to_tui_asset_readback": True, "inspection_revision_identity_exposed": True}
 
 
-async def _admit_existing_profile_session(*, passphrase: str) -> None:
-    """Unlock a CLI-created profile through the shipped visible Login screen.
-
-    This runs before the headless workbench launcher on purpose.  The normal
-    launcher has no credential-autopilot hook: it may reuse a canonical live
-    session in this process, but correctly refuses to prompt a headless child.
-    The acceptance child therefore performs the same standalone public screen
-    interaction an operator would, then lets the unmodified launcher prove its
-    ordinary already-admitted branch.
-    """
-    from textual.widgets import Input
-
-    from cadrumo.application.user_profile.login_interaction import (
-        ProfileLoginInventoryState,
-        attempt_profile_login,
-        observe_profile_login_inventory,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
-
-    inventory = observe_profile_login_inventory()
-    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
-        raise InstalledAssetTuiError(
-            "installed TUI could not truthfully offer the existing profile for login",
-            stage="session_admission",
-        )
-    diagnostic: dict[str, object] | None = None
-    with bundled_indexed_authority().operation() as operation:
-        screen = LoginScreen(
-            choices=inventory.choices,
-            authenticate=lambda candidate_profile_id, candidate_passphrase: attempt_profile_login(
-                candidate_profile_id,
-                candidate_passphrase,
-                profile_decode_context=operation.profile_decode_context(),
-            ),
-            preselected=inventory.preselected_profile_id,
-        )
-        app = ScreenHostApp(screen)
-        async with app.run_test(size=(160, 60)) as pilot:
-            field = await _wait_for_public_selector(pilot, "#field-passphrase", stage="session_admission")
-            if not isinstance(field, Input):
-                raise InstalledAssetTuiError(
-                    "installed TUI passphrase control has an unexpected type",
-                    stage="session_admission",
-                )
-            field.value = passphrase
-            await pilot.click("#btn-unlock")
-            await pilot.app.workers.wait_for_complete()  # type: ignore[reportUnknownMemberType]
-            await pilot.pause()
-            diagnostic = _public_surface_diagnostic(pilot)
-    if screen.outcome is None:
-        raise InstalledAssetTuiError(
-            "installed TUI Login screen did not establish a profile session",
-            stage="session_admission",
-            diagnostic=diagnostic,
-        )
-
-
 def _run_probe(
     *,
     workspace_root: Path,
@@ -945,25 +887,24 @@ def _run_probe(
     else:
         completed.append("existing_profile")
         publish("existing_profile")
-        # A CLI-created encrypted profile has no live session in this new
-        # child process.  Establish it only through the shipped LoginScreen;
-        # the subsequent headless launcher keeps its guard and reuses the
-        # session through the canonical admission door.
-        from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-        from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
-
-        with live_exchange_rate_composition(), profile_adapter_composition():
-            asyncio.run(
-                asyncio.wait_for(
-                    _admit_existing_profile_session(passphrase=passphrase),
-                    timeout=45.0,
-                )
-            )
-        completed.append("session_admitted")
-        publish("session_admitted")
     observed: list[dict[str, object]] = []
 
     async def drive(pilot: Any) -> None:
+        try:
+            root_ready = await admit_installed_session(
+                pilot=pilot,
+                passphrase=passphrase,
+                deadline=asyncio.get_running_loop().time() + 45.0,
+            )
+        except InstalledTuiChildError as error:
+            raise InstalledAssetTuiError(
+                "installed runtime admission did not complete", stage="session_admission", diagnostic=error.diagnostic
+            ) from error
+        if not root_ready:
+            if profile_bootstrap == "existing":
+                completed.append("session_admitted")
+                publish("session_admitted")
+            return
         await pilot.pause()
         observed.append(_public_surface_diagnostic(pilot))
         completed.append("launcher_autopilot")

@@ -30,6 +30,7 @@ from typing import ClassVar
 
 from .....core.aeat_csv import normalise_aeat_csv
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.identity.digest import ContentDigest
 from .....core.time.clock import now
 from ...pdf.extracted_casilla import ExtractedCasilla
 from ...pdf.label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
@@ -93,6 +94,22 @@ class Modelo100ObservedV2025Extractor:
                 registry-profile projection does not meet its minimum coverage.
         """
         pages = extract_pages_text(pdf_path)
+        return self.extract_pages(
+            pages,
+            artefact_kind,
+            source_pdf_sha256=sha256_file(pdf_path),
+            extraction_profile=extraction_profile,
+        )
+
+    def extract_pages(
+        self,
+        pages: tuple[str, ...],
+        artefact_kind: ArtefactKind,
+        *,
+        source_pdf_sha256: ContentDigest,
+        extraction_profile: BorradorExtractionProfile | None = None,
+    ) -> InboundBorradorObservation:
+        """Extract the canonical observation from one captured page-text pass."""
         text = "\n".join(pages)
 
         tax_id, ejercicio, csv_value = _extract_header_values(text, artefact_kind)
@@ -106,7 +123,6 @@ class Modelo100ObservedV2025Extractor:
             matched_targets=matched_targets,
         )
 
-        source_pdf_sha256 = sha256_file(pdf_path)
         return InboundBorradorObservation(
             modelo="100",
             ejercicio=ejercicio,

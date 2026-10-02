@@ -129,12 +129,13 @@ def _history_repository():
     return _seed_ports().iva_compensation_history_repository
 
 
-def _seed(amount: Decimal) -> None:
+def _seed(amount: Decimal, *, operation: PinnedAuthorityOperation) -> None:
     seed_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
         period=_SEED_FILING_PERIOD,
         amount=amount,
         ports=_seed_ports(),
+        operation=operation,
     )
 
 
@@ -225,9 +226,9 @@ def _persist_sealed_303(
     rev_repo.save(upsert_calculation_revision(rev_repo.load(), revision))
 
 
-def test_correction_overwrites_balance_and_emits_audit_event() -> None:
+def test_correction_overwrites_balance_and_emits_audit_event(*, operation: PinnedAuthorityOperation) -> None:
     """Correcting a seeded period changes the stored balance and emits the audit event."""
-    _seed(Decimal("500.00"))
+    _seed(Decimal("500.00"), operation=operation)
 
     state = correct_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
@@ -235,6 +236,7 @@ def test_correction_overwrites_balance_and_emits_audit_event() -> None:
         amount=Decimal("1200.50"),
         reason="typo in opening balance",
         ports=_seed_ports(),
+        operation=operation,
     )
 
     assert state.available_end_amount == Decimal("1200.50")
@@ -256,7 +258,7 @@ def test_correction_overwrites_balance_and_emits_audit_event() -> None:
     assert payload["period"] == _SEED_PERIOD
 
 
-def test_correction_refuses_when_no_record_exists() -> None:
+def test_correction_refuses_when_no_record_exists(*, operation: PinnedAuthorityOperation) -> None:
     """Correcting a period with no seeded record refuses (seed first)."""
     with pytest.raises(ModeloIvaWalletCorrectionNoRecordError):
         correct_iva_compensation_period_for_bucket(
@@ -265,6 +267,7 @@ def test_correction_refuses_when_no_record_exists() -> None:
             amount=Decimal("100.00"),
             reason="no record yet",
             ports=_seed_ports(),
+            operation=operation,
         )
 
 
@@ -286,7 +289,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
     so correcting the 2024 4T seed would silently change an already-filed
     return — refused, with the offending revision named.
     """
-    _seed(Decimal("500.00"))
+    _seed(Decimal("500.00"), operation=operation)
     _persist_sealed_303(filing_year=2025, period="1T", state=sealed_state, operation=operation)
 
     with pytest.raises(ModeloIvaWalletCorrectionSealedError) as excinfo:
@@ -296,6 +299,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
             amount=Decimal("1200.50"),
             reason="should be blocked",
             ports=_seed_ports(),
+            operation=operation,
         )
 
     context = excinfo.value.context or {}
@@ -317,7 +321,7 @@ def test_correction_refused_when_same_period_sealed_303_consumed_the_seed(
     *, operation: PinnedAuthorityOperation
 ) -> None:
     """A sealed filing for the seeded 4T itself freezes the opening balance."""
-    _seed(Decimal("500.00"))
+    _seed(Decimal("500.00"), operation=operation)
     _persist_sealed_303(
         filing_year=_SEED_YEAR,
         period=_SEED_PERIOD,
@@ -332,6 +336,7 @@ def test_correction_refused_when_same_period_sealed_303_consumed_the_seed(
             amount=Decimal("1200.50"),
             reason="same filing already consumed the basis",
             ports=_seed_ports(),
+            operation=operation,
         )
 
     assert (excinfo.value.context or {})["blocking_period"] == _SEED_PERIOD
@@ -348,7 +353,7 @@ def test_correction_allowed_when_only_a_draft_303_exists(*, operation: PinnedAut
     proceeds. If the guard fired on a draft it would over-block legitimate
     corrections.
     """
-    _seed(Decimal("500.00"))
+    _seed(Decimal("500.00"), operation=operation)
     _persist_sealed_303(filing_year=2025, period="1T", state=CalculationRevisionState.BORRADOR, operation=operation)
 
     state = correct_iva_compensation_period_for_bucket(
@@ -357,6 +362,7 @@ def test_correction_allowed_when_only_a_draft_303_exists(*, operation: PinnedAut
         amount=Decimal("1200.50"),
         reason="draft does not block",
         ports=_seed_ports(),
+        operation=operation,
     )
 
     assert state.available_end_amount == Decimal("1200.50")

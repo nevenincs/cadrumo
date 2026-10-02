@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+import sys
+from collections.abc import Iterator, Sequence
+from contextvars import ContextVar
 from datetime import UTC, date, datetime
+from pathlib import Path
 
 import pytest
 from click.testing import Result
@@ -42,21 +45,56 @@ from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ...adapter_composition import build_expedientes_ports
 from ...live_state_composition import compose_notifications_ports
-from .._overview_evidence import live_censo_verified_profile_keys
+from ...overview_evidence_composition import live_censo_verified_profile_keys
 from ..common import current_workflow_state, profile_to_taxpayer
+from . import _overview_calendar_support
 from ._overview_calendar_support import (
+    _CALENDAR_GATING_FACT_OVERRIDES,
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,
-    _isolated_backend,
     _justificante_metadata,
     _modelo_record_with_external_justificante,
     _stamp_calendar_enrolment_from_censo,
 )
-from .cli_runner import invoke_cached_cli
+from ._overview_native_support import invoke_native_overview
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 __all__ = ["_isolated_backend"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+    pytest.mark.usefixtures("authority_operation"),
+]
+
+_ACTIVE_NATIVE: ContextVar[NativeCliProfileFixture | None] = ContextVar("overview_calendar_native", default=None)
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    """Keep the canonical seeded bucket while admitting its real credentialed worker."""
+    global PRIMARY_PROFILE_ID
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(
+            label="operator",
+            facts={**_CALENDAR_GATING_FACT_OVERRIDES, "identity.tax_id": "57964777Q"},
+        )
+        from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
+
+        resolved = str(ProfileCapsuleLifecycle().select("operator").profile_id)
+        previous = PRIMARY_PROFILE_ID
+        PRIMARY_PROFILE_ID = resolved
+        _overview_calendar_support.PRIMARY_PROFILE_ID = resolved
+        token = _ACTIVE_NATIVE.set(fixture)
+        try:
+            yield
+        finally:
+            _ACTIVE_NATIVE.reset(token)
+            PRIMARY_PROFILE_ID = previous
+            _overview_calendar_support.PRIMARY_PROFILE_ID = previous
+
 
 # The pipe-joined choice set, bracket-agnostic: Typer renders a Choice
 # metavar as `<es|en|ca|hu>` (older Typer used square brackets). Asserting
@@ -66,7 +104,10 @@ _OUTPUT_LANGUAGE_CHOICE_LIST = "|".join(SUPPORTED_OUTPUT_LANGUAGES)
 
 
 def _invoke(args: Sequence[str]) -> Result:
-    return invoke_cached_cli(args)
+    fixture = _ACTIVE_NATIVE.get()
+    if fixture is None:
+        raise AssertionError("calendar native fixture is not active")
+    return invoke_native_overview(fixture, args)
 
 
 _INVALID_CALENDAR_CLI_ARGS = (

@@ -30,6 +30,7 @@ import importlib
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from types import SimpleNamespace
 
 import pytest
 
@@ -389,6 +390,42 @@ def test_comparison_refuses_ambiguous_semantic_role(snapshot_2025: RegistrySnaps
     with pytest.raises(TaxationComparisonError, match="multiple casillas"):
         compare_taxation_modes(
             snapshot,
+            inputs={},
+            binding_values={},
+            enum_binding_values={},
+        )
+
+
+@pytest.mark.parametrize("missing_role", ["irpf_cuota_resultante_autoliquidacion", "irpf_cuota_diferencial"])
+@pytest.mark.parametrize("missing_mode", ["conjunta", "individual"])
+def test_comparison_refuses_missing_calculated_result(
+    snapshot_2025: RegistrySnapshot, monkeypatch: pytest.MonkeyPatch, missing_role: str, missing_mode: str
+) -> None:
+    """A missing result casilla cannot become an invented zero tax amount."""
+    from .. import taxation_comparison as comparison_module
+
+    result_ids = {
+        role: next(casilla.id for casilla in snapshot_2025.revision.casillas if casilla.semantic_role == role)
+        for role in ("irpf_cuota_resultante_autoliquidacion", "irpf_cuota_diferencial")
+    }
+    values = {casilla: Decimal("0") for casilla in result_ids.values()}
+    incomplete = {casilla: value for casilla, value in values.items() if casilla != result_ids[missing_role]}
+    calls = 0
+
+    def calculate(*_args: object, **_kwargs: object) -> SimpleNamespace:
+        nonlocal calls
+        calls += 1
+        return SimpleNamespace(values=incomplete if (calls == 1) == (missing_mode == "conjunta") else values)
+
+    monkeypatch.setattr(
+        comparison_module,
+        "calculate_registry_snapshot",
+        calculate,
+    )
+
+    with pytest.raises(TaxationComparisonError, match=f"{missing_mode} calculation did not produce required result"):
+        compare_taxation_modes(
+            snapshot_2025,
             inputs={},
             binding_values={},
             enum_binding_values={},

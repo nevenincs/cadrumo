@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Never, cast
 
 import typer
 
 from ...application.operator_surface.command_ports import ProfileAuthenticationPosture
 from ...core.errors.hierarchy import InternalInvariantError
 from ._profile_authentication_contract import (
+    ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
-    ProfileSecretSourceOptions,
     command_needs_state_tree,
     profile_authentication_posture,
     root_profile_secret_model,
@@ -43,20 +43,283 @@ if TYPE_CHECKING:
 
 
 _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
+_RUNTIME_PROFILE_KEYS = frozenset(
+    {
+        "config_check",
+        "config_google_register",
+        "config_google_login",
+        "config_google_status",
+        "config_google_logout",
+        "config_google_credential_source_set",
+        "config_google_credential_source_view",
+        "config_google_folder_set",
+        "config_google_folder_view",
+        "config_google_probe",
+        "app_quickfile",
+        "app_ledger_evidence_batch",
+        "app_ledger_evidence_pull",
+        "app_ledger_evidence_pull_all",
+        "config_auth_configure",
+        "config_auth_apoderado_status",
+        "config_auth_apoderado_configure",
+        "config_auth_apoderado_clear",
+        "config_auth_apoderado_check",
+        "config_auth_diagnostics_report",
+        "app_diagnostics_run_health",
+        "app_diagnostics_runs",
+        "app_diagnostics_latency",
+        "app_diagnostics_errors",
+        "app_diagnostics_llm_usage",
+        "app_diagnostics_telemetry_flush",
+        "app_ledger_llm_diagnostics",
+        "app_live_borrador_100_import",
+        "app_live_borrador_100_latest",
+        "app_live_borrador_100_list",
+        "app_live_borrador_100_view",
+        "app_modelo_m036_alta",
+        "app_modelo_m036_baja",
+        "app_modelo_m036_modificacion",
+        "app_modelo_m036_list",
+        "app_modelo_m036_view",
+        "app_modelo_audit_check",
+        "app_modelo_audit_export",
+        "app_modelo_audit_view",
+        "config_profile_archive_export",
+        "config_profile_archive_push",
+        "config_profile_archive_reconcile",
+        "config_collab_recipient_add",
+        "config_collab_recipient_list",
+        "config_collab_recipient_remove",
+        "app_review_queue",
+        "app_review_view",
+        "app_modelo_bindings_list",
+        "app_modelo_bindings_resolve",
+        "app_modelo_requires",
+        "app_modelo_readiness",
+        "app_ledger_evidence_attachment_queue",
+        "app_ledger_evidence_attachment_view",
+        "app_ledger_evidence_consent_list",
+        "app_ledger_evidence_review_list",
+        "app_ledger_evidence_review_view",
+        "app_ledger_attach",
+        "app_ledger_detach",
+        "config_auth_login",
+        "config_profile_recovery_status",
+        "config_profile_history",
+        "config_auth_certificate_register",
+        "config_auth_certificate_list",
+        "config_auth_certificate_select",
+        "config_auth_certificate_remove",
+        "config_auth_certificate_check",
+        "config_auth_certificate_secret_set",
+        "config_auth_certificate_secret_remove",
+        "config_profile_censo_pull",
+        "config_profile_censo_import",
+        "app_live_filed_list",
+        "app_live_filed_discover",
+        "app_live_filed_pull",
+        "app_live_filed_pull_all",
+        "app_live_filed_pull_sources",
+        "app_live_iva_wallet_pull",
+        "app_live_iva_wallet_history",
+        "app_live_iva_wallet_pull_history",
+        "app_live_iva_wallet_pull_evidence",
+        "app_live_notifications_pull",
+        "app_live_notifications_list",
+        "app_live_notifications_view",
+        "app_live_notifications_latest",
+        "app_live_notifications_document_pull",
+        "app_live_notifications_document_view",
+        "app_live_notifications_document_history",
+        "app_live_expedientes_pull",
+        "app_live_expedientes_list",
+        "app_live_expedientes_view",
+        "app_live_expedientes_latest",
+        "app_live_justificante_list",
+        "app_live_justificante_view",
+        "app_live_justificante_pull",
+        "app_live_verify_list",
+        "app_live_verify_view",
+        "app_live_verify_latest",
+        "app_live_verify_nif_iva",
+        "app_live_verify_tgvi",
+        "app_overview_pipeline",
+        "app_overview_status",
+        "app_overview_calendar",
+        "app_overview_agenda",
+        "app_overview_backlog",
+        "app_overview_explain",
+        "app_overview_prepare",
+        "app_ledger_invoice_add",
+        "app_ledger_invoice_import",
+        "app_ledger_invoice_wizard",
+        "app_ledger_bienes_inversion_list",
+        "app_ledger_bienes_inversion_declare",
+        "app_ledger_prorrata_list",
+        "app_ledger_prorrata_declare_sector",
+        "app_ledger_prorrata_elect_especial",
+        "app_ledger_prorrata_elect_general",
+        "app_ledger_prorrata_revoke_especial",
+        "app_ledger_prorrata_seed",
+        "app_ledger_prorrata_seed_sector",
+        "app_ledger_prorrata_settle_sector",
+        "app_ledger_inventory_list",
+        "app_ledger_inventory_create",
+        "app_ledger_inventory_movement_add",
+        "app_ledger_inventory_valuation_preview",
+        "app_ledger_inventory_closing_authority_record",
+        "app_ledger_actividad_asset_create",
+        "app_ledger_actividad_asset_inspect",
+        "app_ledger_actividad_asset_correct",
+        "app_ledger_actividad_asset_forecast",
+        "app_ledger_actividad_asset_claim",
+        "app_ledger_actividad_asset_filing_handoff",
+        "app_ledger_ratios_list",
+        "app_ledger_ratios_set",
+        "app_ledger_ratios_unset",
+        "app_ledger_ratios_eligible",
+        "app_ledger_ratios_validate",
+        "app_ledger_invoice_list",
+        "app_ledger_invoice_view",
+        "app_ledger_invoice_remove",
+        "app_ledger_invoice_update",
+        "app_ledger_import",
+        "app_ledger_export",
+        "app_ledger_link",
+        "app_ledger_add",
+        "app_ledger_allocate",
+        "app_ledger_classify",
+        "app_ledger_rule_add",
+        "app_ledger_rule_list",
+        "app_ledger_rule_apply",
+        "app_ledger_evidence_add",
+        "app_ledger_evidence_list",
+        "app_ledger_evidence_view",
+        "app_ledger_evidence_update",
+        "app_ledger_evidence_remove",
+        "app_ledger_evidence_extract",
+        "app_ledger_evidence_confirm",
+        "app_ledger_split",
+        "app_ledger_merge",
+        "app_ledger_update",
+        "app_ledger_remove",
+        "app_ledger_reset",
+        "app_ledger_counterparty_confirm",
+        "app_ledger_counterparty_view",
+        "app_ledger_counterparty_withdraw",
+        "app_ledger_status",
+        "app_ledger_check",
+        "app_ledger_preflight",
+        "app_ledger_history",
+        "app_ledger_view",
+        "app_ledger_track",
+        "app_ledger_list",
+        "app_ledger_review",
+        "app_ledger_archive",
+        "app_ledger_stash",
+        "app_ledger_restore",
+        "app_ledger_exclude",
+        "app_ledger_participation",
+        "app_ledger_participation_rebuild",
+        "app_modelo_work_rename",
+        "app_modelo_work_report",
+        "app_modelo_work_discard",
+        "app_modelo_work_status",
+        "app_modelo_work_history",
+        "app_modelo_history",
+        "app_modelo_project",
+        "app_modelo_compare",
+        "app_modelo_m145_create",
+        "app_modelo_m145_validate",
+        "app_modelo_m145_export",
+        "app_modelo_m145_mark_delivered_to_payer",
+        "app_modelo_m145_mark_locally_completed",
+        "app_modelo_work_list",
+        "app_modelo_work_create",
+        "app_modelo_work_review",
+        "app_modelo_work_run",
+        "app_modelo_work_run_details",
+        "app_modelo_work_runs",
+        "app_modelo_work_resume",
+        "app_modelo_work_dependencies",
+        "app_modelo_work_select",
+        "app_modelo_work_revision",
+        "app_modelo_work_compare_taxation",
+        "app_modelo_iva_wallet_correct",
+        "app_modelo_iva_wallet_balance",
+        "app_modelo_iva_wallet_seed",
+        "app_modelo_iva_wallet_override",
+        "app_modelo_spreadsheet_push",
+        "app_modelo_spreadsheet_export",
+        "app_modelo_spreadsheet_pull",
+        "app_modelo_spreadsheet_calculate",
+        "app_modelo_spreadsheet_verify",
+        "app_modelo_work_preview_maritime_exemption",
+        "app_modelo_review_package_sign",
+        "app_modelo_review_package_counter_sign",
+        "app_modelo_review_package_encrypt_for_recipient",
+        "app_modelo_review_package_decrypt",
+        "app_modelo_review_package_encrypt_feedback",
+        "app_modelo_review_package_import_feedback",
+        "app_modelo_work_revisions",
+        "app_modelo_work_observations",
+        "app_modelo_work_calculate",
+        "app_modelo_work_wizard",
+        "app_modelo_work_amend",
+        "app_modelo_work_amend_wizard",
+        "app_modelo_reconcile_list",
+        "app_modelo_reconcile_import",
+        "app_modelo_reconcile_pull",
+        "app_modelo_filing_record_view",
+        "app_modelo_filing_record_list",
+        "app_modelo_filing_record_import",
+        "app_modelo_filing_record_observe_local",
+        "app_modelo_aggregate",
+        "app_modelo_verification_report_list",
+        "app_modelo_verification_report_view",
+        "app_modelo_work_attest_m303_exonerado_390",
+        "app_modelo_export",
+        "app_modelo_review_package_build",
+        "app_modelo_work_verify",
+        "app_modelo_work_file",
+        "config_profile_descendiente",
+        "config_auth_status",
+        "config_auth_test",
+        "config_auth_logout",
+        "config_auth_reset",
+        "config_auth_diagnostics_list",
+        "config_auth_diagnostics_view",
+        "config_profile_descendiente_add",
+        "config_profile_descendiente_list",
+        "config_profile_descendiente_remove",
+        "config_profile_sessions",
+        "config_profile_automation_deny",
+        "config_profile_automation_list",
+        "config_profile_automation_inspect",
+        "config_profile_automation_approve",
+        "config_profile_automation_decline",
+        "config_profile_automation_change",
+        "config_profile_lock",
+        "config_profile_view",
+        "config_profile_validate",
+        "config_profile_status",
+        "config_profile_plantilla_media_set",
+        "config_profile_plantilla_media_list",
+        "config_profile_plantilla_media_remove",
+        "config_profile_edit",
+        "config_profile_add_row",
+        "config_profile_edit_row",
+        "config_profile_remove_row",
+        "config_profile_complete_setup",
+        "config_profile_capabilities_view",
+        "config_profile_capabilities_set",
+    }
+)
 
 
-def _refuse(key: str) -> None:
+def _refuse(key: str) -> Never:
     error = import_module(".errors", __package__).CliRefusedBoundaryError
     raise error(translated_message=f"cli.config.custody.errors.{key}")
-
-
-def _root_source(ctx: typer.Context) -> ProfileSecretSourceOptions:
-    value = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get("profile_secret_source")
-    if value is None:
-        return ProfileSecretSourceOptions()
-    if not isinstance(value, ProfileSecretSourceOptions):
-        raise TypeError("root profile-secret source has an invalid type")
-    return value
 
 
 def _leaf_selection(spec: CommandSpec, arguments: Mapping[str, object]) -> MachineSecretSelection | None:
@@ -176,7 +439,11 @@ def _select_preflight_channels(
     arguments: Mapping[str, object],
 ) -> tuple[ProfileSecretSelection | None, MachineSecretSelection | None]:
     """Select both secret scopes and reject any cross-scope channel collision."""
-    source = _root_source(ctx)
+    from .runtime_profile_admission import parsed_root_profile_source
+
+    source = parsed_root_profile_source(ctx)
+    if source.credential_reference is not None and (source.stdin or source.descriptor is not None):
+        _refuse("profile_credential_ref_conflict")
     root = select_profile_secret_channel(
         profile_secrets_stdin=source.stdin,
         profile_secrets_fd=source.descriptor,
@@ -238,6 +505,7 @@ def _resolve_profile_targets(
             pointer = _resolve_root_profile_override_or_refuse(ctx, profile_override)
             explicit_target = pointer.bucket_id
             explicit_label = pointer.label
+            root_state[_RESOLVED_PROFILE_TARGET_KEY] = pointer
             if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
                 bind_profile_target(ctx, bucket_id=explicit_target)
         else:
@@ -245,7 +513,9 @@ def _resolve_profile_targets(
     return explicit_target, explicit_label
 
 
-def _diagnose_unregistered_profile(*, spec: CommandSpec, root: ProfileSecretSelection | None) -> bool:
+def _diagnose_unregistered_profile(
+    *, spec: CommandSpec, root: ProfileSecretSelection | None, credential_reference: bool = False
+) -> bool:
     """Handle the one diagnostic that may finish dispatch before session activation."""
     if not spec.allow_unregistered_profile_diagnostic:
         return False
@@ -255,7 +525,7 @@ def _diagnose_unregistered_profile(*, spec: CommandSpec, root: ProfileSecretSele
     active = resolve_active_bucket_id()
     if active is None or read_profile_bucket_by_id(active) is not None:
         return False
-    if root is not None:
+    if root is not None or credential_reference:
         _refuse("profile_secrets_inapplicable")
     from ...core.storage_materialization import ensure_storage_tree
 
@@ -263,9 +533,11 @@ def _diagnose_unregistered_profile(*, spec: CommandSpec, root: ProfileSecretSele
     return True
 
 
-def _require_resume_target(root: ProfileSecretSelection | None, explicit_target: str | None) -> None:
+def _require_resume_target(
+    root: ProfileSecretSelection | None, explicit_target: str | None, *, credential_reference: bool = False
+) -> None:
     """Refuse root credentials that have no exact profile target to authenticate."""
-    if root is None or explicit_target is not None:
+    if (root is None and not credential_reference) or explicit_target is not None:
         return
     from ...core.bucket_pointer import resolve_active_bucket_id
 
@@ -318,6 +590,15 @@ def _activate_parsed_profile_session(
     )
 
 
+def _uses_runtime_profile_client(spec: CommandSpec, arguments: Mapping[str, object]) -> bool:
+    """Select the runtime route, including commands with a local preview mode."""
+    if spec.key == "config_profile_censo_import":
+        return arguments.get("apply") is True
+    if spec.key == "app_modelo_work_report_verify":
+        return arguments.get("document_only") is not True
+    return spec.key in _RUNTIME_PROFILE_KEYS
+
+
 def preflight_parsed_leaf(
     ctx: typer.Context,
     *,
@@ -328,7 +609,37 @@ def preflight_parsed_leaf(
     """Preflight parsed root/leaf sources, then run the ordinary root gate."""
     node = graph.node(spec.key)
     posture = profile_authentication_posture(node)
+    if spec.key == "app_modelo_work_discard" and arguments.get("confirmed") is not True:
+        from ...core.i18n.render import tr
+
+        target_label = arguments.get("work_unit_id") or " ".join(
+            str(arguments.get(key) or "?") for key in ("modelo", "year", "period")
+        )
+        raise typer.BadParameter(tr("cli.app.modelo.work.discard_requires_yes", work_unit_id=str(target_label)))
     root, leaf = _select_preflight_channels(ctx, spec=spec, arguments=arguments)
+    if spec.key == "config_profile_automation_create" and leaf is None:
+        _refuse("automation_create_proposal_required")
+    from .runtime_profile_admission import parsed_root_profile_source
+
+    source = parsed_root_profile_source(ctx)
+    method = source.method
+    credential_reference = source.credential_reference
+    runtime_profile_client = _uses_runtime_profile_client(spec, arguments)
+    if spec.key == "config_profile_automation_change":
+        if method is not ProfileAuthenticationMethod.API_KEY or credential_reference is None:
+            _refuse("automation_change_credential_ref_required")
+        if leaf is None:
+            _refuse("automation_change_proposal_required")
+    if credential_reference is not None:
+        if method is not ProfileAuthenticationMethod.API_KEY:
+            _refuse("profile_credential_ref_requires_api_key")
+        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or not runtime_profile_client:
+            _refuse("profile_credential_ref_inapplicable")
+    elif method is ProfileAuthenticationMethod.API_KEY:
+        if root is None:
+            _refuse("profile_secrets_api_key_requires_channel")
+        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or not runtime_profile_client:
+            _refuse("profile_secrets_api_key_inapplicable")
     if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:
         _refuse("profile_secrets_inapplicable")
     # The secret-source refusals above are still parse-time refusals and write
@@ -362,7 +673,68 @@ def preflight_parsed_leaf(
             arguments=arguments,
         )
 
-    if _diagnose_unregistered_profile(spec=spec, root=root):
+    if _diagnose_unregistered_profile(spec=spec, root=root, credential_reference=credential_reference is not None):
+        return
+    if (
+        spec.key == "config_profile_status"
+        and explicit_target is None
+        and root is None
+        and credential_reference is None
+    ):
+        from ...core.bucket_pointer import resolve_active_bucket_id
+
+        if resolve_active_bucket_id() is None:
+            return
+    if spec.key == "config_profile_resume":
+        from ...core.bucket_pointer import resolve_active_bucket_id
+        from .common import no_active_profile_refusal
+        from .runtime_profile_admission import activate_runtime_recovery
+
+        if explicit_target is None and resolve_active_bucket_id() is None:
+            raise no_active_profile_refusal()
+        _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
+        activate_runtime_recovery(ctx, target_bucket_id=explicit_target, root_selection=root)
+        return
+    if spec.key == "config_profile_automation_create":
+        from ...core.bucket_pointer import resolve_active_bucket_id
+        from ._profile_session_gate import bind_profile_target
+        from .common import no_active_profile_refusal
+
+        bucket_id = explicit_target or resolve_active_bucket_id()
+        if bucket_id is None:
+            raise no_active_profile_refusal()
+        _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
+        bind_profile_target(ctx, bucket_id=bucket_id)
+        return
+    if spec.key == "config_profile_automation_change":
+        from .config.runtime_automation_request import stage_automation_change_input
+        from .runtime_profile_admission import activate_runtime_profile
+
+        if leaf is None:
+            _refuse("automation_change_proposal_required")
+        stage_automation_change_input(selection=leaf, kind=arguments.get("kind"))
+        _require_resume_target(root, explicit_target, credential_reference=True)
+        activate_runtime_profile(
+            ctx,
+            target_bucket_id=explicit_target,
+            target_profile_label=explicit_label,
+            root_selection=root,
+            method=method,
+            credential_reference=credential_reference,
+        )
+        return
+    if runtime_profile_client:
+        from .runtime_profile_admission import activate_runtime_profile
+
+        _require_resume_target(root, explicit_target, credential_reference=credential_reference is not None)
+        activate_runtime_profile(
+            ctx,
+            target_bucket_id=explicit_target,
+            target_profile_label=explicit_label,
+            root_selection=root,
+            method=method,
+            credential_reference=credential_reference,
+        )
         return
     _activate_parsed_profile_session(
         ctx,
@@ -433,6 +805,8 @@ def consume_root_fallback(
     try:
         if not isinstance(payload, ProfileAuthenticationSecrets):
             raise TypeError("root profile-secret model resolved an unexpected payload type")
+        if payload.profile_passphrase is None:
+            _refuse("profile_secrets_method_mismatch")
         passphrase = payload.profile_passphrase.get_secret_value()
         return _authenticate_for_invocation(ctx, bucket_id=bucket_id, passphrase_callback=lambda: passphrase)
     finally:

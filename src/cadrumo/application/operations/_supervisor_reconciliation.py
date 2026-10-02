@@ -8,9 +8,11 @@ from typing import TYPE_CHECKING, TypeIs, override
 from pydantic import BaseModel
 
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ..user_profile.access_contracts import AccessAction
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
+from .authorization import invoke_authorized
 from .errors import OperationDeclarationError
 from .interactions import OperationConsumedInteraction, OperationPendingInteraction
 from .models import (
@@ -112,6 +114,18 @@ class SupervisorReconciliationMixin(SupervisorHost):
     ) -> OperationPersistedSnapshot:
         """Take over an expired lease and classify the durable operation state."""
         resume_checkpoint = self._resume_checkpoint_for_reconciliation(snapshot, definition)
+        if resume_checkpoint is not None and self._execution_authority is not None:
+            payload = await self._resolve_request_payload(snapshot, definition)
+            await self._execution_authority.require(
+                identity=snapshot.identity,
+                request=OperationRequest(
+                    definition_id=snapshot.identity.definition_id,
+                    subject_ref=snapshot.identity.subject_ref,
+                    payload=payload,
+                    idempotency_key=None,
+                ),
+                action=AccessAction.RESUME,
+            )
         takeover = self._candidate(snapshot.identity, now)
         taken_over = await self._leases.compare_and_swap(predecessor, takeover, observed_at=now)
         if taken_over.disposition is not OperationLeaseDisposition.TAKEN_OVER or taken_over.current != takeover:
@@ -252,7 +266,13 @@ class SupervisorReconciliationMixin(SupervisorHost):
             result_ref = await self._execute_with_deadlines(
                 identity=snapshot.identity,
                 context=context,
-                executor=resumable_executor.resume(request, checkpoint, executor_context),
+                executor=invoke_authorized(
+                    self._execution_authority,
+                    identity=snapshot.identity,
+                    request=request,
+                    action=AccessAction.RESUME,
+                    executor=lambda: resumable_executor.resume(request, checkpoint, executor_context),
+                ),
             )
         except OperationDeclarationError:
             raise
@@ -271,6 +291,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
             advance=self._advance,
             acknowledge_cancellation=self._acknowledge_cancellation,
             set_cancellation_deferred=self._set_cancellation_deferred,
+            execution_authority=self._execution_authority,
         )
 
     async def _record_reconciliation(

@@ -9,7 +9,7 @@ from typing import Final, override
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
-from ....application.actividad_asset.operations import ActivityAssetOperations
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
 from ....application.operator_actions.models import ActionReference
@@ -37,15 +37,16 @@ from .models import (
 from .overview import LedgerOverviewScreen
 from .reconciliation import LedgerReconciliationScreen
 from .review import LedgerReviewScreen
+from .runtime_actividad_asset import compose_runtime_activity_asset_actions
 from .workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshDoorV1
 from .workspace_presentation import ledger_workspace_page
 
 type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], LedgerWorkspaceScreen]
 
 
-def actividad_asset_tui_actions(*, operations: ActivityAssetOperations) -> ActivityAssetTuiActionsV1:
-    """Compose the activity-asset TUI door from the same application operations as CLI."""
-    return ActivityAssetTuiActionsV1(operations=operations)
+def actividad_asset_tui_actions(*, client: RuntimeFrontendClient, profile_label: str) -> ActivityAssetTuiActionsV1:
+    """Compose the activity-asset door over the exact installed TUI session."""
+    return compose_runtime_activity_asset_actions(client, profile_label=profile_label)
 
 
 class LedgerUnavailableScreen(LedgerWorkspaceScreen):

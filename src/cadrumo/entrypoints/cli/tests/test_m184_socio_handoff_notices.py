@@ -15,6 +15,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....application.modelo.lifecycle_advisories import Modelo184SocioHandoffV1
 from ....core.json_contract import NoticeSeverity
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -23,7 +24,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.row_models import Modelo184MemberRow, Modelo349OperadorRow, ModeloDetailRow
-from .._modelo_rendering import m184_socio_handoff_notices
+from .._modelo_rendering import m184_socio_handoff_advisory_notices, m184_socio_handoff_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -112,3 +113,23 @@ def test_handoff_silent_for_non_m184_detail_rows() -> None:
         importe=Decimal("300.00"),
     )
     assert m184_socio_handoff_notices(_revision(non_m184)) == []
+
+
+def test_recorded_handoff_renders_the_same_notice_without_revision_access() -> None:
+    row = Modelo184MemberRow(
+        nif="12345678A", nombre="Ana Socia", porcentaje=Decimal("60.00"), importe=Decimal("58100.00"), clave="D"
+    )
+    original = m184_socio_handoff_notices(_revision(row))[0]
+    assert original.context is not None
+    recorded = Modelo184SocioHandoffV1(
+        nif=row.nif,
+        nombre=row.nombre,
+        porcentaje=str(row.porcentaje),
+        importe=str(row.importe),
+        code=original.code,
+        target_casilla=str(original.context["target_casilla"]),
+        legal_refs=str(original.context["legal_refs"]),
+    )
+
+    assert m184_socio_handoff_advisory_notices((recorded,)) == [original]
+    assert m184_socio_handoff_advisory_notices(()) == []

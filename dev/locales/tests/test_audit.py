@@ -89,8 +89,6 @@ _PROSE_KEYS = {
         "flows.modelo_workspace_filing.why.draft_structural",
         "tui.root.system.quit_help",
         "docs.legal.page.intro",
-        "mcp.call.timeout",
-        "mcp.elicitation.refusal.no_channel",
     },
     "en": {
         "docs.site.footer.note",
@@ -118,8 +116,6 @@ _PROSE_KEYS = {
         "flows.modelo_workspace_filing.why.draft_structural",
         "tui.root.system.quit_help",
         "docs.legal.page.intro",
-        "mcp.call.timeout",
-        "mcp.elicitation.refusal.no_channel",
     },
     "es": {
         "docs.site.footer.note",
@@ -146,8 +142,6 @@ _PROSE_KEYS = {
         "flows.modelo_workspace_filing.why.draft_structural",
         "tui.root.system.quit_help",
         "docs.legal.page.intro",
-        "mcp.call.timeout",
-        "mcp.elicitation.refusal.no_channel",
     },
     "hu": {
         "docs.site.footer.note",
@@ -170,8 +164,6 @@ _PROSE_KEYS = {
         "flows.modelo_workspace_filing.why.draft_structural",
         "tui.root.system.quit_help",
         "docs.legal.page.intro",
-        "mcp.call.timeout",
-        "mcp.elicitation.refusal.no_channel",
     },
 }
 

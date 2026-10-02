@@ -21,11 +21,21 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from decimal import Decimal
 from pathlib import Path
 
+from ....application.calculations.observations_repository import observation_key_for_token
+from ....application.prorrata_register.ports import ProrrataPriorSettlementSourceSnapshot
+from ....application.prorrata_register.sector_lifecycle import (
+    ProrrataSectorLifecycleUnavailableError,
+    seed_sector_carried_definitive_from_register,
+    settle_sector_definitive,
+)
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....core.secure_object_write import SecureObjectWrite
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
     ProrrataActivityRow,
     ProrrataRegister,
@@ -33,7 +43,9 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterError,
     SectorDefinition,
 )
-from ..storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
+from ..storage.errors import StorageValidationError
+from ..storage.secure_object_namespaces import CALCULATION_OBSERVATIONS_NAMESPACE, PROFILE_PRORRATA_REGISTER_NAMESPACE
+from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
 from ..storage.sql.secure_objects import SecureObjectRepository
 from ._secure_model_document import (
     ProfileBareModelSecurePersistence,
@@ -73,8 +85,10 @@ class ProrrataRegisterRepository:
                 to the active-bucket secure object store.
         """
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        resolved_objects = resolve_profile_secure_object_repository(objects=objects, bucket_id=bucket_id)
+        self._objects = resolved_objects
         self._storage = ProfileBareModelSecurePersistence(
-            objects=resolve_profile_secure_object_repository(objects=objects, bucket_id=bucket_id),
+            objects=resolved_objects,
             definition=PROFILE_PRORRATA_REGISTER_NAMESPACE,
             model_type=ProrrataRegister,
             empty_document=ProrrataRegister,
@@ -160,6 +174,37 @@ class ProrrataRegisterRepository:
         """
         return self._storage.to_secure_object_write(register, expected_revision_id=expected_revision_id)
 
+    def commit_whole_carried_seed(
+        self,
+        register: ProrrataRegister,
+        *,
+        ejercicio: int,
+        expected_revision_id: str,
+        source_snapshot: ProrrataPriorSettlementSourceSnapshot,
+    ) -> None:
+        """Fence both possible unmembered prior 303 rows and the register in one transaction."""
+        if source_snapshot.backend_identity is not self._objects.engine:
+            raise StorageValidationError("prorrata seed source and target must share the same profile store")
+        expected = {
+            (CALCULATION_OBSERVATIONS_NAMESPACE.namespace, observation_key_for_token("303", ejercicio - 1, token))
+            for token in ("4T", "12")
+        }
+        actual = {(revision.namespace, revision.object_key) for revision in source_snapshot.revisions}
+        if len(source_snapshot.revisions) != 2 or actual != expected:
+            raise StorageValidationError("prorrata seed requires both prior-year 303 source revisions")
+        assertions = tuple(
+            SecureObjectRevisionAssertion(
+                namespace=revision.namespace,
+                object_key=revision.object_key,
+                expected_revision_id=revision.expected_revision_id,
+            )
+            for revision in source_snapshot.revisions
+        )
+        self._objects.apply_batch(
+            (self.to_secure_object_write(register, expected_revision_id=expected_revision_id),),
+            assertions=assertions,
+        )
+
     def upsert_entry(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
         """Atomically add or replace ``entry`` by its ``(ejercicio, sector_id)`` key.
 
@@ -202,6 +247,63 @@ class ProrrataRegisterRepository:
             )
 
         return self._storage.mutate(_apply)
+
+    def seed_sector_carried(
+        self,
+        ejercicio: int,
+        sector_id: str,
+        *,
+        validate_entry: Callable[[ProrrataRegisterEntry], None],
+    ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
+        """Read the prior definitive again on every register CAS attempt."""
+
+        def _apply(current: ProrrataRegister) -> ProrrataRegister:
+            entry = seed_sector_carried_definitive_from_register(current, ejercicio=ejercicio, sector_id=sector_id)
+            if entry is None:
+                raise ProrrataSectorLifecycleUnavailableError(
+                    f"prior definitive prorrata is absent for sector {sector_id} in {ejercicio - 1}"
+                )
+            validate_entry(entry)
+            return _replace_entry(current, entry)
+
+        committed = self._storage.mutate(_apply)
+        entry = committed.entry_for(ejercicio, sector_id=sector_id)
+        if entry is None:
+            raise ProrrataRegisterError("committed sector carry entry is missing")
+        return committed, entry
+
+    def settle_sector(
+        self,
+        ejercicio: int,
+        sector_id: str,
+        *,
+        con_derecho_volume: Decimal,
+        sin_derecho_volume: Decimal,
+        producing_snapshot_ref: RegistrySnapshotRef,
+        validate_entry: Callable[[ProrrataRegisterEntry], None],
+    ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
+        """Settle from the latest current-year sector entry on each CAS attempt."""
+
+        def _apply(current: ProrrataRegister) -> ProrrataRegister:
+            previous = current.entry_for(ejercicio, sector_id=sector_id)
+            if previous is None:
+                raise ProrrataSectorLifecycleUnavailableError(
+                    f"current provisional prorrata is absent for sector {sector_id} in {ejercicio}"
+                )
+            entry = settle_sector_definitive(
+                previous,
+                con_derecho_volume=con_derecho_volume,
+                sin_derecho_volume=sin_derecho_volume,
+                producing_snapshot_ref=producing_snapshot_ref,
+            )
+            validate_entry(entry)
+            return _replace_entry(current, entry)
+
+        committed = self._storage.mutate(_apply)
+        entry = committed.entry_for(ejercicio, sector_id=sector_id)
+        if entry is None:
+            raise ProrrataRegisterError("committed sector settlement entry is missing")
+        return committed, entry
 
     def upsert_sector_definition(self, definition: SectorDefinition) -> ProrrataRegister:
         """Atomically add or replace a differentiated-sector definition by its ``sector_id``.
@@ -262,3 +364,16 @@ class ProrrataRegisterRepository:
 __all__ = [
     "ProrrataRegisterRepository",
 ]
+
+
+def _replace_entry(current: ProrrataRegister, entry: ProrrataRegisterEntry) -> ProrrataRegister:
+    retained = tuple(
+        existing
+        for existing in current.entries
+        if (existing.ejercicio, existing.sector_id) != (entry.ejercicio, entry.sector_id)
+    )
+    return ProrrataRegister(
+        entries=(*retained, entry),
+        sector_definitions=current.sector_definitions,
+        activity_rows=current.activity_rows,
+    )

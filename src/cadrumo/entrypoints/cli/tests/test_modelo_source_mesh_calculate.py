@@ -3,21 +3,27 @@
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Iterator, Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from ....application.user_profile.login_session import login_profile
+from ....core.external_constants import OutputLanguage
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -39,6 +45,7 @@ from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m303_ordinary_cli_support import joint_return_options
 from ._modelo_work_ux_support import _capture_m115_invoice_withholding
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 __all__ = ["_isolated_cli_backend"]
 
@@ -47,6 +54,41 @@ __all__ = ["_isolated_cli_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _IVA_WALLET_DECIDED_AT = datetime(2025, 4, 1, 16, 10, tzinfo=UTC)
+
+
+def _invoke_native_profile(profile: NativeCliProfileFixture, args: Sequence[str]) -> Result:
+    close_active_bucket_session()
+    result = invoke_cached_cli(
+        ["--profile", "operator", "--profile-secrets-stdin", *args],
+        input=json.dumps({"profile_passphrase": profile.passphrase}),
+    )
+    assert profile.passphrase not in result.output
+    return result
+
+
+@pytest.fixture
+def _native_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label="operator",
+            facts={
+                "identity.tax_id": "12345678Z",
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.name": "Operator",
+                "identity.surnames": "Operator",
+                "activities.description": "design",
+                "taxpayer_type.irpf_income_categories": "actividad_economica",
+                "censo.activity_start_date": "2025-01-01",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "iva.regime": "GENERAL",
+                "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            },
+        )
+        yield profile
 
 
 def _create_profile(**extra_facts: str) -> None:
@@ -704,12 +746,15 @@ def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_
     assert "aeat" not in envelope["error"]["message"]
 
 
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_work_calculate_persists_ledger_source_mesh_observations(
-    capsys: pytest.CaptureFixture[str], *, operation: PinnedAuthorityOperation
+    capsys: pytest.CaptureFixture[str],
+    operation: PinnedAuthorityOperation,
+    _native_profile: NativeCliProfileFixture,
 ) -> None:
     from ....core.bucket_pointer import resolve_active_bucket_id
 
-    _create_profile()
     work_unit = _create_303_work_unit()
     # The CLI JSON output redacts ``bucket_id`` to the literal placeholder
     # ``"<bucket-id>"``; that placeholder is not a valid filesystem path
@@ -736,56 +781,61 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         deduction_locator="invoice:purchase-general-2025-1T",
     )
 
-    # Seed ledger data and a zero-amount IVA wallet decision via a live
-    # profile session.  The CLI runner resets the ContextVar on each
-    # invocation exit so direct repository calls that depend on an active
-    # bucket session must enter their own session block.
+    # Seed ledger data and a zero-amount IVA wallet decision after password
+    # authentication has opened the registered profile's actual encrypted
+    # bucket.  The test-only synthetic DEK helper cannot reopen a retired
+    # registered-profile session.
     # The IVA wallet decision is required by the Modelo 303 reconciliation
     # guard: it blocks calculation when ``compensacion-pendiente-anteriores``
     # is supplied without a persisted decision, even when the amount is zero.
     # A local_recurrence decision with selected_amount=0 satisfies the guard
     # while leaving the ledger mesh assertions meaningful.
-    with open_test_profile_session(bucket_id):
-        from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-        from ....domain.iva_compensation.reconciliation import (
-            IvaCompensationAuthoritySource,
-            IvaCompensationReconciliationDecision,
-        )
+    login_profile(
+        name="operator",
+        passphrase_callback=lambda: _native_profile.passphrase,
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+    from ....domain.iva_compensation.reconciliation import (
+        IvaCompensationAuthoritySource,
+        IvaCompensationReconciliationDecision,
+    )
 
-        TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions((sale, purchase)),
-        )
-        decision = IvaCompensationReconciliationDecision(
-            taxpayer_nif="12345678Z",
-            target_year=2025,
-            target_period=Period.from_year_and_code(2025, "1T"),
-            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
-            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
-            selected_authority="local_recurrence",
-            selected_amount=Decimal("0"),
-            wallet_amount=None,
-            local_recurrence_amount=Decimal("0"),
-            authority_sources=(
-                IvaCompensationAuthoritySource(
-                    source_kind="local_recurrence",
-                    amount=Decimal("0"),
-                    source_locator="test:local-recurrence:2025:1T",
-                    source_modelo="303",
-                    source_filing_year=2025,
-                    source_periods=(Period.from_year_and_code(2025, "1T"),),
-                    registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
-                ),
+    TransactionCatalogueRepository(bucket_id=bucket_id).save(
+        TransactionCatalogue.from_transactions((sale, purchase)),
+    )
+    decision = IvaCompensationReconciliationDecision(
+        taxpayer_nif="12345678Z",
+        target_year=2025,
+        target_period=Period.from_year_and_code(2025, "1T"),
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
+        source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
+        selected_authority="local_recurrence",
+        selected_amount=Decimal("0"),
+        wallet_amount=None,
+        local_recurrence_amount=Decimal("0"),
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="local_recurrence",
+                amount=Decimal("0"),
+                source_locator="test:local-recurrence:2025:1T",
+                source_modelo="303",
+                source_filing_year=2025,
+                source_periods=(Period.from_year_and_code(2025, "1T"),),
+                registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
             ),
-            override_amount=None,
-            divergence="wallet_missing",
-            blocked=False,
-            stale_wallet=False,
-            reason_identity="first_period_zero_aeat_wallet",
-            decided_at=_IVA_WALLET_DECIDED_AT,
-        )
-        IvaWalletDecisionRepository().save_decision(decision)
+        ),
+        override_amount=None,
+        divergence="wallet_missing",
+        blocked=False,
+        stale_wallet=False,
+        reason_identity="first_period_zero_aeat_wallet",
+        decided_at=_IVA_WALLET_DECIDED_AT,
+    )
+    IvaWalletDecisionRepository().save_decision(decision)
 
-    result = invoke_cached_cli(
+    result = _invoke_native_profile(
+        _native_profile,
         [
             "--format",
             "json",
@@ -801,8 +851,12 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     payload = _payload(result.output)
     revision_id = payload["calculation_revision_id"]
 
-    with open_test_profile_session(bucket_id):
-        persisted = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
+    login_profile(
+        name="operator",
+        passphrase_callback=lambda: _native_profile.passphrase,
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    persisted = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
 
     payload_provenance = payload["source_provenance"]
     assert payload_provenance, "calculate JSON must carry the persisted source-mesh trace"
@@ -825,7 +879,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     assert payload_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
     assert payload_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
 
-    observations_result = invoke_cached_cli(
+    observations_result = _invoke_native_profile(
+        _native_profile,
         [
             "--format",
             "json",
@@ -850,7 +905,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     assert command_observations["iva.soportado.interiores"]["legal_refs"] == list(input_observation.legal_refs)
     assert command_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
 
-    text_observations = invoke_cached_cli(
+    text_observations = _invoke_native_profile(
+        _native_profile,
         [
             "app",
             "modelo",
@@ -874,6 +930,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     import typer.main
 
     from ....application.modelo.calculate_input import ModeloWorkCalculationServiceResult
+    from ....application.modelo.operation_definitions import calculation_public_result
     from .._modelo_behavior_support import resolve_work_unit_for_cli
     from .._modelo_work_wizard_cli import _emit_wizard_result
 
@@ -883,14 +940,21 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     def _noop() -> None: ...
 
     wizard_context = typer.Context(typer.main.get_command(wizard_app), obj={"format": "json"})
-    with open_test_profile_session(bucket_id):
-        wizard_work_unit = resolve_work_unit_for_cli(work_unit_id=work_unit["work_unit_id"])
-        _emit_wizard_result(
-            wizard_context,
-            ModeloWorkCalculationServiceResult(revision=persisted, work_unit=wizard_work_unit),
-            (),
+    login_profile(
+        name="operator",
+        passphrase_callback=lambda: _native_profile.passphrase,
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    wizard_work_unit = resolve_work_unit_for_cli(work_unit_id=work_unit["work_unit_id"])
+    _emit_wizard_result(
+        wizard_context,
+        calculation_public_result(
+            ModeloWorkCalculationServiceResult(revision=persisted, work_unit=wizard_work_unit, revision_published=True),
             operation=operation,
-        )
+        ),
+        (),
+        language=OutputLanguage.EN,
+    )
     wizard_payload = _payload(capsys.readouterr().out)
     assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"
     assert {row["source_ref"] for row in wizard_payload["source_provenance"]} == {

@@ -289,14 +289,14 @@ def profile_recovery_status(
 ) -> None:
     """Report whether the active profile has a recovery code enrolled."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.recovery_custody import profile_recovery_status as _status
     from ..config_payloads import ConfigProfileRecoveryStatusResult
+    from .runtime_recovery_status import read_recovery_status
 
-    status = _status(profile_id=_active_profile_id())
+    status = read_recovery_status(ctx)
     emit_envelope(
         ctx,
         command="config.profile.recovery.status",
-        result=ConfigProfileRecoveryStatusResult(profile_id=status.profile_id, enrolled=status.enrolled),
+        result=ConfigProfileRecoveryStatusResult(profile_id=str(status.profile_id), enrolled=status.enrolled),
         lines=[f"enrolled\t{'yes' if status.enrolled else 'no'}"],
     )
 

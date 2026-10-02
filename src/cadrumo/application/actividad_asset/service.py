@@ -23,9 +23,14 @@ class ActivityAssetHistoryService:
         """Append one reviewed asset revision."""
         return self._repository.append_revision(revision)
 
-    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
-        """Record or exactly replay one amortization claim."""
-        return self._repository.record_claim(claim)
+    def record_claim(
+        self,
+        claim: AmortizationClaim,
+        *,
+        expected_history: ActivityAssetHistory | None = None,
+    ) -> ActivityAssetHistoryClaimResult:
+        """Record a claim only while its optional forecast history remains current."""
+        return self._repository.record_claim(claim, expected_history=expected_history)
 
 
 __all__ = ["ActivityAssetHistoryService"]

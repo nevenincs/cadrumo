@@ -13,9 +13,11 @@ overwritten.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
+from ...core.identity.digest import ContentDigest
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.plantilla_media import (
@@ -25,6 +27,7 @@ from ...domain.user_profile.plantilla_media import (
     plantilla_media_years,
 )
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+from .capsule_record import ProfileRecordConflictError
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from .profile_record_repository import ProfileRecordRepository
 from .projections import in_window_order
@@ -37,6 +40,37 @@ class PlantillaMediaWriteSurface(StrEnum):
 
     CLI = "cli"
     MANAGER = "manager"
+
+
+@dataclass(frozen=True, slots=True)
+class PlantillaMediaMutation:
+    """The committed profile record and declared years from one write intent."""
+
+    record: UserProfileRecord
+    years: tuple[PlantillaMediaYear, ...]
+    changed: bool
+
+
+def _require_baseline(
+    record: UserProfileRecord,
+    *,
+    expected_revision: int | None,
+    expected_content_digest: ContentDigest | None,
+) -> None:
+    if (expected_revision is None) != (expected_content_digest is None):
+        raise ValueError("plantilla media mutation requires a paired record baseline")
+    if expected_revision is not None and (
+        record.record_revision != expected_revision or record.content_digest != expected_content_digest
+    ):
+        raise ProfileRecordConflictError("plantilla media mutation baseline is stale")
+
+
+def _mutation(before: UserProfileRecord, published: UserProfileRecord) -> PlantillaMediaMutation:
+    return PlantillaMediaMutation(
+        record=published,
+        years=plantilla_media_years_of(published),
+        changed=published.record_revision != before.record_revision,
+    )
 
 
 def _effective_values(record: UserProfileRecord) -> dict[str, object]:
@@ -126,9 +160,12 @@ def set_plantilla_media_year(
     state: PlantillaMediaState,
     surface: PlantillaMediaWriteSurface,
     profile_decode_context: ProfileDecodeContext,
-) -> tuple[PlantillaMediaYear, ...]:
-    """Declare or replace one year's average workforce and return every declared year."""
+    expected_revision: int | None = None,
+    expected_content_digest: ContentDigest | None = None,
+) -> PlantillaMediaMutation:
+    """Declare or replace one year's average workforce with its commit witness."""
     record = _load(profile_id, profile_decode_context)
+    _require_baseline(record, expected_revision=expected_revision, expected_content_digest=expected_content_digest)
     effective = _effective_values(record)
     index = _index_of_year(effective, year)
     if index is None:
@@ -146,7 +183,7 @@ def set_plantilla_media_year(
         surface=surface,
         profile_decode_context=profile_decode_context,
     )
-    return plantilla_media_years_of(published)
+    return _mutation(record, published)
 
 
 def remove_plantilla_media_year(
@@ -155,13 +192,16 @@ def remove_plantilla_media_year(
     year: int,
     surface: PlantillaMediaWriteSurface,
     profile_decode_context: ProfileDecodeContext,
-) -> tuple[PlantillaMediaYear, ...]:
-    """Withdraw one declared year and return the years that remain.
+    expected_revision: int | None = None,
+    expected_content_digest: ContentDigest | None = None,
+) -> PlantillaMediaMutation:
+    """Withdraw one declared year and return its commit witness.
 
     Raises:
         UserProfileValidationError: When the year is not declared.
     """
     record = _load(profile_id, profile_decode_context)
+    _require_baseline(record, expected_revision=expected_revision, expected_content_digest=expected_content_digest)
     index = _index_of_year(_effective_values(record), year)
     if index is None:
         raise UserProfileValidationError(f"the average workforce of {year} is not declared")
@@ -175,10 +215,11 @@ def remove_plantilla_media_year(
         surface=surface,
         profile_decode_context=profile_decode_context,
     )
-    return plantilla_media_years_of(published)
+    return _mutation(record, published)
 
 
 __all__ = [
+    "PlantillaMediaMutation",
     "PlantillaMediaWriteSurface",
     "list_plantilla_media_years",
     "plantilla_media_years_of",

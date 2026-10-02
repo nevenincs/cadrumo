@@ -80,6 +80,33 @@ def _modelo_iva_wallet_seed_ports() -> ModeloIvaWalletSeedPorts:
     )
 
 
+def test_oversized_override_locator_refuses_before_decision_or_audit_write(tmp_path: Path) -> None:
+    """An event-incompatible locator cannot leave a decision without its audit event."""
+    with _secure_backend(tmp_path), bundled_indexed_authority().operation() as operation:
+        _store_operator_profile()
+        ports = _modelo_iva_wallet_seed_ports()
+        existing_events = ports.bucket_event_repository.load().events
+
+        with pytest.raises(ValueError, match="evidence_locator exceeds the bucket-event payload limit"):
+            record_iva_compensation_override_for_bucket(
+                bucket_id=_BUCKET_ID,
+                period=_TARGET_PERIOD_VALUE,
+                amount=Decimal("450.00"),
+                reason="operator reviewed the prior balance",
+                evidence_locator="x" * 501,
+                ports=ports,
+                operation=operation,
+            )
+
+        assert (
+            ports.calculation_observation_ports.iva_wallet_decision_repository.load_decision(
+                _TAXPAYER_NIF, _TARGET_PERIOD_VALUE
+            )
+            is None
+        )
+        assert ports.bucket_event_repository.load().events == existing_events
+
+
 def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine_prefill(tmp_path: Path) -> None:
     with _secure_backend(tmp_path), bundled_indexed_authority().operation() as operation:
         _store_operator_profile()

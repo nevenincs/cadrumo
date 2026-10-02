@@ -1,7 +1,7 @@
 """Bulk CSV transport helper for ``aeat app ledger classify``.
 
-Bulk classification writes through the composed ledger ports supplied by the
-caller, preserving the active ledger catalogue path.
+The file is read at the CLI boundary and submitted through the authenticated
+profile worker; application parsing and writes stay in the ledger service.
 
 Core types:
 :class:`~cadrumo.core.json_contract.OutputSchema`.
@@ -14,16 +14,12 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.ledger.actions_classification import bulk_classify_from_csv as _bulk_classify
-from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, OutputSchema
 from ...domain.transactions.enums import BusinessClassification, is_classified
-from ._ledger_support import TransactionRepo
 from .common import bad, emit_envelope
 
 if TYPE_CHECKING:
-    from ...application.ledger.action_ports import LedgerActionPorts
     from ...application.ledger.models import BulkClassifyResult
 
 
@@ -46,23 +42,6 @@ def _read_bulk_classification_file(file: str) -> str:
             tr("cli.ledger.classify.file_not_found", path=file),
         )
     return csv_path.read_text(encoding="utf-8")
-
-
-def _run_bulk_classification(
-    *,
-    transaction_repository: TransactionRepo,
-    csv_text: str,
-    actor: str | None,
-    ports: LedgerActionPorts,
-) -> BulkClassifyResult:
-    """Delegate CSV parsing, classification, and atomic persistence to application code."""
-    return _bulk_classify(
-        bucket_id=transaction_repository.bucket_id,
-        csv_text=csv_text,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger classify --file",
-        ports=ports,
-    )
 
 
 def _bulk_classification_output(
@@ -113,20 +92,32 @@ def _bulk_classification_output(
 def ledger_classify_bulk_csv(
     ctx: typer.Context,
     *,
-    transaction_repository: TransactionRepo,
     transaction_id: str | None,
     classification: BusinessClassification | None,
     file: str,
     actor: str | None,
-    ports: LedgerActionPorts,
 ) -> None:
     _validate_bulk_classification_route(transaction_id, classification)
-    result = _run_bulk_classification(
-        transaction_repository=transaction_repository,
+    from .runtime_ledger_bulk_classify import run_ledger_bulk_classify
+
+    projection = run_ledger_bulk_classify(
+        ctx,
         csv_text=_read_bulk_classification_file(file),
         actor=actor,
-        ports=ports,
     )
+    if projection.outcome == "validation_error":
+        details = "; ".join(projection.validation_messages)
+        raise bad(
+            tr(
+                "cli.ledger.errors.command_input_invalid",
+                details=details or tr("cli.ledger.errors.command_input_invalid_fallback"),
+            ),
+        )
+    result = projection.result
+    if result is None:
+        from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     classify_result, lines, notices = _bulk_classification_output(result)
     emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
     if notices:

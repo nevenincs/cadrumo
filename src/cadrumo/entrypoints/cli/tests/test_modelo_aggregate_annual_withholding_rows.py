@@ -19,10 +19,12 @@ import json
 import re
 from collections.abc import Iterator
 from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import pytest
 from click.testing import Result
@@ -33,8 +35,8 @@ from cadrumo.application.aggregation.tests.withholding_filer_profile_support imp
 
 from ....adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from ....adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ....application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ....application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
@@ -51,18 +53,27 @@ from ....application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from ....application.aggregation.withholding_source import WithholdingSourceResolver
+from ....application.modelo.aggregate_operation import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
 from ....application.modelo.work_profile import ModeloWorkProfile
+from ....application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ....application.user_profile.access_contracts import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionClave, RetencionScheme
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
-from .cli_runner import invoke_cached_cli
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_BUCKET_ID = "00000000-0000-4000-8000-000000000529"
+_SESSION: ContextVar[NativeApiCliSession[ModeloWorkProfile]] = ContextVar("annual_withholding_session")
 _YEAR = 2025
 _ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 _ABSENT_CODE = "modelo.aggregate.calculation_rows_absent"
@@ -82,19 +93,49 @@ def _operator_bucket(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> Iterator[tuple[SecureObjectRepository, ModeloWorkProfile]]:
     """Open an isolated active bucket whose profile the CLI and the resolver both read."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="Annual withholding report") as bucket:
-        work_profile = withholding_work_profile(operation, profile_id=_BUCKET_ID)
-        seed_test_profile_record(work_profile.record, root=bucket.storage_root)
-        yield bucket.repository, work_profile
+
+    def prepare(profile_id: UUID, root: Path) -> ModeloWorkProfile:
+        work_profile = withholding_work_profile(operation, profile_id=str(profile_id))
+        seed_test_profile_record(work_profile.record, root=root)
+        return work_profile
+
+    def scope(client_id: UUID) -> AccessScope:
+        return AccessScope(
+            operations=frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID}),
+            actions=frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT}),
+            disclosures=frozenset(
+                {
+                    DisclosurePermission(
+                        destination_id=client_id,
+                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+                        category=DisclosureCategory.OPERATION_METADATA,
+                    ),
+                    DisclosurePermission(
+                        destination_id=client_id,
+                        projection_id=MODELO_AGGREGATE_OPERATION_DEFINITION_ID + ".result",
+                        category=DisclosureCategory.TAX_VALUES,
+                    ),
+                }
+            ),
+            periods=None,
+            allow_period_independent=True,
+            allow_delegation=False,
+        )
+
+    with native_api_cli_session(tmp_path, scope_for_destination=scope, prepare_profile=prepare) as session:
+        token = _SESSION.set(session)
+        try:
+            with password_profile_session(session.profile_id, operation):
+                yield secure_object_repository_for_bucket(str(session.profile_id)), session.prepared
+        finally:
+            _SESSION.reset(token)
 
 
 def _aggregate(modelo: str) -> Result:
-    return invoke_cached_cli(
-        [
+    return _SESSION.get().invoke_credential_reference(
             "--format", "json", "--language", "en",
             "app", "modelo", "aggregate",
             "--modelo", modelo, "--year", str(_YEAR), "--period", "0A",
-        ],
     )  # fmt: skip
 
 
@@ -110,7 +151,7 @@ def _report(modelo: str) -> tuple[dict[str, Any], list[dict[str, Any]], str]:
 
 def _context(modelo: str, operation: PinnedAuthorityOperation, profile: ModeloWorkProfile) -> CalculationSourceContext:
     return CalculationSourceContext(
-        bucket_id=_BUCKET_ID,
+        bucket_id=str(profile.record.profile_id),
         modelo=modelo,
         filing_year=_YEAR,
         period=_ANNUAL,
@@ -475,14 +516,12 @@ def test_the_invoice_evidence_refusal_names_exactly_the_modelos_that_accept_it(
     refused_elsewhere: set[str] = set()
     with _operator_bucket(tmp_path, authority_operation):
         for modelo in ("111", "115", "123", "180", "190", "193"):
-            result = invoke_cached_cli(
-                [
+            result = _SESSION.get().invoke_credential_reference(
                     "--format", "json", "--language", "en",
                     "app", "modelo", "aggregate",
                     "--modelo", modelo, "--year", str(_YEAR),
                     "--period", "0A" if modelo in {"180", "190", "193"} else "1T",
                     "--received-invoice-retencion", request,
-                ],
             )  # fmt: skip
             assert result.exit_code != 0, result.output
             if match := _INVOICE_REFUSAL.search(result.output):

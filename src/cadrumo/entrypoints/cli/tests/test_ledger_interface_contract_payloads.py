@@ -17,8 +17,6 @@ from pydantic import ValidationError
 
 from ....application.export.tabular import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
-from ....domain.categories.proportionality_catalogue import require_proportionality_kind
-from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification
@@ -398,8 +396,8 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "bucket_id": "default",
             "rows": [
                 {
-                    "category": SpendingCategory.from_registry("vehiculo_combustible"),
-                    "proportionality_kind": require_proportionality_kind("usage_ratio_personal"),
+                    "category": "vehiculo_combustible",
+                    "proportionality_kind": "usage_ratio_personal",
                     "default_ratio": None,
                     "override_present": False,
                 },
@@ -415,10 +413,10 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "profile_present": True,
             "eligible_count": 1,
             "overrides_count": 1,
-            "missing_overrides": [SpendingCategory.from_registry("vehiculo_combustible")],
+            "missing_overrides": ["vehiculo_combustible"],
             "findings": [
                 {
-                    "category": SpendingCategory.from_registry("vehiculo_combustible"),
+                    "category": "vehiculo_combustible",
                     "kind": "missing_override",
                     "detail": "required",
                 },
@@ -426,13 +424,8 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
         },
     )
     assert isinstance(validate.findings[0], RatiosValidateFindingPayload)
-    # model_validate(x.model_dump(mode="json")) round-trips a plain-string
-    # payload but not a strict enum-typed one: mode="json" dumps the StrEnum
-    # to its bare string value, and strict validation on an already-Python
-    # dict refuses to coerce that string back into the enum instance (only
-    # model_validate_json's genuine JSON-text parse gets that leniency). The
-    # wire format is JSON text, so this is the round-trip that actually
-    # matters.
+    # The worker projected pinned category facts to bounded strings, so CLI
+    # result parsing does not reopen ambient registry facts.
     assert RatiosValidateResult.model_validate_json(validate.model_dump_json()) == validate
 
 

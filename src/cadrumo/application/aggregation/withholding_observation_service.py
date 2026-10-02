@@ -10,10 +10,11 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Protocol
+from typing import Annotated, Literal, Protocol
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
@@ -205,6 +206,15 @@ class WithholdingProjectionEntry(BaseModel):
         return self
 
 
+class WithholdingSourceCatalogueBaseline(BaseModel):
+    """Source catalogue revision that must still hold when evidence commits."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_kind: Literal[BindingSourceKind.PAYABLE_INVOICE, BindingSourceKind.LEDGER_TRANSACTION]
+    revision_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 class WithholdingMutationEnvelope(BaseModel):
     """Explicit mutation intent. ``None`` at the service means no mutation."""
 
@@ -217,9 +227,15 @@ class WithholdingMutationEnvelope(BaseModel):
     baseline: WithholdingWindowBaseline | None = None
     reason: str | None = Field(default=None, min_length=1, max_length=500)
     supersedes_generation_id: WithholdingGenerationId | None = None
+    # Admission control for the write, independent of the evidence's replay identity.
+    source_catalogue_baseline: WithholdingSourceCatalogueBaseline | None = Field(default=None, exclude=True, repr=False)
 
     @model_validator(mode="after")
     def _validate_shape(self) -> WithholdingMutationEnvelope:
+        if self.source_catalogue_baseline is not None and any(
+            entry.identity.source_kind != self.source_catalogue_baseline.source_kind.value for entry in self.entries
+        ):
+            raise ValueError("withholding source baseline must match its projection sources")
         if self.baseline is not None and self.baseline.scope_token != self.scope.token:
             raise ValueError("withholding baseline belongs to another window")
         if self.mode is WithholdingMutationMode.APPEND:
@@ -402,6 +418,7 @@ __all__ = [
     "WithholdingProjectionIdentity",
     "WithholdingProjectionRole",
     "WithholdingScopeToken",
+    "WithholdingSourceCatalogueBaseline",
     "WithholdingWindowBaseline",
     "WithholdingWindowScope",
     "WithholdingWindowState",

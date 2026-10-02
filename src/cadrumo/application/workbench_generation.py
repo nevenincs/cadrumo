@@ -585,7 +585,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
         record = self.profile_repository.load(self.profile_id)
         work_units, work_units_revision = self.work_unit_repository.load_revisioned()
-        revisions, calculations_revision = self.calculation_repository.load_revisioned()
+        revisions, calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
         filings, filings_revision = self.filing_repository.load_revisioned()
         verification = self._load_verification_reports()
         bucket_events = None if self.bucket_event_repository is None else self.bucket_event_repository.load()
@@ -644,8 +644,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         modelo_lifecycle = self._read_modelo_lifecycle(
             modelo,
             work_units=work_units,
+            calculations=revisions,
             verification=verification,
             filings=filings,
+            observed_at=observed_at,
         )
         aeat_sync, aeat_sync_refusal = self._read_aeat_sync(
             _declared_tax_id(raw_values),
@@ -697,7 +699,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     ) -> bool:
         final_record = self.profile_repository.load(self.profile_id)
         _, final_work_units_revision = self.work_unit_repository.load_revisioned()
-        _, final_calculations_revision = self.calculation_repository.load_revisioned()
+        _, final_calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
         _, final_filings_revision = self.filing_repository.load_revisioned()
         return (
             final_record.content_digest == record.content_digest
@@ -841,8 +843,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         modelo: tuple[ModeloWorkspaceProjectionV1, ...] | None,
         *,
         work_units: WorkUnitCatalogue,
+        calculations: CalculationRevisionCatalogue,
         verification: VerificationReportCatalogue | None,
         filings: ModeloRecordCatalogue,
+        observed_at: UtcInstant,
     ) -> tuple[ModeloWorkspaceLifecycleProjectionV1, ...] | None:
         """Project lifecycle references from the same catalogues as this generation."""
         if (
@@ -852,8 +856,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             or self.bucket_event_repository is None
         ):
             return None
+        from .modelo.edit_admission import admit_modelo_edit_baseline
+        from .modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
+        from .modelo.edit_models import ModeloEditAdmittedV1
         from .modelo.history import assemble_work_unit_history
         from .modelo.history_ports import ModeloHistoryPorts
+        from .modelo.m303_exonerado_390_applicability_attestation import modelo_390_question_asked
 
         ports = ModeloHistoryPorts(
             work_unit_repository=self.work_unit_repository,
@@ -890,6 +898,18 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 None,
             )
             history = assemble_work_unit_history(str(unit.work_unit_id), ports=ports, operation=self.operation)
+            edit_baseline = None
+            if self.operation_contracts is not None:
+                admission = admit_modelo_edit_baseline(
+                    work_unit_id=unit.work_unit_id,
+                    work_catalogue=work_units,
+                    calculation_catalogue=calculations,
+                    operation=self.operation,
+                    operation_contracts=self.operation_contracts,
+                    issued_at=observed_at,
+                )
+                if isinstance(admission, ModeloEditAdmittedV1):
+                    edit_baseline = ModeloEditApplyBaselineV1.from_baseline(admission.baseline)
             rows.append(
                 ModeloWorkspaceLifecycleProjectionV1(
                     target=target,
@@ -897,6 +917,9 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     verification_report_id=report_id,
                     local_filing_record_id=filing_id,
                     events=history.events,
+                    edit_baseline=edit_baseline,
+                    asks_modelo_390=str(unit.modelo) == "303"
+                    and modelo_390_question_asked(unit.period, operation=self.operation),
                 )
             )
         return tuple(rows)
@@ -1690,7 +1713,7 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
     modelo = _carry_projection(inputs.modelo)
     modelo_lifecycle = _carry_projection(inputs.modelo_lifecycle)
     modelo_graded_refusals = _carry_projection(inputs.modelo_graded_refusals)
-    search = _assemble_search(
+    search = assemble_workbench_generation_search(
         ledger=ledger,
         declarations=declarations,
         aeat_sync=aeat_sync,
@@ -1798,7 +1821,7 @@ def _search_availability(
     return WorkbenchGenerationAvailability.AVAILABLE
 
 
-def _assemble_search(
+def assemble_workbench_generation_search(
     *,
     ledger: WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1],
     declarations: WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1],
@@ -1874,4 +1897,5 @@ __all__ = [
     "WorkbenchGenerationV1",
     "assemble_workbench_generation",
     "assemble_workbench_generation_from",
+    "assemble_workbench_generation_search",
 ]

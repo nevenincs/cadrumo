@@ -969,57 +969,6 @@ async def _refuse_linked_transaction_edit(pilot: Any, *, description: str) -> No
     await _inspect_transaction(pilot, description=description)
 
 
-async def _login_existing_profile_through_installed_tui(*, passphrase: str) -> None:
-    """Admit an existing profile through its installed public Login screen.
-
-    A fresh child has no active bucket session.  The production launcher keeps
-    credential screens out of a headless run, so this generic prelude drives
-    the same visible Login controls before the actual launcher owns the Ledger
-    journey.  It never reads or writes the secure store directly.
-    """
-    from textual.widgets import Input
-
-    from cadrumo.application.user_profile.login_interaction import (
-        ProfileLoginInventoryState,
-        attempt_profile_login,
-        observe_profile_login_inventory,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
-
-    inventory = observe_profile_login_inventory()
-    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
-        raise LedgerInstalledTuiError("installed Ledger Login screen did not recognize the existing profile")
-    with bundled_indexed_authority().operation() as operation:
-        screen = LoginScreen(
-            choices=inventory.choices,
-            authenticate=lambda profile_id, secret: attempt_profile_login(
-                profile_id,
-                secret,
-                profile_decode_context=operation.profile_decode_context(),
-            ),
-            preselected=inventory.preselected_profile_id,
-        )
-        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-            await wait_for_public_selector(pilot, "#field-passphrase")
-            query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
-            await pilot.click("#btn-unlock")
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
-    if screen.outcome is None:
-        raise LedgerInstalledTuiError("installed Ledger Login screen did not admit the existing profile")
-
-
-def _admit_existing_profile_for_headless_launcher(*, passphrase: str) -> None:
-    """Prepare one fresh process through the generic public credential prelude."""
-    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-    from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
-
-    with live_exchange_rate_composition(), profile_adapter_composition():
-        asyncio.run(_login_existing_profile_through_installed_tui(passphrase=passphrase))
-
-
 def _run_launcher(*, passphrase: str, drive_after_home: Any) -> None:
     """Run one ordinary installed launch and require a truthful normal exit."""
     from cadrumo.entrypoints.tui.launcher import main
@@ -1123,8 +1072,6 @@ def _run_existing_profile_child(
 ) -> LedgerTuiChildReceipt:
     """Run one public readback or continuation action against an existing profile."""
     observations: list[str] = []
-
-    _admit_existing_profile_for_headless_launcher(passphrase=passphrase)
 
     async def drive(pilot: Any) -> None:
         if mode == "tui_only_reopen":

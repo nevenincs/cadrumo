@@ -17,7 +17,6 @@ _EXPECTED_WIRING: Final[dict[str, str]] = {
     "dev.docs.terminology_handbook": "docs-terminology-report",
     "dev.env": "setup-env",
     "dev.identity": "check-identity",
-    "dev.init": "init",
     "dev.locales": "check-locales",
     "dev.release": "release-preview",
     "dev.registry.aeip": "report-registry-aeip",

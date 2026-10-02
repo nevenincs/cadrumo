@@ -1,301 +1,150 @@
-"""Pilot-driven proofs for the full-screen way back in.
+"""Runtime login controls preserve selection and refuse local corrections.
 
-Every test drives the real :class:`LoginScreen` through Textual's headless
-Pilot, against a real storage root holding a profile created through the
-real registration path, and unlocks it through the real application login
-door — real Argon2id derivation, a real AEAD unwrap, a real minted
-session. A stand-in anywhere on that chain would prove only that widgets
-talk to a stand-in, and the property under test here is precisely that
-the operator's keystrokes reach key material.
-
-Assertions are against widget ids, typed outcomes, and persisted state,
-never against rendered prose: the prose is locale data, and asserting it
-from the same catalogue the screen reads would be tautological.
+Native authentication and handoff ownership have separate runtime acceptance;
+these Pilot proofs exercise controls without opening local custody.
 """
 
 from __future__ import annotations
 
-import asyncio
+from uuid import UUID, uuid4
 
 import pytest
 from textual.widgets import Button, Input, Select
 
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....application.user_profile.login_interaction import ProfileLoginChoice, attempt_profile_login
-from ....application.user_profile.login_session import login_profile, logout_active_profile
-from ....application.user_profile.registration import register_profile_with_credentials
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.user_profile.login_interaction import ProfileLoginChoice
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..secret.login import LoginScreen
+from ..secret.runtime_login import RuntimeLoginMethod, RuntimeLoginScreen
 
-pytestmark = [
-    pytest.mark.integration,
-    pytest.mark.hex_entrypoint,
-]
-
-_TERMINAL_SIZE = (140, 60)
-_CREDENTIAL_INPUT = "login-screen-operator-secret"
-"""One password for every fixture profile, because the master key is
-storage-root-wide: profiles in one root are unwrapped by one passphrase,
-so a per-profile password is not a state this application can be in."""
-
-_WRONG_CREDENTIAL_INPUT = "not-the-password-that-was-chosen"
-
-_BACKOFF_WAIT_SECONDS = 2.5
-"""Long enough to outlast the backoff one failed attempt arms.
-
-The schedule is ``min(2 ** failures, 60)`` seconds, so a single failure
-imposes two. Waited in real time rather than cleared through the throttle
-authority: what is being proved is that an operator who mistypes can get
-back in on the same screen, and stepping past the control they would
-actually meet would prove something weaker."""
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _register(label: str) -> str:
-    """Create one real profile through the real door and return its id."""
-    # Registration validates facts against registry authority, so it runs under a real lease.
-    with bundled_indexed_authority().operation():
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        outcome = register_profile_with_credentials(
-            label=label,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
-    # Registration leaves the new profile unlocked. The screen under test
-    # exists for a LOCKED machine, so the session is closed again here;
-    # otherwise the idempotent-login guard would return the already-open
-    # session and no unwrap would be exercised at all.
-    logout_active_profile()
-    return outcome.bucket_id
+def _choices() -> tuple[ProfileLoginChoice, ProfileLoginChoice]:
+    return (
+        ProfileLoginChoice(profile_id=str(uuid4()), label="First profile"),
+        ProfileLoginChoice(profile_id=str(uuid4()), label="Second profile"),
+    )
 
 
-def _screen(choices: list[ProfileLoginChoice], *, preselected: str | None = None) -> LoginScreen:
-    """The production composition, wired to the application interaction contract."""
-    _, profile_decode_context = _profile_contexts_for_test()
+class _OpeningDetector:
+    """Record opener use even when the screen maps its typed refusal."""
 
-    def _authenticate(profile_id: str, passphrase: str):
-        return attempt_profile_login(
-            profile_id,
-            passphrase,
-            profile_decode_context=profile_decode_context,
-        )
+    def __init__(self) -> None:
+        self.opened: list[UUID] = []
 
-    return LoginScreen(choices=choices, authenticate=_authenticate, preselected=preselected)
-
-
-async def _unlock_with(screen: LoginScreen, pilot, password: str) -> None:
-    """Type a password and press the button, as an operator does.
-
-    Addressed against the screen rather than the host, because the host's
-    own default screen is not the surface under test.
-    """
-    await pilot.pause()
-    screen.query_one("#field-passphrase", Input).value = password
-    await pilot.pause()
-    await pilot.click("#btn-unlock")
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+    async def __call__(self, profile_id: UUID) -> RuntimeFrontendClient:
+        self.opened.append(profile_id)
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
 
 
 @pytest.mark.asyncio
-async def test_typing_the_password_and_pressing_log_in_opens_a_real_session(tmp_path) -> None:
-    """The screen unlocks a real profile and mints a real session.
-
-    The claim is end to end: the profile was created by the real create
-    path, the screen hands the typed password to the real login door, and
-    what comes back is the typed session outcome naming the profile that
-    was picked. Nothing on that chain is stood in for.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register("Login Subject")
-
-        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Login Subject")])
-        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(app, pilot, _CREDENTIAL_INPUT)
-
-        assert app.error is None
-        assert app.outcome is not None, "the typed password must open the profile"
-        assert app.outcome.bucket_id == profile_id
-        assert app.outcome.label == "Login Subject"
-        assert app.outcome.already_authenticated is False, "a logged-out profile must be authenticated, not resumed"
-        assert app.outcome.absolute_deadline > app.outcome.authenticated_at, "a real session carries a real window"
+async def test_empty_password_refuses_without_opening_a_connection() -> None:
+    opener = _OpeningDetector()
+    screen = RuntimeLoginScreen(choices=_choices(), open_client=opener, accept_handoff=lambda _: False)
+    host = ScreenHostApp(screen)
+    async with host.run_test(size=(140, 60)) as pilot:
+        await pilot.pause()
+        await pilot.click("#runtime-login-submit")
+        await pilot.pause()
+        assert host.return_value is None
+        assert screen.is_mounted
+        status = screen.query_one("#runtime-login-status", PinnedStatusBar)
+        assert status.tone == "error" and status.message
+        assert not screen.query_one("#runtime-login-submit", Button).disabled
+        assert opener.opened == []
 
 
 @pytest.mark.asyncio
-async def test_a_wrong_password_refuses_in_place_without_leaving(tmp_path) -> None:
-    """A typo is answered on the page, not by returning to the shell.
-
-    Four things are pinned together, because a screen could satisfy any
-    one of them alone and still be wrong: no session was opened, the
-    refusal is visible, the rejected text is gone from the field, and the
-    screen is still running with its button live.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register("Refusal Subject")
-
-        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Refusal Subject")])
-        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(app, pilot, _WRONG_CREDENTIAL_INPUT)
-
-            assert app.outcome is None, "a wrong password must not open anything"
-            assert app.is_running, "the screen must stay open so the operator can retry"
-            # Emptiness, not wording: that the refusal zone was populated
-            # is the screen's decision; which words fill it is locale data.
-            status = app.query_one("#credential-status", PinnedStatusBar)
-            assert status.tone == "error"
-            assert status.message, "the refusal must be shown in the pinned channel"
-            assert app.query_one("#field-passphrase", Input).value == "", (
-                "the rejected password must be cleared, or the retry appends to the mistake"
-            )
-            assert app.query_one("#btn-unlock", Button).disabled is False, "the operator must be able to try again"
-
-            # The immediate retry meets the backoff one failure arms, and
-            # meets it HERE rather than as a traceback: the screen shows
-            # the wait and stays open. Asserted because it is what the
-            # operator actually experiences after a typo.
-            await _unlock_with(app, pilot, _CREDENTIAL_INPUT)
-            assert app.outcome is None, "the backoff must hold the immediate retry"
-            assert app.is_running, "a throttled retry must refuse in place, not close the screen"
-            assert status.tone == "error"
-            assert status.message
-
-            pilot.app.exit(None)
+async def test_password_is_masked_and_method_change_erases_the_old_proof() -> None:
+    opener = _OpeningDetector()
+    screen = RuntimeLoginScreen(choices=_choices(), open_client=opener, accept_handoff=lambda _: False)
+    async with ScreenHostApp(screen).run_test(size=(140, 60)) as pilot:
+        await pilot.pause()
+        field = screen.query_one("#runtime-login-credential", Input)
+        assert field.password
+        assert screen.query_one("#runtime-login-method", Select).value is RuntimeLoginMethod.PASSWORD
+        field.value = "synthetic-unused-password"
+        screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_KEY
+        await pilot.pause()
+        assert field.value == ""
+        assert field.password
+        assert opener.opened == []
 
 
 @pytest.mark.asyncio
-async def test_the_operator_can_retry_on_the_same_screen_once_the_backoff_clears(tmp_path) -> None:
-    """A mistyped password costs a wait, not the screen.
+async def test_profile_chooser_routes_current_selection_to_the_runtime_opener() -> None:
+    choices = _choices()
+    opened: list[UUID] = []
 
-    This is the property a refusal that merely *looked* survivable would
-    miss: after the backoff passes, the same still-open screen unlocks
-    the profile, so the worker handle was released and the frozen inputs
-    were thawed rather than left disabled behind a visible error line.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register("Retry Subject")
+    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        opened.append(profile_id)
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
 
-        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Retry Subject")])
-        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(app, pilot, _WRONG_CREDENTIAL_INPUT)
-            assert app.outcome is None
-
-            await asyncio.sleep(_BACKOFF_WAIT_SECONDS)
-            await _unlock_with(app, pilot, _CREDENTIAL_INPUT)
-
-        assert app.error is None
-        assert app.outcome is not None, "the retry on the same screen must succeed once the wait is served"
-        assert app.outcome.bucket_id == profile_id
-
-
-@pytest.mark.asyncio
-async def test_the_chosen_profile_is_the_one_that_opens(tmp_path) -> None:
-    """The chooser decides which profile is opened.
-
-    One password unwraps every profile in a storage root, so the
-    discriminating fact is not whether *a* profile opens — one always
-    would — but WHICH one the outcome names. Moving off the preselected
-    first row is what makes a screen that quietly used the pointer, the
-    preselection, or row zero fail here.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        first = _register("Alpha Subject")
-        second = _register("Beta Subject")
-
-        app = _screen(
-            [
-                ProfileLoginChoice(profile_id=first, label="Alpha Subject"),
-                ProfileLoginChoice(profile_id=second, label="Beta Subject"),
-            ],
-            preselected=first,
-        )
-        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            assert app.selected_profile_id() == first, "the preselection must be what the chooser opens on"
-
-            app.query_one("#field-profile", Select).value = second
-            await pilot.pause()
-            assert app.selected_profile_id() == second, "the chooser must hold the operator's pick"
-            await _unlock_with(app, pilot, _CREDENTIAL_INPUT)
-
-        assert app.error is None
-        assert app.outcome is not None
-        assert app.outcome.bucket_id == second, "the profile the chooser was left on is the one that must open"
-        assert app.outcome.label == "Beta Subject"
+    screen = RuntimeLoginScreen(
+        choices=choices, preselected=choices[0].profile_id, open_client=open_client, accept_handoff=lambda _: False
+    )
+    host = ScreenHostApp(screen)
+    async with host.run_test(size=(140, 60)) as pilot:
+        await pilot.pause()
+        selection = screen.query_one("#runtime-login-profile", Select)
+        assert selection.value == choices[0].profile_id
+        selection.value = choices[1].profile_id
+        await pilot.pause()
+        field = screen.query_one("#runtime-login-credential", Input)
+        field.value = "synthetic-runtime-proof"
+        await pilot.click("#runtime-login-submit")
+        await host.workers.wait_for_complete()
+        await pilot.pause()
+        assert opened == [UUID(choices[1].profile_id)]
+        assert field.value == ""
+        assert screen.is_mounted and host.return_value is None
+        assert screen.query_one("#runtime-login-status", PinnedStatusBar).tone == "error"
+        assert not screen.query_one("#runtime-login-submit", Button).disabled
 
 
 @pytest.mark.asyncio
-async def test_the_password_field_is_masked(tmp_path) -> None:
-    """The secret renders masked; a screen that showed it on a shared terminal is the failure."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register("Masked Subject")
-
-        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Masked Subject")])
-        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            assert app.query_one("#field-passphrase", Input).password is True
-            await pilot.pause()
-            pilot.app.exit(None)
-
-
-@pytest.mark.asyncio
-async def test_an_empty_password_refuses_without_calling_the_door(tmp_path) -> None:
-    """Pressing log in with nothing typed refuses locally and opens nothing."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register("Empty Subject")
-
-        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Empty Subject")])
-        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.click("#btn-unlock")
-            await pilot.pause()
-
-            assert app.outcome is None
-            assert app.is_running, "a blank submission is a correction, not an exit"
-            status = app.query_one("#credential-status", PinnedStatusBar)
-            assert status.tone == "error"
-            assert status.message
-            pilot.app.exit(None)
+@pytest.mark.parametrize("gesture", ["button", "escape"])
+async def test_cancel_discards_unused_password_without_opening_a_connection(gesture: str) -> None:
+    opener = _OpeningDetector()
+    screen = RuntimeLoginScreen(choices=_choices(), open_client=opener, accept_handoff=lambda _: False)
+    host = ScreenHostApp(screen)
+    async with host.run_test(size=(140, 60)) as pilot:
+        await pilot.pause()
+        field = screen.query_one("#runtime-login-credential", Input)
+        field.value = "synthetic-unused-password"
+        if gesture == "button":
+            await pilot.click("#runtime-login-cancel")
+        else:
+            await pilot.press("escape")
+        await pilot.pause()
+        assert screen not in host.screen_stack
+        assert host.return_value is None
+        assert field.value == ""
+        assert opener.opened == []
 
 
 @pytest.mark.asyncio
-async def test_cancelling_leaves_without_opening_anything(tmp_path) -> None:
-    """Cancel closes the screen with no outcome and no session.
-
-    The profile must still be locked afterwards, which is checked by
-    logging in normally and seeing a fresh authentication rather than the
-    idempotent resume a still-open session would produce.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register("Cancel Subject")
-
-        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Cancel Subject")])
-        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            app.query_one("#field-passphrase", Input).value = _CREDENTIAL_INPUT
-            await pilot.pause()
-            await pilot.click("#btn-cancel")
-            await pilot.pause()
-
-        assert app.error is None
-        assert app.outcome is None, "cancelling must not report a login"
-
-        _, profile_decode_context = _profile_contexts_for_test()
-        resumed = login_profile(
-            name=profile_id,
-            passphrase_callback=lambda: _CREDENTIAL_INPUT,
-            profile_decode_context=profile_decode_context,
-        )
-        assert resumed.already_authenticated is False, "cancelling must have left the profile locked"
+async def test_external_host_exit_erases_unused_input_handles_without_opening_a_connection() -> None:
+    opener = _OpeningDetector()
+    screen = RuntimeLoginScreen(choices=_choices(), open_client=opener, accept_handoff=lambda _: False)
+    host = ScreenHostApp(screen)
+    async with host.run_test(size=(140, 60)) as pilot:
+        await pilot.pause()
+        credential = screen.query_one("#runtime-login-credential", Input)
+        reference = screen.query_one("#runtime-login-reference", Input)
+        resume_password = screen.query_one("#runtime-login-resume-password", Input)
+        credential.value = "synthetic-unused-password"
+        reference.value = str(uuid4())
+        resume_password.value = "synthetic-unused-recovery-password"
+        assert all(field.value for field in (credential, reference, resume_password))
+        host.exit(None)
+    assert all(field.value == "" for field in (credential, reference, resume_password))
+    assert opener.opened == []
+    assert host.return_value is None
 
 
-@pytest.mark.asyncio
-async def test_a_screen_with_no_profiles_refuses_to_open() -> None:
-    """A chooser with no rows is not a page; the caller is told so up front.
-
-    The CLI seam never builds one, but the screen refuses rather than
-    rendering an empty chooser the operator cannot act on or escape into
-    a useful state.
-    """
-    with pytest.raises(ValueError, match="at least one profile"):
-        _screen([])
+def test_screen_with_no_profiles_refuses_to_open() -> None:
+    with pytest.raises(ValueError, match="requires a profile choice"):
+        RuntimeLoginScreen(choices=(), open_client=_OpeningDetector(), accept_handoff=lambda _: False)

@@ -9,12 +9,14 @@ success.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 from pydantic import BaseModel
 
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
 from ....application.modelo.edit_contract import ModeloEditMutationFamily
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -25,6 +27,9 @@ from ....application.modelo.edit_models import (
     ModeloEditScalarIntentKind,
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
+)
+from ....application.modelo.export_projection import (
+    ModeloExportPublicResultV3,
 )
 from ....application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
@@ -37,7 +42,6 @@ from ....application.modelo.operation_definitions import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
     ModeloEditApplyOperationRequestV1,
     ModeloEditApplySubmissionV1,
-    ModeloExportPublicResultV2,
     ModeloExportRequest,
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculateRequest,
@@ -45,20 +49,18 @@ from ....application.modelo.operation_definitions import (
     ModeloWorkFileRequest,
     ModeloWorkVerifyRequest,
 )
-from ....application.operations.composition import OperationComposedServices
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
-from ....application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
-    OperationResultProjectionSuccessV1,
-)
 from ....application.operations.models import OperationRequest
+from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.errors.hierarchy import CadrumoError
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language
 from ....core.modelo_export_artefact import ModeloExportArtefact
-from ....core.operations import OperationTerminalCondition
+from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
-from ..operations.controller import OperationController
+from ..operations.controller_port import OperationControllerPort
 
 _ACTOR_REF = "operator:tui-modelo"
 
@@ -69,10 +71,10 @@ class ModeloLifecycleActionUnavailableError(CadrumoError):
 
 @dataclass(frozen=True, slots=True)
 class ModeloWorkspaceLifecycleDoor:
-    """Submit one selected declaration lifecycle action through public services."""
+    """Submit one selected declaration lifecycle action through the runtime host."""
 
-    services: OperationComposedServices
     work_unit_id: str
+    submit_operation: Callable[[OperationRequest[BaseModel]], Awaitable[OperationControllerPort]]
     calculation_revision_id: str | None = None
     verification_report_id: str | None = None
     refresh_after_success: Callable[[], object] | None = None
@@ -82,12 +84,14 @@ class ModeloWorkspaceLifecycleDoor:
     ) = None
     #: Whether this work unit's Modelo 303 period asks the Modelo 390 exemption, resolved under the pinned authority.
     asks_modelo_390: bool = False
+    #: Reads one settled export's public result through the same runtime session.
+    read_export_result: Callable[[OperationPublicProjectionV1], Awaitable[ModeloExportPublicResultV3]] | None = None
 
     async def calculate(
         self,
         *,
         ordinary_m303_filing_evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None = None,
-    ) -> OperationController:
+    ) -> OperationControllerPort:
         """Calculate the selected work unit from its canonical persisted ledger."""
         # Other modelos keep the request shape without the optional M303 field set at all.
         payload = (
@@ -131,7 +135,7 @@ class ModeloWorkspaceLifecycleDoor:
         *,
         scalar_values: dict[str, str],
         binding_values: dict[str, str],
-    ) -> OperationController:
+    ) -> OperationControllerPort:
         """Apply staged registry-addressed values through Modelo Edit Contract V1."""
         baseline = self.edit_baseline
         if baseline is None:
@@ -168,7 +172,7 @@ class ModeloWorkspaceLifecycleDoor:
             )
         )
 
-    async def verify(self) -> OperationController:
+    async def verify(self) -> OperationControllerPort:
         """Verify the selected current calculation or refuse when none is present."""
         calculation_revision_id = self._require_calculation_revision()
         return await self._submit(
@@ -179,7 +183,7 @@ class ModeloWorkspaceLifecycleDoor:
             )
         )
 
-    async def file(self) -> OperationController:
+    async def file(self) -> OperationControllerPort:
         """Record the locally filed revision after the caller's explicit confirmation."""
         calculation_revision_id = self._require_calculation_revision()
         if self.verification_report_id is None:
@@ -209,7 +213,7 @@ class ModeloWorkspaceLifecycleDoor:
         prior_domiciliation_election: PriorDomiciliationElection,
         replace_existing: bool = False,
         artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE,
-    ) -> OperationController:
+    ) -> OperationControllerPort:
         """Export the selected verified revision to the operator-selected path with the operator's choices.
 
         ``artefact`` names which export the operator asked for. It defaults to the
@@ -222,45 +226,36 @@ class ModeloWorkspaceLifecycleDoor:
                 subject_ref=self.work_unit_id,
                 payload=ModeloExportRequest(
                     calculation_revision_id=self._require_calculation_revision(),
-                    output_path=output_path,
+                    output_path=str(Path(output_path).resolve()),
                     refund_election=refund_election,
                     payment_election=payment_election,
                     prior_domiciliation_election=prior_domiciliation_election,
                     replace_existing=replace_existing,
                     artefact=artefact,
+                    report_language=OutputLanguage(output_language()),
                     actor=_ACTOR_REF,
                 ),
             )
         )
 
-    async def settled_export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
-        """Resolve one settled export's public result through the composed result door.
+    async def settled_export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3 | None:
+        """Resolve one settled export's public result through the runtime's result door.
 
         ``None`` when the projection is not a successful export or its result
         cannot be resolved; the caller states that absence rather than inventing
         the facts the result would have carried.
         """
-        schema = projection.definition_contract.result_schema
         if (
-            projection.definition_id != MODELO_EXPORT_OPERATION_DEFINITION_ID
+            self.read_export_result is None
+            or projection.definition_id != MODELO_EXPORT_OPERATION_DEFINITION_ID
             or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or schema is None
+            or projection.definition_contract.result_schema is None
         ):
             return None
-        resolved = await self.services.result.resolve(
-            OperationResultProjectionRequestV1(
-                operation_id=projection.operation_id,
-                terminal_revision=projection.revision,
-                definition_contract_digest=projection.definition_contract.definition_contract_digest,
-                result_schema=schema,
-            ),
-            ModeloExportPublicResultV2,
-        )
-        if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
-            resolved.projection, ModeloExportPublicResultV2
-        ):
+        try:
+            return await self.read_export_result(projection)
+        except (RuntimeRefusalError, RuntimeFrontendRefusedError):
             return None
-        return resolved.projection
 
     def _require_calculation_revision(self) -> str:
         if self.calculation_revision_id is None:
@@ -269,10 +264,20 @@ class ModeloWorkspaceLifecycleDoor:
             )
         return self.calculation_revision_id
 
-    async def _submit(self, request: OperationRequest[BaseModel]) -> OperationController:
-        submission = await self.services.submission.submit(request, actor_ref=_ACTOR_REF)
-        controller = OperationController(services=self.services, submission=submission, actor_ref=_ACTOR_REF)
-        await controller.start()
+    async def _submit(self, request: OperationRequest[BaseModel]) -> OperationControllerPort:
+        controller = await self.submit_operation(request)
+        try:
+            await controller.start()
+        except (RuntimeRefusalError, RuntimeFrontendRefusedError) as refusal:
+            # Admission may have succeeded before its acknowledgement was lost.
+            # Keep the submitted identity without inferring rollback or retry.
+            raise ModeloLifecycleActionUnavailableError(
+                refusal.reason.value if isinstance(refusal, RuntimeRefusalError) else refusal.reason,
+                context={
+                    "operation_id": controller.operation_id,
+                    "effect": OperationEffect.UNKNOWN.value,
+                },
+            ) from None
         return controller
 
 

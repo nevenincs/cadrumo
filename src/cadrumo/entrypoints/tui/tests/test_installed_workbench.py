@@ -1,194 +1,26 @@
-"""What ``aeat app tui`` actually composes, proven against the production seam.
-
-The sibling module- and console-execution suites prove a session STARTS. They
-cannot say what it contains, because a started session holding the terminal is
-opaque from outside. This one composes the same production root in-process and
-interrogates it: which destinations are admitted, whether every admitted one
-mounts and returns, and whether the process that does all of that ever reaches
-the CLI.
-
-The composition is real. A real encrypted profile is registered and unlocked,
-the real operation platform is composed, and the destination catalogue is the
-one the root shell receives. What is deliberately NOT asserted is rendered
-prose: it is locale data read from the catalogue the app reads, so asserting it
-would prove only that one file was consulted twice.
-"""
+"""Installed TUI module and child-process entrypoint checks."""
 
 from __future__ import annotations
 
+import asyncio
 import json
+import runpy
 import sys
 from pathlib import Path
 
 import pytest
-from textual.widgets import Input, Static
 
-from ....application.search.workbench import WorkbenchDestinationAdmissionState
+from ....adapters.local_runtime.framing import RuntimeTransportCleanup
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ....tests.audited_process import run_audited_process
-from ..components.filing_year_route import FilingYearRouteScreen
-from ..components.host import ScreenHostApp
+from .. import launcher
 from ..launcher import main
-from ..ledger.controller import LedgerWorkspaceScreen
-from ..navigation import TUI_DESTINATION_CATALOGUE, TuiScreenContextV1
-from ..withholding.screen import WithholdingEvidenceScreen
-from .workbench_session import WORKBENCH_PROFILE_LABEL, installed_workbench_root
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.hex_entrypoint]
 
 _CLI_PACKAGE = "cadrumo.entrypoints.cli"
-_PRIMARY_DESTINATIONS = (
-    "workbench.home",
-    "workbench.ledger",
-    "workbench.withholding",
-    "workbench.declarations",
-    "workbench.aeat_sync",
-)
-
-
-@pytest.mark.asyncio
-async def test_the_installed_root_admits_the_whole_closed_destination_catalogue(tmp_path: Path) -> None:
-    """Every declared destination is routed, and each carries an explicit state."""
-    async with installed_workbench_root(tmp_path) as root:
-        routed = tuple(route.descriptor.destination for route in root.destination_catalogue.routes)
-
-        assert routed == tuple(descriptor.destination for descriptor in TUI_DESTINATION_CATALOGUE)
-        for route in root.destination_catalogue.routes:
-            assert route.admission.state in set(WorkbenchDestinationAdmissionState), route.descriptor.destination
-
-
-@pytest.mark.asyncio
-async def test_a_fresh_profile_admits_home_profile_and_every_principal_workspace(tmp_path: Path) -> None:
-    """An empty profile is a usable workbench, not an unavailable one.
-
-    This is the state a new operator meets. Ledger, Declarations and AEAT Sync
-    hold nothing yet, and holding nothing is a truthful empty workspace rather
-    than a destination that refuses to open.
-    """
-    async with installed_workbench_root(tmp_path) as root:
-        for destination in (*_PRIMARY_DESTINATIONS, "workbench.profile"):
-            route = root.destination_catalogue.resolve(destination)
-            assert route.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE, destination
-            assert route.factory is not None, destination
-
-
-@pytest.mark.asyncio
-async def test_every_admitted_destination_builds_its_own_screen(tmp_path: Path) -> None:
-    """An admitted destination mounts a real screen, not a placeholder."""
-    async with installed_workbench_root(tmp_path) as root:
-        built = []
-        for destination in (*_PRIMARY_DESTINATIONS, "workbench.profile"):
-            route = root.destination_catalogue.resolve(destination)
-            assert route.factory is not None, destination
-            built.append(route.factory(TuiScreenContextV1(destination=destination)))
-
-        assert len({id(screen) for screen in built}) == len(built)
-
-
-@pytest.mark.asyncio
-async def test_the_installed_ledger_route_admits_the_link_door(tmp_path: Path) -> None:
-    """A submitter the composition root never supplies is a door that cannot open.
-
-    The reconciliation body renders with or without one, so an unwired door
-    shows up only as a confirmation control that silently stays hidden. That is
-    how an application-side writer comes to be built and left unreachable, so
-    the assertion belongs here, against the real composed session.
-    """
-    async with installed_workbench_root(tmp_path) as root:
-        route = root.destination_catalogue.resolve("workbench.ledger")
-        assert route.factory is not None
-        ledger = route.factory(TuiScreenContextV1(destination="workbench.ledger"))
-
-        assert isinstance(ledger, LedgerWorkspaceScreen)
-        assert ledger.controller.can_submit_links(), "the installed Ledger route composed no link door"
-
-
-@pytest.mark.asyncio
-async def test_withholding_route_uses_the_active_profile_and_selected_year(tmp_path: Path) -> None:
-    """The real installed route opens the existing shared-service evidence screen."""
-    async with installed_workbench_root(tmp_path) as root:
-        route = root.destination_catalogue.resolve("workbench.withholding")
-        assert route.factory is not None
-        selector = route.factory(TuiScreenContextV1(destination="workbench.withholding"))
-        assert isinstance(selector, FilingYearRouteScreen)
-        assert isinstance(selector._screen_factory(2025), WithholdingEvidenceScreen)
-        async with ScreenHostApp(selector).run_test() as pilot:
-            year_input = pilot.app.screen.query_one("#filing-year-route-year", Input)
-            year_input.value = "2025"
-            assert year_input.value == "2025"
-            await pilot.click("#filing-year-route-open")
-            await pilot.pause()
-            assert year_input.value == "2025"
-            assert isinstance(pilot.app.screen, WithholdingEvidenceScreen), str(
-                selector.query_one("#filing-year-route-error", Static).render()
-            )
-            assert pilot.app.screen._filing_year == 2025
-
-
-@pytest.mark.asyncio
-async def test_an_unavailable_destination_never_carries_a_mountable_factory(tmp_path: Path) -> None:
-    """Availability and mountability agree, so nothing can look openable and refuse.
-
-    Exercised in BOTH directions. Over the default session every destination is
-    available, so the loop only ever proved "available implies a factory" and
-    the reverse half was carried by a construction-time guard rather than by
-    this test. The undeclared-identity session below genuinely refuses AEAT
-    Sync, which is what makes the second direction real.
-    """
-    async with installed_workbench_root(tmp_path) as root:
-        available_states = set()
-        for route in root.destination_catalogue.routes:
-            available = route.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE
-            available_states.add(available)
-            assert available == (route.factory is not None), route.descriptor.destination
-
-        assert available_states == {True}, "this session refuses a destination; the other case belongs below"
-
-
-@pytest.mark.asyncio
-async def test_a_refused_destination_is_listed_without_a_factory(tmp_path: Path) -> None:
-    """The reverse direction, on a session that genuinely refuses something.
-
-    A refused destination stays in the closed catalogue -- an operator must be
-    able to see it exists and why -- but must carry no factory, because a route
-    that looks openable and then refuses is the defect this pair exists for.
-    """
-    async with installed_workbench_root(tmp_path, tax_id=None) as root:
-        refused = [
-            route
-            for route in root.destination_catalogue.routes
-            if route.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
-        ]
-
-        assert refused, "the undeclared-identity session refuses nothing, so this proves nothing"
-        for route in refused:
-            assert route.factory is None, route.descriptor.destination
-            assert route.admission.reason_code is not None, route.descriptor.destination
-
-
-@pytest.mark.asyncio
-async def test_the_home_refresh_door_rebuilds_the_projection_for_the_live_profile(tmp_path: Path) -> None:
-    """Returning from a journey re-reads Home rather than replaying a snapshot."""
-    async with installed_workbench_root(tmp_path) as root:
-        first = root.refresh_home()
-        second = root.refresh_home()
-
-        assert first is not second
-        assert first.account.profile_label == WORKBENCH_PROFILE_LABEL
-        assert second.account.profile_label == WORKBENCH_PROFILE_LABEL
-
-
-@pytest.mark.asyncio
-async def test_search_and_navigation_report_the_same_admissions(tmp_path: Path) -> None:
-    """The palette cannot offer a destination the mounted catalogue refuses."""
-    async with installed_workbench_root(tmp_path) as root:
-        search_inputs = root.search_inputs
-        assert search_inputs is not None
-
-        assert search_inputs.ledger_admission == root.admissions["workbench.ledger"]
-        assert search_inputs.declarations_admission == root.admissions["workbench.declarations"]
-        assert search_inputs.aeat_sync_admission == root.admissions["workbench.aeat_sync"]
-
-
 _CHILD_IMPORT_PROBE = """\
 import json
 import sys
@@ -220,6 +52,8 @@ def _cli_modules_a_fresh_process_loads(*modules: str) -> list[str]:
     return [str(name) for name in loaded]
 
 
+@pytest.mark.hex_entrypoint
+@pytest.mark.integration
 def test_the_installed_session_never_pulls_the_cli_into_the_child_process() -> None:
     """Composing the whole workbench must not import the sibling entrypoint.
 
@@ -234,6 +68,7 @@ def test_the_installed_session_never_pulls_the_cli_into_the_child_process() -> N
     assert _cli_modules_a_fresh_process_loads(*child_modules) == []
 
 
+@pytest.mark.integration
 def test_the_child_import_probe_reports_a_cli_import_when_one_happens() -> None:
     """The control: the same probe, handed a CLI module, reports it.
 
@@ -243,6 +78,8 @@ def test_the_child_import_probe_reports_a_cli_import_when_one_happens() -> None:
     assert _CLI_PACKAGE + ".main" in _cli_modules_a_fresh_process_loads(_CLI_PACKAGE + ".main")
 
 
+@pytest.mark.hex_entrypoint
+@pytest.mark.integration
 def test_an_empty_profile_store_ends_the_headless_session_without_creating_one(tmp_path: Path) -> None:
     """The artifact proves it starts without inventing an operator's profile.
 
@@ -258,18 +95,43 @@ def test_an_empty_profile_store_ends_the_headless_session_without_creating_one(t
         assert not list(Path(storage_root).glob("**/*.capsule"))
 
 
-@pytest.mark.asyncio
-async def test_a_profile_without_a_declared_identity_leaves_aeat_sync_unavailable(tmp_path: Path) -> None:
-    """AEAT evidence is scoped to the filer, so an undeclared filer has none.
+@pytest.mark.unit
+@pytest.mark.parametrize("kind", ["cleanup", "runtime", "frontend"])
+def test_module_cleanup_refusal_exits_without_disclosing_native_failure(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], kind: str
+) -> None:
+    sentinel = "UNIQUE-SYNTHETIC-NATIVE-CLOSE-FAILURE-DO-NOT-DISCLOSE"
 
-    The profile schema supplies a placeholder NIF when none is declared.
-    Scoping the workspace to it would produce rows a later real pull refuses
-    as a mixed subject, so the destination stays explicitly unavailable — with
-    a reason — rather than opening onto evidence that belongs to nobody.
-    """
-    async with installed_workbench_root(tmp_path, tax_id=None) as root:
-        route = root.destination_catalogue.resolve("workbench.aeat_sync")
+    class NativeRelease:
+        def close(self) -> None:
+            raise OSError(sentinel)
 
-        assert route.admission.state is WorkbenchDestinationAdmissionState.UNAVAILABLE
-        assert route.admission.reason_code is not None
-        assert route.factory is None
+    owner = RuntimeTransportCleanup(NativeRelease())
+
+    async def fail_cleanup() -> None:
+        await close_async_resources(owner, task_name="tui-module-fault", primary_error=None)
+
+    with pytest.raises(AsyncResourceCleanupError) as retained:
+        asyncio.run(fail_cleanup())
+    primary = (
+        RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        if kind == "runtime"
+        else RuntimeFrontendRefusedError("authentication_required")
+        if kind == "frontend"
+        else retained.value
+    )
+    if not isinstance(primary, AsyncResourceCleanupError):
+        primary.__dict__["async_cleanup_error"] = retained.value
+
+    def refuse_module(_arguments: list[str]) -> int:
+        raise primary
+
+    monkeypatch.setattr(launcher, "run_module", refuse_module)
+    monkeypatch.setattr(sys, "argv", ["cadrumo-tui"])
+    monkeypatch.setenv("PYDANTIC_DISABLE_PLUGINS", "__all__")
+    with pytest.raises(SystemExit) as exited:
+        runpy.run_module("cadrumo.entrypoints.tui", run_name="__main__", alter_sys=False)
+    assert exited.value.code == 1
+    output = capsys.readouterr()
+    assert output.out == "" and output.err.strip() == "runtime_cleanup_incomplete"
+    assert sentinel not in output.out + output.err

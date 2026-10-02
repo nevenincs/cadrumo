@@ -12,14 +12,16 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 import pytest
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
-from cadrumo.entrypoints.cli.app_live_justificante_composition import (
+from cadrumo.entrypoints.justificante_composition import (
     build_justificante_authenticity_verifier,
     build_justificante_capture_service,
     build_justificante_live_read_port,
@@ -47,7 +49,15 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint]
 _LIVE_MODELO = "130"
 
 
-async def _discover_filed_period(*, bucket_id: str, modelo: str, year: int) -> Period | None:
+@asynccontextmanager
+async def _fixture_persistence_guard() -> AsyncIterator[None]:
+    """Allow this opt-in fixture to persist the expediente snapshot it inspects."""
+    yield
+
+
+async def _discover_filed_period(
+    *, bucket_id: str, modelo: str, year: int, authority_operation: PinnedAuthorityOperation
+) -> Period | None:
     snapshot = await capture_expedientes(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -56,6 +66,8 @@ async def _discover_filed_period(*, bucket_id: str, modelo: str, year: int) -> P
         certificate_secret_backend_factory=build_certificate_secret_backend,
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        authority_operation=authority_operation,
+        effect_guard=_fixture_persistence_guard,
     )
     for declaration in snapshot.declarations:
         if declaration.modelo == modelo:
@@ -74,15 +86,22 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
     bucket_id = require_active_bucket_id()
     year = date.today().year - 1
 
-    period = asyncio.run(_discover_filed_period(bucket_id=bucket_id, modelo=_LIVE_MODELO, year=year))
-    if period is None:
-        pytest.fail(
-            f"active profile {bucket_id!r} has no filed Modelo {_LIVE_MODELO} declaration "
-            f"for {year}; file one (or adjust the live fixture year) before running this live test",
+    with bundled_indexed_authority().operation() as operation:
+        period = asyncio.run(
+            _discover_filed_period(
+                bucket_id=bucket_id,
+                modelo=_LIVE_MODELO,
+                year=year,
+                authority_operation=operation,
+            )
         )
+        if period is None:
+            pytest.fail(
+                f"active profile {bucket_id!r} has no filed Modelo {_LIVE_MODELO} declaration "
+                f"for {year}; file one (or adjust the live fixture year) before running this live test",
+            )
 
-    try:
-        with bundled_indexed_authority().operation() as operation:
+        try:
             persisted = asyncio.run(
                 capture_justificante_snapshot(
                     bucket_id=bucket_id,
@@ -99,8 +118,8 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
                     verifier=build_justificante_authenticity_verifier(),
                 ),
             )
-    except LiveApplicationInputError as exc:
-        pytest.fail(f"live justificante capture could not resolve/pull the receipt: {exc}")
+        except LiveApplicationInputError as exc:
+            pytest.fail(f"live justificante capture could not resolve/pull the receipt: {exc}")
 
     # Structural / relational assertions only.
     assert persisted.modelo == _LIVE_MODELO

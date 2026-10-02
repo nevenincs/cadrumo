@@ -11,10 +11,10 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, ValidationError, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.clock import now as _now_utc
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
@@ -38,7 +38,7 @@ from .errors import (
     InventoryClosingAuthorityConflictError,
     InventoryServiceInputError,
 )
-from .ports import InventoryLedgerServiceRepositoryProtocol, InventoryServicePorts
+from .ports import InventoryClosingAuthorityWrite, InventoryLedgerServiceRepositoryProtocol, InventoryServicePorts
 
 
 class InventoryActividadSummary(BaseModel):
@@ -65,7 +65,7 @@ class InventoryMovementCommand(BaseModel):
     closed :class:`MovementKind` before valuation and persistence.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     movement_id: str = Field(min_length=1, max_length=64)
     movement_date: date
@@ -111,6 +111,7 @@ class InventoryLedgerResult(BaseModel):
 
     ledger: InventoryLedger
     bucket_event_ids: tuple[str, ...] = ()
+    changed: bool = True
 
 
 class InventoryValuationPreviewResult(BaseModel):
@@ -123,6 +124,7 @@ class InventoryValuationPreviewResult(BaseModel):
 
 
 _INVENTORY_EVENT_PAYLOAD_VERSION = 1
+_INVENTORY_VALIDATION_TRANSLATION = "errors.refused.refused_profile_inventory_validation"
 
 
 def _emit_inventory_event(
@@ -155,15 +157,6 @@ def _find_ledger(document: InventoryLedgerDocument, actividad_id: str, year: int
         if ledger.actividad_id == actividad_id and ledger.year == year:
             return ledger
     return None
-
-
-def _replace_ledger(document: InventoryLedgerDocument, ledger: InventoryLedger) -> InventoryLedgerDocument:
-    others = tuple(
-        existing
-        for existing in document.ledgers
-        if not (existing.actividad_id == ledger.actividad_id and existing.year == ledger.year)
-    )
-    return InventoryLedgerDocument(ledgers=(*others, ledger))
 
 
 class InventoryService:
@@ -210,13 +203,19 @@ class InventoryService:
                 context={"valuation_method": valuation_method},
             ) from exc
         repository = self._repository_for(bucket_id)
-        ledger = InventoryLedger(
-            actividad_id=actividad_id,
-            year=year,
-            valuation_method=method,
-            opening_stock=opening_stock,
-            closing_authority_record=None,
-        )
+        try:
+            ledger = InventoryLedger(
+                actividad_id=actividad_id,
+                year=year,
+                valuation_method=method,
+                opening_stock=opening_stock,
+                closing_authority_record=None,
+            )
+        except (InventoryLedgerError, ValidationError) as exc:
+            raise InventoryServiceInputError(
+                translated_message=_INVENTORY_VALIDATION_TRANSLATION,
+                context={"actividad_id": actividad_id, "year": str(year)},
+            ) from exc
         # Delegated to the repository's guarded verb rather than repeating its
         # read, duplicate-check and write here. The document is a singleton row,
         # so creating one ledger rewrites all of them: performed unguarded, a
@@ -231,10 +230,15 @@ class InventoryService:
         try:
             repository.create(ledger)
         except InventoryLedgerError as exc:
-            raise InventoryActividadConflictError(
-                translated_message="application.inventory.service.errors.actividad_conflict",
-                context={"actividad_id": actividad_id, "year": str(year)},
-            ) from exc
+            if (
+                exc.translated_message
+                == "adapters.persistence.profile.inventory.errors.inventory_ledger_already_exists"
+            ):
+                raise InventoryActividadConflictError(
+                    translated_message="application.inventory.service.errors.actividad_conflict",
+                    context={"actividad_id": actividad_id, "year": str(year)},
+                ) from exc
+            raise
         now = _now_utc()
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,
@@ -297,40 +301,65 @@ class InventoryService:
         before persistence. Returns an :class:`InventoryLedgerResult`
         with the updated ledger after the movement is appended.
         """
-        ledger = self.show(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
-        if any(m.movement_id == movement.movement_id for m in ledger.period_movements):
+        try:
+            if movement.acquisition_cost is not None:
+                record = MovementRecord.from_purchase_acquisition(
+                    movement_id=movement.movement_id,
+                    movement_date=movement.movement_date,
+                    quantity=movement.quantity,
+                    acquisition_cost=movement.acquisition_cost,
+                )
+            else:
+                record = MovementRecord(
+                    movement_id=movement.movement_id,
+                    movement_date=movement.movement_date,
+                    kind=movement.kind,
+                    quantity=movement.quantity,
+                    unit_cost=movement.unit_cost,
+                    taxable_base=movement.taxable_base,
+                )
+        except (InventoryLedgerError, ValidationError) as exc:
             raise InventoryServiceInputError(
-                translated_message="application.inventory.service.errors.duplicate_movement_id",
-                context={"movement_id": movement.movement_id},
-            )
-        if movement.acquisition_cost is not None:
-            record = MovementRecord.from_purchase_acquisition(
-                movement_id=movement.movement_id,
-                movement_date=movement.movement_date,
-                quantity=movement.quantity,
-                acquisition_cost=movement.acquisition_cost,
-            )
-        else:
-            record = MovementRecord(
-                movement_id=movement.movement_id,
-                movement_date=movement.movement_date,
-                kind=movement.kind,
-                quantity=movement.quantity,
-                unit_cost=movement.unit_cost,
-                taxable_base=movement.taxable_base,
-            )
-        updated = ledger.model_copy(
-            update={"period_movements": (*ledger.period_movements, record)},
-        )
-        # Domain valuation guard runs in the application layer, before persistence:
-        # a movement that would produce an invalid valuation (e.g. consuming more
-        # stock than available) raises before any write. Keeping the guard here
-        # rather than in the persistence adapter keeps the adapter calculation-free.
-        compute_inventory_valuation(updated)
+                translated_message=_INVENTORY_VALIDATION_TRANSLATION,
+                context={"actividad_id": actividad_id, "year": str(year), "movement_id": movement.movement_id},
+            ) from exc
         repository = self._repository_for(bucket_id)
-        document = repository.load()
-        document = _replace_ledger(document, updated)
-        repository.save(document)
+
+        def validate_candidate(candidate: InventoryLedger) -> None:
+            try:
+                compute_inventory_valuation(candidate)
+            except (InventoryLedgerError, ValidationError) as exc:
+                # The revision-guarded repository invokes this validator on
+                # each latest candidate before publishing it. Only validation
+                # errors from this callback are known to precede persistence.
+                raise InventoryServiceInputError(
+                    translated_message=_INVENTORY_VALIDATION_TRANSLATION,
+                    context={"actividad_id": actividad_id, "year": str(year), "movement_id": movement.movement_id},
+                ) from exc
+
+        try:
+            # The storage adapter retries its singleton revision-guarded mutation
+            # against the latest document. Run the domain guard on that exact
+            # candidate before the winning revision is published, so concurrent
+            # movements cannot pass valuation against a stale read.
+            updated = repository.record_movement(
+                actividad_id,
+                record,
+                year=year,
+                validate_candidate=validate_candidate,
+            )
+        except InventoryLedgerError as exc:
+            if exc.translated_message == "adapters.persistence.profile.inventory.errors.movement_already_exists":
+                raise InventoryServiceInputError(
+                    translated_message="application.inventory.service.errors.duplicate_movement_id",
+                    context={"movement_id": movement.movement_id},
+                ) from exc
+            if exc.translated_message == "adapters.persistence.profile.inventory.errors.inventory_ledger_not_found":
+                raise InventoryActividadNotFoundError(
+                    translated_message="application.inventory.service.errors.actividad_not_found",
+                    context={"actividad_id": actividad_id, "year": str(year)},
+                ) from exc
+            raise
         now = _now_utc()
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,
@@ -342,7 +371,7 @@ class InventoryService:
             occurred_at=now,
             payload={"movement_id": movement.movement_id, "kind": movement.kind.value},
         )
-        return InventoryLedgerResult(ledger=updated, bucket_event_ids=(event_id,))
+        return InventoryLedgerResult(ledger=updated, bucket_event_ids=(event_id,), changed=True)
 
     def valuation_preview(
         self,
@@ -358,7 +387,13 @@ class InventoryService:
             :class:`InventoryValuationPreviewResult`: The valuation preview result.
         """
         ledger = self.show(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
-        result: InventoryValuationResult = compute_inventory_valuation(ledger)
+        try:
+            result: InventoryValuationResult = compute_inventory_valuation(ledger)
+        except (InventoryLedgerError, ValidationError) as exc:
+            raise InventoryServiceInputError(
+                translated_message=_INVENTORY_VALIDATION_TRANSLATION,
+                context={"actividad_id": actividad_id, "year": str(year)},
+            ) from exc
         preview = InventoryValuationPreview(
             actividad_id=ledger.actividad_id,
             year=ledger.year,
@@ -389,11 +424,25 @@ class InventoryService:
     ) -> InventoryLedgerResult:
         """Atomically validate and persist one complete closing-authority bundle."""
         repository = self._repository_for(bucket_id)
+
+        def validate_candidate(candidate: InventoryLedger) -> InventoryLedger:
+            try:
+                # The repository calls this within its revision guard, before
+                # mutation. Rehydrate the candidate here so a rejection has a
+                # precise, pre-commit application boundary.
+                return InventoryLedger.model_validate(candidate.model_dump())
+            except (InventoryLedgerError, ValidationError) as exc:
+                raise InventoryServiceInputError(
+                    translated_message=_INVENTORY_VALIDATION_TRANSLATION,
+                    context={"actividad_id": actividad_id, "year": str(year)},
+                ) from exc
+
         try:
-            ledger = repository.record_closing_authority(
+            write: InventoryClosingAuthorityWrite = repository.record_closing_authority(
                 actividad_id,
                 authority_record,
                 year=year,
+                validate_candidate=validate_candidate,
             )
         except InventoryClosingAuthorityConflictError as exc:
             raise InventoryServiceInputError(
@@ -401,6 +450,8 @@ class InventoryService:
                 context={"actividad_id": actividad_id, "year": str(year)},
             ) from exc
         except InventoryLedgerError as exc:
+            if exc.translated_message != "adapters.persistence.profile.inventory.errors.inventory_ledger_not_found":
+                raise
             raise InventoryActividadNotFoundError(
                 translated_message="application.inventory.service.errors.actividad_not_found",
                 context={"actividad_id": actividad_id, "year": str(year)},
@@ -408,7 +459,7 @@ class InventoryService:
         # No event is emitted here: inventory and bucket events have distinct
         # repositories with no shared transaction. The encrypted ledger write is
         # atomic and replay-safe; claiming a cross-repository commit would not be.
-        return InventoryLedgerResult(ledger=ledger)
+        return InventoryLedgerResult(ledger=write.ledger, changed=write.changed)
 
     def remove(
         self,

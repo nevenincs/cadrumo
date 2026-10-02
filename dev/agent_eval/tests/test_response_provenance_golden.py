@@ -2,19 +2,16 @@
 
 Guards against provenance dropped at the RESPONSE layer: the runner's existing
 provenance dimension (``_check_provenance``) inspects the REGISTRY snapshot, which
-proves the registry itself is grounded but NOT that the CLI/MCP
+proves the registry itself is grounded but NOT that the CLI
 ``modelo.work.calculate`` RESPONSE payload actually relayed that grounding — the
 real repro is a real M130 calculate that returned correct casilla values but no
 ``legal_refs``/``formula_id`` at the CLI layer.
 
 This module dispatches a REAL ``modelo.work.calculate`` through the actual CLI
-command handling (the identical transport
-:func:`cadrumo_harness.mcp.dispatch.tool_request_argv` projects the
-``cadrumo_modelo_work_calculate`` MCP tool call onto: ``app modelo work calculate``),
-decodes the JSON RESPONSE payload's ``observations`` rows, and feeds them into
-:func:`dev.agent_eval._runner.run_golden_scenario` via its ``response_observations``
-parameter so the ``response_provenance_present`` dimension asserts over the
-payload the operator actually reads.
+command handling, decodes the JSON RESPONSE payload's ``observations`` rows, and
+feeds them into :func:`dev.agent_eval._runner.run_golden_scenario` via its
+``response_observations`` parameter so the ``response_provenance_present``
+dimension asserts over the payload the operator actually reads.
 
 No mocks: every seeded row is a genuine ``TransactionCatalogueRepository`` write
 and every response value is what the real registry engine plus the real CLI
@@ -173,12 +170,8 @@ def _dispatch_real_m130_calculate(
     """Dispatch a REAL ``modelo.work.calculate`` and return the response ``observations`` rows.
 
     Drives real command handling end to end (create work unit -> seed real
-    ledger rows -> calculate) — the same transport the ``cadrumo_modelo_work_calculate``
-    MCP tool dispatches to, since
-    :func:`cadrumo_harness.mcp.dispatch.tool_request_argv` projects that tool
-    call onto the identical ``app modelo work calculate`` CLI argv this test
-    invokes directly. Every returned value is what the real registry engine and
-    the real CLI envelope serializer produced — not a hand-rolled dict.
+    ledger rows -> calculate). Every returned value is what the real registry
+    engine and the real CLI envelope serializer produced — not a hand-rolled dict.
     """
     _seed_natural_person_profile(runtime_profile)
     work_unit_id = create_m130_work_unit(filing_year=filing_year, period=period, revision=_REVISION)

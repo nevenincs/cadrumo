@@ -338,7 +338,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.FILED_DECLARATIONS,
         "filed-declarations",
-        consumer_module="entrypoints/cli/_overview_evidence.py",
+        consumer_module="entrypoints/overview_evidence_composition.py",
         settings_field="cadrumo_filed_declarations_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,

@@ -54,7 +54,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
+from typing import TYPE_CHECKING, Final, Literal, NamedTuple, NoReturn
 
 from pydantic import BaseModel, Field
 
@@ -62,11 +62,14 @@ from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.attachments.errors import AttachmentNotFoundError
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.attachments.service import link_attachment_invoice
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
@@ -112,7 +115,28 @@ if TYPE_CHECKING:
     from .confirmation_gate import ConfirmationBlocker, FindingResolution
     from .confirmation_record import InvoiceConfirmationRecord
 
-__all__ = ["InvoiceConfirmationResult", "confirm_invoice_draft_from_evidence"]
+__all__ = [
+    "InvoiceConfirmationResult",
+    "InvoiceEvidenceReviewChangedError",
+    "PreparedInvoiceConfirmation",
+    "confirm_invoice_draft_from_evidence",
+    "invoice_draft_review_sha256",
+    "persist_prepared_invoice_confirmation",
+    "prepare_invoice_confirmation_from_evidence",
+]
+
+
+class InvoiceEvidenceReviewChangedError(InvoiceValidationError):
+    """The raw source or complete draft differs from the operator's review."""
+
+    def __init__(self, part: Literal["source", "draft"]) -> None:
+        """Retain the changed part while directing a fresh extract and review."""
+        self.part = part
+        super().__init__(
+            "The evidence bytes changed since review; extract and review the current document before confirming"
+            if part == "source"
+            else "The invoice reading changed since review; extract and review the current draft before confirming"
+        )
 
 
 class InvoiceConfirmationResult(BaseModel):
@@ -846,6 +870,186 @@ def _persist_confirmed_invoice(
     )
 
 
+class PreparedInvoiceConfirmation(NamedTuple):
+    """Validated in-memory confirmation, ready for the first durable write.
+
+    The preparation is intentionally transient. A runtime worker can finish the
+    potentially slow document read, check the reviewed source and draft, then
+    enter write custody immediately before calling the persistence function.
+    """
+
+    candidate: Invoice
+    preparation: _InvoiceConfirmationPreparation
+    bucket_id: str
+    evidence_id: str | None
+    resolutions: tuple[FindingResolution, ...]
+
+    @property
+    def draft(self) -> InvoiceDraft:
+        """Return the actual re-read draft that will be recorded on confirm."""
+        return self.preparation.draft
+
+    @property
+    def source_sha256(self) -> str:
+        """Return the secure attachment's verified raw-byte content address."""
+        return self.preparation.attachment_id
+
+
+def invoice_draft_review_sha256(draft: InvoiceDraft) -> str:
+    """Bind a review to every public draft fact, including structured class.
+
+    The shared projection includes the structured invoice class kept in a
+    private draft attribute. Hashing ``InvoiceDraft.model_dump`` directly would
+    miss that fact and could accept a different document-class reading.
+    """
+    from .invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
+
+    projection = InvoiceDraftProjectionV1.from_draft(draft)
+    return sha256_hex(canonical_json_bytes(projection.model_dump(mode="json")))
+
+
+def prepare_invoice_confirmation_from_evidence(
+    *,
+    bucket_id: str,
+    kind: InvoiceKind,
+    counterparty_country: str,
+    evidence_id: str | None = None,
+    attachment_id: str | None = None,
+    counterparty_tax_id: str | None = None,
+    counterparty_name: str | None = None,
+    invoice_number: str | None = None,
+    invoice_date: date | None = None,
+    taxable_base: Decimal | None = None,
+    iva_rate: Decimal | None = None,
+    currency: str | None = None,
+    iva_amount: Decimal | None = None,
+    iva_category: IvaCategory | None = None,
+    operation_type: IntracomOperationType | None = None,
+    operation_date: date | None = None,
+    retention_rate: Decimal | None = None,
+    retention_amount: Decimal | None = None,
+    recargo_amount: Decimal | None = None,
+    invoice_class: InvoiceClass | None = None,
+    invoice_class_token: str | None = None,
+    supply_nature: SupplyNature | None = None,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    notes: str = "",
+    resolutions: Sequence[FindingResolution] = (),
+    expected_source_sha256: str | None = None,
+    expected_draft_review_sha256: str | None = None,
+    settings: Settings | None = None,
+    catalogue_creation_ports: CatalogueCreationPorts,
+    counterparty_establishment_repository: CounterpartyEstablishmentRepositoryProtocol,
+    evidence_ports: LedgerEvidencePorts,
+    extraction_ports: InvoiceDraftExtractionPorts,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
+) -> PreparedInvoiceConfirmation:
+    """Re-read, resolve and validate an invoice without a durable write."""
+    preparation = _prepare_invoice_confirmation(
+        bucket_id=bucket_id,
+        kind=kind,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        counterparty_country=counterparty_country,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+        supply_nature=supply_nature,
+        settings=settings,
+        counterparty_establishment_repository=counterparty_establishment_repository,
+        evidence_ports=evidence_ports,
+        resolutions=resolutions,
+        counterparty_tax_id=counterparty_tax_id,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        currency=currency,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        recargo_amount=recargo_amount,
+        extraction_ports=extraction_ports,
+        operation=operation,
+        legends=legends,
+    )
+    if expected_source_sha256 is not None and preparation.attachment_id != expected_source_sha256:
+        raise InvoiceEvidenceReviewChangedError("source")
+    if (
+        expected_draft_review_sha256 is not None
+        and invoice_draft_review_sha256(preparation.draft) != expected_draft_review_sha256
+    ):
+        raise InvoiceEvidenceReviewChangedError("draft")
+    if invoice_class_token is not None:
+        if invoice_class is not None:
+            raise InvoiceValidationError("invoice class was supplied through two inputs")
+        classification_date = resolve_confirmed_invoice_date(invoice_date, preparation.draft)
+        with validating_governed_facts(operation):
+            invoice_class = resolve_invoice_legal_classification_catalogue(
+                effective_date=classification_date,
+            ).require_invoice_class(invoice_class_token)
+    candidate = _build_confirmed_invoice_candidate(
+        bucket_id=bucket_id,
+        kind=kind,
+        counterparty_country=counterparty_country,
+        counterparty_tax_id=counterparty_tax_id,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+        currency=currency,
+        iva_category=iva_category,
+        operation_type=operation_type,
+        operation_date=operation_date,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        recargo_amount=recargo_amount,
+        invoice_class=invoice_class,
+        supply_nature=supply_nature,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        notes=notes,
+        catalogue_creation_ports=catalogue_creation_ports,
+        preparation=preparation,
+    )
+    return PreparedInvoiceConfirmation(
+        candidate=candidate,
+        preparation=preparation,
+        bucket_id=bucket_id,
+        evidence_id=evidence_id,
+        resolutions=tuple(resolutions),
+    )
+
+
+def persist_prepared_invoice_confirmation(
+    prepared: PreparedInvoiceConfirmation,
+    *,
+    confirmed_by: str,
+    catalogue_creation_ports: CatalogueCreationPorts,
+    invoice_confirmation_ports: InvoiceConfirmationPorts,
+    evidence_ports: LedgerEvidencePorts,
+) -> InvoiceConfirmationResult:
+    """Apply the canonical catalogue, link, summary and audit writes.
+
+    Every successful call writes a confirmation audit record, including a
+    guarded catalogue replay. Runtime callers therefore report UPDATED even
+    when the returned ``created`` flag is false.
+    """
+    return _persist_confirmed_invoice(
+        candidate=prepared.candidate,
+        preparation=prepared.preparation,
+        bucket_id=prepared.bucket_id,
+        evidence_id=prepared.evidence_id,
+        confirmed_by=confirmed_by,
+        resolutions=prepared.resolutions,
+        catalogue_creation_ports=catalogue_creation_ports,
+        invoice_confirmation_ports=invoice_confirmation_ports,
+        evidence_ports=evidence_ports,
+    )
+
+
 def confirm_invoice_draft_from_evidence(
     *,
     bucket_id: str,
@@ -899,7 +1103,7 @@ def confirm_invoice_draft_from_evidence(
     ``(kind, invoice_number, issued_at, counterparty_tax_id, currency,
     grand_total)`` — a confirm carrying identical resolved fields to an
     already-persisted invoice returns that invoice unchanged
-    (``created=False``, no new bucket write); a confirm whose resolved fields
+    (``created=False``, with a new confirmation audit record); a confirm whose resolved fields
     genuinely differ mints a distinct invoice record rather than overwriting.
 
     Args:
@@ -1003,36 +1207,12 @@ def confirm_invoice_draft_from_evidence(
         ConfirmationBlockedError: When the document raises a blocking finding
             that carries no explicit per-finding resolution.
     """
-    preparation = _prepare_invoice_confirmation(
+    prepared = prepare_invoice_confirmation_from_evidence(
         bucket_id=bucket_id,
         kind=kind,
+        counterparty_country=counterparty_country,
         evidence_id=evidence_id,
         attachment_id=attachment_id,
-        counterparty_country=counterparty_country,
-        taxable_base=taxable_base,
-        iva_rate=iva_rate,
-        iva_amount=iva_amount,
-        supply_nature=supply_nature,
-        settings=settings,
-        counterparty_establishment_repository=counterparty_establishment_repository,
-        evidence_ports=evidence_ports,
-        resolutions=resolutions,
-        counterparty_tax_id=counterparty_tax_id,
-        counterparty_name=counterparty_name,
-        invoice_number=invoice_number,
-        invoice_date=invoice_date,
-        currency=currency,
-        retention_rate=retention_rate,
-        retention_amount=retention_amount,
-        recargo_amount=recargo_amount,
-        extraction_ports=extraction_ports,
-        operation=operation,
-        legends=legends,
-    )
-    candidate = _build_confirmed_invoice_candidate(
-        bucket_id=bucket_id,
-        kind=kind,
-        counterparty_country=counterparty_country,
         counterparty_tax_id=counterparty_tax_id,
         counterparty_name=counterparty_name,
         invoice_number=invoice_number,
@@ -1052,16 +1232,18 @@ def confirm_invoice_draft_from_evidence(
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
         notes=notes,
-        catalogue_creation_ports=catalogue_creation_ports,
-        preparation=preparation,
-    )
-    return _persist_confirmed_invoice(
-        candidate=candidate,
-        preparation=preparation,
-        bucket_id=bucket_id,
-        evidence_id=evidence_id,
-        confirmed_by=confirmed_by,
         resolutions=resolutions,
+        settings=settings,
+        catalogue_creation_ports=catalogue_creation_ports,
+        counterparty_establishment_repository=counterparty_establishment_repository,
+        evidence_ports=evidence_ports,
+        extraction_ports=extraction_ports,
+        operation=operation,
+        legends=legends,
+    )
+    return persist_prepared_invoice_confirmation(
+        prepared,
+        confirmed_by=confirmed_by,
         catalogue_creation_ports=catalogue_creation_ports,
         invoice_confirmation_ports=invoice_confirmation_ports,
         evidence_ports=evidence_ports,

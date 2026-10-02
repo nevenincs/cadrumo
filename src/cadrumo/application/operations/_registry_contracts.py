@@ -111,6 +111,8 @@ def validate_resultful_public_registration(
     bindings: dict[tuple[str, int, ContentDigest], type[BaseModel]],
 ) -> None:
     """Match a result-bearing operation's schema and optional projection adapter."""
+    if definition.refusal_detail_codes and (contract.result_schema is None or registration.result_projector is None):
+        raise ValueError("refusal evidence requires a registered terminal schema and explicit projector")
     if contract.result_schema is not None:
         bound_result_type = bindings[schema_identity_key(contract.result_schema)]
         distinct_result_projection = bound_result_type is not definition.result_type
@@ -312,6 +314,7 @@ def definition_contract_policy_value(contract: OperationPublicDefinitionContract
         "reconciliation_policy": contract.reconciliation_policy.value,
         "permitted_frontends": tuple(sorted(item.value for item in contract.permitted_frontends)),
         "ephemeral_secret_required": contract.ephemeral_secret_required,
+        "refusal_detail_codes": tuple(sorted(contract.refusal_detail_codes)),
     }
 
 
@@ -351,6 +354,7 @@ def build_public_contract(
         reconciliation_policy=definition.reconciliation_policy,
         permitted_frontends=definition.permitted_frontends,
         ephemeral_secret_required=definition.ephemeral_secret is not None,
+        refusal_detail_codes=definition.refusal_detail_codes,
         definition_contract_digest=_PROVISIONAL_CONTRACT_DIGEST,
     )
     return contract_type(
@@ -376,6 +380,7 @@ def build_public_contract(
         reconciliation_policy=provisional.reconciliation_policy,
         permitted_frontends=provisional.permitted_frontends,
         ephemeral_secret_required=provisional.ephemeral_secret_required,
+        refusal_detail_codes=provisional.refusal_detail_codes,
         definition_contract_digest=definition_contract_digest(provisional),
     )
 

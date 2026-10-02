@@ -25,8 +25,10 @@ __all__ = ["isolated_backend"]
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
 from cadrumo.application.modelo.action_errors import (
@@ -774,9 +776,20 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
     assert "<T303DID00>" not in output_path.read_text(encoding="iso-8859-1")
     assert "iban" not in export_event.model_dump_json().casefold()
 
+    verification_repository = VerificationReportCatalogueRepository(
+        bucket_id=bucket_id,
+        m303_rectificativa_taxpayer_tax_id=taxpayer_nif,
+    )
+    report_id = seed_filing_gate_report(
+        rectificativa,
+        verification_repository,
+    )
+    _, filing_baseline_revision_id = filing_repository.load_revisioned()
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         filing = persist_filed_revision(
             target=rectificativa,
+            approved_verification_report_id=report_id,
+            filing_baseline_revision_id=filing_baseline_revision_id,
             work_unit=work_unit,
             work_units=work_repo.load(),
             notes=None,
@@ -784,6 +797,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
             now=datetime(2026, 5, 21, 12, 4, tzinfo=UTC),
             calculation_repository=calc_repo,
             filing_repository=filing_repository,
+            verification_repository=verification_repository,
             work_unit_repository=work_repo,
             bucket_event_repository=event_repo,
             result_disposition=result.resolved_result_disposition,

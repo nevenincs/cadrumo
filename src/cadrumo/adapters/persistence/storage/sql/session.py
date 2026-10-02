@@ -35,7 +35,7 @@ def get_sessionmaker(engine: Engine | None = None) -> sessionmaker[Session]:
 
 
 @contextmanager
-def session_scope(engine: Engine | None = None) -> Generator[Session]:
+def session_scope(engine: Engine | None = None, *, serializable: bool = False) -> Generator[Session]:
     """Context-managed unit of work.
 
     Commits on normal exit, rolls back on exception, and always closes the
@@ -44,6 +44,9 @@ def session_scope(engine: Engine | None = None) -> Generator[Session]:
     Args:
         engine: Optional engine override. When ``None``, :func:`get_engine`
             is consulted.
+        serializable: Protect read predicates through commit. SQLite acquires
+            its write reservation before any reads, including absent-row checks;
+            other backends must support SQLAlchemy's SERIALIZABLE isolation.
 
     Yields:
         A live :class:`~sqlalchemy.orm.Session`.
@@ -54,6 +57,13 @@ def session_scope(engine: Engine | None = None) -> Generator[Session]:
     factory = get_sessionmaker(engine)
     session = factory()
     try:
+        if serializable:
+            connection = session.connection(execution_options={"isolation_level": "SERIALIZABLE"})
+            if connection.dialect.name == "sqlite":
+                # sqlite3's legacy transaction mode does not BEGIN on SELECT.
+                # Reserve the writer before observing source revisions so a
+                # concurrent insert cannot invalidate an absence assertion.
+                connection.exec_driver_sql("BEGIN IMMEDIATE")
         yield session
         session.commit()
     except Exception:  # rollback on any error then re-raise; SQLAlchemy exception surface is too broad to enumerate

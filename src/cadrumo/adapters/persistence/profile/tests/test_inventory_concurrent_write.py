@@ -32,6 +32,7 @@ from .....domain.contribuyente.inventory.records import (
     MovementRecord,
     ValuationMethod,
 )
+from .....domain.contribuyente.inventory.valuation import compute_inventory_valuation
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository
 from ._inventory_acquisition_fixture import acquisition_for
@@ -136,7 +137,12 @@ def test_record_movement_returns_the_committed_ledger() -> None:
     """
     InventoryLedgerRepository().create(_ledger("retail", opening="150.00"))
 
-    updated = InventoryLedgerRepository().record_movement("retail", _movement("mv-9"), year=_YEAR)
+    def validate_candidate(candidate: InventoryLedger) -> None:
+        compute_inventory_valuation(candidate)
+
+    updated = InventoryLedgerRepository().record_movement(
+        "retail", _movement("mv-9"), year=_YEAR, validate_candidate=validate_candidate
+    )
 
     assert updated.actividad_id == "retail"
     assert [mv.movement_id for mv in updated.period_movements] == ["mv-9"]

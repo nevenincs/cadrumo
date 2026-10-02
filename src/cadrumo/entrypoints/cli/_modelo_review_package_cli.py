@@ -1,8 +1,10 @@
 """Behavior handlers for the ``aeat app modelo review-package`` verb group.
 
 Assembles a shareable, checksum-verifiable review package (``build``) and
-verifies one already received (``verify``). All verbs are local-only: they
-never contact AEAT. ``build`` internally reuses
+verifies one already received (``verify``). The human exchange verbs submit
+registered requests to the authenticated profile worker; the public CLI
+payloads retain only explicit paths and non-secret receipt metadata. All verbs
+are local-only: they never contact AEAT. ``build`` internally reuses
 :func:`~application.modelo.export.export_modelo_revision` to obtain the
 fichero-BOE draft bytes it bundles, so it inherits every export-time safety
 gate (evidence completeness, cross-period clean state, IVA wallet
@@ -10,36 +12,17 @@ reconciliation) and also appends the usual ``MODELO_EXPORTED`` bucket event —
 building a review package is, structurally, an export plus a checksum-manifest
 wrap.
 
-``sign`` / ``verify-signature`` / ``counter-sign`` / ``verify-receipt`` wire
-the Ed25519 authenticity layer
-(:mod:`~application.modelo.review_package_signing`,
-:mod:`~application.modelo.review_package_counter_sign`) onto the CLI so
-the full operator-shares / accountant-receives / accountant-counter-signs /
-operator-verifies workflow is reachable without touching the application
-layer directly. Every signing/counter-signing keypair is minted and persisted
-through :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
-``SECRET`` sensitivity, scoped to whichever bucket runs the verb (the active
-profile by default, or an explicit ``--bucket-id``); only the PUBLIC half of
-a keypair is ever surfaced in CLI output. ``verify`` remains an INTEGRITY
-check only (did every member arrive byte-for-byte); ``verify-signature`` and
-``verify-receipt`` are AUTHENTICITY checks (who signed it).
+``sign`` / ``counter-sign`` submit package paths and user choices as
+``SECURE_REFERENCE`` worker requests. Signing and counter-signing keys, audit
+events, replay state, and explicit final artifacts remain in their canonical
+worker-owned stores. ``verify-signature`` and ``verify-receipt`` remain local
+authenticity checks; only their existing public keys and validity results are
+rendered.
 
-``encrypt-for-recipient`` / ``decrypt`` wire the X25519 CONFIDENTIALITY layer
-(:mod:`~application.modelo.review_package_recipient_encryption`) onto
-the CLI: a package sealed with ``encrypt-for-recipient`` can be opened only by
-the holder of the matching X25519 private key, unlike ``sign``/``counter-sign``,
-which leave the archive itself in plaintext ZIP form.
-``encrypt-for-recipient`` looks up the recipient's registered public key via
-the required application recipient-registry capability
-(populated by ``aeat config collab recipient add``); ``decrypt`` mints-or-loads
-the running bucket's OWN X25519 keypair (mirroring the signing keypair's
-mint-once-persist-as-ciphertext contract exactly, via
-:func:`~application.modelo.review_package_recipient_encryption.ensure_recipient_encryption_keypair`) and
-composes :class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository`
-around the pure decrypt primitive to refuse a captured package presented twice.
-Both verbs operate entirely on in-memory bytes; the plaintext package bytes are
-never written to disk except as the final recovered archive the operator
-explicitly requests via ``--output``.
+``encrypt-for-recipient`` / ``decrypt`` and the two feedback verbs also submit
+through the registered worker. The operation result excludes ciphertext,
+decrypted bytes, and private keys. Decryption writes plaintext only to the
+operator's explicit final ``--output`` path.
 
 See Also:
     :func:`~application.modelo.review_package.build_review_package`
@@ -58,69 +41,36 @@ See Also:
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import typer
 
-from ...adapters.persistence.profile.recipient_replay_guard import (
-    RecipientPackageReplayedError,
-    RecipientReplayGuardRepository,
-)
-from ...application.modelo.action_errors import CalculationRevisionNotFoundError
 from ...application.modelo.operator_inputs import ModeloReviewPackageBuildOperatorInput
-from ...application.modelo.recipient_encryption import RecipientEncryptedPackage
-from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.review_package import (
-    ReviewPackageError,
     ReviewPackageIntegrityError,
-    ReviewPackageRevisionStateError,
-    build_review_package,
     verify_review_package,
 )
-from ...application.modelo.review_package_collab_audit import emit_collab_feedback_countersign_attached_event
 from ...application.modelo.review_package_counter_sign import (
     CounterSignedReceipt,
     ReviewPackageCounterSigningError,
-    counter_sign_review_package,
     verify_counter_signed_receipt,
 )
-from ...application.modelo.review_package_feedback import (
-    FeedbackCounterSignatureInvalidError,
-    ReviewPackageFeedbackError,
-    build_feedback_package,
-    encrypt_feedback_package_for_originator,
-    import_feedback_package,
-)
-from ...application.modelo.review_package_recipient_encryption import (
-    RecipientDecryptionError,
-    RecipientEncryptionError,
-    decrypt_review_package_for_recipient,
-    encrypt_review_package_for_recipient,
-    ensure_recipient_encryption_keypair,
-)
-from ...application.modelo.review_package_recipient_registry import (
-    RecipientNotRegisteredError,
-    get_recipient_fingerprint,
+from ...application.modelo.review_package_operation import (
+    ModeloReviewPackageBuildPublicResultV1,
+    ModeloReviewPackageBuildRequest,
 )
 from ...application.modelo.review_package_signing import (
     ReviewPackageSigningError,
     SignedReviewPackage,
-    ensure_review_package_signing_keypair,
-    review_package_signing_public_key,
-    sign_review_package,
     verify_review_package_signature,
 )
-from ...application.workflow.persistence import workflow_state_repository
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
-from ._modelo_behavior_support import bare_period_error, resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
-    load_modelo_work_unit,
-    resolve_default_actor,
-    resolve_explicit_or_active_bucket_id,
+    parse_revision_selector,
+    resolve_actor_option,
 )
-from ._modelo_export_cli import export_modelo_revision_for_cli
 from ._modelo_review_package_rendering import (
     review_package_build_result_lines,
     review_package_build_result_payload,
@@ -134,15 +84,18 @@ from ._modelo_review_package_rendering import (
     review_package_verify_result,
     review_package_verify_signature_result,
 )
-from .common import emit_envelope, filing_taxpayer_or_refuse
-from .state_projection_support import (
-    authority_operation,
-    calculation_action_ports_factory,
-    modelo_export_ports_factory,
-    recipient_encryption_capability_factory,
-    recipient_fingerprint_registry_ports_factory,
-    review_package_signing_keypair_capability_factory,
+from .common import emit_envelope
+from .runtime_modelo_review_package import run_modelo_review_package_build
+from .runtime_modelo_review_package_exchange import (
+    run_review_package_counter_sign,
+    run_review_package_decrypt,
+    run_review_package_encrypt_feedback,
+    run_review_package_encrypt_for_recipient,
+    run_review_package_import_feedback,
+    run_review_package_sign,
 )
+from .runtime_modelo_verification import select_modelo_work_revision_for_cli
+from .state_projection_support import authority_operation
 
 
 def review_package_build(
@@ -150,18 +103,7 @@ def review_package_build(
     **input_values: object,
 ) -> None:
     """Assemble a shareable review package for the resolved revision."""
-    from ._modelo_cli_support import bad_parameter_from_error
-
     operator_input = ModeloReviewPackageBuildOperatorInput.model_validate(input_values)
-    if operator_input.modelo is not None and operator_input.period is not None:
-        operation = authority_operation(ctx)
-        declared_periods = declared_modelo_period_tokens(operator_input.modelo, operation=operation)
-        if declared_periods and operator_input.period.upper() not in declared_periods:
-            raise typer.BadParameter(
-                bare_period_error(operator_input.modelo, operator_input.period, operation=operation)
-            )
-    workflow_state = workflow_state_repository().load()
-    workflow_profile = filing_taxpayer_or_refuse(workflow_state)
     if (
         operator_input.output is None
         or not str(operator_input.output).strip()
@@ -172,73 +114,41 @@ def review_package_build(
                 "cli.app.modelo.review_package.errors.output_required",
             )
         )
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=resolve_explicit_or_active_bucket_id(operator_input.bucket_id),
-        operation=authority_operation(ctx),
-    )
-    selected_revision = resolve_exportable_revision_for_cli(
-        revision=operator_input.revision,
+    client, selected_revision = select_modelo_work_revision_for_cli(
+        ctx,
+        calculation_revision_id=operator_input.revision,
         work_unit_id=operator_input.work_unit_id,
         modelo=operator_input.modelo,
         year=operator_input.year,
         period=operator_input.period,
-        registry_revision=operator_input.registry_revision,
+        revision=operator_input.registry_revision,
         bucket_id=operator_input.bucket_id,
-        select=operator_input.select,
-        calculation_ports=calculation_ports,
+        selector=parse_revision_selector(operator_input.select),
+        default_for="export",
     )
-    target_revision_id = selected_revision.calculation_revision_id
-    resolved_actor = operator_input.actor or resolve_default_actor()
-    work_unit = load_modelo_work_unit(
-        selected_revision.work_unit_id,
-        ports=calculation_ports.work_lifecycle_ports,
-    )
-    operator_input.output.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(
-        prefix="cadrumo-review-package-draft-", dir=operator_input.output.parent
-    ) as staging_name:
-        draft_path = Path(staging_name) / "draft.fichero-boe"
-        export_result = export_modelo_revision_for_cli(
-            calculation_revision_id=target_revision_id,
-            output_path=draft_path,
-            actor=resolved_actor,
+    completed = run_modelo_review_package_build(
+        client,
+        ModeloReviewPackageBuildRequest(
+            profile_id=client.profile_id,
+            calculation_revision_id=selected_revision.calculation_revision_id,
+            output_path=str(operator_input.output.resolve()),
+            actor=resolve_actor_option(operator_input.actor),
             refund_election=operator_input.refund_election,
             payment_election=operator_input.payment_election,
             prior_domiciliation_election=operator_input.prior_domiciliation_election,
-            # The draft is written into a fresh temporary directory it owns.
-            replace_existing=False,
-            operation=authority_operation(ctx),
-            workflow_profile=workflow_profile,
-            export_ports=modelo_export_ports_factory(ctx)(
-                bucket_id=str(work_unit.bucket_id),
-                m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-            ),
-        )
-        from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-
-        revision_record = CalculationRevisionCatalogueRepository().load().get(target_revision_id)
-        if revision_record is None:
-            raise bad_parameter_from_error(
-                CalculationRevisionNotFoundError(context={"calculation_revision_id": target_revision_id})
-            )
-        draft_bytes = draft_path.read_bytes()
-        try:
-            build_result = build_review_package(
-                revision=revision_record,
-                work_unit=work_unit,
-                draft_bytes=draft_bytes,
-                output_path=operator_input.output,
-                built_by=resolved_actor,
-                operation=authority_operation(ctx),
-                notes=operator_input.notes,
-            )
-        except (ReviewPackageRevisionStateError, ReviewPackageError) as exc:
-            raise bad_parameter_from_error(exc) from exc
+            notes=operator_input.notes,
+        ),
+        work_unit_id=selected_revision.unit.work_unit_id,
+    )
+    result = completed.projection
+    if not isinstance(result, ModeloReviewPackageBuildPublicResultV1):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    build_result = result.to_result()
     emit_envelope(
         ctx,
         command="modelo.review_package.build",
         result=review_package_build_result_payload(build_result),
-        lines=review_package_build_result_lines(build_result, export_bucket_event_id=export_result.bucket_event_id),
+        lines=review_package_build_result_lines(build_result, export_bucket_event_id=result.export_bucket_event_id),
     )
 
 
@@ -266,32 +176,15 @@ def review_package_verify(ctx: typer.Context, package: Path) -> None:
 
 def review_package_sign(ctx: typer.Context, package: Path, output: Path, bucket_id: str | None = None) -> None:
     """Sign a review package's manifest digest and write the signature envelope."""
-    from ._modelo_cli_support import bad_parameter_from_error
-
-    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    keypair = ensure_review_package_signing_keypair(
-        bucket_id=resolved_bucket_id,
-        signing_keypair=review_package_signing_keypair_capability_factory(ctx)(bucket_id=resolved_bucket_id),
-    )
-    try:
-        signed = sign_review_package(package, keypair=keypair)
-    except FileNotFoundError as exc:
+    if not package.exists():
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.review_package.errors.package_not_found",
                 package_path=str(package),
             )
-        ) from exc
-    except ReviewPackageIntegrityError as exc:
-        raise bad_parameter_from_error(exc) from exc
-    except ReviewPackageSigningError as exc:
-        raise bad_parameter_from_error(exc) from exc
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(signed.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
-    public_key = review_package_signing_public_key(keypair)
-    result, lines = review_package_sign_result(
-        package, output, bucket_id=resolved_bucket_id, signed=signed, signer_public_key_hex=public_key.public_key_hex
-    )
+        )
+    projection = run_review_package_sign(ctx, package=package, output=output, bucket_id=bucket_id)
+    result, lines = review_package_sign_result(projection)
     emit_envelope(ctx, command="modelo.review_package.sign", result=result, lines=lines)
 
 
@@ -322,8 +215,6 @@ def review_package_counter_sign(
     ctx: typer.Context, package: Path, signature: Path, output: Path, note: str = "", bucket_id: str | None = None
 ) -> None:
     """Counter-sign an operator's signature envelope and write the receipt."""
-    from ._modelo_cli_support import bad_parameter_from_error
-
     if not signature.exists():
         raise typer.BadParameter(
             tr(
@@ -331,39 +222,15 @@ def review_package_counter_sign(
                 signature_path=str(signature),
             )
         )
-    try:
-        signed = SignedReviewPackage.model_validate_json(signature.read_text(encoding=UTF_8_ENCODING))
-    except ValueError as exc:
-        raise bad_parameter_from_error(ReviewPackageSigningError(str(exc))) from exc
-    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    counter_signer_keypair = ensure_review_package_signing_keypair(
-        bucket_id=resolved_bucket_id,
-        signing_keypair=review_package_signing_keypair_capability_factory(ctx)(bucket_id=resolved_bucket_id),
+    projection = run_review_package_counter_sign(
+        ctx,
+        package=package,
+        signature=signature,
+        output=output,
+        note=note,
+        bucket_id=bucket_id,
     )
-    try:
-        receipt = counter_sign_review_package(signed, counter_signer_keypair=counter_signer_keypair, note=note)
-    except ReviewPackageCounterSigningError as exc:
-        raise bad_parameter_from_error(exc) from exc
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(receipt.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
-    # The counter-signer's bucket records that it signed this package.
-    from ...application.bucket_event_repository import bucket_event_history_repository
-    from ...application.modelo.review_package_collab_audit import emit_collab_package_counter_signed_event
-
-    emit_collab_package_counter_signed_event(
-        receipt,
-        bucket_id=resolved_bucket_id,
-        repository=bucket_event_history_repository(bucket_id=resolved_bucket_id),
-    )
-    counter_public_key = review_package_signing_public_key(counter_signer_keypair)
-    result, lines = review_package_counter_sign_result(
-        package,
-        signature,
-        output,
-        bucket_id=resolved_bucket_id,
-        receipt=receipt,
-        counter_signer_public_key_hex=counter_public_key.public_key_hex,
-    )
+    result, lines = review_package_counter_sign_result(projection)
     emit_envelope(ctx, command="modelo.review_package.counter_sign", result=result, lines=lines)
 
 
@@ -409,8 +276,6 @@ def review_package_encrypt_for_recipient(
     bucket_id: str | None = None,
 ) -> None:
     """Seal a review package for one registered recipient's public key."""
-    from ._modelo_cli_support import bad_parameter_from_error
-
     if not package.exists():
         raise typer.BadParameter(
             tr(
@@ -418,55 +283,27 @@ def review_package_encrypt_for_recipient(
                 package_path=str(package),
             )
         )
-    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
-    try:
-        recipient = get_recipient_fingerprint(
-            recipient_id,
-            ports=recipient_fingerprint_registry_ports_factory(ctx)(bucket_id=resolved_bucket_id),
-        )
-    except RecipientNotRegisteredError as exc:
-        raise bad_parameter_from_error(exc) from exc
     if valid_for_days is not None and valid_for_days <= 0:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.review_package.errors.invalid_valid_for_days",
             )
         )
-    from datetime import timedelta
-
-    try:
-        envelope = encrypt_review_package_for_recipient(
-            package.read_bytes(),
-            recipient_public_key_hex=recipient.public_key_hex,
-            recipient_encryption=recipient_encryption,
-            review_only=review_only,
-            valid_for=timedelta(days=valid_for_days) if valid_for_days is not None else None,
-        )
-    except RecipientEncryptionError as exc:
-        raise bad_parameter_from_error(exc) from exc
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(envelope.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
-    # The collaboration event history is the audit trail for a package leaving
-    # this bucket; without this the encrypt succeeds and records nothing.
-    from ...application.bucket_event_repository import bucket_event_history_repository
-    from ...application.modelo.review_package_collab_audit import emit_collab_package_encrypted_event
-
-    emit_collab_package_encrypted_event(
-        envelope,
-        bucket_id=resolved_bucket_id,
-        repository=bucket_event_history_repository(bucket_id=resolved_bucket_id),
+    projection = run_review_package_encrypt_for_recipient(
+        ctx,
+        package=package,
+        recipient_id=recipient_id,
+        output=output,
+        review_only=review_only,
+        valid_for_days=valid_for_days,
+        bucket_id=bucket_id,
     )
-    result, lines = review_package_encrypt_for_recipient_result(
-        package, output, recipient_id=recipient_id, recipient_public_key_hex=recipient.public_key_hex, envelope=envelope
-    )
+    result, lines = review_package_encrypt_for_recipient_result(projection)
     emit_envelope(ctx, command="modelo.review_package.encrypt_for_recipient", result=result, lines=lines)
 
 
 def review_package_decrypt(ctx: typer.Context, envelope_path: Path, output: Path, bucket_id: str | None = None) -> None:
     """Decrypt a recipient-encrypted review package with this bucket's own keypair."""
-    from ._modelo_cli_support import bad_parameter_from_error
-
     if not envelope_path.exists():
         raise typer.BadParameter(
             tr(
@@ -474,43 +311,8 @@ def review_package_decrypt(ctx: typer.Context, envelope_path: Path, output: Path
                 envelope_path=str(envelope_path),
             )
         )
-    try:
-        envelope = RecipientEncryptedPackage.model_validate_json(envelope_path.read_text(encoding=UTF_8_ENCODING))
-    except ValueError as exc:
-        raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
-    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
-    keypair = ensure_recipient_encryption_keypair(
-        bucket_id=resolved_bucket_id,
-        recipient_encryption=recipient_encryption,
-    )
-    try:
-        decrypted = decrypt_review_package_for_recipient(
-            envelope,
-            recipient_private_key_hex=keypair.private_key_hex,
-            recipient_encryption=recipient_encryption,
-        )
-    except RecipientDecryptionError as exc:
-        raise bad_parameter_from_error(exc) from exc
-    # The recipient's bucket records that it opened this package.
-    from ...application.bucket_event_repository import bucket_event_history_repository
-    from ...application.modelo.review_package_collab_audit import emit_collab_package_decrypted_event
-
-    emit_collab_package_decrypted_event(
-        envelope,
-        bucket_id=resolved_bucket_id,
-        repository=bucket_event_history_repository(bucket_id=resolved_bucket_id),
-    )
-    replay_guard = RecipientReplayGuardRepository(bucket_id=resolved_bucket_id)
-    try:
-        replay_guard.mark_consumed(envelope.envelope_nonce_hex)
-    except RecipientPackageReplayedError as exc:
-        raise bad_parameter_from_error(exc) from exc
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_bytes(decrypted.package_bytes)
-    result, lines = review_package_decrypt_result(
-        envelope_path, output, bucket_id=resolved_bucket_id, decrypted=decrypted
-    )
+    projection = run_review_package_decrypt(ctx, envelope_path=envelope_path, output=output, bucket_id=bucket_id)
+    result, lines = review_package_decrypt_result(projection)
     emit_envelope(ctx, command="modelo.review_package.decrypt", result=result, lines=lines)
 
 
@@ -526,59 +328,25 @@ def review_package_encrypt_feedback(
     bucket_id: str | None = None,
 ) -> None:
     """Seal review feedback back to the originator's registered public key."""
-    from ._modelo_cli_support import bad_parameter_from_error
-
-    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
-    try:
-        originator = get_recipient_fingerprint(
-            originator_id,
-            ports=recipient_fingerprint_registry_ports_factory(ctx)(bucket_id=resolved_bucket_id),
-        )
-    except RecipientNotRegisteredError as exc:
-        raise bad_parameter_from_error(exc) from exc
-    counter_signed_receipt: CounterSignedReceipt | None = None
-    if receipt is not None:
-        if not receipt.exists():
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.review_package.errors.receipt_not_found",
-                    receipt_path=str(receipt),
-                )
+    if receipt is not None and not receipt.exists():
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.review_package.errors.receipt_not_found",
+                receipt_path=str(receipt),
             )
-        try:
-            counter_signed_receipt = CounterSignedReceipt.model_validate_json(
-                receipt.read_text(encoding=UTF_8_ENCODING)
-            )
-        except ValueError as exc:
-            raise bad_parameter_from_error(ReviewPackageCounterSigningError(str(exc))) from exc
-    try:
-        feedback = build_feedback_package(
-            bucket_id=originator.recipient_id,
-            work_unit_id=work_unit_id,
-            calculation_revision_id=calculation_revision_id,
-            note=note,
-            counter_signed_receipt=counter_signed_receipt,
-            submitted_by=submitted_by,
         )
-        envelope = encrypt_feedback_package_for_originator(
-            feedback,
-            originator_public_key_hex=originator.public_key_hex,
-            recipient_encryption=recipient_encryption,
-        )
-    except (ReviewPackageFeedbackError, RecipientEncryptionError) as exc:
-        raise bad_parameter_from_error(exc) from exc
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(envelope.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
-    result, lines = review_package_encrypt_feedback_result(
-        output,
+    projection = run_review_package_encrypt_feedback(
+        ctx,
         originator_id=originator_id,
-        originator_public_key_hex=originator.public_key_hex,
         work_unit_id=work_unit_id,
         calculation_revision_id=calculation_revision_id,
-        has_counter_sign=counter_signed_receipt is not None,
-        envelope=envelope,
+        submitted_by=submitted_by,
+        output=output,
+        note=note,
+        receipt=receipt,
+        bucket_id=bucket_id,
     )
+    result, lines = review_package_encrypt_feedback_result(projection)
     emit_envelope(ctx, command="modelo.review_package.encrypt_feedback", result=result, lines=lines)
 
 
@@ -591,8 +359,6 @@ def review_package_import_feedback(
     bucket_id: str | None = None,
 ) -> None:
     """Import, verify, and journal a recipient's feedback package."""
-    from ._modelo_cli_support import bad_parameter_from_error
-
     if not envelope_path.exists():
         raise typer.BadParameter(
             tr(
@@ -607,43 +373,15 @@ def review_package_import_feedback(
                 package_path=str(package),
             )
         )
-    try:
-        envelope = RecipientEncryptedPackage.model_validate_json(envelope_path.read_text(encoding=UTF_8_ENCODING))
-    except ValueError as exc:
-        raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
-    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-
-    repository = secure_object_repository_for_bucket(resolved_bucket_id)
-    keypair = ensure_recipient_encryption_keypair(
-        bucket_id=resolved_bucket_id,
-        recipient_encryption=recipient_encryption,
+    projection = run_review_package_import_feedback(
+        ctx,
+        envelope_path=envelope_path,
+        package=package,
+        operator_public_key_hex=operator_public_key_hex,
+        counter_signer_public_key_hex=counter_signer_public_key_hex,
+        bucket_id=bucket_id,
     )
-    try:
-        imported = import_feedback_package(
-            envelope,
-            originator_private_key_hex=keypair.private_key_hex,
-            recipient_encryption=recipient_encryption,
-            reviewed_package_path=package,
-            operator_public_key_hex=operator_public_key_hex,
-            counter_signer_public_key_hex=counter_signer_public_key_hex,
-        )
-    except (RecipientDecryptionError, ReviewPackageFeedbackError, FeedbackCounterSignatureInvalidError) as exc:
-        raise bad_parameter_from_error(exc) from exc
-    attached = False
-    if imported.counter_signature_verified:
-        from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-
-        emit_collab_feedback_countersign_attached_event(
-            imported,
-            bucket_id=resolved_bucket_id,
-            repository=BucketEventHistoryRepository(objects=repository),
-        )
-        attached = True
-    result, lines = review_package_import_feedback_result(
-        envelope_path, bucket_id=resolved_bucket_id, imported=imported, attached=attached
-    )
+    result, lines = review_package_import_feedback_result(projection)
     emit_envelope(ctx, command="modelo.review_package.import_feedback", result=result, lines=lines)
 
 

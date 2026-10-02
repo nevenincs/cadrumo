@@ -14,7 +14,9 @@ on.
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Sequence
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -23,10 +25,17 @@ from click.testing import Result
 
 from ....application.user_profile.preflight import build_profile_preflight_requirement
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ._overview_calendar_support import calendar_backend_omitting_gating_facts
-from .cli_runner import invoke_cached_cli
+from ._overview_calendar_support import _CALENDAR_GATING_FACT_OVERRIDES
+from ._overview_native_support import invoke_native_overview
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
+_ACTIVE_NATIVE: ContextVar[NativeCliProfileFixture | None] = ContextVar("overview_refusal_native", default=None)
 
 #: The gating fact this module leaves unanswered, and the selector token the
 #: warning stream carries for it. The refusal must show the label, not this.
@@ -47,7 +56,10 @@ _REFUSING_VERBS = tuple(str(parameters.id) for parameters in _REFUSING_INVOCATIO
 
 
 def _invoke(args: Sequence[str]) -> Result:
-    return invoke_cached_cli(args)
+    fixture = _ACTIVE_NATIVE.get()
+    if fixture is None:
+        raise AssertionError("refusal native fixture is not active")
+    return invoke_native_overview(fixture, args)
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,14 +81,22 @@ def refusals_with_the_fact_unanswered(tmp_path_factory: pytest.TempPathFactory) 
     active-profile pointer transaction refuses to nest across roots.
     """
     captured: dict[str, _RefusedInvocation] = {}
-    with calendar_backend_omitting_gating_facts(tmp_path_factory.mktemp("refusals"), _OMITTED_FACT_PATH):
-        for parameters in _REFUSING_INVOCATIONS:
-            args = parameters.values[0]
-            assert isinstance(args, list)
-            captured[str(parameters.id)] = _RefusedInvocation(
-                text=_invoke(args),
-                json=_invoke(["--format", "json", *args]),
-            )
+    with native_cli_profile_scope(tmp_path_factory.mktemp("refusals")) as fixture:
+        fixture.register(
+            label="Unanswered overview profile",
+            facts={key: value for key, value in _CALENDAR_GATING_FACT_OVERRIDES.items() if key != _OMITTED_FACT_PATH},
+        )
+        token = _ACTIVE_NATIVE.set(fixture)
+        try:
+            for parameters in _REFUSING_INVOCATIONS:
+                args = parameters.values[0]
+                assert isinstance(args, list)
+                captured[str(parameters.id)] = _RefusedInvocation(
+                    text=_invoke(args),
+                    json=_invoke(["--format", "json", *args]),
+                )
+        finally:
+            _ACTIVE_NATIVE.reset(token)
     return captured
 
 
@@ -171,7 +191,12 @@ def test_answering_the_fact_removes_this_refusal(tmp_path: Path) -> None:
     the fact answered must not refuse for this reason. Without it, the module
     proves only that the verb refuses, never that the omission is why.
     """
-    with calendar_backend_omitting_gating_facts(tmp_path):
-        result = _invoke(["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"])
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(label="Answered overview profile", facts=_CALENDAR_GATING_FACT_OVERRIDES)
+        token = _ACTIVE_NATIVE.set(fixture)
+        try:
+            result = _invoke(["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"])
+        finally:
+            _ACTIVE_NATIVE.reset(token)
 
     assert _expected_label() not in result.output, result.output

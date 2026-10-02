@@ -24,14 +24,14 @@ import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import Any, Literal
 
 from dev.acceptance.income_tax.installed_tui_child import (
     SETUP_WALK_SURFACE,
     InstalledTuiChildError,
+    admit_installed_session,
     assert_installed_product_origin,
     installed_product_evidence,
-    leave_the_setup_walk_if_handed_off,
     query_public_selector,
     read_passphrase_from_stdin,
     run_installed_tui_child_process,
@@ -51,7 +51,6 @@ from dev.packaging.installed_wheel_binding import environment_interpreter
 from .installed_tui_journey import (
     LedgerInstalledTuiError,
     _activate_button,
-    _admit_existing_profile_for_headless_launcher,
     _open_invoice_detail,
     _open_ledger_destination,
     _open_transaction_detail,
@@ -65,7 +64,6 @@ _SCHEMA = "ledger-01-installed-provenance-v2"
 _PATTERN_REVISION = "1.7"
 _BRIEF_REVISION = "0.1"
 _YEAR = 2025
-_KEYCHAIN_UNAVAILABLE = "AUTH_STORAGE_KEYRING_UNAVAILABLE"
 _TUI_IMPORT_KINDS = {"received": "invoices_received", "issued": "invoices_issued"}
 
 type ChildMode = Literal["import", "inspect"]
@@ -124,12 +122,7 @@ def _cli_track_text(cli: InstalledCli, transaction_id: str, *, authenticated: bo
 def _cli(
     cli: InstalledCli, arguments: Sequence[str], *, command: str, stage: str, authenticated: bool = True
 ) -> dict[str, Any]:
-    """Run one public JSON command and name the failed stage without retaining payloads.
-
-    ``authenticated=False`` resumes the session a TUI login admitted.  The
-    product refuses a stdin secret while such a session is resumable, because
-    the secret would go unused.
-    """
+    """Run one public JSON command and name the failed stage without retaining payloads."""
     try:
         return _result(cli.run(arguments, command=command, authenticated=authenticated), stage=stage)
     except InstalledCliError as error:
@@ -182,35 +175,6 @@ def _public_rows(
     return indexed
 
 
-class _PublicCommandRunner(Protocol):
-    """The one installed-CLI call the session probe makes."""
-
-    def run(
-        self, arguments: Sequence[str], /, *, command: str, authenticated: bool, allow_error: bool
-    ) -> dict[str, Any]: ...
-
-
-def _tui_login_session_mode(cli: _PublicCommandRunner) -> Literal["resumed_tui_session", "stdin_secret"]:
-    """Ask the product whether the TUI login left a session the CLI can resume.
-
-    A TUI login persists its session only through a usable OS keychain; without
-    one the product keeps the login process-scoped and a later CLI call must
-    authenticate itself. Both are supported product states, so the readback
-    observes which one this host produced instead of assuming it.
-    """
-    try:
-        document = cli.run(("app", "ledger", "list"), command="ledger.list", authenticated=False, allow_error=True)
-    except InstalledCliError as error:
-        raise LedgerInstalledTuiError(f"TUI session probe: installed CLI {error}") from error
-    if document.get("status") != "error":
-        return "resumed_tui_session"
-    error = document.get("error")
-    code = error.get("code") if isinstance(error, dict) else None
-    if code == _KEYCHAIN_UNAVAILABLE:
-        return "stdin_secret"
-    raise LedgerInstalledTuiError(f"TUI session probe refused with an unexpected code: {code}")
-
-
 def _host_free_memory_gb() -> float | None:
     """Report free physical memory, which bounds whether a run failed for the host's reasons."""
     if sys.platform != "win32":
@@ -239,17 +203,17 @@ def _host_free_memory_gb() -> float | None:
     return round(status.available_physical / 2**30, 1)
 
 
-def _cli_readback(cli: InstalledCli, cases: Sequence[ProvenanceCase], *, authenticated: bool) -> dict[str, list[str]]:
-    """Read every imported target through public CLI and return per-case surfaces."""
+def _cli_readback(cli: InstalledCli, cases: Sequence[ProvenanceCase]) -> dict[str, list[str]]:
+    """Read every imported target using fresh stdin proof and return per-case surfaces."""
     transactions = _public_rows(
-        cli, ("app", "ledger", "list"), command="ledger.list", key="description", authenticated=authenticated
+        cli, ("app", "ledger", "list"), command="ledger.list", key="description", authenticated=True
     )
     invoices = _public_rows(
         cli,
         ("app", "ledger", "invoice", "list"),
         command="ledger.invoice.list",
         key="invoice_number",
-        authenticated=authenticated,
+        authenticated=True,
     )
     surfaces: dict[str, list[str]] = {}
     for case in cases:
@@ -264,11 +228,11 @@ def _cli_readback(cli: InstalledCli, cases: Sequence[ProvenanceCase], *, authent
                 ("app", "ledger", "track", transaction_id),
                 command="ledger.track",
                 stage=stage,
-                authenticated=authenticated,
+                authenticated=True,
             )
             assert_json_provenance(tracked, filename=case.filename, row=case.locator, stage=f"{stage} track JSON")
             assert_track_text_provenance(
-                _cli_track_text(cli, transaction_id, authenticated=authenticated),
+                _cli_track_text(cli, transaction_id, authenticated=True),
                 filename=case.filename,
                 row=case.locator,
             )
@@ -283,7 +247,7 @@ def _cli_readback(cli: InstalledCli, cases: Sequence[ProvenanceCase], *, authent
                 ("app", "ledger", "invoice", "view", invoice_id),
                 command="ledger.invoice.view",
                 stage=stage,
-                authenticated=authenticated,
+                authenticated=True,
             )
             assert_json_provenance(viewed, filename=case.filename, row=case.locator, stage=f"{stage} view JSON")
             if viewed.get("kind") != case.invoice_kind:
@@ -386,16 +350,15 @@ async def _wait_with_deadline(
         await pilot.pause(0.5)
 
 
-async def _admit_installed_session(pilot: Any, *, passphrase: str) -> None:
-    """Unlock through the visible Login screen, or accept an already admitted session."""
-    from textual.widgets import Input
-
-    admitted_surfaces = ("#home-agenda", SETUP_WALK_SURFACE)
-    if await _wait_with_deadline(pilot, ("#field-passphrase", *admitted_surfaces)) == "#field-passphrase":
-        query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
-        await pilot.click("#btn-unlock")
-        await _wait_with_deadline(pilot, admitted_surfaces)
-    await leave_the_setup_walk_if_handed_off(pilot=pilot)
+async def _admit_installed_session(pilot: Any, *, passphrase: str) -> bool:
+    """Drive the runtime login/root Apps within the existing admission bound."""
+    deadline = asyncio.get_running_loop().time() + _ADMISSION_SURFACE_SECONDS
+    await _wait_with_deadline(pilot, ("#runtime-login-credential", "#home-agenda", SETUP_WALK_SURFACE))
+    return await admit_installed_session(
+        pilot=pilot,
+        passphrase=passphrase,
+        deadline=deadline,
+    )
 
 
 def _run_installed_launcher(*, passphrase: str, drive_after_home: Any) -> None:
@@ -403,8 +366,8 @@ def _run_installed_launcher(*, passphrase: str, drive_after_home: Any) -> None:
     from cadrumo.entrypoints.tui.launcher import main as launch
 
     async def drive(pilot: Any) -> None:
-        await _admit_installed_session(pilot, passphrase=passphrase)
-        await drive_after_home(pilot)
+        if await _admit_installed_session(pilot, passphrase=passphrase):
+            await drive_after_home(pilot)
 
     if launch(headless=True, auto_pilot=drive) != 0:
         raise LedgerInstalledTuiError("installed Ledger launcher did not exit cleanly")
@@ -432,7 +395,6 @@ def _run_child(*, workspace_root: Path, mode: ChildMode, manifest: Path, passphr
     """Import the TUI cases, or inspect every case, through one fresh installed TUI process."""
     entries = _read_manifest(manifest)
     selected = [entry for entry in entries if entry["import_frontend"] == "tui"] if mode == "import" else entries
-    _admit_existing_profile_for_headless_launcher(passphrase=passphrase)
     observations: list[str] = []
 
     async def drive(pilot: Any) -> None:
@@ -562,7 +524,7 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
     for case in cli_cases:
         _import_through_cli(cli, case, paths[case.case_id])
     # Before any TUI login the CLI authenticates with the stdin secret.
-    cli_surfaces = _cli_readback(cli, cli_cases, authenticated=True)
+    cli_surfaces = _cli_readback(cli, cli_cases)
 
     imported = _run_tui_child(
         args,
@@ -575,8 +537,7 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
         passphrase=passphrase,
         expected=[f"tui_import:{case.case_id}" for case in tui_cases],
     )
-    tui_readback_authentication = _tui_login_session_mode(cli)
-    cli_surfaces.update(_cli_readback(cli, tui_cases, authenticated=tui_readback_authentication == "stdin_secret"))
+    cli_surfaces.update(_cli_readback(cli, tui_cases))
     inspected = _run_tui_child(
         args,
         mode="inspect",
@@ -609,7 +570,7 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
             {
                 **case.receipt_entry(),
                 "surfaces": [*cli_surfaces[case.case_id], "tui_detail"],
-                "cli_authentication": tui_readback_authentication if case.import_frontend == "tui" else "stdin_secret",
+                "cli_authentication": "stdin_secret",
             }
             for case in cases
         ],

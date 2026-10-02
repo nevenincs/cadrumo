@@ -86,11 +86,13 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
     from ....application.wizard.commands import build_wizard_command
     from ....core.json_contract import Notice
     from ....domain.calculations.registry.authority import bundled_indexed_authority
-    from .._payer_fact_migration_notice import drain_payer_fact_migration_notices
+    from ...payer_fact_migration_notices import drain_payer_fact_migration_notices
     from .._profile_authentication_notice import drain_profile_authentication_notices
 
     def _drain_invocation_notices() -> tuple[Notice, ...]:
-        return (*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices())
+        from ..common import resolve_notice_actions
+
+        return resolve_notice_actions((*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices()))
 
     def _run(*args: object, **kwargs: object) -> None:
         # Keep the flow, command, and every profile context-dependent action
@@ -98,6 +100,14 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
         # generation must not escape the lease that made its choices valid.
         with bundled_indexed_authority().operation() as operation:
             flow = build_setup_flow(operation)
+            patch_persister = None
+            if mode == "edit":
+                from .runtime_profile_patch import runtime_patch_persister
+
+                context = kwargs.get("ctx")
+                if not isinstance(context, _TyperClickContext):
+                    raise TypeError("profile patch requires a parsed CLI context")
+                patch_persister = runtime_patch_persister(cast(typer.Context, context), flow=flow, operation=operation)
             # The wizard emits its own envelope, below this package's funnel,
             # so it is handed the drain for the notices root authentication
             # staged for this invocation.
@@ -106,6 +116,7 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
                 mode=mode,
                 operation=operation,
                 invocation_notices=_drain_invocation_notices,
+                patch_persister=patch_persister,
             )
             projected = with_profile_cli_projection(
                 wizard_command,

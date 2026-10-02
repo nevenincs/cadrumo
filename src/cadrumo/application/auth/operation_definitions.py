@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
@@ -11,9 +13,11 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, SecretStr
 
+from ...core.async_cleanup import await_cancellation_complete
 from ...core.auth_provider import AuthProviderKind
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.hashing import reject_duplicate_json_members, reject_json_constant
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
@@ -44,10 +48,15 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
+    OperationSchemaBindingV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..user_profile.login_session import ProfileLoginOutcome, login_profile
-from ..user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome, rotate_profile_passphrase
+from ..user_profile.passphrase_rotation import (
+    ProfilePassphraseRotationError,
+    ProfilePassphraseRotationOutcome,
+    rotate_profile_passphrase,
+)
 from .certificate_secret_backend import CertificateSecretBackendFactory
 from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
 from .operator_probe_ports import OperatorProbePorts
@@ -64,6 +73,7 @@ PROFILE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"
 _PROFILE_LOGIN_KIND = "profile.login.passphrase"
 _PROFILE_ROTATION_KIND = "profile.passphrase.rotation"
 _PUBLIC_REQUEST_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+type ProfileRotationFinalizer = Callable[[OperationExecutorContext, ProfilePassphraseRotationOutcome], Awaitable[None]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,7 +121,7 @@ class ProfilePassphraseRotationOperationRequest(BaseModel):
 class _PassphraseRotationSecret(BaseModel):
     """Runtime-only JSON carried solely by the one-shot broker."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     current_passphrase: SecretStr
     new_passphrase: SecretStr
@@ -138,12 +148,42 @@ def _require_active_profile_subject[PayloadT: BaseModel](request: OperationReque
 
 async def _result_reference(result: BaseModel, context: OperationExecutorContext) -> str:
     """Persist a post-custody result or retain the safe profile reference."""
-    if context.identity.definition_id in {
-        PROFILE_LOGIN_OPERATION_DEFINITION_ID,
-        PROFILE_ROTATION_OPERATION_DEFINITION_ID,
-    }:
+    if context.identity.definition_id == PROFILE_LOGIN_OPERATION_DEFINITION_ID:
         return context.identity.subject_ref
     return await context.operands.put(result, written_at=now())
+
+
+def _parse_rotation_secret(secret: memoryview) -> _PassphraseRotationSecret:
+    """Decode the one-shot frame without exposing rejected input in a refusal."""
+    try:
+        document = json.loads(
+            bytes(secret).decode("utf-8"),
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
+        )
+        return _PassphraseRotationSecret.model_validate(document, strict=True)
+    except (UnicodeError, ValueError, TypeError, RecursionError):
+        # Leave the validation exception's scope before raising: it may retain
+        # the rejected secret even when its display is suppressed.
+        pass
+    raise ProfilePassphraseRotationError("Invalid protected passphrase rotation input")
+
+
+def _require_rotation_outcome(value: object, *, profile_id: UUID) -> ProfilePassphraseRotationOutcome:
+    """Revalidate even a constructed model before recording a completed write."""
+    if type(value) is ProfilePassphraseRotationOutcome:
+        try:
+            outcome = ProfilePassphraseRotationOutcome.model_validate(
+                value.model_dump(mode="python", warnings=False), strict=True
+            )
+        except (ValueError, TypeError):
+            # An invalid constructed model may carry arbitrary values in the
+            # validation error; do not retain that exception on the refusal.
+            pass
+        else:
+            if outcome.profile_id == str(profile_id):
+                return outcome
+    raise ValueError("passphrase rotation returned an invalid profile outcome")
 
 
 class ProfileLoginOperationExecutor:
@@ -181,8 +221,10 @@ class ProfilePassphraseRotationOperationExecutor:
         self,
         *,
         rotate_passphrase: Callable[..., ProfilePassphraseRotationOutcome] = rotate_profile_passphrase,
+        finalize_rotation: ProfileRotationFinalizer | None = None,
     ) -> None:
         self._rotate_passphrase = rotate_passphrase
+        self._finalize_rotation = finalize_rotation
 
     async def execute(
         self,
@@ -192,26 +234,41 @@ class ProfilePassphraseRotationOperationExecutor:
         _require_profile_subject(request, request.payload.profile_id)
         await context.events.phase("auth.passphrase.secret-consume")
         async with context.ephemeral_secret.consume() as secret:
-            parsed = _PassphraseRotationSecret.model_validate(json.loads(bytes(secret).decode("utf-8")), strict=True)
+            parsed = _parse_rotation_secret(secret)
             current = parsed.current_passphrase.get_secret_value()
             replacement = parsed.new_passphrase.get_secret_value()
             confirmation = parsed.new_passphrase_confirmation.get_secret_value()
             try:
-                await context.events.effect(OperationEffect.UNKNOWN)
                 await context.events.phase("auth.passphrase.execute")
-                result = self._rotate_passphrase(
-                    profile_id=request.payload.profile_id,
-                    current_passphrase=current,
-                    new_passphrase=replacement,
-                    new_passphrase_confirmation=confirmation,
-                    profile_decode_context=context.authority_operation.profile_decode_context(),
-                )
+                decode = context.authority_operation.profile_decode_context()
+
+                async def publish() -> str:
+                    async with context.cancellation.irreversible_section():
+                        await context.events.effect(OperationEffect.UNKNOWN)
+                        try:
+                            result = await asyncio.to_thread(
+                                self._rotate_passphrase,
+                                profile_id=request.payload.profile_id,
+                                current_passphrase=current,
+                                new_passphrase=replacement,
+                                new_passphrase_confirmation=confirmation,
+                                profile_decode_context=decode,
+                            )
+                        except ProfilePassphraseRotationError:
+                            await context.events.effect(OperationEffect.NONE)
+                            raise
+                        result = _require_rotation_outcome(result, profile_id=request.payload.profile_id)
+                        await context.events.effect(OperationEffect.UPDATED)
+                        result_ref = await context.operands.put(result, written_at=now())
+                        if self._finalize_rotation is not None:
+                            await self._finalize_rotation(context, result)
+                        await context.events.phase("auth.passphrase.settlement")
+                        return result_ref
+
+                return await await_cancellation_complete(publish(), task_name="profile-passphrase-rotation-publication")
             finally:
                 current = replacement = confirmation = ""
                 del parsed
-        await context.events.effect(OperationEffect.UPDATED)
-        await context.events.phase("auth.passphrase.settlement")
-        return await _result_reference(result, context)
 
 
 class AuthConfigureOperationExecutor:
@@ -231,17 +288,28 @@ class AuthConfigureOperationExecutor:
     ) -> str:
         _require_active_profile_subject(request)
         await context.events.phase("auth.configure.preflight")
-        await context.events.effect(OperationEffect.UNKNOWN)
-        await context.events.phase("auth.configure.execute")
-        result = self._configure(
-            request.payload.provider.value,
-            certificate_path=request.payload.certificate_path,
-            operator_scope_ports=self._ports.operator_scope_ports,
-            operation=context.authority_operation,
-        )
-        await context.events.effect(OperationEffect.UPDATED)
-        await context.events.phase("auth.configure.settlement")
-        return await _result_reference(result, context)
+
+        async def publish() -> str:
+            async with context.cancellation.irreversible_section():
+                await context.events.effect(OperationEffect.UNKNOWN)
+                await context.events.phase("auth.configure.execute")
+                result = await asyncio.to_thread(
+                    self._configure,
+                    request.payload.provider.value,
+                    certificate_path=request.payload.certificate_path,
+                    operator_scope_ports=self._ports.operator_scope_ports,
+                    operation=context.authority_operation,
+                )
+                if type(result) is not AuthConfigureResult:
+                    raise ValueError("provider configuration returned an invalid result")
+                result = AuthConfigureResult.model_validate_json(result.model_dump_json(), strict=True)
+                if result.provider != request.payload.provider.value:
+                    raise ValueError("provider configuration returned a different provider")
+                await context.events.effect(OperationEffect.UPDATED)
+                await context.events.phase("auth.configure.settlement")
+                return await _result_reference(result, context)
+
+        return await await_cancellation_complete(publish(), task_name="auth-configure-publication")
 
 
 class AuthSessionAcquireOperationExecutor:
@@ -261,20 +329,44 @@ class AuthSessionAcquireOperationExecutor:
     ) -> str:
         _require_active_profile_subject(request)
         await context.events.phase("auth.acquire.preflight")
-        await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.acquire.execute")
-        result = await self._acquire(
-            request.payload.provider.value if request.payload.provider is not None else None,
-            fresh=request.payload.fresh,
-            reset_lock=request.payload.reset_lock,
-            certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
-            browser_session_factory=self._ports.browser_session_factory,
-            operator_probe_ports=self._ports.operator_probe_ports,
-            operator_scope_ports=self._ports.operator_scope_ports,
-        )
-        await context.events.effect(OperationEffect.UPDATED)
-        await context.events.phase("auth.acquire.settlement")
-        return await _result_reference(result, context)
+        effect_started = False
+
+        @asynccontextmanager
+        async def guarded_effect() -> AsyncGenerator[None]:
+            nonlocal effect_started
+            async with context.cancellation.irreversible_section():
+                if not effect_started:
+                    await context.events.effect(OperationEffect.UNKNOWN)
+                    effect_started = True
+                yield
+
+        async def acquire_and_settle() -> str:
+            result = await self._acquire(
+                request.payload.provider.value if request.payload.provider is not None else None,
+                fresh=request.payload.fresh,
+                reset_lock=request.payload.reset_lock,
+                certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
+                browser_session_factory=self._ports.browser_session_factory,
+                operator_probe_ports=self._ports.operator_probe_ports,
+                operator_scope_ports=self._ports.operator_scope_ports,
+                effect_guard=guarded_effect,
+                authority_operation=context.authority_operation,
+            )
+            if (
+                type(result) is not AuthLoginResult
+                or not result.authenticated
+                or result.removed_sessions < 0
+                or (request.payload.provider is not None and result.provider != request.payload.provider.value)
+            ):
+                raise ValueError("provider acquisition returned an invalid result")
+            result = AuthLoginResult.model_validate_json(result.model_dump_json(), strict=True)
+            async with guarded_effect():
+                await context.events.effect(OperationEffect.UPDATED)
+                await context.events.phase("auth.acquire.settlement")
+                return await _result_reference(result, context)
+
+        return await await_cancellation_complete(acquire_and_settle(), task_name="auth-acquire-publication")
 
 
 class AuthLogoutOperationExecutor:
@@ -294,19 +386,28 @@ class AuthLogoutOperationExecutor:
     ) -> str:
         target_bucket_id = _require_active_profile_subject(request)
         await context.events.phase("auth.logout.preflight")
-        await context.events.effect(OperationEffect.UNKNOWN)
-        await context.events.phase("auth.logout.execute")
-        result = self._logout(
-            provider=request.payload.provider.value if request.payload.provider is not None else None,
-            all_providers=request.payload.all_providers,
-            target_bucket_id=target_bucket_id,
-            certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
-            operator_scope_ports=self._ports.operator_scope_ports,
-        )
-        changed = result.removed_sessions or result.cleared_session_state
-        await context.events.effect(OperationEffect.UPDATED if changed else OperationEffect.NONE)
-        await context.events.phase("auth.logout.settlement")
-        return await _result_reference(result, context)
+
+        async def publish() -> str:
+            async with context.cancellation.irreversible_section():
+                await context.events.effect(OperationEffect.UNKNOWN)
+                await context.events.phase("auth.logout.execute")
+                result = await asyncio.to_thread(
+                    self._logout,
+                    provider=request.payload.provider.value if request.payload.provider is not None else None,
+                    all_providers=request.payload.all_providers,
+                    target_bucket_id=target_bucket_id,
+                    certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
+                    operator_scope_ports=self._ports.operator_scope_ports,
+                )
+                result = AuthLogoutResult.model_validate_json(result.model_dump_json(), strict=True)
+                if result.bucket_id != target_bucket_id or result.removed_sessions < 0:
+                    raise ValueError("invalid provider logout outcome")
+                changed = result.removed_sessions or result.cleared_session_state
+                await context.events.effect(OperationEffect.UPDATED if changed else OperationEffect.NONE)
+                await context.events.phase("auth.logout.settlement")
+                return await _result_reference(result, context)
+
+        return await await_cancellation_complete(publish(), task_name="auth-logout-publication")
 
 
 class AuthResetOperationExecutor:
@@ -326,27 +427,45 @@ class AuthResetOperationExecutor:
     ) -> str:
         target_bucket_id = _require_active_profile_subject(request)
         await context.events.phase("auth.reset.preflight")
-        await context.events.effect(OperationEffect.UNKNOWN)
-        await context.events.phase("auth.reset.execute")
-        result = self._reset(
-            provider=request.payload.provider.value if request.payload.provider is not None else None,
-            all_providers=request.payload.all_providers,
-            target_bucket_id=target_bucket_id,
-            certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
-            operator_scope_ports=self._ports.operator_scope_ports,
-        )
-        changed = any(
-            (
-                result.removed_sessions,
-                result.cleared_provider_configuration,
-                result.cleared_locks,
-                result.removed_certificate_sources,
-                result.removed_certificate_secrets,
-            )
-        )
-        await context.events.effect(OperationEffect.UPDATED if changed else OperationEffect.NONE)
-        await context.events.phase("auth.reset.settlement")
-        return await _result_reference(result, context)
+
+        async def publish() -> str:
+            async with context.cancellation.irreversible_section():
+                await context.events.effect(OperationEffect.UNKNOWN)
+                await context.events.phase("auth.reset.execute")
+                result = await asyncio.to_thread(
+                    self._reset,
+                    provider=request.payload.provider.value if request.payload.provider is not None else None,
+                    all_providers=request.payload.all_providers,
+                    target_bucket_id=target_bucket_id,
+                    certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
+                    operator_scope_ports=self._ports.operator_scope_ports,
+                )
+                result = AuthResetResult.model_validate_json(result.model_dump_json(), strict=True)
+                if (
+                    result.bucket_id != target_bucket_id
+                    or min(
+                        result.removed_sessions,
+                        result.cleared_locks,
+                        result.removed_certificate_sources,
+                        result.removed_certificate_secrets,
+                    )
+                    < 0
+                ):
+                    raise ValueError("invalid provider reset outcome")
+                changed = any(
+                    (
+                        result.removed_sessions,
+                        result.cleared_provider_configuration,
+                        result.cleared_locks,
+                        result.removed_certificate_sources,
+                        result.removed_certificate_secrets,
+                    )
+                )
+                await context.events.effect(OperationEffect.UPDATED if changed else OperationEffect.NONE)
+                await context.events.phase("auth.reset.settlement")
+                return await _result_reference(result, context)
+
+        return await await_cancellation_complete(publish(), task_name="auth-reset-publication")
 
 
 def _definition(
@@ -359,6 +478,7 @@ def _definition(
     phases: tuple[str, ...],
     secret_kind: str | None = None,
     request_storage: OperationRequestStoragePolicy = OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+    permitted_frontends: frozenset[OperationFrontendProjection] = frozenset(OperationFrontendProjection),
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -385,9 +505,7 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
-        ),
+        permitted_frontends=permitted_frontends,
         ephemeral_secret=(
             None
             if secret_kind is None
@@ -404,6 +522,7 @@ def build_auth_operation_definitions(
     ports: AuthOperationPorts,
     profile_login: Callable[..., ProfileLoginOutcome] = login_profile,
     rotate_passphrase: Callable[..., ProfilePassphraseRotationOutcome] = rotate_profile_passphrase,
+    finalize_rotation: ProfileRotationFinalizer | None = None,
     configure: Callable[..., AuthConfigureResult] = configure_operator_auth,
     acquire: Callable[..., Awaitable[AuthLoginResult]] = login_operator_auth,
     logout: Callable[..., AuthLogoutResult] = logout_operator_auth,
@@ -428,6 +547,7 @@ def build_auth_operation_definitions(
             build=lambda: AuthConfigureOperationExecutor(ports=ports, configure=configure),
             phases=("auth.configure.preflight", "auth.configure.execute", "auth.configure.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
         _definition(
             definition_id=AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
@@ -437,6 +557,7 @@ def build_auth_operation_definitions(
             build=lambda: AuthSessionAcquireOperationExecutor(ports=ports, acquire=acquire),
             phases=("auth.acquire.preflight", "auth.acquire.execute", "auth.acquire.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
         _definition(
             definition_id=AUTH_LOGOUT_OPERATION_DEFINITION_ID,
@@ -461,10 +582,14 @@ def build_auth_operation_definitions(
             request_type=ProfilePassphraseRotationOperationRequest,
             result_type=ProfilePassphraseRotationOutcome,
             executor_type=ProfilePassphraseRotationOperationExecutor,
-            build=lambda: ProfilePassphraseRotationOperationExecutor(rotate_passphrase=rotate_passphrase),
+            build=lambda: ProfilePassphraseRotationOperationExecutor(
+                rotate_passphrase=rotate_passphrase,
+                finalize_rotation=finalize_rotation,
+            ),
             phases=("auth.passphrase.secret-consume", "auth.passphrase.execute", "auth.passphrase.settlement"),
             secret_kind=_PROFILE_ROTATION_KIND,
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
     )
 
@@ -473,12 +598,98 @@ def build_auth_operation_registrations(
     definitions: tuple[OperationDefinition, ...],
 ) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
     """Bind the auth-owned definitions to their stable public schemas."""
+    from .passphrase_operation_access import (
+        PROFILE_ROTATION_RESULT_SCHEMA_ID,
+        ProfilePassphraseRotationResultProjection,
+        project_profile_rotation_result,
+        resolve_profile_rotation_access,
+    )
+    from .provider_configure_operation_access import (
+        AUTH_CONFIGURE_RESULT_SCHEMA_ID,
+        AuthConfigureOperationProjection,
+        project_auth_configure_result,
+        resolve_auth_configure_access,
+    )
+    from .session_acquire_operation_access import (
+        AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID,
+        AuthSessionAcquireOperationProjection,
+        project_auth_session_acquire_result,
+        resolve_auth_session_acquire_access,
+    )
+    from .teardown_operation_access import resolve_auth_teardown_access
+
     return tuple(
         sorted(
             (
-                OperationPublicDefinitionRegistrationV1.compose_request_only(
+                OperationPublicDefinitionRegistrationV1.compose(
                     definition=definition,
-                    request_schema_id=f"{definition.definition_id}.request",
+                    request_schema=OperationSchemaBindingV1.bind(
+                        schema_id=f"{definition.definition_id}.request",
+                        schema_version=1,
+                        model_type=definition.request_type,
+                    ),
+                    result_schema=OperationSchemaBindingV1.bind(
+                        schema_id=PROFILE_ROTATION_RESULT_SCHEMA_ID,
+                        schema_version=1,
+                        model_type=ProfilePassphraseRotationResultProjection,
+                    ),
+                    result_projector=project_profile_rotation_result,
+                    access_resolver=resolve_profile_rotation_access,
+                )
+                if definition.definition_id == PROFILE_ROTATION_OPERATION_DEFINITION_ID
+                else OperationPublicDefinitionRegistrationV1.compose(
+                    definition=definition,
+                    request_schema=OperationSchemaBindingV1.bind(
+                        schema_id=f"{definition.definition_id}.request",
+                        schema_version=1,
+                        model_type=AuthConfigureOperationRequest,
+                    ),
+                    result_schema=OperationSchemaBindingV1.bind(
+                        schema_id=AUTH_CONFIGURE_RESULT_SCHEMA_ID,
+                        schema_version=1,
+                        model_type=AuthConfigureOperationProjection,
+                    ),
+                    result_projector=project_auth_configure_result,
+                    access_resolver=resolve_auth_configure_access,
+                )
+                if definition.definition_id == AUTH_CONFIGURE_OPERATION_DEFINITION_ID
+                else OperationPublicDefinitionRegistrationV1.compose(
+                    definition=definition,
+                    request_schema=OperationSchemaBindingV1.bind(
+                        schema_id=f"{definition.definition_id}.request",
+                        schema_version=1,
+                        model_type=AuthSessionAcquireOperationRequest,
+                    ),
+                    result_schema=OperationSchemaBindingV1.bind(
+                        schema_id=AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID,
+                        schema_version=1,
+                        model_type=AuthSessionAcquireOperationProjection,
+                    ),
+                    result_projector=project_auth_session_acquire_result,
+                    access_resolver=resolve_auth_session_acquire_access,
+                )
+                if definition.definition_id == AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
+                else OperationPublicDefinitionRegistrationV1.compose(
+                    definition=definition,
+                    request_schema=OperationSchemaBindingV1.bind(
+                        schema_id=f"{definition.definition_id}.request",
+                        schema_version=1,
+                        model_type=definition.request_type,
+                    ),
+                    result_schema=OperationSchemaBindingV1.bind(
+                        schema_id=f"{definition.definition_id}.result",
+                        schema_version=1,
+                        model_type=(
+                            AuthLogoutResult
+                            if definition.definition_id == AUTH_LOGOUT_OPERATION_DEFINITION_ID
+                            else AuthResetResult
+                        ),
+                    ),
+                    access_resolver=resolve_auth_teardown_access,
+                )
+                if definition.definition_id in {AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID}
+                else OperationPublicDefinitionRegistrationV1.compose_request_only(
+                    definition=definition, request_schema_id=f"{definition.definition_id}.request"
                 )
                 for definition in definitions
             ),
@@ -489,6 +700,7 @@ def build_auth_operation_registrations(
 
 __all__ = [
     "AuthOperationPorts",
+    "ProfileRotationFinalizer",
     "build_auth_operation_definitions",
     "build_auth_operation_registrations",
 ]

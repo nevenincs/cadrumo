@@ -18,18 +18,22 @@ from click.testing import Result
 
 from ....adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ._strict_cli_fixture_support import diagnostics_isolated_backend
-from .cli_runner import invoke_cached_cli
+from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
-__all__ = ["diagnostics_isolated_backend"]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["diagnostics_native_profile"]
 
 _BUCKET_ID = "22222222-3333-4444-8555-666666666666"
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_cached_cli(args)
+    return invoke_diagnostics_cli(args)
 
 
 def _seed_runs() -> None:
@@ -71,7 +75,7 @@ def _seed_runs() -> None:
     )
 
 
-def test_runs_lists_seeded_records_most_recent_first(_isolated_backend: None) -> None:
+def test_runs_lists_seeded_records_most_recent_first(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """The verb lists the seeded run telemetry typed, most-recent-first."""
     _seed_runs()
 
@@ -86,7 +90,7 @@ def test_runs_lists_seeded_records_most_recent_first(_isolated_backend: None) ->
     assert payload["runs"][1]["error_kind"] == "LLMClassifierError"
 
 
-def test_runs_empty_is_instructive(_isolated_backend: None) -> None:
+def test_runs_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """With no LLM run telemetry the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "diagnostics", "runs"])
     assert result.exit_code == 0, result.output
@@ -101,7 +105,7 @@ def test_runs_empty_is_instructive(_isolated_backend: None) -> None:
     assert "diagnostics.runs.no_run_data" in codes
 
 
-def test_runs_provider_filter_scopes_the_listing(_isolated_backend: None) -> None:
+def test_runs_provider_filter_scopes_the_listing(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--provider`` restricts the listing to one provider label."""
     _seed_runs()
 
@@ -116,7 +120,7 @@ def test_runs_provider_filter_scopes_the_listing(_isolated_backend: None) -> Non
     assert payload["total_runs"] == 1
 
 
-def test_runs_since_until_scopes_by_date(_isolated_backend: None) -> None:
+def test_runs_since_until_scopes_by_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--since``/``--until`` narrow the listing by date."""
     _seed_runs()
 
@@ -140,7 +144,7 @@ def test_runs_since_until_scopes_by_date(_isolated_backend: None) -> None:
     assert payload["runs"][0]["run_id"] == "run-1"
 
 
-def test_runs_limit_caps_the_most_recent_rows(_isolated_backend: None) -> None:
+def test_runs_limit_caps_the_most_recent_rows(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--limit`` caps the listing to the N most-recent rows."""
     _seed_runs()
 
@@ -152,14 +156,14 @@ def test_runs_limit_caps_the_most_recent_rows(_isolated_backend: None) -> None:
     assert payload["total_runs"] == 2
 
 
-def test_runs_rejects_malformed_date(_isolated_backend: None) -> None:
+def test_runs_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
     result = _invoke(["--format", "json", "app", "diagnostics", "runs", "--since", "01/04/2026"])
     assert result.exit_code != 0
     assert "ISO date" in result.output
 
 
-def test_runs_rejects_nonpositive_limit(_isolated_backend: None) -> None:
+def test_runs_rejects_nonpositive_limit(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A ``--limit`` below 1 is refused by the option's own ``min`` bound."""
     result = _invoke(["--format", "json", "app", "diagnostics", "runs", "--limit", "0"])
     assert result.exit_code != 0

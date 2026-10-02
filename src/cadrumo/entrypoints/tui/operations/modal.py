@@ -1,7 +1,8 @@
 """The generic detachable operation modal, built solely from public DTOs.
 
 This modal drives exactly one submitted operation through
-:class:`OperationController` and renders exactly the public projection,
+:class:`~cadrumo.entrypoints.tui.operations.controller_port.OperationControllerPort`
+and renders exactly the public projection,
 event-page, REVIEW, response-control, cancellation, detach and typed
 Workspace-refresh DTOs those public services return. It never imports a
 persisted snapshot, a journal record, or a supervisor-private type, and it
@@ -24,9 +25,11 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
 
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
 from ....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,
     OperationCancellationSuccessV1,
+    OperationDetachRefusalCode,
     OperationDetachSuccessV1,
     OperationObservationSuccessV1,
     OperationResponseApplyRequestV1,
@@ -39,12 +42,13 @@ from ....application.operations.interactions import (
     OperationResponseIntentValue,
 )
 from ....application.operations.models import OperationId, OperationRevision
+from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationLifecycle
 from ....core.time.clock import now
 from ..components.theme import tokenised
-from .controller import OperationController
+from .controller_port import OperationControllerPort
 from .interactions import (
     OperationModalInteractionStateV1,
     OperationModalReviewInteractionV1,
@@ -118,7 +122,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
     """)
     BINDINGS: ClassVar = [Binding("escape", "request_close", "", show=False)]
 
-    def __init__(self, controller: OperationController) -> None:
+    def __init__(self, controller: OperationControllerPort) -> None:
         """Bind the modal to exactly one already-submitted operation."""
         super().__init__()
         self._controller = controller
@@ -167,10 +171,20 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self._poll_worker = self.run_worker(self._poll_loop(), name="operation-modal-poll", exclusive=True)
 
     async def _poll_loop(self) -> None:
+        try:
+            await self._observe_until_stopped()
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+            self._runtime_access_lost(error)
+
+    async def _observe_until_stopped(self) -> None:
         cursor = self._log_view.next_cursor
-        while not self._observation_stopped:
+        while self._observing():
             observed = await self._controller.observe(cursor)
+            if not self._observing():
+                return
             if not isinstance(observed, OperationObservationSuccessV1):
+                self._clear_private_view(observed.code.value)
+                cursor = 0
                 await asyncio.sleep(_POLL_INTERVAL.total_seconds())
                 continue
             self._log_view = fold_event_page(self._log_view, observed.event_page)
@@ -179,15 +193,43 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 cursor = restart_cursor
             else:
                 cursor = self._log_view.next_cursor
+            if self._view_model is None:
+                self._clear_action_refusal()
             self._view_model = build_operation_modal_view_model(observed.projection)
             self._interaction = await resolve_modal_interaction_state(
                 self._controller, observed.projection, BaseModel, current=self._interaction
             )
+            if not self._observing():
+                self._clear_private_view(self._action_refusal or "")
+                return
             self._refresh_view_state()
             if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
                 self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model))
                 return
             await asyncio.sleep(_POLL_INTERVAL.total_seconds())
+
+    def _observing(self) -> bool:
+        """Read the current state, which another action may change across an await."""
+        return not self._observation_stopped
+
+    def _runtime_access_lost(self, error: RuntimeFrontendRefusedError | RuntimeRefusalError) -> None:
+        self._observation_stopped = True
+        code = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
+        self._clear_private_view(code)
+
+    def _clear_private_view(self, code: str) -> None:
+        """Discard private presentation when it can no longer be authorized."""
+        self._view_model = None
+        self._interaction = None
+        self._log_view = build_initial_log_view(self._controller.operation_id)
+        self._action_refusal = code
+        for suffix in ("phase", "deadlines", "diagnostic", "receipt", "review", "log"):
+            self.query_one(f"#operation-modal-{suffix}", Static).update("")
+        self.query_one("#operation-modal-status", Static).update(tr("operation.modal.status.access_unavailable"))
+        self._render_action_refusal()
+        for action in ("cancel", "detach", "apply", "reject"):
+            self.query_one(f"#btn-operation-{action}", Button).disabled = True
+        self.query_one("#btn-operation-close", Button).disabled = False
 
     async def _stop_poll_worker(self) -> None:
         """End the poll worker and wait for it, so teardown never races a live poll."""
@@ -312,7 +354,11 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         view_model = self._view_model
         if view_model is None or not view_model.cancel_control_enabled:
             return
-        result = await self._controller.cancel(expected_revision=view_model.projection.revision)
+        try:
+            result = await self._controller.cancel(expected_revision=view_model.projection.revision)
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+            self._runtime_access_lost(error)
+            return
         if isinstance(result, OperationCancellationSuccessV1):
             self._clear_action_refusal()
             return
@@ -327,7 +373,11 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         view_model = self._view_model
         if view_model is None:
             return
-        result = await self._controller.detach(expected_revision=view_model.projection.revision)
+        try:
+            result = await self._controller.detach(expected_revision=view_model.projection.revision)
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+            self._runtime_access_lost(error)
+            return
         if isinstance(result, OperationDetachSuccessV1):
             # Flagging alone let the screen pop while the worker was still parked
             # in its sleep or inside the observation read, so teardown raced a live
@@ -336,8 +386,16 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             self.dismiss(
                 OperationModalDetachedOutcomeV1(operation_id=self._controller.operation_id, revision=result.revision)
             )
+        else:
+            self._show_action_refusal(result.code)
 
     async def _respond(self, *, intent: OperationResponseIntentValue) -> None:
+        try:
+            await self._send_response(intent=intent)
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+            self._runtime_access_lost(error)
+
+    async def _send_response(self, *, intent: OperationResponseIntentValue) -> None:
         interaction = self._interaction
         if not isinstance(interaction, OperationModalReviewInteractionV1):
             return
@@ -374,7 +432,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
 
     def _show_action_refusal(
         self,
-        code: OperationCancellationRefusalCode | OperationResponseControlRefusalCode,
+        code: OperationCancellationRefusalCode | OperationResponseControlRefusalCode | OperationDetachRefusalCode,
     ) -> None:
         """Say why the operator's action was refused, in their own language.
 

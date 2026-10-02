@@ -25,6 +25,7 @@ from ..filed_data_ports import (
     FiledDataCapturePort,
     FiledDataRegisterPort,
     FiledDeclarationAvailabilityReportProtocol,
+    FiledEffectGuard,
     FiledRegisterDeclarationProtocol,
 )
 from ..filed_observation_ports import (
@@ -207,16 +208,8 @@ class _InMemoryIvaObservationPersistence:
         source_artefact_sha256: str | None,
     ) -> IvaCompensationPeriodState:
         """Refuse instead of manufacturing a disposition-aware history state."""
-        del (
-            observation_repository,
-            history_repository,
-            envelope,
-            taxpayer_nif,
-            source_observation_key,
-            expediente_id,
-            status,
-            source_artefact_sha256,
-        )
+        del observation_repository, history_repository, envelope, taxpayer_nif
+        del source_observation_key, expediente_id, status, source_artefact_sha256
         raise RuntimeError("test bundle does not provide IVA history co-commit")
 
 
@@ -384,7 +377,9 @@ class _UnavailableIvaRemoteStatePort:
         """Accept no remote-state manifest because no remote state is read."""
         del manifest
 
-    async def active_verified_session(self, *, operation: str, target_url: str | None) -> tuple[AeatSession, Settings]:
+    async def active_verified_session(
+        self, *, operation: str, target_url: str | None, **_kwargs: object
+    ) -> tuple[AeatSession, Settings]:
         """Refuse before any live session or network can be requested."""
         del operation, target_url
         raise RuntimeError("test bundle does not provide live IVA access")
@@ -395,6 +390,7 @@ class _UnavailableIvaRemoteStatePort:
         *,
         operation: str,
         target_url: str | None,
+        **_kwargs: object,
     ) -> AuthenticatedAeatSessionResult:
         """Refuse before any live authentication can be requested."""
         del settings, operation, target_url
@@ -409,6 +405,7 @@ class _UnavailableIvaRemoteStatePort:
         year_to: int,
         output_root: Path,
         progress_context: dict[str, object] | None,
+        **_kwargs: object,
     ) -> IvaCompensationHistoryCaptureReport:
         """Refuse direct IVA history capture in application tests."""
         del session, settings, year_from, year_to, output_root, progress_context
@@ -424,9 +421,11 @@ class _UnavailableIvaRemoteStatePort:
         taxpayer_nif: str | None,
         output_root: Path | None,
         progress_context: dict[str, object] | None,
+        effect_guard: FiledEffectGuard | None = None,
+        **_kwargs: object,
     ) -> IvaWalletCaptureReport:
         """Refuse direct IVA wallet capture in application tests."""
-        del session, settings, target_year, target_period, taxpayer_nif, output_root, progress_context
+        del session, settings, target_year, target_period, taxpayer_nif, output_root, progress_context, effect_guard
         raise RuntimeError("test bundle does not provide live IVA access")
 
 
@@ -457,17 +456,26 @@ class _UnavailableFiledDataRegister:
             translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
         )
 
+    async def capture_observation_deferred(self, declaration: FiledRegisterDeclarationProtocol):
+        """Refuse staged capture on the same unavailable register."""
+        del declaration
+        raise LiveApplicationError(
+            translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
+        )
+
 
 class UnavailableFiledDataCapturePort:
     """Application-only filed-data port that never opens a real Sede session."""
 
     @asynccontextmanager
-    async def open_register(self, *, operation: str) -> AsyncIterator[FiledDataRegisterPort]:
+    async def open_register(self, *, operation: str, **_kwargs: object) -> AsyncIterator[FiledDataRegisterPort]:
         """Yield the per-pair refusal register used by composition tests."""
         del operation
         yield _UnavailableFiledDataRegister()
 
-    async def discover_availability(self, *, operation: str) -> FiledDeclarationAvailabilityReportProtocol:
+    async def discover_availability(
+        self, *, operation: str, **_kwargs: object
+    ) -> FiledDeclarationAvailabilityReportProtocol:
         """Refuse direct register discovery in this in-memory bundle."""
         del operation
         raise LiveApplicationError(
@@ -482,10 +490,24 @@ class UnavailableFiledDataCapturePort:
         period: Period,
         artefact_sink: FiledArtefactSink | None = None,
         operation: str,
+        **_kwargs: object,
     ) -> tuple[FiledObservationProtocol, ...]:
         """Return no source rows because source capture is outside these tests."""
         del revision, filing_year, period, artefact_sink, operation
         return ()
+
+    async def capture_source_observations_deferred(
+        self,
+        revision: ModeloRevision,
+        *,
+        filing_year: int,
+        period: Period,
+        operation: str,
+        **_kwargs: object,
+    ):
+        """Refuse staged source capture in this unavailable test bundle."""
+        del revision, filing_year, period, operation
+        raise RuntimeError("test bundle does not provide staged source capture")
 
 
 @dataclass(frozen=True, slots=True)
@@ -528,6 +550,7 @@ class _UnavailableFilingReconciliation:
         *,
         actor: str,
         clock: datetime,
+        **_kwargs: object,
     ) -> FilingReconciliationResult:
         """Refuse rather than fabricate a chain decision on the test-only surface."""
         del entry, actor, clock

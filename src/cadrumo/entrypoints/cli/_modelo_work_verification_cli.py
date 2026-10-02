@@ -1,50 +1,37 @@
 """Behavior for modelo work verification and internal filing.
 
-This transport module resolves operator revision targets, calls
-:func:`verify_modelo_revision_with_preconditions` or
-:func:`file_modelo_revision`, and serializes the
-resulting :class:`VerificationReport` or
-:class:`ModeloRecord` into :class:`WorkVerifyResult` and
-:class:`WorkFileResult` envelopes. Cross-period dependency inspection is read
-only and emits :class:`WorkDependenciesResult`.
+Verify and file select through the registered runtime and render their
+settled writer results. Cross-period dependency inspection remains a separate
+read-only command.
 """
 
 from __future__ import annotations
 
 import typer
 
-from ...application.calculations.cross_period_clean_state import (
-    cross_period_dependency_inventory,
-    evaluate_cross_period_clean_state,
+from ...application.modelo.action_errors import CalculationRevisionStateError, VerificationReportNotFoundError
+from ...application.modelo.dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
+from ...application.modelo.operation_definitions import (
+    ModeloWorkFileApproval,
+    ModeloWorkFilePublicResultV2,
+    ModeloWorkFileRequest,
+    ModeloWorkVerifyPublicResultV2,
+    ModeloWorkVerifyRequest,
 )
-from ...application.calculations.cross_period_models import (
-    CrossPeriodCleanStateVerdict,
-    CrossPeriodDependencyInventoryItem,
-    CrossPeriodExpectedMemberSet,
-)
-from ...application.calculations.m111_no_retenciones import m111_no_retenciones_periods_for_bucket
-from ...application.modelo.filing_actions import file_modelo_revision
-from ...application.modelo.profile_readiness_gate import require_profile_ready_for_work_unit
+from ...application.modelo.preconditions import build_modelo_work_file_unverified_revision_failure
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
-from ...application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ...application.modelo.verify_selector import ModeloVerifySelector
-from ...application.modelo.work_plazo import calculated_m210_plazo_resolution
-from ...application.workflow.persistence import workflow_state_repository
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
-from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
-from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos.calculation_revision import CalculationRevisionState
-from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
+from ._modelo_behavior_support import resolve_optional_cli_period
 from ._modelo_cli_support import (
-    bad_parameter_from_error,
-    load_modelo_calculation_revision,
-    load_modelo_work_unit,
+    parse_revision_selector,
     resolve_default_actor,
 )
 from ._modelo_payloads import (
@@ -59,51 +46,37 @@ from ._modelo_payloads import (
 from ._modelo_rendering import (
     filing_record_lines,
     filing_record_payload,
-    m184_socio_handoff_notices,
+    m184_socio_handoff_advisory_notices,
     m210_plazo_notice,
     verification_report_lines,
     verification_report_notices,
     verification_report_payload,
 )
-from .common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
-from .state_projection_support import (
-    authority_operation,
-    calculation_action_ports_factory,
-    certificate_secret_backend_factory,
-    filing_action_ports_factory,
-    operator_scope_ports,
-    profile_read_ports_factory,
-    verification_repository_bundle_factory,
+from .common import activate_subcommand_output_language, emit_envelope
+from .runtime_modelo_dependencies import read_modelo_dependencies
+from .runtime_modelo_verification import (
+    run_modelo_work_filing,
+    run_modelo_work_verification,
+    select_modelo_work_revision_for_cli,
 )
-
-
-def _profile_expected_member_sets(profile: object) -> tuple[CrossPeriodExpectedMemberSet, ...]:
-    return tuple(
-        CrossPeriodExpectedMemberSet(
-            source_modelo=roster.source_modelo,
-            filing_year=roster.filing_year,
-            period=roster.period,
-            member_nifs=roster.member_nifs,
-        )
-        for roster in getattr(profile, "cross_period_group_member_rosters", ())
-    )
+from .runtime_registered_operation import submitted_operation_error
 
 
 def _dependency_inventory_item_payload(
-    item: CrossPeriodDependencyInventoryItem,
+    item: DependencyInventoryItemSnapshot,
 ) -> CrossPeriodDependencyInventoryItemPayload:
     return CrossPeriodDependencyInventoryItemPayload(
         target_modelo=item.target_modelo,
         target_revision_id=item.target_revision_id,
         target_filing_year=item.target_filing_year,
-        target_period=item.target_period,
+        target_period=item.target_period.to_period(),
         dependency_count=len(item.dependencies),
         source_modelos=item.source_modelos,
         dependencies=tuple(
             CrossPeriodDependencyRequirementPayload(
                 source_modelo=requirement.source_modelo,
                 filing_year=requirement.filing_year,
-                period=requirement.period,
+                period=requirement.period.to_period(),
                 source_casilla_ids=requirement.source_casilla_ids,
                 required_source_casilla_ids=requirement.required_source_casilla_ids,
                 source_presence_groups=requirement.source_presence_groups,
@@ -118,25 +91,29 @@ def _dependency_inventory_item_payload(
     )
 
 
-def _clean_state_payload(verdict: CrossPeriodCleanStateVerdict) -> CrossPeriodCleanStatePayload:
+def _clean_state_payload(verdict: DependencyCleanStateSnapshot) -> CrossPeriodCleanStatePayload:
     return CrossPeriodCleanStatePayload(
         target_modelo=verdict.target_modelo,
         target_filing_year=verdict.target_filing_year,
-        target_period=verdict.target_period,
+        target_period=verdict.target_period.to_period(),
         requires_clean_state=verdict.requires_clean_state,
         clean=verdict.clean,
         blockers=tuple(blocker.value for blocker in verdict.blockers),
         dependencies=tuple(
             CrossPeriodDependencyEvidencePayload(
-                source_modelo=evidence.requirement.source_modelo,
-                filing_year=evidence.requirement.filing_year,
-                period=evidence.requirement.period,
+                source_modelo=evidence.source_modelo,
+                filing_year=evidence.filing_year,
+                period=evidence.period.to_period(),
                 clean=evidence.clean,
                 blockers=tuple(blocker.value for blocker in evidence.blockers),
-                observation_source_kind=evidence.observation_source_kind,
+                observation_source_kind=evidence.observation_source_kind.value
+                if evidence.observation_source_kind is not None
+                else None,
                 filing_record_id=evidence.filing_record_id,
                 calculation_revision_id=evidence.calculation_revision_id,
-                external_evidence_kind=evidence.external_evidence_kind,
+                external_evidence_kind=evidence.external_evidence_kind.value
+                if evidence.external_evidence_kind is not None
+                else None,
                 expected_member_nifs=evidence.expected_member_nifs,
                 observed_member_nifs=evidence.observed_member_nifs,
                 missing_member_nifs=evidence.missing_member_nifs,
@@ -220,48 +197,30 @@ def work_verify(
 ) -> None:
     """Persist a :class:`VerificationReport` for the selected draft revision."""
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
-    from ...core.bucket_pointer import require_active_bucket_id
-
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=bucket_id or require_active_bucket_id(),
-        operation=authority_operation(ctx),
-    )
-    selected_revision = resolve_revision_for_cli(
+    client, selected = select_modelo_work_revision_for_cli(
+        ctx,
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         modelo=modelo,
         year=year,
         period=period,
-        registry_revision=revision,
+        revision=revision,
         bucket_id=bucket_id,
-        selector=select.to_calculation_revision_selector().value,
+        selector=select.to_calculation_revision_selector(),
         default_for="verify",
-        calculation_ports=calculation_ports,
     )
-    selected_work_unit = load_modelo_work_unit(
-        selected_revision.work_unit_id,
-        ports=calculation_ports.work_lifecycle_ports,
-    )
-    # One decrypted record serves every gate and advisory this command runs.
-    profile = require_profile_ready_for_work_unit(
-        selected_work_unit,
-        operation=authority_operation(ctx),
-        profile_decode_context=authority_operation(ctx).profile_decode_context(),
-    )
-    workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
-    already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
-    with bundled_indexed_authority().operation() as operation:
-        verification = verify_modelo_revision_with_preconditions(
-            selected_revision.calculation_revision_id,
-            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-            operator_scope_ports=operator_scope_ports(ctx),
-            verification_repositories=verification_repository_bundle_factory(ctx)(selected_work_unit.bucket_id),
+    completed = run_modelo_work_verification(
+        client,
+        work_unit_id=selected.unit.work_unit_id,
+        request=ModeloWorkVerifyRequest(
+            calculation_revision_id=selected.calculation_revision_id,
             actor=actor or resolve_default_actor(),
-            workflow_profile=workflow_profile,
-            operation=operation,
-            profile=profile,
-        )
+        ),
+    )
+    projection = completed.projection
+    if not isinstance(projection, ModeloWorkVerifyPublicResultV2):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    verification = projection.verification.to_verification()
     report = verification.report
     report_payload = verification_report_payload(report, finding_preconditions=verification.finding_preconditions)
     result = WorkVerifyResult.model_validate(report_payload.model_dump(mode="python"))
@@ -272,17 +231,9 @@ def work_verify(
         ),
     ]
     notices = verification_report_notices(report)
-    plazo_resolution = calculated_m210_plazo_resolution(
-        work_unit=load_modelo_work_unit(
-            selected_revision.work_unit_id,
-            ports=calculation_ports.work_lifecycle_ports,
-        ),
-        revision=selected_revision,
-        workflow_profile=workflow_profile,
-    )
-    if plazo_resolution is not None:
-        notices.append(m210_plazo_notice(plazo_resolution))
-    if already_verified:
+    if projection.advisories.m210_plazo is not None:
+        notices.append(m210_plazo_notice(projection.advisories.m210_plazo.to_resolution()))
+    if not verification.published:
         noop_message = tr(
             "cli.app.modelo.work.verify_idempotent_noop", calculation_revision_id=report.calculation_revision_id
         )
@@ -298,11 +249,7 @@ def work_verify(
             )
         )
         lines.append(noop_message)
-    notices.extend(
-        m184_socio_handoff_notices(
-            load_modelo_calculation_revision(selected_revision.calculation_revision_id, ports=calculation_ports)
-        )
-    )
+    notices.extend(m184_socio_handoff_advisory_notices(projection.advisories.m184_socio_handoffs))
     emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
     if not report.granted_verificado_completo:
         raise typer.Exit(code=1)
@@ -317,54 +264,32 @@ def work_dependencies(
 ) -> None:
     """Show cross-period dependency inventory and clean-state blockers."""
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
     if period is not None and modelo is None:
         raise typer.BadParameter(tr("cli.app.modelo.work.dependencies_period_requires_modelo"))
+    typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
+    completed = read_modelo_dependencies(ctx, filing_year=year, modelo=modelo, period=typed_period)
+    snapshot = completed.snapshot
     try:
-        state = workflow_state_repository().load()
-        workflow_profile = filing_taxpayer_or_refuse(state)
-        with bundled_indexed_authority().operation() as operation:
-            inventory = cross_period_dependency_inventory(
-                operation,
-                filing_year=year,
-                modelos=(modelo,) if modelo is not None else None,
-            )
-            clean_state = None
-            if modelo is not None and period is not None:
-                active_bucket_id = state.active_profile_bucket_id() or ""
-                verification_repositories = verification_repository_bundle_factory(ctx)(active_bucket_id)
-                snapshot = operation.snapshot(modelo, filing_year=year, period=period)
-                clean_state = evaluate_cross_period_clean_state(
-                    snapshot,
-                    bucket_id=active_bucket_id,
-                    observation_repository=verification_repositories.observation,
-                    filing_repository=verification_repositories.filing,
-                    calculation_repository=verification_repositories.calculation,
-                    verification_repository=verification_repositories.verification,
-                    justificante_repository=verification_repositories.justificante,
-                    expected_member_sets=_profile_expected_member_sets(workflow_profile),
-                    taxpayer_tax_id=workflow_profile.tax_id,
-                    activity_start_date=workflow_profile.activity_start_date,
-                    taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
-                    m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(
-                        active_bucket_id,
-                        profile_path_values_reader=profile_read_ports_factory(ctx)(active_bucket_id).path_values,
-                    ),
-                    operation=operation,
-                )
-    except (FileNotFoundError, RegistrySnapshotError, ValueError) as exc:
-        raise bad_parameter_from_error(exc) from exc
-    result = WorkDependenciesResult(
-        filing_year=year,
-        modelo_filter=modelo,
-        period_filter=period,
-        target_modelos=inventory.target_modelos,
-        source_modelos=inventory.source_modelos,
-        target_count=len(inventory.items),
-        items=tuple(_dependency_inventory_item_payload(item) for item in inventory.items),
-        clean_state=_clean_state_payload(clean_state) if clean_state is not None else None,
-    )
-    emit_envelope(ctx, command="modelo.work.dependencies", result=result, lines=_dependency_inventory_lines(result))
+        result = WorkDependenciesResult(
+            filing_year=snapshot.filing_year,
+            modelo_filter=snapshot.modelo_filter,
+            period_filter=period,
+            target_modelos=snapshot.target_modelos,
+            source_modelos=snapshot.source_modelos,
+            target_count=len(snapshot.items),
+            items=tuple(_dependency_inventory_item_payload(item) for item in snapshot.items),
+            clean_state=_clean_state_payload(snapshot.clean_state) if snapshot.clean_state is not None else None,
+        )
+        emit_envelope(ctx, command="modelo.work.dependencies", result=result, lines=_dependency_inventory_lines(result))
+    except Exception:
+        receipt = completed.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None
 
 
 def work_file(
@@ -386,57 +311,63 @@ def work_file(
 ) -> None:
     """Create an internal :class:`ModeloRecord` for a verified revision."""
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
-    from ...core.bucket_pointer import require_active_bucket_id
-
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=bucket_id or require_active_bucket_id(),
-        operation=authority_operation(ctx),
-    )
-    selected_revision = resolve_revision_for_cli(
+    client, selected = select_modelo_work_revision_for_cli(
+        ctx,
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         modelo=modelo,
         year=year,
         period=period,
-        registry_revision=revision,
+        revision=revision,
         bucket_id=bucket_id,
-        selector=select,
+        selector=parse_revision_selector(select),
         default_for="file",
-        calculation_ports=calculation_ports,
     )
-    selected_work_unit = load_modelo_work_unit(
-        selected_revision.work_unit_id,
-        ports=calculation_ports.work_lifecycle_ports,
+    if selected.calculation_state not in {
+        CalculationRevisionState.VERIFICADO_COMPLETO,
+        CalculationRevisionState.PRESENTADO,
+    }:
+        raise CalculationRevisionStateError(
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={
+                "calculation_revision_id": selected.calculation_revision_id,
+                "state": selected.calculation_state.value,
+            },
+            precondition_failure=build_modelo_work_file_unverified_revision_failure(
+                calculation_revision_id=selected.calculation_revision_id,
+                state=selected.calculation_state.value,
+                work_unit=selected.unit.to_work_unit(),
+            ),
+        )
+    if not selected.granted_verificado_completo or selected.verification_report_id is None:
+        raise VerificationReportNotFoundError(
+            translated_message="application.modelo.errors.verification_report_not_found",
+            context={"calculation_revision_id": selected.calculation_revision_id},
+        )
+    completion = run_modelo_work_filing(
+        client,
+        work_unit_id=selected.unit.work_unit_id,
+        request=ModeloWorkFileRequest(
+            approval=ModeloWorkFileApproval(
+                calculation_revision_id=selected.calculation_revision_id,
+                verification_report_id=selected.verification_report_id,
+            ),
+            actor=actor or resolve_default_actor(),
+            notes=notes,
+            refund_election=refund_election,
+            payment_election=payment_election,
+            prior_domiciliation_election=prior_domiciliation_election,
+        ),
     )
-    # One decrypted record serves every gate this command runs.
-    profile = require_profile_ready_for_work_unit(
-        selected_work_unit,
-        operation=authority_operation(ctx),
-        profile_decode_context=authority_operation(ctx).profile_decode_context(),
-    )
-    workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
-    filing_ports = filing_action_ports_factory(ctx)(bucket_id=selected_work_unit.bucket_id)
-    already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
-    record = file_modelo_revision(
-        selected_revision.calculation_revision_id,
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
-        actor=actor or resolve_default_actor(),
-        workflow_profile=workflow_profile,
-        notes=notes,
-        refund_election=refund_election,
-        payment_election=payment_election,
-        prior_domiciliation_election=prior_domiciliation_election,
-        ports=filing_ports,
-        operation=authority_operation(ctx),
-        profile=profile,
-    )
+    projection = completion.projection
+    if not isinstance(projection, ModeloWorkFilePublicResultV2):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    record = projection.record.to_record()
     result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]
     lines.append(f"filing_disambiguation\t{tr('cli.app.modelo.work.file_internal_disambiguation')}")
     notices: list[Notice] = []
-    if already_filed:
+    if not projection.published:
         noop_message = tr(
             "cli.app.modelo.work.file_idempotent_noop", calculation_revision_id=record.calculation_revision_id
         )
@@ -452,9 +383,5 @@ def work_file(
             )
         )
         lines.append(noop_message)
-    notices.extend(
-        m184_socio_handoff_notices(
-            load_modelo_calculation_revision(record.calculation_revision_id, ports=calculation_ports)
-        )
-    )
+    notices.extend(m184_socio_handoff_advisory_notices(projection.advisories.m184_socio_handoffs))
     emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)

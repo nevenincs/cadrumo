@@ -3,21 +3,40 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterator, Sequence
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
 
 import pytest
+from click.testing import Result
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from ....core.config import override_settings
 from .._ledger_rule_payloads import ClassificationRulePayload, RuleApplyAppliedPayload, RuleApplyMatchPayload
-from ._isolated_profile_storage_fixtures import llm_profile_backend_on_request
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["llm_profile_backend_on_request"]
 
 _PROFILE_FREE_TESTS: set[Callable[..., None]] = set()
+_ACTIVE_PROFILE: ContextVar[NativeCliProfileFixture | None] = ContextVar("bulk_classify_active_profile", default=None)
+_PROFILE_LABEL = "bulk-classify-cli-test"
+_PROFILE_FACTS = {
+    "taxpayer_type.entity_type": "natural_person",
+    "identity.name": "Bulk",
+    "identity.surnames": "Classify",
+    "activities.description": "design",
+    "censo.activity_start_date": "2025-01-01",
+    "tax_residence.jurisdiction_scope": "common_regime",
+    "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": "false",
+    "iva.cash_accounting_regime_enrolled": "false",
+    "iva.voluntary_sii_enrolled": "false",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+}
 
 
 def _profile_free[TestT: Callable[..., None]](test: TestT) -> TestT:
@@ -26,11 +45,34 @@ def _profile_free[TestT: Callable[..., None]](test: TestT) -> TestT:
     return test
 
 
+def _invoke_cli(args: Sequence[str]) -> Result:
+    """Run one CLI command with a registered profile's protected stdin password."""
+    profile = _ACTIVE_PROFILE.get()
+    assert profile is not None and profile.label is not None
+    password = profile.passphrase
+    close_active_bucket_session()
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
+        result = invoke_cached_cli(
+            ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
+            input=json.dumps({"profile_passphrase": password}),
+        )
+    assert password not in result.output
+    return result
+
+
 @pytest.fixture(autouse=True)
-def _profile_unless_contract_only(request: pytest.FixtureRequest) -> None:
-    """Open the isolated profile for every CLI case; contract checks read none."""
-    if request.function not in _PROFILE_FREE_TESTS:
-        request.getfixturevalue("llm_profile_backend")
+def _profile_unless_contract_only(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[None]:
+    """Use a real password-protected CLI profile except for pure DTO checks."""
+    if request.function in _PROFILE_FREE_TESTS:
+        yield
+        return
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label=_PROFILE_LABEL, facts=_PROFILE_FACTS)
+        token = _ACTIVE_PROFILE.set(profile)
+        try:
+            yield
+        finally:
+            _ACTIVE_PROFILE.reset(token)
 
 
 def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
@@ -43,10 +85,10 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
     csv_path = tmp_path / "import.csv"
     csv_path.write_text(csv_content, encoding="utf-8")
 
-    result = invoke_cached_cli(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
+    result = _invoke_cli(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
 
-    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
+    listed = _invoke_cli(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     assert isinstance(payload, dict), listed.output
@@ -73,7 +115,7 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
 
 
 def _list_transactions() -> list[dict[str, Any]]:
-    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
+    listed = _invoke_cli(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
@@ -81,18 +123,33 @@ def _list_transactions() -> list[dict[str, Any]]:
 
 def _stored_transaction(transaction_id: str) -> Any:
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ....application.user_profile.login_session import login_profile
     from ....core.bucket_pointer import resolve_active_bucket_id
     from ....domain.calculations.registry.authority import bundled_indexed_authority
 
+    profile = _ACTIVE_PROFILE.get()
+    assert profile is not None and profile.label is not None
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    # The test reads the store itself, outside any command, so it takes the lease a command would.
-    with bundled_indexed_authority().operation():
-        return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions[transaction_id]
+    password = profile.passphrase
+    # Reauthenticate the local readback after CLI custody has ended, using the
+    # same protected synthetic profile credential carried through CLI stdin.
+    close_active_bucket_session()
+    try:
+        with bundled_indexed_authority().operation() as operation:
+            login = login_profile(
+                name=profile.label,
+                passphrase_callback=lambda: password,
+                profile_decode_context=operation.profile_decode_context(),
+            )
+            assert login.bucket_id == bucket_id
+            return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions[transaction_id]
+    finally:
+        close_active_bucket_session()
 
 
 def _classify_with_tax_facts(transaction_id: str) -> None:
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         [
             "app",
             "ledger",
@@ -124,7 +181,7 @@ def _import_many_transactions(tmp_path: Path, *, count: int) -> list[str]:
     csv_path = tmp_path / "many.csv"
     csv_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    result = invoke_cached_cli(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
+    result = _invoke_cli(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
     return [row["transaction_id"] for row in _list_transactions()]
 
@@ -141,7 +198,7 @@ def test_classify_from_csv_applies_all_valid_rows(tmp_path: Path) -> None:
     csv_file = tmp_path / "classify.csv"
     csv_file.write_text(csv_content, encoding="utf-8")
 
-    result = invoke_cached_cli(["app", "ledger", "classify", "--file", str(csv_file)])
+    result = _invoke_cli(["app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code == 0, result.output
 
     by_id = {r["transaction_id"]: r for r in _list_transactions()}
@@ -156,7 +213,7 @@ def test_classify_from_csv_partial_failure_applies_valid_rows(tmp_path: Path) ->
     csv_file = tmp_path / "partial.csv"
     csv_file.write_text(csv_content, encoding="utf-8")
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code == 0, result.output
@@ -172,7 +229,7 @@ def test_classify_from_csv_all_failed_exits_nonzero(tmp_path: Path) -> None:
     csv_file = tmp_path / "all_failed.csv"
     csv_file.write_text(csv_content, encoding="utf-8")
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code != 0, result.output
@@ -198,7 +255,7 @@ def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> Non
     csv_file = tmp_path / "system_state.csv"
     csv_file.write_text(csv_content, encoding="utf-8")
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code == 0, result.output
@@ -216,7 +273,7 @@ def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
     csv_file = tmp_path / "badcol.csv"
     csv_file.write_text(csv_content, encoding="utf-8")
 
-    result = invoke_cached_cli(["app", "ledger", "classify", "--file", str(csv_file)])
+    result = _invoke_cli(["app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code != 0
 
 
@@ -231,7 +288,7 @@ def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
@@ -251,7 +308,7 @@ def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
@@ -270,7 +327,7 @@ def test_classify_from_csv_accepts_display_id_prefix(tmp_path: Path) -> None:
     csv_file = tmp_path / "short_id.csv"
     csv_file.write_text(f"transaction_id,classification\n{display_id},BUSINESS\n", encoding="utf-8")
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
@@ -298,7 +355,7 @@ def test_classify_from_csv_ambiguous_prefix_is_row_failure(tmp_path: Path) -> No
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
@@ -317,14 +374,14 @@ def test_classify_from_csv_exclusive_with_id(tmp_path: Path) -> None:
     csv_file = tmp_path / "x.csv"
     csv_file.write_text(f"transaction_id,classification\n{tx1},BUSINESS\n", encoding="utf-8")
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["app", "ledger", "classify", "--file", str(csv_file), tx1, "--classification", "BUSINESS"],
     )
     assert result.exit_code != 0
 
 
 def test_classify_from_csv_not_found_raises(tmp_path: Path) -> None:
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["app", "ledger", "classify", "--file", str(tmp_path / "nosuchfile.csv")],
     )
     assert result.exit_code != 0
@@ -342,7 +399,7 @@ def test_rule_add_with_a_governed_category_is_accepted() -> None:
     category catalogue requires an explicit authority operation or scope",
     because the command validated the category before opening its authority.
     """
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         [
             "--format",
             "json",
@@ -363,13 +420,13 @@ def test_rule_add_with_a_governed_category_is_accepted() -> None:
 
 
 def test_rule_add_then_list_shows_rule() -> None:
-    add_result = invoke_cached_cli(
+    add_result = _invoke_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", "acme", "--classification", "BUSINESS"],
     )
     assert add_result.exit_code == 0, add_result.output
     assert "BUSINESS" in add_result.output
 
-    list_result = invoke_cached_cli(["--format", "json", "app", "ledger", "rule", "list"])
+    list_result = _invoke_cli(["--format", "json", "app", "ledger", "rule", "list"])
     assert list_result.exit_code == 0, list_result.output
     envelope = json.loads(list_result.output)
     assert envelope["command"] == "ledger.rule.list"
@@ -381,22 +438,27 @@ def test_rule_add_then_list_shows_rule() -> None:
 
 def test_rule_add_idempotent_same_pattern() -> None:
     args = ["app", "ledger", "rule", "add", "--description-pattern", "acme", "--classification", "BUSINESS"]
-    first = invoke_cached_cli(args)
-    second = invoke_cached_cli(args)
+    first = _invoke_cli(args)
+    second = _invoke_cli(args)
     assert first.exit_code == 0, first.output
     assert second.exit_code == 0, second.output
 
-    list_result = invoke_cached_cli(["--format", "json", "app", "ledger", "rule", "list"])
+    list_result = _invoke_cli(["--format", "json", "app", "ledger", "rule", "list"])
     payload = json.loads(list_result.output)["result"]
     # idempotent: same content-addressed id → still exactly one rule
     assert len(payload["rules"]) == 1
 
 
 def test_rule_add_invalid_regex_rejected() -> None:
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", "[invalid", "--classification", "BUSINESS"],
     )
     assert result.exit_code != 0
+    assert "not a valid regex" in result.output.lower(), result.output
+
+    listed = _invoke_cli(["--format", "json", "app", "ledger", "rule", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert json.loads(listed.output)["result"]["rules"] == []
 
 
 @pytest.mark.parametrize(
@@ -451,7 +513,7 @@ def test_rule_add_empty_or_whitespace_pattern_rejected_cleanly(pattern: str) -> 
     leaked the pydantic repr/URL. A whitespace-only pattern matches nothing
     useful. Both must surface the instructive refusal, never a pydantic dump.
     """
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", pattern, "--classification", "BUSINESS"],
     )
     assert result.exit_code != 0, result.output
@@ -462,7 +524,7 @@ def test_rule_add_empty_or_whitespace_pattern_rejected_cleanly(pattern: str) -> 
 
 
 def test_rule_list_empty() -> None:
-    list_result = invoke_cached_cli(["--format", "json", "app", "ledger", "rule", "list"])
+    list_result = _invoke_cli(["--format", "json", "app", "ledger", "rule", "list"])
     assert list_result.exit_code == 0, list_result.output
     payload = json.loads(list_result.output)["result"]
     assert payload["rules"] == []
@@ -477,14 +539,14 @@ def test_rule_apply_classifies_not_yet_processed_transactions(tmp_path: Path) ->
     tx1, tx2 = _import_two_transactions(tmp_path)
 
     # The imported CSV uses "Payment reference" as description: INV-001, INV-002
-    invoke_cached_cli(
+    _invoke_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", "INV-001", "--classification", "BUSINESS"],
     )
-    invoke_cached_cli(
+    _invoke_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", "INV-002", "--classification", "PERSONAL"],
     )
 
-    apply_result = invoke_cached_cli(["--format", "json", "app", "ledger", "rule", "apply"])
+    apply_result = _invoke_cli(["--format", "json", "app", "ledger", "rule", "apply"])
     assert apply_result.exit_code == 0, apply_result.output
     payload = json.loads(apply_result.output)["result"]
     assert payload["matched"] == 2
@@ -501,16 +563,16 @@ def test_rule_apply_skips_already_classified_without_reaffirm(tmp_path: Path) ->
     tx1, _tx2 = _import_two_transactions(tmp_path)
 
     # Manually classify tx1
-    invoke_cached_cli(["app", "ledger", "classify", tx1, "--classification", "PERSONAL"])
+    _invoke_cli(["app", "ledger", "classify", tx1, "--classification", "PERSONAL"])
 
-    invoke_cached_cli(
+    _invoke_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", "INV-001", "--classification", "BUSINESS"],
     )
-    invoke_cached_cli(
+    _invoke_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", "INV-002", "--classification", "BUSINESS"],
     )
 
-    apply_result = invoke_cached_cli(["--format", "json", "app", "ledger", "rule", "apply"])
+    apply_result = _invoke_cli(["--format", "json", "app", "ledger", "rule", "apply"])
     assert apply_result.exit_code == 0, apply_result.output
     payload = json.loads(apply_result.output)["result"]
 
@@ -525,11 +587,11 @@ def test_rule_apply_skips_already_classified_without_reaffirm(tmp_path: Path) ->
 
 def test_rule_apply_dry_run_does_not_mutate(tmp_path: Path) -> None:
     _import_two_transactions(tmp_path)
-    invoke_cached_cli(
+    _invoke_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", "INV-001", "--classification", "BUSINESS"],
     )
 
-    dry_result = invoke_cached_cli(["--format", "json", "app", "ledger", "rule", "apply", "--dry-run"])
+    dry_result = _invoke_cli(["--format", "json", "app", "ledger", "rule", "apply", "--dry-run"])
     assert dry_result.exit_code == 0, dry_result.output
     payload = json.loads(dry_result.output)["result"]
     assert payload["dry_run"] is True
@@ -544,7 +606,7 @@ def test_rule_priority_order_first_match_wins(tmp_path: Path) -> None:
     tx1, _ = _import_two_transactions(tmp_path)
 
     # Two rules both match "INV-001"; priority 1 (BUSINESS) should win over priority 100 (PERSONAL)
-    invoke_cached_cli(
+    _invoke_cli(
         [
             "app",
             "ledger",
@@ -558,7 +620,7 @@ def test_rule_priority_order_first_match_wins(tmp_path: Path) -> None:
             "100",
         ],
     )
-    invoke_cached_cli(
+    _invoke_cli(
         [
             "app",
             "ledger",
@@ -573,7 +635,7 @@ def test_rule_priority_order_first_match_wins(tmp_path: Path) -> None:
         ],
     )
 
-    apply_result = invoke_cached_cli(["app", "ledger", "rule", "apply"])
+    apply_result = _invoke_cli(["app", "ledger", "rule", "apply"])
     assert apply_result.exit_code == 0, apply_result.output
 
     by_id = {r["transaction_id"]: r for r in _list_transactions()}
@@ -604,7 +666,7 @@ def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code == 0, result.output
@@ -638,7 +700,7 @@ def test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted(tmp
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
@@ -665,7 +727,7 @@ def test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values(tmp
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
@@ -693,7 +755,7 @@ def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> No
     tx1, tx2 = _import_two_transactions(tmp_path)
 
     # Single-classify tx1 (gross 100.00) with IVA facts via positional-id mode.
-    single = invoke_cached_cli(
+    single = _invoke_cli(
         [
             "app",
             "ledger",
@@ -717,7 +779,7 @@ def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> No
         f"transaction_id,classification,taxable_base,iva_rate,iva_amount\n{tx2},BUSINESS,165.29,0.21,34.71\n",
         encoding="utf-8",
     )
-    bulk = invoke_cached_cli(["app", "ledger", "classify", "--file", str(csv_file)])
+    bulk = _invoke_cli(["app", "ledger", "classify", "--file", str(csv_file)])
     assert bulk.exit_code == 0, bulk.output
 
     by_id = {r["transaction_id"]: r for r in _list_transactions()}
@@ -745,7 +807,7 @@ def test_classify_from_csv_rejects_malformed_iva_fact(tmp_path: Path) -> None:
         f"{tx2},BUSINESS,165.29,0.21,34.71\n",
         encoding="utf-8",
     )
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code == 0, result.output
@@ -766,7 +828,7 @@ def test_classify_from_csv_surplus_cells_are_row_failure(tmp_path: Path) -> None
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(
+    result = _invoke_cli(
         ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
@@ -791,7 +853,7 @@ def test_classify_from_csv_accepts_business_pct_for_mixed(tmp_path: Path) -> Non
         f"transaction_id,classification,category_id,business_pct\n{tx1},MIXED,telefonia_movil,0.50\n",
         encoding="utf-8",
     )
-    result = invoke_cached_cli(["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)])
+    result = _invoke_cli(["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["applied"] == 1
     row = {r["transaction_id"]: r for r in _list_transactions()}[tx1]
@@ -803,7 +865,7 @@ def test_classify_from_csv_accepts_usage_ratio_id_for_mixed(tmp_path: Path) -> N
     """Bulk CSV can carry the proportionality reference needed by mixed rows."""
     tx1, _tx2 = _import_two_transactions(tmp_path)
 
-    ratio = invoke_cached_cli(["app", "ledger", "ratios", "set", "telefonia_movil", "0.50"])
+    ratio = _invoke_cli(["app", "ledger", "ratios", "set", "telefonia_movil", "0.50"])
     assert ratio.exit_code == 0, ratio.output
 
     csv_file = tmp_path / "mixed_with_ratio.csv"
@@ -813,7 +875,7 @@ def test_classify_from_csv_accepts_usage_ratio_id_for_mixed(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)])
+    result = _invoke_cli(["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 1, payload
@@ -840,7 +902,7 @@ def test_classify_from_csv_rejects_unknown_usage_ratio_id(tmp_path: Path) -> Non
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)])
+    result = _invoke_cli(["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code != 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 0, payload

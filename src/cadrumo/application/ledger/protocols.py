@@ -115,6 +115,28 @@ class TransactionCatalogueCoCommitWriterProtocol(TransactionCatalogueRepositoryP
         ...
 
 
+@runtime_checkable
+class RevisionGuardedTransactionCatalogueCoCommitWriterProtocol(
+    TransactionCatalogueCoCommitWriterProtocol,
+    Protocol,
+):
+    """Optional whole-catalogue snapshot/CAS capability for multi-row mutations."""
+
+    def load_revisioned(self) -> tuple[TransactionCatalogue, str]:
+        """Return one decoded catalogue bounded by a stable whole-catalogue revision."""
+        ...
+
+    def save_if_revision_with_secure_object_writes(
+        self,
+        catalogue: TransactionCatalogue,
+        *,
+        expected_revision_id: str,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Atomically persist only if the full loaded snapshot still matches."""
+        ...
+
+
 class InvoiceCatalogueCoCommitWriterProtocol(InvoiceCatalogueRepositoryProtocol, Protocol):
     """Invoice-catalogue port for an atomic ledger co-commit."""
 
@@ -150,5 +172,6 @@ __all__ = [
     "InvoiceCatalogueCoCommitWriterProtocol",
     "ParsedLedgerRowProtocol",
     "ProviderValidationProtocol",
+    "RevisionGuardedTransactionCatalogueCoCommitWriterProtocol",
     "TransactionCatalogueCoCommitWriterProtocol",
 ]

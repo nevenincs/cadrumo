@@ -1,59 +1,15 @@
-"""Recipient-fingerprint registry CLI for review-package collaboration.
-
-Mounts ``aeat config collab recipient add|list|remove`` on the ``config`` root.
-A taxpayer records a trusted recipient (an accountant/gestor) by the SHA-256
-fingerprint of that recipient's X25519 public key, verified out-of-band (read
-aloud, compared over a separate channel) before it is trusted -- exactly the
-:class:`~application.modelo.review_package_recipient_registry_ports.RecipientFingerprintRegistryPorts`
-contract this module wires, never re-implements
-(``aeat-architecture-boundaries``). The registered public key is
-what ``aeat app modelo review-package encrypt-for-recipient`` seals a package
-against; see :mod:`~entrypoints.cli._modelo_review_package_cli`.
-
-``add`` is idempotent-guarded to the extent the underlying repository already
-is: a duplicate ``recipient_id`` refuses instructively (``RecipientAlreadyRegisteredError``
-propagates verbatim through :func:`~entrypoints.cli.errors.command_error_boundary`,
-which renders every registered :class:`~core.errors.hierarchy.CadrumoError` at the CLI
-boundary) rather than silently overwriting the prior fingerprint -- a
-fingerprint swap must be an explicit ``remove`` followed by ``add``, never an
-implicit clobber, since the whole point of the out-of-band verification is
-that the operator confirms the exact key on file.
-
-See Also:
-    :class:`~application.modelo.review_package_recipient_registry_ports.RecipientFingerprintRegistryPorts`
-        Bucket-scoped persistence capability this CLI surface delegates to.
-    :class:`~application.modelo.review_package_recipient_registry.RecipientFingerprintRecord`
-        Public-key and fingerprint record projected into command results.
-    :func:`~application.modelo.review_package_recipient_registry.public_key_hex_from_raw_bytes`
-        Public-key validator used before a recipient is registered.
-    :mod:`~entrypoints.cli.config.collab_payloads`
-        Typed JSON payload schemas emitted by these commands.
-    :mod:`~entrypoints.cli._modelo_review_package_cli`
-        Review-package command group that consumes registered recipients for
-        ``encrypt-for-recipient``.
-"""
+"""CLI presentation for the registered review-package recipient operations."""
 
 from __future__ import annotations
 
 import typer
 
-from ....application.bucket_event_repository import bucket_event_history_repository
-from ....application.modelo.review_package_collab_audit import (
-    emit_collab_recipient_registered_event,
-    emit_collab_recipient_removed_event,
-)
-from ....application.modelo.review_package_recipient_registry import (
-    add_recipient_fingerprint,
-    get_recipient_fingerprint,
-    list_recipient_fingerprints,
-    public_key_hex_from_raw_bytes,
-    remove_recipient_fingerprint,
-)
-from ....application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
-from ....core.i18n.render import tr
-from ..common import active_bucket_id_or_refuse as _active_bucket_id_or_refuse
 from ..common import emit_envelope
-from ..state_projection_support import recipient_fingerprint_registry_ports_factory
+from ..runtime_collab_recipient import (
+    submit_collab_recipient_add,
+    submit_collab_recipient_list,
+    submit_collab_recipient_remove,
+)
 from .collab_payloads import (
     ConfigCollabRecipientAddResult,
     ConfigCollabRecipientListResult,
@@ -62,119 +18,72 @@ from .collab_payloads import (
 )
 
 
-def _registry(ctx: typer.Context, *, bucket_id: str) -> RecipientFingerprintRegistryPorts:
-    """Resolve the required bucket-scoped registry capability from composition."""
-    return recipient_fingerprint_registry_ports_factory(ctx)(bucket_id=bucket_id)
-
-
-def _validated_public_key_hex(public_key: str) -> str:
-    """Normalise and validate a CLI-supplied X25519 public key.
-
-    A malformed hex string is a CLI input-format error (``typer.BadParameter``),
-    distinct from the registry's own domain refusals (duplicate/missing id),
-    which propagate as registered :class:`~core.errors.hierarchy.CadrumoError`
-    subclasses and render automatically at the command boundary.
-    """
-    normalized = public_key.strip().lower()
-    try:
-        raw = bytes.fromhex(normalized)
-    except ValueError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.config.collab.recipient.errors.invalid_public_key",
-            ),
-        ) from exc
-    return public_key_hex_from_raw_bytes(raw)
-
-
 def collab_recipient_add(
     ctx: typer.Context,
     recipient_id: str,
     public_key: str,
     label: str = "",
 ) -> None:
-    """Register one trusted recipient's public key, refusing a duplicate id."""
-    validated_key_hex = _validated_public_key_hex(public_key)
-
-    bucket_id = _active_bucket_id_or_refuse()
-    ports = _registry(ctx, bucket_id=bucket_id)
-    add_recipient_fingerprint(
+    """Register one trusted recipient through its profile worker operation."""
+    projection = submit_collab_recipient_add(
+        ctx,
         recipient_id=recipient_id,
-        public_key_hex=validated_key_hex,
+        public_key=public_key,
         label=label,
-        ports=ports,
-    )
-    record = get_recipient_fingerprint(recipient_id, ports=ports)
-    # Trusting a new recipient is an auditable act on this bucket.
-    emit_collab_recipient_registered_event(
-        record,
-        bucket_id=bucket_id,
-        repository=bucket_event_history_repository(bucket_id=bucket_id),
-    )
-
+    ).projection
+    row = projection.recipient
     result = ConfigCollabRecipientAddResult(
-        recipient_id=record.recipient_id,
-        label=record.label,
-        public_key_hex=record.public_key_hex,
-        fingerprint_sha256=record.fingerprint_sha256,
-        added_at=record.added_at,
+        recipient_id=row.recipient_id,
+        label=row.label,
+        public_key_hex=row.public_key_hex,
+        fingerprint_sha256=row.fingerprint_sha256,
+        added_at=row.added_at,
     )
     emit_envelope(
         ctx,
         command="config.collab.recipient.add",
         result=result,
         lines=(
-            f"recipient_id\t{record.recipient_id}",
-            f"label\t{record.label}",
-            f"fingerprint_sha256\t{record.fingerprint_sha256}",
+            f"recipient_id\t{row.recipient_id}",
+            f"label\t{row.label}",
+            f"fingerprint_sha256\t{row.fingerprint_sha256}",
         ),
     )
 
 
 def collab_recipient_list(ctx: typer.Context) -> None:
-    """List every registered recipient's fingerprint."""
-    bucket_id = _active_bucket_id_or_refuse()
-    records = list_recipient_fingerprints(ports=_registry(ctx, bucket_id=bucket_id))
-
+    """List the complete registered recipient set in canonical order."""
+    projection = submit_collab_recipient_list(ctx).projection
     rows = [
         RecipientFingerprintRowPayload(
-            recipient_id=record.recipient_id,
-            label=record.label,
-            public_key_hex=record.public_key_hex,
-            fingerprint_sha256=record.fingerprint_sha256,
-            added_at=record.added_at,
+            recipient_id=row.recipient_id,
+            label=row.label,
+            public_key_hex=row.public_key_hex,
+            fingerprint_sha256=row.fingerprint_sha256,
+            added_at=row.added_at,
         )
-        for record in records
+        for row in projection.recipients
     ]
-    result = ConfigCollabRecipientListResult(recipients=rows, count=len(rows))
-    lines = [f"count\t{len(rows)}"]
+    result = ConfigCollabRecipientListResult(recipients=rows, count=projection.count)
+    lines = [f"count\t{projection.count}"]
     lines.extend(f"{row.recipient_id}\t{row.label}\t{row.fingerprint_sha256}" for row in rows)
     emit_envelope(ctx, command="config.collab.recipient.list", result=result, lines=lines)
 
 
-def collab_recipient_remove(
-    ctx: typer.Context,
-    recipient_id: str,
-) -> None:
-    """Remove the recipient registered under ``recipient_id``."""
-    bucket_id = _active_bucket_id_or_refuse()
-    ports = _registry(ctx, bucket_id=bucket_id)
-    updated = remove_recipient_fingerprint(recipient_id, ports=ports)
-    # Revoking trust is auditable for the same reason granting it is.
-    emit_collab_recipient_removed_event(
-        recipient_id=recipient_id,
-        bucket_id=bucket_id,
-        repository=bucket_event_history_repository(bucket_id=bucket_id),
+def collab_recipient_remove(ctx: typer.Context, recipient_id: str) -> None:
+    """Remove one trusted recipient through its profile worker operation."""
+    projection = submit_collab_recipient_remove(ctx, recipient_id=recipient_id).projection
+    result = ConfigCollabRecipientRemoveResult(
+        recipient_id=projection.recipient_id,
+        remaining=projection.remaining,
     )
-
-    result = ConfigCollabRecipientRemoveResult(recipient_id=recipient_id, remaining=len(updated.records))
     emit_envelope(
         ctx,
         command="config.collab.recipient.remove",
         result=result,
         lines=(
-            f"recipient_id\t{recipient_id}",
-            f"remaining\t{len(updated.records)}",
+            f"recipient_id\t{projection.recipient_id}",
+            f"remaining\t{projection.remaining}",
         ),
     )
 

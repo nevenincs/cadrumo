@@ -35,6 +35,7 @@ from cadrumo.adapters.outbound.calculation_summary_pdf.summary_container import 
 from cadrumo.adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
 from cadrumo.adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
+    build_review_package_signing_keypair_reader,
 )
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend
@@ -193,7 +194,7 @@ def _store(repos: Repos, work_unit: WorkUnit) -> CalculationSummaryStoreContext:
     return CalculationSummaryStoreContext(
         active_bucket_id=work_unit.bucket_id,
         export_ports=_export_ports(repos, work_unit),
-        signing_keypair=build_review_package_signing_keypair_capability(bucket_id=work_unit.bucket_id),
+        signing_keypair=build_review_package_signing_keypair_reader(bucket_id=work_unit.bucket_id),
         operation=published_authority_operation(),
     )
 

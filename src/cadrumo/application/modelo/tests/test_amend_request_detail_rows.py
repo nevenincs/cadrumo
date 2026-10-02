@@ -144,12 +144,11 @@ def test_every_detail_row_kind_can_be_carried_by_an_amendment(kind: str) -> None
     assert carried[0].to_row() == expected
 
 
-def test_all_three_states_survive_the_journal_round_trip() -> None:
-    """The request is journalled, so it is read back before the executor sees it.
+def test_all_three_states_survive_request_json_round_trip() -> None:
+    """The serialized request preserves the ``None``/empty distinction.
 
-    A round trip that lost the ``None``/empty distinction would restore the
-    refusal this change removes -- or worse, turn a silent caller into one
-    that declared nil.
+    A round trip that lost the distinction would turn a silent caller into one
+    that declared nil, or restore the refusal this field removes.
     """
     row_payload = Modelo347ContraparteRow(
         nif="B12345674",

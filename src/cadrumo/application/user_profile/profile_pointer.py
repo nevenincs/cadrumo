@@ -79,6 +79,11 @@ class ActiveProfilePointerTransaction:
         self._assert_live_ownership()
         return self._publish(expected=None, bucket_id=None)
 
+    def compare_and_clear(self, *, expected: BucketPointer) -> BucketPointer:
+        """Clear only the exact frontend selection captured by this caller."""
+        self._assert_live_ownership()
+        return self._publish(expected=expected, bucket_id=None)
+
     def _publish(self, *, expected: BucketPointer | None, bucket_id: str | None) -> BucketPointer:
         try:
             observed = read_pointer(self._root)

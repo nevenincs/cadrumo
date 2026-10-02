@@ -40,6 +40,7 @@ def build_filing_obligation_advisories(
     raw_values: Mapping[str, object] | None,
     *,
     filing_year: int | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
     """Derive overview-status advisory locale keys from raw profile values.
 
@@ -59,6 +60,7 @@ def build_filing_obligation_advisories(
         filing_year: The income year selecting the dated reduced limit.  A
             yearless surface cannot make this dated legal assertion and emits
             no advisory.
+        operation: The caller's retained authority pin for dated thresholds.
 
     Returns a tuple of ``tr()``-resolvable locale keys, empty when no
     evidence of a mandatory obligation is present. Malformed raw values are
@@ -104,24 +106,20 @@ def build_filing_obligation_advisories(
 
     # Authority composition is application work.  The domain evaluator only
     # accepts this explicit context and never reads bundled facts itself.
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
-
     coordinate = date(filing_year, 12, 31)
-    with bundled_indexed_authority().operation() as operation:
-        facts = _DeadlineFactResolutionContext(
-            authority=operation,
-            filing_period=coordinate,
-            submission_date=coordinate,
-        )
-
-        if _evaluate_multiple_pagadores_obligation(
-            pagadores_count,
-            secondary_income,
-            total_work_income,
-            filing_year=filing_year,
-            facts=facts,
-        ):
-            return (_MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY,)
+    facts = _DeadlineFactResolutionContext(
+        authority=operation,
+        filing_period=coordinate,
+        submission_date=coordinate,
+    )
+    if _evaluate_multiple_pagadores_obligation(
+        pagadores_count,
+        secondary_income,
+        total_work_income,
+        filing_year=filing_year,
+        facts=facts,
+    ):
+        return (_MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY,)
     return ()
 
 

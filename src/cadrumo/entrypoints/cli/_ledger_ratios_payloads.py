@@ -16,17 +16,20 @@ validate results.
 
 from __future__ import annotations
 
-from pydantic import field_validator
+from typing import Annotated
+
+from pydantic import Field, field_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
-from ...domain.categories.proportionality import ProportionalityKind
-from ...domain.categories.spending_category import SpendingCategory
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import validate_usage_ratio_bound
+
+_CategoryValue = Annotated[str, Field(min_length=1, max_length=96)]
+_ProportionalityKindValue = Annotated[str, Field(min_length=1, max_length=96)]
 
 
 def _validated_ratio_text(value: str, *, field: str) -> str:
@@ -51,14 +54,12 @@ def _validated_ratio_text(value: str, *, field: str) -> str:
 class RatiosRowPayload(OutputSchema):
     """One per-category usage-ratio row.
 
-    ``category`` reuses the canonical
-    :class:`~domain.categories.spending_category.SpendingCategory` closed set and ``ratio``
-    is bound to ``[0, 1]`` through the domain authority, so an unknown
-    category or an out-of-band ratio is refused at the transport edge
-    instead of crossing it.
+    ``category`` is the bounded canonical token already projected by the
+    selected profile worker; it is not re-resolved against ambient registry
+    facts while rendering this frontend payload.
     """
 
-    category: SpendingCategory
+    category: _CategoryValue
     ratio: str
 
     @field_validator("ratio")
@@ -71,13 +72,12 @@ class RatiosRowPayload(OutputSchema):
 class RatiosEligibleRowPayload(OutputSchema):
     """One ``ledger ratios eligible`` row (D2).
 
-    ``proportionality_kind`` reuses the canonical registry-projected
-    :class:`~domain.categories.proportionality.ProportionalityKind` token rather than
-    restating the rule vocabulary as free text.
+    ``category`` and ``proportionality_kind`` are bounded tokens projected
+    by the selected worker's pinned authority.
     """
 
-    category: SpendingCategory
-    proportionality_kind: ProportionalityKind
+    category: _CategoryValue
+    proportionality_kind: _ProportionalityKindValue
     default_ratio: str | None = None
     override_present: bool
 
@@ -98,7 +98,7 @@ class RatiosValidateFindingPayload(OutputSchema):
     finding at all.
     """
 
-    category: SpendingCategory
+    category: _CategoryValue
     kind: NonEmptyStr
     detail: NonEmptyStr
 
@@ -116,7 +116,7 @@ class RatiosSetResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios set``."""
 
     bucket_id: BucketId
-    category: SpendingCategory
+    category: _CategoryValue
     ratio: str
 
     @field_validator("ratio")
@@ -130,7 +130,7 @@ class RatiosUnsetResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios unset``."""
 
     bucket_id: BucketId
-    category: SpendingCategory
+    category: _CategoryValue
     #: Empty after a successful unset — the override no longer exists.
     ratio: str = ""
 
@@ -154,5 +154,5 @@ class RatiosValidateResult(OutputSchema):
     profile_present: bool
     eligible_count: int
     overrides_count: int
-    missing_overrides: list[SpendingCategory] = []
+    missing_overrides: list[_CategoryValue] = []
     findings: list[RatiosValidateFindingPayload] = []

@@ -37,6 +37,7 @@ from ...application.ledger.invoice_draft_payloads import (
 from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
@@ -356,7 +357,7 @@ class EvidenceConsentListResult(OutputSchema):
 
 
 class EvidenceConfirmResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger evidence extract --confirm``.
+    """JSON envelope for ``aeat app ledger evidence confirm``.
 
     Reports the persisted (or already-existing, on a guarded no-op) rich
     catalogue :class:`~domain.invoices.models.Invoice` -- mirroring
@@ -369,6 +370,8 @@ class EvidenceConfirmResult(OutputSchema):
     bucket_id: BucketId
     evidence_id: str | None = None
     attachment_id: str | None = None
+    source_sha256: Hex64Str
+    reviewed_draft_sha256: Hex64Str
     created: bool
     invoice_id: InvoiceId
     kind: str

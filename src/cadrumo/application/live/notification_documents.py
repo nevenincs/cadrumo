@@ -38,6 +38,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import AbstractAsyncContextManager
 from datetime import datetime
 from typing import Annotated, Final, Literal
 
@@ -433,6 +434,7 @@ class NotificationDocumentService:
         bucket_id: str,
         session: object,
         row: NotificationRowProtocol,
+        effect_guard: Callable[[], AbstractAsyncContextManager[None]] | None = None,
     ) -> NotificationDocumentCustody:
         """Fetch one already-read notification's document and take custody of it.
 
@@ -447,6 +449,7 @@ class NotificationDocumentService:
             session: An authenticated AEAT session.
             row: The notification to fetch. Must be one AEAT already records as
                 read.
+            effect_guard: Fresh authority fence held through encrypted local custody.
 
         Returns:
             The :class:`NotificationDocumentCustody` outcome. A second pull of
@@ -460,6 +463,9 @@ class NotificationDocumentService:
         """
         self._content_guard(row)
         document = await self._document_fetcher(session, row, settings=self._settings)
+        if effect_guard is not None:
+            async with effect_guard():
+                return self.persist_document(bucket_id=bucket_id, row=row, document=document)
         return self.persist_document(bucket_id=bucket_id, row=row, document=document)
 
     def show(self, *, bucket_id: str, certificado_id: str) -> NotificationDocumentRecord:

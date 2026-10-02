@@ -9,7 +9,7 @@ with the profile-persistence adapter tests.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from decimal import Decimal
 
 import pytest
@@ -27,6 +27,7 @@ from cadrumo.domain.prorrata_register.register import (
 )
 
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ..ports import ProrrataPriorSettlementSourceSnapshot
 from ..service import ProrrataRegisterService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -94,6 +95,33 @@ class _InMemoryProrrataRegisterRepository:
             activity_rows=(*retained, row),
         )
         return self._register
+
+    def seed_sector_carried(
+        self, ejercicio: int, sector_id: str, *, validate_entry: Callable[[ProrrataRegisterEntry], None]
+    ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
+        raise AssertionError("sector carry is outside these policy tests")
+
+    def settle_sector(
+        self,
+        ejercicio: int,
+        sector_id: str,
+        *,
+        con_derecho_volume: Decimal,
+        sin_derecho_volume: Decimal,
+        producing_snapshot_ref: RegistrySnapshotRef,
+        validate_entry: Callable[[ProrrataRegisterEntry], None],
+    ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
+        raise AssertionError("sector settlement is outside these policy tests")
+
+    def commit_whole_carried_seed(
+        self,
+        register: ProrrataRegister,
+        *,
+        ejercicio: int,
+        expected_revision_id: str,
+        source_snapshot: ProrrataPriorSettlementSourceSnapshot,
+    ) -> None:
+        raise AssertionError("source-fenced carry is outside these policy tests")
 
 
 @pytest.fixture

@@ -89,6 +89,7 @@ def aeat_sync_screen_factory(
     projection: AeatSyncWorkspaceProjectionV1,
     *,
     operation_handoff: AeatSyncOperationHandoffV1 | None = None,
+    refresh_snapshot: Callable[[], AeatSyncWorkspaceProjectionV1] | None = None,
     notification_document_handoff: AeatSyncNotificationDocumentHandoffV1 | None = None,
     operation_contracts: OperationPublicContractSetV1 | None = None,
 ) -> TuiScreenFactoryV1:
@@ -99,6 +100,7 @@ def aeat_sync_screen_factory(
             context,
             projection,
             operation_handoff=operation_handoff,
+            refresh_snapshot=refresh_snapshot,
             notification_document_handoff=notification_document_handoff,
             operation_contracts=operation_contracts,
         )

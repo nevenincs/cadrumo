@@ -35,10 +35,11 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import nullcontext
 from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
@@ -81,6 +82,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation | None = None,
     profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisory diagnostics raised after bucket aggregation calculation.
@@ -131,6 +133,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
             the annual IVA settlement advisory's reciprocity proof.
         transaction_repository: Required bucket-bound transaction catalogue
             capability used by the annual IVA settlement advisory.
+        operation: The caller's pinned authority for an in-progress calculation.
+            Standalone diagnostic callers may omit it to lease one locally.
         profile: The bucket's profile when the calculation already loaded it;
             when omitted, the profile-backed collectors read it themselves.
 
@@ -147,7 +151,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             Appends this tuple to the source mesh diagnostics on the returned
             bucket aggregation result.
     """
-    with bundled_indexed_authority().operation() as operation:
+    with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as authority:
         minimo_descendientes_undeclared_diagnostics = collect_minimo_descendientes_undeclared_diagnostics(
             revision,
             casilla_values,
@@ -155,7 +159,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             period_token=period_token,
             filing_year=filing_year,
             bucket_id=bucket_id,
-            operation=operation,
+            operation=authority,
             profile=profile,
         )
         minimo_descendientes_prorrata_inferred_diagnostics = collect_minimo_descendientes_prorrata_inferred_diagnostics(
@@ -165,7 +169,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             period_token=period_token,
             filing_year=filing_year,
             bucket_id=bucket_id,
-            operation=operation,
+            operation=authority,
             profile=profile,
         )
         minimo_descendientes_rentas_undeclared_diagnostics = collect_minimo_descendientes_rentas_undeclared_diagnostics(
@@ -175,7 +179,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             period_token=period_token,
             filing_year=filing_year,
             bucket_id=bucket_id,
-            operation=operation,
+            operation=authority,
             profile=profile,
         )
         minimo_descendientes_entry_date_missing_diagnostics = (
@@ -186,7 +190,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
                 period_token=period_token,
                 filing_year=filing_year,
                 bucket_id=bucket_id,
-                operation=operation,
+                operation=authority,
                 profile=profile,
             )
         )
@@ -197,7 +201,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             period_token=period_token,
             filing_year=filing_year,
             bucket_id=bucket_id,
-            operation=operation,
+            operation=authority,
             profile=profile,
         )
         guarderia_spend_shape_diagnostics = collect_guarderia_spend_shape_diagnostics(
@@ -207,7 +211,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             period_token=period_token,
             filing_year=filing_year,
             bucket_id=bucket_id,
-            operation=operation,
+            operation=authority,
             profile=profile,
         )
         guarderia_madre_meses_undeclared_diagnostics = collect_guarderia_madre_meses_undeclared_diagnostics(
@@ -217,7 +221,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             period_token=period_token,
             filing_year=filing_year,
             bucket_id=bucket_id,
-            operation=operation,
+            operation=authority,
             profile=profile,
         )
         descendientes_count_desync_diagnostics = collect_descendientes_count_desync_diagnostics(
@@ -226,55 +230,58 @@ def collect_bucket_aggregation_advisory_diagnostics(
             period_token=period_token,
             filing_year=filing_year,
             bucket_id=bucket_id,
-            operation=operation,
+            operation=authority,
             profile=profile,
         )
 
-    return (
-        collect_official_box_unpopulated_diagnostics(revision, casilla_values)
-        + collect_prior_payment_not_deducted_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            observation_repository=observation_repository,
+        return (
+            collect_official_box_unpopulated_diagnostics(revision, casilla_values)
+            + collect_prior_payment_not_deducted_diagnostics(
+                revision,
+                casilla_values,
+                modelo=modelo,
+                period_token=period_token,
+                filing_year=filing_year,
+                observation_repository=observation_repository,
+                operation=authority,
+            )
+            + collect_prior_payment_minoracion_not_captured_diagnostics(
+                revision,
+                modelo=modelo,
+                period_token=period_token,
+                filing_year=filing_year,
+                observation_repository=observation_repository,
+                operation=authority,
+            )
+            + collect_settlement_not_computed_diagnostics(revision)
+            + minimo_descendientes_undeclared_diagnostics
+            + minimo_descendientes_prorrata_inferred_diagnostics
+            + minimo_descendientes_rentas_undeclared_diagnostics
+            + minimo_descendientes_entry_date_missing_diagnostics
+            + minimo_descendientes_dependencia_diagnostics
+            + guarderia_spend_shape_diagnostics
+            + guarderia_madre_meses_undeclared_diagnostics
+            + descendientes_count_desync_diagnostics
+            + collect_bienes_inversion_regularizacion_diagnostics(
+                revision,
+                modelo=modelo,
+                period_token=period_token,
+                filing_year=filing_year,
+                bucket_id=bucket_id,
+                register_repository=bienes_inversion_repository,
+            )
+            + collect_rate_box_coverage_diagnostics(revision, casilla_values)
+            + collect_prorrata_regularizacion_diagnostics(
+                revision,
+                casilla_values,
+                modelo=modelo,
+                period_token=period_token,
+                filing_year=filing_year,
+                bucket_id=bucket_id,
+                observation_repository=observation_repository,
+                prorrata_register_repository=prorrata_register_repository,
+                transaction_repository=transaction_repository,
+                bienes_inversion_repository=bienes_inversion_repository,
+                operation=authority,
+            )
         )
-        + collect_prior_payment_minoracion_not_captured_diagnostics(
-            revision,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            observation_repository=observation_repository,
-        )
-        + collect_settlement_not_computed_diagnostics(revision)
-        + minimo_descendientes_undeclared_diagnostics
-        + minimo_descendientes_prorrata_inferred_diagnostics
-        + minimo_descendientes_rentas_undeclared_diagnostics
-        + minimo_descendientes_entry_date_missing_diagnostics
-        + minimo_descendientes_dependencia_diagnostics
-        + guarderia_spend_shape_diagnostics
-        + guarderia_madre_meses_undeclared_diagnostics
-        + descendientes_count_desync_diagnostics
-        + collect_bienes_inversion_regularizacion_diagnostics(
-            revision,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            register_repository=bienes_inversion_repository,
-        )
-        + collect_rate_box_coverage_diagnostics(revision, casilla_values)
-        + collect_prorrata_regularizacion_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            observation_repository=observation_repository,
-            prorrata_register_repository=prorrata_register_repository,
-            transaction_repository=transaction_repository,
-            bienes_inversion_repository=bienes_inversion_repository,
-        )
-    )

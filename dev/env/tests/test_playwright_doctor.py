@@ -1,79 +1,43 @@
 """Real-behavior gate for the `just doctor-browser` provisioning probe.
 
-Every assertion here forces the REAL condition it names: a real Playwright
-launch of a real, provisioned channel for the success path, and a real launch
-failure against a channel name that cannot exist for the failure path. No
-mocks, stubs, monkeypatches, or hand-computed expectations.
+The success path launches the real, provisioned bundled Chromium. The failure
+path points Playwright at an empty browser directory so the real launch fails.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from cadrumo.core.config import Settings
-
-from ..playwright_doctor import remediation_for_channel, run_doctor
+from ..playwright_doctor import REMEDIATION, run_doctor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_remediation_for_chrome_names_system_install_and_the_root_caveat() -> None:
-    """The `chrome` channel's remediation must name the exact command and the Linux-root constraint."""
-    remediation = remediation_for_channel("chrome")
-    assert "playwright install chrome" in remediation
-    assert "system" in remediation.lower()
-    assert "root" in remediation.lower() or "apt" in remediation.lower()
+def test_remediation_names_the_bundled_chromium_install_command() -> None:
+    """The remediation names the exact bundled-Chromium install command."""
+    assert "playwright install chromium" in REMEDIATION
 
 
-def test_remediation_for_chromium_names_the_matching_install_command() -> None:
-    """A non-chrome channel's remediation must name that exact channel, not a hardcoded 'chromium'."""
-    remediation = remediation_for_channel("chromium")
-    assert "playwright install chromium" in remediation
-
-
-def test_remediation_never_recommends_the_wrong_browser_for_the_configured_channel() -> None:
-    """The `chrome` remediation must not tell the operator to install chromium instead."""
-    remediation = remediation_for_channel("chrome")
-    assert "playwright install chromium" not in remediation
-
-
-def test_run_doctor_succeeds_for_a_real_provisioned_channel() -> None:
-    """A real launch-and-close of an actually-provisioned channel exits 0.
+def test_run_doctor_succeeds_for_the_real_provisioned_chromium() -> None:
+    """A real launch-and-close of the provisioned bundled Chromium exits 0.
 
     This launches a browser, so it fails on a host that has not run
-    ``playwright install`` -- a red that reports the host rather than the
-    code. ``external_tool`` looks like the answer and is NOT: it was tried
-    here and reverted. Exactly one declared lane covers this path, and its
-    expression is ``(unit or integration) and not resident_service and not
-    external_tool``, so the marker does not move the test to another lane --
-    it moves it to NO lane, and the reachability gate refuses that by name.
-    A test nobody runs reads as coverage and is not, which is the worse of
-    the two failures, so the host-dependent red stays until the real remedy
-    lands: a lane that names this path AND accepts the marker. That is a
-    justfile change, and the justfile is an operator decision.
+    ``playwright install`` -- a red that reports the host rather than the code.
     """
-    exit_code = run_doctor(channel="chromium")
-    assert exit_code == 0
+    assert run_doctor() == 0
 
 
-def test_run_doctor_fails_for_a_channel_that_cannot_exist(capsys: pytest.CaptureFixture[str]) -> None:
-    """A real launch attempt against a nonsense channel name fails loudly with the exact remediation."""
-    bogus_channel = "definitely-not-a-real-playwright-channel"
-    exit_code = run_doctor(channel=bogus_channel)
+def test_run_doctor_fails_with_remediation_when_chromium_is_not_provisioned(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A real launch against an empty browser directory fails loudly with the exact remediation."""
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path))
+    exit_code = run_doctor()
     assert exit_code == 1
     captured = capsys.readouterr()
-    assert bogus_channel in captured.err
-    assert f"playwright install {bogus_channel}" in captured.err
-
-
-def test_run_doctor_defaults_to_the_live_configured_setting(monkeypatch: pytest.MonkeyPatch) -> None:
-    """With no explicit channel, `run_doctor` resolves and probes `Settings.cadrumo_browser_channel`.
-
-    The default settings value is bundled `chromium`, which `just setup-browser`
-    provisions, so the settings-driven default path exits 0 exactly like an
-    explicit `channel="chromium"` probe would.
-    """
-    monkeypatch.delenv("CADRUMO_BROWSER_CHANNEL", raising=False)
-    assert Settings().cadrumo_browser_channel == "chromium"
-    exit_code = run_doctor()
-    assert exit_code == 0
+    assert "not launchable" in captured.err
+    assert "playwright install chromium" in captured.err

@@ -15,24 +15,39 @@ unwired projection survive unnoticed.
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    bound_test_profile_record,
+    upsert_test_profile_facts,
+)
+from cadrumo.application.modelo.invoice_withholding_capture_operation import (
+    MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
+)
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.access_contracts import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile, isolated_runtime_profile
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ....application.aggregation.errors import AggregationValidationError
 from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ....application.aggregation.withholding_observation_service import WithholdingMutationMode
@@ -48,25 +63,27 @@ from ....application.modelo.calculation_actions import (
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.aggregation import RetencionClave
 from ....core.period import Period
-from ....core.storage_taxonomy import StorageCategory
-from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....tests.storage_scope import storage_overrides
 from ...adapter_composition import build_calculation_action_ports, build_retencion_observation_ports
-from .cli_runner import invoke_cached_cli, invoke_uncached_typer_app
+from .native_api_cli_support import native_api_cli_session
+from .test_runtime_invoice_add import password_profile_session
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
 
-_BUCKET_ID = "00000000-0000-4000-8000-000000000452"
 _T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
 _T1 = datetime(2026, 2, 1, 10, 0, tzinfo=UTC)
+_M111_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 def _professional_services_invoice(
@@ -166,45 +183,97 @@ def _withholding_evidence_payload(
     return request.model_dump_json()
 
 
-def _seed_ready_profile(root: Path) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="withholding operator activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                UserProfileFact(path="withholding.colegio_concertado", value=False),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+_M111_PROFILE_FACTS = (
+    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+    UserProfileFact(path="identity.name", value="Test"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="activities.description", value="withholding operator activity"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+    UserProfileFact(path="withholding.colegio_concertado", value=False),
+)
+
+
+def _capture_scope(client_id: UUID) -> AccessScope:
+    """Grant only invoice capture, with all-period catalogue lookup authority."""
+    return AccessScope(
+        operations=frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID}),
+        actions=frozenset(
+            {
+                AccessAction.SUBMIT,
+                AccessAction.START,
+                AccessAction.RESUME,
+                AccessAction.OBSERVE,
+                AccessAction.RESULT,
+                AccessAction.COMMIT,
+                AccessAction.CANCEL,
+                AccessAction.DETACH,
+            }
         ),
-        root=root,
-        label="M111 invoice retención routing",
+        disclosures=frozenset(
+            {
+                DisclosurePermission(
+                    destination_id=client_id,
+                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+                    category=DisclosureCategory.OPERATION_METADATA,
+                ),
+                DisclosurePermission(
+                    destination_id=client_id,
+                    projection_id=f"{MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID}.result",
+                    category=DisclosureCategory.TAX_VALUES,
+                ),
+            }
+        ),
+        periods=None,
+        allow_period_independent=True,
+        allow_delegation=False,
     )
 
 
-def _calculate_m111(objects: SecureObjectRepository, period: Period) -> dict[str, Decimal]:
+def _m111_capture_profile_preparer(
+    authority_operation: PinnedAuthorityOperation,
+    invoice_factory: Callable[[str], Invoice],
+    *,
+    save_invoice: bool = True,
+) -> Callable[[UUID, Path], Invoice]:
+    """Complete one registered profile and seed its invoice catalogue."""
+
+    def prepare(profile_id: UUID, root: Path) -> Invoice:
+        facts = complete_profile_facts(authority_operation.profile_schema(), _M111_PROFILE_FACTS)
+        populated = upsert_test_profile_facts(profile_id, facts, root=root)
+        with bound_test_profile_record(profile_id, root=root) as repository:
+            ready = repository.complete_setup(
+                populated.profile_id,
+                expected_revision=populated.record_revision,
+                expected_content_digest=populated.content_digest,
+            )
+        assert ready.setup_state is ProfileSetupState.COMPLETE
+
+        invoice = invoice_factory(str(profile_id))
+        if save_invoice:
+            InvoiceCatalogueRepository(bucket_id=str(profile_id)).save(build_invoice_catalogue([invoice]))
+        return invoice
+
+    return prepare
+
+
+def _calculate_m111(bucket_id: str, period: Period) -> dict[str, Decimal]:
+    objects = secure_object_repository_for_bucket(bucket_id)
     with bundled_indexed_authority().operation() as operation:
         snapshot = operation.snapshot("111", filing_year=period.filing_year, period="1T")
-        wu_repo = WorkUnitCatalogueRepository(objects=objects)
+        wu_repo = WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects)
         work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
+            bucket_id=bucket_id,
             modelo="111",
             filing_year=period.filing_year,
             period=period,
@@ -218,13 +287,16 @@ def _calculate_m111(objects: SecureObjectRepository, period: Period) -> dict[str
         )
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
             clock=_T1,
         )
     return dict(result.revision.casilla_values)
 
 
-def test_received_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path) -> None:
+def test_received_invoice_routes_through_aggregate_cli_into_m111(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A CLI-routed received invoice's retención reaches the M111 calculate path.
 
     The per-perceptor store is populated ONLY by invoking
@@ -232,48 +304,47 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path)
     seeding ``RetencionObservationRepository`` directly, which is exactly what
     proves the production wiring rather than the pure projection.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 invoice retencion") as profile:
-        objects: SecureObjectRepository = profile.repository
-        _seed_ready_profile(profile.storage_root)
-        invoice = _professional_services_invoice(bucket_id=_BUCKET_ID)
-        InvoiceCatalogueRepository(objects=objects).save(build_invoice_catalogue([invoice]))
-
-        result = invoke_cached_cli(
-            [
-                "--language",
-                "en",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-                "--received-invoice-retencion",
-                _withholding_evidence_payload(
-                    invoice,
-                    allocation_id="allocation-routed",
-                    payment_event_id="payment-routed",
-                    idempotency_key="capture-routed",
-                ),
-            ],
+    with native_api_cli_session(
+        tmp_path,
+        scope_for_destination=_capture_scope,
+        prepare_profile=_m111_capture_profile_preparer(
+            authority_operation,
+            lambda bucket_id: _professional_services_invoice(bucket_id=bucket_id),
+        ),
+    ) as session:
+        invoice = session.prepared
+        result = session.invoke_password(
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--received-invoice-retencion",
+            _withholding_evidence_payload(
+                invoice,
+                allocation_id="allocation-routed",
+                payment_event_id="payment-routed",
+                idempotency_key="capture-routed",
+            ),
         )
         assert result.exit_code == 0, result.output
 
-        # The CLI resolves the active bucket independently of the injected
-        # ``objects`` handle; reading back through the real store confirms the
-        # write landed in the same encrypted namespace the calculate path reads.
-        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
-            "111",
-            Period.from_year_and_code(2025, "1T"),
-        )
-        assert len(stored) == 1
-        assert stored[0].source_object_id == invoice.invoice_id
-        assert stored[0].retencion_amount == Decimal("150.00")
+        with password_profile_session(session.profile_id, authority_operation):
+            stored = build_retencion_observation_ports(bucket_id=str(session.profile_id)).repository.load_observations(
+                "111",
+                _M111_PERIOD,
+            )
+            assert len(stored) == 1
+            assert stored[0].source_object_id == invoice.invoice_id
+            assert stored[0].retencion_amount == Decimal("150.00")
 
-        values = _calculate_m111(objects, Period.from_year_and_code(2025, "1T"))
+            values = _calculate_m111(str(session.profile_id), _M111_PERIOD)
 
     assert values["07"] == Decimal("1")
     assert values["08"] == Decimal("1000.00")
@@ -282,8 +353,11 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path)
     assert values["30"] == Decimal("150.00")
 
 
-def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(tmp_path: Path) -> None:
-    """A new CLI command tree reads the exact baseline needed for replacement.
+def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The aggregate CLI reads the exact baseline needed for replacement.
 
     The readback uses the public aggregate envelope, while the stored state is
     consulted only to prove an omitted invocation did not mutate it.  The
@@ -291,45 +365,38 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(tmp_
     previously returned baseline, so this exercises the real producer and CAS
     boundary instead of reimplementing either in the test.
     """
-    for directory in storage_overrides(
+    with native_api_cli_session(
         tmp_path,
-        StorageCategory.SECRETS,
-        StorageCategory.TOKENS,
-        StorageCategory.RUNS,
-        StorageCategory.DRAFTS,
-        StorageCategory.FINANCIAL_TRANSACTIONS,
-        StorageCategory.INVOICES,
-    ).values():
-        directory.mkdir(parents=True, exist_ok=True)
-
-    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 readback") as profile:
-        invoice = _professional_services_invoice(
-            bucket_id=_BUCKET_ID,
-            number="F-PROV-READBACK",
-            issued_at=date(2025, 3, 15),
-        )
-        InvoiceCatalogueRepository(objects=profile.repository).save(build_invoice_catalogue([invoice]))
-        first = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-                "--received-invoice-retencion",
-                _withholding_evidence_payload(
-                    invoice,
-                    allocation_id="readback-first",
-                    payment_event_id="readback-payment-first",
-                    idempotency_key="readback-first",
-                ),
-            ]
+        scope_for_destination=_capture_scope,
+        prepare_profile=_m111_capture_profile_preparer(
+            authority_operation,
+            lambda bucket_id: _professional_services_invoice(
+                bucket_id=bucket_id,
+                number="F-PROV-READBACK",
+                issued_at=date(2025, 3, 15),
+            ),
+        ),
+    ) as session:
+        invoice = session.prepared
+        first = session.invoke_password(
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--received-invoice-retencion",
+            _withholding_evidence_payload(
+                invoice,
+                allocation_id="readback-first",
+                payment_event_id="readback-payment-first",
+                idempotency_key="readback-first",
+            ),
         )
         assert first.exit_code == 0, first.output
         first_window = json.loads(first.output)["result"]["withholding_window"]
@@ -344,115 +411,90 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(tmp_
         assert "1000.00" not in json.dumps(first_window)
         assert "150.00" not in json.dumps(first_window)
 
-        replay = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-                "--received-invoice-retencion",
-                _withholding_evidence_payload(
-                    invoice,
-                    allocation_id="readback-first",
-                    payment_event_id="readback-payment-first",
-                    idempotency_key="readback-first",
-                ),
-            ]
+        replay = session.invoke_password(
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--received-invoice-retencion",
+            _withholding_evidence_payload(
+                invoice,
+                allocation_id="readback-first",
+                payment_event_id="readback-payment-first",
+                idempotency_key="readback-first",
+            ),
         )
         assert replay.exit_code == 0, replay.output
         assert json.loads(replay.output)["result"]["withholding_window"] == first_window
 
-        # A freshly materialised command tree shares no Click command cache
-        # with the capture invocation. It omits all capture input and must
-        # therefore read the persisted token without creating a generation.
-        from ..main import app
-
-        omitted = invoke_uncached_typer_app(
-            app,
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-            ],
+        omitted = session.invoke_password(
+            "--language", "en", "app", "modelo", "aggregate", "--modelo", "111", "--year", "2025", "--period", "1T"
         )
         assert omitted.exit_code == 0, omitted.output
         omitted_window = json.loads(omitted.output)["result"]["withholding_window"]
         assert omitted_window == first_window
 
-        replaced = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-                "--received-invoice-retencion",
-                _withholding_evidence_payload(
-                    invoice,
-                    allocation_id="readback-replacement",
-                    payment_event_id="readback-payment-replacement",
-                    idempotency_key="readback-replacement",
-                    mode=WithholdingMutationMode.REPLACE,
-                    baseline=first_baseline,
-                    reason="corrected allocation",
-                    supersedes_generation_id=first_generation_id,
-                ),
-            ]
+        replaced = session.invoke_password(
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--received-invoice-retencion",
+            _withholding_evidence_payload(
+                invoice,
+                allocation_id="readback-replacement",
+                payment_event_id="readback-payment-replacement",
+                idempotency_key="readback-replacement",
+                mode=WithholdingMutationMode.REPLACE,
+                baseline=first_baseline,
+                reason="corrected allocation",
+                supersedes_generation_id=first_generation_id,
+            ),
         )
         assert replaced.exit_code == 0, replaced.output
         replacement_window = json.loads(replaced.output)["result"]["withholding_window"]
 
-        stale = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-                "--received-invoice-retencion",
-                _withholding_evidence_payload(
-                    invoice,
-                    allocation_id="readback-stale",
-                    payment_event_id="readback-payment-stale",
-                    idempotency_key="readback-stale",
-                    mode=WithholdingMutationMode.REPLACE,
-                    baseline=first_baseline,
-                    reason="stale correction",
-                    supersedes_generation_id=first_generation_id,
-                ),
-            ]
+        stale = session.invoke_password(
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--received-invoice-retencion",
+            _withholding_evidence_payload(
+                invoice,
+                allocation_id="readback-stale",
+                payment_event_id="readback-payment-stale",
+                idempotency_key="readback-stale",
+                mode=WithholdingMutationMode.REPLACE,
+                baseline=first_baseline,
+                reason="stale correction",
+                supersedes_generation_id=first_generation_id,
+            ),
         )
         assert stale.exit_code != 0
-        after_stale = invoke_uncached_typer_app(
-            app,
-            ["--format", "json", "app", "modelo", "aggregate", "--modelo", "111", "--year", "2025", "--period", "1T"],
+        after_stale = session.invoke_password(
+            "--language", "en", "app", "modelo", "aggregate", "--modelo", "111", "--year", "2025", "--period", "1T"
         )
         assert after_stale.exit_code == 0, after_stale.output
         assert json.loads(after_stale.output)["result"]["withholding_window"] == replacement_window
@@ -466,49 +508,58 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(tmp_
     }
 
 
-def test_issued_invoice_retencion_is_refused_and_not_routed(tmp_path: Path) -> None:
+def test_issued_invoice_retencion_is_refused_and_not_routed(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """An issued invoice's retención is a CREDIT, not a retenedor liability, and is refused routing.
 
     The refusal names its reason rather than dropping the evidence silently,
     and nothing reaches the per-perceptor store.
     """
-    issued = _professional_services_invoice(bucket_id=_BUCKET_ID, kind=InvoiceKind.ISSUED, number="F-CLI-002")
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 invoice retencion") as profile:
-        objects: SecureObjectRepository = profile.repository
-        InvoiceCatalogueRepository(objects=objects).save(build_invoice_catalogue([issued]))
-
-        result = invoke_cached_cli(
-            [
-                "--language",
-                "en",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-                "--received-invoice-retencion",
-                _withholding_evidence_payload(
-                    issued,
-                    allocation_id="allocation-issued",
-                    payment_event_id="payment-issued",
-                    idempotency_key="capture-issued",
-                ),
-            ],
+    with native_api_cli_session(
+        tmp_path,
+        scope_for_destination=_capture_scope,
+        prepare_profile=_m111_capture_profile_preparer(
+            authority_operation,
+            lambda bucket_id: _professional_services_invoice(
+                bucket_id=bucket_id,
+                kind=InvoiceKind.ISSUED,
+                number="F-CLI-002",
+            ),
+        ),
+    ) as session:
+        issued = session.prepared
+        result = session.invoke_password(
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--received-invoice-retencion",
+            _withholding_evidence_payload(
+                issued,
+                allocation_id="allocation-issued",
+                payment_event_id="payment-issued",
+                idempotency_key="capture-issued",
+            ),
         )
 
         assert result.exit_code == 2, result.output
-        assert "not_a_retenedor_liability" in result.output
+        assert "not_a_retenedor_liability" in result.output, result.output
 
-        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
-            "111",
-            Period.from_year_and_code(2025, "1T"),
-        )
-        assert stored == ()
+        with password_profile_session(session.profile_id, authority_operation):
+            stored = build_retencion_observation_ports(bucket_id=str(session.profile_id)).repository.load_observations(
+                "111",
+                _M111_PERIOD,
+            )
+            assert stored == ()
 
 
 @pytest.mark.parametrize(
@@ -519,7 +570,11 @@ def test_issued_invoice_retencion_is_refused_and_not_routed(tmp_path: Path) -> N
     ),
 )
 def test_an_invoice_with_two_defects_is_refused_naming_both(
-    tmp_path: Path, language: str, credit_reason: str, non_resident_reason: str
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+    language: str,
+    credit_reason: str,
+    non_resident_reason: str,
 ) -> None:
     """An issued invoice from a non-resident is refused once, with both defects, in the operator's language.
 
@@ -527,41 +582,42 @@ def test_an_invoice_with_two_defects_is_refused_naming_both(
     argument error, so a machine reads every defect token and a person reads
     every explanation, and nothing reaches the per-perceptor store.
     """
-    issued_abroad = _professional_services_invoice(
-        bucket_id=_BUCKET_ID,
-        kind=InvoiceKind.ISSUED,
-        number="F-CLI-003",
-        counterparty_country="PT",
-        counterparty_tax_id="PT123456789",
-    )
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 invoice retencion") as profile:
-        objects: SecureObjectRepository = profile.repository
-        InvoiceCatalogueRepository(objects=objects).save(build_invoice_catalogue([issued_abroad]))
-
-        result = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "--language",
-                language,
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-                "--received-invoice-retencion",
-                _withholding_evidence_payload(
-                    issued_abroad,
-                    allocation_id="allocation-issued-abroad",
-                    payment_event_id="payment-issued-abroad",
-                    idempotency_key="capture-issued-abroad",
-                ),
-            ],
+    with native_api_cli_session(
+        tmp_path,
+        scope_for_destination=_capture_scope,
+        prepare_profile=_m111_capture_profile_preparer(
+            authority_operation,
+            lambda bucket_id: _professional_services_invoice(
+                bucket_id=bucket_id,
+                kind=InvoiceKind.ISSUED,
+                number="F-CLI-003",
+                counterparty_country="PT",
+                counterparty_tax_id="PT123456789",
+            ),
+        ),
+    ) as session:
+        issued_abroad = session.prepared
+        result = session.invoke_password(
+            "--format",
+            "json",
+            "--language",
+            language,
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--received-invoice-retencion",
+            _withholding_evidence_payload(
+                issued_abroad,
+                allocation_id="allocation-issued-abroad",
+                payment_event_id="payment-issued-abroad",
+                idempotency_key="capture-issued-abroad",
+            ),
         )
 
         assert result.exit_code == 2, result.output
@@ -571,16 +627,16 @@ def test_an_invoice_with_two_defects_is_refused_naming_both(
         assert credit_reason in error["context"]["defect_reasons"]
         assert non_resident_reason in error["context"]["defect_reasons"]
 
-        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
-            "111",
-            Period.from_year_and_code(2025, "1T"),
-        )
-        assert stored == ()
+        with password_profile_session(session.profile_id, authority_operation):
+            stored = build_retencion_observation_ports(bucket_id=str(session.profile_id)).repository.load_observations(
+                "111", _M111_PERIOD
+            )
+            assert stored == ()
 
 
 def _producer_created_invoice(
     *,
-    objects: SecureObjectRepository,
+    bucket_id: str,
     number: str,
     retention_rate: Decimal | None,
     retention_amount: Decimal | None,
@@ -602,10 +658,10 @@ def _producer_created_invoice(
     category) -- a separate, already-tracked gap, not
     something this test's producer is responsible for.
     """
-    catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+    catalogue_ports = build_catalogue_creation_ports(bucket_id=bucket_id)
     with bundled_indexed_authority().operation() as operation:
         invoice = build_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
+            bucket_id=bucket_id,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Asesoría Profesional SL",
             counterparty_tax_id="B12345674",
@@ -625,7 +681,10 @@ def _producer_created_invoice(
     return result.invoice
 
 
-def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path) -> None:
+def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The new retention_rate/retention_amount producer (#66) reaches M111.
 
     Mutation-proof companion:
@@ -634,49 +693,53 @@ def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(tmp_pat
     ``retention_rate``/``retention_amount`` being ``None`` -- disabling the
     producer's output reddens the M111 casilla assertions below.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 producer retencion") as profile:
-        objects: SecureObjectRepository = profile.repository
-        _seed_ready_profile(profile.storage_root)
-        invoice = _producer_created_invoice(
-            objects=objects,
-            number="F-PROV-CLI-901",
-            retention_rate=Decimal("0.15"),
-            retention_amount=Decimal("150.00"),
-        )
-
-        result = invoke_cached_cli(
-            [
-                "--language",
-                "en",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-                "--received-invoice-retencion",
-                _withholding_evidence_payload(
-                    invoice,
-                    allocation_id="allocation-producer",
-                    payment_event_id="payment-producer",
-                    idempotency_key="capture-producer",
-                ),
-            ],
+    with native_api_cli_session(
+        tmp_path,
+        scope_for_destination=_capture_scope,
+        prepare_profile=_m111_capture_profile_preparer(
+            authority_operation,
+            lambda bucket_id: _producer_created_invoice(
+                bucket_id=bucket_id,
+                number="F-PROV-CLI-901",
+                retention_rate=Decimal("0.15"),
+                retention_amount=Decimal("150.00"),
+            ),
+            save_invoice=False,
+        ),
+    ) as session:
+        invoice = session.prepared
+        result = session.invoke_password(
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--received-invoice-retencion",
+            _withholding_evidence_payload(
+                invoice,
+                allocation_id="allocation-producer",
+                payment_event_id="payment-producer",
+                idempotency_key="capture-producer",
+            ),
         )
         assert result.exit_code == 0, result.output
 
-        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
-            "111",
-            Period.from_year_and_code(2025, "1T"),
-        )
-        assert len(stored) == 1
-        assert stored[0].source_object_id == invoice.invoice_id
-        assert stored[0].retencion_amount == Decimal("150.00")
+        with password_profile_session(session.profile_id, authority_operation):
+            stored = build_retencion_observation_ports(bucket_id=str(session.profile_id)).repository.load_observations(
+                "111",
+                _M111_PERIOD,
+            )
+            assert len(stored) == 1
+            assert stored[0].source_object_id == invoice.invoice_id
+            assert stored[0].retencion_amount == Decimal("150.00")
 
-        values = _calculate_m111(objects, Period.from_year_and_code(2025, "1T"))
+            values = _calculate_m111(str(session.profile_id), _M111_PERIOD)
 
     assert values["07"] == Decimal("1")
     assert values["08"] == Decimal("1000.00")
@@ -685,7 +748,10 @@ def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(tmp_pat
     assert values["30"] == Decimal("150.00")
 
 
-def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> None:
+def test_producer_without_retention_is_excluded_from_m111(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Mutation proof: the identical invoice, minus the producer's amount, never reaches M111.
 
     Same producer call, same base/rate/counterparty/category as
@@ -701,49 +767,53 @@ def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> Non
     no observation at all. Asserting zeroed casillas here would instead require
     the silent zero the resolver deliberately refuses.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 producer retencion") as profile:
-        objects: SecureObjectRepository = profile.repository
-        _seed_ready_profile(profile.storage_root)
-        invoice = _producer_created_invoice(
-            objects=objects,
-            number="F-PROV-CLI-902",
-            retention_rate=None,
-            retention_amount=None,
-        )
-
-        result = invoke_cached_cli(
-            [
-                "--language",
-                "en",
-                "app",
-                "modelo",
-                "aggregate",
-                "--modelo",
-                "111",
-                "--year",
-                "2025",
-                "--period",
-                "1T",
-                "--received-invoice-retencion",
-                _withholding_evidence_payload(
-                    invoice,
-                    allocation_id="allocation-unwithheld",
-                    payment_event_id="payment-unwithheld",
-                    idempotency_key="capture-unwithheld",
-                ),
-            ],
+    with native_api_cli_session(
+        tmp_path,
+        scope_for_destination=_capture_scope,
+        prepare_profile=_m111_capture_profile_preparer(
+            authority_operation,
+            lambda bucket_id: _producer_created_invoice(
+                bucket_id=bucket_id,
+                number="F-PROV-CLI-902",
+                retention_rate=None,
+                retention_amount=None,
+            ),
+            save_invoice=False,
+        ),
+    ) as session:
+        invoice = session.prepared
+        result = session.invoke_password(
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--received-invoice-retencion",
+            _withholding_evidence_payload(
+                invoice,
+                allocation_id="allocation-unwithheld",
+                payment_event_id="payment-unwithheld",
+                idempotency_key="capture-unwithheld",
+            ),
         )
         assert result.exit_code == 2, result.output
         assert "no_retencion_declared" in result.output
 
-        stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
-            "111",
-            Period.from_year_and_code(2025, "1T"),
-        )
-        assert stored == ()
+        with password_profile_session(session.profile_id, authority_operation):
+            stored = build_retencion_observation_ports(bucket_id=str(session.profile_id)).repository.load_observations(
+                "111",
+                _M111_PERIOD,
+            )
+            assert stored == ()
 
-        with pytest.raises(AggregationValidationError) as exc_info:
-            _calculate_m111(objects, Period.from_year_and_code(2025, "1T"))
+            with pytest.raises(AggregationValidationError) as exc_info:
+                _calculate_m111(str(session.profile_id), _M111_PERIOD)
 
     assert exc_info.value.translated_message == "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
     context = exc_info.value.context

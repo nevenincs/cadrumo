@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 from itertools import pairwise
-from typing import Literal, Protocol, runtime_checkable
+from typing import Annotated, Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ....core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
@@ -65,11 +67,12 @@ class OperationPersistedSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[6] = 6
+    schema_version: Literal[8] = 8
     identity: OperationIdentity
     definition_contract_digest: ContentDigest
     request_storage: OperationRequestStoragePolicy
     request_reference: ContentDigest
+    admission_provenance_reference: ContentDigest | None = None
     credential_free_request_json: str | None = None
     secret_requirement: OperationSecretRequirement | None = None
     executor_entered_at: datetime | None = None
@@ -317,8 +320,60 @@ def _validate_terminal_events(snapshot: OperationPersistedSnapshot) -> None:
         raise ValueError("terminal journal event receipt does not match persisted operation snapshot")
 
 
+class OperationRecoveryInventoryDisposition(StrEnum):
+    """Classification of one existing operation journal identifier."""
+
+    NONTERMINAL = "nonterminal"
+    TERMINAL = "terminal"
+    REFUSED = "refused"
+
+
+type OperationInventoryLimit = Annotated[int, Field(ge=1, le=128)]
+
+
+class OperationRecoveryInventoryEntry(BaseModel):
+    """Credential-free inventory classification of one journal filename."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    operation_id: OperationId
+    disposition: OperationRecoveryInventoryDisposition
+
+
+class OperationRecoveryInventoryPage(BaseModel):
+    """One bounded filename-order page; pages are not a cross-call snapshot."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    entries: Annotated[tuple[OperationRecoveryInventoryEntry, ...], Field(max_length=128)]
+    next_cursor: OperationId | None
+    has_more: bool
+
+    @model_validator(mode="after")
+    def _validate_cursor(self) -> OperationRecoveryInventoryPage:
+        ids = tuple(entry.operation_id for entry in self.entries)
+        if ids != tuple(sorted(set(ids))):
+            raise ValueError("operation inventory entries must be unique and ordered")
+        if ids and self.next_cursor != ids[-1]:
+            raise ValueError("operation inventory cursor must name the last scanned entry")
+        if self.has_more and not ids:
+            raise ValueError("operation inventory continuation requires a scanned entry")
+        return self
+
+
 @runtime_checkable
-class OperationJournal(Protocol):
+class OperationRecoveryInventoryReader(Protocol):
+    """Read credential-free journal identities before authorized recovery."""
+
+    async def inventory_page(
+        self, *, after: OperationId | None, limit: OperationInventoryLimit
+    ) -> OperationRecoveryInventoryPage:
+        """Read at most ``limit`` existing records after an exclusive ID cursor."""
+        ...
+
+
+@runtime_checkable
+class OperationJournal(OperationRecoveryInventoryReader, Protocol):
     """Atomic snapshot-plus-event persistence with optimistic revision checks."""
 
     async def load(self, operation_id: OperationId) -> OperationPersistedSnapshot:
@@ -433,12 +488,22 @@ class OperationLeaseRepository(Protocol):
         ...
 
 
+def serialize_operation_operand(operand: BaseModel) -> bytes:
+    """Return the exact typed JSON bytes addressed by secure-reference digests."""
+    return operand.model_dump_json(
+        by_alias=True,
+        exclude_defaults=False,
+        exclude_none=False,
+        exclude_unset=False,
+    ).encode(UTF_8_ENCODING)
+
+
 @runtime_checkable
 class OperationSecureReferenceStore(Protocol):
     """Store and resolve confidential operands outside credential-free journals."""
 
     async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest:
-        """Store one typed confidential operand and return its reference."""
+        """Store one confidential operand by the SHA-256 of its canonical serialized bytes."""
         ...
 
     async def resolve[OperandT: BaseModel](
@@ -453,6 +518,7 @@ class OperationSecureReferenceStore(Protocol):
 
 __all__ = [
     "OperationEventStream",
+    "OperationInventoryLimit",
     "OperationJournal",
     "OperationLeaseRepository",
     "OperationObservationCursorAheadError",
@@ -462,5 +528,10 @@ __all__ = [
     "OperationPersistedSnapshot",
     "OperationProgressFoldCheckpoint",
     "OperationProgressFoldInput",
+    "OperationRecoveryInventoryDisposition",
+    "OperationRecoveryInventoryEntry",
+    "OperationRecoveryInventoryPage",
+    "OperationRecoveryInventoryReader",
     "OperationSecureReferenceStore",
+    "serialize_operation_operand",
 ]

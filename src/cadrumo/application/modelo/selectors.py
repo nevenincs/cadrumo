@@ -367,7 +367,7 @@ def _revisions_for_work_unit(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, ...]:
-    catalogue = calculation_repository.load()
+    catalogue = calculation_repository.load(operation=operation)
     revisions = tuple(sorted(catalogue.for_work_unit(work_unit.work_unit_id), key=lambda revision: revision.created_at))
     for revision in revisions:
         require_calculation_revision_coordinates_current(revision, operation=operation)
@@ -381,7 +381,7 @@ def _explicit_revision_for_work_unit(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
-    catalogue = calculation_repository.load()
+    catalogue = calculation_repository.load(operation=operation)
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
         raise ModeloCalculationRevisionSelectorNotFoundError(

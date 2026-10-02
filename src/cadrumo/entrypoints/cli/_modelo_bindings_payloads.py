@@ -25,6 +25,7 @@ See Also:
 
 from __future__ import annotations
 
+from ...core.identity.digest import ContentDigest
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
@@ -111,6 +112,7 @@ class ModeloBindingsListResult(OutputSchema):
     """Bindings list result."""
 
     operation: str = "modelo.bindings.list"
+    authority_generation: ContentDigest
     modelo_filter: str | None
     year_filter: int | None
     period_filter: str | None
@@ -133,6 +135,7 @@ class ModeloBindingsPreviewResult(OutputSchema):
     """Bindings resolve result."""
 
     operation: str = "modelo.bindings.resolve"
+    authority_generation: ContentDigest
     modelo: str
     revision: str
     filing_year: int | None

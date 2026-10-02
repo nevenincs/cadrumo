@@ -1,188 +1,128 @@
 # Contributing to Cadrumo
 
-This guide covers setting up a development environment from a source checkout.
-It is for contributors working on Cadrumo itself. If you want to *use* Cadrumo,
-follow the [installation guide](docs/workstation-setup.md) instead — end users
-install a released package, never a checkout.
+This guide is for people changing Cadrumo itself. To use Cadrumo, follow the
+[installation guide](docs/workstation-setup.md).
 
-## Set up the development environment
+## Set up a worktree
 
-Choose one of two paths: install directly on your machine, or open the
-project in a ready-made container.
-
-### Option A: install on your machine
-
-Install the project and its tools in one step:
-
-```bash
-just bootstrap
-```
-
-This creates the pinned Python environment, installs the project and all
-development dependencies, installs the repository tooling, provisions
-`env/.env`, and runs the readiness check at the end. It is safe to run again
-and costs nothing when there is nothing to do. `just init-check` reports
-whether a worktree is ready without changing anything.
-
-### Option B: open in a devcontainer
-
-The repository ships a `Dockerfile` and a `.devcontainer/devcontainer.json`
-with Python 3.13, `uv`, and headless-Chromium already installed, so you skip
-the manual `uv sync` / `playwright install` steps entirely.
-
-With VS Code and the Dev Containers extension, open the project folder and
-choose "Reopen in Container". The first build installs every dependency group
-and pre-bakes the Playwright browser; later reopens reuse the cached image.
-
-Without VS Code, build and run the image directly:
-
-```bash
-docker build --target dev -t cadrumo-devcontainer -f Dockerfile .
-docker run --rm -it -v "$(pwd)":/workspace cadrumo-devcontainer bash
-```
-
-The container has no interactive display, so live AEAT browser reads run
-headless (`CADRUMO_BROWSER_HEADLESS=true` is set for you). Your digital
-certificate is personal, per-machine data — it is never baked into the image.
-Mount it or set `CADRUMO_CERTIFICATE_PATH` after the container starts if you need
-`aeat app live ...` inside the container.
-
-## Publish the runtime authority
-
-A fresh clone cannot calculate or file anything until you publish the runtime
-authority once. The authority is the compiled, digest-checked publication of
-the tax-rule registry, and it is the only registry source an installed Cadrumo
-process reads. A released package carries one; a checkout builds its own.
+You need [`uv`](https://docs.astral.sh/uv/), [`just`](https://just.systems/)
+1.38 or later, and on Windows PowerShell 7.4 or later. From the repository
+root, run:
 
 ```console
-just registry-publish-authority
+just init
 ```
 
-The publication lands in `.authority/` at the repository root. It is roughly
-eighty megabytes, it takes a few minutes, and it is excluded from version
-control: it is regenerated output, it changes whenever the registry sources
-do, and carrying it in history would add that much binary to every clone.
-Commit the registry change on its own; never commit the result of this
-command.
+`just init` syncs the locked Python environment with the development
+dependencies, creates `env/.env` from `env/.env.example` when it is missing and
+copies in the values you set in the `main` worktree's `env/.env`, installs the repository tooling, provisions the local search service, and
+publishes the runtime registry authority. Each step prints its own progress,
+and the command is safe to run again. `just setup` runs only the environment
+and tooling steps; CI and the devcontainer use it.
 
-Republish whenever you change registry declarations or legal evidence, and
-after a dependency or interpreter change — the publication records the
-identity of the sources and the compiler that produced it, so either kind of
-change makes it stale. `just check-registry` tells you when it has.
+The devcontainer (`.devcontainer/devcontainer.json`) runs `just setup` for you.
+Browser automation is optional: `just setup-browser` installs the Playwright
+channels and `just doctor-browser` checks them.
 
-### Where the tooling looks for it
-
-`CADRUMO_AUTHORITY_ROOT` names the directory to resolve the authority from,
-and whether you set it depends on how you start the process:
-
-| How you run | The variable |
-| --- | --- |
-| `just` recipes, `python -m dev.*`, `pytest` | Set for you, to this checkout's `.authority/`. |
-| The `aeat` command from your checkout | You set it yourself. |
-
-That split is deliberate and will not be closed. Cadrumo's runtime never
-imports its development tooling and never searches upwards for a repository
-root, so nothing in the product can discover a checkout's `.authority/` on its
-own. The development tooling knows where the repository is and seeds the
-variable; the product does not and cannot. To run the `aeat` command against
-your checkout's authority, name it yourself:
+The published authority lives in `.authority/`, which is not committed. `just`
+recipes, `python -m dev.*`, and `pytest` find it on their own. To run the `aeat`
+command against it from a checkout, point the product at it yourself:
 
 ```powershell
 $env:CADRUMO_AUTHORITY_ROOT = "$PWD\.authority"
 ```
 
-An explicit value always wins over the seeded one, so a run pointed at another
-authority tree is never overridden by the checkout's own.
+## Author, publish, and verify the registry
 
-### The two refusals you will meet
+The registry is the tax-rule knowledge Cadrumo calculates and exports from.
+Changing it is one pipeline, run in this order:
 
-Both name the command that fixes them. Which one you see says where the
-process was looking.
+1. **Author.** Edit the declarations under `src/cadrumo/_data/registry/aeat/`
+   and the legal evidence under `src/cadrumo/_data/corpus/`. Start a new modelo
+   with `just registry-modelo-scaffold`, or a new revision of an existing one
+   with `just registry-modelo-new-edition`; `just registry-modelo-checklist`
+   lists what a revision needs. Store a revision as its differences from the
+   one before it, not as a copy. Export layouts are generated from the inputs in
+   `dev/registry/mappings/` and `dev/registry/render_profiles/`; write one with
+   `just registry-publish-target` and confirm it with
+   `just check-registry-target-current`.
+2. **Publish.** Run `just registry-publish-authority-if-authority-stale`. It
+   compiles and validates the whole registry and replaces `.authority/` only
+   when the result is valid; when nothing changed it reports
+   `published=skipped-current` in seconds. Installed code reads only this
+   publication, never the source tree.
+3. **Verify.** Run `just check-registry-gate` (validity, runtime load, and
+   integrity against the publication) and `just test-registry`.
+   `just check-registry` reports the registry's overall health.
 
-Before you have published, `just`, `pytest` and the `dev` tooling report:
+Commit the authored source and generated export layouts. Never commit
+`.authority/`. For details, see
+[Publish a validated runtime authority](docs/how-to/publish-runtime-authority.md),
+[Registry conformance](REGISTRY-CONFORMANCE.md), and
+[the registry tooling](dev/registry/README.md).
 
-```text
-CADRUMO_AUTHORITY_ROOT points at a directory that holds no registry authority
-descriptor at <repo>\.authority\authority.current.json. Publish the authority
-with `python -m dev.registry.pipeline publish-authority` or point the variable
-at a published authority tree.
-```
+## Verification principles
 
-The `aeat` command with the variable unset looks in the packaged location
-instead, finds nothing there in a checkout, and reports:
+- Ground every rate, threshold, formula, and record layout that affects a
+  filing in the exact AEAT or BOE provision, instruction, or record design for
+  that modelo and period, and cite it.
+- Test through the real registry, compiler, resolver, and calculation. Use test
+  doubles only to isolate pure logic in unit tests, never for the behavior a
+  test claims to check.
+- Take expected values from an independent source, such as an official worked
+  example or a separate calculation, never from the output of the code under
+  test.
+- Keep missing, unsupported, and zero distinct. A total is complete only when
+  every required input is present; never fill a gap with zero.
+- A check must catch the defect it guards against. Show it failing on a planted
+  defect in a temporary fixture, and passing on the real tree.
+- A result is the command you ran and its exit status. Report failures you
+  found but did not cause separately from ones you introduced.
 
-```text
-No registry authority is published at <...>\cadrumo\_data\registry\authority\authority.current.json.
-Publish it with `python -m dev.registry.pipeline publish-authority`, or set
-CADRUMO_AUTHORITY_ROOT to a published authority tree.
-```
+## Standards
 
-Neither falls back to the other. A configured root is the whole answer, so a
-checkout cannot silently answer from packaged bytes it believed it had
-replaced.
+- Import each symbol from the module that defines it. Keep `__init__.py` files
+  empty: no re-exports, aliases, or wrappers.
+- Put tests in the nearest `tests/` directory of the code they cover.
+- When you move or replace something, update every caller and delete the old
+  path in the same change. Do not add compatibility shims.
+- Never hand-edit generated files, such as API stubs, locale catalogues, and
+  generated export layouts. Change the source and run its generator.
+- Extend the CLI under its two root commands, `config` and `app`.
+- Use the official Spanish term for tax concepts, such as modelo and casilla.
+- Keep real taxpayer data, credentials, and certificates out of code, fixtures,
+  logs, and issues. Tests use synthetic data.
+- Write comments that explain why, not what.
 
-For the publication format, the verification steps, and the release-only
-candidate directory, see
-[Publish a validated runtime authority](docs/how-to/publish-runtime-authority.md).
+## Before you open a pull request
 
-## Check the workstation
-
-`just doctor-check` runs `aeat config check` against the checkout's environment. The
-report lists each external dependency, whether it is available, and the exact
-command to fix any gap.
-
-Provision the optional Playwright browser and get guidance for the on-host
-vision model:
-
-```bash
-just setup-playwright
-```
-
-Run `just doctor-check` again after each change to confirm the gap is closed.
-
-## Check Python runtime compatibility
-
-Cadrumo supports CPython 3.13 and every newer released minor listed in
-[`dev/ci/python-runtime-matrix.json`](dev/ci/python-runtime-matrix.json). The
-inventory is the source of truth for local and CI runtime selection. Its
-separate `next` row is a prerelease watch only; it is not a stable support or
-classifier claim until it has been promoted with evidence.
-
-The `next` row uses a provisionable rolling minor selector (currently `3.15`)
-while prereleases are available. Its evidence records the exact interpreter
-patch (currently CPython `3.15.0b4`); do not replace the rolling selector with a
-fixed RC identifier unless that exact interpreter can be provisioned.
-
-The repository's [`.python-version`](.python-version) is the exact Python
-identity used to build release artifacts. It is deliberately narrower than the
-support floor and must not be changed just to add a runtime to the matrix. To
-install selectors for local checks, run for example:
-
-```console
-uv python install 3.13 3.14 3.15
-```
-
-Then run the inventory-driven compatibility command from a clean checkout:
+Run these from the repository root. Each must exit 0:
 
 ```console
-just test-python-compatibility
+just check-code
+just check-registry-gate
+just test-gate
 ```
 
-The command writes evidence below `var/python-runtime-compatibility/`. Source
-evidence builds distributions from the source snapshot. Binary evidence installs
-the one sealed release cohort with wheels only. A source pass therefore does not
-prove that native dependencies have compatible wheels; a missing binary wheel is
-a distinct compatibility result and must remain visible rather than being
-silently skipped.
+- `just check-code` runs the linter, the code and data format checks, the type
+  checkers, the import-boundary lint, and the dependency, reachability, usage,
+  and docstring-reference checks. `just check-import-boundaries` runs the import
+  lint on its own.
+- `just check-registry-gate` checks the registry against its publication.
+- `just test-gate` runs the tests affected by your change against `origin/main`,
+  as CI does.
 
-## Work on the modelo registry
+Then run `just report-code-health`. It reports duplication, import quality, and
+complexity across the whole repository, and exits 1 while any of them is red.
+Read it for your change: import quality must be green, and no function you
+added or changed may be listed as a complexity hotspot. `--full` lists every
+hotspot.
 
-The registry conformance tool reports how much of the modelo registry is
-checked, and records who engineered and reviewed each revision. Read
-[REGISTRY-CONFORMANCE.md](REGISTRY-CONFORMANCE.md) before stamping a revision or
-moving the conformance baseline.
+If a check fails on code you did not touch, it fails on `main` too. Say so in
+the pull request instead of fixing it in the same change.
 
-## Releases
+`just fix-code path/to/file.py` repairs lint, type, and format issues in one
+file. The CI merge gate also scans workflows and security; `just gate-local`
+runs the full local gate.
 
-Release mechanics, publication gates, and rollback live in
-[RELEASING.md](RELEASING.md).
+Release mechanics live in [RELEASING.md](RELEASING.md).

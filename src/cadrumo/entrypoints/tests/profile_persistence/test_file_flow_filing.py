@@ -94,6 +94,7 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
     ):
         file_modelo_revision(
             revision.calculation_revision_id,
+            approved_verification_report_id="0" * 64,  # absent: BORRADOR refusal precedes approval
             actor="operator-A",
             workflow_profile=workflow_profile(),
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),

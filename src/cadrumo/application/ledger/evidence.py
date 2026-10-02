@@ -62,11 +62,16 @@ from ...core.percentage import Percentage
 from ...core.text_bounds import NonNegativeDecimal
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import emit_bucket_event
+from ...domain.buckets.event_repository import bucket_event_history_write, build_bucket_event, emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.identifiers import canonical_decimal_string
 from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
-from .evidence_ports import EvidenceAttachmentIngestRequest, LedgerEvidencePorts
+from .evidence_ports import (
+    EvidenceAttachmentIngestRequest,
+    LedgerEvidencePorts,
+    RevisionGuardedPurchaseInvoiceEvidenceRepositoryProtocol,
+)
+from .persistence_ports import LedgerPersistenceConflictError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
@@ -375,11 +380,56 @@ def _load(ports: LedgerEvidencePorts, bucket_id: str) -> list[PurchaseInvoiceEvi
     return list(ports.evidence_repository.load(bucket_id=bucket_id))
 
 
-def _save(ports: LedgerEvidencePorts, bucket_id: str, records: list[PurchaseInvoiceEvidence]) -> None:
-    ports.evidence_repository.save(bucket_id=bucket_id, records=tuple(records))
-
-
 _EVIDENCE_EVENT_PAYLOAD_VERSION = 1
+_EVIDENCE_MUTATION_ATTEMPTS = 4
+
+
+def prepare_purchase_invoice_evidence_update(
+    record: PurchaseInvoiceEvidence,
+    patch: PurchaseInvoiceEvidencePatch,
+    *,
+    updated_at: datetime,
+) -> PurchaseInvoiceEvidence:
+    """Return the canonical patched record without persisting it.
+
+    The registered worker uses this same preparation path to prove its bounded
+    result before it asks the service to commit. The service calls it again for
+    each fresh snapshot after a revision conflict.
+    """
+    data = record.model_dump()
+    for key, value in patch.model_dump(exclude_unset=True).items():
+        if value is not None:
+            data[key] = value
+    data["updated_at"] = updated_at
+    return PurchaseInvoiceEvidence.model_validate(data)
+
+
+def _revisioned_mutation_repositories(
+    ports: LedgerEvidencePorts,
+) -> tuple[RevisionGuardedPurchaseInvoiceEvidenceRepositoryProtocol, BucketEventHistoryRepositoryProtocol]:
+    """Require both revision-aware writers before a mutating evidence call."""
+    evidence_repository = ports.evidence_repository
+    event_repository = ports.bucket_event_repository
+    if not isinstance(evidence_repository, RevisionGuardedPurchaseInvoiceEvidenceRepositoryProtocol):
+        raise InternalInvariantError("evidence mutation requires a revision-guarded evidence repository")
+    if not callable(getattr(event_repository, "load_revisioned", None)):
+        raise InternalInvariantError("evidence mutation requires revisioned bucket-event history")
+    return evidence_repository, event_repository
+
+
+def _require_expected_record(
+    record: PurchaseInvoiceEvidence,
+    *,
+    evidence_id: str,
+    expected_current: PurchaseInvoiceEvidence | None,
+) -> None:
+    """Refuse a stale operation preflight before it can change persisted state."""
+    if expected_current is not None and (expected_current.evidence_id != evidence_id or record != expected_current):
+        raise PurchaseInvoiceEvidenceSnapshotConflictError("purchase invoice evidence changed after preflight")
+
+
+class PurchaseInvoiceEvidenceSnapshotConflictError(Exception):
+    """The target evidence row changed after a result-safety preflight."""
 
 
 def _emit_evidence_event(
@@ -428,6 +478,7 @@ def _ingest_evidence_attachment(
     media_kind: MediaKind,
     now: datetime,
     actor: str,
+    expected_content_digest: ContentDigest | None = None,
 ) -> ContentDigest:
     """Write one admitted evidence file through the application custody port."""
     return ports.attachment_ingestor.ingest(
@@ -438,6 +489,7 @@ def _ingest_evidence_attachment(
             mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
             captured_at=now,
             actor=actor,
+            expected_content_digest=expected_content_digest,
         ),
     )
 
@@ -454,6 +506,7 @@ class PurchaseInvoiceEvidenceService:
         *,
         bucket_id: str,
         source_path: str | Path,
+        source_directory: Path | None = None,
         supplier: str | None = None,
         invoice_number: str | None = None,
         invoice_date: str | None = None,
@@ -463,6 +516,7 @@ class PurchaseInvoiceEvidenceService:
         notes: str = "",
         actor: str = "cli",
         idempotency_key: str | None = None,
+        expected_content_digest: ContentDigest | None = None,
     ) -> PurchaseInvoiceEvidenceResult:
         """Attach a new purchase invoice evidence file to a bucket (ledger).
 
@@ -489,6 +543,9 @@ class PurchaseInvoiceEvidenceService:
                 path stays forward-slash on Windows). A ``Path`` is accepted for
                 programmatic callers and stringified for the echo. Byte access
                 always resolves the path regardless.
+            source_directory: Absolute directory of the submitting frontend.
+                Relative source paths are read from this directory when execution
+                crosses a process boundary; the original breadcrumb is unchanged.
             supplier: Optional vendor name extracted from the invoice.
             invoice_number: Optional invoice identifier from the document.
             invoice_date: Optional issue date string (free-form; typically
@@ -508,6 +565,8 @@ class PurchaseInvoiceEvidenceService:
                 fields. When omitted the verb stays deliberately ADDITIVE --
                 two attachments of one file are two distinct pieces of
                 evidence, and collapsing them would be its own defect.
+            expected_content_digest: Optional planned source identity checked
+                against the single byte allocation entering attachment custody.
 
         Returns:
             :class:`PurchaseInvoiceEvidenceResult`: Carrying the new record and the
@@ -517,7 +576,23 @@ class PurchaseInvoiceEvidenceService:
             ``PurchaseInvoiceEvidenceInputError``: if ``source_path`` is not a
                 readable file or has an unsupported extension.
         """
-        resolved = Path(source_path).expanduser().resolve()
+        try:
+            source = Path(source_path).expanduser()
+            if source_directory is not None:
+                if not source_directory.is_absolute():
+                    raise ValueError("source directory must be absolute")
+                if not source.is_absolute():
+                    source = source_directory / source
+            resolved = source.resolve()
+        except (OSError, RuntimeError, ValueError):
+            raise PurchaseInvoiceEvidenceInputError(
+                translated_message="errors.refused.refused_ledger_evidence_input",
+                context={"source_path": str(source_path)},
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
+                    facts={"source_file_readable": False},
+                ),
+            ) from None
         if not resolved.is_file():
             raise PurchaseInvoiceEvidenceInputError(
                 translated_message="errors.refused.refused_ledger_evidence_input",
@@ -529,77 +604,21 @@ class PurchaseInvoiceEvidenceService:
             )
         media_kind = _resolve_media_kind(resolved)
         now = _utc_now()
-        # The attachment service is the single manifest and encrypted-byte write
-        # authority. Ledger retains its narrow PDF/image admission, stable source
-        # provenance, and evidence-specific audit lifecycle around that custody write.
-        digest = _ingest_evidence_attachment(
-            ports=self._ports,
-            bucket_id=bucket_id,
-            resolved=resolved,
-            media_kind=media_kind,
-            now=now,
-            actor=actor,
+        evidence_repository, event_repository = _revisioned_mutation_repositories(self._ports)
+        keyed_id = (
+            derive_keyed_purchase_invoice_evidence_id(bucket_id=bucket_id, idempotency_key=idempotency_key)
+            if idempotency_key is not None
+            else None
         )
-        records = _load(self._ports, bucket_id)
-        existing_ids = {existing.evidence_id for existing in records}
-        if idempotency_key is not None:
-            keyed_id = derive_keyed_purchase_invoice_evidence_id(
-                bucket_id=bucket_id,
-                idempotency_key=idempotency_key,
-            )
-            prior = next((row for row in records if row.evidence_id == keyed_id), None)
-            if prior is not None:
-                divergent = _divergent_evidence_fields(
-                    prior,
-                    source_sha256=digest,
-                    media_kind=media_kind,
-                    supplier=supplier,
-                    invoice_number=invoice_number,
-                    invoice_date=invoice_date,
-                    taxable_base=taxable_base,
-                    iva_rate=iva_rate,
-                    iva_amount=iva_amount,
-                    notes=notes,
-                )
-                if divergent:
-                    raise PurchaseInvoiceEvidenceInputError(
-                        translated_message="errors.refused.refused_ledger_evidence_input",
-                        precondition_verdict=ledger_no_recovery_verdict(
-                            LedgerPreconditionCondition.EVIDENCE_IDEMPOTENCY_KEY_UNIQUE,
-                            facts={"idempotency_key_matches_existing_record": False},
-                        ),
-                    )
-                # Guarded no-op: the existing record, no second bucket event, no
-                # re-stamped timestamp. The empty event tuple is the signal that
-                # nothing was written.
-                return PurchaseInvoiceEvidenceResult(record=prior, bucket_event_ids=())
-            evidence_id = keyed_id
-        else:
-            evidence_id = _derive_additive_evidence_id(
-                bucket_id=bucket_id,
-                digest=digest,
-                media_kind=media_kind,
-                supplier=supplier,
-                invoice_number=invoice_number,
-                invoice_date=invoice_date,
-                taxable_base=taxable_base,
-                iva_rate=iva_rate,
-                iva_amount=iva_amount,
-                notes=notes,
-                now=now,
-                existing_ids=existing_ids,
-            )
-        record = PurchaseInvoiceEvidence(
-            evidence_id=evidence_id,
+        # Validate the complete domain row before the attachment custodian makes
+        # its first durable write. The digest and additive id are the only facts
+        # not known yet; valid placeholders have the same bounded wire shape.
+        PurchaseInvoiceEvidence(
+            evidence_id=keyed_id or "0" * 16,
             bucket_id=bucket_id,
-            # Argv-faithful breadcrumb: echo the path the operator supplied, never
-            # the machine-absolutized form. `resolved` is used for byte access
-            # only; folding the absolute path into the persisted record (and the
-            # echoed envelope) made two invocations from different working dirs
-            # non-deterministic for identical bytes.
             source_path=str(source_path),
-            source_sha256=digest,
-            attachment_id=digest,
+            source_sha256="0" * 64,
+            attachment_id="0" * 64,
             media_kind=media_kind,
             supplier=supplier,
             invoice_number=invoice_number,
@@ -611,22 +630,112 @@ class PurchaseInvoiceEvidenceService:
             created_at=now,
             updated_at=now,
         )
-        records.append(record)
-        _save(self._ports, bucket_id, records)
-        event_id = _emit_evidence_event(
-            event_repository=self._ports.bucket_event_repository,
+        # The attachment service is the single manifest and encrypted-byte write
+        # authority. Ledger retains its narrow PDF/image admission, stable source
+        # provenance, and evidence-specific audit lifecycle around that custody write.
+        digest = _ingest_evidence_attachment(
+            ports=self._ports,
             bucket_id=bucket_id,
-            event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
-            evidence_id=record.evidence_id,
+            resolved=resolved,
+            media_kind=media_kind,
+            now=now,
             actor=actor,
-            occurred_at=now,
-            # Identity-bearing payload: the content digest plus stable declared
-            # metadata, never the source path. The bucket-event id folds the
-            # payload, so a path here would make the event id machine-path
-            # dependent (the defect this fix closes).
-            payload={"media_kind": record.media_kind, "source_sha256": record.source_sha256},
+            expected_content_digest=expected_content_digest,
         )
-        return PurchaseInvoiceEvidenceResult(record=record, bucket_event_ids=(event_id,))
+        last_conflict: LedgerPersistenceConflictError | None = None
+        for _attempt in range(_EVIDENCE_MUTATION_ATTEMPTS):
+            snapshot, evidence_revision_id = evidence_repository.load_revisioned(bucket_id=bucket_id)
+            records = list(snapshot)
+            existing_ids = {existing.evidence_id for existing in records}
+            if keyed_id is not None:
+                prior = next((row for row in records if row.evidence_id == keyed_id), None)
+                if prior is not None:
+                    divergent = _divergent_evidence_fields(
+                        prior,
+                        source_sha256=digest,
+                        media_kind=media_kind,
+                        supplier=supplier,
+                        invoice_number=invoice_number,
+                        invoice_date=invoice_date,
+                        taxable_base=taxable_base,
+                        iva_rate=iva_rate,
+                        iva_amount=iva_amount,
+                        notes=notes,
+                    )
+                    if divergent:
+                        raise PurchaseInvoiceEvidenceInputError(
+                            translated_message="errors.refused.refused_ledger_evidence_input",
+                            precondition_verdict=ledger_no_recovery_verdict(
+                                LedgerPreconditionCondition.EVIDENCE_IDEMPOTENCY_KEY_UNIQUE,
+                                facts={"idempotency_key_matches_existing_record": False},
+                            ),
+                        )
+                    # A keyed replay keeps the original record and does not append
+                    # a second event. Attachment ingestion remains a separate
+                    # secure-custody write performed once above.
+                    return PurchaseInvoiceEvidenceResult(record=prior, bucket_event_ids=())
+                evidence_id = keyed_id
+            else:
+                evidence_id = _derive_additive_evidence_id(
+                    bucket_id=bucket_id,
+                    digest=digest,
+                    media_kind=media_kind,
+                    supplier=supplier,
+                    invoice_number=invoice_number,
+                    invoice_date=invoice_date,
+                    taxable_base=taxable_base,
+                    iva_rate=iva_rate,
+                    iva_amount=iva_amount,
+                    notes=notes,
+                    now=now,
+                    existing_ids=existing_ids,
+                )
+            record = PurchaseInvoiceEvidence(
+                evidence_id=evidence_id,
+                bucket_id=bucket_id,
+                # Argv-faithful breadcrumb: echo the path the operator supplied,
+                # never the machine-absolutized form.
+                source_path=str(source_path),
+                source_sha256=digest,
+                attachment_id=digest,
+                media_kind=media_kind,
+                supplier=supplier,
+                invoice_number=invoice_number,
+                invoice_date=invoice_date,
+                taxable_base=taxable_base,
+                iva_rate=iva_rate,
+                iva_amount=iva_amount,
+                notes=notes,
+                created_at=now,
+                updated_at=now,
+            )
+            event = build_bucket_event(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
+                occurred_at=now,
+                actor=actor,
+                object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
+                object_id=record.evidence_id,
+                # Identity-bearing payload: the content digest plus stable
+                # declared metadata, never the source path.
+                payload={"media_kind": record.media_kind.value, "source_sha256": record.source_sha256},
+                payload_version=_EVIDENCE_EVENT_PAYLOAD_VERSION,
+            )
+            event_write = bucket_event_history_write(event_repository, (event,))
+            try:
+                evidence_repository.save_if_revision_with_secure_object_writes(
+                    bucket_id=bucket_id,
+                    records=(*records, record),
+                    expected_revision_id=evidence_revision_id,
+                    extra_writes=(event_write,),
+                )
+            except LedgerPersistenceConflictError as exc:
+                last_conflict = exc
+                continue
+            return PurchaseInvoiceEvidenceResult(record=record, bucket_event_ids=(event.event_id,))
+        if last_conflict is not None:
+            raise last_conflict
+        raise AssertionError("evidence add retries exhausted without a revision conflict")
 
     def view(self, *, bucket_id: str, evidence_id: str) -> PurchaseInvoiceEvidence:
         """Return the single evidence record identified by ``evidence_id``.
@@ -672,13 +781,15 @@ class PurchaseInvoiceEvidenceService:
         evidence_id: str,
         patch: PurchaseInvoiceEvidencePatch,
         actor: str = "cli",
+        expected_current: PurchaseInvoiceEvidence | None = None,
+        occurred_at: datetime | None = None,
     ) -> PurchaseInvoiceEvidenceResult:
         """Apply a partial update to an existing evidence record.
 
-        Loads the bucket's record list, finds the record matching
-        ``evidence_id``, merges non-``None`` fields from ``patch``, stamps
-        ``updated_at``, writes the updated list back, and emits a
-        ``PURCHASE_INVOICE_EVIDENCE_REPLACED`` audit event.
+        Loads a revisioned bucket snapshot, merges non-``None`` fields from
+        ``patch``, stamps ``updated_at``, and commits the catalogue and its
+        ``PURCHASE_INVOICE_EVIDENCE_REPLACED`` event in one guarded batch.
+        Contention replays the pure patch against a fresh catalogue snapshot.
 
         Args:
             bucket_id: Ledger bucket containing the record.
@@ -686,6 +797,11 @@ class PurchaseInvoiceEvidenceService:
             patch: ``PurchaseInvoiceEvidencePatch`` carrying the fields to
                 change. Fields set to ``None`` are left unchanged.
             actor: Identifier stamped on the audit event.
+            expected_current: Optional record opened by a bounded result
+                preflight. When provided, refuse if that target row changed so
+                the caller cannot commit a result it could not safely project.
+            occurred_at: Optional fixed transition instant shared with a
+                registered worker's result preflight and retry-stable event.
 
         Returns:
             :class:`PurchaseInvoiceEvidenceResult`: With the updated record and audit
@@ -695,36 +811,56 @@ class PurchaseInvoiceEvidenceService:
             ``PurchaseInvoiceEvidenceNotFoundError``: if no matching record
                 exists.
         """
-        records = _load(self._ports, bucket_id)
-        for index, record in enumerate(records):
-            if record.evidence_id != evidence_id:
-                continue
-            data = record.model_dump()
-            for key, value in patch.model_dump(exclude_unset=True).items():
-                if value is not None:
-                    data[key] = value
-            now = _utc_now()
-            data["updated_at"] = now
-            updated = PurchaseInvoiceEvidence.model_validate(data)
-            records[index] = updated
-            _save(self._ports, bucket_id, records)
-            event_id = _emit_evidence_event(
-                event_repository=self._ports.bucket_event_repository,
+        evidence_repository, event_repository = _revisioned_mutation_repositories(self._ports)
+        occurred_at = occurred_at or _utc_now()
+        last_conflict: LedgerPersistenceConflictError | None = None
+        for _attempt in range(_EVIDENCE_MUTATION_ATTEMPTS):
+            snapshot, evidence_revision_id = evidence_repository.load_revisioned(bucket_id=bucket_id)
+            records = list(snapshot)
+            record_index = next(
+                (index for index, record in enumerate(records) if record.evidence_id == evidence_id),
+                None,
+            )
+            if record_index is None:
+                raise PurchaseInvoiceEvidenceNotFoundError(
+                    translated_message="errors.refused.refused_ledger_evidence_not_found",
+                    precondition_verdict=ledger_no_recovery_verdict(
+                        LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
+                        facts={"evidence_record_present": False},
+                    ),
+                )
+            current = records[record_index]
+            if current.bucket_id != bucket_id:
+                raise InternalInvariantError("purchase invoice evidence row belongs to another bucket")
+            _require_expected_record(current, evidence_id=evidence_id, expected_current=expected_current)
+            updated = prepare_purchase_invoice_evidence_update(current, patch, updated_at=occurred_at)
+            records[record_index] = updated
+            event = build_bucket_event(
                 bucket_id=bucket_id,
                 event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
-                evidence_id=evidence_id,
+                occurred_at=occurred_at,
                 actor=actor,
-                occurred_at=now,
-                payload={"media_kind": updated.media_kind},
+                object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
+                object_id=evidence_id,
+                payload={"media_kind": updated.media_kind.value},
+                payload_version=_EVIDENCE_EVENT_PAYLOAD_VERSION,
             )
-            return PurchaseInvoiceEvidenceResult(record=updated, bucket_event_ids=(event_id,))
-        raise PurchaseInvoiceEvidenceNotFoundError(
-            translated_message="errors.refused.refused_ledger_evidence_not_found",
-            precondition_verdict=ledger_no_recovery_verdict(
-                LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
-                facts={"evidence_record_present": False},
-            ),
-        )
+            event_write = bucket_event_history_write(event_repository, (event,))
+            result = PurchaseInvoiceEvidenceResult(record=updated, bucket_event_ids=(event.event_id,))
+            try:
+                evidence_repository.save_if_revision_with_secure_object_writes(
+                    bucket_id=bucket_id,
+                    records=tuple(records),
+                    expected_revision_id=evidence_revision_id,
+                    extra_writes=(event_write,),
+                )
+            except LedgerPersistenceConflictError as exc:
+                last_conflict = exc
+                continue
+            return result
+        if last_conflict is not None:
+            raise last_conflict
+        raise AssertionError("evidence update retries exhausted without a revision conflict")
 
     def remove(
         self,
@@ -732,18 +868,21 @@ class PurchaseInvoiceEvidenceService:
         bucket_id: str,
         evidence_id: str,
         actor: str = "cli",
+        expected_current: PurchaseInvoiceEvidence | None = None,
     ) -> PurchaseInvoiceEvidenceResult:
         """Remove an evidence record from a bucket.
 
-        Loads the bucket catalogue, finds the record, removes it from the
-        in-memory list, persists the updated encrypted bucket-local catalogue
-        in secure-object storage, and emits a
-        ``PURCHASE_INVOICE_EVIDENCE_DETACHED`` audit event.
+        Loads a revisioned bucket snapshot and commits the record removal with
+        its ``PURCHASE_INVOICE_EVIDENCE_DETACHED`` event in one guarded batch.
+        Contention replays the removal against a fresh catalogue snapshot.
 
         Args:
             bucket_id: Ledger bucket containing the record.
             evidence_id: Id of the record to remove.
             actor: Identifier stamped on the audit event.
+            expected_current: Optional record opened by a bounded result
+                preflight. When provided, refuse if that target row changed so
+                the caller cannot commit a result it could not safely project.
 
         Returns:
             :class:`PurchaseInvoiceEvidenceResult`: Carrying the removed record and
@@ -753,29 +892,55 @@ class PurchaseInvoiceEvidenceService:
             ``PurchaseInvoiceEvidenceNotFoundError``: if no matching record
                 exists.
         """
-        records = _load(self._ports, bucket_id)
-        for index, record in enumerate(records):
-            if record.evidence_id == evidence_id:
-                removed = records.pop(index)
-                _save(self._ports, bucket_id, records)
-                now = _utc_now()
-                event_id = _emit_evidence_event(
-                    event_repository=self._ports.bucket_event_repository,
-                    bucket_id=bucket_id,
-                    event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
-                    evidence_id=evidence_id,
-                    actor=actor,
-                    occurred_at=now,
-                    payload={"media_kind": removed.media_kind},
+        evidence_repository, event_repository = _revisioned_mutation_repositories(self._ports)
+        occurred_at = _utc_now()
+        last_conflict: LedgerPersistenceConflictError | None = None
+        for _attempt in range(_EVIDENCE_MUTATION_ATTEMPTS):
+            snapshot, evidence_revision_id = evidence_repository.load_revisioned(bucket_id=bucket_id)
+            records = list(snapshot)
+            record_index = next(
+                (index for index, record in enumerate(records) if record.evidence_id == evidence_id),
+                None,
+            )
+            if record_index is None:
+                raise PurchaseInvoiceEvidenceNotFoundError(
+                    translated_message="errors.refused.refused_ledger_evidence_not_found",
+                    precondition_verdict=ledger_no_recovery_verdict(
+                        LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
+                        facts={"evidence_record_present": False},
+                    ),
                 )
-                return PurchaseInvoiceEvidenceResult(record=removed, bucket_event_ids=(event_id,))
-        raise PurchaseInvoiceEvidenceNotFoundError(
-            translated_message="errors.refused.refused_ledger_evidence_not_found",
-            precondition_verdict=ledger_no_recovery_verdict(
-                LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
-                facts={"evidence_record_present": False},
-            ),
-        )
+            removed = records[record_index]
+            if removed.bucket_id != bucket_id:
+                raise InternalInvariantError("purchase invoice evidence row belongs to another bucket")
+            _require_expected_record(removed, evidence_id=evidence_id, expected_current=expected_current)
+            records.pop(record_index)
+            event = build_bucket_event(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
+                object_id=evidence_id,
+                payload={"media_kind": removed.media_kind.value},
+                payload_version=_EVIDENCE_EVENT_PAYLOAD_VERSION,
+            )
+            event_write = bucket_event_history_write(event_repository, (event,))
+            result = PurchaseInvoiceEvidenceResult(record=removed, bucket_event_ids=(event.event_id,))
+            try:
+                evidence_repository.save_if_revision_with_secure_object_writes(
+                    bucket_id=bucket_id,
+                    records=tuple(records),
+                    expected_revision_id=evidence_revision_id,
+                    extra_writes=(event_write,),
+                )
+            except LedgerPersistenceConflictError as exc:
+                last_conflict = exc
+                continue
+            return result
+        if last_conflict is not None:
+            raise last_conflict
+        raise AssertionError("evidence remove retries exhausted without a revision conflict")
 
 
 # Public supporting contract for sibling ledger action services, matching the
@@ -790,5 +955,8 @@ __all__ = [
     "PurchaseInvoiceEvidencePatch",
     "PurchaseInvoiceEvidenceResult",
     "PurchaseInvoiceEvidenceService",
+    "PurchaseInvoiceEvidenceSnapshotConflictError",
+    "derive_keyed_purchase_invoice_evidence_id",
     "emit_evidence_event",
+    "prepare_purchase_invoice_evidence_update",
 ]

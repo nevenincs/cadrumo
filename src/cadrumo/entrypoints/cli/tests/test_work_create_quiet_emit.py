@@ -35,7 +35,6 @@ from typer._click.core import Command as TyperCommand
 from typer.core import TyperGroup, TyperOption
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._modelo_payloads import WorkCreateResult
@@ -140,18 +139,15 @@ def test_text_mode_quiet_suppresses_confirmation(capsys: pytest.CaptureFixture[s
     Modelo 100 only), so the quiet text surface is empty — proving the
     flag suppressed the prose without swallowing a notice.
     """
-    with bundled_indexed_authority().operation() as operation:
-        _emit_work_create_result(
-            _context("text"),
-            unit=_build_m130_unit(),
-            reused=False,
-            name=None,
-            name_applied=None,
-            allow_not_applicable=False,
-            authority_operation=operation,
-            profile=None,
-            quiet=True,
-        )
+    _emit_work_create_result(
+        _context("text"),
+        unit=_build_m130_unit(),
+        reused=False,
+        name=None,
+        name_applied=None,
+        allow_not_applicable=False,
+        quiet=True,
+    )
     out = capsys.readouterr().out
     assert out.strip() == ""
     assert "operation" not in out
@@ -166,18 +162,15 @@ def test_quiet_json_envelope_is_complete(capsys: pytest.CaptureFixture[str]) -> 
     ``result`` payload and the envelope spine must be emitted in full,
     proving the flag never degrades the machine surface.
     """
-    with bundled_indexed_authority().operation() as operation:
-        _emit_work_create_result(
-            _context("json"),
-            unit=_build_m130_unit(),
-            reused=False,
-            name=None,
-            name_applied=None,
-            allow_not_applicable=False,
-            authority_operation=operation,
-            profile=None,
-            quiet=True,
-        )
+    _emit_work_create_result(
+        _context("json"),
+        unit=_build_m130_unit(),
+        reused=False,
+        name=None,
+        name_applied=None,
+        allow_not_applicable=False,
+        quiet=True,
+    )
     envelope = json.loads(capsys.readouterr().out)
 
     assert envelope["schema_version"]

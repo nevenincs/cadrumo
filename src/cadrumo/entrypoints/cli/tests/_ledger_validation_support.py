@@ -75,6 +75,7 @@ def import_validation_transaction(tmp_path: Path) -> str:
     """
     return _import_one_transaction(
         tmp_path,
+        invoke_cli=_invoke,
         payee="Client SL",
         reference="Invoice 1",
         amount="-50.00",

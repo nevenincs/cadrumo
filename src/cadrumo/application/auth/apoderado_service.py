@@ -200,6 +200,24 @@ class ApoderadoService:
         :raises ApoderadoRepresentedNifInvalidError: When ``represented_nif``
             is not a valid NIF, NIE, or CIF.
         """
+        config = self.prepare_configuration(
+            bucket_id=bucket_id,
+            represented_nif=represented_nif,
+            scope_tokens=scope_tokens,
+            notes=notes,
+        )
+        self.persist_configuration(config)
+        return config
+
+    def prepare_configuration(
+        self,
+        *,
+        bucket_id: str,
+        represented_nif: str,
+        scope_tokens: tuple[str, ...],
+        notes: str = "",
+    ) -> ApoderadoConfiguration:
+        """Validate and build the configuration without touching its repository."""
         from ...core.identity.documents import IdentityError
         from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 
@@ -218,8 +236,11 @@ class ApoderadoService:
             configured_at=now(),
             notes=notes,
         )
-        self._repository_for(config.bucket_id).save(config)
         return config
+
+    def persist_configuration(self, configuration: ApoderadoConfiguration) -> None:
+        """Write an already validated configuration to its encrypted namespace."""
+        self._repository_for(configuration.bucket_id).save(configuration)
 
     def clear(self, *, bucket_id: str) -> bool:
         """Retire the configuration. Returns True iff a record was removed."""

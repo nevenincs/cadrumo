@@ -81,6 +81,7 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
     ):
         file_modelo_revision(
             revision.calculation_revision_id,
+            approved_verification_report_id="0" * 64,  # repository read refuses before approval lookup
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-A",
             workflow_profile=workflow_profile(),

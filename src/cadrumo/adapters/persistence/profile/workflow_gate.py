@@ -15,6 +15,7 @@ from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloPresentado
 from ..storage.errors import StorageError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
+from ..storage.sql.secure_objects import SecureObjectRepository
 from .filing_drafts import ModeloDraftRepository
 from .submission import SubmissionRepository
 
@@ -71,10 +72,10 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
             raise WorkflowGatePersistenceError("submission_list") from exc
 
 
-def build_workflow_gate_ports(*, bucket_id: str) -> WorkflowGatePorts:
+def build_workflow_gate_ports(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> WorkflowGatePorts:
     """Compose workflow-gate persistence capabilities for one profile bucket."""
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     return WorkflowGatePorts(
         draft_repository=WorkflowGateDraftRepositoryAdapter(
             repository=ModeloDraftRepository(bucket_id=normalized_bucket_id, objects=objects),

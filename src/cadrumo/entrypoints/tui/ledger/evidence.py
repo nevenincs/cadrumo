@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from typing import Final, assert_never, cast, override
 
 from pydantic import ValidationError
@@ -11,8 +11,14 @@ from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Input, Select, Static
 
 from ....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
+from ....application.ledger.invoice_evidence_operation_dtos import (
+    FieldProvenanceProjectionV1,
+    InvoiceDraftProjectionV1,
+)
+from ....application.operations.public_scalar import PublicDecimal
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.iva.classification import InvoiceKind
+from ..account import AccountSessionExpiredError
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
     LedgerEvidenceReviewRequested,
@@ -42,46 +48,46 @@ _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
 
 
 def draft_lines(draft: LedgerEvidenceDraftV1) -> tuple[str, ...]:
-    """Show what the reader found; a field it could not ground reads as unread, not as zero.
-
-    When the fields read as unread because the model fill did not run, a last
-    line says so and names what stopped it, so the operator knows the page may
-    well print them.
-    """
+    """Show what the reader found; a field it could not ground reads as unread, not as zero."""
     unread = ledger_copy("tui.ledger.evidence.draft.unread")
 
     def shown(value: str | None) -> str:
         return unread if value is None else value
 
-    lines = (
-        ledger_copy(
-            "tui.ledger.evidence.draft.supplier",
-            name=shown(draft.supplier_name),
-            nif=shown(draft.supplier_tax_id),
-        ),
-        ledger_copy(
-            "tui.ledger.evidence.draft.identity",
-            number=shown(draft.invoice_number),
-            date=shown(draft.invoice_date),
-        ),
-        ledger_copy(
-            "tui.ledger.evidence.draft.amounts",
-            base=shown(draft.taxable_base),
-            rate=shown(draft.iva_rate),
-            iva=shown(draft.iva_amount),
-            total=shown(draft.grand_total),
-            currency=shown(draft.currency),
-        ),
-        ledger_copy("tui.ledger.evidence.draft.discrepancies", count=draft.discrepancies),
-    )
-    fallback = draft.label_reading_fallback
-    if fallback is None:
-        return lines
-    return (*lines, _label_reading_line(fallback))
+    if draft.full_projection is None:
+        lines = (
+            ledger_copy(
+                "tui.ledger.evidence.draft.supplier",
+                name=shown(draft.supplier_name),
+                nif=shown(draft.supplier_tax_id),
+            ),
+            ledger_copy(
+                "tui.ledger.evidence.draft.identity",
+                number=shown(draft.invoice_number),
+                date=shown(draft.invoice_date),
+            ),
+            ledger_copy(
+                "tui.ledger.evidence.draft.amounts",
+                base=shown(draft.taxable_base),
+                rate=shown(draft.iva_rate),
+                iva=shown(draft.iva_amount),
+                total=shown(draft.grand_total),
+                currency=shown(draft.currency),
+            ),
+            ledger_copy("tui.ledger.evidence.draft.discrepancies", count=draft.discrepancies),
+        )
+        fallback = draft.label_reading_fallback
+        return lines if fallback is None else (*lines, _label_reading_line(fallback))
+
+    projection = draft.full_projection
+    lines = _full_draft_lines(projection, shown=shown)
+    if projection.label_reading_fallback is not None:
+        lines.append(_label_reading_line(projection.label_reading_fallback.to_fallback()))
+    return tuple(lines)
 
 
 def _label_reading_line(fallback: LabelReadingFallback) -> str:
-    """Name what stopped the model fill and the fields it left unread, one remedy per cause."""
+    """Name the unread fields and the remedy for the reader's refusal."""
     match fallback.cause:
         case LabelReadingFallbackCause.READER_UNAVAILABLE:
             key = "tui.ledger.evidence.draft.label_reading.reader_unavailable"
@@ -94,6 +100,183 @@ def _label_reading_line(fallback: LabelReadingFallback) -> str:
     return ledger_copy(key, count=len(fallback.unread_fields), fields=", ".join(fallback.unread_fields))
 
 
+def _full_draft_lines(
+    projection: InvoiceDraftProjectionV1,
+    *,
+    shown: Callable[[str | None], str],
+) -> list[str]:
+    """Render every canonical draft fact with field labels and repeated evidence rows."""
+    unread = ledger_copy("tui.ledger.evidence.draft.unread")
+
+    def amount(value: PublicDecimal | None) -> str:
+        return unread if value is None else value.decimal
+
+    def invoice_kind(value: InvoiceKind | None) -> str:
+        return unread if value is None else ledger_copy(_KIND_LOCALE_KEYS[value])
+
+    supply_nature = unread if projection.proposed_supply_nature is None else projection.proposed_supply_nature.value
+    lines = [
+        ledger_copy(
+            "tui.ledger.evidence.draft.party",
+            role=ledger_copy("tui.ledger.evidence.draft.supplier_role"),
+            name=shown(projection.supplier_name),
+            tax_id=shown(projection.supplier_tax_id),
+            postal_code=shown(projection.supplier_postal_code),
+            country=shown(projection.supplier_country),
+            country_code=shown(projection.supplier_country_code),
+            stated_country_code=shown(projection.supplier_stated_country_code),
+        ),
+        ledger_copy(
+            "tui.ledger.evidence.draft.party",
+            role=ledger_copy("tui.ledger.evidence.draft.customer_role"),
+            name=shown(projection.customer_name),
+            tax_id=shown(projection.customer_tax_id),
+            postal_code=shown(projection.customer_postal_code),
+            country=shown(projection.customer_country),
+            country_code=shown(projection.customer_country_code),
+            stated_country_code=shown(projection.customer_stated_country_code),
+        ),
+        ledger_copy(
+            "tui.ledger.evidence.draft.document",
+            number=shown(projection.invoice_number),
+            series=shown(projection.invoice_series),
+            date=shown(projection.invoice_date),
+            rectifies=shown(projection.rectifies_invoice_number),
+            supply_nature=supply_nature,
+            iva_category=shown(projection.iva_category),
+            suggested_kind=invoice_kind(projection.suggested_kind),
+        ),
+        ledger_copy(
+            "tui.ledger.evidence.draft.amounts",
+            base=amount(projection.taxable_base),
+            rate=amount(projection.iva_rate),
+            iva=amount(projection.iva_amount),
+            total=amount(projection.grand_total),
+            currency=shown(projection.currency),
+        ),
+        ledger_copy("tui.ledger.evidence.draft.regime", value=shown(projection.regime_legend)),
+        ledger_copy(
+            "tui.ledger.evidence.draft.adjustments",
+            recargo=amount(projection.recargo_amount),
+            retention_rate=amount(projection.retencion_rate),
+            retention=amount(projection.retencion_amount),
+            suplidos=amount(projection.suplidos_amount),
+        ),
+    ]
+
+    lines.append(ledger_copy("tui.ledger.evidence.draft.lines_heading"))
+    if not projection.lines:
+        lines.append(ledger_copy("tui.ledger.evidence.draft.lines_empty"))
+    for index, row in enumerate(projection.lines, start=1):
+        lines.append(
+            ledger_copy(
+                "tui.ledger.evidence.draft.line",
+                index=index,
+                description=shown(row.description),
+                quantity=amount(row.quantity),
+                unit_price=amount(row.unit_price),
+                base=amount(row.taxable_base),
+                rate=amount(row.iva_rate),
+                iva=amount(row.iva_amount),
+                recargo_rate=amount(row.recargo_rate),
+                recargo=amount(row.recargo_amount),
+            )
+        )
+
+    lines.append(ledger_copy("tui.ledger.evidence.draft.breakdown_heading"))
+    if not projection.iva_breakdown:
+        lines.append(ledger_copy("tui.ledger.evidence.draft.breakdown_empty"))
+    for index, row in enumerate(projection.iva_breakdown, start=1):
+        lines.append(
+            ledger_copy(
+                "tui.ledger.evidence.draft.breakdown",
+                index=index,
+                rate=amount(row.iva_rate),
+                base=amount(row.taxable_base),
+                iva=amount(row.iva_amount),
+                recargo_rate=amount(row.recargo_rate),
+                recargo=amount(row.recargo_amount),
+            )
+        )
+
+    lines.append(ledger_copy("tui.ledger.evidence.draft.findings_heading"))
+    if not projection.discrepancies:
+        lines.append(ledger_copy("tui.ledger.evidence.draft.findings_empty"))
+    for row in projection.discrepancies:
+        lines.append(
+            ledger_copy(
+                "tui.ledger.evidence.draft.finding",
+                kind=row.kind.value,
+                field=shown(row.field),
+                detail=shown(row.detail),
+                expected=amount(row.expected),
+                observed=amount(row.observed),
+            )
+        )
+
+    lines.append(ledger_copy("tui.ledger.evidence.draft.provenance_heading"))
+    if not projection.provenance:
+        lines.append(ledger_copy("tui.ledger.evidence.draft.provenance_empty"))
+    for row in projection.provenance:
+        lines.extend(_provenance_lines(row, unread=unread, shown=shown))
+
+    structured_class = projection.facturae_invoice_class
+    lines.append(
+        ledger_copy(
+            "tui.ledger.evidence.draft.structured_class",
+            source_code=unread if structured_class is None else structured_class.source_code,
+            kind=unread if structured_class is None else structured_class.kind.value,
+        )
+    )
+    lines.append(
+        ledger_copy(
+            "tui.ledger.evidence.draft.source_metadata",
+            transcription_sha256=shown(projection.transcription_sha256),
+            raw_text_length=projection.raw_text_length,
+        )
+    )
+    return lines
+
+
+def _provenance_lines(
+    row: FieldProvenanceProjectionV1,
+    *,
+    unread: str,
+    shown: Callable[[str | None], str],
+) -> tuple[str, ...]:
+    """Preserve every provenance axis and each ambiguity candidate in the review."""
+    values = [
+        ledger_copy(
+            "tui.ledger.evidence.draft.provenance",
+            field=row.field,
+            origin=row.origin.value,
+            grounding=row.grounding.value,
+            anchor=shown(row.anchor),
+            refused_anchor=shown(row.refused_anchor),
+            self_reported=ledger_copy(
+                "tui.ledger.evidence.draft.yes" if row.anchor_self_reported else "tui.ledger.evidence.draft.no"
+            ),
+            derived_from=", ".join(row.derived_from) if row.derived_from else unread,
+            role_evidence=shown(row.role_evidence),
+            unverified=ledger_copy(
+                "tui.ledger.evidence.draft.yes" if row.attribution_unverified else "tui.ledger.evidence.draft.no"
+            ),
+            note=row.note or unread,
+        )
+    ]
+    values.extend(
+        ledger_copy(
+            "tui.ledger.evidence.draft.candidate",
+            field=row.field,
+            value=candidate.value,
+            anchor=shown(candidate.anchor),
+            note=candidate.note or unread,
+        )
+        for candidate in row.candidates
+    )
+    return tuple(values)
+
+
 class LedgerEvidenceScreen(LedgerWorkspaceScreen):
     """Render safe evidence metadata without document contents or source locators."""
 
@@ -102,6 +285,7 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         super().__init__(controller, id="ledger-evidence-screen")
         self.selected_evidence_id: str | None = None
         self.selected_record_id: str | None = None
+        self._reviewed_evidence_id: str | None = None
         self.requested_review: LedgerEvidenceReviewRequested | None = None
         self._records: tuple[LedgerEvidenceRecordRowV1, ...] | None = None
         self.draft: LedgerEvidenceDraftV1 | None = None
@@ -114,9 +298,10 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(ledger_copy("tui.ledger.evidence.safe_metadata"), markup=False)
-            yield Static(ledger_copy("tui.ledger.evidence.queue_heading"), classes="cadrumo-heading", markup=False)
-            yield ContentDataTable[str](id="ledger-evidence", cursor_type="row", zebra_stripes=True)
-            yield Static("", id="ledger-evidence-detail", markup=False)
+            if self._has_attachment_review_queue:
+                yield Static(ledger_copy("tui.ledger.evidence.queue_heading"), classes="cadrumo-heading", markup=False)
+                yield ContentDataTable[str](id="ledger-evidence", cursor_type="row", zebra_stripes=True)
+                yield Static("", id="ledger-evidence-detail", markup=False)
             if self.controller.evidence_door is not None:
                 yield Static(
                     ledger_copy("tui.ledger.evidence.records_heading"), classes="cadrumo-heading", markup=False
@@ -152,20 +337,21 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
     def on_mount(self) -> None:
         """Populate application-supplied safe metadata with semantic row keys."""
         self.populate_navigation()
-        table = cast("DataTable[str]", self.query_one("#ledger-evidence", DataTable))
-        table.add_column(ledger_copy("tui.ledger.column.entry"))
-        table.add_column(ledger_copy("tui.ledger.evidence.column.type"))
-        table.add_column(ledger_copy("tui.ledger.evidence.column.status"))
-        rows = self.controller.evidence_rows()
-        for position, row in enumerate(rows, start=1):
-            status_key = "tui.ledger.evidence.pending" if row.pending_review else "tui.ledger.evidence.reviewed"
-            table.add_row(str(position), row.mime_type, ledger_copy(status_key), key=row.attachment_id)
-        if not rows:
-            self.query_one("#ledger-evidence-detail", Static).update(ledger_copy("tui.ledger.evidence.empty"))
-        restored = self.controller.restored_evidence_id()
-        if restored is not None:
-            index = next(index for index, row in enumerate(table.ordered_rows) if row.key.value == restored)
-            table.move_cursor(row=index)
+        if self._has_attachment_review_queue:
+            table = cast("DataTable[str]", self.query_one("#ledger-evidence", DataTable))
+            table.add_column(ledger_copy("tui.ledger.column.entry"))
+            table.add_column(ledger_copy("tui.ledger.evidence.column.type"))
+            table.add_column(ledger_copy("tui.ledger.evidence.column.status"))
+            rows = self.controller.evidence_rows()
+            for position, row in enumerate(rows, start=1):
+                status_key = "tui.ledger.evidence.pending" if row.pending_review else "tui.ledger.evidence.reviewed"
+                table.add_row(str(position), row.mime_type, ledger_copy(status_key), key=row.attachment_id)
+            if not rows:
+                self.query_one("#ledger-evidence-detail", Static).update(ledger_copy("tui.ledger.evidence.empty"))
+            restored = self.controller.restored_evidence_id()
+            if restored is not None:
+                index = next(index for index, row in enumerate(table.ordered_rows) if row.key.value == restored)
+                table.move_cursor(row=index)
         if self.controller.evidence_door is not None:
             records = cast("DataTable[str]", self.query_one("#ledger-evidence-records", DataTable))
             records.add_column(ledger_copy("tui.ledger.column.entry"), key="position")
@@ -174,7 +360,17 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
             records.add_column(ledger_copy("tui.ledger.evidence.column.status"), key="status")
             self._show_records()
             self.run_worker(self._measure_reader(), group="ledger-evidence-reader")
-        table.focus()
+        if self._has_attachment_review_queue:
+            self.query_one("#ledger-evidence", DataTable).focus()
+        elif self.controller.evidence_door is not None:
+            self.query_one("#ledger-evidence-records", DataTable).focus()
+        else:
+            self.query_one("#ledger-navigation", DataTable).focus()
+
+    @property
+    def _has_attachment_review_queue(self) -> bool:
+        """Show attachment review only when its independent query supplied rows."""
+        return self.controller.evidence_action is not None and self.controller.evidence_items is not None
 
     def _show_records(self) -> None:
         """Read the records off the event loop; listing them decrypts the whole evidence catalogue."""
@@ -182,8 +378,12 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         self.run_worker(self._load_records(), group="ledger-evidence-records", exclusive=True)
 
     async def _load_records(self) -> None:
-        loaded = await asyncio.to_thread(self.controller.evidence_records)
-        self._render_records(loaded)
+        try:
+            loaded = await asyncio.to_thread(self.controller.evidence_records)
+        except AccountSessionExpiredError as error:
+            self._handle_expired_session(error)
+        else:
+            self._render_records(loaded)
 
     def _render_records(self, loaded: tuple[LedgerEvidenceRecordRowV1, ...] | None) -> None:
         records = cast("DataTable[str]", self.query_one("#ledger-evidence-records", DataTable))
@@ -208,7 +408,12 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         return await asyncio.to_thread(self.controller.reader_readiness)
 
     async def _measure_reader(self) -> None:
-        self._show_reader(await self._read_readiness())
+        try:
+            readiness = await self._read_readiness()
+        except AccountSessionExpiredError as error:
+            self._handle_expired_session(error)
+        else:
+            self._show_reader(readiness)
 
     def _show_reader(self, readiness: LedgerReaderReadinessV1 | None) -> None:
         line = self.query_one("#ledger-evidence-reader", Static)
@@ -252,6 +457,8 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
 
     def _select_record(self, evidence_id: str) -> None:
         record = next(item for item in self._records or () if item.evidence_id == evidence_id)
+        if evidence_id != self.selected_record_id:
+            self._clear_review()
         self.selected_record_id = evidence_id
         self.query_one("#ledger-evidence-record-detail", Static).update(
             ledger_copy(
@@ -263,16 +470,22 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
             )
         )
         self.query_one("#ledger-evidence-extract", Button).disabled = False
-        self.query_one("#ledger-evidence-confirm", Button).disabled = False
+        self.query_one("#ledger-evidence-confirm", Button).disabled = self._reviewed_evidence_id != evidence_id
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Add, read or confirm a document; reading waits on the reader's readiness."""
+        """Add, read or confirm a document through its registered operation door."""
         match event.button.id:
             case "ledger-evidence-add":
                 self._add()
             case "ledger-evidence-extract" if self.selected_record_id is not None:
                 self._start(self._extract(self.selected_record_id), ledger_copy("tui.ledger.evidence.reading"))
             case "ledger-evidence-confirm" if self.selected_record_id is not None:
+                if (
+                    self._reviewed_evidence_id != self.selected_record_id
+                    or self.draft is None
+                    or self.draft.evidence_id != self.selected_record_id
+                ):
+                    return
                 confirmation = self._confirmation(self.selected_record_id)
                 if confirmation is not None:
                     self._start(self._confirm(confirmation), ledger_copy("tui.ledger.evidence.confirming"))
@@ -286,24 +499,7 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         self.reading = True
         self.query_one("#ledger-refusal", Static).update("")
         self.query_one("#ledger-flow-status", Static).update(status_text)
-        self.run_worker(self._when_reader_ready(work), group="ledger-evidence-reading")
-
-    async def _when_reader_ready(self, work: Coroutine[object, object, None]) -> None:
-        """Run ``work`` only if the reader says it can; otherwise name the failed condition."""
-        readiness = await self._read_readiness()
-        self._show_reader(readiness)
-        if readiness is not None and readiness.extraction_ready:
-            await work
-            return
-        work.close()
-        self.reading = False
-        self.query_one("#ledger-flow-status", Static).update("")
-        self.query_one("#ledger-refusal", Static).update(
-            ledger_copy(
-                "tui.ledger.evidence.reading_refused.reader",
-                condition="-" if readiness is None else readiness.failed_condition_id or "-",
-            )
-        )
+        self.run_worker(work, group="ledger-evidence-reading")
 
     def _confirmation(self, evidence_id: str) -> LedgerEvidenceConfirmationV1 | None:
         country = self.query_one("#ledger-evidence-country", Input).value.strip().upper()
@@ -318,29 +514,64 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
             counterparty_name=counterparty or None,
         )
 
+    def _clear_review(self) -> None:
+        """Forget the ephemeral draft and remove its confirmation eligibility."""
+        self._reviewed_evidence_id = None
+        self.draft = None
+        self.query_one("#ledger-evidence-draft", Static).update("")
+        self.query_one("#ledger-evidence-confirm", Button).disabled = True
+
+    def _handle_expired_session(self, error: AccountSessionExpiredError) -> None:
+        """Clear locally retained review and record rows when the bound session expires."""
+        self._clear_review()
+        self._records = None
+        self.selected_record_id = None
+        self.query_one("#ledger-evidence-records", DataTable).clear()
+        self.query_one("#ledger-evidence-record-detail", Static).update("")
+        self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+
     async def _extract(self, evidence_id: str) -> None:
         status = self.query_one("#ledger-flow-status", Static)
+        self._clear_review()
         try:
             draft = await self.controller.extract_evidence(evidence_id)
+        except AccountSessionExpiredError as error:
+            status.update(ledger_copy("tui.ledger.evidence.read_failed"))
+            self._handle_expired_session(error)
         except (CadrumoError, ValidationError) as error:
             status.update(ledger_copy("tui.ledger.evidence.read_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
-            self.draft = draft
             status.update(ledger_copy("tui.ledger.evidence.read_done"))
-            self.query_one("#ledger-evidence-draft", Static).update("\n".join(draft_lines(draft)))
-            if draft.suggested_kind is not None:
-                self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
-            counterparty = self.query_one("#ledger-evidence-counterparty", Input)
-            if not counterparty.value and draft.supplier_name:
-                counterparty.value = draft.supplier_name
+            if self.selected_record_id == evidence_id and draft.evidence_id == evidence_id:
+                self.draft = draft
+                self._reviewed_evidence_id = evidence_id
+                self.query_one("#ledger-evidence-draft", Static).update("\n".join(draft_lines(draft)))
+                self.query_one("#ledger-evidence-confirm", Button).disabled = False
+                if draft.suggested_kind is not None:
+                    self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
+                counterparty = self.query_one("#ledger-evidence-counterparty", Input)
+                if not counterparty.value and draft.supplier_name:
+                    counterparty.value = draft.supplier_name
         finally:
             self.reading = False
 
     async def _confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> None:
+        if (
+            self._reviewed_evidence_id != confirmation.evidence_id
+            or self.draft is None
+            or self.draft.evidence_id != confirmation.evidence_id
+        ):
+            return
+        self._clear_review()
         status = self.query_one("#ledger-flow-status", Static)
         try:
             confirmed = await self.controller.confirm_evidence(confirmation)
+        except AccountSessionExpiredError as error:
+            self.reading = False
+            status.update(ledger_copy("tui.ledger.evidence.confirm_failed"))
+            self._handle_expired_session(error)
+            return
         except (CadrumoError, ValidationError) as error:
             self.reading = False
             status.update(ledger_copy("tui.ledger.evidence.confirm_failed"))
@@ -376,6 +607,9 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         status = self.query_one("#ledger-flow-status", Static)
         try:
             record = await self.controller.add_evidence(source_path)
+        except AccountSessionExpiredError as error:
+            status.update(ledger_copy("tui.ledger.evidence.add_failed"))
+            self._handle_expired_session(error)
         except (CadrumoError, ValidationError) as error:
             status.update(ledger_copy("tui.ledger.evidence.add_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))

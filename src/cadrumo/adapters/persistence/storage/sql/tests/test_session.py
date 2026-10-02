@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import OperationalError
 
 from ...errors import StorageValidationError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
@@ -64,3 +65,40 @@ def test_session_scope_rolls_back_and_logs_on_exception(
         assert count == 0
         messages = tuple(record.getMessage() for record in caplog.records if record.name == _SESSION_LOGGER_NAME)
         assert "session_scope rolling back due to exception" in messages
+
+
+def test_serializable_session_blocks_insert_after_absence_read_until_commit(tmp_path: Path) -> None:
+    """SQLite reserves the writer before a serializable session reads absence."""
+    transaction_id = "v" * 64
+    with _engine(tmp_path) as engine:
+        with session_scope(engine, serializable=True) as session:
+            absent_count = session.execute(
+                text("select count(*) from transaction_date_index where transaction_id = :transaction_id"),
+                {"transaction_id": transaction_id},
+            ).scalar_one()
+            assert absent_count == 0
+
+            with engine.connect() as competing_connection:
+                competing_connection.exec_driver_sql("PRAGMA busy_timeout=0")
+                with pytest.raises(OperationalError, match="locked"):
+                    competing_connection.execute(
+                        _INSERT_INDEX_ROW,
+                        {"transaction_id": transaction_id},
+                    )
+                    competing_connection.commit()
+                competing_connection.rollback()
+
+            still_absent_count = session.execute(
+                text("select count(*) from transaction_date_index where transaction_id = :transaction_id"),
+                {"transaction_id": transaction_id},
+            ).scalar_one()
+            assert still_absent_count == 0
+
+        with engine.begin() as later_connection:
+            later_connection.execute(_INSERT_INDEX_ROW, {"transaction_id": transaction_id})
+        with engine.connect() as connection:
+            committed_count = connection.execute(
+                text("select count(*) from transaction_date_index where transaction_id = :transaction_id"),
+                {"transaction_id": transaction_id},
+            ).scalar_one()
+        assert committed_count == 1

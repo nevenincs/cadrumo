@@ -11,8 +11,8 @@ from pydantic import BaseModel, ValidationError
 from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ....application.invoices.catalogue_creation import CatalogueInvoiceCreateResult, build_catalogue_invoice
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoiceRemoveResult, CatalogueInvoiceUpdateResult
+from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
-from .._ledger_business_invoice_cli import _catalogue_invoice_payload
 from .._ledger_catalogue_invoice_payloads import (
     BulkInvoiceImportRowFailurePayload,
     CatalogueInvoiceCreatePayload,
@@ -24,6 +24,20 @@ from .._ledger_catalogue_invoice_payloads import (
 from ..command_schema import command_schema_types
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+
+
+def _invoice_record_payload(invoice: Invoice) -> dict[str, object]:
+    """Build the independent expected wire mapping for a canonical invoice."""
+    payload: dict[str, object] = {
+        name: getattr(invoice, name) for name in CatalogueInvoiceRecordPayload.model_fields if hasattr(invoice, name)
+    }
+    payload["linked_transaction_ids"] = list(invoice.linked_transaction_ids)
+    payload["lines"] = [line.model_dump(mode="python") for line in invoice.lines]
+    provenance = invoice.provenance
+    payload["source_filename"] = provenance.source_path.name if provenance is not None else None
+    payload["source_sha256"] = provenance.source_sha256 if provenance is not None else None
+    payload["source_row_index"] = provenance.source_row_index if provenance is not None else None
+    return payload
 
 
 class _InvoiceMutationContractComposition(BaseModel):
@@ -51,7 +65,7 @@ def _canonical_invoice_payload() -> dict[str, object]:
         currency="EUR",
         rate_provider=recorded_ecb_rate_provider(),
     )
-    return _catalogue_invoice_payload(invoice)
+    return _invoice_record_payload(invoice)
 
 
 def test_invoice_mutation_results_and_cli_payloads_have_distinct_schema_identities() -> None:

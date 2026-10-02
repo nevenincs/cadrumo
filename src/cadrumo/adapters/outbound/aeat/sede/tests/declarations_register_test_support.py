@@ -107,12 +107,12 @@ class RoutedFiledDataCapturePort:
         self._walk_timeout_ms = walk_timeout_ms
 
     @asynccontextmanager
-    async def open_register(self, *, operation: str):
+    async def open_register(self, *, operation: str, **_kwargs: object):
         """Yield the already-open routed register through its application view."""
         del operation
         yield _RoutedFiledDataRegister(self._register, walk_timeout_ms=self._walk_timeout_ms)
 
-    async def discover_availability(self, *, operation: str):
+    async def discover_availability(self, *, operation: str, **_kwargs: object):
         """Reject discovery because these tests inject deterministic discovery facts."""
         del operation
         raise AssertionError("routed capture tests inject discovery instead of reading register options")
@@ -121,6 +121,11 @@ class RoutedFiledDataCapturePort:
         """Reject source capture because it is outside these register-sweep proofs."""
         del args, kwargs
         raise AssertionError("routed capture tests do not exercise source capture")
+
+    async def capture_source_observations_deferred(self, *args: object, **kwargs: object):
+        """Reject staged source capture outside these register-sweep proofs."""
+        del args, kwargs
+        raise AssertionError("routed capture tests do not exercise staged source capture")
 
 
 class _RoutedFiledDataRegister:
@@ -143,6 +148,12 @@ class _RoutedFiledDataRegister:
     async def capture_observation(self, declaration, *, artefact_sink=None):
         """Delegate one row capture."""
         return await self._register.capture_observation(declaration, artefact_sink=artefact_sink)
+
+    async def capture_observation_deferred(self, declaration):
+        """Stage routed bytes for the guarded application capture path."""
+        from ..filed_data_capture_port import capture_deferred_sede_observation
+
+        return await capture_deferred_sede_observation(self._register, declaration)
 
 
 __all__ = [

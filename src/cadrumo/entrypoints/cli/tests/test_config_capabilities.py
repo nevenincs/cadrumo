@@ -8,11 +8,13 @@ fact, and ``show`` resolves it back with its source. No mocks.
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
+from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -22,9 +24,15 @@ from ....application.user_profile.registration import register_profile_with_cred
 from ....core.capabilities import ServiceCapability
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile runtime"),
+]
 
 _LABEL = "Capability test profile"
 _CREDENTIAL_INPUT = "capability-test-passphrase"
@@ -53,11 +61,22 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
                 passphrase_callback=lambda: _CREDENTIAL_INPUT,
                 profile_decode_context=operation.profile_decode_context(),
             )
-        yield
+        with native_profile_view_server(tmp_path / "cadrumo-storage"):
+            yield
+
+
+def _invoke(argv: list[str]) -> Result:
+    if "capabilities" not in argv:
+        return invoke_cached_cli(argv)
+    config_index = argv.index("config")
+    return invoke_cached_cli(
+        [*argv[:config_index], "--profile", _LABEL, "--profile-secrets-stdin", *argv[config_index:]],
+        input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
+    )
 
 
 def _show() -> dict[str, Any]:
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "capabilities", "view"])
+    result = _invoke(["--format", "json", "config", "profile", "capabilities", "view"])
     assert result.exit_code == 0, result.output
     rows = json.loads(result.output)["result"]["capabilities"]
     return {row["capability"]: row for row in rows}
@@ -91,7 +110,7 @@ def test_capability_payload_refuses_unknown_capability_or_source(
 
 
 def test_set_disables_a_capability_and_show_reflects_it() -> None:
-    setres = invoke_cached_cli(
+    setres = _invoke(
         ["--format", "json", "config", "profile", "capabilities", "set", "llm_vision", "off"],
     )
     assert setres.exit_code == 0, setres.output
@@ -101,49 +120,6 @@ def test_set_disables_a_capability_and_show_reflects_it() -> None:
     rows = _show()
     assert rows["llm_vision"]["enabled"] is False
     assert rows["llm_vision"]["source"] == "profile"
-
-
-def test_config_check_reports_capabilities_and_dependencies() -> None:
-    # Opt out of llm_vision so the report is deterministic regardless of whether a
-    # real Ollama is running in the test environment (no opted-in dependency gap).
-    off = invoke_cached_cli(["config", "profile", "capabilities", "set", "llm_vision", "off"])
-    assert off.exit_code == 0, off.output
-
-    result = invoke_cached_cli(["--format", "json", "config", "check"])
-    assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
-    assert payload["ok"] is True
-    assert payload["issues"] == []
-    caps = {c["capability"]: c for c in payload["capabilities"]}
-    assert set(caps) == {capability.value for capability in ServiceCapability}
-    assert caps["llm_vision"]["enabled"] is False
-    services = {d["service"] for d in payload["dependencies"]}
-    # One row per invoice-reading role, from the probe the status surface uses.
-    assert {"local-reader:text_extraction", "local-reader:vision_transcription"} <= services
-    assert "ollama-vision" not in services
-    assert "playwright-chromium" in services
-    # Re-pointed rather than dropped when the subprocess provider probe was
-    # deleted: the doctor must still report a row for the LOCAL model runtime,
-    # which is now the only classification backend. Deleting the assertion
-    # outright would have removed the coverage along with the cloud rows.
-    assert "model-runtime-hardware-floor" in services
-    assert not any(s.startswith("llm-provider:") for s in services), (
-        "the subprocess cloud providers are deleted; no llm-provider row may survive"
-    )
-    # The doctor reports every capability-gated optional extra's importability.
-    assert {"extra:google", "extra:browser", "extra:anthropic"} <= services
-
-
-def test_config_check_flags_opted_in_capability_with_missing_dependency() -> None:
-    # llm_vision is on by default; point the local runtime at a closed port so the
-    # vision reader is reliably unavailable. The doctor must surface the gap by
-    # the reader's own row id and exit non-zero.
-    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        result = invoke_cached_cli(["--format", "json", "config", "check"])
-    assert result.exit_code == 2, result.output
-    payload = json.loads(result.output)["result"]
-    assert payload["ok"] is False
-    assert "local-reader:vision_transcription" in payload["issues"]
 
 
 @pytest.mark.parametrize(
@@ -162,7 +138,7 @@ def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[
     With the capability off, each Drive/Sheets
     write verb refuses with the capability message *before* any Google call.
     """
-    off = invoke_cached_cli(["config", "profile", "capabilities", "set", "google_export", "off"])
+    off = _invoke(["config", "profile", "capabilities", "set", "google_export", "off"])
     assert off.exit_code == 0, off.output
 
     result = invoke_cached_cli(argv)
@@ -172,7 +148,7 @@ def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[
 
 
 def test_set_enables_cloud_upload_via_profile_opt_in() -> None:
-    setres = invoke_cached_cli(
+    setres = _invoke(
         ["config", "profile", "capabilities", "set", "google_export", "off"],
     )
     assert setres.exit_code == 0, setres.output

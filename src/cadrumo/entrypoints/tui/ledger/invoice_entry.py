@@ -15,6 +15,7 @@ from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
+from ..account import AccountSessionExpiredError
 from .controller import LedgerInvoiceEntryRequested, LedgerWorkspaceController, ledger_copy
 from .models import LedgerFlowState, LedgerInvoiceClassChoice, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
@@ -429,7 +430,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
     def _lock_form(self) -> None:
         for widget in self.query(Input):
             widget.disabled = True
-        for widget in self.query(Select):
+        for widget in self.query(Select[str]):
             widget.disabled = True
         for button_id in ("#ledger-invoice-review", "#ledger-invoice-line-add", "#ledger-invoice-line-remove"):
             self.query_one(button_id, Button).disabled = True
@@ -442,6 +443,11 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
             raise InternalInvariantError("reviewed invoice disappeared before submission")
         try:
             result = await self.controller.add_invoice(entry)
+        except AccountSessionExpiredError as error:
+            self._clear_private_form()
+            self._transition(LedgerFlowState.FAILED)
+            status.update(ledger_copy("tui.ledger.invoice.failure"))
+            self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         except (CadrumoError, ValidationError) as error:
             self._transition(LedgerFlowState.FAILED)
             status.update(ledger_copy("tui.ledger.invoice.failure"))
@@ -464,6 +470,15 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
         again = self.query_one("#ledger-invoice-again", Button)
         again.add_class("-open")
         again.focus()
+
+    def _clear_private_form(self) -> None:
+        """Discard the reviewed invoice and entered values when the session is lost."""
+        self.entry = None
+        self.lines.clear()
+        for field in self.query(Input):
+            field.value = ""
+        self.query_one("#ledger-invoice-summary", Static).update("")
+        self._render_lines()
 
     @override
     def _cancel_flow(self) -> None:

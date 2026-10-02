@@ -29,10 +29,6 @@ from dev.exit_codes import (
     FAILED,
     FINDINGS_CODES,
     FIX_STRICT_ENV,
-    INIT_HOST_TOOL_MISSING,
-    INIT_LOCKED,
-    INIT_STALE,
-    INIT_STEP_FAILED,
     NOTHING_SELECTED,
     OK,
     PYTEST_NO_TESTS_COLLECTED,
@@ -175,28 +171,12 @@ def test_the_codes_are_distinct() -> None:
     codes = [
         OK,
         FAILED,
-        INIT_HOST_TOOL_MISSING,
-        INIT_STALE,
-        INIT_STEP_FAILED,
         DRIFT,
-        INIT_LOCKED,
         ADVISORY_BROKEN,
         NOTHING_SELECTED,
         TOOL_MISSING,
     ]
     assert len(codes) == len(set(codes))
-
-
-def test_the_init_codes_match_the_agreed_allocation() -> None:
-    """L6 allocated 2-6 for `just bootstrap`; nothing else may claim them."""
-    allocated = (
-        INIT_HOST_TOOL_MISSING,
-        INIT_STALE,
-        INIT_STEP_FAILED,
-        DRIFT,
-        INIT_LOCKED,
-    )
-    assert allocated == (2, 3, 4, 5, 6)
 
 
 def test_the_environment_switches_are_named_once() -> None:

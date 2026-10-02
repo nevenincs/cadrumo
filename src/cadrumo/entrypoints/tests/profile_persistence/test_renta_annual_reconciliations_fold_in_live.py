@@ -71,6 +71,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
@@ -684,16 +685,21 @@ def _seed_and_file_m111_1t(
     assert work_unit is not None
     verified_revision = cr_repo.load().get(result.revision.calculation_revision_id)
     assert verified_revision is not None
+    filing_repository = ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID)
+    _, filing_baseline_revision_id = filing_repository.load_revisioned()
     with bundled_indexed_authority().operation() as operation:
         persist_filed_revision(
             target=verified_revision,
+            approved_verification_report_id=report.verification_report_id,
+            filing_baseline_revision_id=filing_baseline_revision_id,
             work_unit=work_unit,
             work_units=work_units,
             notes=None,
             actor="test-operator",
             now=_T1,
             calculation_repository=cr_repo,
-            filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+            filing_repository=filing_repository,
+            verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
             work_unit_repository=wu_repo,
             bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
             calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),

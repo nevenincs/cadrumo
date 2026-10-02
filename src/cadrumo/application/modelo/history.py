@@ -229,11 +229,13 @@ def assemble_work_unit_history(
     # object_type=WORK_UNIT keyed by work_unit_id.
     collected = _work_unit_history_events(catalogue, work_unit_id)
 
-    revisions = cr_repo.load()
+    revisions = cr_repo.load(operation=operation)
     calculation_events, revision_ids = _calculation_history_events(catalogue, revisions.values(), work_unit_id)
     collected.extend(calculation_events)
 
-    verifications = require_verification_report_coordinates_current(vr_repo.load(), operation=operation)
+    verifications = require_verification_report_coordinates_current(
+        vr_repo.load(operation=operation), operation=operation
+    )
     collected.extend(_verification_history_events(catalogue, verifications.values(), revision_ids))
 
     filings = fr_repo.load()

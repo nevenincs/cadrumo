@@ -592,7 +592,7 @@ BATCH_DRAFT_EXTRACTOR = "extract_invoice_draft_from_evidence"
 BATCH_READ_TRANSPORTS: Final[tuple[str, ...]] = (LOCAL_TRANSPORT_LABEL,)
 
 
-def _batch_sources(sources: Iterable[Path | str]) -> tuple[Path, ...]:
+def _batch_sources(sources: Iterable[Path | str], *, source_directory: Path | None = None) -> tuple[Path, ...]:
     """Expand each submitted source to the files it names.
 
     A directory contributes the files directly inside it. Enumeration order is
@@ -602,8 +602,9 @@ def _batch_sources(sources: Iterable[Path | str]) -> tuple[Path, ...]:
     resolved: list[Path] = []
     for source in sources:
         path = Path(source).expanduser()
-        if path.is_dir():
-            resolved.extend(child for child in scan_directory(path) if child.is_file())
+        readable = source_directory / path if source_directory is not None and not path.is_absolute() else path
+        if readable.is_dir():
+            resolved.extend(path / child.name for child in scan_directory(readable) if child.is_file())
         else:
             resolved.append(path)
     return tuple(resolved)
@@ -613,6 +614,7 @@ def run_evidence_batch(
     *,
     bucket_id: str,
     sources: Iterable[Path | str],
+    source_directory: Path | None = None,
     direction: InvoiceKind,
     evidence_ports: LedgerEvidencePorts,
     extraction_ports: InvoiceDraftExtractionPorts,
@@ -620,6 +622,7 @@ def run_evidence_batch(
     legends: tuple[RegimeLegend, ...],
     settings: Settings | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
+    before_item: Callable[[], None] | None = None,
     profile: HardwareProfile | None = None,
 ) -> BatchRunResult:
     """Run the ingestion pipeline over every source, one typed row each.
@@ -647,6 +650,8 @@ def run_evidence_batch(
     Args:
         bucket_id: Ledger bucket every record is written into.
         sources: Files and directories to ingest.
+        source_directory: Absolute submitting-frontend directory used only for
+            byte access; logical source paths and persisted breadcrumbs remain unchanged.
         direction: The direction declared for the whole run. Part of each
             item's identity, so the same document filed both ways is two
             records rather than one.
@@ -664,6 +669,8 @@ def run_evidence_batch(
         on_item: Called with each row as it completes, for progress reporting.
             A raising callback must not lose the run, so it is guarded like any
             other per-item failure.
+        before_item: Optional current-authority admission before source reads
+            and before/after item work. Failures propagate outside row translators.
         profile: Measured hardware the admission check judges against; probed
             when omitted. The same injection point the admission primitive
             itself exposes, so a contended machine can be exercised from real
@@ -687,13 +694,18 @@ def run_evidence_batch(
     deterministic: set[str] = set()
     roles: dict[str, ModelRole] = {}
     unresolved: list[UnresolvedBatchSource] = []
-    for path in _batch_sources(sources):
+    if source_directory is not None and not source_directory.is_absolute():
+        raise ValueError("source directory must be absolute")
+    for path in _batch_sources(sources, source_directory=source_directory):
+        if before_item is not None:
+            before_item()
         try:
             # Read to hash and to probe the shape, then released. The bytes are
             # re-read per item at work time rather than held: a folder of
             # documents held in memory at once is unbounded, and spilling them
             # anywhere would be the spool file this design exists without.
-            data = path.read_bytes()
+            readable = source_directory / path if source_directory is not None and not path.is_absolute() else path
+            data = readable.read_bytes()
         except OSError as exc:
             unresolved.append(
                 UnresolvedBatchSource(
@@ -727,6 +739,8 @@ def run_evidence_batch(
     lane = _InferenceLaneState(settings=resolved_settings, profile=profile)
     rows: list[BatchItemResult] = []
     for content_address, source_name in order_batch_sources(addressed):
+        if before_item is not None:
+            before_item()
         path = addressed[(content_address, source_name)]
         reads_without_a_model = content_address in deterministic
         if not lane.admits(deterministic=reads_without_a_model, role=roles.get(content_address)):
@@ -746,6 +760,7 @@ def run_evidence_batch(
                 needed_inference=not reads_without_a_model,
                 bucket_id=bucket_id,
                 path=path,
+                source_directory=source_directory,
                 content_address=content_address,
                 direction=direction,
                 settings=resolved_settings,
@@ -760,6 +775,8 @@ def run_evidence_batch(
             if row.status == "refused":
                 lane.close_if_no_reader_is_available(roles.get(content_address))
         rows.append(row)
+        if before_item is not None:
+            before_item()
         if on_item is not None:
             # Progress reporting is incidental to the run; a sink that fails
             # must not cost the operator results already produced.
@@ -801,6 +818,7 @@ def _ingest_one_batch_item(
     *,
     bucket_id: str,
     path: Path,
+    source_directory: Path | None = None,
     content_address: str,
     direction: InvoiceKind,
     settings: Settings,
@@ -837,7 +855,13 @@ def _ingest_one_batch_item(
         )
 
     try:
-        attached = service.add(bucket_id=bucket_id, source_path=path, idempotency_key=identity)
+        attached = service.add(
+            bucket_id=bucket_id,
+            source_path=path,
+            source_directory=source_directory,
+            idempotency_key=identity,
+            expected_content_digest=content_address,
+        )
     except Exception as exc:  # reason: one document's failure is its own row, never the run's end.
         return refused(
             "evidence_refused",

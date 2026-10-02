@@ -1,0 +1,16 @@
+@step List sessions for the intended profile.
+aeat config profile sessions
+@expect exit_code == 0
+@step Lock the caller's session.
+aeat config profile lock
+@expect exit_code == 0
+@step Lock a selected session.
+@static aeat config profile lock --session SESSION_UUID
+@blocked operator-artifact SESSION_UUID must come from the actual session inventory for the intended profile.
+@step Lock the profile everywhere and suspend automation.
+aeat config profile lock --all
+@expect exit_code == 0
+@step Confirm private profile access refuses while the profile-wide lock remains active.
+@result aeat --format json config profile view
+@expect error.context.reason == "profile_locked"
+@expect exit_code == 2

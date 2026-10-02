@@ -9,6 +9,16 @@ from ._entrypoints_part2 import DECLARED_ERROR_CODES as _ENTRYPOINTS_PART2_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.entrypoints.cli.errors.CliRecordedOperationError",
+        ErrorCode(
+            code="REFUSED_CLI_RECORDED_OPERATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.cli.config.errors.ConfigBoundaryError",
         ErrorCode(
             code="ERROR_CONFIG_BOUNDARY",

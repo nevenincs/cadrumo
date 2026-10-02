@@ -23,6 +23,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from ....adapters.persistence.profile.tests.operator_scope_fakes import (
@@ -153,6 +154,7 @@ def _inward_export_ports(
 
 def _verification_ports(
     *,
+    operation: PinnedAuthorityOperation,
     wu_repo: WorkUnitCatalogueRepository,
     cr_repo: CalculationRevisionCatalogueRepository,
     filing_repo: ModeloRecordCatalogueRepository,
@@ -162,7 +164,7 @@ def _verification_ports(
 ) -> VerificationRepositoryBundle:
     """Compose the complete verification bundle over the isolated repositories."""
     return replace(
-        build_verification_repository_bundle(_BUCKET_ID),
+        build_verification_repository_bundle(_BUCKET_ID, operation=operation),
         work_unit=wu_repo,
         calculation=cr_repo,
         filing=filing_repo,
@@ -510,6 +512,7 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
             workflow_profile=workflow_profile(),
             settings=ready_clave_settings(_TAX_ID),
             verification_repositories=_verification_ports(
+                operation=operation,
                 wu_repo=wu_repo,
                 cr_repo=cr_repo,
                 filing_repo=filing_repo,
@@ -615,6 +618,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
                 workflow_profile=workflow_profile(),
                 settings=ready_clave_settings(_TAX_ID),
                 verification_repositories=_verification_ports(
+                    operation=operation,
                     wu_repo=wu_repo,
                     cr_repo=cr_repo,
                     filing_repo=filing_repo,
@@ -737,6 +741,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
                 workflow_profile=workflow_profile(),
                 settings=ready_clave_settings(_TAX_ID),
                 verification_repositories=_verification_ports(
+                    operation=operation,
                     wu_repo=wu_repo,
                     cr_repo=cr_repo,
                     filing_repo=filing_repo,
@@ -774,6 +779,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         with bundled_indexed_authority().operation() as operation:
             filed = file_modelo_revision(
                 revision.calculation_revision_id,
+                approved_verification_report_id=report.verification_report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 actor="operator",
                 workflow_profile=workflow_profile(),
@@ -787,7 +793,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
                 clock=_VERIFIED_AT,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).record
         assert filed is not None
         assert tuple(filing_repo.load().values()) != ()
 
@@ -822,6 +828,7 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
                     workflow_profile=workflow_profile(),
                     settings=ready_clave_settings(_TAX_ID),
                     verification_repositories=_verification_ports(
+                        operation=operation,
                         wu_repo=wu_repo,
                         cr_repo=cr_repo,
                         filing_repo=filing_repo,
@@ -1008,6 +1015,9 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing
         operation=operation,
     )
     legacy = _persist_legacy_verified_revision(revision, cr_repo=cr_repo, tx_repo=tx_repo)
+    # Supply this isolated filing-gate fixture's matching approval without
+    # claiming that a fresh verifier would grant its intentionally stale facts.
+    report_id = seed_filing_gate_report(legacy, vr_repo)
 
     with (
         pytest.raises(ModeloFilingEvidenceMissingError) as exc_info,
@@ -1015,6 +1025,7 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing
     ):
         file_modelo_revision(
             legacy.calculation_revision_id,
+            approved_verification_report_id=report_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator",
             workflow_profile=workflow_profile(),

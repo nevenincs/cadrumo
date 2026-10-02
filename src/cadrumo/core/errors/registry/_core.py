@@ -9,6 +9,16 @@ from ._core_part2 import DECLARED_ERROR_CODES as _CORE_PART2_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.core.errors.hierarchy.RecordedRegisteredError",
+        ErrorCode(
+            code="ERROR_RECORDED_REGISTERED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_cadrumo_core",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.core.output_rendering.OutputRenderingError",
         ErrorCode(
             code="INTERNAL_OUTPUT_RENDERING",

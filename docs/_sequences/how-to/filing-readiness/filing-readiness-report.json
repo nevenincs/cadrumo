@@ -26,6 +26,7 @@
         "command": "modelo.describe",
         "notices": [],
         "result": {
+          "authority_grade": "filing",
           "binding_count": 52,
           "bound_casilla_count": 52,
           "cadence": "quarterly",
@@ -137,9 +138,17 @@
             },
             "message": "ledger_ready only means the period ledger rows passed transaction preflight; missing_bindings/source_binding_ready still decide source completeness.",
             "severity": "info"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
+          "authority_generation": "33b9c4cf5ace0549979bd7f64a71a1071b2071c30ceaf2e0578414f8c5e3b13d",
           "binding_ready": false,
           "filing_year": 2026,
           "ledger_checked_transaction_count": 0,

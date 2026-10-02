@@ -22,6 +22,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -102,6 +103,12 @@ from cadrumo.domain.modelos.protocols import (
     ModeloRecordCatalogueRepositoryProtocol,
 )
 from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.verification_report import (
+    VerificationCompletenessStatus,
+    VerificationReport,
+    derive_verification_report_id,
+)
+from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -291,6 +298,7 @@ def workflow_profile() -> TaxpayerProfile:
 
 def _verification_repositories_for_test(
     *,
+    operation: PinnedAuthorityOperation,
     work_units: WorkUnitCatalogueRepository,
     calculations: CalculationRevisionCatalogueRepository,
     filings: ModeloRecordCatalogueRepository,
@@ -299,7 +307,7 @@ def _verification_repositories_for_test(
     active_bucket_id = resolve_active_bucket_id()
     assert active_bucket_id is not None
     return replace(
-        build_verification_repository_bundle(active_bucket_id),
+        build_verification_repository_bundle(active_bucket_id, operation=operation),
         work_unit=work_units,
         calculation=calculations,
         filing=filings,
@@ -698,6 +706,7 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
                 workflow_profile=workflow_profile(),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_repositories_for_test(
+                    operation=_authority_operation_for_test,
                     work_units=work_units,
                     calculations=calculations,
                     filings=filings,
@@ -737,6 +746,7 @@ def test_m390_refuses_a_non_presentado_source_calculation_revision(
                 workflow_profile=workflow_profile(),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_repositories_for_test(
+                    operation=_authority_operation_for_test,
                     work_units=work_units,
                     calculations=calculations,
                     filings=filings,
@@ -807,6 +817,7 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
                 workflow_profile=workflow_profile(),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_repositories_for_test(
+                    operation=_authority_operation_for_test,
                     work_units=work_units,
                     calculations=calculations,
                     filings=filings,
@@ -863,6 +874,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
             workflow_profile=workflow_profile(),
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_repositories_for_test(
+                operation=operation,
                 work_units=work_units,
                 calculations=calculations,
                 filings=filings,
@@ -880,12 +892,38 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         },
     )
     calculations.save(upsert_calculation_revision(calculations.load(), verified_target))
+    # This isolated filing-gate scenario deliberately supplies the prerequisite
+    # report for its synthetic verified revision; it does not claim the stale
+    # source would earn a fresh verifier grant.
+    report_id = derive_verification_report_id(
+        calculation_revision_id=verified_target.calculation_revision_id,
+        completeness_status=VerificationCompletenessStatus.COMPLETE,
+        findings=(),
+        verified_by="operator",
+    )
+    verification_repository = VerificationReportCatalogueRepository(objects=secure_objects)
+    verification_repository.save(
+        upsert_verification_report(
+            verification_repository.load(),
+            VerificationReport(
+                verification_report_id=report_id,
+                calculation_revision_id=verified_target.calculation_revision_id,
+                registry_snapshot_ref=verified_target.registry_snapshot_ref,
+                completeness_status=VerificationCompletenessStatus.COMPLETE,
+                findings=(),
+                run_at=_T2,
+                verified_by="operator",
+                granted_verificado_completo=True,
+            ),
+        )
+    )
     with (
         pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
         bundled_indexed_authority().operation() as operation,
     ):
         file_modelo_revision(
             verified_target.calculation_revision_id,
+            approved_verification_report_id=report_id,
             actor="operator",
             workflow_profile=workflow_profile(),
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),

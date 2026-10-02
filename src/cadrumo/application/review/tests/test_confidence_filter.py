@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from ....core.config import Settings, override_settings
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -102,9 +103,14 @@ def _seed(tmp_path: Path) -> tuple[Settings, dict[str, str], DraftReviewPorts]:
     return settings, ids, ports
 
 
-def test_confidence_below_includes_only_strictly_lower_rows(tmp_path: Path) -> None:
+def test_confidence_below_includes_only_strictly_lower_rows(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     settings, ids, ports = _seed(tmp_path)
     report = project_review_queue(
+        bucket_id=_PROFILE_ID,
+        operation=operation,
         settings=settings,
         state=ReviewState.ALL,
         confidence_below=Decimal("0.5"),
@@ -120,9 +126,14 @@ def test_confidence_below_includes_only_strictly_lower_rows(tmp_path: Path) -> N
     assert ids["unscored"] not in surfaced
 
 
-def test_confidence_below_one_surfaces_every_scored_row_under_one(tmp_path: Path) -> None:
+def test_confidence_below_one_surfaces_every_scored_row_under_one(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     settings, ids, ports = _seed(tmp_path)
     report = project_review_queue(
+        bucket_id=_PROFILE_ID,
+        operation=operation,
         settings=settings,
         state=ReviewState.ALL,
         confidence_below=Decimal("1.0"),
@@ -135,9 +146,14 @@ def test_confidence_below_one_surfaces_every_scored_row_under_one(tmp_path: Path
     assert ids["unscored"] not in surfaced
 
 
-def test_confidence_below_zero_surfaces_nothing(tmp_path: Path) -> None:
+def test_confidence_below_zero_surfaces_nothing(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     settings, _ids, ports = _seed(tmp_path)
     report = project_review_queue(
+        bucket_id=_PROFILE_ID,
+        operation=operation,
         settings=settings,
         state=ReviewState.ALL,
         confidence_below=Decimal("0"),
@@ -146,11 +162,22 @@ def test_confidence_below_zero_surfaces_nothing(tmp_path: Path) -> None:
     assert report.rows == ()
 
 
-def test_no_confidence_filter_includes_non_transaction_kinds(tmp_path: Path) -> None:
+def test_no_confidence_filter_includes_non_transaction_kinds(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Without the filter the queue is not narrowed to the low-confidence source."""
     settings, ids, ports = _seed(tmp_path)
-    unfiltered = project_review_queue(settings=settings, state=ReviewState.ALL, ports=ports)
+    unfiltered = project_review_queue(
+        bucket_id=_PROFILE_ID,
+        operation=operation,
+        settings=settings,
+        state=ReviewState.ALL,
+        ports=ports,
+    )
     filtered = project_review_queue(
+        bucket_id=_PROFILE_ID,
+        operation=operation,
         settings=settings,
         state=ReviewState.ALL,
         confidence_below=Decimal("0.5"),

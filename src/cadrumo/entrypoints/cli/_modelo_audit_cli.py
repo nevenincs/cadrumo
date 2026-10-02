@@ -6,25 +6,7 @@ from pathlib import Path
 
 import typer
 
-from .common import active_bucket_id_or_refuse, emit_envelope
-
-
-def _evidence_bundle_service(*, bucket_id: str):
-    from ...adapters.persistence.profile.evidence_bundles import (
-        EvidenceBundleRepository,
-        EvidenceBundleWorkUnitRepository,
-    )
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ...application.evidence.ports import EvidenceBundlePorts
-    from ...application.evidence.service import EvidenceBundleService
-
-    objects = secure_object_repository_for_bucket(bucket_id)
-    return EvidenceBundleService(
-        ports=EvidenceBundlePorts(
-            repository=EvidenceBundleRepository(objects=objects),
-            work_units=EvidenceBundleWorkUnitRepository(bucket_id=bucket_id, objects=objects),
-        ),
-    )
+from .common import emit_envelope
 
 
 def audit_view(
@@ -32,8 +14,10 @@ def audit_view(
     bundle_id: str,
 ) -> None:
     """Render an evidence bundle's manifest and referenced record list."""
-    bucket_id = active_bucket_id_or_refuse()
-    bundle = _evidence_bundle_service(bucket_id=bucket_id).show(bucket_id=bucket_id, bundle_id=bundle_id)
+    from .runtime_modelo_audit import read_modelo_audit_view
+
+    bundle = read_modelo_audit_view(ctx, bundle_id=bundle_id)
+    bucket_id = bundle.bucket_id
     from ...application.evidence.payloads import EvidenceRecordRefPayload
     from .modelo_aux_payloads import ModeloAuditViewResult
 
@@ -74,8 +58,11 @@ def audit_check(
     bundle_id: str,
 ) -> None:
     """Re-verify the evidence bundle's integrity without mutating state."""
-    bucket_id = active_bucket_id_or_refuse()
-    report = _evidence_bundle_service(bucket_id=bucket_id).check(bucket_id=bucket_id, bundle_id=bundle_id)
+    from .runtime_modelo_audit import check_modelo_audit
+    from .runtime_profile_binding import bound_profile_client
+
+    report = check_modelo_audit(ctx, bundle_id=bundle_id)
+    bucket_id = str(bound_profile_client(ctx).profile_id)
     from .modelo_aux_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditCheckResult
 
     result = ModeloAuditCheckResult(
@@ -108,29 +95,28 @@ def audit_export(
     force_incomplete: bool = False,
 ) -> None:
     """Write the evidence bundle as a ZIP archive to ``--output``."""
-    bucket_id = active_bucket_id_or_refuse()
-    service = _evidence_bundle_service(bucket_id=bucket_id)
-    output_path = service.export(
-        bucket_id=bucket_id,
+    from .runtime_modelo_audit import export_modelo_audit
+
+    projection = export_modelo_audit(
+        ctx,
         bundle_id=bundle_id,
-        output_path=output,
+        output=output,
         force_incomplete=force_incomplete,
     )
-    bundle = service.show(bucket_id=bucket_id, bundle_id=bundle_id)
     from .modelo_aux_payloads import ModeloAuditExportResult
 
     result = ModeloAuditExportResult(
-        bucket_id=bucket_id,
-        bundle_id=bundle.bundle_id,
-        output=str(output_path),
-        verification_state=bundle.verification_state,
-        records=len(bundle.records),
+        bucket_id=str(projection.profile_id),
+        bundle_id=projection.bundle_id,
+        output=projection.output,
+        verification_state=projection.verification_state,
+        records=projection.records,
     )
     lines = [
-        f"bucket\t{bucket_id}",
-        f"bundle_id\t{bundle.bundle_id}",
-        f"output\t{output_path}",
-        f"verification_state\t{bundle.verification_state.value}",
+        f"bucket\t{projection.profile_id}",
+        f"bundle_id\t{projection.bundle_id}",
+        f"output\t{projection.output}",
+        f"verification_state\t{projection.verification_state.value}",
     ]
     emit_envelope(ctx, command="modelo.audit.export", result=result, lines=lines)
 

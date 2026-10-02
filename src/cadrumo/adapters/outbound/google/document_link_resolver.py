@@ -24,7 +24,7 @@ of being silently stored as links.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Final, NoReturn, Protocol, cast
@@ -226,6 +226,7 @@ def resolve_document_link(
     reference: str,
     credentials: Credentials | None = None,
     service: _DriveService | None = None,
+    before_request: Callable[[], None] | None = None,
 ) -> bytes:
     """Resolve a recorded :class:`~domain.attachments.enums.AttachmentSource` link to bytes.
 
@@ -239,6 +240,7 @@ def resolve_document_link(
             production path) the service is built from ``credentials``; tests
             inject a transport-only seam here so the fetch path runs without a
             live network or real credentials.
+        before_request: Optional admission check before each remote request.
 
     Returns:
         The fetched document bytes for ``GOOGLE_DRIVE`` links the ``drive.file``
@@ -277,7 +279,7 @@ def resolve_document_link(
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             )
         drive_service = _resolved_drive_service(credentials, service)
-        return _download_drive_file_from_service(file_id, drive_service)
+        return _download_drive_file_from_service(file_id, drive_service, before_request=before_request)
     if source is AttachmentSource.URL:
         raise _document_link_terminal_refusal(
             OutboundStoragePermissionError(
@@ -300,8 +302,12 @@ def resolve_document_link(
     )
 
 
-def _download_drive_file_from_service(file_id: str, service: _DriveService) -> bytes:
+def _download_drive_file_from_service(
+    file_id: str, service: _DriveService, *, before_request: Callable[[], None] | None = None
+) -> bytes:
     request = service.files().get_media(fileId=file_id)
+    if before_request is not None:
+        before_request()
     try:
         payload = request.execute()
     except OutboundStorageError:
@@ -358,6 +364,7 @@ def list_drive_folder_documents(
     folder_id: str,
     credentials: Credentials | None = None,
     service: _DriveService | None = None,
+    before_request: Callable[[], None] | None = None,
 ) -> DriveFolderListing:
     """List the PDF/image children of a ``drive.file``-reachable Drive folder.
 
@@ -378,6 +385,7 @@ def list_drive_folder_documents(
             Optional only because ``service`` may be injected instead; one
             of the two must be supplied.
         service: Optional pre-built Drive ``v3`` service (test seam).
+        before_request: Optional admission check before each remote request.
 
     Returns:
         A :class:`DriveFolderListing` naming every PDF/image child plus a
@@ -392,7 +400,7 @@ def list_drive_folder_documents(
     drive_service = _resolved_drive_service(credentials, service)
     documents: list[DriveFolderDocument] = []
     skipped = 0
-    for document in _iter_drive_folder_files(drive_service, folder_id=folder_id):
+    for document in _iter_drive_folder_files(drive_service, folder_id=folder_id, before_request=before_request):
         mime_type = document.mime_type
         if mime_type == _DRIVE_FOLDER_MIME_TYPE:
             continue
@@ -452,6 +460,7 @@ def _fetch_drive_folder_page(
     folder_id: str,
     query: str,
     page_token: str | None,
+    before_request: Callable[[], None] | None = None,
 ) -> dict[str, Any]:
     """Fetch one folder page and map permission failures at the folder boundary."""
     request = _drive_folder_list_request(
@@ -459,6 +468,8 @@ def _fetch_drive_folder_page(
         query=query,
         page_token=page_token,
     )
+    if before_request is not None:
+        before_request()
     try:
         response = execute_request(
             # CAST-RATIONALE-thirdparty: Google Drive SDK request object is untyped at the client boundary
@@ -525,7 +536,9 @@ def _next_drive_folder_page_token(
         ) from exc
 
 
-def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) -> Iterator[DriveFolderDocument]:
+def _iter_drive_folder_files(
+    drive_service: _DriveService, *, folder_id: str, before_request: Callable[[], None] | None = None
+) -> Iterator[DriveFolderDocument]:
     """Yield every raw Drive child of ``folder_id`` across pages, mapping scope refusals.
 
     A 403/404 (or any permission refusal without an already-named ``required_scope``)
@@ -541,6 +554,7 @@ def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) ->
             folder_id=folder_id,
             query=query,
             page_token=page_token,
+            before_request=before_request,
         )
         yield from _folder_page_documents(response, folder_id=folder_id)
         page_token = _next_drive_folder_page_token(response, folder_id=folder_id, seen_tokens=seen_tokens)

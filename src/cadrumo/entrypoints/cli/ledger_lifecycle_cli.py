@@ -9,50 +9,42 @@ payloads inside :class:`SchemaEnvelope` through
 from __future__ import annotations
 
 import re
-from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import typer
 from pydantic import ValidationError
 
-from ...application.ledger.actions_lifecycle import (
-    archive_manual_transaction,
-    mark_transaction_reviewed_excluded,
-    remove_manual_transaction,
-    reset_ledger_catalogue,
-    restore_manual_transaction,
-    stash_manual_transaction,
-)
-from ...application.ledger.actions_split_merge import merge_transactions, split_transaction
 from ...application.ledger.id_resolution import compute_display_id_width
-from ...application.ledger.llm_classification_ports import LLMSplitApplyResult
+from ...application.ledger.llm_review_operation import (
+    LEDGER_SPLIT_REVIEW_DEFINITION_ID,
+    LedgerLlmOperationResult,
+    LedgerLlmReviewProjection,
+    LedgerLlmReviewRequest,
+    LedgerLlmReviewResponse,
+    LedgerLlmSuggestionProjection,
+)
+from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.models import SplitChildCommand
-from ...application.ledger.notices import stale_finalized_revision_notices
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.config import load_settings
-from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
-from ...core.time.clock import now
-from ...domain.attachments.enums import AttachmentSource, DocumentLinkSource
+from ...domain.attachments.enums import DocumentLinkSource
 from ...domain.transactions.enums import BusinessClassification, is_classified
-from ...domain.transactions.errors import TransactionValidationError
-from ..ledger_action_composition import compose_ledger_action_ports
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import (
-    emit_update_result,
-    ledger_transaction_validation_no_recovery,
     ledger_validation_bad,
-    resolve_id,
 )
-from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
-from .ledger_llm_composition import compose_ledger_llm
-from .state_projection_support import authority_operation
+from .common import bad, emit_envelope
+from .runtime_profile_binding import bound_profile_client
+from .runtime_registered_operation import (
+    RegisteredOperationReviewCompletion,
+    RegisteredOperationReviewHandler,
+    run_registered_operation,
+    submitted_operation_error,
+)
 
 if TYPE_CHECKING:
-    from ...application.ledger.action_ports import LedgerActionPorts
-    from ...application.ledger.llm_classification_ports import LLMSplitSuggestion
-    from ...application.ledger.models import SplitTransactionResult
+    from ...application.ledger.split_operation import LedgerSplitOperationResult
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
@@ -63,30 +55,21 @@ def ledger_detach(
     actor: str | None = None,
 ) -> None:
     """Detach supplementary attachments from one ledger transaction."""
-    from ...application.ledger.actions_manual import detach_manual_transaction_attachments
+    from .runtime_ledger_attachment import emit_ledger_attachment_result, run_ledger_detach
 
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = detach_manual_transaction_attachments(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
+    result = run_ledger_detach(
+        ctx,
+        transaction_id=transaction_id,
         attachment_ids=tuple(attachment_ids),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger detach",
-        ports=ports,
+        actor=actor,
     )
     from ._ledger_payloads import LedgerDetachResult
 
-    emit_update_result(
+    emit_ledger_attachment_result(
         ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
+        result,
         command="ledger.detach",
-        result_cls=LedgerDetachResult,
-        notices=stale_finalized_revision_notices(result),
+        result_schema=LedgerDetachResult,
     )
 
 
@@ -98,52 +81,23 @@ def ledger_attach(
     actor: str | None = None,
 ) -> None:
     """Attach existing secure evidence objects to one ledger transaction."""
-    from ...application.ledger.actions_manual import attach_manual_transaction_evidence
+    from .runtime_ledger_attachment import emit_ledger_attachment_result, run_ledger_attach
 
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = attach_manual_transaction_evidence(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
+    result = run_ledger_attach(
+        ctx,
+        transaction_id=transaction_id,
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         attachment_ids=tuple(attachment_ids),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger attach",
-        ports=ports,
+        actor=actor,
     )
     from ._ledger_payloads import LedgerAttachResult
 
-    emit_update_result(
+    emit_ledger_attachment_result(
         ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
+        result,
         command="ledger.attach",
-        result_cls=LedgerAttachResult,
-        notices=stale_finalized_revision_notices(result),
+        result_schema=LedgerAttachResult,
     )
-
-
-def _sniff_document_mime_type(reference: str, data: bytes) -> str:
-    """Best-effort MIME type for fetched evidence bytes.
-
-    Sniffs the magic bytes for the document kinds operators attach (PDF,
-    PNG, JPEG), then falls back to a filename guess from the reference, then
-    to ``application/octet-stream``. The bytes are always stored regardless
-    of the guessed type; the type is provenance metadata, never a gate.
-    """
-    import mimetypes
-
-    if data.startswith(b"%PDF-"):
-        return PDF_MIME_TYPE
-    if data.startswith(b"\x89PNG\r\n\x1a\n"):
-        return "image/png"
-    if data.startswith(b"\xff\xd8\xff"):
-        return "image/jpeg"
-    guessed, _ = mimetypes.guess_type(reference)
-    return guessed or "application/octet-stream"
 
 
 def ledger_evidence_pull(
@@ -154,72 +108,39 @@ def ledger_evidence_pull(
     note: str = "",
     actor: str | None = None,
 ) -> None:
-    """Fetch a document link and store its bytes as encrypted evidence on a ledger row.
+    """Fetch a document link and attach its bytes through the profile worker."""
+    from ._ledger_payloads import LedgerAttachResult, TransactionPayload
+    from .runtime_ledger_evidence_ingestion import run_ledger_evidence_pull
 
-    The reference is resolved through
-    :func:`resolve_document_link`, which fetches
-    Drive files reachable under the granted ``drive.file`` scope. The fetched
-    bytes are stored through the byte-bearing
-    :func:`add_attachment` path (real
-    ``sha256`` and ``mime_type``), and the original link is kept as manifest
-    provenance. Gmail links, arbitrary URLs, and out-of-scope Drive files are
-    **refused** — a link is never stored as evidence.
-    """
-    from ...adapters.outbound.google.active_profile import resolve_active_profile
-    from ...adapters.outbound.google.document_link_resolver import resolve_document_link
-    from ...adapters.outbound.storage.factory import build_google_credentials
-    from ...adapters.persistence.storage.attachment import AttachmentStore
-    from ...application.ledger.actions_manual import attach_manual_transaction_evidence
-    from ...domain.attachments.enums import AttachmentKind
-    from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
-
-    attachment_source = source.to_attachment_source()
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-
-    profile = resolve_active_profile()
-    credentials = build_google_credentials(profile=profile)
-    data = resolve_document_link(
-        source=attachment_source,
-        reference=reference,
-        credentials=credentials,
-    )
-
-    store = AttachmentStore()
-    attachment = add_attachment(
-        store,
-        content=AttachmentBytesContent(data=data),
-        request=AttachmentIngestionRequest(
-            kind=AttachmentKind.DRIVE_DOCUMENT,
-            source=attachment_source,
-            source_reference=reference,
-            mime_type=_sniff_document_mime_type(reference, data),
-            captured_at=now(),
-            bucket_id=transaction_repository.bucket_id,
-            link_transaction_ids=(resolved_id,),
-            metadata={"source": attachment_source.value, "source_reference": reference},
-            notes=note,
-        ),
-    )
-    result = attach_manual_transaction_evidence(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        attachment_ids=(attachment.attachment_id,),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger evidence pull",
-        ports=replace(ports, attachment_store=store),
-    )
-    from ._ledger_payloads import LedgerAttachResult
-
-    emit_update_result(
+    projection = run_ledger_evidence_pull(
         ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
+        transaction_id=transaction_id,
+        source=source,
+        reference=reference,
+        note=note,
+        actor=actor,
+    )
+    transaction = TransactionPayload.model_validate_json(projection.transaction.model_dump_json())
+    result = LedgerAttachResult.model_validate(
+        {
+            "bucket_id": str(projection.profile_id),
+            "transaction_id": projection.transaction_id,
+            "bucket_event_ids": list(projection.bucket_event_ids),
+            "review_status": projection.review_status,
+            "transaction": transaction.model_dump(mode="json"),
+        },
+    )
+    emit_envelope(
+        ctx,
         command="ledger.evidence.pull",
-        result_cls=LedgerAttachResult,
+        result=result,
+        lines=[
+            f"{tr('cli.ledger.labels.id')}\t{transaction.transaction_id}",
+            f"{tr('cli.ledger.labels.date')}\t{transaction.date}",
+            f"{tr('cli.ledger.labels.amount')}\t{transaction.amount}",
+            f"{tr('cli.ledger.labels.description')}\t{transaction.description}",
+            f"{tr('cli.ledger.labels.review_status')}\t{projection.review_status.value}",
+        ],
     )
 
 
@@ -266,125 +187,40 @@ def ledger_evidence_pull_all(
     folder: str,
     note: str = "",
 ) -> None:
-    """Bulk-fetch every PDF/image child of a Drive folder into encrypted evidence.
-
-    Lists the folder's children through
-    :func:`~adapters.outbound.google.document_link_resolver.list_drive_folder_documents` (the
-    same ``drive.file``-scoped minimal-scope posture
-    :func:`ledger_evidence_pull` uses for a single document), then fetches and
-    encrypts each PDF/image child through
-    :func:`~adapters.outbound.google.document_link_resolver.resolve_document_link` and
-    :func:`~domain.attachments.service.add_attachment` — the identical
-    fetch-and-encrypt primitive ``doclink`` composes, never re-implemented
-    here. Fetched attachments are content-addressed and deduplicate by
-    SHA-256, so re-running the sweep is idempotent. Attachments are stored
-    unlinked to any transaction; binding is a separate operator action.
-
-    A file the app cannot reach under the ``drive.file`` scope is refused
-    individually — evidence bytes are never stored as a link-only pointer,
-    and one refused file does not abort the rest of the sweep. Gmail bulk
-    fetch is out of scope pending a separate ``gmail.readonly``
-    scope-upgrade decision.
-    """
-    from ...adapters.outbound.google.active_profile import resolve_active_profile
-    from ...adapters.outbound.google.document_link_resolver import (
-        list_drive_folder_documents,
-        resolve_document_link,
-    )
-    from ...adapters.outbound.storage.errors import OutboundStoragePermissionError
-    from ...adapters.outbound.storage.factory import build_google_credentials
-    from ...adapters.persistence.storage.attachment import AttachmentStore
-    from ...application.ledger.evidence_sweep import sweep_evidence_folder
-    from ...application.ledger.evidence_sweep_ports import (
-        EvidenceSweepDocument,
-        EvidenceSweepFileNotReachableError,
-    )
-    from ...domain.attachments.enums import AttachmentKind
-    from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
+    """Bulk-fetch Drive folder children through the exact profile worker."""
     from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult
+    from .runtime_ledger_evidence_ingestion import run_ledger_evidence_pull_all
 
     folder_id = _parse_drive_folder_reference(folder)
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    bucket_id = transaction_repository.bucket_id
-
-    profile = resolve_active_profile()
-    credentials = build_google_credentials(profile=profile)
-    listing = list_drive_folder_documents(folder_id=folder_id, credentials=credentials)
-
-    store = AttachmentStore()
-
-    application_documents = tuple(
-        EvidenceSweepDocument(
-            file_id=document.file_id,
-            name=document.name,
-            mime_type=document.mime_type,
-        )
-        for document in listing.documents
-    )
-
-    def _fetch(document: EvidenceSweepDocument) -> str:
-        """Fetch and encrypt one folder child, returning its attachment id."""
-        reference = f"https://drive.google.com/file/d/{document.file_id}"
-        try:
-            data = resolve_document_link(
-                source=AttachmentSource.GOOGLE_DRIVE,
-                reference=reference,
-                credentials=credentials,
-            )
-        except OutboundStoragePermissionError as exc:
-            raise EvidenceSweepFileNotReachableError from exc
-        attachment = add_attachment(
-            store,
-            content=AttachmentBytesContent(data=data),
-            request=AttachmentIngestionRequest(
-                kind=AttachmentKind.DRIVE_DOCUMENT,
-                source=AttachmentSource.GOOGLE_DRIVE,
-                source_reference=reference,
-                mime_type=document.mime_type or _sniff_document_mime_type(document.name, data),
-                captured_at=now(),
-                bucket_id=bucket_id,
-                metadata={
-                    "source": AttachmentSource.GOOGLE_DRIVE.value,
-                    "source_reference": reference,
-                    "drive_folder_id": folder_id,
-                    "drive_file_name": document.name,
-                },
-                notes=note,
-            ),
-        )
-        return attachment.attachment_id
-
-    sweep = sweep_evidence_folder(documents=application_documents, fetch=_fetch)
+    projection = run_ledger_evidence_pull_all(ctx, folder=folder_id, note=note)
     rows = [
         LedgerEvidencePullAllFilePayload(
-            file_id=swept.file_id,
-            name=swept.name,
-            mime_type=swept.mime_type,
-            fetched=swept.fetched,
-            attachment_id=swept.attachment_id,
-            refusal_reason=None if swept.refusal is None else swept.refusal.value,
+            file_id=row.file_id,
+            name=row.name,
+            mime_type=row.mime_type,
+            fetched=row.fetched,
+            attachment_id=row.attachment_id,
+            refusal_reason=None if row.refusal_reason is None else row.refusal_reason.value,
         )
-        for swept in sweep.documents
+        for row in projection.files
     ]
-
     result = LedgerEvidencePullAllResult.model_validate(
         {
-            "bucket_id": bucket_id,
-            "folder_id": folder_id,
-            "total_documents": len(listing.documents),
-            "fetched_count": sweep.fetched_count,
-            "refused_count": sweep.refused_count,
-            "skipped_non_document_count": listing.skipped_non_document_count,
+            "bucket_id": str(projection.profile_id),
+            "folder_id": projection.folder_id,
+            "total_documents": projection.total_documents,
+            "fetched_count": projection.fetched_count,
+            "refused_count": projection.refused_count,
+            "skipped_non_document_count": projection.skipped_non_document_count,
             "files": [row.model_dump(mode="json") for row in rows],
         },
     )
     lines = [
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.folder_id')}\t{folder_id}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.total')}\t{len(listing.documents)}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.fetched')}\t{sweep.fetched_count}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.refused')}\t{sweep.refused_count}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.skipped')}\t{listing.skipped_non_document_count}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.folder_id')}\t{projection.folder_id}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.total')}\t{projection.total_documents}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.fetched')}\t{projection.fetched_count}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.refused')}\t{projection.refused_count}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.skipped')}\t{projection.skipped_non_document_count}",
     ]
     lines.extend(
         f"{row.name}\t{row.mime_type}\t{'fetched' if row.fetched else 'refused'}\t"
@@ -392,16 +228,16 @@ def ledger_evidence_pull_all(
         for row in rows
     )
     notices: list[Notice] = []
-    if sweep.refused_count:
+    if projection.refused_count:
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="ledger.pull_folder.files_refused",
                 message=tr(
                     "cli.app.ledger.evidence.pull_all_notices.files_refused",
-                    refused_count=sweep.refused_count,
+                    refused_count=projection.refused_count,
                 ),
-                context={"folder_id": folder_id, "refused_count": str(sweep.refused_count)},
+                context={"folder_id": projection.folder_id, "refused_count": str(projection.refused_count)},
             ),
         )
     emit_envelope(
@@ -423,30 +259,20 @@ def ledger_archive(
     """Archive one ledger transaction through the bucket-scoped backend."""
     if not yes:
         raise bad(tr("cli.ledger.errors.confirm_required"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(
-        bucket_id=transaction_repository.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = archive_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        source_command="aeat app ledger archive",
-        ports=ports,
-    )
     from ._ledger_payloads import LedgerArchiveResult
+    from .runtime_ledger_lifecycle import emit_ledger_lifecycle_result, run_ledger_archive
 
-    emit_update_result(
+    result = run_ledger_archive(
         ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
+        transaction_id=transaction_id,
+        reason=reason,
+        actor=actor or resolve_active_bucket_id() or "operator",
+    )
+    emit_ledger_lifecycle_result(
+        ctx,
+        result,
         command="ledger.archive",
-        result_cls=LedgerArchiveResult,
+        result_schema=LedgerArchiveResult,
     )
 
 
@@ -460,30 +286,20 @@ def ledger_stash(
     """Stash one ledger transaction through the bucket-scoped backend."""
     if not yes:
         raise bad(tr("cli.ledger.errors.confirm_required"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(
-        bucket_id=transaction_repository.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = stash_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        source_command="aeat app ledger stash",
-        ports=ports,
-    )
     from ._ledger_payloads import LedgerStashResult
+    from .runtime_ledger_lifecycle import emit_ledger_lifecycle_result, run_ledger_stash
 
-    emit_update_result(
+    result = run_ledger_stash(
         ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
+        transaction_id=transaction_id,
+        reason=reason,
+        actor=actor or resolve_active_bucket_id() or "operator",
+    )
+    emit_ledger_lifecycle_result(
+        ctx,
+        result,
         command="ledger.stash",
-        result_cls=LedgerStashResult,
+        result_schema=LedgerStashResult,
     )
 
 
@@ -497,33 +313,20 @@ def ledger_exclude(
     """Mark one active ledger transaction as reviewed and excluded from filing."""
     if not yes:
         raise bad(tr("cli.ledger.errors.confirm_required"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(
-        bucket_id=transaction_repository.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = mark_transaction_reviewed_excluded(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        source_command="aeat app ledger exclude",
-        transaction_repository=ports.transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
-        work_unit_repository=ports.work_unit_repository,
-        calculation_repository=ports.calculation_repository,
-    )
     from ._ledger_payloads import LedgerExcludeResult
+    from .runtime_ledger_lifecycle import emit_ledger_lifecycle_result, run_ledger_exclude
 
-    emit_update_result(
+    result = run_ledger_exclude(
         ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
+        transaction_id=transaction_id,
+        reason=reason,
+        actor=actor or resolve_active_bucket_id() or "operator",
+    )
+    emit_ledger_lifecycle_result(
+        ctx,
+        result,
         command="ledger.exclude",
-        result_cls=LedgerExcludeResult,
+        result_schema=LedgerExcludeResult,
     )
 
 
@@ -537,30 +340,20 @@ def ledger_restore(
     """Restore one stashed or archived ledger transaction to active."""
     if not yes:
         raise bad(tr("cli.ledger.errors.confirm_required"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(
-        bucket_id=transaction_repository.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = restore_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        source_command="aeat app ledger restore",
-        ports=ports,
-    )
     from ._ledger_payloads import LedgerRestoreResult
+    from .runtime_ledger_lifecycle import emit_ledger_lifecycle_result, run_ledger_restore
 
-    emit_update_result(
+    result = run_ledger_restore(
         ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
+        transaction_id=transaction_id,
+        reason=reason,
+        actor=actor or resolve_active_bucket_id() or "operator",
+    )
+    emit_ledger_lifecycle_result(
+        ctx,
+        result,
         command="ledger.restore",
-        result_cls=LedgerRestoreResult,
+        result_schema=LedgerRestoreResult,
     )
 
 
@@ -572,30 +365,20 @@ def ledger_remove(
     yes: bool = False,
     actor: str | None = None,
 ) -> None:
-    """Remove one ledger transaction through the bucket-scoped backend."""
+    """Remove one ledger transaction through the registered profile worker."""
     if not dry_run and not yes:
         raise bad(tr("cli.ledger.errors.confirm_required"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(
-        bucket_id=transaction_repository.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    report = remove_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
+    from ._ledger_payloads import LedgerRemoveResult
+    from .runtime_ledger_remove import run_ledger_remove
+
+    removal = run_ledger_remove(
+        ctx,
+        transaction_id=transaction_id,
         reason=reason,
         dry_run=dry_run,
-        source_command="aeat app ledger remove",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
-        invoice_repository=ports.invoice_repository,
-        work_unit_repository=ports.work_unit_repository,
-        calculation_repository=ports.calculation_repository,
+        actor=actor or resolve_active_bucket_id() or "operator",
     )
-    from ._ledger_payloads import LedgerRemoveResult
+    report = removal.report
 
     emit_envelope(
         ctx,
@@ -617,27 +400,13 @@ def ledger_reset(
     yes: bool = False,
     actor: str | None = None,
 ) -> None:
-    """Reset the active bucket ledger catalogue through the backend."""
+    """Reset the authenticated profile ledger catalogue through its worker."""
     if not dry_run and not yes:
         raise bad(tr("cli.ledger.errors.confirm_required"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(
-        bucket_id=transaction_repository.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    report = reset_ledger_catalogue(
-        bucket_id=transaction_repository.bucket_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        dry_run=dry_run,
-        source_command="aeat app ledger reset",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
-        invoice_repository=ports.invoice_repository,
-        work_unit_repository=ports.work_unit_repository,
-        calculation_repository=ports.calculation_repository,
-    )
+    from .runtime_ledger_reset import run_ledger_reset
+
+    reset = run_ledger_reset(ctx, reason=reason, dry_run=dry_run, actor=actor)
+    report = reset.report
     from ._ledger_payloads import LedgerResetResult
 
     emit_envelope(
@@ -668,47 +437,14 @@ def _validate_manual_split_options(
         raise bad(tr("cli.ledger.split.errors.min_two_children"))
 
 
-def _run_manual_split(
-    *,
-    bucket_id: str,
-    resolved_id: str,
-    child_amount: tuple[str, ...],
-    child_description: tuple[str, ...],
-    reason: str,
-    actor: str | None,
-    ports: LedgerActionPorts,
-) -> SplitTransactionResult:
-    """Parse manual children and invoke the single-writer split mutation."""
-    try:
-        children = tuple(
-            SplitChildCommand(
-                amount=parse_decimal_amount(amount_raw, label="child-amount"),
-                description=description_raw,
-            )
-            for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
-        )
-        result = split_transaction(
-            bucket_id=bucket_id,
-            transaction_id=resolved_id,
-            children=children,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger split",
-            reason=reason,
-            ports=ports,
-        )
-    except ValidationError as exc:
-        raise ledger_validation_bad(exc) from exc
-    return result
-
-
-def _emit_manual_split_result(ctx: typer.Context, result: SplitTransactionResult) -> None:
+def _emit_manual_split_result(ctx: typer.Context, result: LedgerSplitOperationResult) -> None:
     """Project the persisted split result and its classification advisory."""
     from ._ledger_payloads import LedgerSplitResult
 
     child_id_rows = _split_child_id_rows(result.child_transaction_ids)
-    notices = _split_classification_dropped_notices(result.parent_transaction.business_classification)
+    notices = _split_classification_dropped_notices(result.parent_business_classification)
     lines = [
-        f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
+        f"{tr('cli.ledger.labels.bucket')}\t{result.profile_id}",
         f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
         f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
         f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
@@ -721,7 +457,7 @@ def _emit_manual_split_result(ctx: typer.Context, result: SplitTransactionResult
         command="ledger.split",
         result=LedgerSplitResult.model_validate(
             {
-                "bucket_id": result.bucket_id,
+                "bucket_id": str(result.profile_id),
                 "parent_transaction_id": result.parent_transaction_id,
                 "split_group_id": result.split_group_id,
                 "child_transaction_ids": list(result.child_transaction_ids),
@@ -767,18 +503,24 @@ def ledger_split(
         child_description=child_description,
         yes=yes,
     )
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = _run_manual_split(
-        bucket_id=transaction_repository.bucket_id,
-        resolved_id=resolved_id,
-        child_amount=child_amount,
-        child_description=child_description,
+    try:
+        children = tuple(
+            SplitChildCommand(
+                amount=parse_decimal_amount(amount_raw, label="child-amount"),
+                description=description_raw,
+            )
+            for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
+        )
+    except ValidationError as exc:
+        raise ledger_validation_bad(exc) from exc
+    from .runtime_ledger_split import run_ledger_split
+
+    result = run_ledger_split(
+        ctx,
+        transaction_id=transaction_id,
+        children=children,
         reason=reason,
         actor=actor,
-        ports=ports,
     )
     _emit_manual_split_result(ctx, result)
 
@@ -845,21 +587,21 @@ def _validate_split_llm_options(
         raise bad(tr("cli.ledger.errors.confirm_required"))
 
 
-def _build_split_child_proposals(suggestion: LLMSplitSuggestion) -> list[LedgerSplitChildProposalPayload]:
+def _build_split_child_proposals(suggestion: LedgerLlmSuggestionProjection) -> list[LedgerSplitChildProposalPayload]:
     """Project the suggestion's proposed children into typed payload rows."""
     from ._ledger_payloads import LedgerSplitChildProposalPayload
 
     return [
         LedgerSplitChildProposalPayload.model_validate(
             {
-                "proportion": format(child.proportion, "f"),
-                "amount": format(child.amount, "f"),
+                "proportion": child.proportion,
+                "amount": child.amount,
                 "description": child.description,
-                "category": child.category.value if child.category is not None else None,
-                "iva_category": child.iva_category.value if child.iva_category is not None else None,
-                "iva_rate": format(child.iva_rate, "f") if child.iva_rate is not None else None,
-                "taxable_base": format(child.taxable_base, "f") if child.taxable_base is not None else None,
-                "iva_amount": format(child.iva_amount, "f") if child.iva_amount is not None else None,
+                "category": child.category,
+                "iva_category": child.iva_category,
+                "iva_rate": child.iva_rate,
+                "taxable_base": child.taxable_base,
+                "iva_amount": child.iva_amount,
                 "rate_derivable": child.rate_derivable,
             },
         )
@@ -871,7 +613,7 @@ def _render_split_llm_preview(
     ctx: typer.Context,
     *,
     bucket_id: str,
-    suggestion: LLMSplitSuggestion,
+    suggestion: LedgerLlmSuggestionProjection,
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the non-persisting split preview envelope."""
@@ -887,7 +629,7 @@ def _render_split_llm_preview(
             "provider": transport_from_provenance(suggestion.provenance),
             "provenance": suggestion.provenance,
             "reason": suggestion.reason,
-            "parent_amount": format(suggestion.parent_amount, "f"),
+            "parent_amount": suggestion.parent_amount,
             "proposed_children": [child.model_dump(mode="json") for child in proposed_children],
         },
     )
@@ -903,8 +645,8 @@ def _render_split_llm_preview(
 def _render_split_llm_applied(
     ctx: typer.Context,
     *,
-    suggestion: LLMSplitSuggestion,
-    applied: LLMSplitApplyResult,
+    suggestion: LedgerLlmSuggestionProjection,
+    applied: LedgerLlmOperationResult,
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the persisted split-applied envelope."""
@@ -914,8 +656,8 @@ def _render_split_llm_applied(
     child_id_rows = _split_child_id_rows(applied.child_transaction_ids)
     result = LedgerSplitResult.model_validate(
         {
-            "bucket_id": applied.bucket_id,
-            "parent_transaction_id": applied.parent_transaction_id,
+            "bucket_id": str(applied.profile_id),
+            "parent_transaction_id": applied.transaction_id,
             "split_group_id": applied.split_group_id,
             "child_transaction_ids": list(applied.child_transaction_ids),
             "child_transactions": [row.model_dump(mode="json") for row in child_id_rows],
@@ -924,13 +666,13 @@ def _render_split_llm_applied(
             "provider": transport_from_provenance(suggestion.provenance),
             "provenance": applied.provenance,
             "reason": suggestion.reason,
-            "parent_amount": format(suggestion.parent_amount, "f"),
+            "parent_amount": suggestion.parent_amount,
             "proposed_children": [child.model_dump(mode="json") for child in proposed_children],
             "classified_child_count": applied.classified_child_count,
         },
     )
     lines = [
-        f"{tr('cli.ledger.labels.parent_id')}\t{applied.parent_transaction_id}",
+        f"{tr('cli.ledger.labels.parent_id')}\t{applied.transaction_id}",
         f"{tr('cli.ledger.labels.split_group_id')}\t{applied.split_group_id}",
         f"{tr('cli.ledger.labels.children')}\t{len(applied.child_transaction_ids)}",
     ]
@@ -964,12 +706,9 @@ def _ledger_split_llm(
     ``--child-description`` flags are the explicit operator override and cannot be
     combined with ``--llm``.
     """
-    from ...application.ledger.llm_classification import suggest_evidence_split
-    from ...application.ledger.llm_review_workflow import (
-        LlmReviewDecision,
-        LlmReviewInvocationOrigin,
-        execute_reviewed_decision,
-    )
+    from ...application.operations.registry import OperationSchemaIdentityV1
+    from ...application.runtime.contracts import RuntimeRefusalCode
+    from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 
     _validate_split_llm_options(
         child_amount=child_amount,
@@ -978,57 +717,119 @@ def _ledger_split_llm(
         yes=yes,
     )
 
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    bucket_id = transaction_repository.bucket_id
-    composition = compose_ledger_llm(bucket_id=bucket_id, settings=load_settings())
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    suggestion = suggest_evidence_split(
-        bucket_id=bucket_id,
-        transaction_id=resolved_id,
-        transaction_repository=transaction_repository,
+    client = bound_profile_client(ctx)
+    request = LedgerLlmReviewRequest(
+        profile_id=client.profile_id,
+        transaction_id=transaction_id,
+        mode="split",
+        origin=LlmReviewInvocationOrigin.SPLIT_LLM,
+        preview=not apply,
+        actor=actor,
         read_evidence=read_evidence,
         vision_model=vision_model,
-        settings=load_settings(),
-        ports=composition.ports,
-        operation=authority_operation(ctx),
+        reason=reason,
     )
+    reviewed: LedgerLlmReviewProjection | None = None
 
-    proposed_children = _build_split_child_proposals(suggestion)
+    def matches(projection: LedgerLlmReviewProjection) -> bool:
+        return not (
+            projection.profile_id != client.profile_id
+            or projection.suggestion.kind != "split"
+            or not projection.suggestion.transaction_id.startswith(request.transaction_id)
+        )
 
-    if not apply:
+    def decide(projection: LedgerLlmReviewProjection) -> Literal["apply"] | None:
+        nonlocal reviewed
+        if request.preview or not matches(projection):
+            from ...application.runtime.contracts import RuntimeRefusalError
+
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        reviewed = projection
+        return "apply" if apply else None
+
+    completed = run_registered_operation(
+        client,
+        request,
+        definition_id=LEDGER_SPLIT_REVIEW_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(client.profile_id)),
+        result_type=LedgerLlmOperationResult,
+        request_version=1,
+        result_version=1,
+        timeout=120,
+        review=RegisteredOperationReviewHandler(
+            review_type=LedgerLlmReviewProjection,
+            review_schema=OperationSchemaIdentityV1.from_model(
+                schema_id=LEDGER_SPLIT_REVIEW_DEFINITION_ID + ".projection",
+                schema_version=1,
+                model_type=LedgerLlmReviewProjection,
+            ),
+            response_schema=OperationSchemaIdentityV1.from_model(
+                schema_id=LEDGER_SPLIT_REVIEW_DEFINITION_ID + ".response",
+                schema_version=1,
+                model_type=LedgerLlmReviewResponse,
+            ),
+            decide=decide,
+        ),
+    )
+    if isinstance(completed, RegisteredOperationReviewCompletion):
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=None,
+            effect=completed.effect,
+        )
+    applied = completed.projection
+    if request.preview:
+        preview = applied.preview
+        if (
+            reviewed is not None
+            or applied.outcome != "preview"
+            or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+            or completed.effect is not OperationEffect.NONE
+            or completed.refusal_code is not None
+            or applied.profile_id != client.profile_id
+            or preview is None
+            or not matches(preview)
+            or applied.transaction_id != preview.suggestion.transaction_id
+            or applied.reviewed_proposal_digest != preview.reviewed_proposal_digest
+            or applied.provenance != preview.suggestion.provenance
+        ):
+            raise submitted_operation_error(
+                completed.operation_id,
+                RuntimeRefusalCode.INVALID_FRAME.value,
+                terminal_condition=completed.terminal_condition,
+                effect=completed.effect,
+                refusal_code=completed.refusal_code,
+            )
+        suggestion = preview.suggestion
         _render_split_llm_preview(
             ctx,
-            bucket_id=bucket_id,
+            bucket_id=str(client.profile_id),
             suggestion=suggestion,
-            proposed_children=proposed_children,
+            proposed_children=_build_split_child_proposals(suggestion),
         )
         return
-
-    try:
-        applied = execute_reviewed_decision(
-            suggestion,
-            origin=LlmReviewInvocationOrigin.SPLIT_LLM,
-            decision=LlmReviewDecision.SPLIT,
-            bucket_id=bucket_id,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            ports=compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx)),
+    if (
+        not apply
+        or reviewed is None
+        or applied.outcome != "split"
+        or applied.profile_id != client.profile_id
+        or applied.transaction_id != reviewed.suggestion.transaction_id
+        or applied.reviewed_proposal_digest != reviewed.reviewed_proposal_digest
+        or applied.provenance != reviewed.suggestion.provenance
+        or completed.effect is not OperationEffect.UPDATED
+    ):
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
         )
-    except TransactionValidationError as exc:
-        raise ledger_transaction_validation_no_recovery(exc) from None
-    except ValidationError as exc:
-        raise ledger_validation_bad(exc) from exc
-    if not isinstance(applied, LLMSplitApplyResult):
-        raise TransactionValidationError(
-            "SPLIT decision returned no evidence-split result",
-            context={"result_type": type(applied).__name__},
-        )
-
     _render_split_llm_applied(
         ctx,
-        suggestion=suggestion,
+        suggestion=reviewed.suggestion,
         applied=applied,
-        proposed_children=proposed_children,
+        proposed_children=_build_split_child_proposals(reviewed.suggestion),
     )
 
 
@@ -1044,17 +845,13 @@ def ledger_merge(
         raise bad(tr("cli.ledger.errors.confirm_required"))
     if len(child_id) < 2:
         raise bad(tr("cli.ledger.merge.errors.min_two_children"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_ids = tuple(resolve_id(transaction_repository, raw) for raw in child_id)
-    result = merge_transactions(
-        bucket_id=transaction_repository.bucket_id,
-        child_transaction_ids=resolved_ids,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger merge",
+    from .runtime_ledger_merge import run_ledger_merge
+
+    result = run_ledger_merge(
+        ctx,
+        child_ids=child_id,
         reason=reason,
-        ports=ports,
+        actor=actor,
     )
     from ._ledger_payloads import LedgerMergeResult
 
@@ -1063,7 +860,7 @@ def ledger_merge(
         command="ledger.merge",
         result=LedgerMergeResult.model_validate(
             {
-                "bucket_id": result.bucket_id,
+                "bucket_id": str(result.profile_id),
                 "split_group_id": result.split_group_id,
                 "parent_transaction_id": result.parent_transaction_id,
                 "merged_transaction_id": result.merged_transaction_id,
@@ -1072,7 +869,7 @@ def ledger_merge(
             },
         ),
         lines=[
-            f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
+            f"{tr('cli.ledger.labels.bucket')}\t{result.profile_id}",
             f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
             f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
             f"{tr('cli.ledger.labels.merged_id')}\t{result.merged_transaction_id}",

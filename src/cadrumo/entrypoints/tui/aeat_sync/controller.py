@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from ....application.aeat_sync.workspace import (
     AEAT_SYNC_WORKSPACE_CONTRACT_VERSION,
     AeatSyncWorkspaceAvailability,
@@ -78,6 +80,7 @@ class AeatSyncWorkspaceController:
         projection: AeatSyncWorkspaceProjectionV1,
         *,
         operation_handoff: AeatSyncOperationHandoffV1 | None = None,
+        refresh_snapshot: Callable[[], AeatSyncWorkspaceProjectionV1] | None = None,
         notification_document_handoff: AeatSyncNotificationDocumentHandoffV1 | None = None,
         action_catalogue: ActionCatalogue = OPERATOR_ACTION_CATALOGUE,
         operation_contracts: OperationPublicContractSetV1 | None = None,
@@ -90,6 +93,7 @@ class AeatSyncWorkspaceController:
         self.context = context
         self.projection = projection
         self.operation_handoff = operation_handoff
+        self.refresh_snapshot = refresh_snapshot
         self.notification_document_handoff = notification_document_handoff
         self.action_catalogue = action_catalogue
         self.operation_contracts = operation_contracts

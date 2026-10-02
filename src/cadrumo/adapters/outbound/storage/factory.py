@@ -47,6 +47,12 @@ if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
+from ....application.user_profile.access_contracts import AccessDenialCode
+from ....application.user_profile.access_errors import ProfileAccessRefusedError
+from ....application.user_profile.google_configuration_operation_ports import (
+    GoogleConfigurationAcknowledgement,
+    GoogleConfigurationHandoff,
+)
 from ....core.config import Settings, load_settings
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.google_credential_source import GoogleCredentialSourceKind
@@ -100,7 +106,12 @@ def _parse_kind(raw: str) -> ProviderKind:
         ) from exc
 
 
-def build_google_credentials(*, profile: str) -> Credentials:
+def build_google_credentials(
+    *,
+    profile: str,
+    before_handoff: GoogleConfigurationHandoff | None = None,
+    acknowledged: GoogleConfigurationAcknowledgement | None = None,
+) -> Credentials:
     """Resolve Google ``Credentials`` for the profile's chosen credential source.
 
     Reads the profile's persisted
@@ -141,7 +152,9 @@ def build_google_credentials(*, profile: str) -> Credentials:
             )
         from ..google.impersonation import resolve_impersonated_credentials
 
-        return resolve_impersonated_credentials(impersonation)
+        if before_handoff is None and acknowledged is None:
+            return resolve_impersonated_credentials(impersonation)
+        return resolve_impersonated_credentials(impersonation, before_handoff=before_handoff, acknowledged=acknowledged)
 
     return _build_oauth_desktop_credentials(profile=profile)
 
@@ -239,12 +252,18 @@ def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
 def get_storage_provider(
     *,
     settings: Settings | None = None,
+    profile: str | None = None,
+    before_handoff: GoogleConfigurationHandoff | None = None,
+    acknowledged: GoogleConfigurationAcknowledgement | None = None,
 ) -> StorageProvider:
     """Build a :class:`StorageProvider` for the active AEAT profile.
 
     Args:
         settings: Optional pre-built :class:`core.config.Settings`.
             Defaults to :func:`core.config.load_settings`.
+        profile: Optional expected profile, checked against the active profile.
+        before_handoff: Optional admission check before each provider handoff.
+        acknowledged: Optional acknowledgement of a completed provider handoff.
 
     Returns:
         A concrete :class:`StorageProvider` already wired with credentials and
@@ -258,7 +277,10 @@ def get_storage_provider(
     """
     settings_resolved = settings if settings is not None else load_settings()
     kind = _parse_kind(settings_resolved.cadrumo_storage_provider_kind)
-    profile = _resolve_profile()
+    resolved_profile = _resolve_profile()
+    if profile is not None and profile != resolved_profile:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    profile = resolved_profile
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
         from ...persistence.storage.bucket.directory_layout import bucket_paths
@@ -270,23 +292,27 @@ def get_storage_provider(
     if kind is ProviderKind.GOOGLE_DRIVE:
         from ._google_drive import GoogleDriveProvider
 
-        root_folder_id = resolve_drive_root_folder_id(profile=profile, settings=settings_resolved)
-        if not root_folder_id:
-            raise OutboundStorageValidationError(
-                "no Drive root folder id is configured for this profile",
-                context={"profile": profile},
-                translated_message="adapters.outbound.storage._factory.errors.drive_root_missing",
-                precondition_verdict=_configuration_validation_verdict(
-                    "storage.factory.google_drive_root_folder_id.present",
-                    field="google_drive_root_folder_id",
-                    backend="google_drive",
-                ),
+        root_folder_id = resolve_required_drive_root_folder_id(profile=profile, settings=settings_resolved)
+        if before_handoff is None and acknowledged is None:
+            credentials = build_google_credentials(profile=profile)
+            return GoogleDriveProvider(
+                credentials=credentials,
+                root_folder_id=root_folder_id,
+                vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
             )
-        credentials = build_google_credentials(profile=profile)
+        if before_handoff is not None:
+            before_handoff("google.credentials-acquisition")
+        credentials = build_google_credentials(
+            profile=profile, before_handoff=before_handoff, acknowledged=acknowledged
+        )
+        if acknowledged is not None:
+            acknowledged("google.credentials-acquisition")
         return GoogleDriveProvider(
             credentials=credentials,
             root_folder_id=root_folder_id,
             vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
+            before_handoff=before_handoff,
+            acknowledged=acknowledged,
         )
 
     # Should never be reached — _parse_kind already refused unknown kinds.
@@ -297,4 +323,21 @@ def get_storage_provider(
     )
 
 
-__all__ = ["get_storage_provider"]
+def resolve_required_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
+    """Validate canonical local root configuration before any credential hydration."""
+    root_folder_id = resolve_drive_root_folder_id(profile=profile, settings=settings)
+    if not root_folder_id:
+        raise OutboundStorageValidationError(
+            "no Drive root folder id is configured for this profile",
+            context={"profile": profile},
+            translated_message="adapters.outbound.storage._factory.errors.drive_root_missing",
+            precondition_verdict=_configuration_validation_verdict(
+                "storage.factory.google_drive_root_folder_id.present",
+                field="google_drive_root_folder_id",
+                backend="google_drive",
+            ),
+        )
+    return root_folder_id
+
+
+__all__ = ["get_storage_provider", "resolve_required_drive_root_folder_id"]

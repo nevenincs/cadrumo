@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:f6ac8dc5733330c02880941dd5c8e3e797a417f18f686edfd097e8164add1fd6'
+modified: '2026-09-26'
+body_hash: 'sha256:e31ce705c6d9f4c8d8e80d8632e9b29db22130ea3f47544c39eaabf834c807f6'
 related:
   - "[[2026-07-08-mcp-identity-linked-operation-research]]"
   - "[[2026-07-08-mcp-console-review-audit]]"
   - "[[2026-07-08-mcp-protocol-hardening-adr]]"
   - "[[2026-07-08-mcp-progressive-discovery-adr]]"
+  - '[[2026-09-26-mcp-purpose-authentication-adr]]'
 ---
 
 # `mcp-identity-linked-operation` adr: `bind every MCP operation to the confirmed active taxpayer identity` | (**status:** `accepted`)
@@ -218,3 +219,11 @@ found, so the sequencing must hold.
 session-scoped safety gates (e.g. a period-scoped or filing-year-scoped
 confirmation); the envelope-spine active-profile field gives downstream tooling a
 uniform identity anchor for audit and trajectory analysis.
+
+## Amendment 2026-09-26: authenticated binding replaces identity-read admission
+
+Accepted under the operator's instruction to continue the presented mcp-purpose-authentication plan. The accepted 2026-09-26-mcp-purpose-authentication-adr and its profile-access decision replace I2's observation flag and every dependent requirement to arm/rearm that flag as authorization.
+
+Identity/status tools observe a proven profile session; reading them cannot create authorization. Every private read, mutation and result/resource access validates the immutable profile binding, credential/grant, session and current revocation state. A human profile switch cannot retarget an agent. The label remains a human display value, not a security identifier; envelope and confirmation labels derive from the operation's captured binding rather than the ambient profile at emit time.
+
+I1's accessible identity orientation, I3's shared envelope presentation, I4's clear target echo and applicable redaction rules remain. Their old fixed tool counts and observation-before-mutation ordering are not replacement implementation constraints. Direct and execute-style paths share application admission. The new accepted records own that policy; this record does not duplicate it.

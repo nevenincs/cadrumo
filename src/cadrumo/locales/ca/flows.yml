@@ -57,6 +57,8 @@ flows:
       cancel: Cancel·la
       choose_one: Tria una de les opcions, o cancel·la per deixar el valor sense canvis.
       clear: Esborra
+      completed_refresh_unavailable: L'operació s'ha completat, però la vista actualitzada
+        no està disponible. Torna a Inici per actualitzar-la.
       masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
         buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
       no_change: No ha calgut fer cap canvi.

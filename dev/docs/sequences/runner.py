@@ -2,12 +2,11 @@
 
 Each :class:`~dev.docs.sequences.schema.ParsedSequence` executes in FULL
 isolation: a fresh real-crypto storage root (:func:`isolated_profile_storage_root`
-— genuine ``bucket-dek-v1`` provisioning under the ephemeral dev-test master-key
-backend), the project-wide frozen instant :data:`SANDBOX_INSTANT`
+with genuine password custody over an ephemeral deterministic test DEK),
+the project-wide frozen instant :data:`SANDBOX_INSTANT`
 (:func:`cadrumo.core.time.frozen_clock`), a deterministic injected profile
 identity :data:`SANDBOX_PROFILE_ID` published through the canonical capsule
-writer
-(:func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.publish_test_profile_capsule`,
+writer (:class:`~cadrumo.application.user_profile.lifecycle.ProfileCapsuleLifecycle`,
 with facts merged by
 :func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.upsert_test_profile_facts` inside
 :func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.open_test_profile_session` — never a
@@ -56,6 +55,7 @@ import re
 import shutil
 import time
 import warnings
+from base64 import b64encode
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import chdir, contextmanager, nullcontext
 from contextvars import ContextVar
@@ -64,6 +64,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Literal
+from uuid import UUID
 
 import keyring
 import keyring.backends.null
@@ -83,21 +84,30 @@ from cadrumo.adapters.persistence.storage.profile_persistence_composition import
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
+    derive_test_bucket_key,
     open_test_profile_session,
-    publish_test_profile_capsule,
+    profile_authority_contexts,
     upsert_test_profile_facts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
+from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
+from cadrumo.application.user_profile.custody_ports import create_profile_custody_registration_material
+from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
-from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
+from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime
 from .schema import (
     FrameKind,
     Identifier,
@@ -108,7 +118,6 @@ from .schema import (
 )
 
 __all__ = [
-    "SANDBOX_INSTANT",
     "SANDBOX_PROFILE_ID",
     "SANDBOX_PROFILE_LABEL",
     "CapturedValue",
@@ -124,9 +133,6 @@ __all__ = [
     "refuse_live_frames",
     "sequence_sandbox",
 ]
-
-#: The one project-wide frozen instant every sequence executes under.
-SANDBOX_INSTANT: datetime = datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)
 
 #: The deterministic injected profile identity (a fixed valid UUIDv4 shape,
 #: distinct from the shared test-fixture bucket ids). With the clock frozen and
@@ -514,12 +520,11 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
     ``profile_id`` is what makes every profile-derived identifier in a frame's
     output deterministic across runs.
 
-    The session stays open for the whole sandbox span rather than just the
-    facts merge. A published test capsule derives its custody material from
-    the profile's immutable identity, not from an operator passphrase, so
-    there is no password any frame could present: an in-process frame reaches
-    the bucket only by reusing the session bound here. Closing it after the
-    merge would leave every profile-bound verb refusing on custody.
+    Password custody is minted by the public custody owner using the existing
+    synthetic dev-test password. The deterministic test DEK remains compatible
+    with the shared session fixture; the real envelope can also authenticate a
+    separately owned runtime worker. The session stays open for the whole
+    current in-process sandbox span rather than just the facts merge.
 
     ``published`` is set when the storage root is a clone of a sandbox that
     already went through exactly this publication (:func:`_sandbox_template`):
@@ -529,10 +534,40 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
         with open_test_profile_session(SANDBOX_PROFILE_ID):
             yield
         return
-    publish_test_profile_capsule(SANDBOX_PROFILE_ID, label=SANDBOX_PROFILE_LABEL)
+    identity = UUID(SANDBOX_PROFILE_ID)
+    dek = derive_test_bucket_key(SANDBOX_PROFILE_ID, purpose="dek")
+    material = create_profile_custody_registration_material(
+        profile_id=identity,
+        password=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+        dek=dek,
+        dek_epoch=b64encode(derive_test_bucket_key(SANDBOX_PROFILE_ID, purpose="dek-epoch")[:16]).decode("ascii"),
+        salt=derive_test_bucket_key(SANDBOX_PROFILE_ID, purpose="password-salt")[:16],
+    )
+    create_context, decode_context = profile_authority_contexts()
+    initial = create_user_profile_record(
+        context=create_context,
+        profile_id=SANDBOX_PROFILE_ID,
+        setup_state=ProfileSetupState.INCOMPLETE,
+    )
+    session = ProfileRecordSession.from_envelope(
+        envelope=material.envelope, dek=dek, profile_decode_context=decode_context
+    )
+    try:
+        ProfileCapsuleLifecycle().create(
+            label=SANDBOX_PROFILE_LABEL,
+            profile_id=identity,
+            password_envelope=material.envelope,
+            sentinel=material.sentinel,
+            data_files={},
+            initial_record=initial,
+            record_session=session,
+        )
+    finally:
+        session.close()
+    # A settings override provides a route; it does not publish the durable
+    # CLI default whose logout/delete walkthroughs observe real transitions.
+    ProfileCapsuleLifecycle().select(SANDBOX_PROFILE_ID)
     with open_test_profile_session(SANDBOX_PROFILE_ID):
-        from uuid import UUID
-
         from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
         from cadrumo.application.filing.retention import try_record_filing_retention_snapshot
 
@@ -562,8 +597,9 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
 
 
 #: The provisioned-at-rest sandbox state each later sandbox in this process is
-#: cloned from, keyed by the authority generation it was provisioned under.
-_SANDBOX_TEMPLATES: dict[str, Path] = {}
+#: cloned from, keyed by authority generation and the synthetic password digest.
+#: Neither the password nor its digest is exposed in transcripts or diagnostics.
+_SANDBOX_TEMPLATES: dict[tuple[str, str], Path] = {}
 _SANDBOX_TEMPLATE_HOLDER: list[TemporaryDirectory[str]] = []
 
 
@@ -573,14 +609,21 @@ def _sandbox_template() -> Path:
     Publishing the sandbox profile (capsule, facts, setup, retention and
     legal-hold observations) is the same work for every sequence and was most
     of each sandbox's cost. It is done once per process and per authority
-    generation, through the production writers exactly as before, then closed
-    so every file is at rest before it is copied.
+    generation and effective synthetic password, through the production writers,
+    then closed so every file is at rest before it is copied. The shared test
+    DEK depends only on the fixed profile identity, so it adds no settings input
+    to this cache identity.
     """
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
     with bundled_indexed_authority().operation() as operation:
         generation = str(operation.generation)
-    template = _SANDBOX_TEMPLATES.get(generation)
+    # Resolve under the same environment boundary as provisioning; an ambient
+    # operator password must never enter the template identity or its custody.
+    with _neutralized_ambient_env():
+        password_digest = sha256_hex(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
+    identity = (generation, password_digest)
+    template = _SANDBOX_TEMPLATES.get(identity)
     if template is not None:
         return template
     holder = TemporaryDirectory(prefix="cadrumo-docs-sandbox-template-")
@@ -605,7 +648,7 @@ def _sandbox_template() -> Path:
         pass
     close_active_bucket_session()
     dispose_engine()
-    _SANDBOX_TEMPLATES[generation] = template
+    _SANDBOX_TEMPLATES[identity] = template
     return template
 
 
@@ -874,6 +917,7 @@ def sequence_sandbox(
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
         _provisioned_sandbox_profile(published=True),
+        sequence_runtime(Path(load_settings().cadrumo_local_storage_root)),
     ):
         effective_settings = load_settings()
         try:
@@ -1128,7 +1172,7 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
     settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
     with settings_context, _next_process_session_view():
-        result = invoke_cached_cli(list(args))
+        result = _invoke_authenticated_frame(args)
     if os.environ.get("CI"):
         return result
     tries = 1
@@ -1139,9 +1183,29 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     ):
         time.sleep(2)
         dispose_engine()
-        result = invoke_cached_cli(list(args))
+        result = _invoke_authenticated_frame(args)
         tries += 1
     return result
+
+
+def _invoke_authenticated_frame(args: tuple[str, ...]) -> Result:
+    """Supply a fresh bounded password proof without replacing authored channels."""
+    explicit = {
+        "--profile-secrets-stdin",
+        "--profile-secrets-fd",
+        "--profile-credential-ref",
+        "--profile-auth-method",
+        "--secrets-stdin",
+        "--secrets-fd",
+    }
+    if any(argument.split("=", 1)[0] in explicit for argument in args):
+        return invoke_cached_cli(list(args))
+    spec = COMMAND_GRAPH.resolve_invocation(args)
+    registration = None if spec is None else command_registration_for_node(COMMAND_GRAPH.node(spec.key))
+    if registration is None or registration.profile_authentication is not ProfileAuthenticationPosture.RESUME_FALLBACK:
+        return invoke_cached_cli(list(args))
+    password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    return invoke_cached_cli(["--profile-secrets-stdin", *args], input=json.dumps({"profile_passphrase": password}))
 
 
 def _execute_frame(

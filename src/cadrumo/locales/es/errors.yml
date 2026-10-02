@@ -171,6 +171,12 @@ errors:
       vivo agotó el tiempo antes de devolver evidencia de la AEAT.
     error_application_registry: La orquestación del registro de modelos falló o fue
       rechazada.
+    error_automation_decision_run: No se ha podido confirmar la decisión sobre automatización.
+      Consulta la operación antes de reintentar.
+    error_automation_inventory_read: No se ha podido confirmar el inventario de automatización.
+    error_automation_requester_uncertain: No se pudo confirmar el resultado de la
+      solicitud de autorización. Consulte la solicitud existente antes de volver a
+      intentarlo.
     error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
       de borrador de Modelo 100 conocido.
     error_cadrumo_async_resource_cleanup: Falló la limpieza asíncrona de recursos;
@@ -282,6 +288,8 @@ errors:
       solicitada.
     error_modelo_iva_wallet_reconciliation_blocked: 'El cálculo del Modelo 303 está
       bloqueado: se requiere la reconciliación del wallet de IVA'
+    error_modelo_metadata_run: La operación sobre los metadatos del trabajo no devolvió
+      un resultado confirmado. Consulta su identificador antes de volver a intentarlo.
     error_modelo_verification_report_not_found: No se encontró el informe de verificación
       solicitado.
     error_modelo_work_unit_already_discarded: La unidad de trabajo ya está descartada.
@@ -313,6 +321,8 @@ errors:
       bienes de inversión no es estructuralmente válido.
     error_profile_inventory_ledger: Una operación del libro de inventario del perfil
       no es válida.
+    error_profile_mutation_run: La operación de cambio de perfil terminó sin un resultado
+      utilizable. Consulta la operación antes de reintentar.
     error_profile_prorrata_register_record: Un registro de prorrata de IVA entre periodos
       no es estructuralmente válido.
     error_profile_tax_residence: Se produjo un error en el perfil de residencia fiscal.
@@ -821,6 +831,9 @@ errors:
       para él.
     canonical_invoice_withholding_defects: La evidencia de la factura no permite registrar
       la retención hasta que se corrijan en la factura todos los defectos indicados.
+    canonical_invoice_evidence_review_changed: El justificante o el borrador de la
+      factura ha cambiado desde la revisión. Vuelva a leer y revisar el documento
+      actual antes de confirmarlo.
     canonical_invoice_withholding_evidence: La evidencia de la factura no permite
       registrar la retención.
     canonical_ledger_payment_withholding_evidence: El pago del libro no permite registrar
@@ -839,6 +852,10 @@ errors:
       puede exportarse: contiene un registro que paga rendimientos devengados en un
       ejercicio anterior y ninguna fuente oficial determina la base y la retención
       que declara ese registro.'
+    canonical_modelo_binding_value_contract_unsupported: El vínculo no tiene un formato
+      oficial de valor compatible con la vista previa automatizada.
+    canonical_modelo_binding_value_invalid: El valor proporcionado no cumple el formato
+      oficial del vínculo.
     canonical_modelo_lifecycle_clock_precedes: El reloj de la acción es anterior a
       un registro que actualizaría, así que no se ha guardado nada. Vuelva a intentarlo
       con la hora actual.
@@ -965,6 +982,8 @@ errors:
     modelo_work_period_token: Periodo de modelo no válido.
     modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
       el ejercicio fiscal solicitado.
+    modelo_work_rename_approval_stale: El trabajo ha cambiado desde que se consultó.
+      Vuelve a consultarlo antes de cambiarle el nombre.
     modelo_work_selector_ambiguous: Mas de una unidad de trabajo de modelo coincide
       con el selector.
     modelo_work_selector_contradiction: Los argumentos del selector de trabajo de
@@ -1272,6 +1291,8 @@ errors:
       un dato de perfil obligatorio. Completa el perfil antes de continuar.
     refused_profile_prorrata_register_validation: Un registro de prorrata de IVA entre
       periodos no superó la validación.
+    refused_profile_receipt: El comprobante de inicio de sesión humano guardado no
+      pudo autenticar este perfil.
     refused_profile_schema_validation: Los datos del perfil infringen el contrato
       del esquema. Corrige los valores indicados.
     refused_renta_maritime_exemption_inactive: 'La exención DA 41 LIRPF (flota atunera)
@@ -1286,6 +1307,7 @@ errors:
       para forzarlo.'
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
       la sintaxis del filtro indicado.
+    refused_runtime_frontend: El entorno de ejecución del perfil rechazó esta solicitud.
     refused_source_mesh_invariant: 'Rechazado: invariante de la malla de fuentes incumplida.'
     refused_storage_bucket_already_present: Ya existe un bucket con ese identificador.
     refused_storage_master_key_no_active_session: El cifrado requiere una sesión activa.

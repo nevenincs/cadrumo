@@ -63,7 +63,7 @@ from ...components.account_chrome import AccountChromeScreen
 from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup, NoticeBand
-from ...operations.controller import OperationController
+from ...operations.controller_port import OperationControllerPort
 from ...operations.refusal_explanation import public_refusal_explanation
 from ..export_result import EXPORT_ARTEFACT_LOCALE_KEYS, ModeloExportResultScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
@@ -83,8 +83,10 @@ from .models import (
 from .technical_details import TechnicalDetailRowV1, mount_technical_details, producer_row
 
 if TYPE_CHECKING:
+    from .....application.modelo.export_projection import (
+        ModeloExportPublicResultV3,
+    )
     from .....application.modelo.operation_definitions import (
-        ModeloExportPublicResultV2,
         ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     )
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
@@ -315,7 +317,7 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
         The pages had routes but nothing on screen led to them, so a
         declaration opened on its overview and went no further.
         """
-        table = self.query_one("#workspace-overview-destinations", ContentDataTable)
+        table = cast("ContentDataTable[str]", self.query_one("#workspace-overview-destinations", ContentDataTable))
         table.add_column(tr("tui.modelo.destination.column"), key="destination")
         for destination in _OTHER_DESTINATIONS:
             table.add_row(tr(f"tui.modelo.destination.{destination}"), key=f"modelo.workspace.{destination}")
@@ -323,12 +325,14 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Open the selected page over this one; leaving it returns here."""
-        if event.data_table.id != "workspace-overview-destinations" or event.row_key.value is None:
+        table = cast("DataTable[str]", event.data_table)
+        selected_key = event.row_key.value
+        if table.id != "workspace-overview-destinations" or not isinstance(selected_key, str):
             return
         # Imported here: the route table imports this module for its own page.
         from ..routes import resolve_destination
 
-        destination = cast("ModeloWorkspaceDestinationIdV1", str(event.row_key.value))
+        destination = cast("ModeloWorkspaceDestinationIdV1", selected_key)
         self.app.push_screen(resolve_destination(destination)(self._session))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -394,16 +398,22 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
                 "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
             }
         return {
-            "refund_election": RefundElection(
-                str(self.query_one("#modelo-lifecycle-export-refund-election", Select).value)
-            ),
+            "refund_election": RefundElection(self._required_select_value("#modelo-lifecycle-export-refund-election")),
             "payment_election": PaymentElection(
-                str(self.query_one("#modelo-lifecycle-export-payment-election", Select).value)
+                self._required_select_value("#modelo-lifecycle-export-payment-election")
             ),
             "prior_domiciliation_election": PriorDomiciliationElection(
-                str(self.query_one("#modelo-lifecycle-export-prior-domiciliation-election", Select).value)
+                self._required_select_value("#modelo-lifecycle-export-prior-domiciliation-election")
             ),
         }
+
+    def _required_select_value(self, selector: str) -> str:
+        """Return one selected string, preserving refusal if a required Select is blank."""
+        control = cast("Select[str]", self.query_one(selector, Select))
+        value = control.value
+        if not isinstance(value, str):
+            raise ValueError("required Modelo export election has no selected value")
+        return value
 
     def _is_m303_calculation(self) -> bool:
         """Return whether Calculate must collect the ordinary Modelo 303 evidence form."""
@@ -452,10 +462,10 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
         ):
             self._notice(tr("tui.modelo.m303_evidence.admission_unavailable"))
             return
-        submit_calculation = cast("Callable[..., Awaitable[OperationController]]", calculate)
+        submit_calculation = cast("Callable[..., Awaitable[OperationControllerPort]]", calculate)
         admit_evidence = cast("Callable[..., Awaitable[ModeloWorkCalculateOrdinaryM303EvidenceRequestV2]]", author)
 
-        async def submit() -> OperationController:
+        async def submit() -> OperationControllerPort:
             evidence = existing_evidence
             if evidence is None:
                 evidence = await admit_evidence(
@@ -474,7 +484,7 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
                 actions = self._session.lifecycle_actions
                 submit = None if actions is None else getattr(actions, "file", None)
                 if isinstance(submit, Callable):
-                    self._start_lifecycle_action(cast("Callable[..., Awaitable[OperationController]]", submit))
+                    self._start_lifecycle_action(cast("Callable[..., Awaitable[OperationControllerPort]]", submit))
             else:
                 self._notice(tr("application.modelo.lifecycle.file_cancelled"))
 
@@ -490,7 +500,7 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
 
     def _start_lifecycle_action(
         self,
-        submit: Callable[..., Awaitable[OperationController]],
+        submit: Callable[..., Awaitable[OperationControllerPort]],
         *,
         keyword_arguments: dict[str, object] | None = None,
     ) -> None:
@@ -506,7 +516,7 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
 
     async def _open_lifecycle_modal(
         self,
-        submit: Callable[..., Awaitable[OperationController]],
+        submit: Callable[..., Awaitable[OperationControllerPort]],
         *,
         keyword_arguments: dict[str, object],
     ) -> None:
@@ -571,27 +581,28 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
             return
         actions = self._session.lifecycle_actions
         refresh = None if actions is None else getattr(actions, "refresh_after_success", None)
+        refresh_callback = cast("Callable[[], object]", refresh) if callable(refresh) else None
         projection = outcome.view_model.projection
         settled_export_result = None if actions is None else getattr(actions, "settled_export_result", None)
-        if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and isinstance(
-            settled_export_result, Callable
-        ):
+        if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and callable(settled_export_result):
             self.run_worker(
                 self._state_export_result(
-                    cast("Callable[..., Awaitable[ModeloExportPublicResultV2 | None]]", settled_export_result),
+                    cast("Callable[..., Awaitable[ModeloExportPublicResultV3 | None]]", settled_export_result),
                     projection,
-                    refresh=refresh if isinstance(refresh, Callable) else None,
+                    refresh=refresh_callback,
                 ),
                 group="modelo-lifecycle-export-result",
                 exclusive=True,
             )
             return
-        if isinstance(refresh, Callable):
-            self.run_worker(self._refresh_after_success(refresh), group="modelo-lifecycle-refresh", exclusive=True)
+        if refresh_callback is not None:
+            self.run_worker(
+                self._refresh_after_success(refresh_callback), group="modelo-lifecycle-refresh", exclusive=True
+            )
 
     async def _state_export_result(
         self,
-        resolve: Callable[..., Awaitable[ModeloExportPublicResultV2 | None]],
+        resolve: Callable[..., Awaitable[ModeloExportPublicResultV3 | None]],
         projection: OperationPublicProjectionV1,
         *,
         refresh: Callable[[], object] | None,

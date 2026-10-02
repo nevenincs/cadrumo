@@ -1,16 +1,15 @@
 # Orientation — where to look for each kind of question
 
-This is a routing table, not a knowledge dump. Every row mirrors a command family's
-own `operator_question` field on the capability manifest
-(the MCP `contract` tool → `contract.command_families[].operator_question`).
-When a question is not covered below, read that field directly — it is the live
-authority this table paraphrases, and it grows as command families are added.
+This table identifies CLI command families. In MCP, use `status` to check the
+connection's exact profile and current authorization, `search` to discover granted
+registered operations, and `describe` to obtain an operation's current input schema.
+CLI availability does not imply that an operation is exposed or granted to MCP.
 
 ## Capability and shape questions
 
-- "What can the CLI do, and is a command read-only or state-mutating?" →
-  the MCP `contract` tool. Read `contract.command_families` for the
-  `mutability` of the family you are about to use before you act.
+- "Which operations can this agent use?" → MCP `search`, then `describe`.
+  Read the registered contract and schema before calling `execute`; never infer
+  permission from a persona name or the human's active profile.
 - "How do I read the result of any command?" → the envelope-reading rule; every
   `--format json` response shares one spine.
 
@@ -119,26 +118,15 @@ official source rather than treating a product command as legal authority.
   trail, and durable filing outputs are never reclaimable. Inspect the
   category with `show` first; `reclaim` is not a general "clean up" verb.
 
-## Long-tail discovery — finding a verb this table does not name
+## Discovering registered operations through MCP
 
-This table and the domain toolsets cover the common path. Reach every other verb
-through the MCP console's four meta-tools. Use them in order: `search`, then
-`describe`, then `execute`.
+The MCP server exposes a fixed protocol surface. Use `status` to inspect whether
+this connection is admitted for its bound profile. Once admitted, use
+`search` to find operations permitted by that profile, then `describe` with the
+returned `definition_id` to inspect an operation's contract and input schema.
+Review that contract before submitting work with `execute`, which requires the
+`definition_id`, `subject_ref`, and a payload matching the described schema.
 
-- `search` — describe the outcome in a few words; it returns the matching command
-  keys with a mutability hint. Start here when you do not know the verb.
-- `describe` — pass one command key from a search hit; it returns that command's
-  full input schema, annotations, risk classification, confirmation tier, owning
-  toolset, and which personas may call it. Inspect a hit before you run it.
-- `execute` — run one command key with its named arguments, through the same
-  safety gates the direct tools use. Run it only after `describe` shows the schema.
-
-Widen the surface with `toolsets` when you will do repeated work in one domain
-(renta, iva, ledger, censo, modelo-lifecycle). Activating a toolset advertises its
-per-verb tools directly, so you stop reaching them through `search` and `execute`.
-
-Translate a shell verb to a command key by dropping `aeat` and the `app` root and
-joining the rest with dots. `aeat app ledger import` is the command key
-`ledger.import`; `aeat app modelo work calculate` is `modelo.work.calculate`. A
-`config` verb keeps its root: `aeat config profile status` is
-`config.profile.status`.
+The MCP server takes the profile ID at launch and uses a protected credential
+reference when one is configured. It does not translate shell verbs to tool
+names or activate per-domain tool sets.

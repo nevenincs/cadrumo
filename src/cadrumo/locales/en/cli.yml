@@ -107,6 +107,10 @@ cli:
           yet; normally required).
         confirm_counterparty_nif_help: Override the extracted supplier tax id.
         confirm_currency_help: ISO-4217 currency code.
+        confirm_expected_draft_review_sha256_help: Review digest of the exact draft
+          you inspected, returned by extract.
+        confirm_expected_source_sha256_help: SHA-256 of the evidence source returned
+          by extract; verifies that the bytes are unchanged.
         confirm_help: Re-extract evidence on-host and confirm it into a real catalogue
           Invoice.
         confirm_invoice_class_help: Declare the invoice class when the document does
@@ -114,10 +118,13 @@ cli:
           the invoice it corrects, so this is the override for documents that do not.
         confirm_invoice_date_help: Override the extracted invoice date (YYYY-MM-DD).
         confirm_invoice_number_help: Override the extracted invoice number.
+        confirm_iva_amount_help: Override the extracted IVA amount; omit to keep it.
+        confirm_iva_category_help: IVA category token to record for this invoice.
         confirm_iva_rate_help: Override the extracted IVA rate (omit to keep the extracted
           value).
         confirm_link_hint_message: The invoice was recorded without a matching ledger
           transaction.
+        confirm_operation_date_help: Date of the taxable operation (ISO YYYY-MM-DD).
         confirm_operation_type_help: 'Modelo 349 clave for an entrega intracomunitaria.
           Required when the document states an intra-community supply: the category
           cannot say whether it followed an exempt importation.'
@@ -126,12 +133,15 @@ cli:
           taxable base and the IVA rate, so a difference means the document carries
           an amount this record does not, such as a recargo de equivalencia, or a
           figure was misread. Check the document.
+        confirm_recargo_amount_help: Equivalence surcharge amount from the invoice.
         confirm_rectifies_help: Number of the invoice this rectificativa corrects.
           Required by RD 1619/2012 art. 6.1.a.2 alongside its own series, and read
           from the document where one is named.
         confirm_resolve_help: 'Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>.
           For choose, name the reading by its value or by the digest review showed.
           Repeat once per finding; there is no bulk flag.'
+        confirm_retention_amount_help: Income-tax withholding amount from the invoice.
+        confirm_retention_rate_help: Income-tax withholding rate from the invoice.
         confirm_review_contradicted_regime_message: This document contradicts itself
           about how it is taxed. The detail below names what disagreed with what.
         confirm_review_undetermined_establishment_message: Where a party to this invoice
@@ -454,6 +464,8 @@ cli:
           definitive percentage for {prior_ejercicio}, so ejercicio {ejercicio} cannot
           be seeded. The prior definitive is missing, not zero: settle {prior_ejercicio}
           for this sector first.'
+        seed_sector_requires_route: A sector cannot be passed to whole-entity seed;
+          use seed-sector for a differentiated sector.
         seed_source_absent: 'No stamped Modelo 303 settlement observation for {prior_ejercicio}
           carries a definitive prorrata percentage, so ejercicio {ejercicio} cannot
           be seeded. The prior definitive is missing, not zero: capture the prior
@@ -799,6 +811,15 @@ cli:
           or BORRADOR revisions available for comparison.
         no_work_units: No Modelo %{modelo} work units found for year %{filing_year}.
           Create and calculate a work unit first.
+        recover_no_revisions: Check Modelo %{modelo} calculation revisions in both
+          requested years (%{year_a} and %{year_b}); run `aeat app modelo work calculate`
+          for whichever year lacks a revision.
+        recover_no_usable_revisions: Check Modelo %{modelo} BORRADOR or VERIFICADO_COMPLETO
+          revisions in both requested years (%{year_a} and %{year_b}); calculate an
+          eligible work unit in whichever year needs one.
+        recover_no_work_units: Check Modelo %{modelo} work units in both requested
+          years (%{year_a} and %{year_b}); create and calculate a work unit in whichever
+          year lacks one.
         year_help: Filing year to include in the comparison. Specify exactly twice
           (--year 2024 --year 2025).
       compare_help: Compare two filing-year calculation revisions for the same modelo.
@@ -892,6 +913,8 @@ cli:
             states a different declaration kind than the pending local filing.'
           declaration_kind_undetermined: 'Modelo {modelo} {period} {filing_year}:
             AEAT records a later presentation without stating whether it is a correction.'
+          filing_instance_evidence_unavailable: 'Modelo {modelo} {period} {filing_year}:
+            the AEAT entry lacks filing-instance evidence required to record its content.'
           receipt_totals_mismatch: 'Modelo {modelo} {period} {filing_year}: the receipt
             total differs from the pending local filing, but without casilla values
             the AEAT content could not be recorded.'
@@ -1379,6 +1402,9 @@ cli:
           pdf for the signed calculation summary (needs the optional pdf extra).'
         document_only_help: Check the document alone, without opening the active profile's
           store; without --trusted-key a valid result stays unpinned.
+        file:
+          verification_report_ambiguous: More than one granting verification report
+            matches this revision. Resolve the verification conflict before filing.
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
@@ -1641,9 +1667,6 @@ cli:
         row_kv_format_error: '--row field {token} must be written as KEY=VALUE. This
           is a key-value entry: put the row field name on the left of one equals sign
           and its value on the right.'
-        row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
-          the expected NIF-IVA format for country {pais} (Council Directive 2006/112/EC
-          Annex XI)'
         row_unknown_type: '--row type {row_type!r} is not recognised; supported types:
           {supported}.'
         row_validation_error: '--row {row_type!r} failed validation: {error}'
@@ -1712,6 +1735,19 @@ cli:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits
         to AEAT'
+    runtime:
+      disable:
+        help: Disable login startup while keeping on-demand launch available.
+      enable:
+        help: Enable runtime startup when this user signs in.
+      help: Inspect and manage this installation's local runtime.
+      start:
+        help: Start the installed runtime and verify its listener.
+      status:
+        help: Show listener readiness and local runtime manager status.
+      stop:
+        acknowledge_help: Acknowledge that stopping affects all profiles and work.
+        help: Stop the shared runtime after confirming its full scope.
   common:
     errors:
       filing_requires_declared_tax_id: 'The active profile does not declare a tax
@@ -1853,6 +1889,14 @@ cli:
     custody:
       current_passphrase_prompt: 'Current profile passphrase: '
       errors:
+        automation_change_credential_ref_required: Use --profile-auth-method api-key
+          with --profile-credential-ref UUID for a grant change.
+        automation_change_kind_mismatch: The protected proposal kind must match the
+          requested grant change.
+        automation_change_proposal_required: Supply the grant-change proposal through
+          --secrets-stdin or --secrets-fd.
+        automation_create_proposal_required: Supply the enrollment proposal through
+          --secrets-stdin or --secrets-fd.
         echo_suppression_unavailable: This terminal cannot suppress echo, so the secret
           would be visible on screen; use --secrets-stdin or --secrets-fd instead.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
@@ -1860,6 +1904,16 @@ cli:
           and no terminal is attached. Re-run the command from an interactive session.
         non_interactive_secret_required: A secret is required but no interactive terminal
           is available; use --secrets-stdin or --secrets-fd.
+        profile_credential_ref_conflict: Choose either --profile-credential-ref or
+          a root profile secret channel.
+        profile_credential_ref_inapplicable: --profile-credential-ref is available
+          only for runtime-hosted private profile commands.
+        profile_credential_ref_requires_api_key: --profile-credential-ref requires
+          --profile-auth-method api-key.
+        profile_secrets_api_key_inapplicable: API-key authentication is available
+          only for commands served by the local runtime.
+        profile_secrets_api_key_requires_channel: API-key authentication requires
+          --profile-secrets-stdin or --profile-secrets-fd.
         profile_secrets_channel_conflict: 'Choose exactly one profile authentication
           channel: --profile-secrets-stdin or --profile-secrets-fd.'
         profile_secrets_fd_collision: The profile authentication payload and command
@@ -1877,6 +1931,8 @@ cli:
           readable profile authentication channel.
         profile_secrets_inapplicable: Profile authentication input does not apply
           to this command and was not read.
+        profile_secrets_method_mismatch: The protected profile-secret payload does
+          not match --profile-auth-method.
         profile_secrets_missing_target: Profile authentication input requires an exact
           profile target selected by --profile or the command.
         profile_secrets_stdin_collision: Standard input cannot carry both the profile
@@ -1905,6 +1961,11 @@ cli:
           fields or has unexpected ones. Send exactly these keys: {expected_fields}.'
         secrets_stdin_too_large: The machine-secret payload exceeds the maximum allowed
           size.
+      profile_auth_method_help: 'Authentication method for the protected profile-secret
+        channel: password or api-key.'
+      profile_credential_ref_help: Authenticate a runtime profile using an opaque
+        credential UUID from protected native storage (requires --profile-auth-method
+        api-key).
       profile_secrets_fd_help: Read the exact target profile passphrase from one bounded
         JSON object on an inherited readable descriptor after session resume fails.
       profile_secrets_stdin_help: Read the exact target profile passphrase from one
@@ -2022,9 +2083,12 @@ cli:
         at a terminal, or pass --secrets-stdin or --secrets-fd.
       passphrase_prompt: 'Profile passphrase: '
     logout:
-      help: Close the profile session and clear its local pointer
+      help: Clear this CLI context’s selected profile.
       notices:
         already_logged_out: No profile was logged in; nothing to close.
+        remaining_access: The CLI selection is cleared. Other sessions, bounded human
+          resume and enrolled API keys retain their own authority. Use session or
+          profile controls to revoke access.
     passphrase:
       change_help: Change the passphrase without re-encrypting records or invalidating
         a recovery code.
@@ -2089,6 +2153,36 @@ cli:
           export_target_exists: A file already exists at the destination path, and
             a backup is never overwritten. Choose another --output or move the existing
             file first; no profile was read.
+      automation:
+        approve:
+          digest_help: Exact review digest shown by inspect.
+          help: Approve the exact reviewed request using a fresh profile password.
+          request_help: Reviewed request UUID.
+        change:
+          help: Request rotation, renewal or a scope change for an existing API grant.
+          kind_help: 'The grant change: rotate, renew or change_scope.'
+        create:
+          help: Request an API grant and receive its credential in protected storage
+            after separate human approval.
+        decline:
+          digest_help: Exact review digest shown by inspect.
+          help: Decline the exact reviewed request.
+          request_help: Reviewed request UUID.
+        deny:
+          help: Revoke an automation key, grant, or all automation access.
+          kind_help: 'Denial kind: key, grant, or all.'
+          target_help: Key or grant UUID for a targeted denial.
+          target_mismatch: A key or grant denial requires its target UUID; all does
+            not accept a target.
+        help: Manage automation access for this profile.
+        inspect:
+          help: Show the exact reviewed automation request.
+          request_help: Reviewed request UUID.
+        list:
+          help: List this profile's automation grants, keys, and pending requests.
+        review_digest_mismatch: The current review digest does not match the supplied
+          digest. Inspect the request again.
+        review_not_found: That reviewed request is unavailable for this profile.
       bundle_flow:
         export_section_title: Export profile bundle
         import_section_title: Import profile bundle
@@ -2233,9 +2327,17 @@ cli:
         incoherent_observation_advisory: 'The profile listing could not be read coherently
           (outcome: {outcome}). Run the command again; if it persists, inspect the
           profile storage.'
+      lock:
+        all_help: Lock the profile everywhere and suspend all automation grants.
+        help: Lock this session, or lock the whole profile with --all.
+        selector_conflict: Choose either --session or --all.
+        session_help: Session UUID to revoke without locking the profile.
       manager_closed_created: Profile '{profile}' created. Declare setup complete
         with `aeat config profile complete-setup` before working with modelos. Reopen
         it any time with 'aeat config profile edit'.
+      mutation:
+        committed_view_unavailable: The profile change was saved, but its updated
+          view is unavailable. Read the profile again before making another change.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       notices:
@@ -2297,6 +2399,9 @@ cli:
         verification_prompt: 'Type the recovery code back to confirm you have it: '
       remove_row:
         help: Remove an identified row from a repeatable profile section.
+      resume:
+        grant_help: Grant UUID to reactivate; repeat to select more than one.
+        help: Unlock the profile with its password and reactivate selected grants.
       row:
         invalid_row: '''%{row}'' is not a valid row key; use a non-negative integer
           or base.'
@@ -2306,6 +2411,8 @@ cli:
       sandbox:
         active_indicator_info: You are operating inside the sandbox %{label}, not
           a real profile; every command runs against this isolated, discardable bucket.
+      sessions:
+        help: List this profile's current runtime sessions.
       show:
         summary_invalid: 'Profile record is invalid: %{count} blocking issue(s).'
         summary_valid: Profile record is valid.

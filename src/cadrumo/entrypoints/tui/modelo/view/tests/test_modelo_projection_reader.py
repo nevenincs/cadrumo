@@ -16,7 +16,7 @@ from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalo
 from ......application.modelo.workspace_models import ModeloWorkspaceRefusalCode
 from ......application.workbench_generation import ModeloWorkspaceProjectedReadV1
 from ......domain.calculations.registry.authority import bundled_indexed_authority
-from ....launcher import _modelo_projection_reader
+from ......entrypoints.workbench_generation_composition import _modelo_projection_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

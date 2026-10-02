@@ -4,16 +4,23 @@ from __future__ import annotations
 
 import asyncio
 import time
+from pathlib import Path
 
 import psutil
 import pytest
 
 from ......application.auth.protocols import BrowserSessionPort
+from ......application.provisioning_browser import required_browser_builds
 from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...tests.process_support import wait_for_process_exit
 from ..errors import BrowserError, BrowserPreconditionCondition
-from ..factory import create_browser_session, opened_browser_page, shared_playwright_runtime
+from ..factory import (
+    BrowserRuntimeResourceScope,
+    create_browser_session,
+    opened_browser_page,
+    shared_playwright_runtime,
+)
 from ..profile import Profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -70,6 +77,32 @@ async def test_shared_playwright_runtime_reaps_its_real_driver() -> None:
         assert psutil.pid_exists(driver_pid)
 
     await wait_for_process_exit(driver_pid, after="session close")
+
+
+@pytest.mark.asyncio
+async def test_operation_resource_scope_reaps_unclosed_real_browser_driver() -> None:
+    """Supervisor cleanup owns a driver even if its provider never closes it."""
+    scope = BrowserRuntimeResourceScope()
+    with scope.activate():
+        session = await create_browser_session(Settings(), _profile("operation-resource"))
+        driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
+        assert psutil.pid_exists(driver_pid)
+
+    await scope.close()
+    await wait_for_process_exit(driver_pid, after="operation resource cleanup")
+    await scope.close()
+
+
+@pytest.mark.asyncio
+async def test_operation_resource_scope_owns_shared_register_driver() -> None:
+    """A register's shared Playwright driver joins the same cleanup owner."""
+    scope = BrowserRuntimeResourceScope()
+    with scope.activate():
+        async with shared_playwright_runtime() as playwright:
+            driver_pid = playwright._impl_obj._connection._transport._proc.pid
+            assert psutil.pid_exists(driver_pid)
+            await scope.close()
+            await wait_for_process_exit(driver_pid, after="operation register cleanup")
 
 
 @pytest.mark.asyncio
@@ -225,10 +258,23 @@ async def test_default_browser_session_reaps_browser_after_real_context_failure(
 
 
 @pytest.mark.asyncio
-async def test_launch_failure_is_a_factual_typed_safety_outcome() -> None:
-    """A real unavailable channel must not author a local install command."""
-    settings = Settings(cadrumo_browser_channel="msedge-beta")
-    session = await create_browser_session(settings, _profile("launch-hint"))
+async def test_launch_failure_is_a_factual_typed_safety_outcome(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A cache that claims provisioning but holds no executable fails the real launch.
+
+    The completion markers satisfy the provisioning probe, so the refusal does
+    not fire and Playwright itself reports the missing executable.
+    """
+    builds = required_browser_builds()
+    assert builds is not None
+    cache = tmp_path / "marked-but-empty-cache"
+    for build in builds:
+        directory = cache / build.directory_name
+        directory.mkdir(parents=True)
+        (directory / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(cache))
+    session = await create_browser_session(Settings(), _profile("launch-hint"))
     try:
         with pytest.raises(BrowserError) as excinfo:
             await session.create_context()
@@ -262,10 +308,12 @@ async def test_context_creation_cancellation_reaps_browser_after_real_launch() -
         create_task = asyncio.create_task(session.create_context())
         try:
             deadline = time.monotonic() + 10
+            # Yield one loop turn at a time: bundled Chromium can finish context
+            # creation within a timed sleep, which would skip the boundary.
             while session.session._browser is None and not create_task.done():
                 if time.monotonic() >= deadline:
                     pytest.fail("real Chromium launch did not reach the retained-owner boundary")
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0)
             assert session.session._browser is not None
             assert not create_task.done()
 

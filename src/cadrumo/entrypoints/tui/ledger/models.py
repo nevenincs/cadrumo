@@ -14,6 +14,7 @@ from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.invoice_draft_records import LabelReadingFallback
+from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
@@ -427,7 +428,7 @@ class LedgerReaderReadinessV1(BaseModel):
 
 
 class LedgerEvidenceDraftV1(BaseModel):
-    """What the on-host reader found in one document, as display text.
+    """What the on-host reader found in one document, including its canonical review.
 
     ``None`` is a field the reader could not ground in the document; it is
     shown as unread, never as zero. ``label_reading_fallback`` says when some
@@ -449,6 +450,7 @@ class LedgerEvidenceDraftV1(BaseModel):
     currency: str | None
     suggested_kind: InvoiceKind | None
     discrepancies: int
+    full_projection: InvoiceDraftProjectionV1 | None = None
     label_reading_fallback: LabelReadingFallback | None = None
 
 

@@ -136,7 +136,17 @@ def declare_bien_inversion(
         BienInversionDisposalIncompleteError: When only one half of a disposal
             was supplied.
     """
-    record = BienInversionIvaRecord(
+    record = build_bien_inversion_record(command)
+    return persist_bien_inversion_record(record, service=service)
+
+
+def build_bien_inversion_record(command: BienInversionDeclarationCommand) -> BienInversionIvaRecord:
+    """Validate operator intent into a complete record before persistence.
+
+    Keeping record construction separate lets registered operations distinguish
+    known validation refusals from failures after a durable write has begun.
+    """
+    return BienInversionIvaRecord(
         identifier=command.identifier,
         description=command.description,
         acquisition_year=command.acquisition_year,
@@ -151,6 +161,14 @@ def declare_bien_inversion(
             disposal_regime=command.disposal_regime,
         ),
     )
+
+
+def persist_bien_inversion_record(
+    record: BienInversionIvaRecord,
+    *,
+    service: BienesInversionRegisterService,
+) -> BienInversionDeclarationResultV1:
+    """Persist one already validated record and return its canonical result."""
     register = service.declare(record)
     return BienInversionDeclarationResultV1(record=record, updated_register=register)
 
@@ -159,6 +177,8 @@ __all__ = [
     "BienInversionDeclarationCommand",
     "BienInversionDeclarationResultV1",
     "BienInversionDisposalIncompleteError",
+    "build_bien_inversion_record",
     "declare_bien_inversion",
+    "persist_bien_inversion_record",
     "resolve_bien_inversion_disposal",
 ]

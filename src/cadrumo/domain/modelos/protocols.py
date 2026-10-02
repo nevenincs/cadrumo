@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
     # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
     from ...core.secure_object_write import SecureObjectWrite
+    from ..calculations.registry.authority import PinnedAuthorityOperation
     from .calculation_revision import CalculationRevisionCatalogue
     from .filing_record import ModeloRecordCatalogue
     from .participation_index import TransactionRevisionParticipationIndex
@@ -46,20 +47,28 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
         """Return whether a calculation-revision catalogue object has been persisted."""
         ...
 
-    def load(self) -> CalculationRevisionCatalogue:
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
 
         Returns:
             The :class:`CalculationRevisionCatalogue` loaded from storage.
+
+        ``operation`` pins validation to the caller's registry generation when
+        this read is part of an existing calculation.
         """
         ...
 
-    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+    def load_revisioned(
+        self, *, operation: PinnedAuthorityOperation | None = None
+    ) -> tuple[CalculationRevisionCatalogue, str]:
         """Return the catalogue together with its current persistence revision.
 
         Co-commit callers must carry this revision into their guarded write so
         rebuilding the singleton catalogue cannot overwrite a concurrent
         calculation revision.
+
+        A calculation with a pinned authority passes ``operation`` through the
+        revisioned read, so validation cannot lease a different generation.
         """
         ...
 
@@ -171,9 +180,8 @@ class ModeloRecordCatalogueRepositoryProtocol(Protocol):
 class VerificationReportCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for verification reports.
 
-    Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket :class:`VerificationReportCatalogue` satisfies this protocol.
-    The concrete secure-object-backed implementation is
+    The revisioned read and guarded write pin an approved report while a
+    filing commits other encrypted catalogues. The concrete implementation is
     :class:`VerificationReportCatalogueRepository`.
     """
 
@@ -186,7 +194,7 @@ class VerificationReportCatalogueRepositoryProtocol(Protocol):
         """Return whether a verification-report catalogue object has been persisted."""
         ...
 
-    def load(self) -> VerificationReportCatalogue:
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> VerificationReportCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
 
         Returns:
@@ -194,7 +202,25 @@ class VerificationReportCatalogueRepositoryProtocol(Protocol):
         """
         ...
 
-    def save(self, catalogue: VerificationReportCatalogue) -> None:
+    def load_revisioned(
+        self, *, operation: PinnedAuthorityOperation | None = None
+    ) -> tuple[VerificationReportCatalogue, str]:
+        """Return the validated catalogue and revision for a guarded co-commit."""
+        ...
+
+    def to_secure_object_write(
+        self,
+        catalogue: VerificationReportCatalogue,
+        *,
+        expected_revision_id: str,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> SecureObjectWrite:
+        """Guard the approved report snapshot in the filing transaction."""
+        ...
+
+    def save(
+        self, catalogue: VerificationReportCatalogue, *, operation: PinnedAuthorityOperation | None = None
+    ) -> None:
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...
 

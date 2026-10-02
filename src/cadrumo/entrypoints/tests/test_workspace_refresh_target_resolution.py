@@ -119,7 +119,13 @@ def _canonical_request(subject_ref: str) -> str:
     return OperationRequest[ModeloWorkRenameRequest](
         definition_id=_DEFINITION_ID,
         subject_ref=subject_ref,
-        payload=ModeloWorkRenameRequest(work_unit_id=subject_ref, new_name="renamed unit", actor="operator"),
+        payload=ModeloWorkRenameRequest(
+            work_unit_id=subject_ref,
+            new_name="renamed unit",
+            actor="operator",
+            observed_name="original unit",
+            observed_updated_at=_NOW,
+        ),
     ).model_dump_json()
 
 

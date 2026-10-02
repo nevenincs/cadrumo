@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date, datetime
 from typing import ClassVar, Final, cast
 
@@ -49,6 +50,7 @@ from .models import (
     CalendarRecoveryHandoffV1,
     DeclarationsCalendarScopeV1,
     DeclarationsDestinationIdV1,
+    DeclarationsRefreshSnapshotV1,
     DeclarationsRouteTargetV1,
     FilingHandoffV1,
     ModeloWorkCreateHandoffV1,
@@ -162,6 +164,7 @@ class DeclarationsWorkspaceController:
         calendar_entry_handoff: CalendarEntryHandoffV1 | None = None,
         calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
         work_create_handoff: ModeloWorkCreateHandoffV1 | None = None,
+        refresh_snapshot: Callable[[], DeclarationsRefreshSnapshotV1] | None = None,
     ) -> None:
         """Validate the context, projection version, and declared read actions."""
         if context.destination != "workbench.declarations":
@@ -190,6 +193,29 @@ class DeclarationsWorkspaceController:
         self.calendar_entry_handoff = calendar_entry_handoff
         self.calendar_recovery_handoff = calendar_recovery_handoff
         self.work_create_handoff = work_create_handoff
+        self.refresh_snapshot = refresh_snapshot
+
+    def refresh_from_capture(self) -> bool:
+        """Replace safe facts only when the provider still names this bucket."""
+        provider = self.refresh_snapshot
+        if provider is None:
+            return False
+        snapshot = provider()
+        if (
+            not isinstance(snapshot, DeclarationsRefreshSnapshotV1)
+            or self.context.destination != "workbench.declarations"
+            or snapshot.projection.contract_version != DECLARATIONS_WORKSPACE_CONTRACT_VERSION
+            or snapshot.projection.bucket_id != self.projection.bucket_id
+            or (
+                snapshot.calendar_projection is not None
+                and snapshot.calendar_projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION
+            )
+        ):
+            raise ValueError("Declarations refresh snapshot changed its route or profile bucket")
+        self.projection = snapshot.projection
+        self.modelo_workspace_factory = snapshot.modelo_workspace_factory
+        self.calendar_projection = snapshot.calendar_projection
+        return True
 
     def zone_state(self, zone: DeclarationsWorkspaceZone) -> DeclarationsWorkspaceZoneStateV1:
         """Return one closed zone state."""

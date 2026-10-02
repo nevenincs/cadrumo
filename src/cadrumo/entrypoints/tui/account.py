@@ -1,4 +1,4 @@
-"""Production composition for the account utilities.
+"""Account controls and their caller-supplied screen factories.
 
 The workbench treats Profile as an account destination and exposes the other
 account utilities from its identity control.  Their visual and application
@@ -9,48 +9,35 @@ alternative credential, language, appearance, or sign-out screen.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping, Sequence
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from functools import partial
 from typing import TYPE_CHECKING, ClassVar, override
-from uuid import UUID
 
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 
 from ...core.errors.hierarchy import CadrumoError
-from ...domain.user_profile.values import ProfileSetupState
 from .components.account_chrome import AccountActionV1, TuiAccountHostV1, account_action_help, account_action_label
-from .components.theme import toggle_appearance
 from .navigation import TuiScreenContextV1
 from .profile.overview import ProfileManagerScreen
-from .secret.login import LoginScreen
-from .secret.passphrase import PassphraseChangeAttempt, PassphraseScreen
+from .secret.passphrase import PassphraseScreen
 
 if TYPE_CHECKING:
-    from decimal import Decimal
-
     from textual.app import App
     from textual.screen import Screen
 
-    from ...application.operations.composition import OperationComposedServices
-    from ...application.user_profile.acquisition_sources import (
-        AcquisitionSourceCredentialPostureV1,
-        ProfileAcquisitionSourceV1,
-    )
-    from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
-    from ...application.user_profile.overview import ProfileOverview
-    from ...core.credentials import ProfilePasswordAssessment
-    from ...domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
-    from .operations.controller import OperationController
+    from ...application.overview.home import HomeAccountSession
 
 
 type AccountProfileFactoryV1 = Callable[[TuiScreenContextV1], ProfileManagerScreen]
-type AccountChangeUserFactoryV1 = Callable[[], LoginScreen]
+type AccountChangeUserFactoryV1 = Callable[[], AccountDirectSessionActionV1]
 type AccountPasswordFactoryV1 = Callable[[], PassphraseScreen]
+type AccountAccessFactoryV1 = Callable[[], Screen[None]]
 type AccountAppearanceFactoryV1 = Callable[[App[AccountRecomposeRequiredV1 | None]], str]
 type AccountLanguageFactoryV1 = Callable[[ProfileManagerScreen], None]
-type AccountSignOutFactoryV1 = Callable[[], Awaitable[OperationController]]
+type AccountSignOutFactoryV1 = Callable[[], AccountDirectSessionActionV1]
+type AccountSessionReaderV1 = Callable[[], Awaitable[HomeAccountSession]]
 
 
 class AccountSessionExpiredError(CadrumoError):
@@ -78,11 +65,20 @@ class AccountRecomposeRequiredV1:
         """Keep handover identity complete and prohibit it on close outcomes."""
         has_profile = self.profile_id is not None or self.profile_label is not None
         if self.reason is AccountRecomposeReasonV1.CHANGE_USER:
-            if not self.profile_id or not self.profile_label:
-                raise ValueError("change-user recomposition requires the authenticated profile identity")
+            if (self.profile_id is None) != (self.profile_label is None):
+                raise ValueError("change-user recomposition requires both profile identity fields or neither")
+            if has_profile and (not self.profile_id or not self.profile_label):
+                raise ValueError("change-user profile identity fields must not be empty")
             return
         if has_profile:
             raise ValueError("closed-session recomposition cannot retain a profile identity")
+
+
+@dataclass(frozen=True, slots=True)
+class AccountDirectSessionActionV1:
+    """A runtime-owned account effect completed after the old root is severed."""
+
+    complete: Callable[[], Awaitable[AccountRecomposeRequiredV1]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,120 +87,13 @@ class AccountFactoriesV1:
 
     profile: AccountProfileFactoryV1
     change_user: AccountChangeUserFactoryV1
-    password: AccountPasswordFactoryV1
+    password: AccountPasswordFactoryV1 | None
     appearance: AccountAppearanceFactoryV1
     language: AccountLanguageFactoryV1
     sign_out: AccountSignOutFactoryV1
+    access: AccountAccessFactoryV1 | None = None
     onboarding_pending: bool = False
     """Whether the profile still needs setup, so the session opens on the setup walk."""
-
-
-def compose_account_factories(
-    *,
-    profile_overview: ProfileOverview,
-    persist_profile_field: Callable[[str, str, int, str], ProfileOverview],
-    add_profile_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
-    update_profile_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None,
-    remove_profile_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
-    list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None,
-    set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
-    remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
-    login_choices: Sequence[ProfileLoginChoice],
-    authenticate: Callable[[str, str], ProfileLoginAttempt],
-    assess_password: Callable[[str], ProfilePasswordAssessment],
-    rotate_password: Callable[[str, str, str], PassphraseChangeAttempt],
-    sign_out: AccountSignOutFactoryV1,
-    preselected_profile_id: str | None = None,
-    validate_profile_field: Callable[[str, str], str | None] | None = None,
-    launch_profile_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
-    credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
-    appearance: AccountAppearanceFactoryV1 = toggle_appearance,
-    complete_setup: Callable[[], ProfileOverview] | None = None,
-    open_document_reader: Callable[[], Screen[None]] | None = None,
-) -> AccountFactoriesV1:
-    """Bind already-composed account doors to their canonical TUI owners.
-
-    Every value and effect door is supplied by the installed host.  This makes
-    composition explicit: constructing a factory does not read storage,
-    unlock a profile, mutate settings, or submit the strong-close operation.
-    """
-
-    def profile(context: TuiScreenContextV1) -> ProfileManagerScreen:
-        """Create the sole Profile destination for its admitted route."""
-        if context.destination != "workbench.profile":
-            raise ValueError("the account Profile factory accepts only the Profile destination")
-        return ProfileManagerScreen(
-            profile_overview,
-            persist=persist_profile_field,
-            add_row=add_profile_row,
-            update_row=update_profile_row,
-            remove_row=remove_profile_row,
-            list_plantilla_media=list_plantilla_media,
-            set_plantilla_media=set_plantilla_media,
-            remove_plantilla_media=remove_plantilla_media,
-            complete_setup=complete_setup,
-            validate=validate_profile_field,
-            launch_source=launch_profile_source,
-            credential_postures=credential_postures,
-            open_document_reader=open_document_reader,
-        )
-
-    def change_user() -> LoginScreen:
-        """Create the existing credential screen for a deliberate handover."""
-        return LoginScreen(
-            choices=login_choices,
-            authenticate=authenticate,
-            preselected=preselected_profile_id,
-        )
-
-    def password() -> PassphraseScreen:
-        """Create the existing passphrase-rotation screen."""
-        return PassphraseScreen(assess=assess_password, rotate=rotate_password)
-
-    def language(screen: ProfileManagerScreen) -> None:
-        """Open the Profile owner's existing language chooser, not a copy."""
-        screen.action_choose_language()
-
-    return AccountFactoriesV1(
-        profile=profile,
-        change_user=change_user,
-        password=password,
-        appearance=appearance,
-        language=language,
-        sign_out=sign_out,
-        onboarding_pending=complete_setup is not None and profile_overview.setup_state is ProfileSetupState.INCOMPLETE,
-    )
-
-
-def compose_profile_sign_out_factory(
-    services: OperationComposedServices,
-    *,
-    profile_id: str,
-    actor_ref: str = "operator:tui-account",
-) -> AccountSignOutFactoryV1:
-    """Bind the canonical strong-close operation to the current profile.
-
-    The returned door submits and starts the close only when invoked, exactly
-    as ``config logout`` does; composition performs no operation, persistence,
-    or credential work. Observation stays with the operation modal, which
-    watches and never starts: a close that was submitted but not started sat
-    in its created state indefinitely while the modal reported it in progress.
-    """
-    from ...application.user_profile.operations import build_profile_logout_operation_request
-    from .operations.controller import OperationController
-
-    parsed_profile_id = UUID(profile_id)
-
-    async def sign_out() -> OperationController:
-        submission = await services.submission.submit(
-            build_profile_logout_operation_request(parsed_profile_id),
-            actor_ref=actor_ref,
-        )
-        controller = OperationController(services=services, submission=submission, actor_ref=actor_ref)
-        await controller.start()
-        return controller
-
-    return sign_out
 
 
 class WorkbenchAccountProviderV1(Provider):
@@ -236,6 +125,8 @@ class WorkbenchAccountProviderV1(Provider):
             return
         matcher = self.matcher(query)
         for action in self._ACTIONS:
+            if not host.account_action_available(action):
+                continue
             text = account_action_label(action)
             if (score := matcher.match(text)) > 0:
                 yield Hit(
@@ -253,6 +144,8 @@ class WorkbenchAccountProviderV1(Provider):
         if host is None:
             return
         for action in self._ACTIONS:
+            if not host.account_action_available(action):
+                continue
             text = account_action_label(action)
             yield DiscoveryHit(
                 display=text,
@@ -263,8 +156,10 @@ class WorkbenchAccountProviderV1(Provider):
 
 
 __all__ = [
+    "AccountAccessFactoryV1",
     "AccountAppearanceFactoryV1",
     "AccountChangeUserFactoryV1",
+    "AccountDirectSessionActionV1",
     "AccountFactoriesV1",
     "AccountLanguageFactoryV1",
     "AccountPasswordFactoryV1",
@@ -274,6 +169,4 @@ __all__ = [
     "AccountSessionExpiredError",
     "AccountSignOutFactoryV1",
     "WorkbenchAccountProviderV1",
-    "compose_account_factories",
-    "compose_profile_sign_out_factory",
 ]

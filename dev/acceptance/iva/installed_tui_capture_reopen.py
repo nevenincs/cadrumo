@@ -48,7 +48,6 @@ _SOURCE_MODULES: Final[tuple[tuple[str, str], ...]] = (
     ("cadrumo.entrypoints.tui.ledger.classification", "src/cadrumo/entrypoints/tui/ledger/classification.py"),
     ("cadrumo.entrypoints.tui.ledger.entries", "src/cadrumo/entrypoints/tui/ledger/entries.py"),
     ("cadrumo.entrypoints.tui.ledger.import_flow", "src/cadrumo/entrypoints/tui/ledger/import_flow.py"),
-    ("cadrumo.entrypoints.tui.ledger_doors", "src/cadrumo/entrypoints/tui/ledger_doors.py"),
 )
 _CLASSIFICATION_FIELDS: Final[tuple[str, ...]] = (
     "taxable_base",
@@ -535,42 +534,6 @@ def _child_authority() -> AuthorityIdentity:
         raise InstalledTuiChildError(str(exc)) from exc
 
 
-async def _login_existing_profile_through_tui(*, passphrase: str) -> None:
-    """Unlock the capture profile through the installed production Login screen."""
-    from textual.widgets import Input
-
-    from cadrumo.application.user_profile.login_interaction import (
-        ProfileLoginInventoryState,
-        attempt_profile_login,
-        observe_profile_login_inventory,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
-
-    inventory = observe_profile_login_inventory()
-    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
-        raise InstalledTuiChildError("installed IVA TUI login did not recognize the captured profile")
-    with bundled_indexed_authority().operation() as operation:
-        screen = LoginScreen(
-            choices=inventory.choices,
-            authenticate=lambda profile_id, secret: attempt_profile_login(
-                profile_id,
-                secret,
-                profile_decode_context=operation.profile_decode_context(),
-            ),
-            preselected=inventory.preselected_profile_id,
-        )
-        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-            await wait_for_public_selector(pilot, "#field-passphrase")
-            query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
-            await pilot.click("#btn-unlock")
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
-    if screen.outcome is None:
-        raise InstalledTuiChildError("installed IVA TUI Login screen did not admit the captured profile")
-
-
 def _capture_child(
     *,
     workspace_root: Path,
@@ -661,15 +624,7 @@ def _reopen_child(
 
     from textual.widgets import DataTable
 
-    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-    from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
     from cadrumo.entrypoints.tui.launcher import main
-
-    # A fresh headless launcher truthfully declines to display credential
-    # screens. Admit this already-captured profile through that screen first;
-    # its canonical session is then what the production launcher reuses.
-    with live_exchange_rate_composition(), profile_adapter_composition():
-        asyncio.run(_login_existing_profile_through_tui(passphrase=passphrase))
 
     async def drive(pilot: Any) -> None:
         nonlocal observed, reopen_error, reopen_stage

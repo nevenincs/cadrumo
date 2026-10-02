@@ -414,6 +414,11 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("entrypoints/cli/_root_cli.py", "root_command"),
         ("entrypoints/cli/common.py", "activate_subcommand_output_language"),
         ("entrypoints/cli/config/custody.py", "_pin_render_language_to_target_bucket"),
+        # Registered reads materialize translated projections within a with-block
+        # using the exact request language. ContextVar settings are restored before
+        # the result leaves the worker; no CLI callback owns these read scopes.
+        ("application/user_profile/view_operation.py", "read_profile_view_page"),
+        ("entrypoints/runtime/operation_host.py", "capture"),
     },
 )
 
@@ -432,16 +437,22 @@ _CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     },
 )
 
+# Synchronous projection reads must finish their language scope before returning
+# stored/transported values. Pin the with-block as well as the defining site.
+_PROJECTION_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("application/user_profile/view_operation.py", "read_profile_view_page"),
+        ("entrypoints/runtime/operation_host.py", "capture"),
+    }
+)
+
 
 def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     """Every production ``override_settings(cadrumo_output_language=...)`` site is pinned.
 
-    The wrong-language-notice class is bounded to overrides entered outside a
-    ctx-scoped settings scope; the sweep that established the bound proved the
-    wizard's language machinery is the only such surface. This tripwire keeps
-    that proof current: a future command adding its own language override
-    reds here and gets reviewed for ctx-scoping instead of silently
-    re-introducing post-unwind rendering.
+    Command overrides follow callback lifetime, while registered projection
+    reads materialize translated values inside their synchronous with-blocks.
+    Each admitted site must retain its reviewed scope mechanism.
     """
     import ast
 
@@ -458,6 +469,7 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
 
     found: set[tuple[str, str]] = set()
     ctx_wrapped: set[tuple[str, str]] = set()
+    projection_wrapped: set[tuple[str, str]] = set()
     for module in scan_directory(_SRC_ROOT, pattern="*.py", recursive=True):
         rel = module.relative_to(_SRC_ROOT).as_posix()
         if "/tests/" in f"/{rel}" or module.name.startswith("test_"):
@@ -481,6 +493,10 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
         for node in ast.walk(tree):
             if _is_language_override_call(node):
                 found.add(_innermost_site(node))
+            if isinstance(node, ast.With):
+                for item in node.items:
+                    if _is_language_override_call(item.context_expr):
+                        projection_wrapped.add(_innermost_site(item.context_expr))
             # HOW the ctx-scoped sites enter matters, not only WHERE: record
             # every override call that is a direct argument of a
             # ``*.with_resource(...)`` call, so a ctx site downgrading to a
@@ -504,6 +520,10 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     assert not unwrapped, (
         "ctx-scoped override sites no longer enter through ctx.with_resource(...) - "
         f"they have silently become post-callback-unwind exposed: {sorted(unwrapped)}"
+    )
+    unscoped_projections = set(_PROJECTION_SCOPED_OVERRIDE_SITES) - projection_wrapped
+    assert not unscoped_projections, (
+        f"projection language overrides no longer use their bounded with-block: {sorted(unscoped_projections)}"
     )
 
 

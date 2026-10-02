@@ -26,7 +26,6 @@ from cadrumo.domain.contribuyente.inventory.records import (
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,
     InventoryClosingValuationBasis,
-    InventoryLedgerError,
     MovementKind,
     PhysicalClosingEvidence,
     PhysicalClosingEvidenceRole,
@@ -372,7 +371,7 @@ class TestMovementAdd:
                 acquisition_cost=_acquisition("10.00"),
             ),
         )
-        with pytest.raises(InventoryLedgerError, match="consume more stock"):
+        with pytest.raises(InventoryServiceInputError) as exc_info:
             svc.movement_add(
                 bucket_id=secure_engine.bucket_id,
                 actividad_id="A1",
@@ -384,6 +383,20 @@ class TestMovementAdd:
                     quantity=Decimal("2"),
                 ),
             )
+        assert exc_info.value.translated_message == "errors.refused.refused_profile_inventory_validation"
+        assert exc_info.value.context == {
+            "actividad_id": "A1",
+            "year": "2025",
+            "movement_id": "SELL-TOO-MANY",
+        }
+        assert [
+            movement.movement_id
+            for movement in svc.show(
+                bucket_id=secure_engine.bucket_id,
+                actividad_id="A1",
+                year=2025,
+            ).period_movements
+        ] == ["BUY-1"]
 
 
 class TestValuationPreview:

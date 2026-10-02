@@ -882,13 +882,23 @@ class IndexedRegistryAuthority:
     @contextmanager
     def operation(self) -> Generator[PinnedAuthorityOperation]:
         """Pin one reader incarnation for a complete application operation."""
+        with self.lease_operation() as operation, validating_governed_facts(operation):
+            yield operation
+
+    @contextmanager
+    def lease_operation(self) -> Generator[PinnedAuthorityOperation]:
+        """Retain a reader across tasks without borrowing another task's fact scope.
+
+        Long-lived hosts pair this physical lease with a separate
+        ``validating_governed_facts`` scope in each task performing work.
+        Ordinary callers use ``operation`` to acquire both together.
+        """
         reader, operation = self._authority_for_operation()
         try:
             with reader.lease() as generation:
                 if generation != operation.generation:
                     raise RegistrySnapshotError("authority operation generation disagrees with its reader lease")
-                with validating_governed_facts(operation):
-                    yield operation
+                yield operation
         finally:
             self._close_retired_readers()
 

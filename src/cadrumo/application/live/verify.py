@@ -161,6 +161,29 @@ class VerifyService:
         Returns a :class:`VerifyObservation` with the persisted observation id
         and all supplied fields.
         """
+        observation, _newly_persisted = self.record_with_outcome(
+            bucket_id=bucket_id,
+            surface=surface,
+            nif=nif,
+            verdict=verdict,
+            checked_at=checked_at,
+            expected=expected,
+            raw_evidence_locator=raw_evidence_locator,
+        )
+        return observation
+
+    def record_with_outcome(
+        self,
+        *,
+        bucket_id: str,
+        surface: VerifySurface,
+        nif: str,
+        verdict: IdentityCheckVerdictValue,
+        checked_at: datetime,
+        expected: IdentityCheckVerdictValue | None = None,
+        raw_evidence_locator: str | None = None,
+    ) -> tuple[VerifyObservation, bool]:
+        """Persist once and report whether this call made a new local write."""
         observation_id = _derive_observation_id(
             surface=surface,
             nif=nif,
@@ -182,9 +205,9 @@ class VerifyService:
         )
         existing = self._persistence.load(bucket_id=bucket_id, observation_id=observation_id)
         if existing is not None:
-            return existing
+            return existing, False
         self._persistence.save(observation)
-        return observation
+        return observation, True
 
     def list_observations(
         self,

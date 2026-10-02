@@ -63,6 +63,7 @@ from ..auth.operator_probe_ports import OperatorProbePorts
 from ..cli_exception_preconditions import nested_terminal_precondition_verdict
 from ..operator_actions.models import PreconditionVerdict
 from ..state_projection_ports import StateProjectionReadError, StateProjectionReadPorts
+from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from .calculation_action_ports import CalculationActionPorts
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
@@ -244,6 +245,8 @@ def run_modelo_quickfile(
     workflow_profile: TaxpayerProfile,
     build_calculation_inputs: Callable[[str], WorkCalculateInputBundle],
     profile: ModeloWorkProfile | None = None,
+    before_stage: Callable[[QuickfileStage], None] | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> QuickfileResult:
     """Run readiness → create → calculate → verify → export for one modelo target.
 
@@ -278,12 +281,16 @@ def run_modelo_quickfile(
             calculate stages are evaluated against.
         build_calculation_inputs: Factory producing the calculate-stage inputs.
         profile: Already-authenticated work profile reused by calculate when supplied.
+        before_stage: Optional authority check before each stage, outside its refusal catcher.
+        mutation_writer: Optional admission around the prepared local export writes.
 
     Returns:
         A :class:`QuickfileResult` whose ``completed`` flag is ``True`` only when
         the terminal export wrote a local fichero-BOE artefact.
     """
     stages: list[QuickfileStageOutcome] = []
+    if before_stage is not None:
+        before_stage(QuickfileStage.READINESS)
 
     # ── Stage 1: readiness ────────────────────────────────────────────────
     # Resolving the law-determined registry revision is the hard precondition
@@ -299,6 +306,8 @@ def run_modelo_quickfile(
             operation=operation,
             requested_revision_id=command.registry_revision_id,
         )
+    except ProfileAccessRefusedError:
+        raise
     except CadrumoError as exc:
         stages.append(_refusal_outcome(QuickfileStage.READINESS, exc))
         stages.extend(_skipped_after(QuickfileStage.READINESS))
@@ -329,6 +338,8 @@ def run_modelo_quickfile(
     stages.append(_readiness_outcome(readiness))
 
     # ── Stage 2: create / resume the work unit ────────────────────────────
+    if before_stage is not None:
+        before_stage(QuickfileStage.CREATE)
     try:
         ensure_result = ensure_modelo_work_unit_for_active_target(
             bucket_id=command.bucket_id,
@@ -340,7 +351,10 @@ def run_modelo_quickfile(
             catalogue=calculation_action_ports.work_lifecycle_ports.work_unit_repository.load(),
             ports=calculation_action_ports.work_lifecycle_ports,
             operation=operation,
+            profile=profile,
         )
+    except ProfileAccessRefusedError:
+        raise
     except CadrumoError as exc:
         return _halted(
             command,
@@ -360,6 +374,8 @@ def run_modelo_quickfile(
     )
 
     # ── Stage 3: calculate ────────────────────────────────────────────────
+    if before_stage is not None:
+        before_stage(QuickfileStage.CALCULATE)
     try:
         calculation_inputs = build_calculation_inputs(work_unit.work_unit_id)
         filing_instance_evidence = command.filing_instance_evidence or calculation_inputs.filing_instance_evidence
@@ -371,6 +387,8 @@ def run_modelo_quickfile(
             ports=calculation_action_ports,
             profile=profile,
         )
+    except ProfileAccessRefusedError:
+        raise
     except CadrumoError as exc:
         return _halted(
             command,
@@ -390,6 +408,8 @@ def run_modelo_quickfile(
     )
 
     # ── Stage 4: verify ───────────────────────────────────────────────────
+    if before_stage is not None:
+        before_stage(QuickfileStage.VERIFY)
     try:
         report = verify_modelo_revision(
             calculation_revision.calculation_revision_id,
@@ -400,6 +420,8 @@ def run_modelo_quickfile(
             workflow_profile=workflow_profile,
             operation=operation,
         )
+    except ProfileAccessRefusedError:
+        raise
     except CadrumoError as exc:
         return _halted(
             command,
@@ -444,6 +466,8 @@ def run_modelo_quickfile(
     )
 
     # ── Stage 5: export (local fichero-BOE; never contacts AEAT) ───────────
+    if before_stage is not None:
+        before_stage(QuickfileStage.EXPORT)
     try:
         export_result = export_modelo_revision(
             ModeloExportCommand(
@@ -457,7 +481,10 @@ def run_modelo_quickfile(
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports,
             operation=operation,
+            mutation_writer=mutation_writer,
         )
+    except ProfileAccessRefusedError:
+        raise
     except CadrumoError as exc:
         return _halted(
             command,
@@ -561,6 +588,8 @@ def _resolve_readiness(
             ),
             operation=operation,
         )
+    except ProfileAccessRefusedError:
+        raise
     except (CadrumoError, StateProjectionReadError):
         _log.debug("quickfile readiness projection failed; continuing", exc_info=True)
         return None

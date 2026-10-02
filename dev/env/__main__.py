@@ -2,12 +2,11 @@
 
 Usage::
 
-    python -m dev.env install
     python -m dev.env workstation-tools
     python -m dev.env setup
 
-Provisioning actions mutate only the checkout's managed environment. The
-initialization runner owns the dependency checks that precede provisioning.
+``setup`` materializes ``env/.env`` and ports the values set in the main
+worktree's copy; ``workstation-tools`` provisions workstation CLIs.
 """
 
 from __future__ import annotations
@@ -15,11 +14,9 @@ from __future__ import annotations
 import argparse
 
 from ._dotenv import env_setup
-from ._install import install
 from ._workstation import workstation_tools
 
 ACTIONS = {
-    "install": install,
     "workstation-tools": workstation_tools,
     "setup": env_setup,
 }
@@ -36,7 +33,7 @@ def main(argv: list[str] | None = None) -> int:
     """
     parser = argparse.ArgumentParser(
         prog="python -m dev.env",
-        description="Provision this checkout's Python environment.",
+        description="Provision this checkout's local configuration and tools.",
     )
     parser.add_argument("action", choices=[*ACTIONS])
     args = parser.parse_args(argv)

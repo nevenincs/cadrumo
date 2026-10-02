@@ -1,72 +1,47 @@
-"""LLM-assisted ledger classification CLI routing: suggest / saturate / reject / auto-split.
-
-Extracted from ``_ledger.py`` (SPLIT-CANDIDATE) so the ledger command module
-stays within its size budget. The router makes one model call — the split
-proposer — and routes on its verdict: a multi-child verdict drives the
-evidence-driven split (per-line base/IVA children), a single-child "no split"
-verdict classifies the transaction in place from that lone child's selections.
-The model emits no euro amount or regulated number; the registry derives every
-child's base and IVA (``llm-selects-system-derives-tax-numbers``).
-
-Also owns :func:`split_recommendation_notice`,
-the typed ``info`` notice that ``classify --read-evidence`` emits when the model
-flags the invoice as multi-component
-(``aeat-cli-contract``).
-"""
+"""Render registered ledger LLM reviews and their settled classification outcomes."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from decimal import Decimal
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 import typer
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
-from ...application.ledger.actions_manual import ledger_transaction_payload
-from ...application.ledger.llm_classification import (
-    apply_evidence_classification,
-    derive_operator_iva_substrate,
-    saturate_llm_classification,
-    suggest_evidence_split,
-    suggest_llm_classification,
+from ...application.ledger.actions_common import display_decimal
+from ...application.ledger.classify_operation import LedgerClassifyOperationResult, LedgerOperatorIvaResult
+from ...application.ledger.llm_review_operation import (
+    LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
+    LedgerLlmOperationResult,
+    LedgerLlmReviewProjection,
+    LedgerLlmReviewRequest,
+    LedgerLlmReviewResponse,
+    LedgerLlmSuggestionProjection,
 )
-from ...application.ledger.llm_classification_ports import (
-    LLMClassificationSuggestion,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitSuggestion,
-    LLMSuggestionRejectionResult,
-    OperatorIvaDerivationResult,
-)
-from ...application.ledger.llm_review_workflow import (
-    LlmReviewDecision,
-    LlmReviewInvocationOrigin,
-    execute_reviewed_decision,
-)
-from ...application.ledger.models import ManualLedgerTransactionResult
-from ...application.ledger.review_projection import ledger_transaction_review_status
-from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.config import load_settings
+from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
+from ...application.operations.registry import OperationSchemaIdentityV1
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification
-from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ._ledger_support import (
-    ledger_transaction_validation_no_recovery,
     ledger_validation_bad,
     parse_decimal_option,
-    resolve_id,
 )
-from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
-from .ledger_llm_composition import compose_ledger_llm
-from .state_projection_support import authority_operation
+from .common import bad, emit_envelope
+from .runtime_ledger_classify import run_ledger_operator_iva
+from .runtime_profile_binding import bound_profile_client
+from .runtime_registered_operation import (
+    RegisteredOperationReviewCompletion,
+    RegisteredOperationReviewHandler,
+    run_registered_operation,
+    submitted_operation_error,
+)
 
 if TYPE_CHECKING:
-    from ...application.ledger.action_ports import LedgerActionPorts
+    pass
 
 __all__ = [
     "dispatch_autosplit",
@@ -77,70 +52,173 @@ __all__ = [
     "split_recommendation_notice",
 ]
 
-type _LLMSuggestion = LLMClassificationSuggestion | LLMSaturatedSuggestion | LLMSplitSuggestion
 
-
-def emit_llm_rejection(
+def _run_review(
     ctx: typer.Context,
-    suggestion: _LLMSuggestion,
     *,
+    transaction_id: str,
+    mode: Literal["classification", "saturated", "auto_split"],
     origin: LlmReviewInvocationOrigin,
-    bucket_id: str,
-    reason: str,
+    apply: bool,
+    reject: bool,
     actor: str | None,
-    ports: LedgerActionPorts,
-) -> None:
-    """Record an explicit rejection of an LLM suggestion and emit the result.
+    read_evidence: bool,
+    vision_model: str | None,
+    reason: str,
+    business_pct: str | None = None,
+) -> LedgerLlmReviewProjection | LedgerLlmOperationResult:
+    """Use the canonical reviewed-operation driver and correlate the settled proposal."""
+    client = bound_profile_client(ctx)
+    percentage = parse_decimal_option(business_pct, label="business-pct") if apply else None
+    try:
+        request = LedgerLlmReviewRequest(
+            profile_id=client.profile_id,
+            transaction_id=transaction_id,
+            mode=mode,
+            origin=origin,
+            preview=not (apply or reject),
+            business_pct=display_decimal(percentage) if percentage is not None else None,
+            actor=actor,
+            read_evidence=read_evidence,
+            vision_model=vision_model,
+            reason=reason,
+        )
+    except ValidationError as error:
+        raise ledger_validation_bad(error) from error
+    reviewed_projections: list[LedgerLlmReviewProjection] = []
 
-    The fourth decision terminal: the row is NOT classified, but the rejection is
-    captured as a ``ledger.transaction.llm_suggestion.rejected`` audit event. The
-    write is routed through the one review workflow
-    (:func:`~application.ledger.llm_review_workflow.execute_reviewed_decision`) with the caller's
-    :class:`~application.ledger.llm_review_workflow.LlmReviewInvocationOrigin`, so the durable
-    ``source_command`` audit label is derived from the origin rather than a
-    CLI-owned literal. An ``info`` :class:`Notice` confirms the log and points at
-    the manual-override next step
-    (``aeat-cli-contract``).
-    """
+    def matches(projection: LedgerLlmReviewProjection) -> bool:
+        suggestion = projection.suggestion
+        expected_kind = "split" if mode == "auto_split" else mode
+        return not (
+            projection.profile_id != client.profile_id
+            or not suggestion.transaction_id.startswith(request.transaction_id)
+            or suggestion.kind != expected_kind
+            or (mode == "auto_split" and not suggestion.children)
+            or (mode != "auto_split" and (suggestion.classification is None or suggestion.confidence is None))
+        )
+
+    def decide(projection: LedgerLlmReviewProjection) -> Literal["apply", "reject"] | None:
+        if request.preview or not matches(projection):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        reviewed_projections.append(projection)
+        return "reject" if reject else "apply" if apply else None
+
+    definition_id = LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
+    completed = run_registered_operation(
+        client,
+        request,
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(client.profile_id)),
+        result_type=LedgerLlmOperationResult,
+        request_version=1,
+        result_version=1,
+        timeout=120,
+        review=RegisteredOperationReviewHandler(
+            review_type=LedgerLlmReviewProjection,
+            review_schema=OperationSchemaIdentityV1.from_model(
+                schema_id=definition_id + ".projection", schema_version=1, model_type=LedgerLlmReviewProjection
+            ),
+            response_schema=OperationSchemaIdentityV1.from_model(
+                schema_id=definition_id + ".response", schema_version=1, model_type=LedgerLlmReviewResponse
+            ),
+            decide=decide,
+        ),
+    )
+    reviewed = reviewed_projections[-1] if reviewed_projections else None
+    if isinstance(completed, RegisteredOperationReviewCompletion):
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=None,
+            effect=completed.effect,
+        )
+    result = completed.projection
+    if request.preview:
+        preview = result.preview
+        if (
+            reviewed is not None
+            or result.outcome != "preview"
+            or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+            or completed.effect is not OperationEffect.NONE
+            or completed.refusal_code is not None
+            or result.profile_id != client.profile_id
+            or preview is None
+            or not matches(preview)
+            or result.transaction_id != preview.suggestion.transaction_id
+            or result.reviewed_proposal_digest != preview.reviewed_proposal_digest
+            or result.provenance != preview.suggestion.provenance
+        ):
+            raise submitted_operation_error(
+                completed.operation_id,
+                RuntimeRefusalCode.INVALID_FRAME.value,
+                terminal_condition=completed.terminal_condition,
+                effect=completed.effect,
+                refusal_code=completed.refusal_code,
+            )
+        return preview
+    expected_outcome = (
+        "rejected"
+        if reject
+        else "split"
+        if mode == "auto_split" and reviewed is not None and len(reviewed.suggestion.children) > 1
+        else "classified"
+    )
+    expected_effect = (
+        OperationEffect.NONE
+        if result.outcome == "classified"
+        and result.classification is not None
+        and not result.classification.bucket_event_ids
+        else OperationEffect.UPDATED
+    )
+    if (
+        reviewed is None
+        or not (apply or reject)
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+        or result.profile_id != client.profile_id
+        or result.reviewed_proposal_digest != reviewed.reviewed_proposal_digest
+        or result.transaction_id != reviewed.suggestion.transaction_id
+        or result.provenance != reviewed.suggestion.provenance
+        or result.outcome != expected_outcome
+        or (result.classification is not None and result.classification.profile_id != client.profile_id)
+        or (result.outcome == "split" and len(result.child_transaction_ids) != len(reviewed.suggestion.children))
+    ):
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        )
+    return result
+
+
+def emit_llm_rejection(ctx: typer.Context, result: LedgerLlmOperationResult) -> None:
+    """Present the admitted audit-only rejection without performing another write."""
     from ._ledger_llm_payloads import LedgerClassifyLlmRejectResult
 
-    result = execute_reviewed_decision(
-        suggestion,
-        origin=origin,
-        decision=LlmReviewDecision.REJECT,
-        bucket_id=bucket_id,
-        reason=reason,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        ports=ports,
-    )
-    if not isinstance(result, LLMSuggestionRejectionResult):
-        raise TransactionValidationError(
-            "REJECT decision returned no suggestion-rejection result",
-            context={"decision": LlmReviewDecision.REJECT.value, "result_type": type(result).__name__},
-        )
+    if result.outcome != "rejected" or result.suggestion_kind is None or result.bucket_event_id is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     payload = LedgerClassifyLlmRejectResult.model_validate(
         {
             "llm": True,
             "rejected": True,
-            "provider": transport_from_provenance(suggestion.provenance),
+            "provider": transport_from_provenance(result.provenance),
             "transaction_id": result.transaction_id,
             "suggestion_kind": result.suggestion_kind,
             "provenance": result.provenance,
             "bucket_event_id": result.bucket_event_id,
             "operator_reason": result.operator_reason,
             "persisted": False,
-        },
+        }
     )
     notice = Notice(
         severity=NoticeSeverity.INFO,
         code="ledger.classify.llm_rejected",
-        message=tr(
-            "cli.ledger.classify.llm_rejected_message",
-        ),
-        context={
-            "transaction_id": result.transaction_id,
-            "suggestion_kind": result.suggestion_kind,
-        },
+        message=tr("cli.ledger.classify.llm_rejected_message"),
+        context={"transaction_id": result.transaction_id, "suggestion_kind": result.suggestion_kind},
     )
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{result.transaction_id}",
@@ -148,6 +226,126 @@ def emit_llm_rejection(
         notice.message,
     ]
     emit_envelope(ctx, command="ledger.classify", result=payload, lines=lines, notices=[notice])
+
+
+def _emit_llm_single_classify(
+    ctx: typer.Context, result: LedgerClassifyOperationResult, *, extra_lines: tuple[str, ...] = ()
+) -> None:
+    """Render the worker's admitted single-transaction classify quintet."""
+    from ._ledger_payloads import LedgerClassifySingleResult, TransactionPayload
+
+    transaction, review_status = result.transaction, result.review_status
+    if transaction is None or review_status is None or result.outcome != "classified":
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    payload = LedgerClassifySingleResult.model_validate(
+        {
+            "bucket_id": str(result.profile_id),
+            "transaction_id": transaction.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
+            "transaction": TransactionPayload.model_validate(transaction.model_dump(mode="json")).model_dump(
+                mode="json"
+            ),
+        }
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{transaction.transaction_id}",
+        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{transaction.classified_by}",
+        *extra_lines,
+        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+    ]
+    emit_envelope(ctx, command="ledger.classify", result=payload, lines=lines)
+
+
+def _render_autosplit_preview(ctx: typer.Context, review: LedgerLlmReviewProjection) -> None:
+    """Render the same split or lone-child preview from admitted wire facts."""
+    from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
+    from ._ledger_payloads import LedgerSplitResult
+
+    suggestion = review.suggestion
+    child = next(iter(suggestion.children), None)
+    if child is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    if len(suggestion.children) > 1:
+        children = _autosplit_child_payloads(suggestion)
+        payload = LedgerSplitResult.model_validate(
+            {
+                "bucket_id": str(review.profile_id),
+                "parent_transaction_id": suggestion.transaction_id,
+                "llm": True,
+                "persisted": False,
+                "provider": transport_from_provenance(suggestion.provenance),
+                "provenance": suggestion.provenance,
+                "reason": suggestion.reason,
+                "parent_amount": suggestion.parent_amount,
+                "proposed_children": children,
+            }
+        )
+        lines = [
+            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+            f"{tr('cli.ledger.labels.children')}\t{len(children)}",
+            tr("cli.ledger.classify.llm_review_hint"),
+        ]
+        emit_envelope(ctx, command="ledger.split", result=payload, lines=lines)
+        return
+    payload = LedgerClassifyLlmSuggestResult.model_validate(
+        {
+            "llm": True,
+            "persisted": False,
+            "transaction_id": suggestion.transaction_id,
+            "provider": transport_from_provenance(suggestion.provenance),
+            "classification": BusinessClassification.BUSINESS.value,
+            "category": child.category,
+            "confidence": "1",
+            "reason": suggestion.reason,
+            "provenance": suggestion.provenance,
+        }
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+        f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{BusinessClassification.BUSINESS.value}",
+        f"{tr('cli.ledger.labels.category_id')}\t{child.category or ''}",
+        f"{tr('cli.ledger.labels.iva_category')}\t{child.iva_category or ''}",
+        tr("cli.ledger.classify.auto_split_single_line"),
+        tr("cli.ledger.classify.llm_review_hint"),
+    ]
+    emit_envelope(ctx, command="ledger.classify", result=payload, lines=lines)
+
+
+def _render_settled(ctx: typer.Context, result: LedgerLlmOperationResult, *, saturated: bool = False) -> None:
+    """Select presentation from the worker's settled outcome without another service call."""
+    if result.outcome == "rejected":
+        emit_llm_rejection(ctx, result)
+    elif result.outcome == "split":
+        from ._ledger_payloads import LedgerSplitResult
+
+        payload = LedgerSplitResult.model_validate(
+            {
+                "bucket_id": str(result.profile_id),
+                "parent_transaction_id": result.transaction_id,
+                "split_group_id": result.split_group_id,
+                "child_transaction_ids": list(result.child_transaction_ids),
+                "llm": True,
+                "persisted": True,
+                "provenance": result.provenance,
+            }
+        )
+        lines = [
+            f"{tr('cli.ledger.labels.id')}\t{result.transaction_id}",
+            f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
+            f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.provenance}",
+        ]
+        emit_envelope(ctx, command="ledger.split", result=payload, lines=lines)
+    else:
+        classified = result.classification
+        if classified is None or classified.transaction is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        extra = (
+            (f"{tr('cli.ledger.labels.iva_category')}\t{classified.transaction.iva_category or ''}",)
+            if saturated
+            else ()
+        )
+        _emit_llm_single_classify(ctx, classified, extra_lines=extra)
 
 
 def transport_from_provenance(provenance: str) -> str:
@@ -194,282 +392,26 @@ def split_recommendation_notice(transaction_id: str) -> Notice:
     )
 
 
-def _autosplit_child_payloads(suggestion: LLMSplitSuggestion) -> list[object]:
+def _autosplit_child_payloads(suggestion: LedgerLlmSuggestionProjection) -> list[object]:
     """Project a split suggestion's children to the shared proposal payload."""
     from ._ledger_payloads import LedgerSplitChildProposalPayload
 
     return [
         LedgerSplitChildProposalPayload.model_validate(
             {
-                "proportion": format(child.proportion, "f"),
-                "amount": format(child.amount, "f"),
+                "proportion": child.proportion,
+                "amount": child.amount,
                 "description": child.description,
-                "category": child.category.value if child.category is not None else None,
-                "iva_category": child.iva_category.value if child.iva_category is not None else None,
-                "iva_rate": format(child.iva_rate, "f") if child.iva_rate is not None else None,
-                "taxable_base": format(child.taxable_base, "f") if child.taxable_base is not None else None,
-                "iva_amount": format(child.iva_amount, "f") if child.iva_amount is not None else None,
+                "category": child.category if child.category is not None else None,
+                "iva_category": child.iva_category if child.iva_category is not None else None,
+                "iva_rate": child.iva_rate if child.iva_rate is not None else None,
+                "taxable_base": child.taxable_base if child.taxable_base is not None else None,
+                "iva_amount": child.iva_amount if child.iva_amount is not None else None,
                 "rate_derivable": child.rate_derivable,
             },
         ).model_dump(mode="json")
         for child in suggestion.children
     ]
-
-
-def dispatch_autosplit(
-    ctx: typer.Context,
-    *,
-    transaction_id: str | None,
-    classification: BusinessClassification | None,
-    file: str | None,
-    apply: bool,
-    actor: str | None,
-    read_evidence: bool,
-    vision_model: str | None,
-    reject: bool = False,
-    reason: str = "",
-) -> None:
-    """Route ``classify --read-evidence --auto-split`` on the model's split verdict.
-
-    One model call — the split proposer — yields the verdict. A multi-child verdict
-    drives the evidence-driven split (preview, or with ``--apply`` the
-    base/IVA-separating split); a single-child "no split" verdict classifies the
-    transaction in place from that child's selections (preview, or with ``--apply``
-    the in-place write). The model emits no euro amount or regulated number; the
-    registry derives every child's base and IVA.
-    """
-    from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
-    from ._ledger_payloads import LedgerClassifySingleResult
-
-    # Checked before the shared three: an operator who asked for --auto-split
-    # without --read-evidence should hear about the flag they actually typed,
-    # not about a conflict further down the same argv.
-    if not read_evidence:
-        raise bad(
-            tr("cli.ledger.classify.auto_split_needs_evidence"),
-        )
-    prologue = _llm_classify_prologue(
-        ctx,
-        suggest_fn=suggest_evidence_split,
-        classification=classification,
-        file=file,
-        transaction_id=transaction_id,
-        apply=apply,
-        actor=actor,
-        # Unconditionally true: the guard above already refused otherwise, so
-        # passing the flag through would only offer a second way to disagree.
-        read_evidence=True,
-        vision_model=vision_model,
-        reject=reject,
-        reason=reason,
-    )
-    if prologue is None:
-        return
-    suggestion, transaction_repository, ports = prologue
-    bucket_id = transaction_repository.bucket_id
-
-    if suggestion.recommends_split:
-        _emit_split(
-            ctx,
-            suggestion,
-            bucket_id=bucket_id,
-            apply=apply,
-            actor=actor,
-            ports=ports,
-        )
-        return
-    _emit_single(
-        ctx,
-        suggestion,
-        bucket_id=bucket_id,
-        apply=apply,
-        actor=actor,
-        result_models=(LedgerClassifyLlmSuggestResult, LedgerClassifySingleResult),
-        ports=ports,
-    )
-
-
-def _emit_split(
-    ctx: typer.Context,
-    suggestion: LLMSplitSuggestion,
-    *,
-    bucket_id: str,
-    apply: bool,
-    actor: str | None,
-    ports: LedgerActionPorts,
-) -> None:
-    """Preview or apply the multi-child evidence-driven split for the auto-split route.
-
-    The caller-composed action-port bundle is threaded through to the write so
-    the review workflow uses one canonical bucket-scoped composition.
-    """
-    from ._ledger_payloads import LedgerSplitResult
-
-    proposed_children = _autosplit_child_payloads(suggestion)
-    if not apply:
-        result = LedgerSplitResult.model_validate(
-            {
-                "bucket_id": bucket_id,
-                "parent_transaction_id": suggestion.transaction_id,
-                "llm": True,
-                "persisted": False,
-                "provider": transport_from_provenance(suggestion.provenance),
-                "provenance": suggestion.provenance,
-                "reason": suggestion.reason,
-                "parent_amount": format(suggestion.parent_amount, "f"),
-                "proposed_children": proposed_children,
-            },
-        )
-        lines = [
-            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
-            f"{tr('cli.ledger.labels.children')}\t{len(proposed_children)}",
-            tr("cli.ledger.classify.llm_review_hint"),
-        ]
-        emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
-        return
-    try:
-        applied = execute_reviewed_decision(
-            suggestion,
-            origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
-            decision=LlmReviewDecision.SPLIT,
-            bucket_id=bucket_id,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            ports=ports,
-        )
-    except TransactionValidationError as exc:
-        raise ledger_transaction_validation_no_recovery(exc) from None
-    except ValidationError as exc:
-        raise ledger_validation_bad(exc) from exc
-    if not isinstance(applied, LLMSplitApplyResult):
-        raise TransactionValidationError(
-            "SPLIT decision returned no evidence-split result",
-            context={"decision": LlmReviewDecision.SPLIT.value, "result_type": type(applied).__name__},
-        )
-    result = LedgerSplitResult.model_validate(
-        {
-            "bucket_id": applied.bucket_id,
-            "parent_transaction_id": applied.parent_transaction_id,
-            "split_group_id": applied.split_group_id,
-            "child_transaction_ids": list(applied.child_transaction_ids),
-            "llm": True,
-            "persisted": True,
-            "provenance": applied.provenance,
-        },
-    )
-    lines = [
-        f"{tr('cli.ledger.labels.id')}\t{applied.parent_transaction_id}",
-        f"{tr('cli.ledger.labels.children')}\t{len(applied.child_transaction_ids)}",
-        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}",
-    ]
-    emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
-
-
-def _emit_single(
-    ctx: typer.Context,
-    suggestion: LLMSplitSuggestion,
-    *,
-    bucket_id: str,
-    apply: bool,
-    actor: str | None,
-    result_models: tuple[type[BaseModel], type[BaseModel]],
-    ports: LedgerActionPorts,
-) -> None:
-    """Preview or apply the in-place single-line classification (no-split verdict).
-
-    Takes the caller-composed action-port bundle for the same reason
-    :func:`_emit_split` does: both branches of one route use the canonical
-    bucket-scoped write composition.
-    """
-    suggest_model, single_model = result_models
-    child = suggestion.children[0]
-    if not apply:
-        suggest_result = suggest_model.model_validate(
-            {
-                "llm": True,
-                "persisted": False,
-                "transaction_id": suggestion.transaction_id,
-                "provider": transport_from_provenance(suggestion.provenance),
-                "classification": BusinessClassification.BUSINESS.value,
-                "category": child.category.value if child.category is not None else None,
-                "confidence": "1",
-                "reason": suggestion.reason,
-                "provenance": suggestion.provenance,
-            },
-        )
-        lines = [
-            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
-            f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{BusinessClassification.BUSINESS.value}",
-            f"{tr('cli.ledger.labels.category_id')}\t{child.category.value if child.category else ''}",
-            f"{tr('cli.ledger.labels.iva_category')}\t{child.iva_category.value if child.iva_category else ''}",
-            tr("cli.ledger.classify.auto_split_single_line"),
-            tr("cli.ledger.classify.llm_review_hint"),
-        ]
-        emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines)
-        return
-    try:
-        result = apply_evidence_classification(
-            suggestion,
-            bucket_id=bucket_id,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger classify --read-evidence --auto-split --apply",
-            ports=ports,
-        )
-    except TransactionValidationError as exc:
-        raise ledger_transaction_validation_no_recovery(exc) from None
-    except ValidationError as exc:
-        raise ledger_validation_bad(exc) from exc
-    transaction_payload = ledger_transaction_payload(result.transaction)
-    review_status = ledger_transaction_review_status(result.transaction)
-    classify_result = single_model.model_validate(
-        {
-            "bucket_id": result.ref.bucket_id,
-            "transaction_id": result.transaction.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    lines = [
-        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
-        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-    ]
-    emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
-
-
-def _emit_llm_single_classify(
-    ctx: typer.Context,
-    result: ManualLedgerTransactionResult,
-    *,
-    extra_lines: tuple[str, ...] = (),
-) -> None:
-    """Emit the canonical single-transaction classify quintet for an LLM apply result.
-
-    The ``--llm --apply`` and ``--llm --saturate --apply`` terminals are both
-    single-transaction mutations that emit the mutation quintet
-    (``LedgerClassifySingleResult``). ``extra_lines`` carries any substrate lines
-    (e.g. the saturated IVA category) surfaced between the provenance and the
-    review status.
-    """
-    from ._ledger_payloads import LedgerClassifySingleResult
-
-    review_status = ledger_transaction_review_status(result.transaction)
-    classify_result = LedgerClassifySingleResult.model_validate(
-        {
-            "bucket_id": result.ref.bucket_id,
-            "transaction_id": result.transaction.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
-        },
-    )
-    lines = [
-        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
-        *extra_lines,
-        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-    ]
-    emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
 
 
 def _validate_classify_llm_options(
@@ -514,7 +456,7 @@ def _validate_classify_llm_options(
 
 
 def _llm_suggestion_base_payload(
-    suggestion: LLMClassificationSuggestion | LLMSaturatedSuggestion,
+    suggestion: LedgerLlmSuggestionProjection,
 ) -> dict[str, object]:
     """Build the shared non-persisting suggestion payload for a classify/saturate preview."""
     return {
@@ -522,9 +464,9 @@ def _llm_suggestion_base_payload(
         "persisted": False,
         "transaction_id": suggestion.transaction_id,
         "provider": transport_from_provenance(suggestion.provenance),
-        "classification": suggestion.classification.value,
-        "category": suggestion.category.value if suggestion.category is not None else None,
-        "confidence": format(suggestion.confidence, "f"),
+        "classification": suggestion.classification,
+        "category": suggestion.category if suggestion.category is not None else None,
+        "confidence": suggestion.confidence,
         "reason": suggestion.reason,
         "provenance": suggestion.provenance,
     }
@@ -533,7 +475,7 @@ def _llm_suggestion_base_payload(
 def _render_classify_llm_preview(
     ctx: typer.Context,
     *,
-    suggestion: LLMClassificationSuggestion,
+    suggestion: LedgerLlmSuggestionProjection,
 ) -> None:
     """Emit the non-persisting stage-1 classify suggestion. Approve = --apply, reject = --reject."""
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
@@ -541,14 +483,14 @@ def _render_classify_llm_preview(
     suggest_result = LedgerClassifyLlmSuggestResult.model_validate(_llm_suggestion_base_payload(suggestion))
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
-        f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
-        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
-        f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}",
+        f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification}",
+        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category if suggestion.category else ''}",
+        f"{tr('cli.ledger.classify.llm_confidence_label')}\t{suggestion.confidence}",
         f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
         tr("cli.ledger.classify.llm_review_hint"),
     ]
     notices: list[Notice] = []
-    if suggestion.recommends_split:
+    if suggestion.multiple_components is True:
         notice = split_recommendation_notice(suggestion.transaction_id)
         notices.append(notice)
         lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.message}")
@@ -556,21 +498,21 @@ def _render_classify_llm_preview(
 
 
 def _saturate_derived_values(
-    suggestion: LLMSaturatedSuggestion,
+    suggestion: LedgerLlmSuggestionProjection,
 ) -> tuple[str | None, str | None, str | None, str | None]:
     """Return the formatted ``(iva_category, iva_rate, taxable_base, iva_amount)`` display values."""
     return (
-        suggestion.iva_category.value if suggestion.iva_category is not None else None,
-        format(suggestion.iva_rate, "f") if suggestion.iva_rate is not None else None,
-        format(suggestion.taxable_base, "f") if suggestion.taxable_base is not None else None,
-        format(suggestion.iva_amount, "f") if suggestion.iva_amount is not None else None,
+        suggestion.iva_category if suggestion.iva_category is not None else None,
+        suggestion.iva_rate if suggestion.iva_rate is not None else None,
+        suggestion.taxable_base if suggestion.taxable_base is not None else None,
+        suggestion.iva_amount if suggestion.iva_amount is not None else None,
     )
 
 
 def _render_saturate_llm_preview(
     ctx: typer.Context,
     *,
-    suggestion: LLMSaturatedSuggestion,
+    suggestion: LedgerLlmSuggestionProjection,
 ) -> None:
     """Emit the non-persisting saturated classify suggestion (model picks IVA category, system derives numbers)."""
     from ._ledger_llm_payloads import LedgerClassifyLlmSaturateResult
@@ -589,8 +531,8 @@ def _render_saturate_llm_preview(
     )
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
-        f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
-        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
+        f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification}",
+        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category if suggestion.category else ''}",
         f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
     ]
     if suggestion.rate_derivable:
@@ -603,76 +545,14 @@ def _render_saturate_llm_preview(
         )
     elif suggestion.iva_category is not None:
         lines.append(f"{tr('cli.ledger.classify.saturate_non_derivable')}\t{suggestion.derivation_note}")
-    lines.append(f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}")
+    lines.append(f"{tr('cli.ledger.classify.llm_confidence_label')}\t{suggestion.confidence}")
     lines.append(tr("cli.ledger.classify.llm_review_hint"))
     notices: list[Notice] = []
-    if suggestion.recommends_split:
+    if suggestion.multiple_components is True:
         notice = split_recommendation_notice(suggestion.transaction_id)
         notices.append(notice)
         lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.message}")
     emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
-
-
-def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitSuggestion)](
-    ctx: typer.Context,
-    *,
-    suggest_fn: Callable[..., SuggestionT],
-    classification: BusinessClassification | None,
-    file: str | None,
-    transaction_id: str | None,
-    apply: bool,
-    actor: str | None,
-    read_evidence: bool,
-    vision_model: str | None,
-    reject: bool,
-    reason: str,
-) -> tuple[SuggestionT, TransactionCatalogueRepositoryProtocol, LedgerActionPorts] | None:
-    """Shared classify/saturate prologue: validate options, resolve, suggest, handle ``--reject``.
-
-    Returns ``(suggestion, transaction_repository, ports)`` for the caller to
-    preview or apply, or ``None`` when ``--reject`` handled the
-    invocation (the caller then returns). ``suggest_fn`` is the stage-specific suggester
-    (:func:`suggest_llm_classification` or :func:`saturate_llm_classification`).
-    """
-    validated_transaction_id = _validate_classify_llm_options(
-        classification=classification,
-        file=file,
-        reject=reject,
-        apply=apply,
-        transaction_id=transaction_id,
-    )
-
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    composition = compose_ledger_llm(bucket_id=transaction_repository.bucket_id, settings=load_settings())
-    operation = authority_operation(ctx)
-    from ..ledger_action_composition import compose_ledger_action_ports
-
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=operation)
-    resolved_id = resolve_id(transaction_repository, validated_transaction_id)
-    suggestion = suggest_fn(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        operation=operation,
-        transaction_repository=transaction_repository,
-        read_evidence=read_evidence,
-        vision_model=vision_model,
-        settings=load_settings(),
-        ports=composition.ports,
-    )
-
-    if reject:
-        emit_llm_rejection(
-            ctx,
-            suggestion,
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
-            bucket_id=transaction_repository.bucket_id,
-            reason=reason,
-            actor=actor,
-            ports=ports,
-        )
-        return None
-    return suggestion, transaction_repository, ports
 
 
 class LedgerLlmRouteArguments(TypedDict):
@@ -695,6 +575,53 @@ class LedgerLlmRouteArguments(TypedDict):
     vision_model: str | None
     reject: bool
     reason: str
+
+
+def dispatch_autosplit(
+    ctx: typer.Context,
+    *,
+    transaction_id: str | None,
+    classification: BusinessClassification | None,
+    file: str | None,
+    apply: bool,
+    actor: str | None,
+    read_evidence: bool,
+    vision_model: str | None,
+    reject: bool = False,
+    reason: str = "",
+) -> None:
+    """Route ``classify --read-evidence --auto-split`` on the model's split verdict.
+
+    One model call — the split proposer — yields the verdict. A multi-child verdict
+    drives the evidence-driven split (preview, or with ``--apply`` the
+    base/IVA-separating split); a single-child "no split" verdict classifies the
+    transaction in place from that child's selections (preview, or with ``--apply``
+    the in-place write). The model emits no euro amount or regulated number; the
+    registry derives every child's base and IVA.
+    """
+    if not read_evidence:
+        raise bad(tr("cli.ledger.classify.auto_split_needs_evidence"))
+    transaction_id = _validate_classify_llm_options(
+        classification=classification, file=file, reject=reject, apply=apply, transaction_id=transaction_id
+    )
+    outcome = _run_review(
+        ctx,
+        transaction_id=transaction_id,
+        mode="auto_split",
+        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT
+        if reject
+        else LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
+        apply=apply,
+        reject=reject,
+        actor=actor,
+        read_evidence=read_evidence,
+        vision_model=vision_model,
+        reason=reason,
+    )
+    if isinstance(outcome, LedgerLlmReviewProjection):
+        _render_autosplit_preview(ctx, outcome)
+    else:
+        _render_settled(ctx, outcome)
 
 
 def ledger_classify_llm(
@@ -722,47 +649,28 @@ def ledger_classify_llm(
     unchanged. ``--llm`` is mutually exclusive with the manual
     ``--classification`` / ``--file`` override.
     """
-    prologue = _llm_classify_prologue(
+    transaction_id = _validate_classify_llm_options(
+        classification=classification, file=file, reject=reject, apply=apply, transaction_id=transaction_id
+    )
+    outcome = _run_review(
         ctx,
-        suggest_fn=suggest_llm_classification,
-        classification=classification,
-        file=file,
         transaction_id=transaction_id,
+        mode="classification",
+        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT
+        if reject
+        else LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
         apply=apply,
+        reject=reject,
         actor=actor,
         read_evidence=read_evidence,
         vision_model=vision_model,
-        reject=reject,
         reason=reason,
+        business_pct=business_pct,
     )
-    if prologue is None:
-        return
-    suggestion, transaction_repository, ports = prologue
-
-    if not apply:
-        _render_classify_llm_preview(ctx, suggestion=suggestion)
-        return
-
-    try:
-        result = execute_reviewed_decision(
-            suggestion,
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
-            decision=LlmReviewDecision.APPLY,
-            bucket_id=transaction_repository.bucket_id,
-            business_pct=parse_decimal_option(business_pct, label="business-pct"),
-            actor=actor or resolve_active_bucket_id() or "operator",
-            ports=ports,
-        )
-    except ValidationError as exc:
-        raise ledger_validation_bad(exc) from exc
-    if not isinstance(result, ManualLedgerTransactionResult):
-        raise TransactionValidationError(
-            "APPLY decision returned no manual ledger transaction result",
-            context={"decision": LlmReviewDecision.APPLY.value, "result_type": type(result).__name__},
-        )
-    # D1: the --llm --apply path is a single-transaction mutation; it emits the
-    # canonical mutation quintet with the llm provenance in the text lines.
-    _emit_llm_single_classify(ctx, result)
+    if isinstance(outcome, LedgerLlmReviewProjection):
+        _render_classify_llm_preview(ctx, suggestion=outcome.suggestion)
+    else:
+        _render_settled(ctx, outcome)
 
 
 def ledger_saturate_llm(
@@ -792,55 +700,28 @@ def ledger_saturate_llm(
     recorded as a declined audit event and the row is left unchanged. Manual
     ``classify`` flags remain the explicit per-field override.
     """
-    prologue = _llm_classify_prologue(
+    transaction_id = _validate_classify_llm_options(
+        classification=classification, file=file, reject=reject, apply=apply, transaction_id=transaction_id
+    )
+    outcome = _run_review(
         ctx,
-        suggest_fn=saturate_llm_classification,
-        classification=classification,
-        file=file,
         transaction_id=transaction_id,
+        mode="saturated",
+        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT
+        if reject
+        else LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY,
         apply=apply,
+        reject=reject,
         actor=actor,
         read_evidence=read_evidence,
         vision_model=vision_model,
-        reject=reject,
         reason=reason,
+        business_pct=business_pct,
     )
-    if prologue is None:
-        return
-    suggestion, transaction_repository, ports = prologue
-
-    iva_category_value = suggestion.iva_category.value if suggestion.iva_category is not None else None
-
-    if not apply:
-        _render_saturate_llm_preview(ctx, suggestion=suggestion)
-        return
-
-    try:
-        result = execute_reviewed_decision(
-            suggestion,
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY,
-            decision=LlmReviewDecision.APPLY,
-            bucket_id=transaction_repository.bucket_id,
-            business_pct=parse_decimal_option(business_pct, label="business-pct"),
-            actor=actor or resolve_active_bucket_id() or "operator",
-            ports=ports,
-        )
-    except TransactionValidationError as exc:
-        raise ledger_transaction_validation_no_recovery(exc) from None
-    except ValidationError as exc:
-        raise ledger_validation_bad(exc) from exc
-    if not isinstance(result, ManualLedgerTransactionResult):
-        raise TransactionValidationError(
-            "saturated APPLY decision returned no manual ledger transaction result",
-            context={"decision": LlmReviewDecision.APPLY.value, "result_type": type(result).__name__},
-        )
-    # D1: the --llm --saturate --apply path is a single-transaction mutation; it
-    # emits the canonical mutation quintet with the derived IVA category in the lines.
-    _emit_llm_single_classify(
-        ctx,
-        result,
-        extra_lines=(f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",),
-    )
+    if isinstance(outcome, LedgerLlmReviewProjection):
+        _render_saturate_llm_preview(ctx, suggestion=outcome.suggestion)
+    else:
+        _render_settled(ctx, outcome, saturated=True)
 
 
 def _validate_operator_iva_request(
@@ -868,73 +749,22 @@ def _validate_operator_iva_request(
     return transaction_id, iva_category
 
 
-def _derive_operator_iva(
-    *,
-    bucket_id: str,
-    transaction_id: str,
-    iva_category: IvaCategory,
-    actor: str | None,
-    ports: LedgerActionPorts,
-) -> OperatorIvaDerivationResult:
-    """Run the canonical application derivation and translate its refusals."""
-    try:
-        return derive_operator_iva_substrate(
-            bucket_id=bucket_id,
-            transaction_id=transaction_id,
-            iva_category=iva_category,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command=LlmReviewInvocationOrigin.CLASSIFY_IVA_CATEGORY_SATURATE.source_command,
-            ports=ports,
-        )
-    except TransactionValidationError as exc:
-        raise ledger_transaction_validation_no_recovery(exc) from None
-    except ValidationError as exc:
-        raise ledger_validation_bad(exc) from exc
-
-
-def _require_complete_operator_derivation(
-    derivation: OperatorIvaDerivationResult,
-    *,
-    iva_category: IvaCategory,
-) -> tuple[ManualLedgerTransactionResult, Decimal, Decimal, Decimal]:
-    """Narrow the model's derivability coupling before projecting its substrate."""
-    if not derivation.derivable:
-        raise bad(
-            tr(
-                "cli.ledger.classify.derive_non_derivable",
-                category=iva_category.value,
-                note=derivation.note,
-            ),
-        )
-
-    result = derivation.result
-    taxable_base = derivation.taxable_base
-    iva_rate = derivation.iva_rate
-    iva_amount = derivation.iva_amount
-    if result is None or taxable_base is None or iva_rate is None or iva_amount is None:
-        raise bad(
-            tr("cli.ledger.classify.derive_substrate_incomplete", category=iva_category.value),
-        )
-    return result, taxable_base, iva_rate, iva_amount
-
-
 def _emit_operator_iva_result(
     ctx: typer.Context,
     *,
-    derivation: OperatorIvaDerivationResult,
-    result: ManualLedgerTransactionResult,
-    taxable_base: Decimal,
-    iva_rate: Decimal,
-    iva_amount: Decimal,
+    derivation: LedgerOperatorIvaResult,
 ) -> None:
     """Emit the canonical single-result envelope for operator IVA derivation."""
     from ._ledger_payloads import LedgerClassifySingleResult
 
-    transaction_payload = ledger_transaction_payload(result.transaction)
-    review_status = ledger_transaction_review_status(result.transaction)
+    result = derivation.classification
+    if result is None or result.transaction is None or result.review_status is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    transaction_payload = result.transaction
+    review_status = result.review_status
     classify_result = LedgerClassifySingleResult.model_validate(
         {
-            "bucket_id": result.ref.bucket_id,
+            "bucket_id": str(result.profile_id),
             "transaction_id": result.transaction.transaction_id,
             "bucket_event_ids": list(result.bucket_event_ids),
             "review_status": review_status,
@@ -943,10 +773,10 @@ def _emit_operator_iva_result(
     )
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-        f"{tr('cli.ledger.labels.iva_category')}\t{derivation.iva_category.value}",
-        f"{tr('cli.ledger.labels.taxable_base')}\t{format(taxable_base, 'f')}",
-        f"{tr('cli.ledger.labels.iva_rate')}\t{format(iva_rate, 'f')}",
-        f"{tr('cli.ledger.labels.iva_amount')}\t{format(iva_amount, 'f')}",
+        f"{tr('cli.ledger.labels.iva_category')}\t{derivation.iva_category}",
+        f"{tr('cli.ledger.labels.taxable_base')}\t{derivation.taxable_base}",
+        f"{tr('cli.ledger.labels.iva_rate')}\t{derivation.iva_rate}",
+        f"{tr('cli.ledger.labels.iva_amount')}\t{derivation.iva_amount}",
         f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
         f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
     ]
@@ -980,31 +810,16 @@ def ledger_operator_iva_derive(
         iva_category=iva_category,
     )
 
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    from ..ledger_action_composition import compose_ledger_action_ports
-
-    ports = compose_ledger_action_ports(
-        bucket_id=transaction_repository.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    derivation = _derive_operator_iva(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        iva_category=iva_category,
-        actor=actor,
-        ports=ports,
-    )
-    result, taxable_base, iva_rate, iva_amount = _require_complete_operator_derivation(
-        derivation,
-        iva_category=iva_category,
-    )
-    _emit_operator_iva_result(
+    derivation = run_ledger_operator_iva(
         ctx,
-        derivation=derivation,
-        result=result,
-        taxable_base=taxable_base,
-        iva_rate=iva_rate,
-        iva_amount=iva_amount,
+        transaction_id=transaction_id,
+        iva_category=iva_category.value,
+        actor=actor,
     )
+    if derivation.outcome == "validation_error":
+        raise bad(tr("cli.ledger.errors.command_input_invalid", details="; ".join(derivation.validation_messages)))
+    if not derivation.derivable:
+        raise bad(
+            tr("cli.ledger.classify.derive_non_derivable", category=derivation.iva_category, note=derivation.note)
+        )
+    _emit_operator_iva_result(ctx, derivation=derivation)

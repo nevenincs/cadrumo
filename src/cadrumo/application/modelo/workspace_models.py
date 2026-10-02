@@ -39,6 +39,7 @@ from ...domain.modelos.work_unit import WorkUnitState
 from ..operator_actions.models import ActionReference
 from ..state_projection import ProjectionModeloReadiness
 from . import _workspace_model_validation as _workspace_validation
+from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review import ModeloWorkReview
 
@@ -1012,6 +1013,8 @@ class ModeloWorkspaceLifecycleProjectionV1(_WorkspaceModel):
     local_filing_record_id: str | None = None
     aeat_accepted: Literal[False] = False
     events: tuple[BucketEvent, ...] = ()
+    edit_baseline: ModeloEditApplyBaselineV1 | None = None
+    asks_modelo_390: bool = False
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -1022,6 +1025,18 @@ class ModeloWorkspaceLifecycleProjectionV1(_WorkspaceModel):
             raise ValueError("verification lifecycle fact requires its calculation revision")
         if self.local_filing_record_id is not None and self.calculation_revision_id is None:
             raise ValueError("local filing lifecycle fact requires its calculation revision")
+        baseline = self.edit_baseline
+        if baseline is not None and (
+            baseline.bucket_id != self.target.bucket_id
+            or baseline.work_unit_id != self.target.work_unit_id
+            or baseline.modelo != self.target.modelo
+            or baseline.filing_year != self.target.filing_year
+            or baseline.period_filing_year != self.target.period.filing_year
+            or baseline.period_code != self.target.period.code
+            or baseline.current_calculation_revision_id != self.calculation_revision_id
+            or baseline.law_selected_revision_id != self.target.law_selected_revision_id
+        ):
+            raise ValueError("lifecycle edit baseline must match its captured target and revision")
         return self
 
 

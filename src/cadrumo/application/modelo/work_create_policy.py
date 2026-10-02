@@ -31,7 +31,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from ...domain.modelos.errors import ModeloError
+
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileRecord
 
 #: Ceded autonomic-tax modelos that are administered by the Comunidades
@@ -81,6 +84,10 @@ class ModeloWorkCreateApplicabilityRefusal:
     reason: str
 
 
+class ModeloWorkCreateApplicabilityRefusedError(ModeloError):
+    """Registered refusal identity for blocked work creation in profile custody."""
+
+
 def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
     """Return the jurisdiction redirect for a ceded autonomic tax, if any.
 
@@ -103,6 +110,7 @@ def modelo_work_create_applicability_refusal(
     *,
     allow_not_applicable: bool,
     record: UserProfileRecord | None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloWorkCreateApplicabilityRefusal | None:
     """Return an applicability refusal for the active profile, if one applies.
 
@@ -131,16 +139,14 @@ def modelo_work_create_applicability_refusal(
         return None
 
     from ...domain.calculations.registry.applicability import derive_modelo_applicability
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..user_profile.projections import projection_for_taxpayer
     from .profile_readiness_gate import BLOCKING_APPLICABILITY_VERDICTS
 
-    with bundled_indexed_authority().operation() as operation:
-        try:
-            profile = projection_for_taxpayer(record or {}, schema=operation.profile_schema())
-        except ValidationError:
-            return None
-        applicability = derive_modelo_applicability(profile, modelo.strip())
+    try:
+        profile = projection_for_taxpayer(record or {}, schema=operation.profile_schema())
+    except ValidationError:
+        return None
+    applicability = derive_modelo_applicability(profile, modelo.strip(), operation=operation)
     if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return ModeloWorkCreateApplicabilityRefusal(modelo=modelo.strip(), reason=applicability.reason)
@@ -169,6 +175,7 @@ def guard_active_profile_foral_ccaa(record: UserProfileRecord | None) -> None:
 __all__ = [
     "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
     "ModeloWorkCreateApplicabilityRefusal",
+    "ModeloWorkCreateApplicabilityRefusedError",
     "ceded_autonomic_modelo_locale_key",
     "guard_active_profile_foral_ccaa",
     "modelo_work_create_applicability_refusal",

@@ -733,63 +733,6 @@ llm:
         para esta invocación.'
       mint_refused: 'Rechazado: la lectura externa de documentos del contribuyente
         no está permitida para esta invocación.'
-mcp:
-  call:
-    timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)
-      y se canceló. Reinténtalo o ejecuta el comando equivalente de Cadrumo directamente
-      en un terminal si la operación es larga.'
-    timeout_may_complete: '''{command}'' superó su límite de tiempo; la operación
-      puede seguir completándose en segundo plano. Vuelve a ejecutarla con la misma
-      clave de idempotencia para comprobarlo: la garantía de idempotencia hace que
-      el reintento sea seguro y nunca escriba dos veces.'
-  elicitation:
-    confirm:
-      consequence_handoff: Esto genera el archivo definitivo que el contribuyente
-        presentará ante la AEAT por su cuenta. Al confirmar no se envía nada a ningún
-        sitio.
-      consequence_local: Esto modifica datos locales del perfil de contribuyente activo.
-      declined: El usuario no confirmó '{command}' ({outcome}); no se ejecutó nada.
-      field_description: ¿Ejecutar '{command}' ahora?
-      message: Confirma la ejecución de '{command}'. {consequence} Responde sí para
-        continuar o no para detener.
-    refusal:
-      blocked: '''{command}'' está bloqueado de forma permanente: el envío en directo
-        a la AEAT está prohibido por diseño. Exporta en local; el contribuyente presenta
-        por su cuenta.'
-      no_channel: '''{command}'' necesita una confirmación humana y este cliente no
-        admite solicitudes interactivas. Ejecútalo desde un cliente que pueda hacerte
-        preguntas o ejecuta el comando equivalente de Cadrumo CLI directamente en
-        un terminal.'
-  faithfulness:
-    advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
-      que ningún resultado de herramienta de esta sesión ha producido. Verifica la
-      cifra con una lectura de cálculo o revisión antes de confiar en ella.'
-  harness:
-    off_host_consent: 'Aviso de privacidad: léelo antes de continuar. Esta consola
-      la maneja un asistente de IA que se ejecuta en el proveedor de LLM que hayas
-      elegido. Tus palabras y las cifras con las que trabaja el asistente (importes,
-      valores de casilla, obligaciones) se envían a ese proveedor para operar la consola.
-      Tus DOCUMENTOS DE ORIGEN (facturas, extractos bancarios y cualquier byte de
-      evidencia) NUNCA salen de tu equipo: permanecen en almacenamiento local cifrado
-      y no se transmiten nunca. Si actúas por cuenta de un tercero (un gestor o profesional),
-      confirma que esto es aceptable antes de continuar.'
-  identity_gate:
-    elicitation_echo: 'Actuando como el perfil de contribuyente: %{label}.'
-    first_mutation_refused: 'Rechazado: confirma el contribuyente activo antes del
-      primer cambio de esta sesión. Una presentación o edición nunca debe ejecutarse
-      con la identidad equivocada. Llama a whoami (o ''config profile status'' / ''overview
-      status'') para ver qué contribuyente está activo y reinténtalo: una sola lectura
-      de identidad libera esto durante la sesión hasta que cambies de perfil.'
-  persona:
-    handoff_denied: '''{command}'' es el límite irreversible de entrega para presentación,
-      propiedad del rol ''{owner}''; al rol ''{persona}'' se le deniega estructuralmente.
-      Entrega la unidad de trabajo verificada a la sesión verificadora para generar
-      la exportación o el marcador de registro.'
-  serving:
-    warm_degraded: '''{command}'' se atendió mediante el transporte de subproceso
-      porque el entorno de ejecución en caliente estaba {reason}; el resultado es
-      idéntico, solo más lento. La atención en caliente se reanuda cuando termina
-      la llamada lenta.'
 operation:
   modal:
     action:
@@ -810,6 +753,7 @@ operation:
       cancellation_unavailable: La cancelación no está disponible ahora mismo. Vuelve
         a intentarlo en unos instantes.
       cancellation_unsupported: Esta operación no se puede cancelar una vez iniciada.
+      detach_not_allowed: Esta operación no se puede desvincular.
       operation_terminal: La operación ya ha terminado, así que no hay nada que cancelar.
       response_authority_unavailable: No se ha podido registrar la respuesta ahora
         mismo. Vuelve a intentarlo en unos instantes.
@@ -819,9 +763,13 @@ operation:
       unknown_operation: El backend ya no conoce esta operación.
       unsupported_cancellation_version: Esta versión no puede cancelar esa operación.
         Actualiza Cadrumo.
+      unsupported_detach_version: Esta versión no puede desvincular esa operación.
+        Actualiza la aplicación.
       unsupported_response_control_version: Esta versión no puede responder a esa
         operación. Actualiza Cadrumo.
     status:
+      access_unavailable: El acceso a esta operación no está disponible. Cierra esta
+        vista y vuelve a iniciar sesión si es necesario.
       running: En curso
     terminal:
       cancelled: Cancelada
@@ -1293,6 +1241,102 @@ tui:
       notifications: Notificaciones
       overview: Resumen
       reconciliation: Conciliación
+  automation_decision:
+    access_lost: El acceso al perfil ha finalizado. Vuelve a autenticarte para consultar
+      la operación.
+    busy: Registrando tu decisión…
+    cancel: Cancelar
+    completed: Decisión registrada.
+    confirm_approve: Aprobar esta solicitud exacta
+    confirm_decline: Rechazar esta solicitud exacta
+    consent: Acceso solicitado
+    effect: Efecto observado
+    missing_selection: Selecciona una solicitud para revisarla.
+    operation_id: Operación
+    password: Contraseña actual del perfil
+    terminal_condition: Estado terminal
+    title: Revisar solicitud de automatización
+    unavailable: No se ha podido confirmar la decisión. Consulta la operación antes
+      de reintentarlo.
+    unknown_effect: Desconocido; consulta la operación antes de reintentarlo.
+  automation_inventory:
+    access_lost: Esta sesión del perfil ya no está disponible.
+    actions: Acciones
+    all_periods: Todos los periodos de declaración
+    approve: Aprobar solicitud
+    client: Cliente
+    close: Cerrar
+    decline: Rechazar solicitud
+    delegation: Delegación
+    destination: Destino
+    details: Detalles
+    disclosures: Datos que se pueden revelar
+    empty: No hay elementos
+    expires: Caduca
+    grant: Concesión
+    grant_expires: Caducidad propuesta de la concesión
+    grants: Concesiones
+    id: ID
+    key_expires: Caducidad propuesta de la clave
+    keys: Claves
+    kind: Tipo
+    last_used: Último uso
+    no_periods: Ningún periodo de declaración
+    not_applicable: No aplicable
+    operations: Operaciones
+    os_lock: Permitido con el sistema bloqueado
+    period_independent: Independiente del periodo
+    periods: Periodos
+    profile: Perfil
+    refresh: Actualizar
+    requests: Solicitudes
+    review_digest: Huella de revisión
+    state: Estado
+    target_grant: Concesión de destino
+    target_key: Clave de destino
+    title: Acceso automatizado
+    unattended: Sin supervisión
+    unattended_notice: Con una autorización válida para acceso sin supervisión, esta
+      instalación puede desbloquear el perfil tras cerrar la sesión humana. Se siguen
+      aplicando las reglas de bloqueo y revocación.
+    unavailable: El inventario de automatización no está disponible. Actualiza para
+      volver a intentarlo.
+  automation_request:
+    actions: Acciones
+    capability_note: Las operaciones enumeradas describen capacidades, no su disponibilidad
+      actual.
+    change_scope: Cambiar alcance
+    complete: Aprobado y completado
+    credential_reference: UUID de la referencia de credencial protegida existente
+    declined: Rechazado
+    delegation: Permitir delegación
+    disclosures: Datos divulgados
+    enroll: Crear acceso
+    grant_expiry: Caducidad de la concesión (fecha y hora ISO)
+    invalid: Solicitud no válida o no disponible
+    key_expiry: Caducidad de la clave (fecha y hora ISO)
+    kind: Tipo de solicitud
+    operations: Operaciones
+    os_lock: Permitir uso con el sistema operativo bloqueado
+    period_add: Añadir período
+    period_code: Código de período
+    period_independent: Permitir operaciones independientes del período
+    period_mode: Ámbito de períodos
+    period_selected: Períodos seleccionados
+    period_year: Año
+    reference: Referencia de credencial protegida
+    renew: Renovar concesión
+    request_id: ID de solicitud
+    requested: Pendiente de revisión humana independiente
+    review_digest: Huella de la revisión
+    rotate: Cambiar clave
+    submit: Enviar para revisión
+    target_grant: UUID de la concesión existente
+    target_key: UUID de la clave existente (solo al cambiarla)
+    title: Solicitar acceso a la API
+    unattended: Permitir uso desatendido
+    uncertain: Resultado desconocido; conserve el ID de solicitud
+    waiting: Enviando solicitud
   declarations:
     availability:
       available: Disponible
@@ -1682,8 +1726,23 @@ tui:
       confirming: Registrando la factura a partir del documento…
       detail: 'Tamaño: {size} bytes · capturado {captured}'
       draft:
+        adjustments: 'Recargo: {recargo} · tipo de retención: {retention_rate} · retención:
+          {retention} · suplidos: {suplidos}'
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        breakdown: '{index}. tipo: {rate} · base: {base} · IVA: {iva} · tipo de recargo:
+          {recargo_rate} · recargo: {recargo}'
+        breakdown_empty: No hay desglose por tipo
+        breakdown_heading: Desglose
+        candidate: 'Valor propuesto: {field} = {value} · referencia: {anchor} · nota:
+          {note}'
+        customer_role: Cliente
         discrepancies: 'Comprobaciones que no cuadran con el documento: {count}'
+        document: 'Documento {number} · serie: {series} · fecha: {date} · rectifica:
+          {rectifies} · naturaleza del suministro: {supply_nature} · categoría de
+          IVA: {iva_category} · tipo sugerido: {suggested_kind}'
+        finding: '{kind}: {field} · {detail} · esperado: {expected} · observado: {observed}'
+        findings_empty: No hay observaciones
+        findings_heading: Observaciones
         identity: Factura {number} con fecha {date}
         label_reading:
           busy_refused: 'Otra lectura estaba usando la inferencia de este equipo,
@@ -1696,8 +1755,30 @@ tui:
           reader_unavailable: 'No se pudo ejecutar el lector local, así que {count}
             campos que las etiquetas no leyeron quedan vacíos: {fields}. Compruebe
             el lector y vuelva a leer el documento.'
+        line: '{index}. {description} · cantidad: {quantity} · precio unitario: {unit_price}
+          · base: {base} · tipo: {rate} · IVA: {iva} · tipo de recargo: {recargo_rate}
+          · recargo: {recargo}'
+        lines_empty: No hay líneas
+        lines_heading: Líneas
+        'no': 'No'
+        party: '{role}: {name} · identificador fiscal: {tax_id} · código postal: {postal_code}
+          · país: {country} · código de país: {country_code} · código de país declarado:
+          {stated_country_code}'
+        provenance: 'Campo: {field} · origen: {origin} · fundamento: {grounding} ·
+          referencia: {anchor} · referencia rechazada: {refused_anchor} · declaración
+          propia: {self_reported} · derivado de: {derived_from} · prueba del rol:
+          {role_evidence} · no verificado: {unverified} · nota: {note}'
+        provenance_empty: No hay datos de procedencia
+        provenance_heading: Procedencia de los datos
+        regime: 'Régimen: {value}'
+        source_metadata: 'Metadatos de la fuente · SHA-256 de la transcripción: {transcription_sha256}
+          · longitud del texto original: {raw_text_length}'
+        structured_class: 'Clasificación del documento: {kind} · código de origen:
+          {source_code}'
         supplier: 'Proveedor: {name} · NIF {nif}'
+        supplier_role: Proveedor
         unread: sin leer
+        'yes': Sí
       empty: No hay justificantes pendientes de revisión.
       extract: Leer documento
       loading: Leyendo los documentos…
@@ -1724,8 +1805,8 @@ tui:
       records_empty: Aún no hay documentos de factura registrados.
       records_heading: Documentos de factura en este equipo
       reviewed: Revisado
-      safe_metadata: Solo metadatos seguros; el contenido del documento permanece
-        protegido.
+      safe_metadata: El documento de origen permanece protegido y cifrado; los campos
+        obtenidos de él se muestran para su revisión.
       title: Revisión de justificantes
     flow:
       in_flight_refusal: Espera a que termine la operación actual antes de salir de
@@ -2224,8 +2305,26 @@ tui:
           a abrirla para ver el estado actual.
       static_fallback: Solo se muestra el diseño del formulario. No se muestran valores
         calculados a continuación.
+  restricted:
+    actions: 'Acciones permitidas: {values}'
+    all_periods: Todos los períodos
+    availability: 'Disponibilidad — almacenamiento: {storage}; autoridad: {authority};
+      proveedor: {provider}'
+    change_user: Cambiar de usuario
+    close: Cerrar
+    grant: 'Concesión válida: {valid}; vence: {expires_at}'
+    lock: Bloquear esta sesión
+    'no': 'No'
+    none: Ninguno
+    operations: 'Operaciones permitidas: {values}'
+    periods: 'Períodos: {values}; trabajo sin período: {independent}'
+    profile: 'Perfil: {label} ({profile_id})'
+    session_expiry: 'La sesión vence: {expires_at}'
+    title: Sesión API restringida
+    'yes': Sí
   root:
     account:
+      access: Acceso
       appearance: Apariencia
       change_user: Cambiar usuario
       default_profile: Cuenta
@@ -2238,6 +2337,7 @@ tui:
       line: '{label} · {status}'
       line_with_expiry: '{label} · {status} · hasta las {expires_at}'
     account_help:
+      access: Gestionar sesiones y acceso de automatización
       appearance: Cambia entre la apariencia clara y la oscura
       change_user: Inicia sesión en otro perfil de este equipo
       language: Elige el idioma en que se muestran las páginas de este perfil
@@ -2245,6 +2345,7 @@ tui:
       profile: Revisa y edita los datos de este perfil
       sign_out: Cierra la sesión de este perfil y bloquea sus datos
     account_key:
+      access: Acceso
       appearance: Tema
       change_user: Usuario
       language: Idioma
@@ -2262,6 +2363,101 @@ tui:
       quit_help: Sale de Cadrumo; la sesión del perfil queda como está
     title: 'Cadrumo: sesión de terminal'
     updating: Actualizando el área de trabajo…
+  runtime_access:
+    access_lost: El acceso a este perfil no está disponible. Inicia sesión de nuevo.
+    busy: Procesando…
+    close: Cerrar
+    completed: Completado.
+    denial_acknowledgement: 'Acceso denegado: {access_denied} · Limpieza de credenciales
+      pendiente: {cleanup_pending}'
+    deny_all: Revocar toda la automatización
+    deny_grant: Revocar concesión
+    deny_key: Revocar clave
+    deny_target: UUID del destino
+    invalid_grants: Introduce UUID válidos de concesiones.
+    invalid_target: Introduce un UUID de destino válido.
+    lock_current: Bloquear esta sesión
+    lock_profile: Bloquear el perfil en todas partes
+    refresh: Actualizar
+    refused: Se ha rechazado el acceso.
+    resume: Desbloquear perfil
+    resume_grants: UUID de las concesiones que se reactivarán
+    resume_password: Contraseña del perfil
+    revoke_session: Revocar sesión
+    session_details: 'Sesión: {session_id} | Cliente: {client_id} | Sesión padre:
+      {parent_session_id} | Autorización: {grant_id} | Clave: {key_id} | Tipo: {kind}
+      | Estado: {state} | Caduca: {expires_at}'
+    sessions: Sesiones
+    sessions_empty: No hay sesiones actuales.
+    sessions_locked: 'Sesiones bloqueadas: {session_ids}'
+    title: Acceso al perfil
+    view_automation: Ver automatización
+  runtime_login:
+    cancel: Cancelar
+    credential_hint_api_key: Introduce la clave del perfil seleccionado.
+    credential_hint_api_reference: Lea la clave exacta de las credenciales locales
+      protegidas y autentíquese en el servicio local.
+    credential_hint_receipt: Usa el recibo protegido de este perfil; no se introduce
+      contraseña ni clave API.
+    credential_label_api_key: Clave de API
+    credential_label_api_reference: Referencia de credencial (UUID)
+    credential_label_password: Contraseña
+    credential_required: Introduce una credencial.
+    method_api_key: Clave de API
+    method_api_reference: Clave API guardada
+    method_label: Método de inicio de sesión
+    method_password: Contraseña
+    method_receipt: Reanudar con recibo protegido
+    profile_label: Perfil
+    progress: Iniciando sesión…
+    reference_invalid: Introduzca un UUID válido de referencia de credencial.
+    refused: Se ha rechazado el inicio de sesión.
+    submit: Iniciar sesión
+    title: Iniciar sesión en un perfil
+  runtime_management:
+    availability:
+      available: Disponible
+      refused: Rechazado
+      unavailable: No disponible
+      unknown: Desconocido
+      unsupported: No compatible
+    busy: Comprobando el estado del servicio local…
+    disable: Bajo demanda
+    enable: Iniciar al abrir sesión
+    kind:
+      linux_user_service: Servicio de usuario de Linux
+      macos_agent: Agente de inicio de macOS
+      windows_task: Tarea programada de Windows
+    labels:
+      binding_matches: Vinculado a esta instalación
+      listener: Punto de escucha
+      login_autostart: Se inicia al abrir sesión
+      manager_availability: Disponibilidad del gestor
+      manager_kind: Tipo de gestor
+      process_state: Estado del proceso
+      provisioned: Configurado
+    listener:
+      draining: Finalizando
+      ready: Listo
+      refused: Rechazado
+      unavailable: No disponible
+      unknown: Desconocido
+    not_reported: Sin datos
+    open: Administrar servicio
+    open_help: Consulta, inicia o configura el servicio local.
+    process:
+      running: En ejecución
+      starting: Iniciando
+      stopped: Detenido
+      unknown: Desconocido
+    refused: No se ha podido confirmar el estado del servicio.
+    start: Iniciar
+    stop: Detener
+    stop_accepted: Detención aceptada; el servicio está finalizando.
+    stop_cancel: Mantener en ejecución
+    stop_confirm: Detener todos los perfiles y trabajos
+    stop_scope: ¿Detener el servicio compartido para todos los perfiles y trabajos?
+    title: Administración del servicio local
   search:
     action:
       classify_ledger: Clasificar libro mayor

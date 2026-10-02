@@ -96,8 +96,7 @@ class ModeloReconcileResult(OutputSchema):
 class WorkCompareTaxationResult(OutputSchema):
     """Result payload for ``aeat app modelo work compare-taxation``.
 
-    Projects :class:`TaxationComparisonResult` returned
-    by :func:`compare_taxation_for_work_address`. It surfaces the
+    Projects the registered exact-profile comparison result. It surfaces the
     semantic-role-selected cuota resultante de la autoliquidación and cuota
     diferencial / resultado for both conjunta and individual filing modes, plus
     the signed delta and

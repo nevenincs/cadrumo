@@ -6,6 +6,8 @@ import ast
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from pathlib import Path
+from threading import get_ident
+from types import SimpleNamespace
 from typing import cast
 
 import pytest
@@ -48,6 +50,14 @@ from .....application.aeat_sync.workspace import (
     project_aeat_sync_workspace,
 )
 from .....application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from .....application.live.notification_ports import NotificationsPorts
+from .....application.live.notifications_read_operation import (
+    NOTIFICATIONS_LIST_DEFINITION_ID,
+    NotificationsListPublicResultV1,
+    NotificationsSnapshotSummaryPublicV1,
+    build_notifications_list_definition,
+    build_notifications_list_registration,
+)
 from .....application.operations.models import OperationDefinitionId
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
@@ -59,10 +69,13 @@ from .....application.user_profile.censal_operation import (
 from .....core.config import override_settings
 from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from .....core.identity.bucket import BucketId
+from .....core.operations import OperationTerminalCondition
 from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
 from ...components.host import ScreenHostApp
 from ...navigation import TuiScreenContextV1
+from ...operations.controller_port import OperationControllerPort
+from ...operations.modal import OperationModal, OperationModalSettledOutcomeV1
 from ..controller import AeatSyncWorkspaceController
 from ..models import (
     AeatSyncNotificationDocumentHandoffV1,
@@ -99,6 +112,16 @@ _AEAT_SYNC_INTENTIONAL_IDENTICAL_HU = frozenset(
 )
 
 
+class _StartedOperationController:
+    """Minimal controller identity; these screen tests replace modal mounting."""
+
+    operation_id = "a" * 64
+
+
+def _started_operation_controller() -> OperationControllerPort:
+    return cast(OperationControllerPort, _StartedOperationController())
+
+
 def _flatten_locale(node: object, prefix: str = "") -> dict[str, str]:
     """Flatten a locale tree while ignoring non-scalar structural nodes."""
     if isinstance(node, dict):
@@ -133,7 +156,6 @@ def _projection(
     availability: AeatSyncWorkspaceAvailability = AeatSyncWorkspaceAvailability.AVAILABLE,
     *,
     unread: bool = False,
-    unknown_pair: bool = False,
     census_status: AeatSyncCensusStatus = AeatSyncCensusStatus.CONFLICT,
     notification_specs: tuple[tuple[str, date], ...] | None = None,
     overview_area: AeatSyncOverviewArea | None = None,
@@ -156,11 +178,9 @@ def _projection(
             action_catalogue=OPERATOR_ACTION_CATALOGUE,
             operation_contracts=_contracts(),
         )
-    resolved_action_id = action_id or ("operator.live.notifications.list" if unknown_pair else "operator.profile.edit")
+    resolved_action_id = action_id or "operator.profile.edit"
     action = ActionReference(action_id=resolved_action_id)
-    resolved_area = overview_area or (
-        AeatSyncOverviewArea.NOTIFICATIONS if unknown_pair else AeatSyncOverviewArea.CENSUS
-    )
+    resolved_area = overview_area or AeatSyncOverviewArea.CENSUS
     overview = AeatSyncWorkspaceOverviewRowV1(
         area=resolved_area,
         local_state=AeatSyncSourceState.PRESENT,
@@ -169,7 +189,7 @@ def _projection(
         aeat_observed_at=_T2,
         discrepancy_kind=AeatSyncDiscrepancyKind.NONE,
         supported_actions=(action,),
-        supported_operations=() if unknown_pair else (operation_id,),
+        supported_operations=(operation_id,),
     )
     period = Period.from_year_and_code(2026, "1T")
     return project_aeat_sync_workspace(
@@ -304,6 +324,13 @@ def _contracts(
     operation_id: OperationDefinitionId = "user-profile.censo-review",
 ) -> OperationPublicContractSetV1:
     """Build a public contract whose operation/action join is explicit."""
+    if action_id == "operator.live.notifications.list" and operation_id == NOTIFICATIONS_LIST_DEFINITION_ID:
+
+        def unused_notification_ports() -> NotificationsPorts:
+            raise AssertionError("public contract projection must not open notification ports")
+
+        definition = build_notifications_list_definition(unused_notification_ports)
+        return OperationPublicContractSetV1.build((build_notifications_list_registration(definition).contract,))
     definition = build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
         browser_session_factory=default_browser_session_factory,
@@ -548,8 +575,9 @@ async def test_all_six_routes_mount_without_firing_a_host_handoff_or_leaking_sco
     """
     calls: list[object] = []
 
-    async def operation(request: AeatSyncOperationRequestV1) -> None:
+    async def operation(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
+        return _started_operation_controller()
 
     async def document(row: AeatSyncWorkspaceNotificationRowV1) -> None:
         calls.append(row)
@@ -567,13 +595,22 @@ async def test_all_six_routes_mount_without_firing_a_host_handoff_or_leaking_sco
 
 
 @pytest.mark.asyncio
-async def test_explicit_overview_operation_invokes_host_once_and_missing_host_refuses() -> None:
+async def test_explicit_overview_operation_invokes_host_once_and_missing_host_refuses(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     calls: list[AeatSyncOperationRequestV1] = []
 
-    async def handoff(request: AeatSyncOperationRequestV1) -> None:
+    controllers: list[OperationControllerPort] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
+        controller = _started_operation_controller()
+        controllers.append(controller)
+        return controller
 
     screen = AeatSyncOverviewScreen(_controller(operation_handoff=handoff))
+    presented: list[OperationControllerPort] = []
+    monkeypatch.setattr(screen, "_show_operation_modal", presented.append)
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
         await pilot.pause()
         await pilot.click("#aeat-sync-operation-0")
@@ -586,6 +623,7 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
             operation="user-profile.censo-review",
         )
     ]
+    assert presented == controllers
     refused = AeatSyncOverviewScreen(_controller())
     async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
         await pilot.pause()
@@ -597,12 +635,41 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
 
 
 @pytest.mark.asyncio
-async def test_unknown_pair_is_visible_refusal_and_unread_notification_never_calls_document_door() -> None:
+async def test_started_filed_pull_handoff_pushes_the_canonical_operation_modal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    started_controller = _started_operation_controller()
+
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        return started_controller
+
+    screen = AeatSyncOverviewScreen(
+        _controller(
+            operation_handoff=handoff,
+            overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
+            action_id="operator.live.filed.pull_all",
+            operation_id="live.filed-history.pull",
+        )
+    )
+    presented: list[tuple[OperationModal, object]] = []
+    async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        monkeypatch.setattr(screen.app, "push_screen", lambda modal, callback: presented.append((modal, callback)))
+        await pilot.click("#aeat-sync-operation-0")
+        await pilot.pause()
+
+    assert len(presented) == 1
+    assert isinstance(presented[0][0], OperationModal)
+    assert presented[0][0]._controller is started_controller
+    assert presented[0][1] == screen._on_operation_settled
+
+
+@pytest.mark.asyncio
+async def test_missing_session_contract_is_visible_refusal_and_unread_notification_never_calls_document_door() -> None:
     unknown = AeatSyncOverviewScreen(
         AeatSyncWorkspaceController(
             TuiScreenContextV1(destination="workbench.aeat_sync"),
-            _projection(unknown_pair=True),
-            operation_contracts=_contracts(),
+            _projection(),
         )
     )
     async with ScreenHostApp[None](unknown).run_test(size=(100, 30)) as pilot:
@@ -666,6 +733,118 @@ def test_controller_refuses_forged_contract_join_and_catalogue_command() -> None
         operation_contracts=_contracts(),
     )
     assert canonical_guard.admitted_operation((action,), (operation,)) is None
+
+
+@pytest.mark.asyncio
+async def test_successful_operation_refreshes_aeat_sync_off_ui_loop_and_rearms_button() -> None:
+    filed_projection = _projection(
+        overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
+        action_id="operator.live.filed.pull_all",
+        operation_id="live.filed-history.pull",
+    )
+    refreshed = filed_projection.model_copy(deep=True)
+    reads: list[int] = []
+
+    def refresh() -> AeatSyncWorkspaceProjectionV1:
+        reads.append(get_ident())
+        return refreshed
+
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        raise AssertionError("refresh cannot submit a second operation")
+
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        filed_projection,
+        operation_handoff=handoff,
+        refresh_snapshot=refresh,
+        operation_contracts=_contracts("operator.live.filed.pull_all", "live.filed-history.pull"),
+    )
+    screen = AeatSyncOverviewScreen(controller)
+    succeeded = OperationModalSettledOutcomeV1.model_construct(
+        view_model=SimpleNamespace(projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.SUCCEEDED))
+    )
+    refused = OperationModalSettledOutcomeV1.model_construct(
+        view_model=SimpleNamespace(projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.REFUSED))
+    )
+    async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        screen._consumed_request_ids.add("aeat-sync-operation-0")
+        ui_thread = get_ident()
+        screen._on_operation_settled(refused)
+        await pilot.pause()
+        assert reads == []
+        screen._on_operation_settled(succeeded)
+        await pilot.pause()
+        assert reads and reads[0] != ui_thread
+        assert controller.projection is refreshed
+        assert screen._consumed_request_ids == set()
+        assert not screen.query_one("#aeat-sync-operation-1-0", Button).disabled
+
+
+@pytest.mark.asyncio
+async def test_successful_notification_list_projects_capture_times_and_row_counts() -> None:
+    """The TUI renders only the registered public summary fields after settlement."""
+    captured_at = datetime(2026, 9, 28, 12, 30, tzinfo=UTC)
+    result = NotificationsListPublicResultV1(
+        bucket_id=_BUCKET_ID,
+        count=2,
+        rows=(
+            NotificationsSnapshotSummaryPublicV1(
+                snapshot_id="1" * 64,
+                captured_at=captured_at,
+                row_count=7,
+            ),
+            NotificationsSnapshotSummaryPublicV1(
+                snapshot_id="2" * 64,
+                captured_at=captured_at.replace(day=27),
+                row_count=0,
+            ),
+        ),
+    )
+    projected: list[object] = []
+
+    class _NotificationsListResultReader:
+        async def read_notifications_list_result(self, projection: object) -> NotificationsListPublicResultV1:
+            projected.append(projection)
+            return result
+
+    result_reader = _NotificationsListResultReader()
+
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        return cast(OperationControllerPort, result_reader)
+
+    request = AeatSyncOperationRequestV1(
+        action=ActionReference(action_id="operator.live.notifications.list"),
+        operation=NOTIFICATIONS_LIST_DEFINITION_ID,
+    )
+    screen = AeatSyncOverviewScreen(
+        _controller(
+            operation_handoff=handoff,
+            overview_area=AeatSyncOverviewArea.NOTIFICATIONS,
+            action_id="operator.live.notifications.list",
+            operation_id=NOTIFICATIONS_LIST_DEFINITION_ID,
+        )
+    )
+    operation_projection = SimpleNamespace(terminal_condition=OperationTerminalCondition.SUCCEEDED)
+    settled = OperationModalSettledOutcomeV1.model_construct(
+        view_model=SimpleNamespace(projection=operation_projection)
+    )
+    screen._active_operation_request = request
+    screen._active_operation_controller = cast(OperationControllerPort, result_reader)
+
+    async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        screen._on_operation_settled(settled)
+        await pilot.pause()
+        status = str(screen.query_one("#aeat-sync-status", Static).render())
+
+    assert projected == [operation_projection]
+    assert "2026-09-28T12:30:00+00:00" in status
+    assert "2026-09-27T12:30:00+00:00" in status
+    assert tr("tui.aeat_sync.status.items", count=2) in status
+    assert tr("tui.aeat_sync.status.items", count=7) in status
+    assert tr("tui.aeat_sync.status.items", count=0) in status
+    assert "1" * 64 not in status and "2" * 64 not in status
 
 
 @pytest.mark.asyncio
@@ -818,7 +997,7 @@ async def test_operation_failure_and_refusal_copy_is_localized(
 ) -> None:
     """Host failure and absent-door refusal are both translated operator states."""
 
-    async def fail(_request: AeatSyncOperationRequestV1) -> None:
+    async def fail(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         raise RuntimeError("sentinel host failure C:\\protected\\taxpayer.txt 12345678Z")
 
     token = I18N_STRICT_MISSING_KEYS.set(True)
@@ -925,12 +1104,16 @@ async def test_census_adoption_is_local_wording_and_no_remote_push_control(local
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
-async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_handoff(locale: str) -> None:
+async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_handoff(
+    locale: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Filed history pull comes from the overview declaration, never a filed DTO."""
     calls: list[AeatSyncOperationRequestV1] = []
 
-    async def handoff(request: AeatSyncOperationRequestV1) -> None:
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
+        return _started_operation_controller()
 
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
@@ -942,6 +1125,7 @@ async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_hando
                 operation_id="live.filed-history.pull",
             )
             for screen in (AeatSyncOverviewScreen(controller), AeatSyncFiledDeclarationsScreen(controller)):
+                monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
                 async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
                     await pilot.pause()
                     button = screen.query_one("#aeat-sync-operation-0", Button)
@@ -963,11 +1147,11 @@ async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_hando
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
-async def test_overview_census_label_is_distinct_and_notification_listing_has_no_operation(locale: str) -> None:
-    """Local census review is not pull copy; notifications remain a local route."""
+async def test_overview_actions_use_distinct_localized_census_and_notification_copy(locale: str) -> None:
+    """Census review and notification listing retain their own action copy."""
 
-    async def handoff(_request: AeatSyncOperationRequestV1) -> None:
-        return None
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        return _started_operation_controller()
 
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
@@ -980,24 +1164,27 @@ async def test_overview_census_label_is_distinct_and_notification_listing_has_no
                 assert label != tr("tui.aeat_sync.action.pull_filed_all", locale=locale)
 
             notifications = AeatSyncOverviewScreen(
-                AeatSyncWorkspaceController(
-                    TuiScreenContextV1(destination="workbench.aeat_sync"),
-                    _projection(unknown_pair=True),
-                    operation_contracts=_contracts(),
+                _controller(
+                    operation_handoff=handoff,
+                    overview_area=AeatSyncOverviewArea.NOTIFICATIONS,
+                    action_id="operator.live.notifications.list",
+                    operation_id=NOTIFICATIONS_LIST_DEFINITION_ID,
                 )
             )
             async with ScreenHostApp[None](notifications).run_test(size=(80, 24)) as pilot:
                 await pilot.pause()
-                assert not tuple(notifications.query(Button))
-                status = str(notifications.query_one("#aeat-sync-status", Static).render())
-                assert tr("tui.aeat_sync.refusal.operation_handoff", locale=locale) not in status
+                label = str(notifications.query_one("#aeat-sync-operation-0", Button).label)
+                assert label == tr("tui.search.action.list_notifications", locale=locale)
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("first_fails", (False, True))
-async def test_completing_one_overview_operation_keeps_the_other_action_reachable(first_fails: bool) -> None:
+async def test_completing_one_overview_operation_keeps_the_other_action_reachable(
+    first_fails: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The global in-flight guard must not become a global consumed-state guard."""
     rows = (
         AeatSyncWorkspaceOverviewRowV1(
@@ -1049,10 +1236,11 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
     )
     calls: list[AeatSyncOperationRequestV1] = []
 
-    async def handoff(request: AeatSyncOperationRequestV1) -> None:
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
         if first_fails and request.action.action_id == "operator.profile.edit":
             raise RuntimeError("C:\\protected\\taxpayer.txt 12345678Z")
+        return _started_operation_controller()
 
     screen = AeatSyncOverviewScreen(
         AeatSyncWorkspaceController(
@@ -1062,6 +1250,10 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
             operation_handoff=handoff,
         )
     )
+    mounted_controllers: list[OperationControllerPort] = []
+    # Each handoff returns a controller; this test isolates the in-flight and
+    # one-shot controls from the modal's independent polling lifecycle.
+    monkeypatch.setattr(screen, "_show_operation_modal", mounted_controllers.append)
     async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         first = screen.query_one("#aeat-sync-operation-0", Button)

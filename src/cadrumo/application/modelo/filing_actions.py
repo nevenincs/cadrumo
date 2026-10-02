@@ -36,12 +36,13 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.config import Settings
-from ...core.identity.hex_ids import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
@@ -98,7 +99,11 @@ from .m303_regimen_simplificado_scope import (
 from .preconditions import build_modelo_work_file_unverified_revision_failure
 from .prior_domiciliation import resolveprior_domiciliation_election
 from .result_disposition_resolution import resolve_modelo_result_disposition
-from .revision_persistence import persist_filed_revision, require_filing_instance_evidence_for_work_unit
+from .revision_persistence import (
+    persist_filed_revision,
+    require_approved_verification_report,
+    require_filing_instance_evidence_for_work_unit,
+)
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
@@ -112,6 +117,14 @@ if TYPE_CHECKING:
 
 class ModeloFilingEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when internal filing would seal deductible IVA without evidence."""
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloFilingResult:
+    """The filed record and whether this call published a new transition."""
+
+    record: ModeloRecord
+    published: bool
 
 
 def _existing_vigente_filing_record(
@@ -135,6 +148,7 @@ def _existing_vigente_filing_record(
 def file_modelo_revision(
     calculation_revision_id: CalculationRevisionId,
     *,
+    approved_verification_report_id: VerificationReportId,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
     ports: FilingActionPorts,
@@ -151,7 +165,7 @@ def file_modelo_revision(
     settings: Settings | None = None,
     clock: datetime | None = None,
     profile: ModeloWorkProfile | None = None,
-) -> ModeloRecord:
+) -> ModeloFilingResult:
     """Mark a verified-complete revision as the current internal filed answer.
 
     This is the application service behind ``aeat app modelo work file``. It is
@@ -184,6 +198,8 @@ def file_modelo_revision(
     Args:
         calculation_revision_id: The id of the verified-complete revision
             to file.
+        approved_verification_report_id: Exact granting report reviewed for
+            this revision; rechecked in the filing transaction.
         certificate_secret_backend_factory: Factory for the encrypted
             certificate-secret capability used by workflow authentication.
         operator_scope_ports: Operator-scope capabilities used by workflow
@@ -224,8 +240,7 @@ def file_modelo_revision(
             profile read below uses that record.
 
     Returns:
-        The newly created local :class:`ModeloRecord` in
-        ``VIGENTE`` status.
+        The current local filing record and an actual-publication witness.
 
     Raises:
         CalculationRevisionNotFoundError: When the revision id is
@@ -285,6 +300,7 @@ def file_modelo_revision(
                 "work_unit_id": target.work_unit_id,
             },
         )
+    filing_baseline, filing_baseline_revision_id = fr_repo.load_revisioned()
     require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=target)
     require_revision_parent_active(
         work_unit=work_unit,
@@ -328,8 +344,14 @@ def file_modelo_revision(
         # surfaces the no-op as an info Notice. A PRESENTADO revision with no
         # VIGENTE record is an inconsistent state, so it falls through to the
         # hard refusal below rather than fabricating a record.
-        existing = _existing_vigente_filing_record(fr_repo.load(), calculation_revision_id)
+        existing = _existing_vigente_filing_record(filing_baseline, calculation_revision_id)
         if existing is not None:
+            require_approved_verification_report(
+                target=target,
+                approved_verification_report_id=approved_verification_report_id,
+                catalogue=ports.verification_repository.load(operation=operation),
+                operation=operation,
+            )
             # An idempotent retry remains subject to the same fail-closed typed
             # election boundary: an unproven ``X`` request cannot hide behind
             # a prior local filing no-op.
@@ -341,7 +363,7 @@ def file_modelo_revision(
                 observation_repository=obs_repo,
                 operation=operation,
             )
-            return existing
+            return ModeloFilingResult(record=existing, published=False)
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             translated_message="errors.error.error_modelo_calculation_revision_state",
@@ -352,6 +374,13 @@ def file_modelo_revision(
                 work_unit=work_unit,
             ),
         )
+
+    require_approved_verification_report(
+        target=target,
+        approved_verification_report_id=approved_verification_report_id,
+        catalogue=ports.verification_repository.load(operation=operation),
+        operation=operation,
+    )
 
     _require_filing_preconditions(
         work_unit=work_unit,
@@ -369,7 +398,7 @@ def file_modelo_revision(
         target=target,
         work_unit=work_unit,
         revisions=revisions,
-        filing_catalogue=fr_repo.load(),
+        filing_catalogue=filing_baseline,
     )
     gate_engine = workflow_engine or _build_revision_workflow_engine(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -409,8 +438,10 @@ def file_modelo_revision(
         operation=operation,
     )
 
-    return persist_filed_revision(
+    record = persist_filed_revision(
         target=target,
+        approved_verification_report_id=approved_verification_report_id,
+        filing_baseline_revision_id=filing_baseline_revision_id,
         work_unit=work_unit,
         work_units=work_units,
         notes=notes,
@@ -418,6 +449,7 @@ def file_modelo_revision(
         now=now,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
+        verification_repository=ports.verification_repository,
         work_unit_repository=wu_repo,
         bucket_event_repository=bv_repo,
         calculation_observation_repository=obs_repo,
@@ -430,6 +462,7 @@ def file_modelo_revision(
         taxpayer_nif=workflow_profile.tax_id,
         justificante_repository=ports.justificante_repository,
     )
+    return ModeloFilingResult(record=record, published=True)
 
 
 def _filed_revision_result_disposition(
@@ -599,7 +632,7 @@ def list_verification_reports(
     ``(calculation_revision_id, run_at)``.
     """
     catalogue = require_verification_report_coordinates_current(
-        ports.verification_repository.load(),
+        ports.verification_repository.load(operation=operation),
         operation=operation,
     )
     reports = tuple(
@@ -624,7 +657,7 @@ def get_verification_report(
     boundaries.
     """
     catalogue = require_verification_report_coordinates_current(
-        ports.verification_repository.load(),
+        ports.verification_repository.load(operation=operation),
         operation=operation,
     )
     report = catalogue.get(verification_report_id)

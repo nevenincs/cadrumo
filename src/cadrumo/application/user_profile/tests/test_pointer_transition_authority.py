@@ -26,14 +26,14 @@ _B = "22222222-2222-4222-8222-222222222222"
 
 def _select_b_then_a_in_child(root_text: str, result_queue: Any) -> None:
     """Publish two real transitions from one fresh interpreter."""
-    from collections.abc import Iterator
+    from collections.abc import Generator
     from contextlib import contextmanager
 
     from ....core.locks import exclusive_file_lock
     from ..profile_pointer import active_profile_pointer_transaction as transaction_context
 
     @contextmanager
-    def _root_lock(root: Path, *, timeout_seconds: float) -> Iterator[None]:
+    def _root_lock(root: Path, *, timeout_seconds: float) -> Generator[None]:
         with exclusive_file_lock(root, timeout=timeout_seconds):
             yield
 
@@ -110,6 +110,15 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
         pytest.raises(ActiveProfilePointerTransactionError),
     ):
         transaction.compare_and_select(expected=initial_a, bucket_id=_B)
+
+    with active_profile_pointer_transaction(tmp_path) as transaction:
+        with pytest.raises(ActiveProfilePointerTransactionError):
+            transaction.compare_and_clear(expected=initial_a)
+        assert transaction.read() == selected_a_again
+        cleared = transaction.compare_and_clear(expected=selected_a_again)
+        assert cleared.bucket_id is None
+        assert cleared.transition_revision == selected_a_again.transition_revision + 1
+        assert transaction.compare_and_clear(expected=cleared) == cleared
 
 
 def test_defining_modules_are_the_only_public_pointer_transition_surface() -> None:

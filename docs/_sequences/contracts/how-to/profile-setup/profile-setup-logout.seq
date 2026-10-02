@@ -1,7 +1,7 @@
 @step Sign out of the active profile.
 aeat config logout
-@step Confirm that no profile remains active.
-@result aeat --format json config profile status
+@step Confirm that the next command refuses without fresh profile authentication.
+@result aeat --profile-auth-method password --format json config profile status
 @expect status == "error"
 @expect exit_code == 2
 @expect error.code == "REFUSED_CLI_BOUNDARY"

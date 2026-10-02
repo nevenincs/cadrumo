@@ -1,9 +1,8 @@
 """Real-behaviour tests for the per-sequence hermetic sandbox runner.
 
-Every test drives the REAL Cadrumo CLI in-process against a fresh
+Runtime journeys drive the REAL Cadrumo CLI in-process against a fresh
 real-crypto sandbox (genuine ``bucket-dek-v1`` bucket, encrypted SQLite,
-frozen clock, injected deterministic profile id) — no mocks, no skips, no
-seeded stand-ins. The worked chain is the Modelo 130 lifecycle: ``work
+frozen clock, injected deterministic profile id). The worked chain is the Modelo 130 lifecycle: ``work
 create`` → ``work calculate`` (with real registry bindings) → ``work verify``,
 whose verify gate genuinely refuses without clean cross-period evidence, so the
 terminal ``@result`` frame exercises a real declared non-zero exit.
@@ -19,17 +18,35 @@ non-deterministic surface of this chain is empty (trivially within the central
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
+from uuid import UUID
 
 import pytest
-from pydantic import JsonValue
+from pydantic import JsonValue, SecretStr
 
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
+from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
+from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
+from cadrumo.application.user_profile.custody_ports import (
+    load_profile_custody_password_material,
+    unlock_profile_custody_password,
+)
+from cadrumo.core.bucket_pointer import read_pointer_selection
+from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER, redact_structured_for_cli_output
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
 
 from ..errors import SequenceExecutionError
 from ..parser import parse_sequence
 from ..runner import SANDBOX_PROFILE_ID, SequenceTranscript, execute_page_sequences, execute_sequence, sequence_sandbox
+from ..runtime_fixture import SANDBOX_INSTANT
 from ..schema import FrameKind, ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -106,6 +123,149 @@ def test_sandbox_publishes_a_profile_capsule(tmp_path: Path) -> None:
     with sequence_sandbox(sequence_id="canonical-capsule-runtime", sandbox_root=tmp_path / "scope") as sandbox:
         assert sandbox.profile_id == SANDBOX_PROFILE_ID
         assert (sandbox.storage_root / "buckets" / SANDBOX_PROFILE_ID).is_dir()
+        assert read_pointer_selection(sandbox.storage_root).bucket_id == SANDBOX_PROFILE_ID
+
+
+def test_sandbox_password_custody_authenticates_and_decrypts_each_template_clone(tmp_path: Path) -> None:
+    """The fixed fixture identity has genuine password custody in every cloned root."""
+    records: list[UserProfileRecord] = []
+    roots: list[Path] = []
+    envelope_digests: list[str] = []
+    for name in ("first", "second"):
+        with sequence_sandbox(sequence_id=f"password-custody-{name}", sandbox_root=tmp_path / name) as sandbox:
+            roots.append(sandbox.storage_root)
+            material = load_profile_custody_password_material(UUID(SANDBOX_PROFILE_ID), root=sandbox.storage_root)
+            password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+            with pytest.raises(ProfileCustodyPasswordError):
+                unlock_profile_custody_password(material, password=f"{password}-incorrect")
+            unlocked = unlock_profile_custody_password(material, password=password)
+            assert unlocked.profile_id == UUID(SANDBOX_PROFILE_ID)
+            assert unlocked.envelope_digest == material.envelope.self_digest
+            _, decode_context = profile_authority_contexts()
+            session = ProfileRecordSession.from_envelope(
+                envelope=material.envelope, dek=unlocked.dek, profile_decode_context=decode_context
+            )
+            try:
+                record = ProfileRecordStore(session=session, root=sandbox.storage_root).load().record
+                assert record.profile_id == SANDBOX_PROFILE_ID
+                assert record.setup_state is ProfileSetupState.COMPLETE
+                facts = {fact.path: fact.value for fact in record.facts}
+                assert facts["identity.tax_id"] == "12345678Z"
+                assert facts["tax_residence.jurisdiction_scope"] == "common_regime"
+                assert facts["iva.regime"] == "GENERAL"
+                records.append(record)
+                envelope_digests.append(material.envelope.self_digest)
+            finally:
+                session.close()
+            assert session.closed
+    assert roots[0] != roots[1]
+    assert records[0] == records[1]
+    assert envelope_digests[0] == envelope_digests[1]
+
+
+def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tmp_path: Path) -> None:
+    """The installed opener reaches an encrypted worker with the fixture's clock."""
+    # An incorrect proof creates a canonical login-throttle record. Keep that
+    # negative case in its own root: the positive scope has the same frozen
+    # instant, and must not bypass or artificially expire that record.
+    with sequence_sandbox(sequence_id="native-password-refusal", sandbox_root=tmp_path / "refusal"):
+        client = asyncio.run(
+            open_installed_runtime_client(profile_id=UUID(SANDBOX_PROFILE_ID), frontend=OperationFrontendProjection.CLI)
+        )
+        incorrect = bytearray(
+            (load_settings().cadrumo_dev_test_database_password.get_secret_value() + "-incorrect").encode()
+        )
+        try:
+            with pytest.raises(RuntimeFrontendRefusedError) as refused:
+                client.login_password(incorrect)
+            assert refused.value.reason == AutomationCustodyCode.CREDENTIAL_REJECTED.value
+            assert incorrect == bytearray(len(incorrect))
+        finally:
+            client.close()
+
+    with sequence_sandbox(sequence_id="native-profile-view", sandbox_root=tmp_path / "native"):
+        client = asyncio.run(
+            open_installed_runtime_client(profile_id=UUID(SANDBOX_PROFILE_ID), frontend=OperationFrontendProjection.CLI)
+        )
+        proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
+        try:
+            admitted = client.login_password(proof)
+            assert admitted.status.profile_id == UUID(SANDBOX_PROFILE_ID)
+            assert admitted.status.credential_authenticated
+            assert admitted.human_login is not None
+            assert admitted.human_login.authenticated_at == SANDBOX_INSTANT
+            assert not admitted.human_login.session_persisted
+            assert not admitted.human_login.resumed
+            assert proof == bytearray(len(proof))
+            # These canonical pages are executed and decrypted in the child,
+            # rather than reading the runner's bootstrap bucket session.
+            from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
+
+            view = client.read_profile_view((ProfileViewPageKind.FACTS,))
+            facts = {
+                item.path: item.value
+                for item in view.items(ProfileViewPageKind.FACTS)
+                if isinstance(item, ProfileViewFactItem)
+            }
+            assert facts["identity.tax_id"] == "12345678Z"
+            assert facts["tax_residence.jurisdiction_scope"] == "common_regime"
+        finally:
+            client.close()
+
+
+def test_sequence_profile_view_uses_fresh_runtime_proof_and_exact_profile(tmp_path: Path) -> None:
+    """An authored CLI frame gets its canonical profile projection from the worker."""
+    sequence = _result_sequence(
+        "@result aeat --format json config profile view\n"
+        f'@expect result.profile_id == "{SANDBOX_PROFILE_ID}"\n'
+        '@expect result.setup_state == "complete"\n'
+        "@expect exit_code == 0\n",
+        sequence_id="runtime-cli-profile-view",
+    )
+    transcript = execute_sequence(sequence, sandbox_root=tmp_path / "runtime-cli")
+    result = _envelope_result(transcript.frames[0].envelope)
+    facts = result["facts"]
+    assert isinstance(facts, list)
+    # Public CLI output applies canonical personal-identifier redaction. Derive
+    # the expected fact from the known fixture, never from captured output.
+    expected_fact = redact_structured_for_cli_output({"path": "identity.tax_id", "value": "12345678Z"})
+    assert expected_fact["value"] != "12345678Z"
+    assert expected_fact in facts
+
+
+def test_sandbox_template_tracks_current_scoped_password_and_rejects_previous_password(tmp_path: Path) -> None:
+    """A prior cached template cannot silently impose its password on a later scope."""
+    first = f"docs-fixture-first-{tmp_path.name}"
+    second = f"docs-fixture-second-{tmp_path.name}"
+    records: list[UserProfileRecord] = []
+    envelope_digests: list[str] = []
+    for index, (password, previous) in enumerate(((first, second), (second, first), (first, second))):
+        with (
+            override_settings(cadrumo_dev_test_database_password=SecretStr(password)),
+            sequence_sandbox(sequence_id=f"scoped-password-{index}", sandbox_root=tmp_path / str(index)) as sandbox,
+        ):
+            material = load_profile_custody_password_material(UUID(SANDBOX_PROFILE_ID), root=sandbox.storage_root)
+            with pytest.raises(ProfileCustodyPasswordError):
+                unlock_profile_custody_password(material, password=previous)
+            unlocked = unlock_profile_custody_password(material, password=password)
+            assert unlocked.profile_id == UUID(SANDBOX_PROFILE_ID)
+            _, decode_context = profile_authority_contexts()
+            session = ProfileRecordSession.from_envelope(
+                envelope=material.envelope, dek=unlocked.dek, profile_decode_context=decode_context
+            )
+            try:
+                record = ProfileRecordStore(session=session, root=sandbox.storage_root).load().record
+                assert record.profile_id == SANDBOX_PROFILE_ID
+                assert record.setup_state is ProfileSetupState.COMPLETE
+                assert UserProfileFact(path="identity.tax_id", value="12345678Z") in record.facts
+                records.append(record)
+                envelope_digests.append(material.envelope.self_digest)
+            finally:
+                session.close()
+            assert session.closed
+    assert records[0] == records[1] == records[2]
+    assert envelope_digests[0] != envelope_digests[1]
+    assert envelope_digests[0] == envelope_digests[2]
 
 
 def test_logout_then_delete_uses_durable_pointer_not_the_sandbox_override(tmp_path: Path) -> None:
@@ -121,8 +281,10 @@ def test_logout_then_delete_uses_durable_pointer_not_the_sandbox_override(tmp_pa
 
     transcript = execute_sequence(sequence, sandbox_root=tmp_path / "delete")
 
-    assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == "docs-sequence-sandbox"
+    assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert _envelope_result(transcript.frames[0].envelope)["already_logged_out"] is False
     assert _envelope_result(transcript.result_frame.envelope)["deleted"] is True
+    assert read_pointer_selection(Path(transcript.storage_root)).bucket_id is None
     assert not (Path(transcript.storage_root) / "buckets" / SANDBOX_PROFILE_ID).exists()
 
 
@@ -358,32 +520,20 @@ class TestSandboxIsolationAndDeterminism:
 
 
 class TestSandboxEvictsBoundBucketSession:
-    """A login's unscoped session binding must not outlive its sandbox.
+    """A fixture's local bootstrap-session binding must not outlive its sandbox.
 
-    ``config login`` binds its :class:`BucketSession` through the UNSCOPED
-    ``bind_active_bucket_session`` so the login survives the call — correct for a
-    real operator, whose every command is its own process. This engine invokes
-    the CLI in-process, so the binding otherwise survives sandbox teardown; the
-    next sandbox's root callback then short-circuits on
-    ``has_active_bucket_session()`` instead of resuming for its own bucket, and
-    the storage runtime correctly refuses every profile-bound verb because the
-    route bucket is not the session bucket.
-
-    The login is driven through
+    The fixture
     :func:`~cadrumo.adapters.persistence.profile.tests.profile_registration.register_cli_profile`
-    rather than through ``config profile create`` / ``config login`` FRAMES.
-    Profile custody now demands an explicit bounded secret channel — the
-    ``--secrets-stdin`` / ``--secrets-fd`` payload plus the one-time recovery
-    handoff descriptor pair — and a sequence frame is argv only, with no stdin
-    and no inherited descriptors, so neither verb can execute inside the
-    hermetic runner at all. That door is not a stand-in: it registers through
-    the production ``register_profile_with_credentials`` and then calls the same
-    ``login_profile`` service ``config login`` calls, so the binding under test
-    is the real unscoped one.
+    registers through ``register_profile_with_credentials`` and calls
+    ``login_profile`` directly. Its unscoped local bucket session can survive
+    that helper call, so sandbox teardown must evict it before the next fixture
+    uses a different storage root. These assertions cover bootstrap fixture
+    isolation; current CLI admission and runtime lease cleanup have separate
+    native owning tests.
     """
 
-    def test_login_binding_is_evicted_at_teardown(self, tmp_path: Path) -> None:
-        """A real login binds a real session inside, and nothing survives outside."""
+    def test_fixture_bootstrap_binding_is_evicted_at_teardown(self, tmp_path: Path) -> None:
+        """A real fixture session is bound inside and evicted outside the sandbox."""
         from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
         from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 
@@ -392,7 +542,7 @@ class TestSandboxEvictsBoundBucketSession:
         with sequence_sandbox(sequence_id="runner-session-leak", sandbox_root=tmp_path / "login"):
             register_cli_profile(label="me")
 
-            # Anti-vacuity: the login really bound a session, and for a bucket
+            # Anti-vacuity: the fixture really bound a session, and for a bucket
             # that is NOT this sandbox's injected profile — exactly the binding
             # that used to poison the next sandbox. Without this assertion the
             # post-teardown check below would pass on a run where nothing bound.
@@ -402,14 +552,12 @@ class TestSandboxEvictsBoundBucketSession:
 
         assert current_active_bucket_session() is None
 
-    def test_profile_bound_verb_serves_in_the_sandbox_after_a_login_sandbox(self, tmp_path: Path) -> None:
-        """The operator-facing symptom: the NEXT sequence must still be served.
+    def test_follower_sequence_serves_after_bootstrap_fixture_sandbox(self, tmp_path: Path) -> None:
+        """A follower sequence still executes after the bootstrap fixture exits.
 
-        The follower runs as a real sequence in a real sandbox, the shape the
-        ``how-to/troubleshooting`` page runs. With the leading sandbox's binding
-        left standing it exits 4 (``INTEGRITY_STORAGE_VALIDATION``: the database
-        route does not match the active bucket session) and
-        :func:`execute_sequence` raises.
+        The first sandbox binds a real local session for a different profile.
+        The follower checks that this fixture state cannot prevent its command
+        from completing in a fresh sandbox.
         """
         from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
         from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
@@ -817,3 +965,16 @@ class TestAmbientEnvNeutralisation:
                 os.environ[env_var_name] = prior_value
             else:
                 os.environ.pop(env_var_name, None)
+
+
+@pytest.mark.parametrize("action", ["status", "start"])
+def test_sequence_public_runtime_management_does_not_supply_profile_proof(tmp_path: Path, action: str) -> None:
+    """Public runtime frames observe the real ready host without irrelevant secrets."""
+    sequence = _result_sequence(
+        f"@result aeat --format json app runtime {action}\n"
+        '@expect result.listener == "ready"\n'
+        "@expect exit_code == 0\n",
+        sequence_id=f"runtime-public-{action}",
+    )
+    transcript = execute_sequence(sequence, sandbox_root=tmp_path / action)
+    assert _envelope_result(transcript.frames[0].envelope)["listener"] == "ready"

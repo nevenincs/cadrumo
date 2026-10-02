@@ -13,7 +13,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\t<unset>\nNext step: `aeat app overview status`\n"
+      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\t<unset>\nNext step: `aeat app overview status`\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -28,7 +28,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Profile record is valid.\nrecord_validity\tvalid\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nactivities.description\tdocumentation examples\nidentity.name\tDocs\nidentity.surnames\tSandbox\nidentity.tax_id\tsha256:1c9f9632\niva.cash_accounting_regime_enrolled\tfalse\niva.hydrocarbon_deposit_advance_payment_deduction_entitled\tfalse\niva.m303_regime_composition\tgeneral\niva.redeme_enrolled\tfalse\niva.regime\tGENERAL\niva.voluntary_sii_enrolled\tfalse\ntax_residence.jurisdiction_scope\tcommon_regime\ntaxpayer_type.entity_type\tnatural_person\n"
+      "text": "Profile record is valid.\nrecord_validity\tvalid\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nactivities.description\tdocumentation examples\nidentity.name\tDocs\nidentity.surnames\tSandbox\nidentity.tax_id\tsha256:1c9f9632\niva.cash_accounting_regime_enrolled\tfalse\niva.hydrocarbon_deposit_advance_payment_deduction_entitled\tfalse\niva.m303_regime_composition\tgeneral\niva.redeme_enrolled\tfalse\niva.regime\tGENERAL\niva.voluntary_sii_enrolled\tfalse\ntax_residence.jurisdiction_scope\tcommon_regime\ntaxpayer_type.entity_type\tnatural_person\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -43,7 +43,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "readiness\tready\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nschema_version\t7\nvalid\tTrue\n"
+      "text": "readiness\tready\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nschema_version\t7\nvalid\tTrue\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -85,9 +85,17 @@
             },
             "message": "ledger_ready only means the period ledger rows passed transaction preflight; missing_bindings/source_binding_ready still decide source completeness.",
             "severity": "info"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
+          "authority_generation": "33b9c4cf5ace0549979bd7f64a71a1071b2071c30ceaf2e0578414f8c5e3b13d",
           "binding_ready": false,
           "filing_year": 2026,
           "ledger_checked_transaction_count": 0,

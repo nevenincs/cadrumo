@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Buffer, Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime
 from typing import NamedTuple, cast, override
 
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text
+from sqlalchemy.engine import TupleResult
 from sqlalchemy.orm import Session
 
 from .....core.classification.policies import SensitivityClass
@@ -67,6 +68,29 @@ __all__ = ["SecureObjectUnreadable"]
 _log = get_logger(__name__)
 
 
+type _ArchiveColumns = tuple[
+    int,  # id
+    str,  # namespace
+    Buffer | str,  # object_key, without the ORM lookup decoder
+    str,  # classification
+    int,  # schema_version
+    datetime | str,  # written_at, without a SQL datetime processor
+    Buffer | str,  # ciphertext payload
+    str | None,  # revision_id
+    str | None,  # previous_revision_id
+    Buffer | str | None,  # revision_ancestor_ids
+    str | None,  # previous_payload_hash
+    str | None,  # payload_hash
+    str | None,  # ciphertext_hash
+    datetime | str | None,  # revision_written_at
+    str | None,  # write_provenance
+    str | None,  # source_event_id
+]
+type _ListColumns = tuple[
+    int, Buffer, str, int, datetime, Buffer, str | None, str | None, str | None, str | None, str | None
+]
+
+
 class SecureObjectMigrationTarget(NamedTuple):
     """One explicitly governed row participating in an atomic schema cutover."""
 
@@ -86,12 +110,14 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         namespace_registry: StorageHierarchyRegistry | None = None,
         active_session_bucket_id: str | None = None,
         require_secure_active_session: bool = False,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> None:
         """Bind the repository to ``engine`` and ensure the secure_objects table exists."""
         self._engine = engine or get_engine()
         self._namespace_registry = namespace_registry
         self._active_session_bucket_id = active_session_bucket_id
         self._require_secure_active_session = require_secure_active_session
+        self._mutation_writer = mutation_writer
         # SQLAlchemy declares ``local_table`` as the wider ``FromClause`` even
         # though this mapped row must resolve to a concrete ``Table`` before it
         # can be created. Keep the boundary executable: a quoted-only cast
@@ -156,6 +182,21 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         self._check_session_freshness()
         with session_scope(self._engine) as session:
             yield session
+
+    def write_transaction(self, write: Callable[[Session], None]) -> None:
+        """Admit and finish one prepared sibling-table mutation transaction.
+
+        The caller prepares its diff before admission and checks its baseline
+        inside ``write`` before any DML. Assertion-only work belongs in the
+        read scope; a successful call here confirms an actual mutation.
+        """
+
+        def commit() -> None:
+            self._check_session_freshness()
+            with session_scope(self._engine, serializable=True) as session:
+                write(session)
+
+        self._commit_prepared_mutation(commit)
 
     @override
     def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
@@ -422,8 +463,27 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 stmt = text(projection + "WHERE namespace = :namespace ORDER BY namespace, object_key")
             stmt = stmt.execution_options(yield_per=batch_size)
             parameters = {"namespace": namespace} if namespace is not None else {}
-            for raw in session.execute(stmt, parameters):
-                written_at_raw = raw.written_at
+            # text() bypasses the ORM column processors. Bind the exact SELECT
+            # shape at the SQL API boundary; tuples() preserves its physical rows.
+            rows = cast(TupleResult[_ArchiveColumns], session.execute(stmt, parameters).tuples())
+            for (
+                row_id,
+                stored_namespace,
+                object_key_raw,
+                classification,
+                schema_version,
+                written_at_raw,
+                payload_raw,
+                revision_id,
+                previous_revision_id,
+                revision_ancestor_ids,
+                previous_payload_hash,
+                payload_hash,
+                ciphertext_hash,
+                revision_written_at_raw,
+                write_provenance,
+                source_event_id,
+            ) in rows:
                 if isinstance(written_at_raw, str):
                     written_at_value = datetime.fromisoformat(written_at_raw)
                 else:
@@ -438,42 +498,39 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 # value contains non-text bytes, but as str when the
                 # bytes happen to be valid UTF-8. Normalise both into
                 # bytes so downstream consumers see a consistent type.
-                object_key_raw = raw.object_key
                 if isinstance(object_key_raw, bytes):
                     object_key_value = object_key_raw
                 elif isinstance(object_key_raw, str):
                     object_key_value = object_key_raw.encode(UTF_8_ENCODING)
                 else:
                     object_key_value = bytes(object_key_raw)
-                payload_raw = raw.payload
                 if isinstance(payload_raw, bytes):
                     payload_value = payload_raw
                 elif isinstance(payload_raw, str):
                     payload_value = payload_raw.encode(UTF_8_ENCODING)
                 else:
                     payload_value = bytes(payload_raw)
-                revision_written_at_raw = raw.revision_written_at
                 if isinstance(revision_written_at_raw, str):
                     revision_written_at_value = datetime.fromisoformat(revision_written_at_raw)
                 else:
                     revision_written_at_value = revision_written_at_raw
                 yield SecureObjectRawRow(
-                    row_id=int(raw.id),
-                    namespace=str(raw.namespace),
+                    row_id=int(row_id),
+                    namespace=str(stored_namespace),
                     object_key=object_key_value,
-                    classification=str(raw.classification),
-                    schema_version=int(raw.schema_version),
+                    classification=str(classification),
+                    schema_version=int(schema_version),
                     written_at=written_at_value,
                     payload=payload_value,
-                    revision_id=raw.revision_id,
-                    previous_revision_id=raw.previous_revision_id,
-                    revision_ancestor_ids=parse_revision_ancestor_ids(raw.revision_ancestor_ids),
-                    previous_payload_hash=raw.previous_payload_hash,
-                    payload_hash=raw.payload_hash,
-                    ciphertext_hash=raw.ciphertext_hash,
+                    revision_id=revision_id,
+                    previous_revision_id=previous_revision_id,
+                    revision_ancestor_ids=parse_revision_ancestor_ids(revision_ancestor_ids),
+                    previous_payload_hash=previous_payload_hash,
+                    payload_hash=payload_hash,
+                    ciphertext_hash=ciphertext_hash,
                     revision_written_at=revision_written_at_value,
-                    write_provenance=raw.write_provenance,
-                    source_event_id=raw.source_event_id,
+                    write_provenance=write_provenance,
+                    source_event_id=source_event_id,
                 )
 
     def list_namespaces(self) -> tuple[str, ...]:
@@ -679,35 +736,38 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         key_by_digest = {secure_object_key_digest(key): key for key in keys}
         with session_scope(self._engine) as session:
             rows = tuple(
-                session.execute(
-                    text(
-                        "SELECT id, object_key, classification, schema_version, "
-                        "written_at, payload, revision_id, previous_revision_id, "
-                        "payload_hash, ciphertext_hash, previous_payload_hash "
-                        "FROM secure_objects WHERE namespace = :namespace "
-                        "AND object_key IN :object_keys ORDER BY object_key",
-                    )
-                    .bindparams(
-                        bindparam("namespace", value=namespace),
-                        bindparam("object_keys", value=tuple(key_by_digest), expanding=True),
-                    )
-                    .columns(
-                        id=SecureObjectRow.__table__.c.id.type,
-                        object_key=SecureObjectRow.__table__.c.object_key.type,
-                        classification=SecureObjectRow.__table__.c.classification.type,
-                        schema_version=SecureObjectRow.__table__.c.schema_version.type,
-                        written_at=SecureObjectRow.__table__.c.written_at.type,
-                    ),
+                cast(
+                    TupleResult[_ListColumns],
+                    session.execute(
+                        text(
+                            "SELECT id, object_key, classification, schema_version, "
+                            "written_at, payload, revision_id, previous_revision_id, "
+                            "payload_hash, ciphertext_hash, previous_payload_hash "
+                            "FROM secure_objects WHERE namespace = :namespace "
+                            "AND object_key IN :object_keys ORDER BY object_key",
+                        )
+                        .bindparams(
+                            bindparam("namespace", value=namespace),
+                            bindparam("object_keys", value=tuple(key_by_digest), expanding=True),
+                        )
+                        .columns(
+                            id=SecureObjectRow.__table__.c.id.type,
+                            object_key=SecureObjectRow.__table__.c.object_key.type,
+                            classification=SecureObjectRow.__table__.c.classification.type,
+                            schema_version=SecureObjectRow.__table__.c.schema_version.type,
+                            written_at=SecureObjectRow.__table__.c.written_at.type,
+                        ),
+                    ).tuples(),
                 )
             )
             legacy_keys: list[str] = []
             for row in rows:
                 try:
-                    is_legacy = int(row.schema_version) != current_version
+                    is_legacy = int(row[3]) != current_version
                 except (TypeError, ValueError):
                     is_legacy = False
                 if is_legacy:
-                    legacy_keys.append(key_by_digest[bytes(row.object_key)])
+                    legacy_keys.append(key_by_digest[bytes(row[1])])
             if legacy_keys:
                 refuse_legacy(tuple(legacy_keys))
             items = tuple(
@@ -1126,16 +1186,19 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     written_at=SecureObjectRow.__table__.c.written_at.type,
                 )
             )
-            raw = session.execute(stmt).one()
+            classification, schema_version, written_at, payload = cast(
+                TupleResult[tuple[str, int, datetime, Buffer]],
+                session.execute(stmt).tuples(),
+            ).one()
         return SecureObjectMetadata(
             namespace=namespace,
-            classification=str(raw.classification),
-            schema_version=int(raw.schema_version),
+            classification=str(classification),
+            schema_version=int(schema_version),
             # Re-attach UTC exactly as the record read path does, so peeking a
             # row and loading it report the same instant rather than an aware
             # and a naive spelling of it.
-            written_at=coerce_utc_aware(raw.written_at),
-            byte_length=len(bytes(raw.payload)),
+            written_at=coerce_utc_aware(written_at),
+            byte_length=len(bytes(payload)),
         )
 
     def peek_many_schema_versions(self, namespace: str, object_keys: Iterable[str]) -> Mapping[str, int]:
@@ -1160,8 +1223,8 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     schema_version=SecureObjectRow.__table__.c.schema_version.type,
                 )
             )
-            rows = session.execute(stmt).all()
-        return {key_by_digest[bytes(raw.object_key)]: int(raw.schema_version) for raw in rows}
+            rows = cast(TupleResult[tuple[Buffer, int]], session.execute(stmt).tuples()).all()
+        return {key_by_digest[bytes(object_key)]: int(schema_version) for object_key, schema_version in rows}
 
     def peek_many_revision_ids(self, namespace: str, object_keys: Iterable[str]) -> Mapping[str, str | None]:
         """Return the stored revision id of each present natural key without loading ciphertext.
@@ -1189,10 +1252,10 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     revision_id=SecureObjectRow.__table__.c.revision_id.type,
                 )
             )
-            rows = session.execute(stmt).all()
+            rows = cast(TupleResult[tuple[Buffer, str | None]], session.execute(stmt).tuples()).all()
         return {
-            key_by_digest[bytes(raw.object_key)]: (None if raw.revision_id is None else str(raw.revision_id))
-            for raw in rows
+            key_by_digest[bytes(object_key)]: (None if revision_id is None else str(revision_id))
+            for object_key, revision_id in rows
         }
 
     def delete(self, namespace: str, object_key: str) -> bool:

@@ -303,6 +303,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     with bundled_indexed_authority().operation() as operation:
         file_modelo_revision(
             revision.calculation_revision_id,
+            approved_verification_report_id=verification.verification_report_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator",
             workflow_profile=workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),

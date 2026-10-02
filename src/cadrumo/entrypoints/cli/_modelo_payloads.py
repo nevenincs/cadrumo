@@ -62,6 +62,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ...core.identity.profile import ProfileId
 from ...core.identity.transaction_ids import TransactionId
@@ -1262,6 +1263,7 @@ class ModeloRequiresResult(OutputSchema):
     """
 
     operation: str = "modelo.requires"
+    authority_generation: ContentDigest
     modelo: str
     revision: str
     filing_year: int
@@ -1518,6 +1520,7 @@ class ModeloReadinessResult(OutputSchema):
     """Active-profile modelo readiness report."""
 
     operation: str = "modelo.readiness"
+    authority_generation: ContentDigest
     profile_id: ProfileId
     modelo: str
     revision_id: RevisionId

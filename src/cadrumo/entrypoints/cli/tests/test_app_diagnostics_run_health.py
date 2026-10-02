@@ -20,9 +20,6 @@ from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from .._diagnostics_payloads import (
     ErrorKindCountPayload,
@@ -30,21 +27,20 @@ from .._diagnostics_payloads import (
     LlmRunProviderPayload,
     RunRecordPayload,
 )
-from .cli_runner import invoke_cached_cli
+from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
-_BUCKET_ID = "11111111-2222-4333-8444-555555555555"
-
-_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id=_BUCKET_ID,
-    autouse=False,
-    settings_overrides={"cadrumo_output_language": "en"},
-)
+__all__ = ["diagnostics_native_profile"]
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_cached_cli(args)
+    return invoke_diagnostics_cli(args)
 
 
 def _seed_runs() -> None:
@@ -86,7 +82,7 @@ def _seed_runs() -> None:
     )
 
 
-def test_run_health_reports_seeded_llm_runs_and_no_session(_isolated_backend: None) -> None:
+def test_run_health_reports_seeded_llm_runs_and_no_session(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """The verb reports the seeded run telemetry typed and a no-session auth verdict."""
     _seed_runs()
 
@@ -121,7 +117,7 @@ def test_run_health_reports_seeded_llm_runs_and_no_session(_isolated_backend: No
     assert payload["session_stale"] is False
 
 
-def test_run_health_empty_is_instructive(_isolated_backend: None) -> None:
+def test_run_health_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """With no LLM run telemetry the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "diagnostics", "run-health"])
     assert result.exit_code == 0, result.output
@@ -136,7 +132,7 @@ def test_run_health_empty_is_instructive(_isolated_backend: None) -> None:
     assert "diagnostics.run_health.no_session" in codes
 
 
-def test_run_health_provider_filter_scopes_the_report(_isolated_backend: None) -> None:
+def test_run_health_provider_filter_scopes_the_report(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--provider`` restricts the LLM run-timing section to one provider label."""
     _seed_runs()
 
@@ -151,7 +147,7 @@ def test_run_health_provider_filter_scopes_the_report(_isolated_backend: None) -
     assert payload["total_runs"] == 1
 
 
-def test_run_health_since_until_scopes_by_date(_isolated_backend: None) -> None:
+def test_run_health_since_until_scopes_by_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--since``/``--until`` narrow the LLM run-timing section by date."""
     _seed_runs()
 
@@ -176,7 +172,7 @@ def test_run_health_since_until_scopes_by_date(_isolated_backend: None) -> None:
     assert payload["llm_providers"][0]["runs"] == 1
 
 
-def test_run_health_rejects_malformed_date(_isolated_backend: None) -> None:
+def test_run_health_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
     result = _invoke(["--format", "json", "app", "diagnostics", "run-health", "--since", "01/04/2026"])
     assert result.exit_code != 0

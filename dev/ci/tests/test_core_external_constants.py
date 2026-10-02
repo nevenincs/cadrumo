@@ -581,7 +581,6 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_browser_selector_probe_timeout_ms": 2_500,
         "cadrumo_browser_close_timeout_ms": 5_000,
         "cadrumo_live_iva_declaration_capture_timeout_ms": 120_000,
-        "cadrumo_live_iva_cli_watchdog_timeout_ms": 240_000,
         "cadrumo_browser_locale": "es-ES",
         "cadrumo_browser_timezone": "Europe/Madrid",
         "cadrumo_browser_viewport_width": 1366,
@@ -608,7 +607,6 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         assert getattr(settings, field_name) == expected_value, field_name
 
     assert settings.cadrumo_live_iva_declaration_capture_timeout_ms < settings.cadrumo_live_iva_surface_timeout_ms
-    assert settings.cadrumo_live_iva_cli_watchdog_timeout_ms < 300_000
     # Host compared exactly rather than by URL prefix: a prefix check also
     # accepts ``https://api.openai.com.attacker.invalid/...``, which is a
     # different origin entirely.

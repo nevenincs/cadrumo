@@ -37,7 +37,6 @@ from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
-from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .secure_input import MachineSecretPayload
 
 
@@ -61,22 +60,9 @@ def certificate_register(
 ) -> None:
     """Register (or re-point) a named certificate source for the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.certificate_source_operations import register_operator_certificate_source
-    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import authority_operation, operator_scope_ports
+    from .runtime_certificate import register_source
 
-    try:
-        result = register_operator_certificate_source(
-            name=name,
-            certificate_path=file,
-            friendly_name=friendly_name,
-            operation=authority_operation(ctx),
-            operator_scope_ports=operator_scope_ports(ctx),
-        )
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
+    result = register_source(ctx, name=name, file=file, friendly_name=friendly_name)
 
     from ..config_payloads import CertificateSourceMutationPayload
 
@@ -98,10 +84,10 @@ def certificate_list(
 ) -> None:
     """Enumerate every registered certificate source for the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.certificate_source_operations import list_operator_certificate_sources
     from ..config_payloads import CertificateSourceListPayload, CertificateSourcePayloadEntry
+    from .runtime_certificate import list_sources
 
-    report = list_operator_certificate_sources()
+    report = list_sources(ctx)
     payload = CertificateSourceListPayload(
         sources=[
             CertificateSourcePayloadEntry(
@@ -133,20 +119,9 @@ def certificate_select(
 ) -> None:
     """Mark ``name`` the active certificate source; its path becomes the certificate-provider path."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.certificate_source_operations import select_operator_certificate_source
-    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import authority_operation, operator_scope_ports
+    from .runtime_certificate import select_source
 
-    try:
-        result = select_operator_certificate_source(
-            name=name,
-            operation=authority_operation(ctx),
-            operator_scope_ports=operator_scope_ports(ctx),
-        )
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
+    result = select_source(ctx, name=name)
 
     from ..config_payloads import CertificateSourceMutationPayload
 
@@ -174,20 +149,9 @@ def certificate_remove(
 ) -> None:
     """Remove ``name`` from the certificate-source registry. A no-op when ``name`` is not registered."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.certificate_source_operations import remove_operator_certificate_source
-    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import authority_operation, operator_scope_ports
+    from .runtime_certificate import remove_source
 
-    try:
-        result = remove_operator_certificate_source(
-            name=name,
-            operation=authority_operation(ctx),
-            operator_scope_ports=operator_scope_ports(ctx),
-        )
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
+    result = remove_source(ctx, name=name)
 
     from ..config_payloads import CertificateSourceMutationPayload
 
@@ -218,20 +182,11 @@ def certificate_check(
     individually rather than only the active certificate.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.certificate_source_operations import check_operator_certificate_sources
     from ....application.auth.probes import PROBE_RESULTS_NEEDING_ATTENTION
     from ..config_payloads import CertificateSourceCheckEntryPayload, CertificateSourceCheckPayload
-    from ..state_projection_support import (
-        certificate_secret_backend_factory,
-        operator_probe_ports,
-        operator_scope_ports,
-    )
+    from .runtime_certificate import check_sources
 
-    report = check_operator_certificate_sources(
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_probe_ports=operator_probe_ports(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
-    )
+    report = check_sources(ctx)
     payload = CertificateSourceCheckPayload(
         entries=[
             CertificateSourceCheckEntryPayload(
@@ -314,22 +269,12 @@ def certificate_secret_set(
             ),
         )
 
-    from ....application.auth.certificate_source_operations import set_operator_certificate_source_secret
-    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import authority_operation, certificate_secret_backend_factory, operator_scope_ports
+    from .runtime_certificate import set_source_passphrase
 
     try:
-        result = set_operator_certificate_source_secret(
-            name=name,
-            secret=SecretStr(secret),
-            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-            operation=authority_operation(ctx),
-            operator_scope_ports=operator_scope_ports(ctx),
-        )
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
+        result = set_source_passphrase(ctx, name=name, secret=bytearray(secret.encode("utf-8")))
+    finally:
+        secret = ""
 
     from ..config_payloads import CertificateSourceSecretMutationPayload
 
@@ -356,21 +301,9 @@ def certificate_secret_remove(
 ) -> None:
     """Remove the passphrase bound to the named certificate source. A no-op when unset."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.certificate_source_operations import remove_operator_certificate_source_secret
-    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import authority_operation, certificate_secret_backend_factory, operator_scope_ports
+    from .runtime_certificate import remove_source_passphrase
 
-    try:
-        result = remove_operator_certificate_source_secret(
-            name=name,
-            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-            operation=authority_operation(ctx),
-            operator_scope_ports=operator_scope_ports(ctx),
-        )
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
+    result = remove_source_passphrase(ctx, name=name)
 
     from ..config_payloads import CertificateSourceSecretMutationPayload
 

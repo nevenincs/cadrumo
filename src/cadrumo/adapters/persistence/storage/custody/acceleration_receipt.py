@@ -910,6 +910,28 @@ def _discard_resume_record_or_refuse(
     return _refusal(reason, record)
 
 
+def _receipt_refusal_reason(
+    *,
+    record: _crypto.PersistedProfileSession,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
+    now: datetime,
+) -> ProfileSessionRefusalReason | None:
+    """Classify current metadata without choosing a caller's cleanup policy."""
+    if record.schema_version != _crypto.PROFILE_SESSION_SCHEMA_VERSION:
+        return ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH
+    if record.profile_id != profile_id:
+        return ProfileSessionRefusalReason.TAMPERED
+    if record.custody_generation != custody_generation or record.dek_epoch != dek_epoch:
+        return ProfileSessionRefusalReason.CUSTODY_CHANGED
+    if now >= record.absolute_deadline:
+        return ProfileSessionRefusalReason.EXPIRED_ABSOLUTE
+    if now >= record.idle_deadline:
+        return ProfileSessionRefusalReason.EXPIRED_IDLE
+    return None
+
+
 def _resume_record_refusal(
     *,
     path: Path,
@@ -920,43 +942,17 @@ def _resume_record_refusal(
     dek_epoch: str,
     now: datetime,
 ) -> tuple[ProfileSessionResumeOutcome, None] | None:
-    """Apply ordered metadata and deadline checks to one parsed receipt."""
-    if record.schema_version != _crypto.PROFILE_SESSION_SCHEMA_VERSION:
-        return _discard_resume_record_or_refuse(
-            path=path,
-            payload=payload,
-            record=record,
-            reason=ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH,
-        )
-    if record.profile_id != profile_id:
-        return _discard_resume_record_or_refuse(
-            path=path,
-            payload=payload,
-            record=record,
-            reason=ProfileSessionRefusalReason.TAMPERED,
-        )
-    if record.custody_generation != custody_generation or record.dek_epoch != dek_epoch:
-        return _discard_resume_record_or_refuse(
-            path=path,
-            payload=payload,
-            record=record,
-            reason=ProfileSessionRefusalReason.CUSTODY_CHANGED,
-        )
-    if now >= record.absolute_deadline:
-        return _discard_resume_record_or_refuse(
-            path=path,
-            payload=payload,
-            record=record,
-            reason=ProfileSessionRefusalReason.EXPIRED_ABSOLUTE,
-        )
-    if now >= record.idle_deadline:
-        return _discard_resume_record_or_refuse(
-            path=path,
-            payload=payload,
-            record=record,
-            reason=ProfileSessionRefusalReason.EXPIRED_IDLE,
-        )
-    return None
+    """Apply ordinary keyring-backed resume's exact cleanup policy."""
+    reason = _receipt_refusal_reason(
+        record=record,
+        profile_id=profile_id,
+        custody_generation=custody_generation,
+        dek_epoch=dek_epoch,
+        now=now,
+    )
+    if reason is None:
+        return None
+    return _discard_resume_record_or_refuse(path=path, payload=payload, record=record, reason=reason)
 
 
 def _resume_profile_dek(
@@ -1140,6 +1136,130 @@ def _resume_profile_session(
         return _refusal(ProfileSessionRefusalReason.MALFORMED)
 
 
+def borrow_profile_session_key(
+    *,
+    storage_root: Path,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
+    now: datetime,
+) -> tuple[ProfileSessionResumeOutcome, bytearray | None]:
+    """Borrow an existing human receipt's wrap key, never its DEK.
+
+    Only a trusted human client should compose this entry. The returned buffer
+    belongs to its caller, which must wipe it after one protected IPC exchange.
+    """
+    now = validate_utc_aware(now)
+    path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
+    retirement_path = _profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
+    try:
+        with profile_custody_root_lock(storage_root):
+            _ensure_profile_session_directory(path)
+            if not _resume_artifacts_present(path=path, retirement_path=retirement_path):
+                return _refusal(ProfileSessionRefusalReason.ABSENT)
+            with profile_custody_local_lock(_profile_session_lock_path(path)):
+                try:
+                    _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
+                except KeyringUnavailableError:
+                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE)
+                observed = _read_receipt(path)
+                if observed is None:
+                    return _refusal(ProfileSessionRefusalReason.ABSENT)
+                payload, record = observed
+                refusal = _resume_record_refusal(
+                    path=path,
+                    payload=payload,
+                    record=record,
+                    profile_id=profile_id,
+                    custody_generation=custody_generation,
+                    dek_epoch=dek_epoch,
+                    now=now,
+                )
+                if refusal is not None:
+                    return refusal
+                try:
+                    key = _load_acceleration_secret(profile_id=profile_id, session_id=record.session_id)
+                except KeyringUnavailableError:
+                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
+                if key is None:
+                    _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
+                    return _refusal(ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING, record)
+                borrowed = bytearray(key)
+                del key
+                try:
+                    dek = _crypto.unwrap_profile_session_dek(session_key=bytes(borrowed), record=record)
+                except DecryptionError:
+                    _zeroise(borrowed)
+                    if not _discard_known_record(path=path, payload=payload, record=record):
+                        return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
+                    return _refusal(ProfileSessionRefusalReason.TAMPERED, record)
+                except BaseException:
+                    _zeroise(borrowed)
+                    raise
+                else:
+                    _zeroise(dek)
+                return ProfileSessionResumeOutcome(resumed=True, record=record), borrowed
+    except (ProfileCustodyRecordError, StorageValidationError, ValueError, ValidationError):
+        return _refusal(ProfileSessionRefusalReason.MALFORMED)
+
+
+def resume_profile_session_with_key(
+    *,
+    storage_root: Path,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
+    now: datetime,
+    receipt_key: bytearray,
+) -> tuple[ProfileSessionResumeOutcome, bytearray | None]:
+    """Verify a supplied human wrap key without any OS-keyring operation.
+
+    A wrong client proof never deletes the current record or its stored key.
+    The verified record carries the original deadlines; this door does not
+    advance either deadline or publish an ambient process session.
+    """
+    now = validate_utc_aware(now)
+    if len(receipt_key) != _crypto.PROFILE_SESSION_KEY_BYTES:
+        return _refusal(ProfileSessionRefusalReason.TAMPERED)
+    path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
+    retirement_path = _profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
+    try:
+        with profile_custody_root_lock(storage_root):
+            _ensure_profile_session_directory(path)
+            if not _resume_artifacts_present(path=path, retirement_path=retirement_path):
+                return _refusal(ProfileSessionRefusalReason.ABSENT)
+            with profile_custody_local_lock(_profile_session_lock_path(path)):
+                # Recovery owns a pending key swap. Only the trusted keyring
+                # reader may settle it; a supplied key cannot choose a side.
+                if (
+                    read_optional_profile_custody_local_record(
+                        retirement_path, maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES
+                    )
+                    is not None
+                ):
+                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE)
+                observed = _read_receipt(path)
+                if observed is None:
+                    return _refusal(ProfileSessionRefusalReason.ABSENT)
+                _, record = observed
+                reason = _receipt_refusal_reason(
+                    record=record,
+                    profile_id=profile_id,
+                    custody_generation=custody_generation,
+                    dek_epoch=dek_epoch,
+                    now=now,
+                )
+                if reason is not None:
+                    return _refusal(reason, record)
+                try:
+                    dek = _crypto.unwrap_profile_session_dek(session_key=bytes(receipt_key), record=record)
+                except DecryptionError:
+                    return _refusal(ProfileSessionRefusalReason.TAMPERED, record)
+                return ProfileSessionResumeOutcome(resumed=True, record=record), dek
+    except (ProfileCustodyRecordError, StorageValidationError, ValueError, ValidationError):
+        return _refusal(ProfileSessionRefusalReason.MALFORMED)
+
+
 def advance_persisted_profile_session_idle_deadline(
     *,
     storage_root: Path,
@@ -1202,8 +1322,10 @@ __all__ = [
     "PROFILE_SESSION_KEYCHAIN_SERVICE",
     "ProfileSessionResumeOutcome",
     "advance_persisted_profile_session_idle_deadline",
+    "borrow_profile_session_key",
     "delete_profile_session",
     "mint_profile_session",
     "profile_session_path",
     "resume_profile_session",
+    "resume_profile_session_with_key",
 ]

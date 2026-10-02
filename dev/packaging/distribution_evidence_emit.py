@@ -1,4 +1,4 @@
-"""Emit sanctioned flat distribution-evidence records from installed oracles.
+"""Emit sanctioned flat distribution-evidence records from installed CLI oracles.
 
 Both the release-readiness gate (:func:`dev.release.readiness.check_distribution_evidence_set`)
 and the documentation-claims gate (``dev/docs/tests/test_distribution_claims.py``)
@@ -7,23 +7,13 @@ records from ``var/distribution-install-readiness/``. Those records are
 tamper-evident and cohort-bound, so they can only be minted at capture time,
 when the executed cohort, the isolated installed executables, and the real
 command timestamps are all genuinely in hand. This module is the single bridge
-that turns an installed CLI/MCP behaviour-oracle run into that record; it reuses
-the canonical :func:`~dev.packaging.evidence.create_distribution_evidence`
-authority rather than re-deriving evidence identity.
+that turns an installed CLI-oracle run into that record; it reuses the
+:func:`~dev.packaging.evidence.create_distribution_evidence` authority
+rather than re-deriving evidence identity.
 
-Design (ratified option A): an installed-oracle distribution row's record (Python,
-Homebrew, or Scoop - every lane that installs the product and drives the real
-``aeat`` command) carries the real installed-CLI command transcripts as its
-``commands`` and folds the MCP protocol proof - the launched server executable,
-its cohort-pinned tool-call sequence, and the grounded target value - into
-``result.observations`` plus the second ``installed_executables`` entry. A lane
-that ships no MCP leg (the CLI-only Scoop and Homebrew lanes, which never install
-``cadrumo-mcp``) records that absence honestly: ``mcp_oracle`` is ``None`` and
-the isolation and executable facts come from the tax oracle alone. No command
-transcript is ever synthesised: the MCP server is launched inside the ``mcp``
-stdio client, which does not expose a genuine subprocess exit status or stream
-digests, so fabricating one would be forbidden. Every field written here is a
-real captured value.
+Each record carries the real installed-CLI command transcripts and the installed
+CLI executable identity. MCP stdio protocol checks remain separate from these
+CLI distribution records.
 """
 
 from __future__ import annotations
@@ -33,7 +23,7 @@ import json
 import re
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import Any, Final
 
 from pydantic import JsonValue
 
@@ -56,24 +46,12 @@ from .evidence import (
     write_distribution_evidence,
 )
 from .evidence_scrub import scrub_distribution_evidence
-from .hashing import sha256_path, sha256_text
+from .hashing import sha256_path
 from .installed_tax_oracle import InstalledTaxEvidence
-from .installed_wheel_binding import (
-    assert_installed_console_entry_point,
-    installed_distribution_payload_sha256,
-    installed_wheel_payload_sha256,
-    sealed_wheel_payload_sha256,
-)
-
-if TYPE_CHECKING:
-    from .installed_mcp_oracle import InstalledMcpEvidence
+from .installed_wheel_binding import installed_wheel_payload_sha256, sealed_wheel_payload_sha256
 
 _CLI_EXECUTABLE_NAME: Final[str] = "aeat"
-_MCP_EXECUTABLE_NAME: Final[str] = "cadrumo-mcp"
 _UTF_8: Final[str] = UTF_8
-_MCP_ATTESTED_COMMAND_KEYS: Final[frozenset[str]] = frozenset(
-    {"modelo.work.create", "modelo.work.calculate", "modelo.work.observations"}
-)
 
 
 def _command_transcript(command: CommandResult) -> CommandTranscript:
@@ -101,35 +79,6 @@ def _installed_executable(name: str, path: str) -> InstalledExecutableIdentity:
     return InstalledExecutableIdentity(name=name, path=str(resolved), sha256=sha256_path(resolved))
 
 
-def _mcp_call_summary(mcp_evidence: InstalledMcpEvidence) -> list[dict[str, Any]]:
-    """Return a JSON-safe record of every MCP tool call the oracle made."""
-    return [
-        {
-            "tool_name": call.tool_name,
-            "command_key": call.command_key,
-            "duration_seconds": call.duration_seconds,
-            "is_error": call.is_error,
-            "status": call.status,
-        }
-        for call in mcp_evidence.calls
-    ]
-
-
-def _mcp_observations(mcp_evidence: InstalledMcpEvidence) -> dict[str, Any]:
-    """Return the retained MCP protocol proof (the full evidence, no command fabricated)."""
-    return {
-        "resolved_executable": mcp_evidence.resolved_executable,
-        "server_name": mcp_evidence.server_name,
-        "calculation_revision_id": mcp_evidence.calculation_revision_id,
-        "target_casilla": mcp_evidence.target_casilla,
-        "target_value": mcp_evidence.target_value,
-        "formula_id": mcp_evidence.formula_id,
-        "invoked_cli_sha256": mcp_evidence.invoked_cli_sha256,
-        "invoked_cli_sha256_by_command": dict(mcp_evidence.invoked_cli_sha256_by_command),
-        "calls": _mcp_call_summary(mcp_evidence),
-    }
-
-
 class EvidenceCohortBindingError(RuntimeError):
     """Raised when an oracle capture is not bound to the release cohort it is minted against."""
 
@@ -147,10 +96,8 @@ def _assert_oracle_bound_to_cohort(
     version is merely copied from the cohort. The installed CLI's ``--version``
     output is the captured fact that pins the capture to the cohort: it must
     carry the cohort version, or the capture is not this cohort's build and
-    minting is refused. A lane's MCP dimension, when present, is bound
-    transitively — both oracles are captured from one installed cohort run; the
-    MCP telemetry ``invoked_cli_sha256`` is an attested CLI-*path* digest, not a
-    cohort artifact digest, so it cannot bind to the cohort manifest directly.
+    minting is refused. The installed CLI version, executable digest, and wheel
+    payload must all identify the loaded cohort before the record can be minted.
     """
     version = cohort.manifest.version
     # Match on a token boundary, not a bare substring: a 0.2.10 or 0.2.1rc1
@@ -195,76 +142,11 @@ def _assert_oracle_bound_to_cohort(
         )
 
 
-def _assert_mcp_oracle_bound_to_cohort(*, cohort: LoadedReleaseCohort, mcp_evidence: InstalledMcpEvidence) -> None:
-    """Bind the observed MCP runtime and its invoked CLI to the exact cohort wheel.
-
-    The server and the CLI it invokes ship in one distribution, so both the
-    harness and root bindings resolve to the same sealed ``cadrumo-wheel``. They
-    are compared separately because they are attested through different
-    launchers: a server whose payload matches while its sibling CLI's does not
-    (or the reverse) is a mixed environment, not a cohort install.
-    """
-    records = {record.name: record for record in cohort.manifest.artifacts}
-    expected = {
-        "cohort_source_digest": cohort.manifest.source.source_digest,
-        "cohort_manifest_sha256": records["python-cohort-manifest"].sha256,
-        "cohort_root_wheel_sha256": records["cadrumo-wheel"].sha256,
-        "cohort_harness_wheel_sha256": records["cadrumo-wheel"].sha256,
-    }
-    observed = {
-        "cohort_source_digest": mcp_evidence.cohort_source_digest,
-        "cohort_manifest_sha256": mcp_evidence.cohort_manifest_sha256,
-        "cohort_root_wheel_sha256": mcp_evidence.cohort_root_wheel_sha256,
-        "cohort_harness_wheel_sha256": mcp_evidence.cohort_harness_wheel_sha256,
-    }
-    if observed != expected:
-        raise EvidenceCohortBindingError(
-            f"installed MCP cohort provenance mismatch: expected {expected!r}, got {observed!r}",
-        )
-    runtime_server = Path(mcp_evidence.runtime_server_executable).resolve(strict=True)
-    sibling_cli = runtime_server.with_name("aeat.exe" if runtime_server.suffix.lower() == ".exe" else "aeat")
-    try:
-        assert_installed_console_entry_point(
-            sibling_cli,
-            distribution="cadrumo",
-            entry_point="aeat",
-            expected_value="cadrumo.entrypoints.cli.bootstrap:main",
-        )
-        assert_installed_console_entry_point(
-            runtime_server,
-            distribution="cadrumo",
-            entry_point="cadrumo-mcp",
-            expected_value="cadrumo_harness.mcp.main:main",
-        )
-    except RuntimeError as exc:
-        raise EvidenceCohortBindingError(str(exc)) from exc
-    if sha256_path(runtime_server) != mcp_evidence.server_executable_sha256:
-        raise EvidenceCohortBindingError("installed MCP runtime executable digest drifted after capture")
-    expected_payload = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))
-    live_cli = installed_distribution_payload_sha256(sibling_cli, "cadrumo")
-    live_harness = installed_distribution_payload_sha256(runtime_server, "cadrumo")
-    if (mcp_evidence.installed_cli_payload_sha256, live_cli) != (expected_payload, expected_payload):
-        raise EvidenceCohortBindingError("MCP-invoked CLI payload is not the exact sealed root wheel")
-    if (mcp_evidence.installed_harness_payload_sha256, live_harness) != (
-        expected_payload,
-        expected_payload,
-    ):
-        raise EvidenceCohortBindingError("installed MCP server payload is not the exact sealed root wheel")
-    path_digest = sha256_text(str(sibling_cli))
-    if frozenset(mcp_evidence.invoked_cli_sha256_by_command) != _MCP_ATTESTED_COMMAND_KEYS or set(
-        mcp_evidence.invoked_cli_sha256_by_command.values()
-    ) != {mcp_evidence.invoked_cli_sha256}:
-        raise EvidenceCohortBindingError("MCP command telemetry does not converge on one CLI identity")
-    if mcp_evidence.invoked_cli_sha256 != path_digest:
-        raise EvidenceCohortBindingError("MCP telemetry names a different installed CLI path")
-
-
 def build_installed_oracle_evidence(
     *,
     row_id: str,
     cohort: LoadedReleaseCohort,
     tax_evidence: InstalledTaxEvidence,
-    mcp_evidence: InstalledMcpEvidence | None = None,
     acquisition: AcquisitionIdentity,
     destination: DestinationIdentity,
     client: ClientIdentity | None = None,
@@ -282,11 +164,6 @@ def build_installed_oracle_evidence(
             record binds to its immutable identity and digests.
         tax_evidence: The installed-CLI oracle result (its command transcripts
             become this record's ``commands``).
-        mcp_evidence: The installed-MCP oracle result (its protocol proof is
-            retained in ``result.observations`` and the MCP executable identity).
-            ``None`` for a lane that ships no MCP leg: the isolation and
-            executable facts then come from the tax oracle alone and
-            ``mcp_oracle`` is recorded as the absent marker ``None``.
         acquisition: How and from where the tested bytes were acquired.
         destination: The install/promotion destination reached; its version must
             equal the cohort version for a passing record.
@@ -298,8 +175,6 @@ def build_installed_oracle_evidence(
         A validated, tamper-evident :class:`~dev.packaging.evidence.DistributionEvidence`.
     """
     _assert_oracle_bound_to_cohort(cohort=cohort, tax_evidence=tax_evidence)
-    if mcp_evidence is not None:
-        _assert_mcp_oracle_bound_to_cohort(cohort=cohort, mcp_evidence=mcp_evidence)
     commands = tuple(_command_transcript(command) for command in tax_evidence.commands)
     cli_observations: dict[str, JsonValue] = {
         "requested_executable": tax_evidence.requested_executable,
@@ -318,47 +193,19 @@ def build_installed_oracle_evidence(
         "source_refs": [reference for reference in tax_evidence.source_refs],
         "notice_codes": [code for code in tax_evidence.notice_codes],
     }
-    observations: dict[str, JsonValue]
-    if mcp_evidence is None:
-        isolation = ExecutionIsolation(
-            # Derived from what the oracle actually recorded, not asserted: if a
-            # future refactor stops stripping checkout imports or product
-            # executables, the oracle records False and the evidence schema
-            # refuses to mint a PASSED record.
-            checkout_imports_removed=tax_evidence.checkout_imports_removed,
-            ambient_product_executables_removed=tax_evidence.ambient_product_executables_removed,
-            installed_executables=(_installed_executable(_CLI_EXECUTABLE_NAME, tax_evidence.resolved_executable),),
-        )
-        assertions = (
-            f"installed CLI computed {tax_evidence.target_casilla}={tax_evidence.target_value} "
-            f"via {tax_evidence.formula_id}",
-            "the lane ships no MCP leg: cadrumo-mcp is not part of this distribution",
-            "every persisted observation carried legal and source grounding",
-        )
-        observations = {"cli_oracle": cli_observations, "mcp_oracle": None}
-    else:
-        isolation = ExecutionIsolation(
-            # Derived from what the oracles actually recorded, not asserted: if a future
-            # refactor stops stripping checkout imports or product executables, the oracle
-            # records False and the evidence schema refuses to mint a PASSED record.
-            checkout_imports_removed=tax_evidence.checkout_imports_removed and mcp_evidence.checkout_imports_removed,
-            ambient_product_executables_removed=mcp_evidence.ambient_product_executables_removed,
-            installed_executables=(
-                _installed_executable(_CLI_EXECUTABLE_NAME, tax_evidence.resolved_executable),
-                _installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),
-            ),
-        )
-        assertions = (
-            f"installed CLI computed {tax_evidence.target_casilla}={tax_evidence.target_value} "
-            f"via {tax_evidence.formula_id}",
-            f"installed MCP computed {mcp_evidence.target_casilla}={mcp_evidence.target_value} "
-            f"via {mcp_evidence.formula_id}",
-            "every persisted observation carried legal and source grounding",
-        )
-        observations = {
-            "cli_oracle": cli_observations,
-            "mcp_oracle": cast("JsonValue", _mcp_observations(mcp_evidence)),
-        }
+    isolation = ExecutionIsolation(
+        # Derive isolation claims from the real CLI capture; absent facts never
+        # become successful evidence through defaults.
+        checkout_imports_removed=tax_evidence.checkout_imports_removed,
+        ambient_product_executables_removed=tax_evidence.ambient_product_executables_removed,
+        installed_executables=(_installed_executable(_CLI_EXECUTABLE_NAME, tax_evidence.resolved_executable),),
+    )
+    assertions = (
+        f"installed CLI computed {tax_evidence.target_casilla}={tax_evidence.target_value} "
+        f"via {tax_evidence.formula_id}",
+        "every persisted observation carried legal and source grounding",
+    )
+    observations: dict[str, JsonValue] = {"cli_oracle": cli_observations}
     result = ResultIdentity(
         status=EvidenceStatus.PASSED,
         assertions=assertions,
@@ -387,7 +234,6 @@ def emit_installed_oracle_evidence(
     row_id: str,
     cohort: LoadedReleaseCohort,
     tax_evidence: InstalledTaxEvidence,
-    mcp_evidence: InstalledMcpEvidence | None = None,
     acquisition: AcquisitionIdentity,
     destination: DestinationIdentity,
     client: ClientIdentity | None = None,
@@ -397,14 +243,11 @@ def emit_installed_oracle_evidence(
 
     Writes ``{row_id}-{evidence_id}.json`` under ``directory`` (the flat layout
     both release-readiness and the docs-claims gate scan) and returns its path.
-    ``mcp_evidence`` is optional exactly as in :func:`build_installed_oracle_evidence`:
-    a lane that ships no MCP leg omits it and the record marks the leg absent.
     """
     evidence = build_installed_oracle_evidence(
         row_id=row_id,
         cohort=cohort,
         tax_evidence=tax_evidence,
-        mcp_evidence=mcp_evidence,
         acquisition=acquisition,
         destination=destination,
         client=client,
@@ -479,72 +322,11 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
     )
 
 
-def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
-    """Reconstruct installed-MCP oracle evidence from its ``to_jsonable`` mapping.
-
-    The ``mcp`` import is deferred so this module stays importable without the
-    ``mcp`` dependency for the pure build path.
-    """
-    from .installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
-
-    _require_isolation_fields(
-        data,
-        kind="installed MCP",
-        fields=("checkout_imports_removed", "ambient_product_executables_removed"),
-    )
-    calls = tuple(
-        McpCallEvidence(
-            tool_name=call["tool_name"],
-            command_key=call["command_key"],
-            duration_seconds=call["duration_seconds"],
-            is_error=call["is_error"],
-            status=call["status"],
-        )
-        for call in data["calls"]
-    )
-    return InstalledMcpEvidence(
-        requested_executable=data["requested_executable"],
-        resolved_executable=data["resolved_executable"],
-        server_name=data["server_name"],
-        storage_root=data["storage_root"],
-        work_unit_id=data["work_unit_id"],
-        calculation_revision_id=data["calculation_revision_id"],
-        observations_resource=data["observations_resource"],
-        target_casilla=data["target_casilla"],
-        target_value=data["target_value"],
-        formula_id=data["formula_id"],
-        legal_refs=tuple(data["legal_refs"]),
-        source_refs=tuple(data["source_refs"]),
-        notice_codes=tuple(data["notice_codes"]),
-        advertised_tools=tuple(data["advertised_tools"]),
-        calls=calls,
-        invoked_cli_sha256=data["invoked_cli_sha256"],
-        invoked_cli_sha256_by_command=dict(data["invoked_cli_sha256_by_command"]),
-        cohort_source_digest=data["cohort_source_digest"],
-        cohort_manifest_sha256=data["cohort_manifest_sha256"],
-        cohort_root_wheel_sha256=data["cohort_root_wheel_sha256"],
-        cohort_harness_wheel_sha256=data["cohort_harness_wheel_sha256"],
-        server_executable_sha256=data["server_executable_sha256"],
-        runtime_server_executable=data["runtime_server_executable"],
-        runtime_project_root=data["runtime_project_root"],
-        installed_cli_payload_sha256=data["installed_cli_payload_sha256"],
-        installed_harness_payload_sha256=data["installed_harness_payload_sha256"],
-        checkout_imports_removed=data["checkout_imports_removed"],
-        ambient_product_executables_removed=data["ambient_product_executables_removed"],
-    )
-
-
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Emit one sanctioned flat distribution-evidence record.")
     parser.add_argument("--row-id", required=True, help="Distribution row this run proves.")
     parser.add_argument("--release-cohort-dir", required=True, type=Path, help="Full release-cohort directory.")
     parser.add_argument("--tax-evidence", required=True, type=Path, help="installed_tax_oracle --output JSON.")
-    parser.add_argument(
-        "--mcp-evidence",
-        type=Path,
-        default=None,
-        help="Optional installed_mcp_oracle --output JSON; omit for a lane that ships no MCP leg.",
-    )
     parser.add_argument("--acquisition-mechanism", required=True, help="Acquisition channel (scoop, brew, pip, ...).")
     parser.add_argument("--acquisition-source", required=True, help="Public locator the bytes were acquired from.")
     parser.add_argument("--destination-kind", required=True, help="Install/promotion destination kind.")
@@ -559,21 +341,17 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Emit a flat record from oracle-evidence JSON a lane already produced."""
+    """Emit a flat record from installed-CLI evidence JSON a lane already produced."""
     from .cohort_manifest import load_release_cohort
 
     args = _parser().parse_args(argv)
     tax_evidence = _tax_evidence_from_mapping(json.loads(args.tax_evidence.read_text(encoding=_UTF_8)))
-    mcp_evidence = None
-    if args.mcp_evidence is not None:
-        mcp_evidence = _mcp_evidence_from_mapping(json.loads(args.mcp_evidence.read_text(encoding=_UTF_8)))
     cohort = load_release_cohort(args.release_cohort_dir)
     path = emit_installed_oracle_evidence(
         directory=args.distribution_evidence_dir,
         row_id=args.row_id,
         cohort=cohort,
         tax_evidence=tax_evidence,
-        mcp_evidence=mcp_evidence,
         acquisition=AcquisitionIdentity(mechanism=args.acquisition_mechanism, source=args.acquisition_source),
         destination=DestinationIdentity(
             kind=args.destination_kind,

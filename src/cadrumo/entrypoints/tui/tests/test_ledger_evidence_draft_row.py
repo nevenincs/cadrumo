@@ -18,9 +18,12 @@ from ....application.ledger.invoice_draft_records import (
     LabelReadingFallback,
     LabelReadingFallbackCause,
 )
+from ....application.ledger.invoice_evidence_operation import LedgerEvidenceExtractProjection
+from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from ....core.config import override_settings
+from ....core.operations import OperationEffect
 from ..ledger.evidence import draft_lines
-from ..ledger_doors import _draft_row
+from ..ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -46,7 +49,7 @@ def _draft() -> InvoiceDraft:
 
 
 def test_the_draft_row_carries_the_degraded_reading_to_the_screen() -> None:
-    row = _draft_row("8747cbf318cf0adb", _draft().with_label_reading_fallback(_BUSY))
+    row = _draft_row(_draft().with_label_reading_fallback(_BUSY))
 
     assert row.label_reading_fallback == _BUSY
     with override_settings(cadrumo_output_language="en"):
@@ -54,6 +57,21 @@ def test_the_draft_row_carries_the_degraded_reading_to_the_screen() -> None:
 
 
 def test_a_draft_read_in_full_gives_a_row_with_no_degraded_reading() -> None:
-    row = _draft_row("8747cbf318cf0adb", _draft())
+    row = _draft_row(_draft())
 
     assert row.label_reading_fallback is None
+
+
+def _draft_row(draft: InvoiceDraft):
+    from uuid import UUID
+
+    projection = LedgerEvidenceExtractProjection(
+        profile_id=UUID("00000000-0000-4000-8000-000000000001"),
+        evidence_id="8747cbf318cf0adb",
+        attachment_id=None,
+        source_sha256="a" * 64,
+        draft_review_sha256="b" * 64,
+        consent_audit_effect=OperationEffect.NONE,
+        draft=InvoiceDraftProjectionV1.from_draft(draft),
+    )
+    return RuntimeEvidenceTuiDoorV1._draft(projection, evidence_id="8747cbf318cf0adb")

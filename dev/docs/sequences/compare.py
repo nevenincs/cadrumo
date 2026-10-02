@@ -51,6 +51,7 @@ from cadrumo.tests.golden_comparison import canonicalise, differing_paths, mask_
 
 from .errors import SequenceGoldenMismatchError
 from .golden_store import (
+    SANDBOX_WORKDIR_PLACEHOLDER,
     SequenceGolden,
     mask_host_conditional_details,
     masked_envelope_values,
@@ -242,6 +243,9 @@ def evaluate_expectations(
         at = _frame_locator(page, sequence.sequence_id, index, execution)
         for assertion in frame.expects:
             expected = assertion.expected
+            explicit_sandbox_path = isinstance(expected, str) and expected.startswith(
+                SANDBOX_WORKDIR_PLACEHOLDER + "/",
+            )
             if isinstance(expected, str) and expected.startswith("{") and expected.endswith("}"):
                 capture_name = expected[1:-1]
                 if capture_name in transcript.captures:
@@ -262,6 +266,23 @@ def evaluate_expectations(
                 )
                 continue
             found, value = _resolve_json_path(execution.envelope, assertion.json_path)
+            if explicit_sandbox_path and found:
+                if isinstance(value, str) and value.startswith(
+                    (SANDBOX_WORKDIR_PLACEHOLDER + "/", SANDBOX_WORKDIR_PLACEHOLDER + "\\"),
+                ):
+                    problems.append(
+                        f"{at}: @expect {assertion.json_path} == {rendered} failed — "
+                        "live output must report a native destination, not a sandbox token",
+                    )
+                    continue
+                # Only the authored literal enables normalization; captures remain raw.
+                # The known workdir comes from the runner, independently of live output.
+                envelope = normalise_document_paths(
+                    execution.envelope,
+                    storage_root=transcript.storage_root,
+                    workdir=transcript.workdir,
+                )
+                found, value = _resolve_json_path(envelope, assertion.json_path)
             if not found:
                 problems.append(
                     f"{at}: @expect path {assertion.json_path!r} is missing from the live "

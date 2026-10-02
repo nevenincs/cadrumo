@@ -177,11 +177,19 @@ def _verify(
 
 
 def _file(revision_id: CalculationRevisionId, *, clock: datetime, operation: PinnedAuthorityOperation) -> None:
+    ports = build_filing_action_ports(bucket_id=_BUCKET_ID)
+    granting = tuple(
+        report
+        for report in ports.verification_repository.load().reports.values()
+        if report.calculation_revision_id == revision_id and report.granted_verificado_completo
+    )
+    assert len(granting) == 1
     file_modelo_revision(
         revision_id,
+        approved_verification_report_id=granting[0].verification_report_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         operator_scope_ports=build_operator_scope_ports(),
-        ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+        ports=ports,
         actor="test",
         workflow_profile=_workflow_profile(),
         clock=clock,

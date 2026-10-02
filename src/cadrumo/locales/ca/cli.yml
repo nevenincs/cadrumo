@@ -117,6 +117,10 @@ cli:
           encara; normalment obligatori).
         confirm_counterparty_nif_help: Sobreescriu el NIF del proveïdor extret.
         confirm_currency_help: Codi de moneda ISO-4217.
+        confirm_expected_draft_review_sha256_help: Empremta de revisió de l'esborrany
+          exacte que ha revisat, retornada per extract.
+        confirm_expected_source_sha256_help: SHA-256 del justificant retornat per
+          extract; verifica que els bytes no han canviat.
         confirm_help: Torna a extreure el justificant en local i confirma'l com a
           factura real del catàleg.
         confirm_invoice_class_help: Indiqueu la classe de factura quan el document
@@ -125,10 +129,15 @@ cli:
           als documents que no ho fan.
         confirm_invoice_date_help: Sobreescriu la data de factura extreta (AAAA-MM-DD).
         confirm_invoice_number_help: Sobreescriu el número de factura extret.
+        confirm_iva_amount_help: Sobreescriu l'import d'IVA extret; ometi l'opció
+          per conservar-lo.
+        confirm_iva_category_help: Identificador de la categoria d'IVA que es registrarà
+          per a aquesta factura.
         confirm_iva_rate_help: Sobreescriu el tipus d'IVA extret (ometre per mantenir
           el valor extret).
         confirm_link_hint_message: La factura es va registrar sense cap moviment coincident
           del llibre.
+        confirm_operation_date_help: Data de l'operació gravada (ISO AAAA-MM-DD).
         confirm_operation_type_help: 'Clau del model 349 per a un lliurament intracomunitari.
           Obligatòria quan el document declara un lliurament intracomunitari: la categoria
           no permet saber si va seguir una importació exempta.'
@@ -137,12 +146,15 @@ cli:
           i del tipus d'IVA, de manera que una diferència significa que el document
           inclou un import que aquest registre no recull, com ara un recàrrec d'equivalència,
           o que s'ha llegit malament alguna xifra. Reviseu el document.
+        confirm_recargo_amount_help: Import del recàrrec d'equivalència de la factura.
         confirm_rectifies_help: Número de la factura que rectifica aquesta rectificativa.
           El RD 1619/2012 art. 6.1.a.2 l'exigeix juntament amb la seva pròpia sèrie,
           i es llegeix del document quan aquest l'indica.
         confirm_resolve_help: 'Respongui a una troballa bloquejant: <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
           Per a choose, indiqui la lectura pel seu valor o pel resum que va mostrar
           review. Repeteixi un cop per troballa; no hi ha opció massiva.'
+        confirm_retention_amount_help: Import de retenció d'IRPF de la factura.
+        confirm_retention_rate_help: Percentatge de retenció d'IRPF de la factura.
         confirm_review_contradicted_regime_message: Aquest document es contradiu a
           si mateix sobre com tributa. El detall següent anomena què discrepava amb
           què.
@@ -488,6 +500,8 @@ cli:
           definitiu liquidat per a {prior_ejercicio}, de manera que no es pot arrossegar
           a l''exercici {ejercicio}. El definitiu anterior falta, no és zero: liquida
           abans {prior_ejercicio} per a aquest sector.'
+        seed_sector_requires_route: No es pot passar un sector a l'arrossegament de
+          tota l'activitat; fes servir seed-sector per a un sector diferenciat.
         seed_source_absent: 'Cap observació segellada de la liquidació del Model 303
           de {prior_ejercicio} conté un percentatge de prorrata definitiu, de manera
           que no es pot arrossegar a l''exercici {ejercicio}. El definitiu anterior
@@ -861,6 +875,15 @@ cli:
           té revisions VERIFICADO_COMPLETO ni BORRADOR disponibles per a comparar.
         no_work_units: No s'han trobat unitats de treball del Model %{modelo} per
           a l'exercici %{filing_year}. Crea i calcula una unitat de treball primer.
+        recover_no_revisions: Comprova les revisions de càlcul del Model %{modelo}
+          en els dos exercicis sol·licitats (%{year_a} i %{year_b}); executa `aeat
+          app modelo work calculate` en l'exercici on falti una revisió.
+        recover_no_usable_revisions: Comprova les revisions BORRADOR o VERIFICADO_COMPLETO
+          del Model %{modelo} en els dos exercicis sol·licitats (%{year_a} i %{year_b});
+          calcula una unitat de treball vàlida en l'exercici que ho necessiti.
+        recover_no_work_units: Comprova les unitats de treball del Model %{modelo}
+          en els dos exercicis sol·licitats (%{year_a} i %{year_b}); crea i calcula
+          una unitat en l'exercici on en falti.
         year_help: Exercici fiscal a incloure a la comparació. Específica exactament
           dues vegades (--year 2024 --year 2025).
       compare_help: Compara les revisions de càlcul de dos exercicis per al mateix
@@ -963,6 +986,9 @@ cli:
             indica un tipus de declaració diferent del de la presentació local pendent.'
           declaration_kind_undetermined: 'Model {modelo} {period} {filing_year}: l''AEAT
             registra una presentació posterior sense indicar si és una correcció.'
+          filing_instance_evidence_unavailable: 'Model {modelo} {period} {filing_year}:
+            l''entrada de l''AEAT no té l''evidència de presentació necessària per
+            registrar-ne el contingut.'
           receipt_totals_mismatch: 'Model {modelo} {period} {filing_year}: l''import
             del justificant difereix de la presentació local pendent, però sense valors
             de caselles no s''ha pogut registrar el contingut de l''AEAT.'
@@ -1487,6 +1513,10 @@ cli:
           pdf per al resum del càlcul signat (requereix el complement opcional pdf).'
         document_only_help: Comprova només el document, sense obrir el magatzem del
           perfil actiu; sense --trusted-key, un resultat vàlid queda sense clau ancorada.
+        file:
+          verification_report_ambiguous: Hi ha més d’un informe de verificació favorable
+            per a aquesta revisió. Resoleu el conflicte de verificació abans de registrar
+            la presentació.
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
         file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
@@ -1760,9 +1790,6 @@ cli:
         row_kv_format_error: 'El camp --row {token} s''ha d''escriure com CLAU=VALOR.
           És una entrada clau-valor: posa el nom del camp de la fila a l''esquerra
           d''un únic signe igual i el seu valor a la dreta.'
-        row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
-          amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE
-          Annex XI)'
         row_unknown_type: 'Tipus de fila --row {row_type!r} no reconegut; tipus suportats:
           {supported}.'
         row_validation_error: 'Validació fallida per a la fila --row tipus {row_type!r}:
@@ -1841,6 +1868,19 @@ cli:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
         i exporta; mai presenta a l''AEAT'
+    runtime:
+      disable:
+        help: Desactiva l'inici en obrir la sessió i manté l'inici a demanda.
+      enable:
+        help: Activa l'inici del servei en obrir la sessió d'aquest usuari.
+      help: Consulta i administra el servei local d'aquesta instal·lació.
+      start:
+        help: Inicia el servei instal·lat i verifica'n el punt d'escolta.
+      status:
+        help: Mostreu la disponibilitat del servei local i l'estat del seu gestor.
+      stop:
+        acknowledge_help: Confirma que l'aturada afecta tots els perfils i treballs.
+        help: Atura el servei compartit després de confirmar-ne tot l'abast.
   common:
     errors:
       filing_requires_declared_tax_id: 'El perfil actiu no declara una identitat fiscal,
@@ -1992,6 +2032,14 @@ cli:
     custody:
       current_passphrase_prompt: 'Contrasenya actual del perfil: '
       errors:
+        automation_change_credential_ref_required: Utilitzeu --profile-auth-method
+          api-key amb --profile-credential-ref UUID per canviar una autorització.
+        automation_change_kind_mismatch: El tipus de proposta protegida ha de coincidir
+          amb el canvi d'autorització sol·licitat.
+        automation_change_proposal_required: Proporcioneu la proposta de canvi mitjançant
+          --secrets-stdin o --secrets-fd.
+        automation_create_proposal_required: Proporcioneu la proposta d'autorització
+          mitjançant --secrets-stdin o --secrets-fd.
         echo_suppression_unavailable: Aquest terminal no pot ocultar el que s'escriu,
           de manera que el secret quedaria visible a la pantalla; utilitzeu --secrets-stdin
           o --secrets-fd.
@@ -2001,6 +2049,16 @@ cli:
           d'una sessió interactiva.
         non_interactive_secret_required: Cal un secret però no hi ha cap terminal
           interactiu; utilitzeu --secrets-stdin o --secrets-fd.
+        profile_credential_ref_conflict: Trieu --profile-credential-ref o un canal
+          de secrets de perfil de l'arrel.
+        profile_credential_ref_inapplicable: --profile-credential-ref només està disponible
+          per a ordres privades de perfil allotjades al servei local.
+        profile_credential_ref_requires_api_key: --profile-credential-ref requereix
+          --profile-auth-method api-key.
+        profile_secrets_api_key_inapplicable: L'autenticació amb clau API només està
+          disponible per a les ordres ateses per l'entorn local.
+        profile_secrets_api_key_requires_channel: L'autenticació amb clau API requereix
+          --profile-secrets-stdin o --profile-secrets-fd.
         profile_secrets_channel_conflict: 'Trieu exactament un canal d''autenticació
           del perfil: --profile-secrets-stdin o --profile-secrets-fd.'
         profile_secrets_fd_collision: L'autenticació del perfil i el secret de l'ordre
@@ -2018,6 +2076,8 @@ cli:
           heretat per autenticar el perfil.
         profile_secrets_inapplicable: L'entrada d'autenticació del perfil no s'aplica
           a aquesta ordre i no s'ha llegit.
+        profile_secrets_method_mismatch: El contingut del canal protegit no coincideix
+          amb --profile-auth-method.
         profile_secrets_missing_target: L'autenticació del perfil requereix una destinació
           exacta seleccionada amb --profile o amb l'ordre.
         profile_secrets_stdin_collision: L'entrada estàndard no pot contenir alhora
@@ -2049,6 +2109,11 @@ cli:
           {expected_fields}.'
         secrets_stdin_too_large: El contingut de secrets de màquina supera la mida
           màxima permesa.
+      profile_auth_method_help: 'Mètode d''autenticació del canal protegit de secrets
+        del perfil: password o api-key.'
+      profile_credential_ref_help: Autentiqueu un perfil del servei local amb un UUID
+        de credencial de l'emmagatzematge natiu protegit (requereix --profile-auth-method
+        api-key).
       profile_secrets_fd_help: Llegeix la contrasenya del perfil de destinació exacte
         des d'un objecte JSON acotat en un descriptor llegible heretat després que
         falli la represa de la sessió.
@@ -2186,9 +2251,12 @@ cli:
         aquest verb en un terminal o useu --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contrasenya del perfil: '
     logout:
-      help: Tanca la sessió del perfil i esborra el seu punter local
+      help: Esborrar el perfil seleccionat en aquest context de la CLI.
       notices:
         already_logged_out: Cap perfil tenia la sessió iniciada; no hi ha res a tancar.
+        remaining_access: S’ha esborrat la selecció de la CLI. Les altres sessions,
+          la represa humana limitada i les claus API inscrites conserven la seva pròpia
+          autorització. Fes servir els controls de sessió o perfil per revocar l’accés.
     passphrase:
       change_help: Canvia la contrasenya sense tornar a xifrar els registres ni invalidar
         un codi de recuperació.
@@ -2258,6 +2326,40 @@ cli:
           export_target_exists: Ja hi ha un fitxer al camí de destinació i una còpia
             de seguretat no se sobreescriu mai. Tria un altre --output o mou primer
             el fitxer existent; no s'ha llegit cap perfil.
+      automation:
+        approve:
+          digest_help: Empremta exacta de revisió mostrada per inspect.
+          help: Aprovar la sol·licitud exacta revisada tornant a introduir la contrasenya
+            del perfil.
+          request_help: UUID de la sol·licitud revisada.
+        change:
+          help: Sol·liciteu la rotació, renovació o canvi de permisos d'una autorització
+            API existent.
+          kind_help: 'Canvi d''autorització: rotate, renew o change_scope.'
+        create:
+          help: Sol·liciteu una autorització API i rebeu-ne la credencial en emmagatzematge
+            protegit després de l'aprovació humana per separat.
+        decline:
+          digest_help: Empremta exacta de revisió mostrada per inspect.
+          help: Rebutjar la sol·licitud exacta revisada.
+          request_help: UUID de la sol·licitud revisada.
+        deny:
+          help: Revoca una clau, una concessió o tot l'accés automatitzat.
+          kind_help: 'Tipus de revocació: key, grant o all.'
+          target_help: UUID de la clau o concessió que es revocarà.
+          target_mismatch: La revocació d'una clau o concessió requereix el seu UUID;
+            all no admet cap destinació.
+        help: Gestiona l'accés automatitzat d'aquest perfil.
+        inspect:
+          help: Mostrar la sol·licitud exacta d’automatització revisada.
+          request_help: UUID de la sol·licitud revisada.
+        list:
+          help: Llista les concessions, claus i sol·licituds pendents d'automatització
+            d'aquest perfil.
+        review_digest_mismatch: L’empremta de revisió actual no coincideix amb la
+          proporcionada. Torna a consultar la sol·licitud.
+        review_not_found: La sol·licitud revisada no està disponible per a aquest
+          perfil.
       bundle_flow:
         export_section_title: Exporta el paquet de perfil
         import_section_title: Importa el paquet de perfil
@@ -2407,9 +2509,18 @@ cli:
         incoherent_observation_advisory: 'No s''ha pogut obtenir un llistat fiable
           de perfils (estat: {outcome}). Torneu a executar l''ordre; si persisteix,
           reviseu l''emmagatzematge de perfils.'
+      lock:
+        all_help: Bloqueja el perfil arreu i suspèn totes les concessions automatitzades.
+        help: Bloqueja aquesta sessió o, amb --all, tot el perfil.
+        selector_conflict: Tria --session o --all, però no tots dos.
+        session_help: UUID de la sessió que es revocarà sense bloquejar el perfil.
       manager_closed_created: Perfil '{profile}' creat. Declara que la configuració
         està completa amb `aeat config profile complete-setup` abans de treballar
         amb models. Torna a obrir-lo quan vulguis amb 'aeat config profile edit'.
+      mutation:
+        committed_view_unavailable: El canvi del perfil s'ha desat, però la vista
+          actualitzada no està disponible. Torna a consultar el perfil abans de fer
+          cap altre canvi.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       notices:
@@ -2475,6 +2586,11 @@ cli:
         verification_prompt: 'Escriu el codi de recuperació per confirmar que el tens: '
       remove_row:
         help: Elimina una fila identificada d'una secció repetible del perfil.
+      resume:
+        grant_help: UUID de la concessió que es reactivarà; repeteix l'opció per triar-ne
+          més d'una.
+        help: Desbloqueja el perfil amb la seva contrasenya i reactiva les concessions
+          seleccionades.
       row:
         invalid_row: '''%{row}'' no és una clau de fila vàlida; useu un enter no negatiu
           o base.'
@@ -2484,6 +2600,8 @@ cli:
       sandbox:
         active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
           real; totes les ordres s'executen contra aquest bucket aïllat i descartable.
+      sessions:
+        help: Enumera les sessions actuals d'aquest perfil a l'entorn local.
       show:
         summary_invalid: 'El registre del perfil no és vàlid: %{count} problema/es
           bloquejant/s.'

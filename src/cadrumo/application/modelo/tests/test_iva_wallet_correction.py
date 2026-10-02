@@ -15,6 +15,7 @@ from cadrumo.application.modelo.iva_wallet_seed import (
 )
 from cadrumo.application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -30,7 +31,9 @@ def _ports() -> ModeloIvaWalletSeedPorts:
     return cast(ModeloIvaWalletSeedPorts, _NeverReachedWalletPorts())
 
 
-def test_every_wallet_mutation_refuses_the_same_negative_amount_contract() -> None:
+def test_every_wallet_mutation_refuses_the_same_negative_amount_contract(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """Seed, correction, and override reject a negative amount before any write."""
     amount = Decimal("-1.00")
 
@@ -40,6 +43,7 @@ def test_every_wallet_mutation_refuses_the_same_negative_amount_contract() -> No
             period=_SEED_FILING_PERIOD,
             amount=amount,
             ports=_ports(),
+            operation=operation,
         )
     with pytest.raises(ModeloIvaWalletSeedNegativeAmountError) as correction_error:
         correct_iva_compensation_period_for_bucket(
@@ -48,6 +52,7 @@ def test_every_wallet_mutation_refuses_the_same_negative_amount_contract() -> No
             amount=amount,
             reason="negative",
             ports=_ports(),
+            operation=operation,
         )
     with pytest.raises(ModeloIvaWalletSeedNegativeAmountError) as override_error:
         record_iva_compensation_override_for_bucket(
@@ -57,6 +62,7 @@ def test_every_wallet_mutation_refuses_the_same_negative_amount_contract() -> No
             reason="negative",
             evidence_locator="operator-test:negative",
             ports=_ports(),
+            operation=operation,
         )
 
     expected_context = {"amount": "-1.00"}

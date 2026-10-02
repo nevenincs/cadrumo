@@ -12,8 +12,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ValidationError
 
+from ....application.operations.persistence.journal import serialize_operation_operand
 from ....core.classification.policies import AtRestTreatment, SensitivityClass, default_policy_for
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.time.utc import validate_utc_aware
@@ -73,23 +73,13 @@ class OperationSecureReferenceRepository:
         if default_policy_for(namespace.sensitivity).at_rest is not AtRestTreatment.CIPHERTEXT_REQUIRED:
             raise ValueError("operation secure-reference namespace must require ciphertext at rest")
 
-    @staticmethod
-    def _serialized_operand(operand: BaseModel) -> bytes:
-        """Return the exact typed JSON bytes addressed by the content digest."""
-        return operand.model_dump_json(
-            by_alias=True,
-            exclude_defaults=False,
-            exclude_none=False,
-            exclude_unset=False,
-        ).encode(UTF_8_ENCODING)
-
     async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest:
         """Encrypt ``operand`` under its exact typed-content digest, off the awaiting loop."""
         validate_utc_aware(written_at)
         return await asyncio.to_thread(self._put, operand, written_at)
 
     def _put(self, operand: BaseModel, written_at: datetime) -> ContentDigest:
-        payload = self._serialized_operand(operand)
+        payload = serialize_operation_operand(operand)
         reference = sha256_hex(payload)
         objects = self._repository()
         existing = objects.load(

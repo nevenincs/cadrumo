@@ -250,30 +250,82 @@ async def _register_via_production_screen(*, profile_label: str, passphrase: str
 register_profile_through_installed_tui = _register_via_production_screen
 
 
-async def admit_installed_session(*, pilot: Any, passphrase: str, polls: int = 180) -> None:
-    """Unlock an installed session through its visible admission surface.
+async def admit_installed_session(
+    *, pilot: Any, passphrase: str, polls: int = 180, deadline: float | None = None
+) -> bool:
+    """Drive runtime login, or return True once the separate root reaches Home.
 
-    A newly registered profile can reach either the Login screen or an already
-    admitted Home screen depending on the surrounding production composition.
-    Both branches remain ordinary public TUI interactions.
-
-    While a profile is not set up yet, the session's first Home hands straight
-    on to the Profile setup walk, once. The journeys start from Home, so the
-    walk is left the way an operator leaves it, through its Escape binding,
-    which returns to Home.
+    The installed launcher invokes its autopilot in two separately owned Apps.
+    A verified login handoff returns False so the login App can finish; only
+    the later admitted root invocation may run the journey's private workflow.
+    A supplied absolute loop deadline preserves a caller's existing time bound.
     """
-    from textual.widgets import Input
+    from textual.css.query import NoMatches
+    from textual.widgets import Input, Select
 
-    initial_surface = await wait_for_any_public_selector(
-        pilot,
-        ("#field-passphrase", "#home-agenda", SETUP_WALK_SURFACE),
-        polls=polls,
-    )
-    if initial_surface == "#field-passphrase":
-        query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
-        await pilot.click("#btn-unlock")
-    await wait_for_any_public_selector(pilot, ("#home-agenda", SETUP_WALK_SURFACE), polls=polls)
-    await leave_the_setup_walk_if_handed_off(pilot=pilot, polls=polls)
+    from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginHandoff, RuntimeLoginMethod
+
+    loop = asyncio.get_running_loop()
+
+    async def wait_for(predicate: Callable[[], bool]) -> None:
+        remaining = polls
+        while deadline is not None or remaining > 0:
+            if predicate():
+                return
+            if deadline is not None and loop.time() >= deadline:
+                break
+            remaining -= 1
+            await pilot.pause(0.2 if deadline is not None else None)
+        raise InstalledTuiChildError(
+            "installed runtime admission did not settle",
+            diagnostic=public_surface_diagnostic(pilot),
+        )
+
+    surface: str | None = None
+
+    def locate_surface() -> bool:
+        nonlocal surface
+        for selector in ("#runtime-login-credential", "#home-agenda", SETUP_WALK_SURFACE):
+            try:
+                query_public_selector(pilot, selector)
+            except NoMatches:
+                continue
+            surface = selector
+            return True
+        return False
+
+    try:
+        async with asyncio.timeout_at(deadline):
+            await wait_for(locate_surface)
+            if surface == "#runtime-login-credential":
+                profile = query_public_selector(pilot, "#runtime-login-profile", Select).value
+                if not isinstance(profile, str):
+                    raise InstalledTuiChildError("installed runtime login has no selected profile")
+                query_public_selector(pilot, "#runtime-login-method", Select).value = RuntimeLoginMethod.PASSWORD
+                await pilot.pause()
+                query_public_selector(pilot, "#runtime-login-credential", Input).value = passphrase
+                await pilot.click("#runtime-login-submit")
+
+                def received_handoff() -> bool:
+                    handoff = getattr(pilot.app, "handoff", None)
+                    if handoff is None:
+                        return False
+                    if (
+                        not isinstance(handoff, RuntimeLoginHandoff)
+                        or str(handoff.profile_id) != profile
+                        or handoff.method is not RuntimeLoginMethod.PASSWORD
+                    ):
+                        raise InstalledTuiChildError("installed runtime login returned a mismatched handoff")
+                    return True
+
+                await wait_for(received_handoff)
+                return False
+            await leave_the_setup_walk_if_handed_off(pilot=pilot, polls=polls)
+            return True
+    except TimeoutError as error:
+        raise InstalledTuiChildError(
+            "installed runtime admission did not settle", diagnostic=public_surface_diagnostic(pilot)
+        ) from error
 
 
 async def leave_the_setup_walk_if_handed_off(*, pilot: Any, polls: int = 180) -> None:
@@ -302,60 +354,10 @@ def admitted_session_autopilot(
     """Build a launcher callback that admits, then delegates real TUI work."""
 
     async def drive(pilot: Any) -> None:
-        await admit_installed_session(pilot=pilot, passphrase=passphrase, polls=polls)
-        await drive_after_home(pilot)
+        if await admit_installed_session(pilot=pilot, passphrase=passphrase, polls=polls):
+            await drive_after_home(pilot)
 
     return drive
-
-
-async def login_existing_profile_through_installed_tui(*, passphrase: str) -> None:
-    """Admit a profile that already exists through its installed public Login screen.
-
-    A fresh child has no active session, and the production launcher keeps
-    credential screens out of a headless run.  This prelude drives the same
-    visible Login controls first; it never reads or writes the secure store.
-    """
-    from textual.widgets import Input
-
-    from cadrumo.application.user_profile.login_interaction import (
-        ProfileLoginInventoryState,
-        attempt_profile_login,
-        observe_profile_login_inventory,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
-
-    inventory = observe_profile_login_inventory()
-    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
-        raise InstalledTuiChildError("installed Login screen did not recognize the existing profile")
-    with bundled_indexed_authority().operation() as operation:
-        screen = LoginScreen(
-            choices=inventory.choices,
-            authenticate=lambda profile_id, secret: attempt_profile_login(
-                profile_id,
-                secret,
-                profile_decode_context=operation.profile_decode_context(),
-            ),
-            preselected=inventory.preselected_profile_id,
-        )
-        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-            await wait_for_public_selector(pilot, "#field-passphrase")
-            query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
-            await pilot.click("#btn-unlock")
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
-    if screen.outcome is None:
-        raise InstalledTuiChildError("installed Login screen did not admit the existing profile")
-
-
-def admit_existing_profile_for_headless_launcher(*, passphrase: str) -> None:
-    """Run the Login prelude inside the product compositions a fresh child needs."""
-    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-    from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
-
-    with live_exchange_rate_composition(), profile_adapter_composition():
-        asyncio.run(login_existing_profile_through_installed_tui(passphrase=passphrase))
 
 
 def run_admitted_installed_launcher(
@@ -484,7 +486,8 @@ def _profile_route_autopilot(*, observed: list[str], passphrase: str):
     """
 
     async def drive(pilot: Any) -> None:
-        await admit_installed_session(pilot=pilot, passphrase=passphrase)
+        if not await admit_installed_session(pilot=pilot, passphrase=passphrase):
+            return
         await pilot.press("f4")
         await wait_for_public_selector(pilot, "#manager-status", polls=180)
         observed.append("workbench.profile")

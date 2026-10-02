@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from ...application.modelo.binding_readiness import profile_resolvable_binding_ids
 from ...application.modelo.data_inventory import DataInventoryCasilla, DataInventoryChecklist
+from ...application.modelo.query_read_operation import ModeloBindingRowV1
 from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 from ...application.operator_actions.models import ActionReference
 from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
@@ -66,16 +67,21 @@ def data_inventory_section_lines(title: str, rows: tuple[DataInventoryCasilla, .
     return lines
 
 
-def requires_notices(checklist: DataInventoryChecklist) -> tuple[Notice, ...]:
+def requires_notices(checklist: DataInventoryChecklist, *, operation: PinnedAuthorityOperation) -> tuple[Notice, ...]:
     notices = [
         notice
-        for notice in (_profile_requirement_notice(checklist), _unbucketed_source_notice(checklist))
+        for notice in (
+            _profile_requirement_notice(checklist, operation=operation),
+            _unbucketed_source_notice(checklist),
+        )
         if notice is not None
     ]
     return tuple(notices)
 
 
-def _profile_requirement_notice(checklist: DataInventoryChecklist) -> Notice | None:
+def _profile_requirement_notice(
+    checklist: DataInventoryChecklist, *, operation: PinnedAuthorityOperation
+) -> Notice | None:
     if not checklist.profile_checked:
         return Notice(
             severity=NoticeSeverity.INFO,
@@ -88,7 +94,7 @@ def _profile_requirement_notice(checklist: DataInventoryChecklist) -> Notice | N
     if not checklist.unresolved_profile_bindings:
         return None
     binding_ids = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
-    missing = _unresolved_profile_requirements(checklist) or binding_ids
+    missing = _unresolved_profile_requirements(checklist, operation=operation) or binding_ids
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.requires.missing_profile_coefficient",
@@ -121,7 +127,7 @@ def _unbucketed_source_notice(checklist: DataInventoryChecklist) -> Notice | Non
     )
 
 
-def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
+def _unresolved_profile_requirements(checklist: DataInventoryChecklist, *, operation: PinnedAuthorityOperation) -> str:
     """Render the unresolved bindings' profile facts as grounded requirements.
 
     A binding id names the registry's internal consumer of a profile fact, not
@@ -133,25 +139,11 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     back to the binding ids rather than emit a warning naming nothing.
     """
     from ...application.user_profile.preflight import format_profile_path_requirements
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
     if not checklist.unresolved_profile_keys:
         return ""
-    active_bucket_id = resolve_active_bucket_id()
-    if active_bucket_id is None:
-        return ""
-    with bundled_indexed_authority().operation() as operation:
-        try:
-            profile_decode_context = operation.profile_decode_context()
-            repository = ProfileRecordRepository.for_current_session(
-                active_bucket_id,
-                profile_decode_context=profile_decode_context,
-            )
-        except ProfileNotFoundError:
-            return ""
-        schema = repository.session.profile_decode_context.schema
-        grounding_index = profile_grounding_index_for_operation(operation)
+    schema = operation.profile_decode_context().schema
+    grounding_index = profile_grounding_index_for_operation(operation)
     return ", ".join(
         format_profile_path_requirements(
             checklist.unresolved_profile_keys,
@@ -189,6 +181,25 @@ def _relation_input_guidance_lines(rows: tuple[ModeloBindingQueryRow, ...]) -> t
                     "cli.app.modelo.bindings.relation_input_channel",
                     binding_id=str(row.binding_id),
                     relation_id=str(relation_id),
+                )
+            )
+    return tuple(lines)
+
+
+def binding_relation_guidance_lines(rows: tuple[ModeloBindingRowV1, ...]) -> tuple[str, ...]:
+    """Render the same relation guidance from an authenticated binding result."""
+    relation_fed = tuple(row for row in rows if row.relation_inputs)
+    if not relation_fed:
+        return ()
+    lines = ["relation_guidance\t" + tr("cli.app.modelo.bindings.relation_input_guidance")]
+    for row in relation_fed:
+        for relation_id in row.relation_inputs:
+            lines.append(
+                "relation_input\t"
+                + tr(
+                    "cli.app.modelo.bindings.relation_input_channel",
+                    binding_id=row.binding_id,
+                    relation_id=relation_id,
                 )
             )
     return tuple(lines)

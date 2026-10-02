@@ -63,6 +63,7 @@ from .custody_ports import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
 _CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION: Final[int] = 1
@@ -134,6 +135,7 @@ def export_profile_capsule_archive(
     target: Path,
     root: Path | None = None,
     now: datetime | None = None,
+    write: Callable[[Callable[[], None]], None] | None = None,
 ) -> ProfileCapsuleArchiveReceipt:
     """Write the published capsule for ``profile_id`` to a sealed archive.
 
@@ -142,6 +144,7 @@ def export_profile_capsule_archive(
         target: Destination archive path. Refused if it already exists.
         root: Storage root override; the effective root when omitted.
         now: Creation instant for the header; the clock when omitted.
+        write: Optional admission around the concrete sealed-container write.
 
     Returns:
         A :class:`ProfileCapsuleArchiveReceipt` naming what was written.
@@ -163,7 +166,14 @@ def export_profile_capsule_archive(
         archive_schema_version=archive_schema_version,
         created_at=(now or _now()).astimezone(UTC),
     )
-    write_profile_capsule_archive_container(target, header=header, payload_bytes=payload)
+
+    def publish() -> None:
+        write_profile_capsule_archive_container(target, header=header, payload_bytes=payload)
+
+    if write is None:
+        publish()
+    else:
+        write(publish)
     return ProfileCapsuleArchiveReceipt(
         bucket_id=str(profile_id),
         target=str(target),
