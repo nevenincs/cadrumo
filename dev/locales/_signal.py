@@ -110,6 +110,7 @@ _NEAR_ECHO_THRESHOLD: Final[float] = 0.90
 _ECHO_SAMPLE_LIMIT: Final[int] = 20
 _INVARIANT_ECHO_REASONS: Final[tuple[str, ...]] = (
     "inline_code",
+    "symbol_only",
     "modelo_form",
     "platform_format",
     "canonical_product_identity",
@@ -1612,6 +1613,9 @@ def _translation_invariant_echo_reason(
     normalized_product_names = {_translation_echo_normalize(value) for value in product_names}
     if normalized in normalized_product_names or _is_product_version_identity(source, product_names):
         return "canonical_product_identity"
+    glyphs = tuple(character for character in source if not character.isspace())
+    if glyphs and all(unicodedata.category(character).startswith(("P", "S")) for character in glyphs):
+        return "symbol_only"
     if _MODELO_FORM_RE.search(source):
         return "modelo_form"
     words = _translation_words(source)

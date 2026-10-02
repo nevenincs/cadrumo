@@ -865,6 +865,49 @@ def test_platform_identity_terms_follow_the_download_descriptor(tmp_path) -> Non
     assert "any platform with python 3 13+" not in terms
 
 
+@pytest.mark.parametrize("source", ("!", "●", "↓", "▹ ▿", "…", "`/`", "`?`"))
+def test_literal_symbols_are_invariant_without_language_dictionaries(source: str) -> None:
+    assert _translation_invariant_echo_reason(source, "hu", dictionary=None) == "symbol_only"
+
+
+@pytest.mark.parametrize("source", ("`Enter`", "`Esc`", "`i`"))
+def test_keyboard_and_alphabetic_marks_require_existing_literal_code_contract(source: str) -> None:
+    assert _translation_invariant_echo_reason(source, "ca", dictionary=None) == "inline_code"
+
+
+@pytest.mark.parametrize("source", ("Enter", "Esc", "Space", "i", "", " ", "Review the return!"))
+def test_symbol_invariance_does_not_exempt_unmarked_words_or_prose(source: str) -> None:
+    assert _translation_invariant_echo_reason(source, "es", dictionary=None) is None
+
+
+def test_symbol_classification_preserves_blocking_prose_and_missing_translations(tmp_path, monkeypatch) -> None:
+    from .. import _signal as signal_module
+
+    monkeypatch.setattr(signal_module, "load_dictionaries", lambda _repository: {})
+    docs = tmp_path / "docs"
+    messages = ("●", "`Enter`", "Review the current return!", "Fill in the box")
+    pot = 'msgid ""\nmsgstr ""\n\n' + "\n".join(f'msgid "{message}"\nmsgstr ""\n' for message in messages)
+    _write_docs_source_cache(docs, "guide.md", "# Filing guide\n", pot)
+    catalogue_messages = {("guide.po", message): {"es": message != "Fill in the box"} for message in messages}
+    catalogue_translations = {
+        ("guide.po", message): {"es": (message,)} for message in messages if message != "Fill in the box"
+    }
+
+    inventory, findings = _documentation_source_inventory(
+        tmp_path,
+        catalogue_messages,
+        catalogue_files={("es", "guide.po")},
+        catalogue_translations=catalogue_translations,
+    )
+
+    assert inventory["docs_translation_source_echo"] == 1
+    assert inventory["docs_translation_invariant_echo"] == 2
+    blocking = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
+    assert [finding["source"] for finding in blocking] == ["Review the current return!"]
+    missing = [finding for finding in findings if finding["kind"] == "docs_source_catalogue_drift"]
+    assert any("Fill in the box" in finding["missing_message_ids"] for finding in missing)
+
+
 def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp_path) -> None:
     docs = tmp_path / "docs"
     docs.mkdir()

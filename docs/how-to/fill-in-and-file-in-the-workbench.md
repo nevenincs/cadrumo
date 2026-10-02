@@ -250,7 +250,7 @@ per level:
 | ! | Needs your input | A required value nobody has given |
 | ◐ | Assumed, please confirm | A value nobody entered; confirm it or type the right one |
 | ◆ | Worth checking | Does not stop you |
-| i | For your information | An explanation |
+| `i` | For your information | An explanation |
 
 Each issue says what is wrong, what to do and where. Press Enter on an issue
 to go to its box, or to open its details or the area that owns the problem.
@@ -297,7 +297,7 @@ is refused. To change it, {ref}`start a correction <correct-an-already-filed-loc
 | ◌ | Not calculated yet |
 | × | Could not be calculated |
 | … | Not imported yet |
-| Δ | Changed, not applied |
+| `Δ` | Changed, not applied |
 | ◷ | Out of date |
 | ✓ | Done |
 | ▸ | You are here |
@@ -307,7 +307,7 @@ is refused. To change it, {ref}`start a correction <correct-an-already-filed-loc
 
 | Key | What it does |
 | --- | ------------ |
-| Enter | Open the box under the cursor |
+| `Enter` | Open the box under the cursor |
 | `n` and `N` | Next or previous thing to do |
 | `/` and `g` | Search; go to a box |
 | `f`, `o`, `d` | Filter, sort, density |
@@ -324,7 +324,7 @@ is refused. To change it, {ref}`start a correction <correct-an-already-filed-loc
 | `e` | Export |
 | F8 | Run the next step |
 | `?` | Symbols on this screen; twice for Symbols and keys |
-| Esc | Go back |
+| `Esc` | Go back |
 | F3 | Switch between the light and the dark appearance |
 
 The footer shows as many keys as fit the width of the terminal.

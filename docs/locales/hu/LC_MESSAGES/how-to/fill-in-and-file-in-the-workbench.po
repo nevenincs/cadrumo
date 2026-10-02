@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-02 02:22+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -369,7 +369,7 @@ msgstr "Ugrás az előző vagy a következő oldalra"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Space"
-msgstr "Space"
+msgstr "Szóköz"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Open or close the page under the cursor"
@@ -867,8 +867,8 @@ msgid "Does not stop you"
 msgstr "Nem akadályozza a benyújtást"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "i"
-msgstr "i"
+msgid "`i`"
+msgstr "`i`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "For your information"
@@ -1036,8 +1036,8 @@ msgid "Not imported yet"
 msgstr "Még nincs importálva"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Δ"
-msgstr "Δ"
+msgid "`Δ`"
+msgstr "`Δ`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Changed, not applied"
@@ -1080,8 +1080,8 @@ msgid "Keys"
 msgstr "Billentyűk"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Enter"
-msgstr "Enter"
+msgid "`Enter`"
+msgstr "`Enter`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Open the box under the cursor"
@@ -1156,10 +1156,6 @@ msgid "The sources map"
 msgstr "A források térképe"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "`i`"
-msgstr "`i`"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Issues"
 msgstr "Problémák"
 
@@ -1200,8 +1196,8 @@ msgid "Symbols on this screen; twice for Symbols and keys"
 msgstr "A képernyő jelei; kétszer megnyomva: Jelek és billentyűk"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Esc"
-msgstr "Esc"
+msgid "`Esc`"
+msgstr "`Esc`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Go back"

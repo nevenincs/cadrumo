@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 01:43+0200\n"
+"POT-Creation-Date: 2026-10-02 02:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -338,44 +338,73 @@ msgstr "Justificantes y deducción del IVA soportado"
 
 #: ../../how-to/ledger-evidence.md:99
 msgid ""
-"Supporting documents also decide whether input VAT deducts. Input VAT "
-"deducts only when the row carries `--deduction-kind` on `aeat app ledger "
-"add` or `classify`. The kinds are `domestic_current`, "
-"`domestic_investment`, `import_current`, `import_investment`, "
-"`intra_eu_current`, `intra_eu_investment`, `reagp_compensation`, "
-"`rectification`, and `investment_goods_regularisation`. Only "
-"`domestic_current` and `domestic_investment` can be substantiated from "
-"your records today. They take their supporting document from the linked "
-"purchase-invoice record, so attach it first; `domestic_investment` also "
-"needs `--investment-asset-id`. The other kinds need a customs "
-"declaration, an intra-EU self-assessment, a REAGP receipt, proof of the "
-"rectification, or a bienes de inversión record that a row in your records"
-" cannot link, so the VAT calculation holds back the whole row, both any "
-"VAT it accrues and its deduction. A declaration that contains such a row "
-"cannot pass verification, so file that period another way."
+"Supporting documents also decide whether input VAT deducts. For a "
+"transaction row, declare the deduction kind with `--deduction-kind` on "
+"`aeat app ledger add` or `classify`. The transaction deduction kinds are "
+"`domestic_current`, `domestic_investment`, `import_current`, "
+"`import_investment`, `intra_eu_current`, `intra_eu_investment`, "
+"`reagp_compensation`, and `rectification`."
 msgstr ""
-"Los justificantes también deciden si el IVA soportado se deduce. El IVA "
-"soportado solo se deduce cuando la fila lleva `--deduction-kind` en `aeat"
-" app ledger add` o `classify`. Los tipos son `domestic_current`, "
-"`domestic_investment`, `import_current`, `import_investment`, "
-"`intra_eu_current`, `intra_eu_investment`, `reagp_compensation`, "
-"`rectification` e `investment_goods_regularisation`. Hoy solo "
-"`domestic_current` y `domestic_investment` se pueden acreditar desde tus "
-"registros. Toman su justificante del registro de factura de compra "
-"vinculado, así que adjúntalo primero; `domestic_investment` necesita "
-"además `--investment-asset-id`. Los demás tipos necesitan una declaración"
-" de aduanas, una autoliquidación intracomunitaria, un justificante del "
-"REAGP, una prueba de la rectificación o un registro de bienes de "
-"inversión que una fila de tus registros no puede vincular, por lo que el "
-"cálculo del IVA retiene la fila entera, tanto cualquier IVA que devengue "
-"como su deducción. Una declaración que contenga una fila así no puede "
-"superar la verificación, así que presenta ese periodo por otra vía."
+"Los justificantes también deciden si el IVA soportado se deduce. Para una"
+" fila de movimiento, declara el tipo de deducción con `--deduction-kind` "
+"en `aeat app ledger add` o `classify`. Los tipos de deducción de "
+"movimientos son `domestic_current`, `domestic_investment`, "
+"`import_current`, `import_investment`, `intra_eu_current`, "
+"`intra_eu_investment`, `reagp_compensation` y `rectification`."
 
 #: ../../how-to/ledger-evidence.md:101
+msgid ""
+"Only `domestic_current` and `domestic_investment` can currently be "
+"substantiated from a transaction row. They take their supporting document"
+" from the linked purchase-invoice record, so attach it first; "
+"`domestic_investment` also needs `--investment-asset-id`."
+msgstr ""
+"Hoy solo `domestic_current` y `domestic_investment` se pueden acreditar "
+"desde una fila de movimiento. Toman su justificante del registro de "
+"factura de compra vinculado, así que adjúntalo primero; "
+"`domestic_investment` necesita además `--investment-asset-id`."
+
+#: ../../how-to/ledger-evidence.md:103
+msgid ""
+"The import, intra-EU, REAGP, and rectification kinds need a customs "
+"declaration, an intra-EU self-assessment, a REAGP receipt, or proof of "
+"the rectification. Cadrumo cannot yet record the required supporting "
+"document for those deductions. The VAT calculation holds back the whole "
+"affected transaction row, both any VAT it accrues and its deduction. A "
+"declaration containing such a row cannot pass verification, so file that "
+"period another way."
+msgstr ""
+"Los tipos de importación, intracomunitarios, del REAGP y de rectificación"
+" necesitan una declaración de aduanas, una autoliquidación "
+"intracomunitaria, un justificante del REAGP o una prueba de la "
+"rectificación. Cadrumo todavía no puede registrar el justificante "
+"necesario para esas deducciones. El cálculo del IVA retiene la fila de "
+"movimiento afectada entera, tanto cualquier IVA que devengue como su "
+"deducción. Una declaración que contenga una fila así no puede superar la "
+"verificación, así que presenta ese periodo por otra vía."
+
+#: ../../how-to/ledger-evidence.md:105
+msgid ""
+"`investment_goods_regularisation` comes from the bienes de inversión "
+"register. Declare and inspect capital goods with `aeat app ledger bienes-"
+"inversion declare` and `aeat app ledger bienes-inversion list`. Once the "
+"required definitive prorrata facts are available, the register feeds "
+"regularisation into Modelo 303 box 43 and Modelo 390 box 63. Entering "
+"this kind on a transaction row does not establish that regularisation."
+msgstr ""
+"`investment_goods_regularisation` procede del registro de bienes de "
+"inversión. Declara y consulta los bienes de inversión con `aeat app "
+"ledger bienes-inversion declare` y `aeat app ledger bienes-inversion "
+"list`. Cuando están disponibles los datos necesarios de la prorrata "
+"definitiva, el registro aporta la regularización a la casilla 43 del "
+"Modelo 303 y a la casilla 63 del Modelo 390. Indicar este tipo en una "
+"fila de movimiento no acredita esa regularización."
+
+#: ../../how-to/ledger-evidence.md:107
 msgid "After you correct a row"
 msgstr "Después de corregir una fila"
 
-#: ../../how-to/ledger-evidence.md:103
+#: ../../how-to/ledger-evidence.md:109
 msgid ""
 "If you merge or split transactions, check the new rows and re-attach "
 "supporting documents where needed. [Correct mistakes in your records"
@@ -385,11 +414,11 @@ msgstr ""
 "adjuntar los justificantes donde sea necesario. [Corregir errores en tus "
 "registros](correct-ledger-entries.md) trata los cambios de fila."
 
-#: ../../how-to/ledger-evidence.md:106
+#: ../../how-to/ledger-evidence.md:112
 msgid "Where supporting documents show up"
 msgstr "Dónde aparecen los justificantes"
 
-#: ../../how-to/ledger-evidence.md:108
+#: ../../how-to/ledger-evidence.md:114
 msgid ""
 "Exports of your records include the link to the supporting document with "
 "each transaction. Calculations based on your records carry the trail of "
@@ -399,7 +428,7 @@ msgstr ""
 " cada movimiento. Los cálculos basados en tus registros arrastran el "
 "rastro de los justificantes hasta los ficheros de presentación."
 
-#: ../../how-to/ledger-evidence.md:110
+#: ../../how-to/ledger-evidence.md:116
 msgid ""
 "Read [Import, export, and supporting documents](../reference/import-"
 "export-and-evidence.md) for the difference between linked supporting "
@@ -411,24 +440,24 @@ msgstr ""
 "justificantes vinculados, un fichero de subida a la AEAT, la prueba "
 "oficial de presentación y un paquete de auditoría."
 
-#: ../../how-to/ledger-evidence.md:114
+#: ../../how-to/ledger-evidence.md:120
 msgid "Where to get help"
 msgstr "Dónde conseguir ayuda"
 
-#: ../../how-to/ledger-evidence.md:116
+#: ../../how-to/ledger-evidence.md:122
 msgid "If a command fails or refuses, see [Troubleshooting](troubleshooting.md)."
 msgstr ""
 "Si un comando falla o se niega a continuar, consulta [Resolución de "
 "problemas](troubleshooting.md)."
 
-#: ../../how-to/ledger-evidence.md:117
+#: ../../how-to/ledger-evidence.md:123
 #, python-brace-format
 msgid "If a term is unfamiliar, see the {doc}`Glossary </_generated/glossary>`."
 msgstr ""
 "Si algún término te resulta familiar, consulta el {doc}`Glosario "
 "</_generated/glossary>`."
 
-#: ../../how-to/ledger-evidence.md:118
+#: ../../how-to/ledger-evidence.md:124
 msgid ""
 "Before sharing command output with anyone, strip tax identifiers such as "
 "your NIF, DNI, or NIE."
@@ -436,11 +465,11 @@ msgstr ""
 "Antes de compartir la salida de un comando con nadie, elimina los "
 "identificadores fiscales, como tu NIF, DNI o NIE."
 
-#: ../../how-to/ledger-evidence.md:120
+#: ../../how-to/ledger-evidence.md:126
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/ledger-evidence.md:122
+#: ../../how-to/ledger-evidence.md:128
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand how supporting documents take part in "
@@ -450,7 +479,7 @@ msgstr ""
 "and-evidence.md): entiende cómo participan los justificantes en el "
 "cálculo, la presentación y la auditoría."
 
-#: ../../how-to/ledger-evidence.md:123
+#: ../../how-to/ledger-evidence.md:129
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) - bring more "
 "transactions into your records."
@@ -458,7 +487,7 @@ msgstr ""
 "[Importar y gestionar movimientos](import-bank-statements.md): incorpora "
 "más movimientos a tus registros."
 
-#: ../../how-to/ledger-evidence.md:124
+#: ../../how-to/ledger-evidence.md:130
 msgid ""
 "[Correct mistakes in your records](correct-ledger-entries.md) - fix "
 "mistakes in transaction rows."
@@ -466,7 +495,7 @@ msgstr ""
 "[Corregir errores en tus registros](correct-ledger-entries.md): corrige "
 "errores en las filas de movimiento."
 
-#: ../../how-to/ledger-evidence.md:125
+#: ../../how-to/ledger-evidence.md:131
 msgid ""
 "[Classify transactions](classify-transactions.md) - assign tax categories"
 " to your transactions."
@@ -474,7 +503,7 @@ msgstr ""
 "[Clasificar movimientos](classify-transactions.md): asigna categorías "
 "fiscales a tus movimientos."
 
-#: ../../how-to/ledger-evidence.md:126
+#: ../../how-to/ledger-evidence.md:132
 msgid "[CLI reference](../cli/index.rst) - the full command surface."
 msgstr ""
 "[Referencia de la CLI](../cli/index.rst): la superficie completa de "

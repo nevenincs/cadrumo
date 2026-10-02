@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 01:43+0200\n"
+"POT-Creation-Date: 2026-10-02 02:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -342,45 +342,74 @@ msgstr "Bizonylatok és a beszerzési IVA levonása"
 
 #: ../../how-to/ledger-evidence.md:99
 msgid ""
-"Supporting documents also decide whether input VAT deducts. Input VAT "
-"deducts only when the row carries `--deduction-kind` on `aeat app ledger "
-"add` or `classify`. The kinds are `domestic_current`, "
-"`domestic_investment`, `import_current`, `import_investment`, "
-"`intra_eu_current`, `intra_eu_investment`, `reagp_compensation`, "
-"`rectification`, and `investment_goods_regularisation`. Only "
-"`domestic_current` and `domestic_investment` can be substantiated from "
-"your records today. They take their supporting document from the linked "
-"purchase-invoice record, so attach it first; `domestic_investment` also "
-"needs `--investment-asset-id`. The other kinds need a customs "
-"declaration, an intra-EU self-assessment, a REAGP receipt, proof of the "
-"rectification, or a bienes de inversión record that a row in your records"
-" cannot link, so the VAT calculation holds back the whole row, both any "
-"VAT it accrues and its deduction. A declaration that contains such a row "
-"cannot pass verification, so file that period another way."
-msgstr ""
-"A bizonylatok azt is eldöntik, hogy a beszerzési IVA levonható-e. A "
-"beszerzési IVA csak akkor vonható le, ha a sor az `aeat app ledger add` "
-"vagy `classify` parancson `--deduction-kind` értéket hordoz. A típusok: "
+"Supporting documents also decide whether input VAT deducts. For a "
+"transaction row, declare the deduction kind with `--deduction-kind` on "
+"`aeat app ledger add` or `classify`. The transaction deduction kinds are "
 "`domestic_current`, `domestic_investment`, `import_current`, "
 "`import_investment`, `intra_eu_current`, `intra_eu_investment`, "
-"`reagp_compensation`, `rectification` és "
-"`investment_goods_regularisation`. Ma csak a `domestic_current` és a "
-"`domestic_investment` támasztható alá az Ön nyilvántartásaiból. "
-"Bizonylatukat a kapcsolt beszerzésiszámla-bejegyzésből veszik, ezért azt "
-"előbb csatolja; a `domestic_investment` ezenfelül `--investment-asset-id`"
-" kapcsolót is igényel. A többi típushoz vámnyilatkozat, közösségen belüli"
-" önbevallás, REAGP-bizonylat, a helyesbítés igazolása vagy bienes de "
-"inversión nyilvántartási bejegyzés kell, amelyet az Ön nyilvántartásainak"
-" egy sora nem tud hivatkozni, ezért az IVA-számítás a teljes sort "
-"visszatartja, a sor alapján fizetendő IVA-t és annak levonását is. Az "
-"ilyen sort tartalmazó bevallás nem megy át az ellenőrzésen, ezért az "
-"adott időszak bevallását más módon nyújtsa be."
+"`reagp_compensation`, and `rectification`."
+msgstr ""
+"A bizonylatok azt is eldöntik, hogy a beszerzési IVA levonható-e. Egy "
+"tranzakciósor levonási típusát az `aeat app ledger add` vagy a `classify`"
+" parancs `--deduction-kind` kapcsolójával adja meg. A tranzakciók "
+"levonási típusai: `domestic_current`, `domestic_investment`, "
+"`import_current`, `import_investment`, `intra_eu_current`, "
+"`intra_eu_investment`, `reagp_compensation` és `rectification`."
 
 #: ../../how-to/ledger-evidence.md:101
+msgid ""
+"Only `domestic_current` and `domestic_investment` can currently be "
+"substantiated from a transaction row. They take their supporting document"
+" from the linked purchase-invoice record, so attach it first; "
+"`domestic_investment` also needs `--investment-asset-id`."
+msgstr ""
+"Ma csak a `domestic_current` és a `domestic_investment` támasztható alá "
+"egy tranzakciósorból. Bizonylatukat a kapcsolt beszerzésiszámla-"
+"bejegyzésből veszik, ezért azt előbb csatolja; a `domestic_investment` "
+"ezenfelül `--investment-asset-id` kapcsolót is igényel."
+
+#: ../../how-to/ledger-evidence.md:103
+msgid ""
+"The import, intra-EU, REAGP, and rectification kinds need a customs "
+"declaration, an intra-EU self-assessment, a REAGP receipt, or proof of "
+"the rectification. Cadrumo cannot yet record the required supporting "
+"document for those deductions. The VAT calculation holds back the whole "
+"affected transaction row, both any VAT it accrues and its deduction. A "
+"declaration containing such a row cannot pass verification, so file that "
+"period another way."
+msgstr ""
+"Az import, a közösségen belüli beszerzés, a REAGP és a helyesbítés "
+"levonási típusaihoz vámnyilatkozat, közösségen belüli önbevallás, REAGP-"
+"bizonylat vagy a helyesbítés igazolása kell. Cadrumo még nem tudja "
+"rögzíteni az e levonásokhoz szükséges bizonylatot. Az IVA-számítás a "
+"teljes érintett tranzakciósort visszatartja, a sor alapján fizetendő "
+"IVA-t és annak levonását is. Az ilyen sort tartalmazó bevallás nem megy "
+"át az ellenőrzésen, ezért az adott időszak bevallását más módon nyújtsa "
+"be."
+
+#: ../../how-to/ledger-evidence.md:105
+msgid ""
+"`investment_goods_regularisation` comes from the bienes de inversión "
+"register. Declare and inspect capital goods with `aeat app ledger bienes-"
+"inversion declare` and `aeat app ledger bienes-inversion list`. Once the "
+"required definitive prorrata facts are available, the register feeds "
+"regularisation into Modelo 303 box 43 and Modelo 390 box 63. Entering "
+"this kind on a transaction row does not establish that regularisation."
+msgstr ""
+"Az `investment_goods_regularisation` a bienes de inversión "
+"nyilvántartásból származik. A beruházási javakat az `aeat app ledger "
+"bienes-inversion declare` paranccsal rögzítheti, az `aeat app ledger "
+"bienes-inversion list` paranccsal pedig megtekintheti. Ha a végleges "
+"prorrata szükséges adatai rendelkezésre állnak, a nyilvántartásból "
+"számított korrekció a Modelo 303 43-as mezőjébe és a Modelo 390 63-as "
+"mezőjébe kerül. A típus megadása egy tranzakciósoron nem támasztja alá "
+"ezt a korrekciót."
+
+#: ../../how-to/ledger-evidence.md:107
 msgid "After you correct a row"
 msgstr "Miután kijavított egy sort"
 
-#: ../../how-to/ledger-evidence.md:103
+#: ../../how-to/ledger-evidence.md:109
 msgid ""
 "If you merge or split transactions, check the new rows and re-attach "
 "supporting documents where needed. [Correct mistakes in your records"
@@ -391,11 +420,11 @@ msgstr ""
 "[Javítsa ki a hibákat a nyilvántartásában](correct-ledger-entries.md) "
 "oldal tárgyalja."
 
-#: ../../how-to/ledger-evidence.md:106
+#: ../../how-to/ledger-evidence.md:112
 msgid "Where supporting documents show up"
 msgstr "Hol jelennek meg a bizonylatok"
 
-#: ../../how-to/ledger-evidence.md:108
+#: ../../how-to/ledger-evidence.md:114
 msgid ""
 "Exports of your records include the link to the supporting document with "
 "each transaction. Calculations based on your records carry the trail of "
@@ -405,7 +434,7 @@ msgstr ""
 "bizonylatra mutató hivatkozást. Az Ön nyilvántartásain alapuló számítások"
 " végigviszik a bizonylatok nyomvonalát egészen a benyújtási fájlokig."
 
-#: ../../how-to/ledger-evidence.md:110
+#: ../../how-to/ledger-evidence.md:116
 msgid ""
 "Read [Import, export, and supporting documents](../reference/import-"
 "export-and-evidence.md) for the difference between linked supporting "
@@ -417,24 +446,24 @@ msgstr ""
 "hozzákötött bizonylatok, egy AEAT-feltöltési fájl, a hivatalos benyújtási"
 " igazolás és egy auditcsomag között."
 
-#: ../../how-to/ledger-evidence.md:114
+#: ../../how-to/ledger-evidence.md:120
 msgid "Where to get help"
 msgstr "Hol kérhet segítséget"
 
-#: ../../how-to/ledger-evidence.md:116
+#: ../../how-to/ledger-evidence.md:122
 msgid "If a command fails or refuses, see [Troubleshooting](troubleshooting.md)."
 msgstr ""
 "Ha egy parancs meghiúsul vagy elutasít egy műveletet, lásd: "
 "[Hibaelhárítás](troubleshooting.md)."
 
-#: ../../how-to/ledger-evidence.md:117
+#: ../../how-to/ledger-evidence.md:123
 #, python-brace-format
 msgid "If a term is unfamiliar, see the {doc}`Glossary </_generated/glossary>`."
 msgstr ""
 "Ha egy kifejezés ismeretlen, lásd a {doc}`Szójegyzék "
 "</_generated/glossary>` oldalt."
 
-#: ../../how-to/ledger-evidence.md:118
+#: ../../how-to/ledger-evidence.md:124
 msgid ""
 "Before sharing command output with anyone, strip tax identifiers such as "
 "your NIF, DNI, or NIE."
@@ -442,11 +471,11 @@ msgstr ""
 "Mielőtt bárkivel megosztaná egy parancs kimenetét, távolítsa el az "
 "adóazonosítókat, például az Ön NIF-, DNI- vagy NIE-számát."
 
-#: ../../how-to/ledger-evidence.md:120
+#: ../../how-to/ledger-evidence.md:126
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/ledger-evidence.md:122
+#: ../../how-to/ledger-evidence.md:128
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand how supporting documents take part in "
@@ -456,7 +485,7 @@ msgstr ""
 "evidence.md): értse meg, hogyan vesznek részt a bizonylatok a "
 "számításban, a benyújtásban és az auditban."
 
-#: ../../how-to/ledger-evidence.md:123
+#: ../../how-to/ledger-evidence.md:129
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) - bring more "
 "transactions into your records."
@@ -464,7 +493,7 @@ msgstr ""
 "[Tranzakciók importálása és kezelése](import-bank-statements.md): hozzon "
 "több tranzakciót a nyilvántartásába."
 
-#: ../../how-to/ledger-evidence.md:124
+#: ../../how-to/ledger-evidence.md:130
 msgid ""
 "[Correct mistakes in your records](correct-ledger-entries.md) - fix "
 "mistakes in transaction rows."
@@ -472,7 +501,7 @@ msgstr ""
 "[Javítsa ki a hibákat a nyilvántartásában](correct-ledger-entries.md): "
 "javítsa ki a tranzakciósorok hibáit."
 
-#: ../../how-to/ledger-evidence.md:125
+#: ../../how-to/ledger-evidence.md:131
 msgid ""
 "[Classify transactions](classify-transactions.md) - assign tax categories"
 " to your transactions."
@@ -480,6 +509,6 @@ msgstr ""
 "[Tranzakciók besorolása](classify-transactions.md): rendeljen "
 "adókategóriákat a tranzakcióihoz."
 
-#: ../../how-to/ledger-evidence.md:126
+#: ../../how-to/ledger-evidence.md:132
 msgid "[CLI reference](../cli/index.rst) - the full command surface."
 msgstr "[CLI-referencia](../cli/index.rst): a teljes parancsfelület."

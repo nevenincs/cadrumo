@@ -96,7 +96,13 @@ Removing applies to supporting documents, not transactions. To fix a transaction
 (evidence-and-input-iva-deduction)=
 ## Supporting documents and input VAT deduction
 
-Supporting documents also decide whether input VAT deducts. Input VAT deducts only when the row carries `--deduction-kind` on `aeat app ledger add` or `classify`. The kinds are `domestic_current`, `domestic_investment`, `import_current`, `import_investment`, `intra_eu_current`, `intra_eu_investment`, `reagp_compensation`, `rectification`, and `investment_goods_regularisation`. Only `domestic_current` and `domestic_investment` can be substantiated from your records today. They take their supporting document from the linked purchase-invoice record, so attach it first; `domestic_investment` also needs `--investment-asset-id`. The other kinds need a customs declaration, an intra-EU self-assessment, a REAGP receipt, proof of the rectification, or a bienes de inversión record that a row in your records cannot link, so the VAT calculation holds back the whole row, both any VAT it accrues and its deduction. A declaration that contains such a row cannot pass verification, so file that period another way.
+Supporting documents also decide whether input VAT deducts. For a transaction row, declare the deduction kind with `--deduction-kind` on `aeat app ledger add` or `classify`. The transaction deduction kinds are `domestic_current`, `domestic_investment`, `import_current`, `import_investment`, `intra_eu_current`, `intra_eu_investment`, `reagp_compensation`, and `rectification`.
+
+Only `domestic_current` and `domestic_investment` can currently be substantiated from a transaction row. They take their supporting document from the linked purchase-invoice record, so attach it first; `domestic_investment` also needs `--investment-asset-id`.
+
+The import, intra-EU, REAGP, and rectification kinds need a customs declaration, an intra-EU self-assessment, a REAGP receipt, or proof of the rectification. Cadrumo cannot yet record the required supporting document for those deductions. The VAT calculation holds back the whole affected transaction row, both any VAT it accrues and its deduction. A declaration containing such a row cannot pass verification, so file that period another way.
+
+`investment_goods_regularisation` comes from the bienes de inversión register. Declare and inspect capital goods with `aeat app ledger bienes-inversion declare` and `aeat app ledger bienes-inversion list`. Once the required definitive prorrata facts are available, the register feeds regularisation into Modelo 303 box 43 and Modelo 390 box 63. Entering this kind on a transaction row does not establish that regularisation.
 
 ## After you correct a row
 

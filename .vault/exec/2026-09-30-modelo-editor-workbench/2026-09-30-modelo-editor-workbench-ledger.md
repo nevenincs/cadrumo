@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:f1f94be7594921c10bd2d095401f46cda097c1e7d9ab09d1120325107ec60147'
+body_hash: 'sha256:7766f1fe6280bf48090c185be391d809222941b8333e1bbb8703ae8277871089'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1661,6 +1661,20 @@ related:
 - `S30` `verify:` `git diff --check` -> `pass`
 - `S30` `by:` `vaultspec-execute`
 - `S30` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py (8 passed; 20261002T003653.548934Z-pytest-72332-317dba71)` -> `pass`
+- `S58` `M` `dev/locales/_signal.py`
+- `S58` `M` `dev/locales/tests/test_signal.py`
+- `S58` `M` `docs/how-to/fill-in-and-file-in-the-workbench.md`
+- `S58` `M` `docs/locales/ca/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S58` `M` `docs/locales/es/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S58` `M` `docs/locales/hu/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S58` `verify:` `uv run --no-sync pytest -q -n0 -m unit dev/locales/tests/test_signal.py (49 passed)` -> `pass`
+- `S58` `verify:` `owning documentation localization tests (10 passed)` -> `pass`
+- `S58` `verify:` `uv run --no-sync python C:/Users/hello/AppData/Local/Temp/modelo-docs-final-20261002/validate_current.py (six exact-current catalogues, zero blockers)` -> `pass`
+- `S58` `verify:` `strict isolated user HTML builds en es ca hu (all exit0, zero Sphinx warnings; modelo-docs-final-20261002/build-results.json)` -> `pass`
+- `S58` `verify:` `current authored HTML links and fragments (24316 checked, zero failures)` -> `pass`
+- `S58` `verify:` `Chromium current localized guide review (four languages, no horizontal overflow)` -> `pass`
+- `S58` `verify:` `owning Ruff check and format check` -> `pass`
+- `S58` `by:` `vaultspec-execute`
 
 ## Notes
 
@@ -1760,3 +1774,4 @@ related:
 - `S61` First focused run found fixture omissions, missing terminal-action translations and unregistered incoming printed-total fact kinds; corrected without relaxing production boundaries. Three new real CLI fixtures initially had invalid gross amounts; corrected to the owning ledger contract. Final 63 unit and 8 integration cases pass. Exact logs and preserved initial failures: C:/Users/hello/AppData/Local/Temp/modelo-s61-preparation/handoff.json. Shared compiler dependency is refreshed at the final authority gate before frozen captures.
 - `S59` Follow-up corrects five contextual Hungarian filing labels/explanations, retaining actual taxpayer-model language. A wrong glossary prefix initially created one extra leaf; the canonical remove-batch owner removed it, then set-batch corrected topic.modelos.title. Initial 404-case parity/key suite returned 402 passed and two extra-key failures; both affected cases pass after correction (20261002T001253.779211Z-pytest-3020-c9bc3cf2). No test expectation or detector changed.
 - `S30` Initial variable finding-key producer failed six live word-gate cases; corrected to explicit literal constructors without changing the detector. Initial source scope issue priority regression corrected to preserve filing-window-first refusal before business/flow ownership and currency substrate. S30 remains open for final authority refresh, canonical broad gates and current frozen render review. Accepted D4 retains preparation in the declarations picker and four workbench steps; original five-step text retained as history.
+- `S58` Full locale gate initially failed; retain 20261002T000705.246373Z-check-locales-55476-ffd1cf89 raw inventory. All 78 owned guide echoes corrected without an alphabetic-word allowlist; narrow punctuation/symbol literal handling and explicit inline keyboard code preserve refusal of copied prose. Six obsolete-ID catalogue findings and nine unrelated source echoes match exact resume baseline in modelo-docs-final-20261002/locale-finding-baseline.json. Earlier strict HTML run failed on temporary source integration import, corrected before four final exit0 builds.

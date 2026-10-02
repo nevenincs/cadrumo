@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-02 02:22+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -360,7 +360,7 @@ msgstr "Anar a la pàgina anterior o a la següent"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Space"
-msgstr "Space"
+msgstr "Espai"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Open or close the page under the cursor"
@@ -842,8 +842,8 @@ msgid "Does not stop you"
 msgstr "No t'impedeix presentar"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "i"
-msgstr "i"
+msgid "`i`"
+msgstr "`i`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "For your information"
@@ -1008,8 +1008,8 @@ msgid "Not imported yet"
 msgstr "Encara sense importar"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Δ"
-msgstr "Δ"
+msgid "`Δ`"
+msgstr "`Δ`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Changed, not applied"
@@ -1052,8 +1052,8 @@ msgid "Keys"
 msgstr "Tecles"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Enter"
-msgstr "Enter"
+msgid "`Enter`"
+msgstr "`Enter`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Open the box under the cursor"
@@ -1128,10 +1128,6 @@ msgid "The sources map"
 msgstr "El mapa d'orígens"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "`i`"
-msgstr "`i`"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Issues"
 msgstr "Incidències"
 
@@ -1172,8 +1168,8 @@ msgid "Symbols on this screen; twice for Symbols and keys"
 msgstr "Símbols d'aquesta pantalla; dues vegades per a Símbols i tecles"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Esc"
-msgstr "Esc"
+msgid "`Esc`"
+msgstr "`Esc`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Go back"
