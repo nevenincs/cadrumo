@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 __all__ = [
     "STABILITY_ACKNOWLEDGEMENTS",
     "PlacementMove",
+    "continuity_keys",
     "moved_placements",
     "read_acknowledgements",
     "unacknowledged_moves",
@@ -42,14 +43,15 @@ class PlacementMove:
     to_position: str
 
 
-def _continuity_key(revision: ModeloRevision) -> dict[str, str]:
+def continuity_keys(revision: ModeloRevision) -> dict[str, str]:
+    """Return each casilla mapped to the key it continues under: its ``continuidad_id``, else its id."""
     return {casilla.id: casilla.continuidad_id or casilla.id for casilla in revision.casillas}
 
 
 def _positions(revision: ModeloRevision) -> dict[str, str]:
     if not revision.form_layouts:
         return {}
-    keys = _continuity_key(revision)
+    keys = continuity_keys(revision)
     return {
         keys.get(casilla_id, casilla_id): f"{page}/{section}"
         for casilla_id, (page, section) in revision.form_layouts[0].casilla_sections().items()
@@ -69,7 +71,7 @@ def moved_placements(modelos: Iterable[ModeloDefinition]) -> tuple[PlacementMove
                 continue
             before = _positions(previous)
             after = _positions(revision)
-            by_key = {key: casilla_id for casilla_id, key in _continuity_key(revision).items()}
+            by_key = {key: casilla_id for casilla_id, key in continuity_keys(revision).items()}
             moves.extend(
                 PlacementMove(str(modelo.id), str(revision_id), by_key.get(key, key), before[key], position)
                 for key, position in after.items()

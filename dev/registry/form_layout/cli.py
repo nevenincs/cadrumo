@@ -15,12 +15,10 @@ from typing import Annotated, Final
 
 import typer
 
-from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutReviewState
-
 from ..compiler.loader import load_registry_tree
 from ..record_design_labels import DATA_ROOT
 from .coverage import coverage_rows, coverage_totals
-from .generator import generate_revision_layout
+from .generator import generate_modelo_layouts
 from .serialization import FORM_LAYOUT_DIRECTORY, form_layout_fragment_path, render_form_layout_toml
 from .stability import moved_placements, read_acknowledgements, unacknowledged_moves
 
@@ -53,15 +51,10 @@ def synchronise_form_layouts(
     for modelo in sorted(loaded, key=lambda item: str(item.id)):
         if modelos and str(modelo.id) not in modelos:
             continue
-        for revision_id, revision in sorted(modelo.revisions.items(), key=lambda item: str(item[0])):
+        outcomes = generate_modelo_layouts(modelo, sources=catalogues.sources, data_root=data_root)
+        for revision_id, outcome in outcomes.items():
             path = form_layout_fragment_path(
                 registry_root / "modelos" / str(modelo.id) / "revisions" / str(revision_id)
-            )
-            existing = revision.form_layouts[0] if revision.form_layouts else None
-            if existing is not None and existing.review.state is FormLayoutReviewState.REVIEWED:
-                continue
-            outcome = generate_revision_layout(
-                str(modelo.id), revision, sources=catalogues.sources, data_root=data_root
             )
             if outcome.layout is None:
                 undeclared.append(f"{modelo.id} {revision_id}: {outcome.failure}")
