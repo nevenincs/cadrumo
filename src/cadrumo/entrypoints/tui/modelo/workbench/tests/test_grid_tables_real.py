@@ -459,8 +459,15 @@ async def test_a_rows_left_edge_carries_its_most_severe_cell_and_a_cell_its_own_
     assert blocked[blocked.index("[07]") - 2] == ATTENTION_GLYPHS[Attention.STAGED]
     assert blocked[blocked.index("[09]") - 2] == ATTENTION_GLYPHS[Attention.BLOCKED]
     assert _line_with(lines, "12")[1] == MISSING_MARK.glyph
-    # A row whose boxes wait on an import is marked as waiting, never as missing input nor as done.
-    assert _line_with(lines, "04")[1] == NOT_IMPORTED_MARK.glyph
+    # A row whose boxes wait on an import is marked as waiting, never as missing input nor as done. The reduced
+    # transitional row's base waits on an import while its rate and cuota wait on the calculation, so its mark
+    # also says that what a row waits on first is the import.
+    waiting = next(row for grid in _grids(page) for row in grid.rows if "[153]" in _boxes(row.cells))
+    assert {cell.field.origin for cell in waiting.cells if cell.field is not None} == {
+        ModeloFormOrigin.NOT_IMPORTED_YET,
+        ModeloFormOrigin.NOT_CALCULATED_YET,
+    }
+    assert _line_with(lines, "153")[1] == NOT_IMPORTED_MARK.glyph
     assert _line_with(lines, "10")[1] == NOT_CALCULATED_MARK.glyph
     assert _line_with(lines, "14")[1] == " ", "a row with nothing to do and nothing waiting has no mark"
 

@@ -2,8 +2,11 @@
 
 The form is built by the real read model from the published authority, and the
 rows come from the workbench's own page layout. Expected rates are the ones the
-official 303 design prints for these rows: 4 % super-reduced, 10 % reduced and
-the 2 % transitional rate, grounded on their base bindings. Only a rate box the
+official 303 design prints for these rows. Only the 2 % transitional row is
+grounded on its base binding: the 4 % super-reduced and 10 % reduced rows add
+the promoter's autoconsumo to the ledger's base, which no binding grounds on one
+rate, so their rate boxes show the rate the design prints and say that only the
+form prints it. Only a rate box the
 design fixes shows its row's rate as its value; a rate box the calculation
 fills shows its own value, in its rate unit, and says the row's rate beside it.
 A held zero reads as a zero rate, never as an empty box. The design's own
@@ -23,6 +26,7 @@ from textual.app import App, ComposeResult
 from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
+    ModeloFormEditability,
     ModeloFormOrigin,
     ModeloFormPrintedRate,
     ModeloWorkForm,
@@ -61,11 +65,11 @@ from ..vocabulary import DONE_MARK, NOT_IMPORTED_MARK, origin_words
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PERCENT = "\u00a0%"
-# 02 and 05 are fixed by the design; 166 is calculated, so the rate is its row's and not its own value.
-_GROUNDED = {"02": f"4{_PERCENT}", "05": f"10{_PERCENT}"}
+# 166 is calculated in the one row grounded on its base binding, so the rate is its row's and not its own value.
 _CALCULATED_RATE = ("166", f"2{_PERCENT}")
-# Official numeric literals carry the reviewed two-decimal scale in the published design.
-_PRINTED = {"08": "21", "157": "1.75", "20": "1.4", "23": "5.2"}
+# Official numeric literals carry the reviewed two-decimal scale in the published design. Every one of these rows
+# is grounded on no single rate, 02's and 05's because their base adds the promoter's autoconsumo to the ledger's.
+_PRINTED = {"02": "4", "05": "10", "08": "21", "157": "1.75", "20": "1.4", "23": "5.2"}
 # 151 and 17 print zero placeholders; 154 and 169 are rate boxes no base binding grounds.
 _UNGROUNDED = ("151", "154", "169", "17")
 
@@ -129,12 +133,6 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
     entries = _entries(_form(operation))
 
     with override_settings(cadrumo_output_language="en"):
-        for box, rate in _GROUNDED.items():
-            entry = entries[box]
-            assert entry.rate_of_row, box
-            assert row_value_text(entry, OutputLanguage.EN) == rate, box
-            assert value_text(entry, OutputLanguage.EN) == rate, box
-            assert rate_note(entry) is None, box
         # A rate box the calculation fills shows its own value, not yet calculated here, and says the rate apart.
         box, rate = _CALCULATED_RATE
         calculated = entries[box]
@@ -144,6 +142,17 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
         assert row_value_text(calculated, OutputLanguage.EN) == "·"
         assert value_text(calculated, OutputLanguage.EN) == "…"
         assert rate_note(calculated, OutputLanguage.EN) == f"This row's rate is {rate}."
+        # Were the design to fix that row's rate box, the box would read the grounded rate as its value and, the
+        # rate being one the calculation is shown to apply, say nothing beside it.
+        fixed = replace(
+            calculated,
+            field=calculated.field.model_copy(
+                update={"editability": ModeloFormEditability.DESIGN_CONSTANT, "origin": ModeloFormOrigin.INFORMATIONAL}
+            ),
+        )
+        assert row_value_text(fixed, OutputLanguage.EN) == rate
+        assert value_text(fixed, OutputLanguage.EN) == rate
+        assert rate_note(fixed) is None
         typed = replace(calculated, staged_text="3,50")
         assert row_value_text(typed, OutputLanguage.EN) == "3,50"
         worked_out = replace(
