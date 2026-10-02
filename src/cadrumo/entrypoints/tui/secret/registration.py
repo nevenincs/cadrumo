@@ -60,6 +60,7 @@ from ....core.i18n.render import output_language, tr
 from ..components.app_access import TypedAppAccess
 from ..components.status import PinnedStatusBar
 from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
+from ..components.widgets import DisclosureGroup
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialAttempt,
@@ -255,7 +256,6 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         with self.credential_panel(panel_id="registration-body"):
             yield Static(id="registration-progress")
             yield Static(id="registration-intro")
-            yield Static(id="registration-why")
             yield Static(id="registration-requirements", classes="field-hint")
 
             # Every translated string on this page is written by
@@ -276,6 +276,9 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
 
             yield Label(id="label-confirm", classes="field-label")
             yield Input(id="field-confirm", password=True)
+
+            with DisclosureGroup(title="", id="registration-password-help"):
+                yield Static(id="registration-why")
 
             yield Label(id="label-output-language", classes="field-label")
             # The one widget that cannot be composed empty: a chooser that
@@ -356,6 +359,9 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         )
         self.query_one("#registration-intro", Static).update(tr("flows.registration.intro", locale=locale))
         self.query_one("#registration-why", Static).update(tr("flows.registration.why_password", locale=locale))
+        self.query_one("#registration-password-help", DisclosureGroup).title = tr(
+            "flows.registration.password_help", locale=locale
+        )
         self.query_one("#registration-body", Vertical).border_title = tr("flows.registration.section", locale=locale)
         self.query_one("#label-username", Label).update(tr("flows.registration.username_label", locale=locale))
         self.query_one("#hint-username", Static).update(tr("flows.registration.username_hint", locale=locale))

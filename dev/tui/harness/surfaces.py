@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
 from textual.app import App
@@ -199,11 +200,33 @@ def _declarations_surfaces() -> tuple[Surface, ...]:
     )
 
 
+def _profile_surfaces() -> tuple[Surface, ...]:
+    """Reach the setup stages and editors on fresh, encrypted synthetic profiles."""
+    from .profile_fixtures import (
+        ProfileFixtureState,
+        build_profile_fixture,
+        profile_fixture_interfaces,
+        profile_fixture_storage,
+    )
+
+    return tuple(
+        Surface(
+            f"profile-{state.value}",
+            f"Profile setup or editing: {state.value}",
+            partial(build_profile_fixture, state),
+            interfaces=profile_fixture_interfaces(state),
+            provision=profile_fixture_storage,
+        )
+        for state in ProfileFixtureState
+    )
+
+
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
         *_workbench_surfaces(),
         *_declarations_surfaces(),
+        *_profile_surfaces(),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",

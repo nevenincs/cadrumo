@@ -90,8 +90,6 @@ flows:
       heading: Profil beállítása
       progress: '{answered} / {total} kötelező válasz'
       question: '{number}. kérdés / {total} · {section}'
-      ready: Minden kötelező válasz megvan. Fejezze be a beállítást, és kezdje el
-        a bevallások elkészítését.
       required_only: Csak kötelezők
       search_empty: 'Egyetlen beállítás sem egyezik ezzel: „{query}”.'
       search_placeholder: Beállítások keresése
@@ -134,6 +132,11 @@ flows:
         a lépést, és add meg a kötelező adatokat kézzel. A beállítás befejezéséhez
         nincs szükség AEAT-hozzáférésre.
       get_data_title: Adatok
+      nav_get_data: Import
+      nav_overview: Kezdés
+      nav_ready: Kész
+      nav_required: Kötelező
+      nav_review: Átnézés
       overview_checklist: '✓ Biztonságos profil létrehozva
 
         ○ Adatok importálása vagy a lépés kihagyása
@@ -281,9 +284,9 @@ flows:
   registration:
     confirm_label: Ismételd meg a jelszót
     create_button: Profil létrehozása
-    intro: 'Válassz nevet ennek a profilnak és jelszót a védelméhez. Semmi másra nincs
-      szükség: a profil a folytatás pillanatában létrejön, a többit pedig akkor töltöd
-      ki, amikor szeretnéd.'
+    intro: Válassz nevet és jelszót a biztonságos profil létrehozásához. Az adatait
+      később is megadhatod.
+    password_help: Jelszavas védelem és helyreállítás
     password_hint: Legalább {minimum_length} karakter. Néhány hétköznapi szó egymás
       után könnyebben megjegyezhető és nehezebben kitalálható, mint egy rövid, bonyolult
       szó.

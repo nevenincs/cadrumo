@@ -89,8 +89,6 @@ flows:
       heading: Configura tu perfil
       progress: '{answered} de {total} respuestas obligatorias'
       question: Pregunta {number} de {total} · {section}
-      ready: Ya tienes todas las respuestas obligatorias. Termina la configuración
-        para empezar a preparar tus declaraciones.
       required_only: Solo obligatorias
       search_empty: Ningún ajuste coincide con «{query}».
       search_placeholder: Buscar ajustes
@@ -135,6 +133,11 @@ flows:
         los datos obligatorios tú mismo. No necesitas acceder a la AEAT para terminar
         la configuración.
       get_data_title: Obtener datos
+      nav_get_data: Importar
+      nav_overview: Inicio
+      nav_ready: Listo
+      nav_required: Datos *
+      nav_review: Revisar
       overview_checklist: '✓ Perfil seguro creado
 
         ○ Importar datos o saltar el paso
@@ -283,9 +286,9 @@ flows:
   registration:
     confirm_label: Repite la contraseña
     create_button: Crear perfil
-    intro: 'Elige un nombre para este perfil y una contraseña que lo proteja. No hace
-      falta nada más: tu perfil existe en cuanto continúes, y completas el resto cuando
-      quieras.'
+    intro: Elige un nombre y una contraseña para crear tu perfil seguro. Podrás configurar
+      sus datos después.
+    password_help: Protección y recuperación de la contraseña
     password_hint: Al menos {minimum_length} caracteres. Varias palabras corrientes
       seguidas son más fáciles de recordar y más difíciles de adivinar que una sola
       palabra corta y complicada.

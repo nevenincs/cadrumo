@@ -246,6 +246,17 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
             await pilot.pause()
             assert button.size.width >= len(str(button.label)), "the new action label is clipped to the old width"
 
+            # The completion shortcut follows the same Review boundary as
+            # the visible Finish button, even when every answer is saved.
+            await pilot.click("#setup-stage-overview")
+            await pilot.pause()
+            await pilot.press("f8")
+            await pilot.pause()
+            assert app._setup_stage is ProfileSetupStage.OVERVIEW
+            assert app.overview.setup_state is ProfileSetupState.INCOMPLETE
+            await pilot.click("#setup-stage-review")
+            await pilot.pause()
+
             await pilot.click("#onboarding-continue")
             await wait_until_settled(app, pilot)
             for _ in range(20):
@@ -403,6 +414,11 @@ async def test_every_setup_question_explains_itself_and_the_page_explains_the_cu
                 dialog = app.app.screen
                 if not isinstance(dialog, FieldEditScreen):
                     break
+                help_fold = dialog.query_one("#edit-help-fold", DisclosureGroup)
+                assert help_fold.collapsed
+                assert await pilot.click("#edit-help-fold CollapsibleTitle")
+                await pilot.pause()
+                assert not help_fold.collapsed
                 help_text = str(dialog.query_one("#edit-help", Static).content)
                 assert [line.split(":", 1)[0] + ":" for line in help_text.splitlines()] == headings, dialog._field.path
                 asked += 1

@@ -90,8 +90,6 @@ flows:
       heading: Configura el teu perfil
       progress: '{answered} de {total} respostes obligatòries'
       question: Pregunta {number} de {total} · {section}
-      ready: Ja tens totes les respostes obligatòries. Acaba la configuració per començar
-        a preparar les teves declaracions.
       required_only: Només obligatòries
       search_empty: Cap ajust no coincideix amb «{query}».
       search_placeholder: Cercar ajustos
@@ -134,6 +132,11 @@ flows:
         introdueix les dades obligatòries tu mateix. No cal accedir a l'AEAT per acabar
         la configuració.
       get_data_title: Obtenir dades
+      nav_get_data: Importar
+      nav_overview: Inici
+      nav_ready: A punt
+      nav_required: Dades *
+      nav_review: Revisar
       overview_checklist: '✓ Perfil segur creat
 
         ○ Importar dades o saltar el pas
@@ -283,9 +286,9 @@ flows:
   registration:
     confirm_label: Repeteix la contrasenya
     create_button: Crea el perfil
-    intro: 'Tria un nom per a aquest perfil i una contrasenya que el protegeixi. No
-      cal res més: el teu perfil existeix tan bon punt continuïs, i la resta la completes
-      quan vulguis.'
+    intro: Tria un nom i una contrasenya per crear el teu perfil segur. Podràs configurar-ne
+      les dades després.
+    password_help: Protecció i recuperació de la contrasenya
     password_hint: Com a mínim {minimum_length} caràcters. Unes quantes paraules corrents
       seguides són més fàcils de recordar i més difícils d'endevinar que una sola
       paraula curta i complicada.

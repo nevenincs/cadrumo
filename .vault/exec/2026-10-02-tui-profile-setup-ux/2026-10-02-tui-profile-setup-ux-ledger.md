@@ -5,40 +5,14 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd1f5c7e5208c776fe6a0be01fa09a84c3152a80b59289f4a9b4cb08cd0489a2'
+body_hash: 'sha256:7d6af4b45c32bd01d712aafaceca77cac7a685032fbe4cce6c041a5cfbf2cca9'
 related:
   - "[[2026-10-02-tui-profile-setup-ux-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `tui-profile-setup-ux` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
 - `S01` `A` `src/cadrumo/entrypoints/tui/profile/setup_journey.py`
@@ -56,7 +30,31 @@ related:
 - `S01` `verify:` `uv run --no-sync ty check (changed TUI paths)` -> `pass`
 - `S01` `verify:` `uv run --no-sync python -m dev.locales status --json --check` -> `fail`
 - `S01` `verify:` `uv run --no-sync vaultspec-core vault check all` -> `fail`
+- `S02` `M` `dev/tui/harness/surfaces.py`
+- `S02` `A` `dev/tui/harness/profile_fixtures.py`
+- `S02` `A` `dev/tui/harness/tests/test_profile_fixtures.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/secret/registration.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_onboarding.py`
+- `S02` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S02` `M` `src/cadrumo/locales/en/flows.yml`
+- `S02` `M` `src/cadrumo/locales/es/flows.yml`
+- `S02` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S02` `A` `.vault/audit/2026-10-02-tui-profile-setup-ux-audit.md`
+- `S02` `verify:` `uv run --no-sync pytest -q -n 4 -o addopts= --tb=short -m 'unit or integration' $profileTests dev/tui/harness/tests/test_profile_fixtures.py dev/tui/tests/test_tui_visual_inventory.py dev/tui/tests/test_tui_review_elements.py dev/tui/tests/test_tui_surface_identity_resolution.py` -> `pass`
+- `S02` `verify:` `uv run --no-sync pytest -q -n 2 -o addopts= --tb=short -m 'unit or integration' src/cadrumo/entrypoints/tui/profile/tests` -> `pass`
+- `S02` `verify:` `uv run --no-sync ruff check (six S02 Python paths)` -> `pass`
+- `S02` `verify:` `uv run --no-sync ruff format --check (six S02 Python paths)` -> `pass`
+- `S02` `verify:` `uv run --no-sync ty check (six S02 Python paths)` -> `pass`
+- `S02` `verify:` `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-10-02-tui-profile-setup-ux-plan.md` -> `pass`
+- `S02` `verify:` `uv run --no-sync python .tmp-tui-visual-inventory/profile_capture_run.py es` -> `pass`
+- `S02` `verify:` `uv run --no-sync python .tmp-tui-visual-inventory/profile_capture_run.py en` -> `pass`
+- `S02` `verify:` `uv run --no-sync python .tmp-tui-visual-inventory/profile_capture_run.py ca` -> `pass`
+- `S02` `verify:` `uv run --no-sync python .tmp-tui-visual-inventory/profile_capture_run.py hu` -> `pass`
+- `S02` `verify:` `final profile capture matrix, source fingerprints, artifact digests and served HTTP images` -> `pass`
+- `S02` `verify:` `uv run --no-sync python -m dev.locales status --json --check` -> `fail`
 
 ## Notes
 
 - `S01` 86 profile and registration tests pass. Global locale and vault gates retain unrelated baseline failures; the scoped feature check is clean. The setup translations are enrolled in all four locales with no missing keys or placeholder mismatches.
+- `S02` Global locale status retains unrelated baseline inventory and spelling-tool failures; all four required catalogues are complete, placeholders match, and no changed setup or registration key has a finding. Final review is PASS. PNGs are gitignored review artifacts in four named runs because a separate renderer owns current.

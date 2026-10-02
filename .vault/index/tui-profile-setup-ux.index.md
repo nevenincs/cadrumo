@@ -6,8 +6,10 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:9cd66d39e9fd313e904db8cc4333875abb7034acccae05237cb45b262ff26b50'
+body_hash: 'sha256:1e228028d7e16edc01599b616199fef802f45ac078ada1fc9dd703ac5d1d472a'
 related:
+  - '[[2026-10-02-tui-profile-setup-ux-audit]]'
+  - '[[2026-10-02-tui-profile-setup-ux-ledger]]'
   - '[[2026-10-02-tui-profile-setup-ux-plan]]'
 ---
 
@@ -16,6 +18,14 @@ related:
 Auto-generated index of all documents tagged with `#tui-profile-setup-ux`.
 
 ## Documents
+
+### audit
+
+- `2026-10-02-tui-profile-setup-ux-audit` - `tui-profile-setup-ux` audit: Profile setup and editing UX review
+
+### exec
+
+- `2026-10-02-tui-profile-setup-ux-ledger` - `tui-profile-setup-ux` ledger
 
 ### plan
 

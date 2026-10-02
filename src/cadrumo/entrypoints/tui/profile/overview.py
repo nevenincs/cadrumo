@@ -226,9 +226,6 @@ class FieldEditScreen(ModalScreen[str | None]):
                     tr("flows.progress.required" if self._field.required else "flows.progress.optional"),
                     id="edit-requirement",
                 )
-                help_text = field_help_text(self._field)
-                if help_text:
-                    yield Static(help_text, id="edit-help", markup=False)
                 if self._field.choices:
                     yield OptionList(
                         *[self._label_for(choice.value) for choice in self._field.choices],
@@ -242,6 +239,13 @@ class FieldEditScreen(ModalScreen[str | None]):
                 yield Static(id="edit-refusal")
                 if self._box_hides_a_value:
                     yield Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note")
+                help_text = field_help_text(self._field)
+                if help_text:
+                    yield DisclosureGroup(
+                        Static(help_text, id="edit-help", markup=False),
+                        title=tr("flows.manager.help.about"),
+                        id="edit-help-fold",
+                    )
             with Horizontal(id="edit-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
                 if self._offers_clear:
@@ -473,6 +477,13 @@ _SETUP_TITLE_KEYS = {
     ProfileSetupStage.REVIEW: "flows.manager.setup.review_title",
     ProfileSetupStage.READY: "flows.manager.setup.ready_title",
 }
+_SETUP_NAV_KEYS = {
+    ProfileSetupStage.OVERVIEW: "flows.manager.setup.nav_overview",
+    ProfileSetupStage.GET_DATA: "flows.manager.setup.nav_get_data",
+    ProfileSetupStage.REQUIRED: "flows.manager.setup.nav_required",
+    ProfileSetupStage.REVIEW: "flows.manager.setup.nav_review",
+    ProfileSetupStage.READY: "flows.manager.setup.nav_ready",
+}
 _SETUP_COPY_KEYS = {
     ProfileSetupStage.OVERVIEW: "flows.manager.setup.overview_copy",
     ProfileSetupStage.GET_DATA: "flows.manager.setup.get_data_copy",
@@ -507,7 +518,6 @@ class ProfileManagerScreen(AccountChromeScreen):
         + tokenised("""
     #manager-onboarding { height: auto; padding: $cadrumo-space-0 $cadrumo-gutter; }
     #onboarding-heading { text-style: bold; }
-    #onboarding-intro { color: $text-muted; margin-bottom: $cadrumo-space-1; }
     #onboarding-actions { height: auto; }
     #onboarding-continue { width: auto; }
     #onboarding-previous { width: auto; margin-right: $cadrumo-control-gap; }
@@ -526,6 +536,10 @@ class ProfileManagerScreen(AccountChromeScreen):
     #onboarding-stage-copy { height: auto; margin-bottom: $cadrumo-space-1; }
     #onboarding-checklist { height: auto; color: $text-muted; margin-bottom: $cadrumo-space-1; }
     #onboarding-stage-title.setup-success { color: $success; }
+    #onboarding-stage-title, #onboarding-stage-copy, #onboarding-checklist, #manager-edit-intro {
+        padding-left: $cadrumo-gutter;
+        padding-right: $cadrumo-gutter;
+    }
     #manager-tools { height: auto; padding: $cadrumo-space-0 $cadrumo-gutter; }
     #manager-search { width: 1fr; }
     #manager-required-only { width: auto; }
@@ -742,7 +756,7 @@ class ProfileManagerScreen(AccountChromeScreen):
             # Filled by :meth:`_redraw`, not here: a card's text is fixed when
             # it is built, so cards composed once would keep the language the
             # page opened in after the operator changes it.
-            with DisclosureGroup(title="", collapsed=self._onboarding, id="manager-sources-fold"):
+            with DisclosureGroup(title="", id="manager-sources-fold"):
                 yield Static(id="manager-sources-summary", classes="manager-section-summary", markup=False)
                 yield Vertical(id="manager-sources", classes="cadrumo-panel")
             missing = frozenset(self.overview.missing_required)
@@ -770,6 +784,8 @@ class ProfileManagerScreen(AccountChromeScreen):
                 button = self.query_one(f"#setup-stage-{stage.value}", Button)
                 button.styles.width = f"{100 / len(SETUP_STAGES):g}%"
                 button.styles.min_width = 0
+                button.styles.border = ("none", "transparent")
+                button.styles.height = 1
         await self._redraw()
         if self._onboarding:
             self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
@@ -1260,7 +1276,7 @@ class ProfileManagerScreen(AccountChromeScreen):
                 ProfileSetupStage.READY: done,
             }[candidate]
             marker = "✓" if passed else str(position + 1)
-            stage_button.label = f"{marker} {tr(_SETUP_TITLE_KEYS[candidate])}"
+            stage_button.label = f"{marker} {tr(_SETUP_NAV_KEYS[candidate])}"
             stage_button.variant = "primary" if candidate is stage else "default"
             stage_button.set_class(candidate is stage, "setup-current")
             stage_button.disabled = busy or (candidate is ProfileSetupStage.READY and not done)
@@ -1874,7 +1890,11 @@ class ProfileManagerScreen(AccountChromeScreen):
     @property
     def _completion_offered(self) -> bool:
         """Whether the page offers to declare setup complete right now."""
-        return self._complete_setup is not None and self.overview.setup_state is ProfileSetupState.INCOMPLETE
+        return (
+            self._complete_setup is not None
+            and self.overview.setup_state is ProfileSetupState.INCOMPLETE
+            and (not self._onboarding or self._setup_stage is ProfileSetupStage.REVIEW)
+        )
 
     @override
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
@@ -1920,11 +1940,12 @@ class ProfileManagerScreen(AccountChromeScreen):
                 self._setup_stage = ProfileSetupStage.READY
             await self._redraw()
             self.refresh_bindings()
-            self.query_one("#manager-status", PinnedStatusBar).show_success(
-                tr("flows.manager.complete_setup.completed")
-            )
             if self._onboarding:
                 self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
+            else:
+                self.query_one("#manager-status", PinnedStatusBar).show_success(
+                    tr("flows.manager.complete_setup.completed")
+                )
             return
         self._render_onboarding()
         if isinstance(worker.error, ProfileSchemaValidationError):

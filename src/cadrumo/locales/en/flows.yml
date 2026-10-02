@@ -89,7 +89,6 @@ flows:
       heading: Set up your profile
       progress: '{answered} of {total} required answers'
       question: Question {number} of {total} · {section}
-      ready: All required answers are in. Finish setup to start preparing your declarations.
       required_only: Required only
       search_empty: No setting matches “{query}”.
       search_placeholder: Search settings
@@ -131,6 +130,11 @@ flows:
       get_data_copy: Optional. Import available records, or skip this step and enter
         the required details yourself. You do not need AEAT access to finish setup.
       get_data_title: Get data
+      nav_get_data: Import
+      nav_overview: Start
+      nav_ready: Ready
+      nav_required: Required
+      nav_review: Review
       overview_checklist: '✓ Secure profile created
 
         ○ Import data, or skip it
@@ -277,9 +281,9 @@ flows:
   registration:
     confirm_label: Repeat the password
     create_button: Create profile
-    intro: 'Choose a name for this profile and a password to protect it. That is all
-      that is needed: your profile exists as soon as you continue, and you fill in
-      the rest whenever you like.'
+    intro: Choose a name and password to create your secure profile. You can complete
+      its details afterward.
+    password_help: Password protection and recovery
     password_hint: At least {minimum_length} characters. A few ordinary words strung
       together are easier to remember and harder to guess than one short complicated
       word.
