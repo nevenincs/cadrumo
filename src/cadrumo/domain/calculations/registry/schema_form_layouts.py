@@ -98,6 +98,10 @@ class FormLayoutSeedSource(StrEnum):
     XML_DICTIONARY = "xml_dictionary"
     #: The design's printed ``[NN]`` box numbers, without export offsets.
     DESIGN_BOX_NUMBER = "design_box_number"
+    #: The declared predecessor's layout, followed for the continuing boxes the
+    #: revision's own official form still prints on the same page and apartado,
+    #: because the revision has no record design of its own.
+    PREDECESSOR_LAYOUT = "predecessor_layout"
     #: Numeric casilla numbers only; no official heading is available.
     CASILLA_NUMBER = "casilla_number"
     #: A reviewer declared the structure.
@@ -459,7 +463,8 @@ class FormLayoutDefinition(RegistryModel):
     generated from (its casillas, the bindings it places and the export
     structure it reads); a layout whose digest no longer matches its revision
     is stale and refused. ``design_sources`` pins the official files the
-    headings were quoted from, and ``seed_source`` names the anchor family.
+    structure and headings were read from, and ``seed_source`` names the
+    anchor family.
 
     The layout carries no ``legal_refs`` or ``source_refs`` of its own. It is
     derived presentation, and copying its revision's citations onto it would

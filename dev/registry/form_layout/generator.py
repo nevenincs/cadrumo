@@ -13,8 +13,12 @@ The ladder, per casilla:
 3. the design row whose description prints the casilla's box ``[NN]`` -- used
    only when exactly one row prints it and no other casilla already sits there,
    otherwise the casilla is declared unplaced as ambiguous;
-4. the casilla's numeric box number alone, placed on a numbered-boxes page;
-5. otherwise a working figure when the casilla is not operator-entered, or
+4. for a revision with no design, export record or dictionary line of its own,
+   the declared predecessor's position of the same continuing box, kept only
+   where a form the revision cites prints that page's label, the box and its
+   apartado on one page (:mod:`.predecessor_layout`);
+5. the casilla's numeric box number alone, placed on a numbered-boxes page;
+6. otherwise a working figure when the casilla is not operator-entered, or
    unplaced without an official anchor when it is.
 
 Pages are the design's records (or the dictionary's element groups); sections
@@ -45,7 +49,8 @@ from cadrumo.domain.calculations.registry.binding_value_contract import BindingV
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
 from cadrumo.domain.calculations.registry.form_layout_integrity import form_layout_source_digest
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -64,6 +69,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormGridColumn,
     FormGridRow,
     FormLayoutDefinition,
+    FormLayoutReviewState,
     FormLayoutSeedSource,
     FormPageCondition,
     FormPageDefinition,
@@ -85,12 +91,15 @@ from ..record_design_labels import (
     record_design_sidecars,
 )
 from .column_vocabulary import SHARED_COLUMN_HEADING_KEY_PREFIX, SHARED_COLUMN_KEYS, shared_column_key
+from .official_form_pages import OfficialFormUnavailableError
 from .official_headings import OfficialHeadingRefusedError, QuotedHeading, read_official_headings, verify_quote
 from .official_text import clean_official_text, description_box, description_path, node_slug
+from .predecessor_layout import ContinuedLayout, PredecessorLayout, continue_predecessor_layout
 
 __all__ = [
     "GENERATED_LAYOUT_ID",
     "LayoutGeneration",
+    "generate_modelo_layouts",
     "generate_revision_layout",
 ]
 
@@ -738,6 +747,7 @@ def _build_pages(
     build: _Build,
     manual_bindings: Mapping[str, bool],
     repeating: Mapping[str, ExportRecordDefinition],
+    continued: ContinuedLayout | None,
 ) -> tuple[list[FormPageDefinition], dict[int, tuple[str, str]], set[str], set[str]]:
     primary = {casilla_id: anchors[0] for casilla_id, anchors in build.anchors.items()}
     pages_by_key: dict[str, list[int]] = {}
@@ -746,12 +756,16 @@ def _build_pages(
         pages_by_key.setdefault(position.page_key, []).append(index)
         refs.setdefault(position.page_key, position.page_ref)
     signatures: Counter[tuple[str, ...]] = Counter()
-    pages: list[FormPageDefinition] = []
+    pages: list[FormPageDefinition] = [] if continued is None else list(continued.pages)
     section_of: dict[int, tuple[str, str]] = {}
     placed_bindings: set[str] = set()
-    shown: set[str] = set()
+    shown: set[str] = (
+        set()
+        if continued is None
+        else _block_casillas(block for page in continued.pages for section in page.sections for block in section.blocks)
+    )
     emitted_repeating: set[str] = set()
-    used_pages: set[str] = set()
+    used_pages: set[str] = {page.id for page in pages}
     for page_key, indexes in pages_by_key.items():
         drafts = _page_sections(build, indexes, primary)
         signatures = Counter(
@@ -903,7 +917,10 @@ def _inputs_page(
 
 
 def _placements(
-    build: _Build, section_of: Mapping[int, tuple[str, str]], shown: set[str]
+    build: _Build,
+    section_of: Mapping[int, tuple[str, str]],
+    shown: set[str],
+    continued_aliases: Mapping[str, tuple[FormAliasPosition, ...]],
 ) -> tuple[FormPlacementDefinition, ...]:
     placements: list[FormPlacementDefinition] = []
     for casilla in sorted(build.revision.casillas, key=lambda item: item.id):
@@ -921,7 +938,7 @@ def _placements(
                     for index in anchors[1:]
                     if (section := section_of.get(index)) is not None and section != primary_section
                 )
-            )
+            ) or continued_aliases.get(casilla.id, ())
             placements.append(
                 FormPlacementDefinition(
                     casilla_id=casilla.id, kind=FormPlacementKind.ON_FORM, box_number=box, aliases=aliases
@@ -1039,14 +1056,44 @@ def _quoted_pages(
     return out
 
 
-def _seed_source(build: _Build) -> FormLayoutSeedSource:
+def _seed_source(build: _Build, continued: ContinuedLayout | None) -> FormLayoutSeedSource:
     if build.used_dictionary:
         return FormLayoutSeedSource.XML_DICTIONARY
     if build.used_design and build.used_export:
         return FormLayoutSeedSource.EXPORT_RECORD_DESIGN
     if build.used_design:
         return FormLayoutSeedSource.DESIGN_BOX_NUMBER
+    if continued is not None:
+        return FormLayoutSeedSource.PREDECESSOR_LAYOUT
     return FormLayoutSeedSource.CASILLA_NUMBER
+
+
+def _continued_layout(
+    build: _Build,
+    predecessor: PredecessorLayout | None,
+    *,
+    sources: Mapping[str, SourceReference],
+    data_root: Path,
+) -> ContinuedLayout | None:
+    """Follow the predecessor only for a revision whose own anchors give no official position."""
+    if predecessor is None or build.positions or build.used_design or build.used_dictionary:
+        return None
+    try:
+        continued = continue_predecessor_layout(build.revision, predecessor, sources=sources, data_root=data_root)
+    except OfficialFormUnavailableError as error:
+        build.notes.append(f"official form unavailable: {error}")
+        return None
+    if continued is None:
+        build.notes.append(f"no form the revision cites confirms a page of predecessor {predecessor.revision.id}")
+        return None
+    if continued.unconfirmed:
+        build.notes.append(
+            f"{len(continued.unconfirmed)} continuing casilla(s) not confirmed on the revision's own form: "
+            + ", ".join(sorted(continued.unconfirmed))
+        )
+    pinned = {item.source_ref for item in build.design_sources}
+    build.design_sources.extend(item for item in continued.design_sources if item.source_ref not in pinned)
+    return continued
 
 
 def generate_revision_layout(
@@ -1056,13 +1103,16 @@ def generate_revision_layout(
     sources: Mapping[str, SourceReference],
     data_root: Path,
     headings: Sequence[QuotedHeading] | None = None,
+    predecessor: PredecessorLayout | None = None,
 ) -> LayoutGeneration:
     """Generate one revision's layout through the seed ladder.
 
     A revision declaring no casillas has no form to lay out and returns no
     layout with its reason, which coverage reports as undeclared. ``headings``
     replaces the reviewer's recorded quotes for this revision; by default they
-    are read from ``official_headings.toml``.
+    are read from ``official_headings.toml``. ``predecessor`` is the declared
+    predecessor with its current layout; it is followed only when the revision
+    has no official position of its own, never in place of its own design.
 
     Raises:
         OfficialHeadingRefusedError: When a quoted heading is not grounded on
@@ -1084,17 +1134,62 @@ def generate_revision_layout(
     _anchor_casillas(build)
     build.binding_primary = _binding_primary(build)
     repeating = {record.id: record for record in records if record.repeat is not None}
-    pages, section_of, shown, _placed_bindings = _build_pages(build, manual_bindings, repeating)
+    continued = _continued_layout(build, predecessor, sources=sources, data_root=data_root)
+    pages, section_of, shown, _placed_bindings = _build_pages(build, manual_bindings, repeating, continued)
     quotes = read_official_headings().for_revision(modelo_id, str(revision.id)) if headings is None else headings
     pages = _quoted_pages(build, pages, quotes, sources=sources, data_root=data_root)
     layout = FormLayoutDefinition(
         id=GENERATED_LAYOUT_ID,
         revision_id=revision.id,
-        seed_source=_seed_source(build),
+        seed_source=_seed_source(build, continued),
         generator_version=FORM_LAYOUT_GENERATOR_VERSION,
         source_state_digest=form_layout_source_digest(revision),
         design_sources=tuple(build.design_sources),
         pages=tuple(pages),
-        placements=_placements(build, section_of, shown),
+        placements=_placements(build, section_of, shown, {} if continued is None else continued.aliases),
     )
     return LayoutGeneration(modelo_id, revision.id, layout, notes=tuple(build.notes))
+
+
+def generate_modelo_layouts(
+    modelo: ModeloDefinition,
+    *,
+    sources: Mapping[str, SourceReference],
+    data_root: Path,
+) -> dict[str, LayoutGeneration]:
+    """Generate every revision of a modelo whose layout is not reviewed, each after its declared predecessor.
+
+    A revision may follow its predecessor's layout, so the predecessor is
+    generated first and its fresh layout is the one followed; a reviewed
+    layout is never regenerated and is followed as declared.
+    """
+    outcomes: dict[str, LayoutGeneration] = {}
+
+    def current(revision_id: str, visiting: frozenset[str]) -> FormLayoutDefinition | None:
+        revision = modelo.revisions[revision_id]
+        existing = revision.form_layouts[0] if revision.form_layouts else None
+        if existing is not None and existing.review.state is FormLayoutReviewState.REVIEWED:
+            return existing
+        if revision_id not in outcomes:
+            followed: PredecessorLayout | None = None
+            declared = revision.predecessor
+            if (
+                isinstance(declared, DeclaredPredecessor)
+                and declared.revision_id in modelo.revisions
+                and declared.revision_id not in visiting
+            ):
+                layout = current(declared.revision_id, visiting | {revision_id})
+                if layout is not None:
+                    followed = PredecessorLayout(revision=modelo.revisions[declared.revision_id], layout=layout)
+            outcomes[revision_id] = generate_revision_layout(
+                str(modelo.id), revision, sources=sources, data_root=data_root, predecessor=followed
+            )
+        return outcomes[revision_id].layout
+
+    for revision_id in sorted(modelo.revisions, key=str):
+        current(revision_id, frozenset())
+    return {
+        revision_id: outcomes[revision_id]
+        for revision_id in sorted(modelo.revisions, key=str)
+        if revision_id in outcomes
+    }
