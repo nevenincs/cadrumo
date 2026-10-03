@@ -8,6 +8,7 @@ different reason would fail here.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 from decimal import Decimal
 
 import pydantic
@@ -52,6 +53,7 @@ def _entry(
         country_code=country,
         identifier=identifier,
         description="synthetic asset",
+        held_since=date(2015, 1, 1),
     )
 
 
@@ -211,3 +213,30 @@ def test_an_unsupported_schema_version_is_refused() -> None:
 def test_looking_up_an_unregistered_asset_refuses() -> None:
     with pytest.raises(ForeignAssetRegisterError, match="not registered"):
         ForeignAssetRegister().asset(_ref("1"))
+
+
+@pytest.mark.parametrize(
+    ("held_since", "ceased_on", "held_in_2025", "ceased_in_2025"),
+    [
+        (date(2015, 1, 1), None, True, False),
+        (date(2025, 12, 31), None, True, False),
+        (date(2026, 1, 1), None, False, False),
+        (date(2015, 1, 1), date(2025, 1, 1), True, True),
+        (date(2015, 1, 1), date(2024, 12, 31), False, False),
+    ],
+)
+def test_the_holding_period_decides_which_ejercicios_reach_the_asset(
+    held_since: date, ceased_on: date | None, held_in_2025: bool, ceased_in_2025: bool
+) -> None:
+    entry = _account(_ref("a")).model_copy(update={"held_since": held_since, "ceased_on": ceased_on})
+
+    assert entry.held_in(2025) is held_in_2025
+    assert entry.ceased_in(2025) is ceased_in_2025
+
+
+def test_an_asset_cannot_cease_before_it_was_first_held() -> None:
+    payload = _account(_ref("a")).model_dump()
+    payload["ceased_on"] = date(2014, 12, 31)
+
+    with pytest.raises(pydantic.ValidationError, match="cannot cease before it was first held"):
+        ForeignAssetRegisterEntry.model_validate(payload)

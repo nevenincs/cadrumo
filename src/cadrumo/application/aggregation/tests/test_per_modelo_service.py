@@ -21,6 +21,7 @@ See Also:
 from __future__ import annotations
 
 import hashlib
+from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
@@ -204,6 +205,7 @@ def _register_for(observations: tuple[ForeignAssetIngestObservation, ...]) -> Fo
                     value="" if scheme is M720IdentifierScheme.NONE else observation.asset_external_id,
                 ),
                 description="synthetic asset",
+                held_since=date(2015, 1, 1),
             ),
         )
     return ForeignAssetRegister(

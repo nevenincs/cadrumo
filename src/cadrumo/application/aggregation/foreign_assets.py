@@ -66,7 +66,11 @@ from ...domain.calculations.registry.foreign_asset_obligation_catalogue import (
 )
 from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.currency.service import ExchangeRateProvider
-from ...domain.foreign_assets.record_join import Modelo720Record, join_modelo_720_records
+from ...domain.foreign_assets.record_join import (
+    Modelo720Record,
+    join_modelo_720_records,
+    refuse_held_declared_assets_without_lot,
+)
 from ...domain.foreign_assets.register import ForeignAssetRegister, M720AssetRef
 from ...domain.foreign_assets.valuation import M720ValuationEvent
 from ..foreign_asset_thresholds import (
@@ -425,14 +429,16 @@ class ForeignAssetsAggregationSourceResolver:
             revision=context.revision,
             filing_date=context.period.end_date,
         )
-        declarable, declarable_groups = _declarable_valued_rows(valued, thresholds=thresholds)
         register = self._register_loader()
-        records = join_modelo_720_records(declarable, register)
+        filing_year = context.period.filing_year
+        refuse_held_declared_assets_without_lot(valued, register, filing_year=filing_year)
+        declarable, declarable_groups = _declarable_valued_rows(valued, thresholds=thresholds)
+        records = join_modelo_720_records(declarable, register, filing_year=filing_year)
         declared_source_ids = {row.observation.source_id for row in declarable}
         return _row_resolution(
             context,
             records,
-            diagnostics=_declaration_advisories(register, declarable, declarable_groups),
+            diagnostics=_declaration_advisories(register, valued, declarable_groups),
             worksheet_source_ids={row.source_id for row in self._row_observations},
             # One transaction may evidence several lots; it is one contributor.
             source_transaction_ids=tuple(
@@ -499,43 +505,37 @@ def _declarable_valued_rows(
 
 def _declaration_advisories(
     register: ForeignAssetRegister,
-    declarable: tuple[Modelo720ValuedRow, ...],
+    valued: tuple[Modelo720ValuedRow, ...],
     declarable_groups: frozenset[ForeignAssetObligationGroup],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Report every declared asset that forms no type 2 record this ejercicio.
+    """Report each declared asset whose valued lots fall in a block under its declaration floor.
 
-    A declaration whose asset has no lot in a declarable block leaves its
-    source-owned fields without a value; one in a block under its floor is not
-    exported. Both stay visible rather than vanishing from the declaration.
+    Such a declaration forms no type 2 record and is not exported; it stays
+    visible rather than vanishing from the declaration.
     """
     group_by_code = _obligation_group_by_code()
-    with_lot = {row.observation.asset_ref for row in declarable}
-    advisories: list[CalculationSourceDiagnostic] = []
-    for asset_ref in sorted({declaration.asset_ref for declaration in register.declarations} - with_lot):
-        asset = register.asset(asset_ref)
-        if group_by_code[asset.asset_class] in declarable_groups:
-            message = (
-                f"Modelo 720 asset {asset_ref} is declared but has no valuation for this ejercicio; "
-                "its type 2 record cannot be completed"
-            )
-            remedy = "Record the asset's valuation, or its extinction, through the ledger or the worksheet."
-        else:
-            message = (
+    declared = {declaration.asset_ref for declaration in register.declarations}
+    below_floor = sorted(
+        {
+            row.observation.asset_ref
+            for row in valued
+            if row.observation.asset_ref in declared
+            and group_by_code[row.observation.asset_class_code] not in declarable_groups
+        },
+    )
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=BindingSourceKind.FOREIGN_ASSET.value,
+            resolver_id=ForeignAssetsAggregationSourceResolver.resolver_id,
+            source_ref=f"foreign_asset_register:{asset_ref}",
+            message=(
                 f"Modelo 720 asset {asset_ref} is declared in an obligation block under its declaration floor; "
                 "it is not exported"
-            )
-            remedy = None
-        advisories.append(
-            CalculationSourceDiagnostic(
-                reason="source_issue",
-                source_kind=BindingSourceKind.FOREIGN_ASSET.value,
-                resolver_id=ForeignAssetsAggregationSourceResolver.resolver_id,
-                source_ref=f"foreign_asset_register:{asset_ref}",
-                message=message,
-                remedy=remedy,
             ),
         )
-    return tuple(advisories)
+        for asset_ref in below_floor
+    )
 
 
 def _registry_observation_from_foreign_asset(

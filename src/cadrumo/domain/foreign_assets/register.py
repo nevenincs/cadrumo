@@ -23,6 +23,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Final
@@ -158,7 +159,14 @@ class M720AssetIdentifier(BaseModel):
 
 
 class ForeignAssetRegisterEntry(BaseModel):
-    """One foreign asset known to the declarant, identified by its :data:`M720AssetRef`."""
+    """One foreign asset known to the declarant, identified by its :data:`M720AssetRef`.
+
+    ``held_since`` and ``ceased_on`` bound the period in which the declarant
+    held the asset in any position-76 condition. RD 1065/2007 art. 42 bis.1
+    reaches what is held "a 31 de diciembre de cada año", and art. 42 bis.3 and
+    .5 make a holder who ceased during the year report it in that year's
+    declaration; outside that period the asset belongs to no declaration.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -168,6 +176,8 @@ class ForeignAssetRegisterEntry(BaseModel):
     country_code: CountryCodeAlpha2
     identifier: M720AssetIdentifier
     description: str = Field(min_length=1, max_length=200)
+    held_since: date
+    ceased_on: date | None = None
     schema_version: str = FOREIGN_ASSET_REGISTER_SCHEMA_VERSION
 
     @field_validator("schema_version")
@@ -194,7 +204,19 @@ class ForeignAssetRegisterEntry(BaseModel):
                 f"identifier scheme {self.identifier.scheme.value!r} is not admitted for clave "
                 f"{self.asset_class.value!r}",
             )
+        if self.ceased_on is not None and self.ceased_on < self.held_since:
+            raise ForeignAssetRegisterValidationError("an asset cannot cease before it was first held")
         return self
+
+    def held_in(self, filing_year: int) -> bool:
+        """Whether the declarant held the asset at any time in ``filing_year``."""
+        return self.held_since <= date(filing_year, 12, 31) and (
+            self.ceased_on is None or self.ceased_on >= date(filing_year, 1, 1)
+        )
+
+    def ceased_in(self, filing_year: int) -> bool:
+        """Whether the declarant stopped holding the asset during ``filing_year``."""
+        return self.ceased_on is not None and self.ceased_on.year == filing_year
 
     @property
     def identity_key(self) -> tuple[str, str, str] | None:

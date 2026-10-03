@@ -214,8 +214,10 @@ def _registered(
     if isinstance(lot, ForeignAssetIngestObservation):
         code = MODELO_720_FOREIGN_ASSET_CLASS_CODES[lot.asset_class]
         country, identifier = lot.country, lot.asset_external_id
+        ceased_on = date.fromisoformat(lot.valuation_event_date) if lot.valuation_event_date else None
     else:
         code, country, identifier = lot.asset_class_code, lot.country_code, lot.asset_identifier
+        ceased_on = lot.valuation_event_date
     if code is M720AssetClassCode.CUENTA:
         scheme = M720IdentifierScheme.ACCOUNT_CODE
     elif code in {M720AssetClassCode.VALOR, M720AssetClassCode.INSTITUCION_INVERSION_COLECTIVA}:
@@ -229,6 +231,8 @@ def _registered(
         country_code=country,
         identifier=M720AssetIdentifier(scheme=scheme, value=identifier),
         description="synthetic asset",
+        held_since=date(2015, 1, 1),
+        ceased_on=ceased_on,
     )
 
 
@@ -1073,18 +1077,62 @@ class TestRegisterJoin:
 
         assert refused.value.reason is M720RecordJoinRefusalReason.REGISTER_MISMATCH
 
-    def test_a_declaration_without_a_lot_stays_visible_as_an_advisory(self) -> None:
+    def test_a_declared_asset_held_this_year_without_a_valuation_is_refused(self) -> None:
+        """Without its valuation the block total, and so the 50.000 EUR test, is unknown."""
         lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-3")
+        unvalued = _obs(asset_class=ForeignAssetClass.REAL_ESTATE, valuation="1.00", asset_external_id="AD-FLAT")
+        register = _register_for(lot, unvalued)
+
+        with pytest.raises(ForeignAssetRecordJoinRefusedError) as refused:
+            _resolver(observations=(lot,), register=register).resolve(_context())
+
+        assert (refused.value.asset_ref, refused.value.reason) == (
+            unvalued.asset_ref,
+            M720RecordJoinRefusalReason.DECLARATION_WITHOUT_SOURCE,
+        )
+
+    def test_a_declared_asset_that_ceased_in_an_earlier_year_forms_no_record(self) -> None:
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-4")
         sold = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1.00", asset_external_id="AD-ACC-SOLD")
-        dormant = _obs(asset_class=ForeignAssetClass.REAL_ESTATE, valuation="1.00", asset_external_id="AD-FLAT")
-        register = _register_for(lot, sold, dormant)
+        register = _register_for(lot, sold)
+        register = register.model_copy(
+            update={
+                "assets": tuple(
+                    asset.model_copy(update={"ceased_on": date(2024, 5, 31)})
+                    if asset.asset_ref == sold.asset_ref
+                    else asset
+                    for asset in register.assets
+                ),
+            },
+        )
 
         resolution = _resolver(observations=(lot,), register=register).resolve(_context())
 
-        by_asset = {diagnostic.source_ref: diagnostic for diagnostic in resolution.diagnostics}
-        assert set(by_asset) == {
-            f"foreign_asset_register:{sold.asset_ref}",
-            f"foreign_asset_register:{dormant.asset_ref}",
-        }
-        assert "cannot be completed" in by_asset[f"foreign_asset_register:{sold.asset_ref}"].message
-        assert "not exported" in by_asset[f"foreign_asset_register:{dormant.asset_ref}"].message
+        assert {
+            value for (binding, _), value in resolution.row_binding_values.items() if binding.endswith("asset-ref")
+        } == {lot.asset_ref}
+        assert resolution.diagnostics == ()
+
+    def test_a_lot_outside_the_registered_holding_period_is_refused(self) -> None:
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-5")
+        register = _register_for(lot)
+        register = register.model_copy(
+            update={
+                "assets": tuple(asset.model_copy(update={"ceased_on": date(2025, 3, 1)}) for asset in register.assets)
+            },
+        )
+
+        with pytest.raises(ForeignAssetRecordJoinRefusedError) as refused:
+            _resolver(observations=(lot,), register=register).resolve(_context())
+
+        assert refused.value.reason is M720RecordJoinRefusalReason.REGISTER_MISMATCH
+
+    def test_a_declared_asset_in_a_block_under_its_floor_is_reported_not_exported(self) -> None:
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-6")
+        flat = _obs(asset_class=ForeignAssetClass.REAL_ESTATE, valuation="1000.00", asset_external_id="AD-FLAT-2")
+
+        resolution = _resolver(observations=(lot, flat)).resolve(_context())
+
+        (advisory,) = resolution.diagnostics
+        assert advisory.source_ref == f"foreign_asset_register:{flat.asset_ref}"
+        assert "not exported" in advisory.message

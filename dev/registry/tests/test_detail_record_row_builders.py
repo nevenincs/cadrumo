@@ -82,6 +82,7 @@ def _valued(
                 value=identifier,
             ),
             description="synthetic asset",
+            held_since=date(2015, 1, 1),
         ),
         declaration=ForeignAssetDeclarationEntry(
             asset_ref=observation.asset_ref,

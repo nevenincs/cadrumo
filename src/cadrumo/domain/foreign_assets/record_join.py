@@ -9,14 +9,23 @@ so every record pairs source-owned and operator-owned fields of the SAME asset
 before any row index exists.
 
 Unmatched sides refuse rather than default: a lot whose asset is not
-registered, whose official identifier disagrees with the register, or which no
-declaration covers; and a declaration in a declarable block with no lot for the
-ejercicio. The condition is never assumed to be ``1`` nor the share ``100``.
+registered, whose class, country, official identifier or holding period
+disagrees with the register, or which no declaration covers; and a declared
+asset the declarant held during the ejercicio with no lot for it. Such an asset
+is reported however small its block: without its valuation the block total, and
+so the 50.000 EUR test, is unknown, and a missing value is never a zero. The
+condition is never assumed to be ``1`` nor the share ``100``.
+
+The holding period comes from RD 1065/2007 art. 42 bis: apartado 1 reaches
+assets held at 31 December, apartados 3 and 5 make a holder who ceased during
+the year report the balance at the date of cessation in that year's
+declaration. An asset outside the ejercicio's holding period forms no record.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date
 from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
@@ -30,6 +39,7 @@ from .register import (
     ForeignAssetRegisterEntry,
     M720IdentifierScheme,
 )
+from .valuation import M720ValuationEvent
 
 
 class M720RecordJoinRefusalReason(StrEnum):
@@ -39,13 +49,13 @@ class M720RecordJoinRefusalReason(StrEnum):
     """The lot names an asset reference the register does not hold."""
 
     REGISTER_MISMATCH = "register_mismatch"
-    """The lot's class, country or official identifier differs from its register entry."""
+    """The lot's class, country, official identifier or holding period differs from its register entry."""
 
     UNDECLARED_ASSET = "undeclared_asset"
     """No declaration states the declarant's condition and share for the lot's asset."""
 
     DECLARATION_WITHOUT_SOURCE = "declaration_without_source"
-    """A declared asset in a declarable block has no valuation for the ejercicio."""
+    """A declared asset the declarant held during the ejercicio has no valuation for it."""
 
 
 class ForeignAssetRecordJoinRefusedError(CadrumoError):
@@ -85,7 +95,7 @@ class Modelo720Record(BaseModel):
         return f"{self.row.observation.source_id}#{self.declaration.condition.value}"
 
 
-def _register_disagreement(row: Modelo720ValuedRow, asset: ForeignAssetRegisterEntry) -> str:
+def _register_disagreement(row: Modelo720ValuedRow, asset: ForeignAssetRegisterEntry, filing_year: int) -> str:
     obs = row.observation
     if obs.asset_class_code is not asset.asset_class:
         return f"class {obs.asset_class_code.value} differs from the registered {asset.asset_class.value}"
@@ -93,18 +103,54 @@ def _register_disagreement(row: Modelo720ValuedRow, asset: ForeignAssetRegisterE
         return f"country {obs.country_code} differs from the registered {asset.country_code}"
     if asset.identifier.scheme is not M720IdentifierScheme.NONE and obs.asset_identifier != asset.identifier.value:
         return "official identifier differs from the registered one"
+    if not asset.held_in(filing_year):
+        return f"the register shows the asset not held in {filing_year}"
+    if obs.valuation_event is M720ValuationEvent.EXTINCTION:
+        if obs.valuation_event_date != asset.ceased_on:
+            return "the extinction date differs from the registered cessation date"
+    elif asset.ceased_on is not None and asset.ceased_on <= date(filing_year, 12, 31):
+        return "a year-end valuation for an asset the register shows ceased by 31 December"
     return ""
+
+
+def refuse_held_declared_assets_without_lot(
+    rows: Iterable[Modelo720ValuedRow],
+    register: ForeignAssetRegister,
+    *,
+    filing_year: int,
+) -> None:
+    """Refuse when a declared asset held during ``filing_year`` has no lot for it.
+
+    Args:
+        rows: Every euro-valued lot of the ejercicio, before any threshold.
+        register: The declarant's foreign-asset register and declarations.
+        filing_year: The declared ejercicio.
+
+    Raises:
+        ForeignAssetRecordJoinRefusedError: The first such asset, by reference.
+    """
+    with_lot = {row.observation.asset_ref for row in rows}
+    for asset_ref in sorted({declaration.asset_ref for declaration in register.declarations} - with_lot):
+        if register.asset(asset_ref).held_in(filing_year):
+            raise ForeignAssetRecordJoinRefusedError(
+                asset_ref=asset_ref,
+                reason=M720RecordJoinRefusalReason.DECLARATION_WITHOUT_SOURCE,
+                detail=f"held in {filing_year}; supply its valuation, or the cessation valuation",
+            )
 
 
 def join_modelo_720_records(
     rows: Iterable[Modelo720ValuedRow],
     register: ForeignAssetRegister,
+    *,
+    filing_year: int,
 ) -> tuple[Modelo720Record, ...]:
     """Join declarable lots to the register and fan each out over its declarations.
 
     Args:
         rows: The euro-valued lots of the declarable obligation blocks.
         register: The declarant's foreign-asset register and declarations.
+        filing_year: The declared ejercicio, against which each holding period is read.
 
     Raises:
         ForeignAssetRecordJoinRefusedError: A lot is unregistered, disagrees with
@@ -122,7 +168,7 @@ def join_modelo_720_records(
             raise ForeignAssetRecordJoinRefusedError(
                 asset_ref=asset_ref, reason=M720RecordJoinRefusalReason.UNREGISTERED_ASSET
             )
-        disagreement = _register_disagreement(row, asset)
+        disagreement = _register_disagreement(row, asset, filing_year)
         if disagreement:
             raise ForeignAssetRecordJoinRefusedError(
                 asset_ref=asset_ref, reason=M720RecordJoinRefusalReason.REGISTER_MISMATCH, detail=disagreement
@@ -144,4 +190,5 @@ __all__ = [
     "M720RecordJoinRefusalReason",
     "Modelo720Record",
     "join_modelo_720_records",
+    "refuse_held_declared_assets_without_lot",
 ]

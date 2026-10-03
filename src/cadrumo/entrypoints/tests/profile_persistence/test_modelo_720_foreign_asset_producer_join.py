@@ -46,7 +46,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -139,7 +139,7 @@ _ADVISORY_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Generator[None]:
+def _secure_backend(tmp_path: Path, *, register_assets: bool) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_test_profile_record(
             _create_profile_record_for_test(
@@ -179,7 +179,8 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
                 context=_profile_creation_context_for_test(),
             ),
         )
-        _register_and_declare_the_assets()
+        if register_assets:
+            _register_and_declare_the_assets()
         yield
 
 
@@ -208,6 +209,7 @@ def _register_and_declare_the_assets() -> None:
                 country_code=country,
                 identifier=identifier,
                 description="synthetic foreign asset",
+                held_since=date(2015, 1, 1),
             ),
         )
         register.declare(
@@ -290,7 +292,9 @@ def _calculate_through_the_mesh(
     The foreign-asset rows are _produced by the enrolled resolver from
     *observations*; nothing in this helper hand-writes ``row_binding_values``.
     """
-    with _secure_backend(tmp_path):
+    # With no holdings supplied nothing is registered either: a registered asset
+    # held in the year would rightly refuse the calculation without its valuation.
+    with _secure_backend(tmp_path, register_assets=bool(observations)):
         observation_repository = CalculationObservationRepository()
         observation_repository.save(
             observation_repository.prepare_observation_envelope(

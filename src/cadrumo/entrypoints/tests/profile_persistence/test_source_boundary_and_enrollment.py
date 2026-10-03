@@ -644,6 +644,7 @@ def _register_sole_holder(
                     scheme=M720IdentifierScheme.ACCOUNT_CODE, value=observation.asset_external_id
                 ),
                 description=f"Account at {observation.issuer_or_institution}",
+                held_since=date(2015, 1, 1),
             ),
         )
         register.declare(

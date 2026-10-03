@@ -11,6 +11,7 @@ deletes a required field and checks the load refuses rather than re-defaulting.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -48,6 +49,7 @@ def _account() -> ForeignAssetRegisterEntry:
         country_code="DE",
         identifier=M720AssetIdentifier(scheme=M720IdentifierScheme.IBAN, value="DE89370400440532013000"),
         description="synthetic savings account",
+        held_since=date(2015, 1, 1),
     )
 
 
@@ -59,6 +61,7 @@ def _real_estate() -> ForeignAssetRegisterEntry:
         country_code="PT",
         identifier=M720AssetIdentifier(scheme=M720IdentifierScheme.NONE),
         description="synthetic flat",
+        held_since=date(2015, 1, 1),
     )
 
 
