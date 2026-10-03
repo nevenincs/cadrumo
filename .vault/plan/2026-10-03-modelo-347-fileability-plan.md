@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:967764de27816d4c7c7ff6e1f06c13b854b55d9946efb990e1c1e8fdfd7b959d'
+body_hash: 'sha256:41a8678fdbd77fb222a0c1817dcb070d85a7527eaa6543d4046ffb825420f6d2'
 ---
 
 # `modelo-347-fileability` plan
@@ -40,7 +40,7 @@ Ground the 347 obligation in the BOE texts and compute the 3.005,06 floor per co
 
 Produce the type 2 rows on the live path through the existing row builder and render a byte-correct fichero: signed amounts, type 1 totals, per-row flags, inmueble and non-resident records.
 
-- [ ] `P02.S03` - Return the 347 type 2 rows on the live path through resolve_invoice_binding_row_values and the existing row_binding_values channel, route operator rows through the same channel, delete Modelo347ContraparteRow and validate_m347_threshold, and confine the 349 re-summing loop; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/domain/modelos/row_models.py, src/cadrumo/application/modelo/calculate_input.py, src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`.
+- [x] `P02.S03` - Return the 347 type 2 rows on the live path through resolve_invoice_binding_row_values and the existing row_binding_values channel, route operator rows through the same channel, delete Modelo347ContraparteRow and validate_m347_threshold, and confine the 349 re-summing loop; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/domain/modelos/row_models.py, src/cadrumo/application/modelo/calculate_input.py, src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`.
 - [ ] `P02.S04` - Render every 347 signed amount through the generalised signed_monetary_composite grammar, folding the m180-only composite branch into it, and regenerate both export editions; `dev/registry/pipeline/render_profile_rules.py, dev/registry/pipeline/render_profile_authority.py, dev/registry/render_profiles/modelo_347/, src/cadrumo/_data/registry/aeat/modelos/347/revisions/*/export/`.
 - [ ] `P02.S05` - Feed type 1 positions 136-144 and 145-160 from export fields naming the existing summary bindings, delete the two manual casillas and move their consumers to the bindings; `dev/registry/mappings/modelo_347/, src/cadrumo/_data/registry/aeat/modelos/347/revisions/`.
 - [ ] `P02.S06` - Extend the contraparte row builder key with typed per-row facts for metalico, criterio de caja, inversion del sujeto pasivo, seguro, arrendamiento and transmisiones, and render casilla fields per row; `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py, src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/application/filing/`.
