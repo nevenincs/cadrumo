@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c9bde856167f5c67c516bca6647b25e35abe41a692ababc7d1b0b2232346eba'
+body_hash: 'sha256:8356ad1d862cfc0673fafb3410ccf9345f6274dce38ba5febfffd8ce667bc78a'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -260,6 +260,24 @@ related:
 - `S13` `M` `src/cadrumo/locales/hu/application.yml`
 - `S13` `verify:` `pytest deadline calendar parity suites` -> `pass`
 - `S13` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S06` `M` `dev/registry/mappings/modelo_347/2011/0001-records.toml`
+- `S06` `M` `dev/registry/mappings/modelo_347/2011/0003-declarado.toml`
+- `S06` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S06` `M` `dev/registry/mappings/modelo_347/2025/0003-declarado.toml`
+- `S06` `M` `dev/registry/tests/test_modelo_347_declarado_export.py`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S06` `A` `src/cadrumo/application/filing/tests/test_modelo_347_fichero_export.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/export_value_policy.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py`
+- `S06` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S06` `verify:` `form_layout generate --check` -> `pass`
+- `S06` `verify:` `pytest 347 export end to end` -> `pass`
 
 ## Notes
 
@@ -281,3 +299,4 @@ related:
 - `S15` found two export blockers for S06: decl.ejercicio passed as Decimal, absent ejercicio-operacion written as 0000
 - `S15` correction: the previous S15 rows were read from another writer's commit 659fe64d35 by mistake; these rows are commit 57c565dbd1. Export blockers for S06: decl.ejercicio passed as Decimal, absent ejercicio-operacion written as 0000
 - `S13` part A in cd923576a0; part B (expense-without-invoice advisory, received-invoice dating, tipo de soporte) pending; follow-ups: capture the 2014-2024 347 diseño to restore filing grade for amendments, and a structured authority-grade limitation field (schema decision)
+- `S06` commit f2f8ca00a9; first half landed in snapshot f4729489f9 and repair 3d235bacde; seguro, arrendamiento, transmisiones, BDNS and representante remain single-valued casillas; criterio de caja amount, Spanish provincia and metalico have no source data and are advisories
