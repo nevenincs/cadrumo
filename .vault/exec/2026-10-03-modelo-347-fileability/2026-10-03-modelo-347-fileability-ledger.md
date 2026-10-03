@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c902e83c759aa277d5aa12f011a6d3c4b593fba00933bf60f28c7ee323edfd4'
+body_hash: 'sha256:6ef04cc3989dab7fe977851c87dd5bb2d4cd6d90dacc79e14ac3db64e085978f'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -56,8 +56,22 @@ related:
 - `S02` `verify:` `pytest test_m347_threshold_buckets` -> `pass`
 - `S02` `verify:` `ruff check` -> `pass`
 - `S02` `verify:` `ty check` -> `pass`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/schema_revision_members.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`
+- `S10` `M` `dev/registry/compiler/validate_applicability_section.py`
+- `S10` `M` `src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml`
+- `S10` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/applicability/0001-declarations.toml`
+- `S10` `A` `dev/registry/tests/test_applicability_exclusions.py`
+- `S10` `M` `dev/registry/tests/test_payer_fact_declarations.py`
+- `S10` `M` `dev/registry/tests/test_modelo_applicability.py`
+- `S10` `M` `src/cadrumo/application/overview/tests/test_applicability.py`
+- `S10` `verify:` `pytest applicability suites` -> `pass`
+- `S10` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S10` `verify:` `ruff check` -> `pass`
 
 ## Notes
 
 - `S01` stand-in rd-1065-2007-art-31.html and its sidecars are unreferenced and await deletion at Phase close
 - `S02` 44 tests that read the published authority await the P01 Phase-close publication
+- `S10` `applicability_payer_facts.py` includes another writer's helper split of the new code; published-authority tests await Phase publication

@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:4380cf6f91a9c9ced00111ec2e35edc1fa1b6c2b53620fa4e9a22a8635ada55d'
+body_hash: 'sha256:967764de27816d4c7c7ff6e1f06c13b854b55d9946efb990e1c1e8fdfd7b959d'
 ---
 
 # `modelo-347-fileability` plan
@@ -34,7 +34,7 @@ ambiguous law stays advisory.
 Ground the 347 obligation in the BOE texts and compute the 3.005,06 floor per counterparty and direction bucket through the one existing threshold leaf.
 
 - [x] `P01.S01` - Point rd-1065-2007:art-31 at the BOE consolidated article, add rd-1065-2007:art-32 and rd-1624-1992:art-62 legal entities with verbatim required text, cite art. 33 for the threshold fact users, and retire the stand-in split article; `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml, src/cadrumo/_data/registry/aeat/legal/iva-flow.toml, src/cadrumo/domain/calculations/registry/m347_threshold.py`.
-- [x] `P01.S02` - Compute the 347 floor per counterparty and direction bucket from a dated registry fact mapping claves to buckets, through one declarable-set function in m347_threshold.py delegating to _declarable_party_ids, used by both the row family and the declarante summary; `src/cadrumo/_data/registry/aeat/facts/, src/cadrumo/domain/calculations/registry/m347_threshold.py, src/cadrumo/domain/calculations/registry/invoice_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
+- [ ] `P01.S02` - Compute the 347 floor per counterparty and direction bucket from a dated registry fact mapping claves to buckets, through one declarable-set function in m347_threshold.py delegating to _declarable_party_ids, used by both the row family and the declarante summary; `src/cadrumo/_data/registry/aeat/facts/, src/cadrumo/domain/calculations/registry/m347_threshold.py, src/cadrumo/domain/calculations/registry/invoice_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
 
 ### Phase `P02` - Live declarado rows and export
 
@@ -57,7 +57,7 @@ Apply art. 32.b operation scoping and the art. 33.2 exclusions at the single exi
 
 Decide who must file from typed profile facts and the ledger per filing year, through the one shared applicability evaluator, and feed those facts from census data.
 
-- [ ] `P04.S10` - Add a typed exclusion list to applicability rules with its validator and evaluator step, and declare the 347 SII exclusion, the art. 31.1 activity gate and the clave C floor handling; `src/cadrumo/domain/calculations/registry/schema_revision_members.py, src/cadrumo/domain/calculations/registry/applicability.py, src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/applicability/, src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml`.
+- [x] `P04.S10` - Add a typed exclusion list to applicability rules with its validator and evaluator step, and declare the 347 SII exclusion, the art. 31.1 activity gate and the clave C floor handling; `src/cadrumo/domain/calculations/registry/schema_revision_members.py, src/cadrumo/domain/calculations/registry/applicability.py, src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/applicability/, src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml`.
 - [ ] `P04.S11` - Derive a per-year ledger 347 threshold signal from the resolver's own observations, read the profile answer per filing year, and keep any disagreement visible in applicability and the calendar; `src/cadrumo/application/overview/, src/cadrumo/entrypoints/overview_read_composition.py, src/cadrumo/domain/deadlines/`.
 - [ ] `P04.S12` - Adopt SII, IVA regime, criterio de caja and estimation regime from census data, list the deciding facts in explain, and fix the threshold label and informal register in all locales; `src/cadrumo/application/user_profile/censo_sync.py, src/cadrumo/application/overview/explain.py, src/cadrumo/locales/`.
 
