@@ -83,14 +83,12 @@ _RETENCION_TRABAJO: CasillaId = validated_casilla_id("0596", surface="0596")
 
 def _bindings() -> dict[str, Decimal]:
     return {
-        "renta-profile-guarderia-gastos-reales": Decimal("0"),
         # Art. 81.1 is profile-derived at the application boundary. This
         # direct registry scenario has no profile facts, so it supplies the
         # resolved no-descendant scalar just as the profile resolver would.
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         "renta-profile-incremento-guarderia": Decimal("0"),
         "renta-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-profile-descendientes-guarderia": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),

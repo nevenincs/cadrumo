@@ -67,7 +67,6 @@ _ANNUAL_PERIOD = "0A"
 _RENTAS_UNDECLARED = "minimo_descendientes_rentas_undeclared"
 _UNDECLARED = "minimo_descendientes_undeclared"
 _PRORRATA_INFERRED = "minimo_descendientes_prorrata_inferred"
-_COUNT_DESYNC = "descendientes_count_desync"
 _SETTLEMENT = "settlement_casilla"
 
 
@@ -158,17 +157,6 @@ def test_the_prorrata_inferred_advisory_reaches_the_coordinator() -> None:
         declaration_type="1",
     )
     assert _PRORRATA_INFERRED in _source_kinds({_ESTATAL_CASILLA: Decimal("1200")})
-
-
-def test_the_count_desync_advisory_reaches_the_coordinator() -> None:
-    """The fourth mínimo collector: direct tests existed, its wiring had none.
-
-    A stored count contradicting the rows it aggregates splits the filing --
-    one binding follows the operator's number, the casillas follow the rows.
-    Reached through the coordinator here rather than by calling it.
-    """
-    _write(DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1)), descendientes_count="7")
-    assert _COUNT_DESYNC in _source_kinds({_ESTATAL_CASILLA: Decimal("2400")})
 
 
 def _supported_year_with_manual_settlement() -> int:
@@ -263,7 +251,6 @@ def test_the_coordinator_stays_quiet_when_no_collector_has_anything_to_say() -> 
     assert _RENTAS_UNDECLARED not in kinds
     assert _UNDECLARED not in kinds
     assert _PRORRATA_INFERRED not in kinds
-    assert _COUNT_DESYNC not in kinds
 
 
 def test_the_undeclared_advisory_grounds_from_the_casilla_it_addresses() -> None:

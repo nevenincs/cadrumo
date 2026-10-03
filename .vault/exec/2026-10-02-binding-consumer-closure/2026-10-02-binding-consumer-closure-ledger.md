@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:53f15e4607e3cc4d994347498867abf7803574cb34bebf4b0e295480f1ea8be8'
+body_hash: 'sha256:6c29b0720ce7daa56461d6019fd1951ecce54b2cfbe8f88e27edff5a330bc093'
 related:
   - "[[2026-10-02-binding-consumer-closure-plan]]"
 ---
@@ -204,6 +204,78 @@ related:
 - `S06` `verify:` `vaultspec-core vault edit (dry-run, then expected-blob-hash guarded write)` -> `pass`
 - `S06` `verify:` `vaultspec-core vault check all (no new errors on touched records)` -> `pass`
 - `S07` `verify:` `pytest 130 S07 selection (166 passed)` -> `pass`
+- `S06` `A` `src/cadrumo/core/isin.py`
+- `S06` `A` `src/cadrumo/core/tests/test_isin.py`
+- `S06` `A` `src/cadrumo/domain/foreign_assets/__init__.py`
+- `S06` `A` `src/cadrumo/domain/foreign_assets/register.py`
+- `S06` `A` `src/cadrumo/domain/foreign_assets/tests/__init__.py`
+- `S06` `A` `src/cadrumo/domain/foreign_assets/tests/test_register.py`
+- `S06` `A` `src/cadrumo/application/foreign_assets/__init__.py`
+- `S06` `A` `src/cadrumo/application/foreign_assets/ports.py`
+- `S06` `A` `src/cadrumo/adapters/persistence/profile/foreign_assets.py`
+- `S06` `A` `src/cadrumo/adapters/persistence/profile/tests/test_foreign_asset_register_roundtrip.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S06` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
+- `S06` `M` `src/cadrumo/locales/en/errors.yml`
+- `S06` `M` `src/cadrumo/locales/es/errors.yml`
+- `S06` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S06` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S06` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S06` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S06` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S06` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S06` `M` `dev/quality/metadata/import_load_targets.json`
+- `S06` `verify:` `pytest W1 isin+register+roundtrip (47 passed)` -> `pass`
+- `S06` `verify:` `pytest namespace registry gate (30 passed)` -> `pass`
+- `S05` `M` `src/cadrumo/core/aggregation.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/binding_provider.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/binding_terminal_audit.py`
+- `S05` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S05` `M` `src/cadrumo/application/aggregation/service.py`
+- `S05` `M` `src/cadrumo/application/modelo/data_inventory.py`
+- `S05` `M` `src/cadrumo/application/modelo/source_policy.py`
+- `S05` `M` `src/cadrumo/application/state_projection.py`
+- `S05` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S05` `M` `src/cadrumo/application/modelo/_m349_ledger_guard.py`
+- `S05` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/bindings/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/constructs/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/en/cli.yml`
+- `S05` `M` `src/cadrumo/locales/es/cli.yml`
+- `S05` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S05` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S05` `M` `src/cadrumo/locales/en/docs.yml`
+- `S05` `M` `src/cadrumo/locales/es/docs.yml`
+- `S05` `M` `src/cadrumo/locales/ca/docs.yml`
+- `S05` `M` `src/cadrumo/locales/hu/docs.yml`
+- `S05` `M` `src/cadrumo/locales/en/flows.yml`
+- `S05` `M` `src/cadrumo/locales/es/flows.yml`
+- `S05` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S05` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry_bindings.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/_modelo_349_registry_support.py`
+- `S05` `M` `dev/registry/tests/_modelo_349_registry_support.py`
+- `S05` `M` `dev/registry/tests/test_creation.py`
+- `S05` `M` `dev/registry/tests/test_iva_ledger_observation_role_cutover_static.py`
+- `S05` `M` `src/cadrumo/application/aggregation/tests/test_precedence_ladder_conformance.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_dormant_m349_invoice_resolver_live.py`
+- `S05` `M` `dev/registry/pipeline/candidate_compile_process.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_candidate_compile_process.py`
+- `S05` `verify:` `inspect_authoring_candidate publication_valid` -> `pass`
+- `S05` `verify:` `pytest S05 + 349 runtime set against generation 752c482a (all 349 tests passing)` -> `pass`
+- `S05` `verify:` `pytest candidate compile process (4 passed)` -> `pass`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2023/bindings/0001-declarations.toml`
+- `S07` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S07` `verify:` `pytest 210 runtime + work form + IRNR binding set against generation ff975936 (58 passed)` -> `pass`
+- `S07` `verify:` `check-bindings 210 findings` -> `pass`
 
 ## Notes
 
@@ -226,3 +298,7 @@ related:
 - `S06` S06 P1: row-carrier ADR amended (Route A) with the 2026-10-02 amendment; authorization basis 'Confirmed by the user on 2026-10-02 after review of the concrete rulings'. Currency section rewritten to the FX research: ECB reference rate (Ley 46/1998 art. 36), DGT-fixed rate dates per class and situation, real-estate euro freeze, last-declaration baselines, six advisory cases; grounding in research 2026-10-02-binding-consumer-closure-modelo-720-fx-research. Links added to binding-schema, source-casilla-integration, ledger-fx-conversion ADRs and the research; plan relates the ADR; S06 widened through step edit.
 - `S06` S06 Held (merge-owned): `schema_exports.py,` export.py, `operation_definitions.py,` `operation_composition.py,` `binding_provider_registration.py` - W4 registration, W5 routes and W8 operation registration land after the merge commit.
 - `S07` 130 E1/E2 closed: check-bindings 37 findings, none for 130; S07 stays open for 100 and 210 (held for the merge commit)
+- `S06` W1 asset identity and register landed. Error-registry gate still red only on another writer's InvoiceAddValidationRefusedError (in-flight invoice refactor), not on the foreign-asset errors. W2-W8 remain.
+- `S05` Intentional filing-value correction, not equivalence-preserving: casilla 04 iva-349-declarante-importe-rectificaciones now sums the rectified bases (fact `base_sum)` instead of rectification deltas, per aeat-dr-349-2020-current type 1 pos. 171-185 over type 2 pos. 153-165 and aeat-modelo-349-instructions casilla 04 ('base imponible rectificada').
+- `S05` Blocker fix on the publication path: the candidate compiler's parent-lifetime watcher held a blocking stdin read that deadlocked numpy/OpenBLAS DLL init on Windows; it now polls the pipe with PeekNamedPipe. Authority republished as logical generation 752c482a91b9.
+- `S07` 210 batch I implemented as an application handoff instead of the planned bound casilla: binding casilla `[5]` made the default manual mode stop prompting for it and dropped it from the filer-required set used by verification (silent under-declaration risk). `[5]` stays manual; m210-ledger-irnr-rendimientos-integros declares `non_calculation/application_calculation_handoff` (130 retenciones precedent) and the ledger IRNR resolver writes its ES-only value to `[5]` in ledger mode, replacing the all-jurisdiction fold redirect. TRLIRNR arts. 13.1 and 24; aeat-dr-210-2022 casilla `[5].`

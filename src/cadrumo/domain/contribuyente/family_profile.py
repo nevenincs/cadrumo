@@ -186,33 +186,6 @@ class RentaFamilyProfile(BaseModel):
         """Count of eligible descendientes whose age at year-end < 3 (Art. 58.2)."""
         return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year, context=context))
 
-    def descendientes_guarderia_count(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
-        """Count of descendants who may carry an Art. 81.2 guardería increase.
-
-        Wider than the Art. 58.2 menor-de-tres count by exactly the turning-three
-        period. Kept separate rather than widening that count, which has its own
-        registry binding and its own statutory meaning for the supplement.
-        """
-        return sum(1 for d in self.descendientes if d.is_eligible_guarderia(filing_year, context=context))
-
-    def gastos_guarderia_reales(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
-        """Sum of the Art. 81.2 guardería spend every descendant contributes in *filing_year*.
-
-        Sums :meth:`DescendantInfo.guarderia_contributing_spend`, which applies
-        the Art. 81.2 month rules per child: every declared month while the child
-        is under three, and only the post-birthday months in the period the child
-        turns three. The turning-three period is INCLUDED here and was not
-        before, which is the campaign's largest measured under-grant — a full
-        birth cohort rather than a minority case, reducing cuota directly.
-
-        Year-parameterised rather than pinned to 2024 because the calculate path
-        derives ``renta_family.gastos_guarderia_reales_{filing_year}`` for
-        whatever year the registry declares a consumer for. A 2024-only accessor
-        would have forced that path to keep its own parallel sum, which is how
-        the monthly map could be declared and contribute nothing.
-        """
-        return sum(d.guarderia_contributing_spend(filing_year, context=context) for d in self.descendientes)
-
     def incremento_guarderia_0613(
         self,
         filing_year: int,

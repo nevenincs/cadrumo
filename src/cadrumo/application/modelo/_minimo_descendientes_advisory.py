@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_absence import AbsentCasillaReading
-from ...core.decimal.coercion import coerce_decimal
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
@@ -41,7 +40,6 @@ if TYPE_CHECKING:
     from .work_profile import ModeloWorkProfile
 
 __all__ = [
-    "collect_descendientes_count_desync_diagnostics",
     "collect_guarderia_madre_meses_undeclared_diagnostics",
     "collect_guarderia_spend_shape_diagnostics",
     "collect_minimo_descendientes_dependencia_diagnostics",
@@ -60,7 +58,6 @@ _MINIMO_ESTATAL_SEMANTIC_ROLE = "irpf_minimo_descendientes_estatal"
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente."
 _DESCENDANTS_COUNT_PATH = "renta_family.descendientes_count"
 _UNDECLARED_SOURCE_KIND = "minimo_descendientes_undeclared"
-_COUNT_DESYNC_SOURCE_KIND = "descendientes_count_desync"
 _PRORRATA_INFERRED_SOURCE_KIND = "minimo_descendientes_prorrata_inferred"
 _RENTAS_UNDECLARED_SOURCE_KIND = "minimo_descendientes_rentas_undeclared"
 _ENTRY_DATE_MISSING_SOURCE_KIND = "minimo_descendientes_entry_date_missing"
@@ -909,63 +906,3 @@ def collect_minimo_descendientes_dependencia_diagnostics(
             ),
         )
     return tuple(diagnostics)
-
-
-def collect_descendientes_count_desync_diagnostics(
-    revision: ModeloRevision,
-    *,
-    modelo: str,
-    filing_year: int,
-    period_token: str,
-    bucket_id: str,
-    operation: PinnedAuthorityOperation,
-    profile: ModeloWorkProfile | None = None,
-) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Advise when the stored descendientes count contradicts the rows it aggregates.
-
-    ``renta_family.descendientes_count`` is derived from the
-    ``renta_family.descendiente.{n}.*`` rows and rewritten with them, but it is
-    also an ordinary editable profile field. Edited apart from the rows, the
-    count binding follows the operator's number while the mínimo casillas follow
-    the rows, so the filing carries two answers. A count with no rows is a
-    supported declaration, and an unreadable count is not evidence of drift.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
-    """
-    scope = _selected_registry_scope(
-        revision,
-        modelo=modelo,
-        filing_year=filing_year,
-        period_token=period_token,
-    )
-    if scope is None:
-        return ()
-    _validate_binding_report(scope)
-    facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
-    if facts is None:
-        return ()
-    rows = len(
-        {path.split(".")[2] for path in facts if path.startswith(_DESCENDANT_FACT_PREFIX) and path.count(".") >= 3},
-    )
-    if not rows:
-        return ()
-    stored = coerce_decimal(facts.get(_DESCENDANTS_COUNT_PATH))
-    if stored is None or stored == Decimal(rows):
-        return ()
-    return (
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=_COUNT_DESYNC_SOURCE_KIND,
-            message=(
-                f"profile fact {_DESCENDANTS_COUNT_PATH!r} declares {stored} but the profile carries "
-                f"{rows} renta_family.descendiente row(s). The count feeds its own Modelo 100 binding "
-                "while the mínimo por descendientes casillas are computed from the rows, so the filing "
-                "would carry two different answers"
-            ),
-            remedy=(
-                "Re-enter the descendants with `descendiente add` on the active profile, which rewrites "
-                "the count and the rows together."
-            ),
-        ),
-    )

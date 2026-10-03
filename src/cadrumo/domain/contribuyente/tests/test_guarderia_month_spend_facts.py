@@ -39,6 +39,11 @@ def _fact_context(filing_year: int) -> FamilyFactResolutionContext:
     )
 
 
+def _guarderia_spend(profile: RentaFamilyProfile, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
+    """The Art. 81.2 spend every descendant contributes in *filing_year*, summed per child."""
+    return sum(child.guarderia_contributing_spend(filing_year, context=context) for child in profile.descendientes)
+
+
 def _monthly_spend(amounts: tuple[int, ...]) -> tuple[GuarderiaMonthSpend, ...]:
     """Build the real month-granular spend objects used by the profile."""
     return tuple(GuarderiaMonthSpend(month=month, amount_euros=amount) for month, amount in enumerate(amounts, start=1))
@@ -53,7 +58,7 @@ def test_full_period_monthly_spend_is_retained_by_family_aggregation(filing_year
 
     profile = RentaFamilyProfile(descendientes=(child,))
 
-    assert profile.gastos_guarderia_reales(filing_year, context=_fact_context(filing_year)) == 1_800
+    assert _guarderia_spend(profile, filing_year, context=_fact_context(filing_year)) == 1_800
 
 
 @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
@@ -73,7 +78,7 @@ def test_turning_three_child_counts_every_declared_month(filing_year: int) -> No
 
     profile = RentaFamilyProfile(descendientes=(child,))
 
-    assert profile.gastos_guarderia_reales(filing_year, context=_fact_context(filing_year)) == 2_800
+    assert _guarderia_spend(profile, filing_year, context=_fact_context(filing_year)) == 2_800
 
 
 @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
@@ -85,7 +90,7 @@ def test_spend_outside_the_qualifying_period_yields_zero(filing_year: int) -> No
 
     profile = RentaFamilyProfile(descendientes=(child,))
 
-    assert profile.gastos_guarderia_reales(filing_year, context=_fact_context(filing_year)) == 0
+    assert _guarderia_spend(profile, filing_year, context=_fact_context(filing_year)) == 0
 
 
 @pytest.mark.parametrize("manual_exercise", _MANUAL_EXERCISES)
@@ -138,10 +143,10 @@ def test_manual_examples_retain_raw_months_and_effective_spend_inputs(
     effective_profile = RentaFamilyProfile(descendientes=(effective_child,))
 
     manual_context = _fact_context(manual_exercise)
-    assert raw_profile.gastos_guarderia_reales(manual_exercise, context=manual_context) == sum(
+    assert _guarderia_spend(raw_profile, manual_exercise, context=manual_context) == sum(
         amount for _month, amount in qualifying_month_spend
     )
     assert (
-        effective_profile.gastos_guarderia_reales(manual_exercise, context=manual_context)
+        _guarderia_spend(effective_profile, manual_exercise, context=manual_context)
         == _OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS
     )

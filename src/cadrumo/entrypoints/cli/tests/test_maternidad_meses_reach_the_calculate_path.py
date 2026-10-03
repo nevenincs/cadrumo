@@ -84,7 +84,6 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-profile-guarderia-gastos-reales=0",
     "--binding", "renta-profile-cotizaciones-ss-madre=0",
     "--binding", "renta-profile-marriage-month-start=0",
     "--binding", "renta-profile-marriage-month-end=0",

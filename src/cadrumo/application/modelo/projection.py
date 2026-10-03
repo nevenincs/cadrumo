@@ -538,7 +538,6 @@ def _verb_baseline_projection_bindings(
         binding("renta-modelo-100-estimacion-directa-es-normal"): Decimal("1"),
         binding("renta-profile-declaration-type"): Decimal("1"),
         binding("renta-profile-family-minor-children-in-unit"): Decimal("0"),
-        binding("renta-profile-guarderia-gastos-reales"): Decimal("0"),
         binding("renta-profile-cotizaciones-ss-madre"): Decimal("0"),
         binding("renta-profile-marriage-month-start"): Decimal("0"),
         binding("renta-profile-marriage-month-end"): Decimal("0"),

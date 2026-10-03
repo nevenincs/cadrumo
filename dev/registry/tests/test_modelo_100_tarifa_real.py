@@ -58,10 +58,8 @@ _SUPPORT = committed_supported_filing_years()
 # maternidad binding.
 _FIXTURE_GUARDERIA_BINDINGS = frozenset(
     {
-        "renta-profile-guarderia-gastos-reales",
         "renta-profile-incremento-guarderia",
         "renta-profile-cotizaciones-ss-madre",
-        "renta-profile-descendientes-guarderia",
     }
 )
 # The exercise whose state and Cataluna scales, minimos and age supplements the
@@ -363,10 +361,8 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in scenarios
         # without childcare deduction (mínimo del contribuyente chain only).
-        "renta-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-profile-incremento-guarderia": Decimal("0"),
         "renta-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-profile-descendientes-guarderia": Decimal("0"),
         # Art. 58/61 LIRPF mínimo por descendientes aggregate
         # (Option A engine): zero baseline for a
         # childless profile; scenarios that exercise real descendientes

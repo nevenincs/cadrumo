@@ -134,9 +134,7 @@ _MESH_OWNED_SOURCES = frozenset(
 #: two mínimo bindings are deliberately NOT in this set: caller-supplying either
 #: would decide the very question the probe asks.
 _UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = (
-    "renta-profile-guarderia-gastos-reales",
     "renta-profile-cotizaciones-ss-madre",
-    "renta-profile-descendientes-guarderia",
 )
 
 

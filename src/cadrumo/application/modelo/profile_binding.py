@@ -266,71 +266,6 @@ def _declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
     )
 
 
-def _inject_derived_family_facts(
-    fact_index: dict[str, UserProfileFactValue],
-    filing_year: int,
-    declared_selectors: frozenset[str],
-    *,
-    authored_filing_year: int,
-    context: FamilyFactResolutionContext | None = None,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Inject the two Art. 81.2 guardería terms of the 0613 cap into *fact_index*.
-
-    Both are read off :class:`~domain.contribuyente.family_profile.RentaFamilyProfile` rather
-    than re-derived here, and that is the point of this function's present
-    shape. It used to carry its own loop summing
-    ``renta_family.descendiente.{n}.gastos_guarderia`` under an inline
-    ``age < 3`` test, which made it a SECOND aggregation path beside the
-    canonical record's. The two then diverged the moment the record learned the
-    Art. 81.2 month rules: a descendant declaring only the monthly map
-    contributed the annual field's absent zero here, so the taxpayer could enter
-    their spend, see it stored, and receive nothing.
-
-    Computes ALWAYS: a value already present at either key is overwritten
-    rather than deferred to. Both paths are declared derived, so the engine
-    owns them and a stored fact there can only be a stale or hand-planted
-    value. Deferring to it silently substituted an operator's number for the
-    law's. This mutates the ephemeral per-calculation index and never
-    persists, so a stray stored fact becomes inert rather than erased.
-
-    Gated on a consuming binding rather than on a hardcoded filing year: the
-    injector runs for whatever year the registry declares a consumer for, so
-    extending coverage is registry work with no code edit.
-
-    Note on the count path's NAME, which is now the honest one.
-    ``descendientes_guarderia_{year}`` carries the GUARDERÍA population, wider
-    than "menor de 3 al devengo" by exactly the period a child turns three since
-    the Art. 81.2 month rules landed. It was called
-    ``descendientes_menores_3_{year}`` until this rename, and the old name was a
-    lie in the load-bearing direction: it named the Art. 58.2 statutory count
-    while carrying the wider one, so a reader correcting the mismatch could
-    plausibly have narrowed the VALUE to match the NAME. That would cap a
-    turning-three child's spend at zero and hand back the under-grant the
-    extension exists to close.
-
-    The statutory count keeps the old name, correctly, on
-    :meth:`~domain.contribuyente.family_profile.RentaFamilyProfile.descendientes_menores_3_year_end`.
-    The two are different populations and always were; only one of them was
-    misnamed.
-    """
-    if context is None:
-        coordinate = date(filing_year, 12, 31)
-        context = FamilyFactResolutionContext(
-            authority=operation,
-            filing_period=coordinate,
-            devengo_date=coordinate,
-        )
-    guarderia_key = f"renta_family.descendientes_guarderia_{authored_filing_year}"
-    gastos_key = f"renta_family.gastos_guarderia_reales_{authored_filing_year}"
-    if guarderia_key not in declared_selectors and gastos_key not in declared_selectors:
-        return
-
-    profile = renta_family_profile_from_facts(fact_index)
-    fact_index[guarderia_key] = Decimal(profile.descendientes_guarderia_count(filing_year, context=context))
-    fact_index[gastos_key] = Decimal(profile.gastos_guarderia_reales(filing_year, context=context))
-
-
 def renta_family_profile_from_facts(
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> RentaFamilyProfile:
@@ -354,10 +289,7 @@ def renta_family_profile_from_facts(
     for every descendant, so a record rebuilt without it answers "is this
     descendant entitled to the mínimo?" with the assimilation always available —
     over-granting for a filer who pays judicial anualidades. The reconstruction
-    that carried the pre-check lacked this, and the guardería injector used that
-    one; the count it feeds does not read anualidades, so adding them there is a
-    no-op by inspection rather than by accident, and is stated so no later reader
-    reads it as a behaviour change.
+    that carried the pre-check lacked this.
 
     Shared rather than rebuilt per consumer because the mínimo aggregate, the
     anualidades régimen flag and the Art. 81.1 deducción por maternidad all ask
@@ -1007,11 +939,7 @@ def inject_derived_anualidades_eligibility_facts(
         # same predicate as the aggregates; leaving it unresolved keeps the two
         # surfaces from disagreeing about who holds the mínimo.
         return
-    descendant_facts = {
-        fact_key: str(value)
-        for fact_key, value in fact_index.items()
-        if fact_key.startswith("renta_family.descendiente.")
-    }
+    descendientes = renta_family_profile_from_facts(fact_index).descendientes
     shared_custody = any(
         descendant.custodia_compartida
         and descendant.is_eligible_ordinary(
@@ -1025,7 +953,7 @@ def inject_derived_anualidades_eligibility_facts(
             # expires when per-child attribution lands.
             dependencia_assimilation_available=False,
         )
-        for descendant in descendant_list_from_facts(descendant_facts)
+        for descendant in descendientes
     )
     fact_index[key] = not shared_custody
 
@@ -1124,8 +1052,7 @@ def inject_derived_autonomic_deduccion_facts(
 ) -> None:
     """Inject the Madrid nacimiento/adopción deducción derived facts (casilla 1039).
 
-    Companion to :func:`inject_derived_marriage_facts` and
-    :func:`_inject_derived_family_facts`. Reads the existing
+    Companion to :func:`inject_derived_marriage_facts`. Reads the existing
     ``renta_family.descendiente.{n}.*`` facts and ``tax_residence.ccaa`` and
     computes the prorrateo-weighted count of descendants inside the Comunidad de
     Madrid nacimiento/adopción applicability window (DL 1/2010 arts. 4 y 18.1)
@@ -1622,14 +1549,6 @@ def _load_profile_facts(
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     inject_ordinary_work_maritime_facts(fact_index)
     declared_selectors = _declared_profile_selectors(snapshot.revision)
-    _inject_derived_family_facts(
-        fact_index,
-        snapshot.filing_year,
-        declared_selectors,
-        authored_filing_year=_authored_year(snapshot),
-        context=family_context,
-        operation=operation,
-    )
     inject_derived_anualidades_eligibility_facts(
         fact_index,
         snapshot,

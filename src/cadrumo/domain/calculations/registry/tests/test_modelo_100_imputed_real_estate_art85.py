@@ -57,9 +57,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
     if year == 2024:
         values.update(
             {
-                "renta-profile-guarderia-gastos-reales": Decimal("0"),
                 "renta-profile-incremento-guarderia": Decimal("0"),
-                "renta-profile-descendientes-guarderia": Decimal("0"),
                 "renta-profile-cotizaciones-ss-madre": Decimal("0"),
                 # The maternity deducción's own profile fact, neutral zero for
                 # the same reason as its four siblings above: this scenario is

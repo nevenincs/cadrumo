@@ -48,7 +48,6 @@ from ..calculations.observations_repository import CalculationObservationReposit
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 from ._minimo_descendientes_advisory import (
-    collect_descendientes_count_desync_diagnostics,
     collect_guarderia_madre_meses_undeclared_diagnostics,
     collect_guarderia_spend_shape_diagnostics,
     collect_minimo_descendientes_dependencia_diagnostics,
@@ -224,15 +223,6 @@ def collect_bucket_aggregation_advisory_diagnostics(
             operation=authority,
             profile=profile,
         )
-        descendientes_count_desync_diagnostics = collect_descendientes_count_desync_diagnostics(
-            revision,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-            operation=authority,
-            profile=profile,
-        )
 
         return (
             collect_official_box_unpopulated_diagnostics(revision, casilla_values)
@@ -261,7 +251,6 @@ def collect_bucket_aggregation_advisory_diagnostics(
             + minimo_descendientes_dependencia_diagnostics
             + guarderia_spend_shape_diagnostics
             + guarderia_madre_meses_undeclared_diagnostics
-            + descendientes_count_desync_diagnostics
             + collect_bienes_inversion_regularizacion_diagnostics(
                 revision,
                 modelo=modelo,

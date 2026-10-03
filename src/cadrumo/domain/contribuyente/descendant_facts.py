@@ -36,14 +36,12 @@ Aggregate facts stored::
 
   renta_family.descendientes_count               int count
 
-The Art. 81.2 guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
-is deliberately NOT stored here, and must not be re-added. It is a DERIVED path:
-the calculate-time injector recomputes it from the per-child spend above —
-through the canonical record, so the annual figure and the monthly map are
-weighed by the same Art. 81.2 month rules — and overwrites whatever the index
-holds, precisely so an operator's number can never be substituted for the law's. The
-profile write door refuses that path outright, so projecting it from here would
-refuse the whole batch rather than persist a second, divergent copy.
+No Art. 81.2 guardería aggregate is stored here. The increment the 0613 formula
+reads (``renta_family.incremento_guarderia_{year}``) is a DERIVED path: the
+calculate-time injector recomputes it from the per-child spend above, through the
+canonical record, so the annual figure and the monthly map are weighed by the same
+Art. 81.2 month rules, and overwrites whatever the index holds, so an operator's
+number can never be substituted for the law's.
 """
 
 from __future__ import annotations

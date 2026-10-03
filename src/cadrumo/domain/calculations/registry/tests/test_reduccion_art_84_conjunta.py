@@ -53,10 +53,8 @@ _ZERO_RELATIONS = {
 _PRIOR_EDITION_BINDINGS = {
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
-    "renta-profile-guarderia-gastos-reales": Decimal("0"),
     "renta-profile-incremento-guarderia": Decimal("0"),
     "renta-profile-cotizaciones-ss-madre": Decimal("0"),
-    "renta-profile-descendientes-guarderia": Decimal("0"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
