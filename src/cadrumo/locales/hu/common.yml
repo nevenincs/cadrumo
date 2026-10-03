@@ -662,6 +662,11 @@ filing:
     incomplete_undetermined_fact_required: 'Ehhez a Modelo nyomtatványhoz szükséges
       tény: %{fact}.'
     incomplete_undetermined_periods_missing: 'Be nem jelentett időszakok: %{periods}.'
+    ledger_derived_basis: 'Ez a rögzített számláidból készült helyi levezetés, nem
+      hivatalos AEAT-adat: ebben az évben azt mutatják, hogy az adózóra igaz: %{fact}.'
+    ledger_profile_disagreement: 'A profilban adott válaszod és a rögzített számláid
+      eltérnek abban, hogy igaz-e rád: %{fact}; a kötelezettség látható marad, amíg
+      a kettő közül az egyiket ki nem javítod.'
     payer_fact:
       iva_group_dominant_entity: IVA-csoport domináns tagjaként van bejegyezve
       iva_group_member: IVA-csoport tagjaként van bejegyezve

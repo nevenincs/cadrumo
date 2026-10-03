@@ -673,6 +673,11 @@ filing:
       hecho se declara positivamente; en otro caso no se conjetura una obligación.'
     incomplete_undetermined_fact_required: 'Hecho requerido para este modelo: %{fact}.'
     incomplete_undetermined_periods_missing: 'Periodos sin declarar: %{periods}.'
+    ledger_derived_basis: 'Es una derivación local a partir de tus facturas registradas,
+      no un dato oficial de la AEAT: para este año muestran que el contribuyente %{fact}.'
+    ledger_profile_disagreement: Tu respuesta en el perfil y tus facturas registradas
+      no coinciden sobre si %{fact}; la obligación sigue visible hasta que corrijas
+      una de las dos.
     payer_fact:
       iva_group_dominant_entity: está inscrito como entidad dominante de un grupo
         de IVA

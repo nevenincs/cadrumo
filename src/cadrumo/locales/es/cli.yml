@@ -3919,6 +3919,9 @@ cli:
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
     verbose_help: Mostrar detalles y siguiente acción cuando existan
     warning:
+      applicability_evidence_disagreement: Tu respuesta en el perfil y tus facturas
+        registradas no coinciden sobre si estas obligaciones aplican; las filas siguen
+        visibles hasta que corrijas una de las dos.
       m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
         cálculo forfait del régimen simplificado aún no está disponible; revisa las
         casillas del régimen simplificado antes de presentar.

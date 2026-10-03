@@ -7,6 +7,10 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
+from ..application.overview.applicability_evidence import (
+    FilingYearApplicabilityEvidence,
+    bind_filing_year_applicability_evidence,
+)
 from ..application.overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..application.overview.read_calendar_projection import (
     OverviewAgendaSnapshot,
@@ -115,6 +119,36 @@ def _refusal_requirements(
     )
 
 
+def _filing_year_applicability_evidence(
+    bucket_id: str,
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> FilingYearApplicabilityEvidence:
+    """Bind the per-year profile and ledger evidence to this worker's profile and invoice stores.
+
+    The invoice reader is the one the filing calculation composes for the same
+    bucket, so the ledger signal reads exactly the catalogue the declaration
+    is built from.
+    """
+    from ..adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
+    from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
+
+    return bind_filing_year_applicability_evidence(
+        record=record,
+        schema=operation.profile_decode_context().schema,
+        bucket_id=bucket_id,
+        invoice_source_ports=InvoiceSourceResolverPorts(
+            catalogue_reader=InvoiceCatalogueSourceResolverAdapter(
+                repository=InvoiceCatalogueRepository(bucket_id=bucket_id),
+            ),
+        ),
+        operation=operation,
+        today=today_madrid(),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _OverviewReadPorts:
     bucket_id: str
@@ -133,16 +167,28 @@ class _OverviewReadPorts:
             schema = operation.profile_decode_context().schema
             taxpayer = projection_for_taxpayer(record, schema=schema)
             raw_values = record_to_values(record, schema=schema)
+            evidence = _filing_year_applicability_evidence(self.bucket_id, record, operation=operation)
             if request.kind is OverviewReadKind.STATUS:
-                return self._status(request, operation=operation, raw_values=raw_values, taxpayer=taxpayer)
+                return self._status(
+                    request, operation=operation, raw_values=raw_values, taxpayer=taxpayer, evidence=evidence
+                )
             if request.kind is OverviewReadKind.CALENDAR:
                 return self._calendar(
-                    request, operation=operation, record=record, taxpayer=taxpayer, raw_values=raw_values
+                    request,
+                    operation=operation,
+                    record=record,
+                    taxpayer=taxpayer,
+                    raw_values=raw_values,
+                    evidence=evidence,
                 )
             if request.kind is OverviewReadKind.AGENDA:
-                return self._agenda(request, operation=operation, taxpayer=taxpayer, raw_values=raw_values)
+                return self._agenda(
+                    request, operation=operation, taxpayer=taxpayer, raw_values=raw_values, evidence=evidence
+                )
             if request.kind is OverviewReadKind.BACKLOG:
-                return self._backlog(request, operation=operation, taxpayer=taxpayer, raw_values=raw_values)
+                return self._backlog(
+                    request, operation=operation, taxpayer=taxpayer, raw_values=raw_values, evidence=evidence
+                )
             if request.kind is OverviewReadKind.EXPLAIN:
                 return self._explain(request, operation=operation, record=record, taxpayer=taxpayer)
             return self._prepare(request, operation=operation)
@@ -154,6 +200,7 @@ class _OverviewReadPorts:
         operation: PinnedAuthorityOperation,
         raw_values: Mapping[str, object],
         taxpayer: TaxpayerProfile,
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewStatusRead:
         from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
         from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
@@ -205,6 +252,7 @@ class _OverviewReadPorts:
             operation=operation,
             today=today,
             raw_values=raw_values,
+            applicability_evidence=evidence,
         )
         history = overview_no_aeat_history_notice(tax_route=derive_tax_route(taxpayer))
         return OverviewStatusRead(
@@ -222,6 +270,7 @@ class _OverviewReadPorts:
         record: UserProfileRecord,
         taxpayer: TaxpayerProfile,
         raw_values: Mapping[str, object],
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewCalendarRead:
         from ..application.overview.calendar import build_overview_calendar
         from ..application.overview.calendar_models import OverviewCalendarRange
@@ -251,7 +300,7 @@ class _OverviewReadPorts:
                 self.bucket_id, rng, expected_tax_id=expected_tax_id
             )
             events = (*live, *modelo_events)
-            evidence, evidence_notice = local_calendar_filing_evidence(
+            filing_evidence, evidence_notice = local_calendar_filing_evidence(
                 self.bucket_id, events, operation=operation, expected_tax_id=expected_tax_id
             )
             units, units_notice = local_modelo_work_units(self.bucket_id)
@@ -264,9 +313,10 @@ class _OverviewReadPorts:
                 raw_values=raw_values,
                 show_suppressed=bool(request.show_suppressed),
                 events=events,
-                filing_evidence=evidence,
+                filing_evidence=filing_evidence,
                 work_units=units,
                 live_censo_verified_profile_keys=live_censo_verified_profile_keys(record),
+                applicability_evidence=evidence,
             )
             active = OverviewCalendarSnapshot.from_calendar(calendar)
             legal_ref = _deemed_served_legal_ref(calendar, operation=operation)
@@ -305,6 +355,7 @@ class _OverviewReadPorts:
         operation: PinnedAuthorityOperation,
         taxpayer: TaxpayerProfile,
         raw_values: Mapping[str, object],
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewAgendaRead:
         from ..application.overview.agenda import build_overview_agenda
 
@@ -314,6 +365,7 @@ class _OverviewReadPorts:
             operation=operation,
             horizon_days=request.horizon_days or 14,
             raw_values=raw_values,
+            applicability_evidence=evidence,
         )
         return OverviewAgendaRead(
             agenda=OverviewAgendaSnapshot.from_agenda(agenda),
@@ -332,6 +384,7 @@ class _OverviewReadPorts:
         operation: PinnedAuthorityOperation,
         taxpayer: TaxpayerProfile,
         raw_values: Mapping[str, object],
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewBacklogRead:
         from ..application.overview.backlog import build_overview_backlog
 
@@ -343,6 +396,7 @@ class _OverviewReadPorts:
             to_date=request.to_date,
             raw_values=raw_values,
             work_units=units,
+            applicability_evidence=evidence,
         )
         return OverviewBacklogRead(
             backlog=OverviewBacklogSnapshot.from_backlog(report),

@@ -664,6 +664,12 @@ filing:
       es declara positivament; altrament no es conjectura cap obligació.'
     incomplete_undetermined_fact_required: 'Fet requerit per a aquest model: %{fact}.'
     incomplete_undetermined_periods_missing: 'Períodes sense declarar: %{periods}.'
+    ledger_derived_basis: 'És una derivació local a partir de les teves factures registrades,
+      no una dada oficial de l''AEAT: per a aquest any mostren que el contribuent
+      %{fact}.'
+    ledger_profile_disagreement: La teva resposta al perfil i les teves factures registrades
+      no coincideixen sobre si %{fact}; l'obligació continua visible fins que corregeixis
+      una de les dues.
     payer_fact:
       iva_group_dominant_entity: està inscrit com a entitat dominant d'un grup d'IVA
       iva_group_member: està inscrit com a entitat membre d'un grup d'IVA

@@ -648,6 +648,11 @@ filing:
       is positively declared; otherwise no obligation is presumed.'
     incomplete_undetermined_fact_required: 'Fact required for this modelo: %{fact}.'
     incomplete_undetermined_periods_missing: 'Undeclared periods: %{periods}.'
+    ledger_derived_basis: 'This is a local derivation from your recorded invoices,
+      not an official AEAT value: for this year they show that the taxpayer %{fact}.'
+    ledger_profile_disagreement: Your profile answer and your recorded invoices disagree
+      on whether you %{fact}; the obligation stays visible until you correct one of
+      the two.
     payer_fact:
       iva_group_dominant_entity: is registered as the dominant entity of an IVA group
       iva_group_member: is registered as a member entity of an IVA group

@@ -544,8 +544,12 @@ class TaxpayerProfile(BaseModel):
         does_intracomunitario: Whether the taxpayer conducts
             operaciones intracomunitarias.
         third_party_transactions_above_347_threshold: Whether the
-            profile exceeded the applicable third-party transaction
-            threshold during the prior year; ``None`` when unanswered.
+            taxpayer's operations with some person or entity exceeded the
+            Modelo 347 threshold during the año natural the declaration
+            covers (RD 1065/2007 arts. 32.c and 33.1, "durante el año natural
+            correspondiente"), not the year before it; ``None`` when
+            unanswered. The obligations section is effective-dated, so the
+            answer for one filing year is read as of that year.
         bienes_extranjero_above_threshold: Whether the taxpayer holds
             bienes en el extranjero above the legal threshold; ``None``
             when unanswered.

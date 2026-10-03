@@ -94,6 +94,7 @@ def facts_to_values(
     facts: tuple[UserProfileFact, ...],
     *,
     schema: ProfileSchemaDefinition | None = None,
+    as_of: date | None = None,
 ) -> dict[str, str]:
     """Project a tuple of profile facts into the flat ``selector -> str(value)`` map.
 
@@ -103,13 +104,14 @@ def facts_to_values(
     ``identity.tax_id`` whose schema declares
     ``model_selectors = ["tax.id"]`` is emitted under the key
     ``tax.id``. Facts whose path is not in the schema fall through
-    untranslated.
+    untranslated. ``as_of`` keeps only the facts in force on that date, as
+    :func:`_effective_facts_by_path` describes.
     """
     if schema is None:
         raise UserProfileValidationError("facts projection requires an explicit pinned profile schema")
     selector_index = _selector_index(schema)
     values: dict[str, str] = {}
-    for fact in _effective_facts_by_path(facts).values():
+    for fact in _effective_facts_by_path(facts, as_of=as_of).values():
         if fact.value is None:
             continue
         selectors = selector_index.get(fact.path, (fact.path,))
@@ -123,23 +125,27 @@ def record_to_values(
     record: UserProfileRecord,
     *,
     schema: ProfileSchemaDefinition | None = None,
+    as_of: date | None = None,
 ) -> dict[str, str]:
     """Project a live profile record into the selector-keyed flat values mapping.
 
     Args:
         record: The :class:`UserProfileRecord` to project.
         schema: Profile schema definition supplied by the authority operation.
+        as_of: Optional date the projection is effective at; ``None`` keeps
+            every fact regardless of its window.
     """
-    return facts_to_values(record.facts, schema=_schema_for_record(record, schema))
+    return facts_to_values(record.facts, schema=_schema_for_record(record, schema), as_of=as_of)
 
 
 def snapshot_to_values(
     snapshot: UserProfileSnapshot,
     *,
     schema: ProfileSchemaDefinition | None = None,
+    as_of: date | None = None,
 ) -> dict[str, str]:
     """Project an immutable filing snapshot into the selector-keyed flat values mapping."""
-    return facts_to_values(snapshot.facts, schema=_schema_for_record(snapshot, schema))
+    return facts_to_values(snapshot.facts, schema=_schema_for_record(snapshot, schema), as_of=as_of)
 
 
 def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact, ...]:
@@ -168,13 +174,13 @@ def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact,
     downstream as unset rather than expired, so a required field whose
     window closed would surface as missing rather than as ended.
 
-    Honouring expiry therefore means threading an explicit ``as_of``
-    through every caller, each deciding the instant its own read is
-    effective at. That is a different change; until it is made,
-    supersession is expressed by recording a later ``valid_from`` at the
-    same path, which this ordering already resolves. A ``valid_to`` that
-    nothing supersedes is reported to the operator by the profile
-    validation surface rather than silently ignored.
+    Honouring expiry therefore means an explicit ``as_of`` the caller
+    supplies, deciding the instant its own read is effective at:
+    :func:`_effective_facts_by_path` drops the facts not in force on it. A
+    caller that supplies none still resolves supersession by the later
+    ``valid_from`` at the same path, which this ordering already resolves,
+    and a ``valid_to`` that nothing supersedes is reported to the operator by
+    the profile validation surface rather than silently ignored.
 
     The sort is stable, so a record whose facts carry no window at all
     keeps its declaration order exactly. Nothing in production sets a
@@ -193,27 +199,48 @@ def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact,
 in_window_order = _in_window_order
 
 
-def _effective_facts_by_path(facts: Sequence[UserProfileFact]) -> dict[str, UserProfileFact]:
-    """Resolve the latest fact at each path without discarding explicit clears."""
+def _fact_in_force(fact: UserProfileFact, as_of: date) -> bool:
+    """Whether ``fact``'s effective window contains ``as_of``; an absent bound is open."""
+    return (fact.valid_from is None or fact.valid_from <= as_of) and (fact.valid_to is None or as_of <= fact.valid_to)
+
+
+def _effective_facts_by_path(
+    facts: Sequence[UserProfileFact],
+    *,
+    as_of: date | None = None,
+) -> dict[str, UserProfileFact]:
+    """Resolve the latest fact at each path without discarding explicit clears.
+
+    With ``as_of``, only the facts whose window contains that date compete, so
+    a fact that starts later or ended earlier does not resolve; without it,
+    every fact competes and the latest ``valid_from`` wins.
+    """
     effective: dict[str, UserProfileFact] = {}
     for fact in _in_window_order(facts):
+        if as_of is not None and not _fact_in_force(fact, as_of):
+            continue
         effective[fact.path] = fact
     return effective
 
 
-def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None) -> dict[str, str]:
+def record_to_path_values(
+    record: UserProfileRecord | UserProfileSnapshot | None,
+    *,
+    as_of: date | None = None,
+) -> dict[str, str]:
     """Project a :class:`UserProfileRecord` (or snapshot) into a schema-path-keyed string mapping.
 
     Unlike :func:`record_to_values` (which projects via the schema's
     ``model_selectors`` aliases), this keeps the canonical schema
     path as the key. The mapping is what the wizard catalogue,
     :func:`validate_profile_values`, and CLI status surfaces consume.
+    ``as_of`` keeps only the facts in force on that date.
     """
     if record is None:
         return {}
     return {
         path: _render_fact_value(fact.value)
-        for path, fact in _effective_facts_by_path(record.facts).items()
+        for path, fact in _effective_facts_by_path(record.facts, as_of=as_of).items()
         if fact.value is not None
     }
 
@@ -243,10 +270,10 @@ class EffectiveFact(BaseModel):
     readers can disagree about which fact is effective.
 
     ``valid_to`` is not consulted, so a fact whose window has closed still
-    resolves. That is the shared rule rather than a limit of this
-    projection, and :func:`_in_window_order` carries the reason: expiry
-    needs an ``as_of`` the caller supplies, and resolving it against the
-    clock would make one record project differently on different days.
+    resolves. That is the shared rule for a read without an ``as_of``, and
+    :func:`_in_window_order` carries the reason: expiry needs an ``as_of`` the
+    caller supplies, and resolving it against the clock would make one record
+    project differently on different days.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -289,6 +316,7 @@ def projection_for_taxpayer(
     tax_id_default: str = "00000000T",
     iva_regime_default: IVARegime | None = None,
     schema: ProfileSchemaDefinition | None = None,
+    as_of: date | None = None,
 ) -> TaxpayerProfile:
     """Return the deadline-engine :class:`TaxpayerProfile` for the supplied profile facts.
 
@@ -298,12 +326,21 @@ def projection_for_taxpayer(
         tax_id_default: Fallback NIF when the profile carries none.
         iva_regime_default: Fallback IVA regime when the profile carries none.
         schema: Profile schema definition supplied by the authority operation.
+        as_of: Optional date the profile is projected as of, keeping only the
+            facts whose effective window contains it. Only a record or a
+            snapshot carries windows, so a pre-projected mapping refuses it.
 
     The single coercion path goes through :func:`taxpayer_profile_from_mapping`
     so canonical-token semantics stay in lockstep with the wizard descriptor.
+
+    Raises:
+        UserProfileValidationError: ``as_of`` was supplied with a
+            pre-projected mapping, which no longer carries effective windows.
     """
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
-        mapping = _merged_taxpayer_values(facts, schema=_schema_for_record(facts, schema))
+        mapping = _merged_taxpayer_values(facts, schema=_schema_for_record(facts, schema), as_of=as_of)
+    elif as_of is not None:
+        raise UserProfileValidationError("an as-of taxpayer projection requires the profile record or snapshot")
     else:
         mapping = {str(key): str(value) for key, value in facts.items() if value is not None}
     return taxpayer_profile_from_mapping(
@@ -317,6 +354,7 @@ def _merged_taxpayer_values(
     record: UserProfileRecord | UserProfileSnapshot,
     *,
     schema: ProfileSchemaDefinition | None = None,
+    as_of: date | None = None,
 ) -> dict[str, str]:
     """Merge the path-keyed and selector-keyed projections for the taxpayer coercion.
 
@@ -331,11 +369,11 @@ def _merged_taxpayer_values(
     aliased fields and identical for unaliased ones, so no key ever
     resolves to conflicting values.
     """
-    mapping = record_to_path_values(record)
+    mapping = record_to_path_values(record, as_of=as_of)
     if isinstance(record, UserProfileRecord):
-        selector_values = record_to_values(record, schema=schema)
+        selector_values = record_to_values(record, schema=schema, as_of=as_of)
     else:
-        selector_values = snapshot_to_values(record, schema=schema)
+        selector_values = snapshot_to_values(record, schema=schema, as_of=as_of)
     for key, value in selector_values.items():
         mapping.setdefault(key, value)
     return mapping

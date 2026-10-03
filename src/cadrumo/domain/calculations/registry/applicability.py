@@ -91,6 +91,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from datetime import date
 from enum import StrEnum
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, NamedTuple, override
 
 from pydantic import BaseModel, Field, StringConstraints
@@ -174,6 +175,51 @@ class ApplicabilityVerdict(StrEnum):
     INCOMPLETE = "incomplete"
 
 
+class LedgerPayerFactDerivation(StrEnum):
+    """What the taxpayer's own records show about one payer fact for one filing year.
+
+    A local derivation from records Cadrumo holds, never an official AEAT value.
+
+    Attributes:
+        DERIVED_YES: The records already establish the fact.
+        DERIVED_NO: The records are complete for the year and do not establish
+            it. Absence of records is not this state.
+        UNKNOWN: The records cannot settle the fact for the year.
+    """
+
+    DERIVED_YES = "derived_yes"
+    DERIVED_NO = "derived_no"
+    UNKNOWN = "unknown"
+
+
+class ApplicabilityProvenance(StrEnum):
+    """Which evidence decided a payer-fact applicability verdict.
+
+    Attributes:
+        PROFILE_DECLARED: The operator's profile answer decided it.
+        LEDGER_DERIVED: A :class:`LedgerPayerFactDerivation` decided it; the
+            verdict is a local derivation, not an operator answer.
+    """
+
+    PROFILE_DECLARED = "profile_declared"
+    LEDGER_DERIVED = "ledger_derived"
+
+
+class ApplicabilityEvidenceDisagreement(BaseModel):
+    """The profile answer and the ledger derivation of one payer fact contradict each other.
+
+    Neither side wins silently: the verdict carrying this keeps the obligation
+    visible, and every surface reports the disagreement until one of the two
+    sources is corrected.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    payer_fact: Annotated[str, StringConstraints(min_length=1)]
+    profile_declaration: PayerFactDeclaration
+    ledger_derivation: LedgerPayerFactDerivation
+
+
 class ModeloApplicability(BaseModel):
     """The derived applicability of one modelo for one taxpayer profile.
 
@@ -195,6 +241,10 @@ class ModeloApplicability(BaseModel):
             ``INCOMPLETE`` verdict the refs ground the *concept* being
             asked about (the LIRPF / LIS taxpayer definitions) so the
             operator still sees a citation.
+        provenance: Whether the profile answer or a ledger derivation decided
+            the payer-fact axis of the verdict.
+        evidence_disagreement: Set when the profile answer and the ledger
+            derivation of the rule's payer fact contradict each other.
     """
 
     model_config = _STRICT_FROZEN
@@ -205,6 +255,8 @@ class ModeloApplicability(BaseModel):
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     failure: RegistryFailureClassification | None = None
     """Domain facts for a boundary to project when applicability is incomplete."""
+    provenance: ApplicabilityProvenance = ApplicabilityProvenance.PROFILE_DECLARED
+    evidence_disagreement: ApplicabilityEvidenceDisagreement | None = None
 
     @property
     def applicable(self) -> bool:
@@ -225,6 +277,23 @@ class _ExclusionFinding(NamedTuple):
 
     applicability: ModeloApplicability
     answered: bool
+
+
+class _PayerFactReading(NamedTuple):
+    """The rule's payer-fact answer once the profile and the ledger derivation are combined."""
+
+    declaration: PayerFactDeclaration | None
+    provenance: ApplicabilityProvenance
+    disagreement: ApplicabilityEvidenceDisagreement | None
+    ledger_conclusive: bool
+
+
+_NO_LEDGER_PAYER_FACTS: Mapping[str, LedgerPayerFactDerivation] = MappingProxyType[str, LedgerPayerFactDerivation](
+    {},
+)
+_UNANSWERED_PAYER_FACT_DECLARATIONS = frozenset(
+    {PayerFactDeclaration.UNDECLARED, PayerFactDeclaration.PERIODS_UNDECLARED},
+)
 
 
 class ModeloApplicabilityExclusion(BaseModel):
@@ -382,7 +451,11 @@ class ModeloApplicabilityRule(BaseModel):
             once the positive gates pass. A holding exclusion decides the
             verdict before the payer fact; an undetermined one keeps the
             modelo ``INCOMPLETE`` unless the payer fact already rules it out,
-            so an unanswered excluding fact never reads as applicable.
+            so an unanswered excluding fact never reads as applicable. An
+            exclusion that reads ``required_payer_fact`` itself qualifies how
+            far the operator's answer to that fact settles the obligation; it
+            is not consulted when a conclusive ledger derivation answers the
+            fact directly.
         legal_refs: Scoped registry citation keys (``law-slug:art-N``)
             grounding the rule, each resolvable against the registry
             ``legal/*.toml`` tables.
@@ -403,17 +476,44 @@ class ModeloApplicabilityRule(BaseModel):
     exclusions: tuple[ModeloApplicabilityExclusion, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
-    def _exclusion_finding(self, profile: TaxpayerProfile) -> _ExclusionFinding | None:
+    def _exclusion_finding(
+        self,
+        profile: TaxpayerProfile,
+        *,
+        ledger_answers_payer_fact: bool,
+    ) -> _ExclusionFinding | None:
         """Return the deciding exclusion.
 
         A holding legal exclusion wins, then any other holding one, then the
-        first undetermined one in authored order.
+        first undetermined one in authored order. When the ledger answers the
+        required payer fact conclusively, exclusions reading that same fact are
+        skipped: they qualify the operator's answer, which no longer decides.
         """
-        findings = [
-            finding
-            for exclusion in self.exclusions
-            if (finding := exclusion.evaluate(self.modelo, profile)) is not None
-        ]
+        findings = self._evaluated_exclusion_findings(
+            profile,
+            ledger_answers_payer_fact=ledger_answers_payer_fact,
+        )
+        return self._preferred_exclusion_finding(findings)
+
+    def _evaluated_exclusion_findings(
+        self,
+        profile: TaxpayerProfile,
+        *,
+        ledger_answers_payer_fact: bool,
+    ) -> list[_ExclusionFinding]:
+        """Evaluate eligible exclusions in their authored order."""
+        findings: list[_ExclusionFinding] = []
+        for exclusion in self.exclusions:
+            if ledger_answers_payer_fact and exclusion.payer_fact == self.required_payer_fact:
+                continue
+            finding = exclusion.evaluate(self.modelo, profile)
+            if finding is not None:
+                findings.append(finding)
+        return findings
+
+    @staticmethod
+    def _preferred_exclusion_finding(findings: list[_ExclusionFinding]) -> _ExclusionFinding | None:
+        """Prefer a holding legal exclusion, then the first answered finding."""
         for finding in findings:
             if finding.answered and finding.applicability.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
                 return finding
@@ -451,19 +551,123 @@ class ModeloApplicabilityRule(BaseModel):
                 return self._not_applicable()
         return None
 
-    def _payer_fact_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
-        if self.required_payer_fact is None:
+    def _payer_fact_reading(
+        self,
+        profile: TaxpayerProfile,
+        ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation],
+    ) -> _PayerFactReading:
+        """Combine the profile answer with the ledger derivation of the required payer fact.
+
+        A derived yes establishes the fact whatever the profile says, because
+        the records show operations the answer cannot undo; a contradicting
+        profile answer is kept as a disagreement rather than overruled in
+        silence. A derived no only corroborates a declared no: records Cadrumo
+        does not hold can still establish the fact, so it never replaces an
+        unanswered question. A fact with a period companion is read from the
+        profile alone, since a derivation states no periods.
+        """
+        fact = self.required_payer_fact
+        if fact is None:
+            return _PayerFactReading(None, ApplicabilityProvenance.PROFILE_DECLARED, None, ledger_conclusive=False)
+        declared = payer_fact_declaration(profile, fact)
+        derivation = self._ledger_payer_fact_derivation(fact, ledger_payer_facts)
+        disagreement = self._payer_fact_disagreement(fact, declared, derivation)
+        conclusive = derivation in {LedgerPayerFactDerivation.DERIVED_YES, LedgerPayerFactDerivation.DERIVED_NO}
+        if derivation is LedgerPayerFactDerivation.DERIVED_YES and declared is not PayerFactDeclaration.DECLARED_YES:
+            return _PayerFactReading(
+                PayerFactDeclaration.DECLARED_YES,
+                ApplicabilityProvenance.LEDGER_DERIVED,
+                disagreement,
+                ledger_conclusive=True,
+            )
+        return _PayerFactReading(
+            declared, ApplicabilityProvenance.PROFILE_DECLARED, disagreement, ledger_conclusive=conclusive
+        )
+
+    @staticmethod
+    def _ledger_payer_fact_derivation(
+        fact: PayerFactValue,
+        ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation],
+    ) -> LedgerPayerFactDerivation | None:
+        """Read a derivation only for an unperiodized projected payer fact."""
+        if not isinstance(fact, PayerFactProjection) or fact.period_companion is not None:
             return None
-        declaration = payer_fact_declaration(profile, self.required_payer_fact)
-        if declaration is PayerFactDeclaration.DECLARED_YES:
+        return ledger_payer_facts.get(fact.token)
+
+    @staticmethod
+    def _payer_fact_disagreement(
+        fact: PayerFactValue,
+        declared: PayerFactDeclaration,
+        derivation: LedgerPayerFactDerivation | None,
+    ) -> ApplicabilityEvidenceDisagreement | None:
+        """Keep a contradiction visible when the profile and ledger disagree."""
+        if not isinstance(fact, PayerFactProjection):
             return None
-        if declaration is PayerFactDeclaration.DECLARED_NO:
+        if declared is PayerFactDeclaration.DECLARED_YES and derivation is LedgerPayerFactDerivation.DERIVED_NO:
+            return ApplicabilityEvidenceDisagreement(
+                payer_fact=fact.token,
+                profile_declaration=declared,
+                ledger_derivation=derivation,
+            )
+        if declared is PayerFactDeclaration.DECLARED_NO and derivation is LedgerPayerFactDerivation.DERIVED_YES:
+            return ApplicabilityEvidenceDisagreement(
+                payer_fact=fact.token,
+                profile_declaration=declared,
+                ledger_derivation=derivation,
+            )
+        return None
+
+    def _payer_fact_verdict(
+        self,
+        reading: _PayerFactReading,
+        exclusion: _ExclusionFinding | None,
+    ) -> ModeloApplicability:
+        """Decide the verdict once no exclusion holds outright.
+
+        A declared yes is ``APPLICABLE`` and a declared no ``NOT_APPLICABLE``.
+        An unanswered fact -- and every coded or two-state fact whose boolean
+        cannot tell "no" from "not asked" -- yields ``INCOMPLETE`` rather than a
+        ``NOT_APPLICABLE`` the engine cannot positively justify. An undetermined
+        exclusion is held back until here: a payer fact that rules the modelo
+        out still wins, and otherwise the modelo stays ``INCOMPLETE`` rather than
+        applicable.
+        """
+        if reading.declaration is PayerFactDeclaration.DECLARED_NO:
             return self._not_applicable()
-        return _undetermined_applicability(
-            self.modelo,
-            payer_fact=self.required_payer_fact,
+        if self.required_payer_fact is not None and reading.declaration in _UNANSWERED_PAYER_FACT_DECLARATIONS:
+            return _undetermined_applicability(
+                self.modelo,
+                payer_fact=self.required_payer_fact,
+                legal_refs=self.legal_refs,
+                periods_missing=reading.declaration is PayerFactDeclaration.PERIODS_UNDECLARED,
+            )
+        if exclusion is not None:
+            return exclusion.applicability
+        return ModeloApplicability(
+            modelo=self.modelo,
+            verdict=ApplicabilityVerdict.APPLICABLE,
+            reason=self.applicable_reason,
             legal_refs=self.legal_refs,
-            periods_missing=declaration is PayerFactDeclaration.PERIODS_UNDECLARED,
+        )
+
+    def _with_ledger_evidence(self, verdict: ModeloApplicability, reading: _PayerFactReading) -> ModeloApplicability:
+        """Label a ledger-derived verdict and carry a disagreement onto whatever verdict was reached."""
+        fact = self.required_payer_fact
+        derived = reading.provenance is ApplicabilityProvenance.LEDGER_DERIVED
+        if fact is None or (not derived and reading.disagreement is None):
+            return verdict
+        label = payer_fact_incomplete_label(fact)
+        reason = verdict.reason
+        if derived and verdict.verdict is ApplicabilityVerdict.APPLICABLE:
+            reason = f"{reason} {tr('filing.applicability.ledger_derived_basis', fact=label)}"
+        if reading.disagreement is not None:
+            reason = f"{reason} {tr('filing.applicability.ledger_profile_disagreement', fact=label)}"
+        return verdict.model_copy(
+            update={
+                "reason": reason,
+                "provenance": reading.provenance,
+                "evidence_disagreement": reading.disagreement,
+            },
         )
 
     def _positive_rule_gates_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
@@ -482,7 +686,12 @@ class ModeloApplicabilityRule(BaseModel):
             return self._not_applicable()
         return self._natural_person_axes_result(profile)
 
-    def evaluate(self, profile: TaxpayerProfile) -> ModeloApplicability:
+    def evaluate(
+        self,
+        profile: TaxpayerProfile,
+        *,
+        ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation] = _NO_LEDGER_PAYER_FACTS,
+    ) -> ModeloApplicability:
         """Derive the :class:`ModeloApplicability` for ``profile``.
 
         Returns an ``INCOMPLETE`` verdict when the taxpayer model is not
@@ -495,31 +704,20 @@ class ModeloApplicabilityRule(BaseModel):
 
         Args:
             profile: The :class:`TaxpayerProfile` to evaluate against this rule.
+            ledger_payer_facts: What the taxpayer's own records show about
+                payer facts for the filing year being decided, keyed by payer
+                fact token. Empty when no derivation is available.
         """
         if (result := self._positive_rule_gates_result(profile)) is not None:
             return result
         # The exclusion axis runs once the positive gates pass. A holding
-        # exclusion decides the verdict outright. An undetermined one is held
-        # back: a payer fact that rules the modelo out still wins, and
-        # otherwise the modelo stays INCOMPLETE rather than applicable.
-        exclusion = self._exclusion_finding(profile)
+        # exclusion decides the verdict outright; an undetermined one is held
+        # back for the payer-fact axis.
+        reading = self._payer_fact_reading(profile, ledger_payer_facts)
+        exclusion = self._exclusion_finding(profile, ledger_answers_payer_fact=reading.ledger_conclusive)
         if exclusion is not None and exclusion.answered:
             return exclusion.applicability
-        # The payer-fact axis: a declared yes is APPLICABLE and a declared
-        # no is NOT_APPLICABLE. An unanswered fact -- and every coded or
-        # two-state fact whose boolean cannot tell "no" from "not asked" --
-        # yields INCOMPLETE rather than a NOT_APPLICABLE the engine cannot
-        # positively justify.
-        if (result := self._payer_fact_result(profile)) is not None:
-            return result
-        if exclusion is not None:
-            return exclusion.applicability
-        return ModeloApplicability(
-            modelo=self.modelo,
-            verdict=ApplicabilityVerdict.APPLICABLE,
-            reason=self.applicable_reason,
-            legal_refs=self.legal_refs,
-        )
+        return self._with_ledger_evidence(self._payer_fact_verdict(reading, exclusion), reading)
 
     def _not_applicable(self) -> ModeloApplicability:
         """Return the ``NOT_APPLICABLE`` applicability for this rule."""
@@ -1201,6 +1399,7 @@ def derive_modelo_applicability(
     today: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation] = _NO_LEDGER_PAYER_FACTS,
 ) -> ModeloApplicability:
     """Derive a modelo's applicability from the taxpayer model.
 
@@ -1227,6 +1426,10 @@ def derive_modelo_applicability(
         operation: Already-pinned indexed operation to reuse for point-loaded
             applicability facts. Omitting it leases the bundled indexed
             generation for this call.
+        ledger_payer_facts: The ledger derivations of payer facts for the
+            filing year ``profile`` was projected for. A derivation of the
+            rule's payer fact is combined with the profile answer as
+            :meth:`ModeloApplicabilityRule.evaluate` describes.
 
     Returns:
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
@@ -1282,7 +1485,7 @@ def derive_modelo_applicability(
     rule = _modelo_applicability_rule(modelo, authority=authority, operation=operation)
     if rule is None:
         return _incomplete_applicability(modelo, unruled=True)
-    return rule.evaluate(profile)
+    return rule.evaluate(profile, ledger_payer_facts=ledger_payer_facts)
 
 
 def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:
@@ -1302,7 +1505,10 @@ def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | 
 
 __all__ = [
     "MODELO_APPLICABILITY_RULES",
+    "ApplicabilityEvidenceDisagreement",
+    "ApplicabilityProvenance",
     "ApplicabilityVerdict",
+    "LedgerPayerFactDerivation",
     "ModeloApplicability",
     "ModeloApplicabilityExclusion",
     "ModeloApplicabilityRule",
@@ -1311,5 +1517,6 @@ __all__ = [
     "derive_taxpayer_files_economic_activity",
     "iter_modelo_applicability_rules",
     "modelo_requires_iva_regime",
+    "resolve_applicability_rule_from_operation",
     "taxpayer_model_is_declared",
 ]

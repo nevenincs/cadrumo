@@ -35,6 +35,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
+from itertools import chain
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.i18n.render import tr as _tr
@@ -132,6 +133,7 @@ from .calendar_models import (
 from .calendar_warnings import (
     _build_completeness_and_warnings,
     _calendar_aeat_evidence_conflict_warnings,
+    _calendar_applicability_disagreement_warnings,
     _calendar_censo_enrolment_state,
     _calendar_censo_reconciliation_warnings,
     _calendar_regime_incompatibility_warnings,
@@ -148,6 +150,7 @@ if TYPE_CHECKING:
     from ..live.expedientes import PersistedExpedientesSnapshot
     from ..live.justificante import JustificanteCaptureSnapshot
     from ..live.notifications import PersistedNotificationsSnapshot
+    from .applicability_evidence import FilingYearApplicabilityEvidence
 
 
 class _RemoteNotification(Protocol):
@@ -1061,6 +1064,73 @@ def _schedules_for_calendar_range(
     return deadline_engine, schedules
 
 
+def _calendar_obligation_projection(
+    obligation: _ModeloDeadline,
+    *,
+    profile: _TaxpayerProfile,
+    calendar_range: _OverviewCalendarRange,
+    show_suppressed: bool,
+    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+    live_censo_verified_profile_keys: tuple[str, ...] | None,
+    today: date,
+    due_soon_days: int,
+    operation: PinnedAuthorityOperation,
+    applicability_evidence: FilingYearApplicabilityEvidence | None = None,
+) -> tuple[
+    _OverviewCalendarEntry | None,
+    _SuppressedCalendarEntry | None,
+    str | None,
+    str | None,
+]:
+    """Classify one scheduled obligation for the requested calendar projection."""
+    intersects_range = _entry_intersects_range(
+        obligation,
+        calendar_range,
+        holiday_territory=profile.holiday_territory,
+        operation=operation,
+    )
+    filing_year = obligation.period.filing_year
+    applicability = _derive_modelo_applicability(
+        profile if applicability_evidence is None else applicability_evidence.profile_for_year(filing_year),
+        obligation.modelo,
+        today=today,
+        operation=operation,
+        ledger_payer_facts=(
+            {} if applicability_evidence is None else applicability_evidence.ledger_payer_facts_for_year(filing_year)
+        ),
+    )
+    disagreeing_modelo = (
+        obligation.modelo if applicability.evidence_disagreement is not None and intersects_range else None
+    )
+    if applicability.verdict is not _ApplicabilityVerdict.APPLICABLE:
+        suppressed_entry = (
+            _SuppressedCalendarEntry(
+                modelo=obligation.modelo,
+                period=obligation.period,
+                verdict=applicability.verdict,
+                reason=applicability.reason,
+            )
+            if show_suppressed and intersects_range
+            else None
+        )
+        return None, suppressed_entry, None, disagreeing_modelo
+
+    entry = (
+        _calendar_entry_from_obligation(
+            obligation,
+            holiday_territory=profile.holiday_territory,
+            filing_evidence=filing_evidence,
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            today=today,
+            due_soon_days=due_soon_days,
+            operation=operation,
+        )
+        if intersects_range
+        else None
+    )
+    return entry, None, obligation.modelo, disagreeing_modelo
+
+
 def _entries_and_suppressed_from_schedules(
     schedules: list[_Schedule],
     *,
@@ -1072,7 +1142,8 @@ def _entries_and_suppressed_from_schedules(
     today: date,
     due_soon_days: int,
     operation: PinnedAuthorityOperation,
-) -> tuple[list[_OverviewCalendarEntry], list[_SuppressedCalendarEntry], set[str]]:
+    applicability_evidence: FilingYearApplicabilityEvidence | None = None,
+) -> tuple[list[_OverviewCalendarEntry], list[_SuppressedCalendarEntry], set[str], set[str]]:
     """Project every schedule's obligations into applicable calendar entries.
 
     Each modelo's applicability is DERIVED from the taxpayer model. Only a
@@ -1086,50 +1157,39 @@ def _entries_and_suppressed_from_schedules(
     re-create the confident-wrong-obligation defect. The seed covers the
     core persona set; full per-modelo coverage is a deferred expansion (see
     ``_SEED_COVERAGE_NOTICE``).
+
+    With ``applicability_evidence``, each obligation is decided on the profile
+    as of its own filing year and on the ledger derivations for that year. The
+    fourth result names the modelos whose in-range rows carry a disagreement
+    between the profile answer and the ledger.
     """
     entries: list[_OverviewCalendarEntry] = []
     suppressed: list[_SuppressedCalendarEntry] = []
     coverage_surface_modelos: set[str] = set()
-    for schedule in schedules:
-        for obligation in schedule.obligations:
-            intersects_range = _entry_intersects_range(
-                obligation,
-                calendar_range,
-                holiday_territory=profile.holiday_territory,
-                operation=operation,
-            )
-            applicability = _derive_modelo_applicability(
-                profile,
-                obligation.modelo,
-                today=today,
-                operation=operation,
-            )
-            if applicability.verdict is not _ApplicabilityVerdict.APPLICABLE:
-                if show_suppressed and intersects_range:
-                    suppressed.append(
-                        _SuppressedCalendarEntry(
-                            modelo=obligation.modelo,
-                            period=obligation.period,
-                            verdict=applicability.verdict,
-                            reason=applicability.reason,
-                        ),
-                    )
-                continue
-            coverage_surface_modelos.add(obligation.modelo)
-            if not intersects_range:
-                continue
-            entries.append(
-                _calendar_entry_from_obligation(
-                    obligation,
-                    holiday_territory=profile.holiday_territory,
-                    filing_evidence=filing_evidence,
-                    live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-                    today=today,
-                    due_soon_days=due_soon_days,
-                    operation=operation,
-                ),
-            )
-    return entries, suppressed, coverage_surface_modelos
+    disagreeing_modelos: set[str] = set()
+    obligations = chain.from_iterable(schedule.obligations for schedule in schedules)
+    for obligation in obligations:
+        entry, suppressed_entry, covered_modelo, disagreeing_modelo = _calendar_obligation_projection(
+            obligation,
+            profile=profile,
+            calendar_range=calendar_range,
+            show_suppressed=show_suppressed,
+            filing_evidence=filing_evidence,
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            today=today,
+            due_soon_days=due_soon_days,
+            operation=operation,
+            applicability_evidence=applicability_evidence,
+        )
+        if entry is not None:
+            entries.append(entry)
+        if suppressed_entry is not None:
+            suppressed.append(suppressed_entry)
+        if covered_modelo is not None:
+            coverage_surface_modelos.add(covered_modelo)
+        if disagreeing_modelo is not None:
+            disagreeing_modelos.add(disagreeing_modelo)
+    return entries, suppressed, coverage_surface_modelos, disagreeing_modelos
 
 
 def build_overview_calendar(
@@ -1145,6 +1205,7 @@ def build_overview_calendar(
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...] = (),
     work_units: tuple[_WorkUnit, ...] = (),
     live_censo_verified_profile_keys: tuple[str, ...] | None = None,
+    applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> _OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
 
@@ -1191,6 +1252,12 @@ def build_overview_calendar(
             current values carry live Modelo 036 / censo provenance.
             When supplied, active Modelo rows whose applicability cannot
             be tied to any such path receive a blocking calendar warning.
+        applicability_evidence: Optional per-filing-year evidence bound by
+            the composition root: each obligation's applicability is decided
+            on the profile as of its filing year and on the ledger's own
+            derivations for that year. A row whose profile answer and ledger
+            derivation disagree stays in the calendar and receives a blocking
+            calendar warning. ``None`` decides every year on ``profile``.
 
     A year inside the range with no registered deadline windows is
     treated as a "no data yet" state: that year contributes zero
@@ -1232,7 +1299,7 @@ def build_overview_calendar(
         operation=operation,
     )
     due_soon_days = deadline_engine.due_soon_days
-    entries, suppressed, coverage_surface_modelos = _entries_and_suppressed_from_schedules(
+    entries, suppressed, coverage_surface_modelos, disagreeing_modelos = _entries_and_suppressed_from_schedules(
         schedules,
         profile=profile,
         calendar_range=calendar_range,
@@ -1242,6 +1309,7 @@ def build_overview_calendar(
         today=today,
         due_soon_days=due_soon_days,
         operation=operation,
+        applicability_evidence=applicability_evidence,
     )
     entries.sort(
         key=lambda entry: (
@@ -1296,6 +1364,7 @@ def build_overview_calendar(
             + justificante_warnings
             + evidence_conflict_warnings
             + regime_incompatibility_warnings
+            + _calendar_applicability_disagreement_warnings(disagreeing_modelos)
         ),
         completeness=completeness,
         suppressed_entries=tuple(suppressed),

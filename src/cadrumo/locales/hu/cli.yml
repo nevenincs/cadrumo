@@ -3858,6 +3858,9 @@ cli:
       a profilt, vagy futtasd újra a hiányos profil felülbírálásával.
     verbose_help: Részletek és következő lépés megjelenítése, ha elérhető.
     warning:
+      applicability_evidence_disagreement: A profilban adott válaszod és a rögzített
+        számláid eltérnek abban, hogy ezek a kötelezettségek vonatkoznak-e rád; a
+        sorok láthatók maradnak, amíg a kettő közül az egyiket ki nem javítod.
       m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazandó, de a simplificado
         forfait számítási motor még nem elérhető; beadás előtt ellenőrizd az egyszerűsített
         rezsim rovatait.

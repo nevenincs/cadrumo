@@ -341,6 +341,8 @@ _AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE = "cli.overview.warning.aeat_evidence_co
 _M303_SIMPLIFICADO_FORFAIT_WARNING_CODE = "iva.regime.m303_simplificado_forfait_unavailable"
 _M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY = "cli.overview.warning.m303_simplificado_forfait_unavailable"
 _M303_SIMPLIFICADO_FORFAIT_ACTION_ID = "operator.modelo.describe"
+_APPLICABILITY_DISAGREEMENT_WARNING_CODE = "applicability.evidence_disagreement"
+_APPLICABILITY_DISAGREEMENT_WARNING_LOCALE_KEY = "cli.overview.warning.applicability_evidence_disagreement"
 
 
 def calendar_applicability_profile_keys_for_modelo(
@@ -406,6 +408,27 @@ def _calendar_censo_reconciliation_warnings(
             message=_CENSO_ENROLMENT_WARNING_MESSAGE,
             fix_action=declare_next_action(_CENSO_ENROLMENT_ACTION_ID),
             affected_modelos=tuple(sorted(affected_modelos)),
+        ),
+    )
+
+
+def _calendar_applicability_disagreement_warnings(affected_modelos: Iterable[str]) -> tuple[CalendarWarning, ...]:
+    """Return the warning for obligations whose profile answer and ledger derivation disagree.
+
+    The rows stay in the calendar; this warning is what keeps the contradiction
+    from passing as either source's answer. The remedy is a profile edit
+    because the profile answer is what the operator states, though correcting
+    the ledger resolves it as well.
+    """
+    modelos = tuple(sorted(set(affected_modelos)))
+    if not modelos:
+        return ()
+    return (
+        CalendarWarning(
+            code=_APPLICABILITY_DISAGREEMENT_WARNING_CODE,
+            message=_APPLICABILITY_DISAGREEMENT_WARNING_LOCALE_KEY,
+            fix_action=declare_next_action(_PROFILE_EDIT_ACTION_ID),
+            affected_modelos=modelos,
         ),
     )
 
@@ -630,6 +653,7 @@ def _build_completeness_and_warnings(
 __all__ = [
     "_build_completeness_and_warnings",
     "_calendar_aeat_evidence_conflict_warnings",
+    "_calendar_applicability_disagreement_warnings",
     "_calendar_censo_enrolment_state",
     "_calendar_censo_reconciliation_warnings",
     "_calendar_regime_incompatibility_warnings",
