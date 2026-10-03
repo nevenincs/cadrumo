@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:62b89dd9312e27bdc3bbce53f43f64e7eae121f36152c2bae0e1cb45a666371c'
+body_hash: 'sha256:3a884221ddf446fad7682691a764df947ecff619ed993db2ae041d4570c5f3dc'
 ---
 
 # `modelo-347-fileability` plan
@@ -41,10 +41,10 @@ Ground the 347 obligation in the BOE texts and compute the 3.005,06 floor per co
 Produce the type 2 rows on the live path through the existing row builder and render a byte-correct fichero: signed amounts, type 1 totals, per-row flags, inmueble and non-resident records.
 
 - [x] `P02.S03` - Return the 347 type 2 rows on the live path through resolve_invoice_binding_row_values and the existing row_binding_values channel, route operator rows through the same channel, delete Modelo347ContraparteRow and validate_m347_threshold, and confine the 349 re-summing loop; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/domain/modelos/row_models.py, src/cadrumo/application/modelo/calculate_input.py, src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`.
-- [ ] `P02.S04` - Render every 347 signed amount through the generalised signed_monetary_composite grammar, folding the m180-only composite branch into it, and regenerate both export editions; `dev/registry/pipeline/render_profile_rules.py, dev/registry/pipeline/render_profile_authority.py, dev/registry/render_profiles/modelo_347/, src/cadrumo/_data/registry/aeat/modelos/347/revisions/*/export/`.
-- [ ] `P02.S05` - Feed type 1 positions 136-144 and 145-160 from export fields naming the existing summary bindings, delete the two manual casillas and move their consumers to the bindings; `dev/registry/mappings/modelo_347/, src/cadrumo/_data/registry/aeat/modelos/347/revisions/`.
+- [x] `P02.S04` - Render every 347 signed amount through the generalised signed_monetary_composite grammar, folding the m180-only composite branch into it, and regenerate both export editions; `dev/registry/pipeline/render_profile_rules.py, dev/registry/pipeline/render_profile_authority.py, dev/registry/render_profiles/modelo_347/, src/cadrumo/_data/registry/aeat/modelos/347/revisions/*/export/`.
+- [x] `P02.S05` - Feed type 1 positions 136-144 and 145-160 from export fields naming the existing summary bindings, delete the two manual casillas and move their consumers to the bindings; `dev/registry/mappings/modelo_347/, src/cadrumo/_data/registry/aeat/modelos/347/revisions/`.
 - [ ] `P02.S06` - Extend the contraparte row builder key with typed per-row facts for metalico, criterio de caja, inversion del sujeto pasivo, seguro, arrendamiento and transmisiones, and render casilla fields per row; `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py, src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/application/filing/`.
-- [ ] `P02.S07` - Make the inmueble record repeat from the referencia catastral family and project non-resident and EU-operator rows as the diseno requires; `dev/registry/mappings/modelo_347/, src/cadrumo/domain/calculations/registry/detail_record_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
+- [x] `P02.S07` - Make the inmueble record repeat from the referencia catastral family and project non-resident and EU-operator rows as the diseno requires; `dev/registry/mappings/modelo_347/, src/cadrumo/domain/calculations/registry/detail_record_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
 - [ ] `P02.S15` - Emit no 347 inmueble record when no business-premises lease data exists and advise landlords with leases, through the renderer's existing record-suppression rule; `src/cadrumo/application/filing/, dev/registry/mappings/modelo_347/`.
 - [ ] `P02.S16` - Add a landlord-lease data family on issued rental invoices (tenant, referencia catastral, situacion) and feed the repeating 347 inmueble record and type 1 positions 161 and 170 from it; `src/cadrumo/application/invoices/, src/cadrumo/domain/calculations/registry/detail_record_bindings.py, dev/registry/mappings/modelo_347/`.
 

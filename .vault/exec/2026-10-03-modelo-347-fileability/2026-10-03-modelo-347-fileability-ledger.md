@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0781aabe19a84ad7bacfff7be2bb75e7bc26be994a2e07026e913d9a5e1b9d0'
+body_hash: 'sha256:04a3ecd3ee7de6846c3df48220b750d2b373387a6937eaab51dac6047ee24e0e'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -155,6 +155,53 @@ related:
 - `S09` `verify:` `pytest 347 resolver suites in HEAD export with scratch authority` -> `pass`
 - `S09` `verify:` `ruff check` -> `pass`
 - `S09` `verify:` `ty check` -> `pass`
+- `S04` `M` `dev/registry/mappings/modelo_347/2011/0001-records.toml`
+- `S04` `M` `dev/registry/mappings/modelo_347/2011/0002-declarante.toml`
+- `S04` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S04` `M` `dev/registry/mappings/modelo_347/2025/0002-declarante.toml`
+- `S04` `M` `dev/registry/mappings/modelo_347/2025/0003-declarado.toml`
+- `S04` `M` `dev/registry/pipeline/export_field_render_profile_derivation.py`
+- `S04` `M` `dev/registry/pipeline/render_profile_authority.py`
+- `S04` `M` `dev/registry/pipeline/render_profile_model.py`
+- `S04` `M` `dev/registry/pipeline/source_defects.py`
+- `S04` `M` `dev/registry/pipeline/tests/test_signed_composite_render_profile.py`
+- `S04` `M` `dev/registry/render_profiles/README.md`
+- `S04` `M` `dev/registry/render_profiles/modelo_347/2011/0001-numeric-representation.toml`
+- `S04` `A` `dev/registry/render_profiles/modelo_347/2011/0002-signed-composite.toml`
+- `S04` `M` `dev/registry/render_profiles/modelo_347/2025/0001-numeric-representation.toml`
+- `S04` `A` `dev/registry/render_profiles/modelo_347/2025/0002-signed-composite.toml`
+- `S04` `A` `dev/registry/tests/test_modelo_347_declarado_export.py`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/bindings/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/completeness_manifest/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/constructs/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0001-record-m347-declarante.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/verification_expectations/0001-declarations.toml`
+- `S04` `A` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/bindings/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0001-record-m347-declarante.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0003-record-m347-inmueble.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/revision.toml`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/347.yml`
+- `S04` `M` `src/cadrumo/locales/en/modelo/schema/347.yml`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/347.yml`
+- `S04` `M` `src/cadrumo/locales/hu/modelo/schema/347.yml`
+- `S04` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S04` `verify:` `form_layout generate --check` -> `pass`
+- `S04` `verify:` `pytest 347 export suites` -> `pass`
+- `S05` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S05` `verify:` `form_layout generate --check` -> `pass`
+- `S05` `verify:` `pytest 347 export suites` -> `pass`
+- `S07` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S07` `verify:` `form_layout generate --check` -> `pass`
+- `S07` `verify:` `pytest 347 export suites` -> `pass`
 
 ## Notes
 
@@ -167,3 +214,6 @@ related:
 - `S02` commit 73cee8a07f; published-authority tests await the publication from c5546a23a5
 - `S08` commit bf204de53a; published-authority tests await the publication from c5546a23a5
 - `S09` commit c5546a23a5; published-authority tests await the publication from c5546a23a5
+- `S04` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
+- `S05` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
+- `S07` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
