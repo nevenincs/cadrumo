@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f1ec7ba45cd5f4fda67be670dc3ab30fcd05befd023647d3814631d204390877'
+body_hash: 'sha256:ee7cf9a71409349e4caaed3b6ba4727765f5652e394910ff728f8906f48e4c6a'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -162,3 +162,7 @@ descriptor is not carried forward. That is the cost of converging, and it is pai
 
 Standalone executables and a community Windows package remain unbuilt. They stop being
 declared as pending tiers in product data and become ordinary future work.
+
+## 2026-10-04 installation scope amendment
+
+The accepted 2026-10-04 application-distribution ADR authorizes native application packages as an additional delivery channel. The PyPI-first CLI pipeline and its release ownership remain unchanged; the earlier standalone deferral no longer excludes the separately authorized native application installation work.

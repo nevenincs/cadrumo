@@ -7,7 +7,11 @@ modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:9b3ee0efccc7af866b49db70b77d91155b72b11e425e8615dddbd6106a4c0d90'
 related:
-  - "[[2026-10-04-application-distribution-research]]"
+  - '[[2026-10-04-application-distribution-research]]'
+  - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
+  - '[[2026-09-02-cli-distribution-consolidation-adr]]'
+  - '[[2026-07-13-product-rename-adr]]'
+  - '[[2026-10-03-runtime-without-service-manager-adr]]'
 ---
 # `application-distribution` adr: canonical identity and native installation | (**status:** `accepted`)
 

@@ -355,5 +355,47 @@ it does not claim containment of every future application workflow.
 Linux needs its format, libc floor and transitive ELF loader proof. macOS needs
 native compilation, architecture and signing decisions, dyld proof and compatible
 wheels (the current all-platform exporter cannot obtain the pinned pikepdf wheel).
-Neither platform has an implementation here. Rebuilding CPython itself from source,
+Neither platform has a native interpreter backend here. Rebuilding CPython itself from source,
 release signing and sealed cross-platform cohort promotion are also later work.
+
+## Native distribution definitions
+
+`native/cmake/distribution` packages an already assembled payload. Its shared
+identity projection covers Windows x64, Linux x64/ARM64 and macOS ARM64. The
+application ID is `md.neve.cadrumo`; the preview channel adds `.preview`. Upgrade
+UUIDs are deterministic per application/channel, target and machine installation
+scope. They do not change with the version. MSI product/package codes retain their
+separate release lifetimes. Publisher, license, version and names come from the
+existing Python product and project metadata owners.
+
+Configure with CMake 4.4.3, `-S native/cmake/distribution`, a fresh `-B` directory,
+`-DCADRUMO_TARGET=<canonical-target>` and `-DCADRUMO_PAYLOAD=<absolute-payload>`.
+Set `CADRUMO_DEV_PYTHON` explicitly when the checkout's development interpreter is
+not available. `CADRUMO_CHANNEL` selects `stable` or `preview`. An optional
+`CADRUMO_DESKTOP_EXECUTABLE` must name an actual file in the hashed payload
+inventory; only that entrypoint receives desktop registration. macOS requires a
+root-level desktop executable. Its runtime backend and WebView containment proof
+must be completed before a macOS application release.
+
+CPack definitions select MSI/ZIP on Windows, DEB/RPM/TGZ on Linux, and DMG/TGZ on
+macOS. Run `cpack --config <build>/CPackConfig.cmake -G <generator>` on the native
+packaging host. WiX .NET tooling and its matching UI extension are prerequisites
+for MSI; current WiX 7 also requires operator acceptance of its OSMF EULA. CPack's
+`CPACK_WIX_VERSION=4` selects the WiX XML/tool interface, not a claim that WiX 4
+is the latest release. Set `CPACK_WIX_PRODUCT_ICON` to the generated product ICO
+when producing the Windows installer. DEB requires dpkg tooling; RPM requires
+rpmbuild. Signing, notarization and native launch/upgrade tests remain release gates.
+
+MSI installs under Program Files/CADRUMO/app and owns Start menu/uninstall
+registration. Linux installs under `/opt/cadrumo` with desktop/icon registrations
+under `/usr/share`. Preview uses separate names. macOS packages a CADRUMO.app
+bundle for the Applications folder. Runtime storage remains owned by Settings;
+these definitions add no services, scheduled tasks or automatic launch.
+
+For development, `cmake --install <build> --prefix <absolute-test-prefix>` uses
+relative installation definitions. Set `CADRUMO_UNINSTALL_PREFIX` to that exact
+prefix, then build the `uninstall` target. The external `installation.json`
+receipt binds removal to the installed package manifest and unchanged file hashes.
+Changed files and unowned content remain. Symlink/junction traversal and filesystem
+root removal are refused. Native package managers own uninstall for system packages;
+the prefix helper is for isolated development installations.

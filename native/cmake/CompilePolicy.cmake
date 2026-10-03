@@ -1,5 +1,9 @@
 include(CheckCCompilerFlag)
 include(CheckLinkerFlag)
+if(NOT MSVC)
+  include(CheckPIESupported)
+  check_pie_supported(LANGUAGES C)
+endif()
 
 function(cadrumo_compile_policy target)
   set_target_properties(${target} PROPERTIES

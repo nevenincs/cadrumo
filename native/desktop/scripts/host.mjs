@@ -8,7 +8,7 @@ const binaryDir = process.env.CADRUMO_CMAKE_BINARY_DIR;
 if (!binaryDir || !isAbsolute(binaryDir))
   throw new Error("Select an absolute CMake build directory.");
 const identity = JSON.parse(
-  readFileSync(resolve(binaryDir, "desktop/frontend/identity.json"), "utf8"),
+  readFileSync(resolve(binaryDir, "generated/identity.json"), "utf8"),
 );
 const cli = resolve(desktop, "frontend/node_modules/@tauri-apps/cli/tauri.js");
 const icons = resolve(binaryDir, "desktop/icons");
@@ -70,8 +70,9 @@ run([
   icons,
 ]);
 const config = {
-  productName: identity.display_name,
-  identifier: `dev.${identity.plugin_identifier}.desktop.preview`,
+  productName: identity.name,
+  identifier: identity.application_id,
+  version: identity.version,
   build: { frontendDist: resolve(binaryDir, "desktop/frontend") },
   bundle: { icon: [resolve(icons, "icon.ico"), resolve(icons, "icon.png")] },
 };
