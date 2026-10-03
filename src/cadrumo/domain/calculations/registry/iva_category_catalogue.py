@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
@@ -32,6 +33,20 @@ _ORDER_KEY = "category.order"
 _VALUE_PREFIX = "category."
 _PROJECTION_PREFIX = "category_projection."
 _REASON_PREFIX = "category_reason."
+_EXCLUSION_PREFIX = "category_exclusion."
+
+
+class IvaCategoryExclusion(StrEnum):
+    """How one declaration treats the operations of one IVA category.
+
+    ``EXCLUDED`` is an exclusion the governing text settles: the operations are
+    not declared. ``UNSETTLED`` marks a category whose exclusion is arguable
+    from the text: its operations stay declared and the declaring resolver
+    discloses the reading rather than dropping them.
+    """
+
+    EXCLUDED = "excluded"
+    UNSETTLED = "unsettled"
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +68,7 @@ class IvaCategoryCatalogue:
     operation_types: Mapping[str, str]
     operation_type_categories: Mapping[str, str]
     untdid_categories: Mapping[str, str]
+    exclusions: Mapping[tuple[str, IvaCategory], IvaCategoryExclusion]
 
     @property
     def all_categories(self) -> tuple[IvaCategory, ...]:
@@ -120,6 +136,10 @@ class IvaCategoryCatalogue:
         """Project an EN 16931/UNTDID 5305 code through registry data."""
         token = self.untdid_categories.get(code)
         return None if not token else self.require(token)
+
+    def exclusion(self, modelo: str, token: object) -> IvaCategoryExclusion | None:
+        """Return how ``modelo`` treats operations of one category, or ``None`` when it declares them."""
+        return self.exclusions.get((modelo, self.require(token)))
 
 
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
@@ -204,6 +224,30 @@ def _category_operation_types(entries: Mapping[str, str]) -> tuple[dict[str, str
     return operation_types, operation_type_categories, untdid_categories
 
 
+def _category_exclusions(
+    entries: Mapping[str, str],
+    declared: frozenset[IvaCategory],
+) -> dict[tuple[str, IvaCategory], IvaCategoryExclusion]:
+    """Read ``category_exclusion.<modelo>.<category>`` entries into typed verdicts.
+
+    Refuses an entry that names no modelo, names a category the catalogue does
+    not declare, or carries a verdict outside :class:`IvaCategoryExclusion`.
+    """
+    exclusions: dict[tuple[str, IvaCategory], IvaCategoryExclusion] = {}
+    for key, value in entries.items():
+        if not key.startswith(_EXCLUSION_PREFIX):
+            continue
+        modelo, _, raw_token = key.removeprefix(_EXCLUSION_PREFIX).partition(".")
+        token = IvaCategory(raw_token)
+        if not modelo or token not in declared:
+            raise RegistryValidationError(f"IVA category exclusion {key!r} names no modelo or an undeclared category")
+        try:
+            exclusions[(modelo, token)] = IvaCategoryExclusion(value.strip())
+        except ValueError as exc:
+            raise RegistryValidationError(f"IVA category exclusion {key!r} declares unknown verdict {value!r}") from exc
+    return exclusions
+
+
 def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
     definitions, declared = _category_definitions(entries)
     projections = _category_projections(entries, declared)
@@ -218,6 +262,7 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
         operation_types=MappingProxyType(operation_types),
         operation_type_categories=MappingProxyType(operation_type_categories),
         untdid_categories=MappingProxyType(untdid_categories),
+        exclusions=MappingProxyType(_category_exclusions(entries, declared)),
     )
 
 
@@ -277,6 +322,7 @@ def registry_category_projection(
 __all__ = [
     "IvaCategoryCatalogue",
     "IvaCategoryDefinition",
+    "IvaCategoryExclusion",
     "registry_category_projection",
     "require_iva_category",
     "resolve_iva_category_catalogue",

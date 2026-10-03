@@ -863,17 +863,17 @@ def test_capability_parity_m347_excludes_the_intracommunity_operations(
 def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """A non-resident counterparty under an ordinary operation REACHES M347.
+    """A non-resident counterparty under an ordinary SERVICE operation REACHES M347.
 
-    RD 1065/2007 art. 33.2 is a closed exclusion list whose only
+    RD 1065/2007 art. 33.2 is a closed exclusion list whose
     residency-adjacent items are the filer's own foreign permanent
-    establishment and operations reported through a coincident informativa --
-    neither covers a genuinely non-resident, non-recapitulativa counterparty.
-    A US customer under an ordinary export sale (zero-rated, not intra-EU) is
-    exactly that case: it must count toward the M347 declarante summary, not
-    vanish silently.
+    establishment, operations reported through a coincident informativa and,
+    in letter g, the imports and exports of GOODS -- none covers a service
+    rendered to a genuinely non-resident, non-recapitulativa counterparty. A
+    US customer of a service not subject to Spanish IVA is exactly that case:
+    it must count toward the M347 declarante summary, not vanish silently.
     """
-    export_sale = _invoice(
+    service_sale = _invoice(
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-US-2026-001",
@@ -882,10 +882,10 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
         counterparty_name="Acme Imports Inc",
         counterparty_country="US",
         base_total=Decimal("4000.00"),
-        iva_category=IvaCategory("export_third_country_zero_rated"),
+        iva_category=IvaCategory("operacion_no_sujeta"),
     )
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(build_invoice_catalogue((export_sale,)))
+    repository.save(build_invoice_catalogue((service_sale,)))
 
     resolution = _resolver(repository).resolve(
         CalculationSourceContext(
@@ -899,6 +899,131 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
 
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4000.00")
+
+
+def _m347_2026_context(bucket_id: str) -> CalculationSourceContext:
+    return CalculationSourceContext(
+        bucket_id=bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+
+
+@pytest.mark.parametrize(
+    ("kind", "category"),
+    [
+        pytest.param(InvoiceKind.ISSUED, "export_third_country_zero_rated", id="goods-export"),
+        pytest.param(InvoiceKind.RECEIVED, "import_third_country", id="goods-import"),
+    ],
+)
+def test_m347_excludes_the_imports_and_exports_of_goods(
+    secure_profile: TestRuntimeProfile,
+    kind: InvoiceKind,
+    category: str,
+) -> None:
+    """Art. 33.2.g: "Las importaciones y exportaciones de mercancías" are not declared.
+
+    The same US counterparty and amount that a service declares above: only the
+    goods category differs, so the exclusion reads the operation, never the
+    residence.
+    """
+    goods = _invoice(
+        bucket_id=None,
+        kind=kind,
+        invoice_number=f"M347-GOODS-{kind.value.upper()}-2026-001",
+        issued_at=date(2026, 4, 1),
+        counterparty_tax_id="US000000001",
+        counterparty_name="Acme Imports Inc",
+        counterparty_country="US",
+        base_total=Decimal("4000.00"),
+        iva_category=IvaCategory(category),
+    )
+
+    resolution = _public_resolution((goods,), context=_m347_2026_context(secure_profile.bucket_id))
+
+    assert resolution.provenance == ()
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("0")
+    assert _unsettled_reading_refs(resolution) == []
+
+
+def test_m347_declares_an_operation_assimilated_to_an_export_and_discloses_the_open_exclusion(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """An operation assimilated to an export may be goods or services; it stays declared with an advisory."""
+    assimilated = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-ASIMILADA-2026-001",
+        issued_at=date(2026, 4, 1),
+        counterparty_tax_id="US000000001",
+        counterparty_name="Acme Shipping Inc",
+        counterparty_country="US",
+        base_total=Decimal("4000.00"),
+        iva_category=IvaCategory("export_assimilated_zero_rated"),
+    )
+
+    resolution = _public_resolution((assimilated,), context=_m347_2026_context(secure_profile.bucket_id))
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert _unsettled_reading_refs(resolution) == ["m347-exclusion:iva-category"]
+    advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
+    assert "M347-ASIMILADA-2026-001" in advisory.message
+    assert advisory.asserted_legal_refs == ("rd-1065-2007:art-33",)
+
+
+def _withheld_invoice(bucket_id: str, *, kind: InvoiceKind, invoice_number: str) -> Invoice:
+    return _domestic_invoice(
+        bucket_id=bucket_id,
+        kind=kind,
+        invoice_number=invoice_number,
+        issued_at=date(2026, 3, 10),
+        counterparty_tax_id="B12345674",
+        counterparty_name="Profesional Retenido SL",
+        base_total=Decimal("3500.00"),
+        iva_total=Decimal("735.00"),
+    ).model_copy(update={"retention_rate": Decimal("0.15"), "retention_amount": Decimal("525.00")})
+
+
+def test_m347_excludes_a_received_invoice_whose_withholding_the_filer_declares_annually(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Art. 33.2.i with RIRPF art. 108.2: the payer reports the operation in its withholding summary.
+
+    The same received invoice without the withholding is declared, so what
+    excludes it is the withholding alone.
+    """
+    withheld = _withheld_invoice(
+        secure_profile.bucket_id, kind=InvoiceKind.RECEIVED, invoice_number="M347-RETENIDA-REC-2026-001"
+    )
+    unwithheld = withheld.model_copy(update={"retention_rate": None, "retention_amount": None})
+    context = _m347_2026_context(secure_profile.bucket_id)
+
+    excluded = _public_resolution((withheld,), context=context)
+    declared = _public_resolution((unwithheld,), context=context)
+
+    assert excluded.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
+    assert _unsettled_reading_refs(excluded) == []
+    assert declared.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert declared.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4235.00")
+
+
+def test_m347_declares_an_issued_invoice_withheld_by_the_customer_and_discloses_it(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The withheld party has no withholding summary of its own, so its side stays declared and disclosed."""
+    withheld = _withheld_invoice(
+        secure_profile.bucket_id, kind=InvoiceKind.ISSUED, invoice_number="M347-RETENIDA-EMI-2026-001"
+    )
+
+    resolution = _public_resolution((withheld,), context=_m347_2026_context(secure_profile.bucket_id))
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert _unsettled_reading_refs(resolution) == ["m347-exclusion:withheld-issued-invoice"]
+    advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
+    assert advisory.asserted_legal_refs == ("rd-1065-2007:art-33", "rd-439-2007:art-108")
 
 
 def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not(

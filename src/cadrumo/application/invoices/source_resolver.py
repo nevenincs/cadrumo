@@ -46,7 +46,11 @@ from ...domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from ...domain.calculations.registry.iva_category_catalogue import require_iva_category, resolve_iva_category_catalogue
+from ...domain.calculations.registry.iva_category_catalogue import (
+    IvaCategoryExclusion,
+    require_iva_category,
+    resolve_iva_category_catalogue,
+)
 from ...domain.calculations.registry.m347_threshold import M347DeclarableSet, M347ThresholdBucket
 from ...domain.calculations.registry.third_party_declaration_roles import (
     resolve_third_party_declaration_role_catalogue,
@@ -242,6 +246,7 @@ def _invoice_resolution_from_observations(
         )
     diagnostics += _m347_role_fact_advisories(source_invoices, context=context, resolver_id=resolver_id)
     diagnostics += _m347_threshold_reading_advisories(observed_items, context=context, resolver_id=resolver_id)
+    diagnostics += _m347_exclusion_reading_advisories(observed_items, context=context, resolver_id=resolver_id)
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
@@ -799,6 +804,89 @@ def _m347_threshold_reading_advisories(
     return tuple(diagnostics)
 
 
+def _m347_unsettled_exclusion_invoice_numbers(declared: Sequence[Invoice]) -> list[str]:
+    return sorted(
+        invoice.invoice_number
+        for invoice in declared
+        if _m347_category_exclusion(invoice) is IvaCategoryExclusion.UNSETTLED
+    )
+
+
+def _m347_withheld_issued_invoice_numbers(declared: Sequence[Invoice]) -> list[str]:
+    return sorted(
+        invoice.invoice_number
+        for invoice in declared
+        if invoice.kind is InvoiceKind.ISSUED and _carries_withholding(invoice)
+    )
+
+
+def _m347_exclusion_reading_advisories(
+    observed_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Disclose the declared Modelo 347 operations whose art. 33.2 exclusion is arguable.
+
+    The counterpart of the exclusions :func:`_m347_invoice_observation`
+    applies: what the text settles is excluded there; what it leaves open is
+    declared and named here, one advisory per case rather than one per
+    invoice. The two open cases are an IVA category the catalogue marks
+    ``unsettled`` for Modelo 347 (an operation assimilated to an export, goods
+    or services by its facts), and an ISSUED invoice on which the customer
+    practised a withholding, which the customer reports but whose exclusion
+    from the withheld party's own declaration no text in the corpus states.
+    """
+    if context.modelo != Modelo("347").value:
+        return ()
+    declared = tuple(invoice for invoice, observation in observed_items if observation.operation_clave is not None)
+    unsettled = _m347_unsettled_exclusion_invoice_numbers(declared)
+    withheld = _m347_withheld_issued_invoice_numbers(declared)
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    if unsettled:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="unsettled_legal_reading",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-exclusion:iva-category",
+                message=(
+                    f"Modelo 347 declares the operations on invoices {', '.join(unsettled)}, whose IVA category "
+                    "the registry marks as an unsettled exclusion under RD 1065/2007 art. 33.2: letter g "
+                    "excludes the imports and exports of goods, and the category does not say whether these "
+                    f"operations are goods, so they are declared for ejercicio {context.filing_year}."
+                ),
+                remedy=(
+                    "Check whether these operations are imports or exports of goods; if they are, record the "
+                    "export or import category on the invoice so Modelo 347 leaves them out."
+                ),
+                asserted_legal_refs=_M347_THRESHOLD_LEGAL_REFS,
+            ),
+        )
+    if withheld:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="unsettled_legal_reading",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-exclusion:withheld-issued-invoice",
+                message=(
+                    f"Modelo 347 declares the issued invoices {', '.join(withheld)}, on which the customer "
+                    "practised a withholding. The customer reports it in its annual withholding summary (RIRPF "
+                    "art. 108.2) and art. 33.2.i excludes operations reported in a coincident declaration, but "
+                    f"whether that leaves them out of your own declaration is not settled, so they are declared "
+                    f"for ejercicio {context.filing_year}."
+                ),
+                remedy=(
+                    "Check current AEAT guidance on operations subject to withholding before filing; the "
+                    "declarado records shown include them."
+                ),
+                asserted_legal_refs=(*_M347_THRESHOLD_LEGAL_REFS, "rd-439-2007:art-108"),
+            ),
+        )
+    return tuple(diagnostics)
+
+
 def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset[BindingSourceKind]:
     declared_sources = frozenset(
         binding.source for binding in context.revision.bindings if binding.source in _OWNED_SOURCES
@@ -931,23 +1019,50 @@ def _m347_filer_declaration_roles(bucket_id: BucketId) -> frozenset[ThirdPartyDe
         return projection_for_taxpayer(record, schema=profile_decode_context.schema).declaration_roles
 
 
+def _m347_category_exclusion(invoice: Invoice) -> IvaCategoryExclusion | None:
+    """How Modelo 347 treats this invoice's IVA category, per the catalogue's exclusion keys."""
+    if invoice.iva_category is None:
+        return None
+    return resolve_iva_category_catalogue().exclusion(Modelo("347").value, invoice.iva_category)
+
+
+def _carries_withholding(invoice: Invoice) -> bool:
+    """Whether the invoice records an IRPF withholding actually practised on it."""
+    return invoice.retention_amount is not None and invoice.retention_amount > 0
+
+
 def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
     """Build the M347 observation for one invoice, or ``None`` if excluded.
 
-    Declares a counterparty regardless of residency: RD 1065/2007 art. 33.2 is
-    a CLOSED exclusion list, and a counterparty's non-residency is not one of
+    This is the single point where RD 1065/2007 art. 33.2 excludes an
+    operation. Declares a counterparty regardless of residency: art. 33.2 is a
+    CLOSED exclusion list, and a counterparty's non-residency is not one of
     its nine enumerated items. The diseño de registro's own `pais-codigo`
     field (a "XX" alphabetic slot for a non-established non-resident
     declarado) is direct evidence AEAT expects some M347 counterparties to be
-    non-resident.
+    non-resident. What the list excludes, it excludes by the operation:
 
-    The one residency-shaped exclusion the article DOES state is art.
-    33.2.i): an operation already reported through a coincident periodic
-    informativa. For an invoice, that informativa is Modelo 349's
-    intracommunity recapitulativa, so an operation `_intracommunity_clave`
-    classifies as intracommunity is excluded here and routes to M349 instead
-    -- the same classification M349's own branch of this resolver uses, never
-    a bare country comparison.
+    - art. 33.2.i), an operation already reported through a coincident
+      periodic informativa: for an invoice, Modelo 349's intracommunity
+      recapitulativa, so an operation `_intracommunity_clave` classifies as
+      intracommunity routes to M349 instead -- the same classification M349's
+      own branch of this resolver uses, never a bare country comparison;
+    - art. 33.2.g), "Las importaciones y exportaciones de mercancías", read
+      off the IVA category catalogue's Modelo 347 exclusion keys so that the
+      goods exports and imports drop out while services with a non-resident
+      stay declared; a category the catalogue marks unsettled stays declared
+      and is disclosed by :func:`_m347_exclusion_reading_advisories`;
+    - art. 33.2.i) again for a RECEIVED invoice carrying a withholding: the
+      payer declares it in the "declaración anual de las retenciones e
+      ingresos a cuenta efectuados" of RIRPF art. 108.2, a periodic
+      information duty of coincident content. The withheld party's own side
+      has no such declaration of its own, so an ISSUED invoice with a
+      withholding stays declared and is disclosed instead.
+
+    Letters c, e, f and h turn on facts the invoice does not carry (a
+    gratuitous title, stamps or postage, the social entity's exempt sector,
+    a shipment to or from Canarias, Ceuta or Melilla), so nothing here
+    decides them.
 
     Clave C additionally needs the filer's own
     :class:`ThirdPartyDeclarationRole` membership, loaded here via
@@ -959,6 +1074,10 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
     ``party_legal_name`` are substituted, not merely the clave.
     """
     if _intracommunity_clave(invoice) is not None:
+        return None
+    if _m347_category_exclusion(invoice) is IvaCategoryExclusion.EXCLUDED:
+        return None
+    if invoice.kind is InvoiceKind.RECEIVED and _carries_withholding(invoice):
         return None
     if invoice.counterparty_tax_id is None:
         # Same reason as the general builder above: M347 declares a third party

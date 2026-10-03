@@ -273,14 +273,20 @@ los obligados del art 31.3). Es la base reglamentaria de las claves A/B (umbral 
 y C (cobros por cuenta de terceros) del diseno de registro del Modelo 347. El parrafo \
 segundo del apartado 1 computa por separado las entregas y las adquisiciones, de modo que el \
 umbral se juzga por contraparte y sentido de la operacion; el apartado 3 relaciona las \
-subvenciones satisfechas por las Administraciones Publicas cualquiera que sea su importe. Texto \
-verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html.\
+subvenciones satisfechas por las Administraciones Publicas cualquiera que sea su importe. Del \
+apartado 2 se aplican la letra g), que excluye las importaciones y exportaciones de mercancias \
+cualquiera que sea la residencia de la contraparte, y la letra i), que excluye las operaciones ya \
+incluidas en otra declaracion periodica de contenido coincidente (Modelo 349, y el resumen anual de \
+retenciones del art 108.2 RIRPF para quien practica la retencion). Texto verificado contra el \
+consolidado bundled corpus/normatives/html/rd-1065-2007.html.\
 """
 required_text = [
     "hayan superado la cifra de 3.005,06 euros durante el año natural",
     "se computarán de forma separada las entregas y las adquisiciones de bienes y servicios",
     "a quienes hayan satisfecho subvenciones, auxilios o ayudas, cualquiera que sea su importe",
     "haya superado la cifra de 300,51 euros",
+    "Las importaciones y exportaciones de mercancías",
+    "En general, todas aquellas operaciones respecto de las que exista una obligación periódica de suministro de información",
 ]
 
 [legal."rd-1065-2007:art-34"]
