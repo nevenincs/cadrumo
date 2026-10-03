@@ -100,7 +100,7 @@ from ....application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.revision_persistence import persist_filed_revision
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.aggregation import (
@@ -666,7 +666,7 @@ def _seed_and_file_m111_1t(
     )
     result = _calculate_periodic(secure_objects, modelo="111", period="1T", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -676,7 +676,7 @@ def _seed_and_file_m111_1t(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert report.granted_verificado_completo is True, report.findings
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID)
@@ -784,7 +784,7 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
 
     result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -794,7 +794,7 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_COUNT]) == Decimal("1")
     assert report.granted_verificado_completo is False
@@ -843,7 +843,7 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -853,7 +853,7 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is True, report.findings
     blocking_cross_period = tuple(
@@ -889,7 +889,7 @@ def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
 
     result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -899,7 +899,7 @@ def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is False
     missing = {

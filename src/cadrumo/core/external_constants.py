@@ -128,6 +128,11 @@ class AeatSedePathSection(_Frozen):
     notificaciones: str
     iva_compensation_wallet: str
     censal_datos: str
+    censal_actividades_entry: str
+    censal_actividades: str
+    censal_locales: str
+    censal_situacion_tributaria: str
+    censal_obligaciones: str
 
 
 class AeatClaveMovilSurface(_Frozen):

@@ -1177,28 +1177,7 @@ def borrow_profile_session_key(
                 )
                 if refusal is not None:
                     return refusal
-                try:
-                    key = _load_acceleration_secret(profile_id=profile_id, session_id=record.session_id)
-                except KeyringUnavailableError:
-                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
-                if key is None:
-                    _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
-                    return _refusal(ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING, record)
-                borrowed = bytearray(key)
-                del key
-                try:
-                    dek = _crypto.unwrap_profile_session_dek(session_key=bytes(borrowed), record=record)
-                except DecryptionError:
-                    _zeroise(borrowed)
-                    if not _discard_known_record(path=path, payload=payload, record=record):
-                        return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
-                    return _refusal(ProfileSessionRefusalReason.TAMPERED, record)
-                except BaseException:
-                    _zeroise(borrowed)
-                    raise
-                else:
-                    _zeroise(dek)
-                return ProfileSessionResumeOutcome(resumed=True, record=record), borrowed
+                return _borrow_validated_receipt_key(path, payload, record, profile_id)
     except (ProfileCustodyRecordError, StorageValidationError, ValueError, ValidationError):
         return _refusal(ProfileSessionRefusalReason.MALFORMED)
 
@@ -1329,3 +1308,31 @@ __all__ = [
     "resume_profile_session",
     "resume_profile_session_with_key",
 ]
+
+
+def _borrow_validated_receipt_key(
+    path: Path, payload: bytes, record: _crypto.PersistedProfileSession, profile_id: UUID
+) -> tuple[ProfileSessionResumeOutcome, bytearray | None]:
+    """Borrow only a verified wrap key while both original receipt locks remain held."""
+    try:
+        key = _load_acceleration_secret(profile_id=profile_id, session_id=record.session_id)
+    except KeyringUnavailableError:
+        return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
+    if key is None:
+        _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
+        return _refusal(ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING, record)
+    borrowed = bytearray(key)
+    del key
+    try:
+        dek = _crypto.unwrap_profile_session_dek(session_key=bytes(borrowed), record=record)
+    except DecryptionError:
+        _zeroise(borrowed)
+        if not _discard_known_record(path=path, payload=payload, record=record):
+            return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
+        return _refusal(ProfileSessionRefusalReason.TAMPERED, record)
+    except BaseException:
+        _zeroise(borrowed)
+        raise
+    else:
+        _zeroise(dek)
+    return ProfileSessionResumeOutcome(resumed=True, record=record), borrowed

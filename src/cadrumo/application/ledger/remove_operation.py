@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
 from typing import Annotated
 from uuid import UUID
 
@@ -21,21 +20,17 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPortsFactory
+from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_lifecycle import remove_manual_transaction
 from .id_resolution import resolve_transaction_id
 from .models import LedgerRemovalBlocker, LedgerTransactionRemovalReport
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 
 LEDGER_REMOVE_OPERATION_DEFINITION_ID = "ledger.remove"
 LEDGER_REMOVE_PHASE = "ledger.remove"
@@ -154,15 +149,7 @@ class LedgerRemoveExecutor:
         def remove(*, dry_run: bool) -> LedgerTransactionRemovalReport:
             operation: PinnedAuthorityOperation = context.authority_operation
             ports = self._ports_factory(bucket_id=bucket_id, operation=operation)
-            if ports.operation is not operation or ports.transaction_repository.bucket_id != bucket_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            for repository in (
-                ports.invoice_repository,
-                ports.work_unit_repository,
-                ports.calculation_repository,
-            ):
-                if getattr(repository, "bucket_id", None) != bucket_id:
-                    raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
             catalogue = ports.transaction_repository.load()
             transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
             return remove_manual_transaction(
@@ -207,19 +194,13 @@ class LedgerRemoveExecutor:
 
 def build_ledger_remove_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
     """Declare durable, exact-profile deletion with a bounded secure receipt."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
         request_type=LedgerRemoveRequest,
         result_type=LedgerRemoveOperationResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerRemoveRequest,
-            executor_type=LedgerRemoveExecutor,
-            build=lambda: LedgerRemoveExecutor(ports_factory),
-        ),
-        phase_codes=(LEDGER_REMOVE_PHASE,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerRemoveExecutor,
+        build=lambda: LedgerRemoveExecutor(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -239,18 +220,8 @@ def resolve_ledger_remove_access(
         request.payload, LedgerRemoveRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
-    )
-    if request.payload.dry_run:
-        return resolved
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
+    resolve = resolve_ledger_read_access if request.payload.dry_run else resolve_ledger_commit_access
+    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_remove_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

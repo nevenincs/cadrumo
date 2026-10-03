@@ -13,7 +13,7 @@ import typer
 from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.models import ManualLedgerTransactionPatch
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
-from ...application.ledger.update_operation import (
+from ...application.ledger.update_contracts import (
     LEDGER_UPDATE_OPERATION_DEFINITION_ID,
     LEDGER_UPDATE_VALIDATION_REFUSAL_CODE,
     LedgerUpdateOperationResult,

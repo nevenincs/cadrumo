@@ -167,8 +167,6 @@ from ..application.ledger.check_operation import build_ledger_check_definition, 
 from ..application.ledger.classify_operation import (
     build_ledger_classify_definition,
     build_ledger_classify_registration,
-    build_ledger_operator_iva_definition,
-    build_ledger_operator_iva_registration,
 )
 from ..application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
 from ..application.ledger.counterparty_operation import (
@@ -179,8 +177,10 @@ from ..application.ledger.evidence_add_operation import (
     build_ledger_evidence_add_definition,
     build_ledger_evidence_add_registration,
 )
-from ..application.ledger.evidence_followup_operation import (
+from ..application.ledger.evidence_followup_contracts import (
     LedgerEvidenceFollowupOperationPorts,
+)
+from ..application.ledger.evidence_followup_registration import (
     build_ledger_evidence_followup_definitions,
     build_ledger_evidence_followup_registrations,
 )
@@ -248,6 +248,10 @@ from ..application.ledger.llm_review_operation import (
     build_ledger_llm_review_registration,
 )
 from ..application.ledger.merge_operation import build_ledger_merge_definition, build_ledger_merge_registration
+from ..application.ledger.operator_iva_operation import (
+    build_ledger_operator_iva_definition,
+    build_ledger_operator_iva_registration,
+)
 from ..application.ledger.participation_operation import (
     build_ledger_participation_definition,
     build_ledger_participation_registration,
@@ -405,11 +409,10 @@ from ..application.local_reader_operation import (
     build_local_reader_operation_registration,
 )
 from ..application.modelo.aggregate_operation import (
-    ModeloAggregateOperationPorts,
-    ModeloAggregateOperationPortsFactory,
     build_modelo_aggregate_operation_definition,
     build_modelo_aggregate_operation_registration,
 )
+from ..application.modelo.aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
 from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
 from ..application.modelo.amendment_context_operation import (
     build_modelo_work_amendment_context_definition,
@@ -458,9 +461,11 @@ from ..application.modelo.history_timeline_operation import (
     build_modelo_history_timeline_definition,
     build_modelo_history_timeline_registration,
 )
-from ..application.modelo.invoice_withholding_capture_operation import (
+from ..application.modelo.invoice_withholding_capture_contracts import (
     ModeloInvoiceWithholdingCapturePorts,
     ModeloInvoiceWithholdingCapturePortsFactory,
+)
+from ..application.modelo.invoice_withholding_capture_operation import (
     build_modelo_invoice_withholding_capture_definition,
     build_modelo_invoice_withholding_capture_registration,
 )
@@ -534,8 +539,8 @@ from ..application.modelo.projection_operation import (
     build_modelo_project_definition,
     build_modelo_project_registration,
 )
+from ..application.modelo.query_read_contracts import ModeloQueryReadPortsFactory
 from ..application.modelo.query_read_operation import (
-    ModeloQueryReadPortsFactory,
     build_modelo_bindings_list_definition,
     build_modelo_bindings_list_registration,
     build_modelo_bindings_resolve_definition,
@@ -657,8 +662,10 @@ from ..application.prorrata_register.registered_operations import (
     build_prorrata_seed_sector_definition,
     build_prorrata_settle_sector_definition,
 )
-from ..application.review.read_operation import (
+from ..application.review.read_contracts import (
     ReviewReadOperationPorts,
+)
+from ..application.review.read_registration import (
     build_review_read_definitions,
     build_review_read_registrations,
 )
@@ -1034,7 +1041,7 @@ def build_production_operation_registry(
         ReviewReadOperationPorts(settings=resolved_settings, draft_review_ports_factory=build_draft_review_ports)
     )
     evidence_followup_definitions = build_ledger_evidence_followup_definitions(
-        evidence_followup_ports or build_ledger_evidence_followup_operation_ports(settings=resolved_settings)
+        _production_registry_evidence_followup_ports(evidence_followup_ports, resolved_settings)
     )
     modelo_bindings_list_definition = build_modelo_bindings_list_definition()
     modelo_bindings_resolve_definition = build_modelo_bindings_resolve_definition()
@@ -1174,13 +1181,7 @@ def build_production_operation_registry(
         contracts=registry_contracts,
         prerequisites=edit_prerequisites,
     )
-    resolved_google_export_definition = (
-        google_export_definition
-        if google_export_definition is not None
-        else build_google_sheets_export_operation_definition(
-            prepare_port=_google_sheets_export_prepare_port(settings=resolved_settings)
-        )
-    )
+    resolved_google_export_definition = _production_registry_google_export(google_export_definition, resolved_settings)
     filed_history_definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository,
         composition_factory=compose_live_state,
@@ -1316,16 +1317,7 @@ def build_production_operation_registry(
         run_installer=run_runtime_installer,
         text_probe=probe_text_extraction_fitness,
     )
-    resolved_censal_definition = (
-        censal_definition
-        if censal_definition is not None
-        else build_censal_operation_definition(
-            certificate_secret_backend_factory=build_certificate_secret_backend,
-            browser_session_factory=default_browser_session_factory,
-            operator_scope_ports=resolved_operator_scope_ports,
-            censal_fetch_port=build_censal_fetch_port(),
-        )
-    )
+    resolved_censal_definition = _production_registry_censal(censal_definition, resolved_operator_scope_ports)
     censal_prepare_definition = build_censal_prepare_operation_definition()
     censal_file_import_definition = build_censal_file_import_operation_definition()
     censal_preview_definition = build_censal_preview_operation_definition(
@@ -2084,3 +2076,40 @@ async def _acquire_registry_verify_observation(
     if len(result.observations) != 1:
         raise ValueError("verify acquisition must return exactly one observation")
     return VerifyLiveObservation.model_validate(result.observations[0], from_attributes=True)
+
+
+def _production_registry_google_export(
+    google_export_definition: OperationDefinition | None, resolved_settings: Settings
+) -> OperationDefinition:
+    """Resolve the supplied definition before constructing its production capabilities."""
+    return (
+        google_export_definition
+        if google_export_definition is not None
+        else build_google_sheets_export_operation_definition(
+            prepare_port=_google_sheets_export_prepare_port(settings=resolved_settings)
+        )
+    )
+
+
+def _production_registry_censal(
+    censal_definition: OperationDefinition | None, resolved_operator_scope_ports: OperatorScopePorts
+) -> OperationDefinition:
+    """Resolve the supplied definition before constructing its production capabilities."""
+    return (
+        censal_definition
+        if censal_definition is not None
+        else build_censal_operation_definition(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            browser_session_factory=default_browser_session_factory,
+            operator_scope_ports=resolved_operator_scope_ports,
+            censal_fetch_port=build_censal_fetch_port(),
+            provider_preflight=preflight_filed_history_provider,
+        )
+    )
+
+
+def _production_registry_evidence_followup_ports(
+    evidence_followup_ports: LedgerEvidenceFollowupOperationPorts | None, resolved_settings: Settings
+) -> LedgerEvidenceFollowupOperationPorts:
+    """Retain supplied evidence custody or construct the same production ports."""
+    return evidence_followup_ports or build_ledger_evidence_followup_operation_ports(settings=resolved_settings)

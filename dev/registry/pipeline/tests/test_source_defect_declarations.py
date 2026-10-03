@@ -40,9 +40,10 @@ from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ...compiler.loader import load_registry_tree
-from .._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from .._export_tree import render_complete_export_tree
 from ..export_field_literal_derivation import _literal_derivation
 from ..export_field_numeric_derivation import _numeric_derivation
+from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesignField, join_record_design_semantics
 from ..record_design_intermediate import (
     RecordDesignIntermediate,

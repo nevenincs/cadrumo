@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#corpus-strict-gate'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cad12330e28d319c92e0929a63d5ce6ee949dd64815ce6168132efdd2a685d89'
+body_hash: 'sha256:53b7458345880ee3f8eb3468ff6eab9832fb430155ee630442ceb6567e5a9a3a'
 related:
-  - '[[2026-06-04-corpus-strict-gate-adr]]'
   - '[[2026-06-04-corpus-strict-gate-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#corpus-strict-gate`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-corpus-strict-gate-adr` - `corpus-strict-gate` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

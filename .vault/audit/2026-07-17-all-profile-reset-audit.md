@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#all-profile-reset'
 date: '2026-07-17'
-modified: '2026-07-19'
+modified: '2026-10-03'
 body_hash: 'sha256:9b0e63dc95c5e326ef147844022247ded8dde2e5ab8ef94aadccd2a0be9e278d'
 related:
   - "[[2026-07-17-all-profile-reset-plan]]"
-  - "[[2026-07-17-all-profile-reset-adr]]"
   - "[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]"
+  - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---
 
 # `all-profile-reset` audit: `all-profile reset safety closure review`

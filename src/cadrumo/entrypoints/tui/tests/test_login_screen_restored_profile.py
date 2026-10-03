@@ -26,7 +26,7 @@ from textual.widgets import Input
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.local_runtime.installation import runtime_installation
-from ....adapters.local_runtime.posix import PosixRuntimeEndpoint
+from ....adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from ....adapters.local_runtime.runtime_client import open_installed_runtime_client
 from ....adapters.local_runtime.server import RuntimeTransportServer
 from ....adapters.local_runtime.tests.profile_worker_support import owner_id
@@ -49,7 +49,11 @@ from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ...runtime.profile_connections import RuntimeProfileConnections
 from ...runtime.tests.test_profile_connections import LoginObservation
-from ..secret.runtime_login import RuntimeLoginHandoff, RuntimeLoginMethod, RuntimeLoginScreen
+from ..secret.runtime_login import RuntimeLoginScreen
+from ..secret.runtime_login_contracts import (
+    RuntimeLoginHandoff,
+    RuntimeLoginMethod,
+)
 
 pytestmark = [
     pytest.mark.integration,

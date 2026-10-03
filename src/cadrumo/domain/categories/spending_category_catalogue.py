@@ -19,7 +19,7 @@ from ..calculations.registry.facts.string_mapping import (
     StringMappingPolicy,
 )
 from ..calculations.registry.facts.variants import FactSelector
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .spending_category import SpendingCategory, SpendingCategoryFamily
 
@@ -104,9 +104,7 @@ def resolve_spending_category_catalogue(
 ) -> SpendingCategoryCatalogue:
     """Resolve and validate the dated spending-category catalogue."""
     coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("spending category catalogue requires an explicit authority operation or scope")
+    selected = require_governed_fact_authority(authority, subject="spending category catalogue")
     entries = _ENTRIES_FACT.resolve_entries(selected, effective_date=coordinate)
     categories = _spending_categories(entries)
     family_members = _spending_category_families(entries, categories)

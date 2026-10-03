@@ -23,6 +23,7 @@ from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
+from ...operations.public_scalar import PublicDecimal
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_contracts import (
     AccessAction,
@@ -34,6 +35,7 @@ from ...user_profile.access_contracts import (
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import borrador_100 as service_module
+from .. import borrador_100_contracts as contracts
 from .. import borrador_100_operation as module
 from ..borrador_100 import Borrador100Snapshot, Borrador100SnapshotService, BorradorSnapshotNotFoundError
 from ..borrador_100_import import prepare_borrador_100_import
@@ -48,21 +50,21 @@ _PERIOD = Period.from_year_and_code(2023, "0A")
 _HUMAN_SOURCE = "file-import:sha256:" + "a" * 64
 
 
-def _read_request(*, query: bool = False, **selectors: object) -> OperationRequest[module.Borrador100ReadRequest]:
-    return OperationRequest[module.Borrador100ReadRequest](
+def _read_request(*, query: bool = False, **selectors: object) -> OperationRequest[contracts.Borrador100ReadRequest]:
+    return OperationRequest[contracts.Borrador100ReadRequest](
         definition_id=module.BORRADOR_100_QUERY_OPERATION_DEFINITION_ID
         if query
         else module.BORRADOR_100_READ_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(PROFILE_ID)),
-        payload=module.Borrador100ReadRequest.model_validate({"profile_id": PROFILE_ID, **selectors}),
+        payload=contracts.Borrador100ReadRequest.model_validate({"profile_id": PROFILE_ID, **selectors}),
     )
 
 
-def _import_request(path: Path) -> OperationRequest[module.Borrador100ImportRequest]:
-    return OperationRequest[module.Borrador100ImportRequest](
+def _import_request(path: Path) -> OperationRequest[contracts.Borrador100ImportRequest]:
+    return OperationRequest[contracts.Borrador100ImportRequest](
         definition_id=module.BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(PROFILE_ID)),
-        payload=module.Borrador100ImportRequest(
+        payload=contracts.Borrador100ImportRequest(
             profile_id=PROFILE_ID,
             source_path=path,
             filing_year=_PERIOD.filing_year,
@@ -113,10 +115,10 @@ def test_real_registration_compiles_distinct_closed_human_query_and_import_schem
     importing = registry.lookup_public_contract(module.BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID)
     assert human.result_schema is not None and query.result_schema is not None and importing.result_schema is not None
     assert human.result_schema.schema_id != query.result_schema.schema_id
-    assert "source_url" in module.Borrador100SnapshotDetail.model_fields
-    assert "source_url" not in module.Borrador100QueryDetail.model_fields
-    assert "source_url" not in module.Borrador100QuerySummary.model_fields
-    assert "warnings" in module.Borrador100ImportProjection.model_fields
+    assert "source_url" in contracts.Borrador100SnapshotDetail.model_fields
+    assert "source_url" not in contracts.Borrador100QueryDetail.model_fields
+    assert "source_url" not in contracts.Borrador100QuerySummary.model_fields
+    assert "warnings" in contracts.Borrador100ImportProjection.model_fields
 
 
 @pytest.mark.asyncio
@@ -128,12 +130,12 @@ async def test_shared_canonical_view_preserves_scalars_and_withholds_query_prove
         await module.Borrador100ReadExecutor(subject.compose, query=query).execute(
             request, subject.context(request.definition_id)
         )
-    human = cast(module.Borrador100ReadExecutionResult, subject.operands.values[0]).projection
-    safe = cast(module.Borrador100QueryExecutionResult, subject.operands.values[1]).projection
+    human = cast(contracts.Borrador100ReadExecutionResult, subject.operands.values[0]).projection
+    safe = cast(contracts.Borrador100QueryExecutionResult, subject.operands.values[1]).projection
     assert human.snapshot is not None and safe.snapshot is not None
     assert human.snapshot.source_url == snapshot.source_url
     assert human.snapshot.binding_map() == safe.snapshot.binding_map() == dict(snapshot.binding_values)
-    assert safe.snapshot.binding_values[0].value == module.PublicDecimal(decimal="0.00")
+    assert safe.snapshot.binding_values[0].value == PublicDecimal(decimal="0.00")
     assert safe.snapshot.binding_values[1].value == ""
     assert safe.snapshot.period.to_period() == _PERIOD
     assert _HUMAN_SOURCE not in safe.model_dump_json() and "source_url" not in safe.model_dump_json()
@@ -162,14 +164,14 @@ async def test_canonical_list_state_order_and_empty_latest_keep_exact_pin(
     await module.Borrador100ReadExecutor(subject.compose, query=False).execute(
         request, subject.context(request.definition_id)
     )
-    result = cast(module.Borrador100ReadExecutionResult, subject.operands.values[-1]).projection
+    result = cast(contracts.Borrador100ReadExecutionResult, subject.operands.values[-1]).projection
     assert tuple(row.snapshot_id for row in result.rows) == (older.snapshot_id, newer.snapshot_id)
     assert tuple(row.state for row in result.rows) == (SnapshotLifecycleState.SUPERSEDED, SnapshotLifecycleState.ACTIVE)
     request = _read_request(query=True, kind="latest", filing_year=2024)
     await module.Borrador100ReadExecutor(subject.compose, query=True).execute(
         request, subject.context(request.definition_id)
     )
-    latest = cast(module.Borrador100QueryExecutionResult, subject.operands.values[-1]).projection
+    latest = cast(contracts.Borrador100QueryExecutionResult, subject.operands.values[-1]).projection
     assert latest.filing_year == 2024 and latest.snapshot is None and latest.rows == ()
 
 
@@ -223,7 +225,7 @@ async def test_import_reads_once_preserves_blank_zero_warnings_and_noop_dedup(
     request = _import_request(path)
     await module.Borrador100ImportExecutor(subject.compose).execute(request, subject.context(request.definition_id))
     assert reads == [path] and subject.parser.calls == subject.repository.writes == subject.fence.entries == 1
-    result = cast(module.Borrador100ImportExecutionResult, subject.operands.values[-1]).projection
+    result = cast(contracts.Borrador100ImportExecutionResult, subject.operands.values[-1]).projection
     receipt = subject.parser.receipt
     assert receipt is not None
     assert result.source_pdf_sha256 == receipt.source_pdf_sha256
@@ -248,7 +250,7 @@ async def test_import_reuses_actual_multi_save_supersession(subject: Subject, tm
     path.write_bytes(b"source")
     request = _import_request(path)
     await module.Borrador100ImportExecutor(subject.compose).execute(request, subject.context(request.definition_id))
-    result = cast(module.Borrador100ImportExecutionResult, subject.operands.values[-1]).projection
+    result = cast(contracts.Borrador100ImportExecutionResult, subject.operands.values[-1]).projection
     assert subject.repository.writes == subject.fence.entries == 2
     assert subject.repository.load(prior.snapshot_id).superseded_by_snapshot_id == result.snapshot.snapshot_id
     assert subject.repository.load(result.snapshot.snapshot_id).state is SnapshotLifecycleState.ACTIVE
@@ -372,8 +374,8 @@ def test_query_consent_never_authorizes_full_read_or_import(
 
 
 def test_projector_rejects_cross_purpose_receipt(subject: Subject) -> None:
-    result = module.Borrador100QueryExecutionResult(
-        projection=module.Borrador100QueryProjection(profile_id=PROFILE_ID, kind="list")
+    result = contracts.Borrador100QueryExecutionResult(
+        projection=contracts.Borrador100QueryProjection(profile_id=PROFILE_ID, kind="list")
     )
     receipt = OperationTerminalReceipt(
         identity=OperationIdentity(
@@ -400,4 +402,4 @@ def test_projector_rejects_cross_purpose_receipt(subject: Subject) -> None:
             ),
         )
     with pytest.raises(ValidationError):
-        module.Borrador100ReadRequest(profile_id=PROFILE_ID, kind="list", filing_year=2025)
+        contracts.Borrador100ReadRequest(profile_id=PROFILE_ID, kind="list", filing_year=2025)

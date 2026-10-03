@@ -18,7 +18,7 @@ from ..calculations.registry.facts.string_mapping import (
     StringMappingPolicy,
 )
 from ..calculations.registry.facts.variants import FactSelector
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .profile import IvaDeductibilityHint
 
@@ -71,11 +71,7 @@ def resolve_iva_deductibility_hint_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> IvaDeductibilityHintCatalogue:
     """Resolve the dated IVA hint vocabulary through the facts authority."""
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError(
-            "IVA deductibility hint catalogue requires an explicit authority operation or scope"
-        )
+    selected_authority = require_governed_fact_authority(authority, subject="IVA deductibility hint catalogue")
     entries = _ENTRIES_FACT.resolve_entries(selected_authority, effective_date=effective_date or today_madrid())
     values = tuple(
         IvaDeductibilityHint(token)

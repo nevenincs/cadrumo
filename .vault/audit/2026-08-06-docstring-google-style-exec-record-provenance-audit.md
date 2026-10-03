@@ -3,20 +3,22 @@ tags:
   - '#audit'
   - '#docstring-google-style'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9d0f8ffd075251e0e058925b07f8e9352acce40597d74c37e7994ee1253c414b'
+body_hash: 'sha256:b18376fceaf744222ab4aa31928970fca4ce3449e37285372d3c23b6c0300ea0'
 related: []
 ---
 # `docstring-google-style` audit: `993 of 994 execution records are empty scaffolds from a single unrelated commit`
+
+## Scope
 
 Written by the reviewer of a different campaign, which reached this feature by measuring a
 tree-wide pattern. The finding is about the record, not the work, and this campaign's own
 disposition is left to its owner.
 
-## What was measured
+### What was measured
 
-    .vault/exec/2026-06-09-docstring-google-style/    994 records
+.vault/exec/2026-06-09-docstring-google-style/    994 records
       empty Outcome                                    993
       of those, ALSO empty Description                 993
     .vault/plan/2026-06-09-docstring-google-style-plan.md
@@ -31,7 +33,9 @@ All 993 are dated `2026-07-10`, and a 40-record sample resolves to a single crea
 subject describes something else entirely. The records were generated as a side effect of an
 unrelated landing.
 
-## What the campaign actually is, which changes the disposition
+## Findings
+
+### What the campaign actually is, which changes the disposition
 
 Every one of the 994 records carries the identical heading `verify docs`. That first reads as
 994 copies of one step, but the plan rows disambiguate: each names a distinct file —
@@ -55,22 +59,7 @@ commit, so:
 The two failure modes compound: the campaign's evidence lived only in the records, and the
 records were never authored.
 
-## Disposition
-
-**Recorded as accepted debt with a reason, which is one of the two dispositions the reviewing
-campaign's gate allows.** The 993 are not adopted, and the reasons are:
-
-- They belong to this campaign, and a CI-lane campaign has no standing to rewrite them.
-- Their remedy does not exist. Reconstruction is impossible for a verification sweep whose
-  successful steps produce no commits; fabrication from the step text is barred; and
-  unchecking asserts something unestablished.
-
-**What a reader of this campaign's plan should understand:** 994 of 994 steps are checked, and
-for 993 of them the only evidence that the verification occurred is the checkbox. The work may
-well have been done — a docstring sweep leaves little else behind — but the record does not
-establish it, and no available operation makes it establish it retroactively.
-
-## The tree-wide context, so this is not read as isolated
+### The tree-wide context, so this is not read as isolated
 
 Measured across the whole exec tree, records that closed a Step with an empty Outcome:
 
@@ -86,7 +75,24 @@ Anyone re-measuring will find 1776 + 1321 and should not report ~3100.
 single creating commit — and is recorded separately. Two campaigns, one mechanism: **exec
 records generated in bulk after the fact so that checked steps had files to point at.**
 
-## What would change this
+## Recommendations
+
+### Disposition
+
+**Recorded as accepted debt with a reason, which is one of the two dispositions the reviewing
+campaign's gate allows.** The 993 are not adopted, and the reasons are:
+
+- They belong to this campaign, and a CI-lane campaign has no standing to rewrite them.
+- Their remedy does not exist. Reconstruction is impossible for a verification sweep whose
+  successful steps produce no commits; fabrication from the step text is barred; and
+  unchecking asserts something unestablished.
+
+**What a reader of this campaign's plan should understand:** 994 of 994 steps are checked, and
+for 993 of them the only evidence that the verification occurred is the checkbox. The work may
+well have been done — a docstring sweep leaves little else behind — but the record does not
+establish it, and no available operation makes it establish it retroactively.
+
+### What would change this
 
 A gate refusing to check a Step whose exec record has an empty Outcome would prevent the next
 instance, and would have prevented both of these. That is a decision for whoever owns the

@@ -255,6 +255,11 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
     Each record is (counterparty, clave) with the gross annual amount and its
     quarterly split (RD 1065/2007 art. 33.1 "se suministrará desglosada
     trimestralmente"); the supplier below the 3.005,06 floor yields no record.
+    Both counterparties are resident, so each record carries its NIF and leaves
+    the país de residencia and the 2025 NIF operador comunitario blank: the
+    design fills país only "en el caso de no residentes sin establecimiento
+    permanente", and the community NIF is "incompatible (excluyente)" with the
+    Spanish NIF.
     """
     supplier_q1 = _domestic_invoice(
         kind=InvoiceKind.RECEIVED,
@@ -303,7 +308,8 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
             "nif": "B12345674",
             "nombre": "PROVEEDOR GRANDE SL",
             "clave": "A",
-            "pais-codigo": "ES",
+            "pais-codigo": "",
+            "nif-operador-comunitario": "",
             "importe": supplier_q1.grand_total + supplier_q3.grand_total,
             "importe-q1": supplier_q1.grand_total,
             "importe-q2": Decimal("0"),
@@ -314,7 +320,8 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
             "nif": "B87654323",
             "nombre": "CLIENTE GRANDE SL",
             "clave": "B",
-            "pais-codigo": "ES",
+            "pais-codigo": "",
+            "nif-operador-comunitario": "",
             "importe": customer_q4.grand_total,
             "importe-q1": Decimal("0"),
             "importe-q2": Decimal("0"),

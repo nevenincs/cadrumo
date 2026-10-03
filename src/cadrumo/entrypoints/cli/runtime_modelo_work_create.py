@@ -7,7 +7,7 @@ from uuid import UUID
 
 import typer
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
     MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,

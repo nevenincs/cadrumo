@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..application.modelo.query_read_operation import ModeloQueryReadPorts
+from ..application.modelo.query_read_contracts import ModeloQueryReadPorts
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id

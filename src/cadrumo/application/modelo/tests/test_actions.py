@@ -59,12 +59,10 @@ from ..dt12_antiquity_advisory import dt12_antiquity_advisory_finding
 from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
 from ..revision_replay_inputs import _informational_casilla_replay_inputs
-from ..verification_actions import (
-    _collect_revision_verification_findings,
-    _iva_wallet_error_verification_finding,
-    _missing_required_casilla_finding,
-)
+from ..verification_gate_findings import iva_wallet_error_verification_finding
 from ..verification_predicates import evaluate_verification_predicates
+from ..verification_required_fields import missing_required_casilla_finding
+from ..verification_revision_findings import collect_revision_verification_findings
 from ..workflow_gate import _RevisionInputsProvider, workflow_period_for_work_unit
 from .invoice_catalogue_fake import InvoiceCatalogueFake
 
@@ -482,7 +480,7 @@ def test_single_casilla_blocking_predicate_attributes_its_canonical_casilla() ->
 
 
 def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
-    """_collect_revision_verification_findings produces a localised message when the registry
+    """collect_revision_verification_findings produces a localised message when the registry
     snapshot cannot be resolved for a non-existent modelo.
 
     Modelo '999' is not in the registry; the function must return a single
@@ -496,7 +494,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
         work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
         target = _minimal_calculation_revision(work_unit)
 
-        findings, _resolved, _missing, failures_by_finding_id = _collect_revision_verification_findings(
+        findings, _resolved, _missing, failures_by_finding_id = collect_revision_verification_findings(
             work_unit=work_unit,
             target=target,
             profile=_resident_profile(),
@@ -883,7 +881,7 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key(
         "modelo.work.calculate.iva_wallet.ready",
         "modelo.work.calculate.iva_wallet.filed_history_requires_override",
     )
-    finding = _iva_wallet_error_verification_finding(
+    finding = iva_wallet_error_verification_finding(
         exc,
         work_unit=_minimal_work_unit(modelo="303", period="1T"),
         operation=authority_operation,
@@ -1171,12 +1169,12 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operatio
 
 
 def test_missing_required_casilla_finding_is_locale_neutral() -> None:
-    """_missing_required_casilla_finding renders message via tr().
+    """missing_required_casilla_finding renders message via tr().
 
     The returned finding message must contain the casilla_id token
     (interpolated by the locale template) and must not be the raw locale key.
     """
-    finding = _missing_required_casilla_finding(
+    finding = missing_required_casilla_finding(
         _M130_INGRESOS_CASILLA,
         casilla_def=_m130_casilla_definition(_M130_INGRESOS_CASILLA),
     )
@@ -1192,11 +1190,11 @@ def test_missing_required_casilla_finding_facts_change_with_casilla_id() -> None
     ids must produce different rendered strings. A tautological template or
     missing interpolation would produce identical output.
     """
-    finding_a = _missing_required_casilla_finding(
+    finding_a = missing_required_casilla_finding(
         _M130_INGRESOS_CASILLA,
         casilla_def=_m130_casilla_definition(_M130_INGRESOS_CASILLA),
     )
-    finding_b = _missing_required_casilla_finding(
+    finding_b = missing_required_casilla_finding(
         _M130_GASTOS_CASILLA,
         casilla_def=_m130_casilla_definition(_M130_GASTOS_CASILLA),
     )

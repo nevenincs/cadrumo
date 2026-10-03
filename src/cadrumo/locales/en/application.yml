@@ -123,9 +123,11 @@ application:
         but AEAT reads stay unavailable until a sign-in provider is configured.
     sessions:
       errors:
-        clave_contraste_missing: The non-QR Cl@ve Móvil route needs the contraste
-          printed on your document. Record %{nie_field} on the active profile for
-          a NIE, or %{dni_field} for a DNI, before any AEAT session can be used.
+        clave_contraste_missing: Cl@ve Móvil signs in by default with an approval
+          request to the Cl@ve app, which needs the contraste printed on your document.
+          Record %{nie_field} on the active profile for a NIE, or %{dni_field} for
+          a DNI. To scan a QR code in a visible browser instead, run `aeat config
+          auth configure --provider clave_movil --clave-movil-route qr`.
         clave_identity_malformed: The Cl@ve identity is not a valid Spanish tax identifier,
           so it cannot be confirmed to belong to this profile.
         clave_identity_missing: Cl@ve live auth requires a DNI/NIE. Record it on the
@@ -134,9 +136,6 @@ application:
         clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
           profile tax identity; switch to the matching profile or update the profile
           before live AEAT auth.
-        clave_route_missing: Cl@ve Móvil live authentication requires %{route_field}.
-          Open Identification in the profile manager, choose QR code or Request in
-          app, save it, and retry sync.
         corrupt_session: Your saved authentication session is damaged and cannot be
           read. Run `aeat config auth logout` and then `aeat config auth test`.
         no_session: No active AEAT session; run `aeat config auth test` before reading
@@ -1777,10 +1776,14 @@ application:
           has not been checked
         national_and_territory: national and %{territory} holidays checked; local
           holidays not checked
+        national_and_territory_without_name: national and applicable regional holidays
+          checked; local holidays not checked
         national_only: national holidays only; regional and local holidays not checked
         not_shifted: this modelo's deadline does not move for non-working days
         territory_unverified: national holidays only; %{territory} regional holidays
           for this year have not been checked, and local holidays are not checked
+        territory_unverified_without_name: national holidays only; the applicable
+          regional calendar is unverified; local holidays are not checked
       shift:
         business_day: Business day
         calendar_unavailable: Calendar unavailable

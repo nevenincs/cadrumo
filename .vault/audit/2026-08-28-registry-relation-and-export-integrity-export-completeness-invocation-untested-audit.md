@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#registry-relation-and-export-integrity'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:eadc54e61241105dbe2c311d0710b24d9ebea519074cb738f228ffee1d6c3216'
+body_hash: 'sha256:37a2dfaf02f2fbaf0a2af0cec75a47843a44c33dd085dadb6b3096ddfa1994b6'
 related: []
 ---
 
 # `registry-relation-and-export-integrity` audit: `The pre-write export completeness gate can be deleted and no test reds`
 
-## Finding
+## Scope
 
+Determine whether export completeness validation is invoked on the production path and whether the invocation has test coverage.
+
+## Findings
 `assert_export_mirrors_manifest` — the pre-write completeness assertion that
 stands between a thin draft and a written fichero — can be replaced with a no-op
 and **no test in any suite that reaches the export path fails.**
@@ -20,6 +23,22 @@ and **no test in any suite that reaches the export path fails.**
 The gate's *input* is tested. Its *invocation* is not. Deleting the call site is
 invisible to the suite.
 
+## Recommendations
+A test that drives `export_draft` over a draft with a blank formula-declaring
+casilla and asserts `FilingExportError`, naming the missing casilla. Per the
+standing rule that a gate is unproven until it bites, it must be verified by
+breaking the production path deliberately — the plugin technique above does this
+without touching a tracked file and is the cheap reusable form.
+
+A secondary matter for the same owner: `modelo-export-mirrors-official-structure`
+closes by naming three gates — `test_export_completeness_gate.py`,
+`test_export_completeness_sets.py`, `test_fichero_boe_completeness_parity.py`.
+**None exists**; all three were deleted in the commit noted above. Every gate cited
+by the other ten project rules resolves, so this is a single stale citation block,
+not general drift. A rule naming a gate that is not there is a dangling reference
+for every future reader.
+
+No production code, registry data or test was changed by this audit.
 ## Proof
 
 Method: a pytest plugin held **outside the repository** rebinds
@@ -98,21 +117,3 @@ Today the gate works, so nothing is mis-declared. The exposure is to change: a
 refactor that drops or short-circuits the call would ship green. That is the same
 shape as an unproven gate — the difference between a gate that holds and a gate
 that is *known* to hold.
-
-## Remediation — owner's decision, not taken here
-
-A test that drives `export_draft` over a draft with a blank formula-declaring
-casilla and asserts `FilingExportError`, naming the missing casilla. Per the
-standing rule that a gate is unproven until it bites, it must be verified by
-breaking the production path deliberately — the plugin technique above does this
-without touching a tracked file and is the cheap reusable form.
-
-A secondary matter for the same owner: `modelo-export-mirrors-official-structure`
-closes by naming three gates — `test_export_completeness_gate.py`,
-`test_export_completeness_sets.py`, `test_fichero_boe_completeness_parity.py`.
-**None exists**; all three were deleted in the commit noted above. Every gate cited
-by the other ten project rules resolves, so this is a single stale citation block,
-not general drift. A rule naming a gate that is not there is a dangling reference
-for every future reader.
-
-No production code, registry data or test was changed by this audit.

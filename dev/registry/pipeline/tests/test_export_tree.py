@@ -40,7 +40,7 @@ from ...compiler.loader import load_modelo_directory
 from .. import _export_tree
 from .. import export_field_derivation as _field_patterns
 from .. import export_tree_serialization as serialization
-from .._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from .._export_tree import render_complete_export_tree
 from ..export_field_literal_derivation import _OFFICIAL_QUOTE_FOLD
 from ..export_field_numeric_derivation import _numeric_derivation
 from ..export_field_render_profile_derivation import _WIDTH_17_SIGNED_POLICY, _WIDTH_17_UNSIGNED_POLICY
@@ -52,6 +52,7 @@ from ..export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
 )
+from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
 from ..record_design_intermediate import (
     RecordDesignIntermediate,

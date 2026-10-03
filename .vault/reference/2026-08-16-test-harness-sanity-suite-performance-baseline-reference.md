@@ -3,12 +3,16 @@ tags:
   - '#reference'
   - '#test-harness-sanity'
 date: '2026-08-16'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b0dc99479686c62b7bd6dec78f60028be4a212fbbb438c5c43fe7e090d9616f5'
+body_hash: 'sha256:68fc6f4d6070dad497a0441176ab77882612aea93202bfa413c60dd8feab860e'
 related:
   - "[[2026-08-14-test-harness-sanity-harness-performance-audit]]"
 ---
+## Summary
+
+This reference preserves a reproducible measured performance baseline for the test harness, so a later profile can compare against known costs instead of repeating the same diagnosis.
+
 ## Why this exists
 
 The performance campaign recorded in

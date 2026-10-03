@@ -13,9 +13,16 @@ from ..core.external_constants import OutputLanguage
 from ..core.hashing import canonical_json_bytes
 from ..core.operations import OperationEffect, profile_operation_subject
 from ..core.time.clock import now
-from .operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from .operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+)
 from .operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
-from .operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID, OperationResultProjectionSuccessV1
+from .operations.frontend_requests import OperationResultProjectionSuccessV1
 from .operations.models import CredentialFreeOperationRequest, OperationRequest
 from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.owner import OperationExecutorContext
@@ -26,17 +33,9 @@ from .operations.registry import (
     OperationReconciliationPolicy,
 )
 from .runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from .user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
+from .user_profile.access_contracts import AccessDenialCode, Availability, DisclosureCategory
 from .user_profile.access_errors import ProfileAccessRefusedError
-from .workbench_generation import WorkbenchGenerationV1
+from .workbench_generation_contracts import WorkbenchGenerationV1
 from .workbench_generation_projection import WorkbenchGenerationOperationProjection, project_workbench_generation
 
 WORKBENCH_GENERATION_OPERATION_DEFINITION_ID = "workbench.generation"
@@ -159,58 +158,21 @@ def resolve_workbench_generation_access(
         or request.subject_ref != profile_operation_subject(str(payload.profile_id))
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    elif context.action is AccessAction.RESULT and context.contract.result_schema is not None:
-        disclosures = frozenset(
-            DisclosurePermission(
-                destination_id=context.destination_id,
-                projection_id=context.contract.result_schema.schema_id,
-                category=category,
-            )
-            for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=payload.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.COMMIT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                }
-            ),
-            disclosures=disclosures,
-            periods=frozenset(),
-            allow_period_independent=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-            requires_human=True,
-        ),
+    disclosures = operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}),
+        result_schema_id=None,
+    )
+    return bind_operation_access(
+        context,
+        profile_id=payload.profile_id,
+        definition_id=request.definition_id,
+        actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+        disclosures=disclosures,
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=False,
+        requires_human=True,
+        provider=Availability.NOT_REQUIRED,
     )

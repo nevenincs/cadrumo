@@ -9,11 +9,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from .....adapters.local_runtime.frontend_client import (
-    ProfileViewCollection,
-    RuntimeFrontendClient,
-    RuntimeFrontendRefusedError,
-)
+from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from .....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection, RuntimeFrontendRefusedError
 from .....adapters.local_runtime.profile_mutations import (
     ProfileMutationCompletion,
     ProfileMutationRequest,
@@ -21,7 +18,8 @@ from .....adapters.local_runtime.profile_mutations import (
 )
 from .....application.operations.registry import OperationFrontendProjection
 from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .....application.user_profile.operations import (
+from .....application.user_profile.overview import ProfileOverview, ProfileSectionView
+from .....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileFieldMutationOperationRequest,
@@ -35,7 +33,6 @@ from .....application.user_profile.operations import (
     ProfileRepeatableRowRemoveOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
 )
-from .....application.user_profile.overview import ProfileOverview, ProfileSectionView
 from .....application.user_profile.view_operation import ProfileViewOperationProjection, ProfileViewPageKind
 from .....core.errors.error_codes import get_registered_error_code
 from .....core.errors.hierarchy import CadrumoError

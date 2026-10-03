@@ -8,7 +8,9 @@ import typer
 from pydantic import ValidationError
 
 from ...application.ledger.actions_common import display_decimal
-from ...application.ledger.classify_operation import LedgerClassifyOperationResult, LedgerOperatorIvaResult
+from ...application.ledger.classify_result_contracts import (
+    LedgerClassifyOperationResult,
+)
 from ...application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LedgerLlmReviewProjection,
@@ -18,6 +20,9 @@ from ...application.ledger.llm_review_contracts import (
 )
 from ...application.ledger.llm_review_results import LedgerLlmOperationResult
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
+from ...application.ledger.operator_iva_contracts import (
+    LedgerOperatorIvaResult,
+)
 from ...application.operations.registry import OperationSchemaIdentityV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr

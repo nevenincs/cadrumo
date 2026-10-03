@@ -14,7 +14,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....application.inventory.registered_operation import InventoryLedgerProjection
+from ....application.inventory.registered_projections import InventoryLedgerProjection
 from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryLedger,

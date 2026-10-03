@@ -20,6 +20,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from pydantic import SecretBytes
 
+from cadrumo.adapters.persistence.storage.custody import linux_secret_bus as secret_transport
+from cadrumo.adapters.persistence.storage.custody import linux_secret_contracts as secret_contracts
 from cadrumo.adapters.persistence.storage.custody import linux_secret_service_store as native
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
 from cadrumo.adapters.persistence.storage.custody.linux_secret_service_store import (
@@ -115,13 +117,13 @@ class _ProtocolReplies:
         if method == "CreateItem":
             properties, secret, replace = body
             assert replace is True
-            assert properties[native._ITEM_IFACE + ".Attributes"] == ("a{ss}", _ATTRIBUTES)
+            assert properties[secret_contracts.ITEM_IFACE + ".Attributes"] == ("a{ss}", _ATTRIBUTES)
             assert secret[0] == _SESSION
             assert secret[3] == "application/octet-stream"
             if self.prompt == "/":
                 session = SimpleNamespace(object_path=_SESSION, aes_key=_KEY)
                 secret_bus = SimpleNamespace(call=lambda *args: (secret,))
-                self.item = native._read_item(cast(native._DeadlineBus, secret_bus), _ITEM, session)
+                self.item = native._read_item(cast(secret_transport.DeadlineSecretBus, secret_bus), _ITEM, session)
                 if self.corrupt_write:
                     self.item = b"synthetic-corruption"
             return (_ITEM if self.prompt == "/" else "/", self.prompt)
@@ -141,8 +143,8 @@ class _ProtocolReplies:
 def replies(monkeypatch: pytest.MonkeyPatch) -> _ProtocolReplies:
     bus = _ProtocolReplies()
     monkeypatch.setattr(native.sys, "platform", "linux")
-    monkeypatch.setattr(native, "_user_bus_path", lambda: Path("/synthetic/bus"))
-    monkeypatch.setattr(native, "_DeadlineBus", lambda *args: bus)
+    monkeypatch.setattr(native, "user_secret_bus_path", lambda: Path("/synthetic/bus"))
+    monkeypatch.setattr(native, "DeadlineSecretBus", lambda *args: bus)
 
     def protected(owned_bus: Any, collection: str) -> None:
         assert owned_bus is bus and collection == _COLLECTION
@@ -316,7 +318,7 @@ def test_malformed_encrypted_secret_is_rejected(defect: str) -> None:
     bus = SimpleNamespace(call=lambda *args: (tuple(secret),))
     session = SimpleNamespace(object_path=_SESSION, aes_key=_KEY)
     with pytest.raises((AutomationCustodyError, ValueError)):
-        native._read_item(cast(native._DeadlineBus, bus), _ITEM, session)
+        native._read_item(cast(secret_transport.DeadlineSecretBus, bus), _ITEM, session)
 
 
 @pytest.mark.parametrize("content_type", ["", "application/json", None, b"text/plain", {}])
@@ -325,7 +327,7 @@ def test_unrecognized_or_nonstring_native_content_type_is_rejected(content_type:
     bus = SimpleNamespace(call=lambda *args: (secret,))
     session = SimpleNamespace(object_path=_SESSION, aes_key=_KEY)
     with pytest.raises(AutomationCustodyError) as refused:
-        native._read_item(cast(native._DeadlineBus, bus), _ITEM, session)
+        native._read_item(cast(secret_transport.DeadlineSecretBus, bus), _ITEM, session)
     assert refused.value.reason is AutomationCustodyCode.INVALID
 
 
@@ -350,7 +352,7 @@ def test_linux_factory_reaches_native_adapter_read_without_writing(monkeypatch: 
         connections += 1
         raise missing_bus
 
-    monkeypatch.setattr(native, "_user_bus_path", unavailable_bus)
+    monkeypatch.setattr(native, "user_secret_bus_path", unavailable_bus)
     store = native_automation_secret_store(NativeSecretBackend.LINUX_DBUS)
     assert isinstance(store, LinuxSecretServiceAutomationSecretStore)
     assert store.backend is NativeSecretBackend.LINUX_DBUS
@@ -405,7 +407,7 @@ def test_encrypted_session_uses_pinned_codec_and_closes_without_plain_fallback()
         return ()
 
     bus = SimpleNamespace(call=reply)
-    with native._session(cast(native._DeadlineBus, bus)) as session:
+    with native._session(cast(secret_transport.DeadlineSecretBus, bus)) as session:
         from secretstorage.dhcrypto import DH_PRIME_1024
 
         common = pow(client_public, 2, DH_PRIME_1024).to_bytes(128, "big")
@@ -419,7 +421,10 @@ def test_encrypted_session_uses_pinned_codec_and_closes_without_plain_fallback()
 @pytest.mark.parametrize("peer", [b"", b"\x00", b"\x01", b"\x02" * 129])
 def test_malformed_session_negotiation_is_rejected(peer: bytes) -> None:
     bus = SimpleNamespace(call=lambda *args: (("ay", peer), _SESSION))
-    with pytest.raises(AutomationCustodyError) as refused, native._session(cast(native._DeadlineBus, bus)):
+    with (
+        pytest.raises(AutomationCustodyError) as refused,
+        native._session(cast(secret_transport.DeadlineSecretBus, bus)),
+    ):
         pytest.fail("invalid session was admitted")
     assert refused.value.reason is AutomationCustodyCode.INVALID
 
@@ -430,7 +435,7 @@ def test_malformed_session_negotiation_is_rejected(peer: bytes) -> None:
 def test_user_bus_selection_rejects_untrusted_paths_and_ignores_ambient_address(
     monkeypatch: pytest.MonkeyPatch, defect: str
 ) -> None:
-    monkeypatch.setattr(native.os, "getuid", lambda: 1001, raising=False)
+    monkeypatch.setattr(secret_transport.os, "getuid", lambda: 1001, raising=False)
     monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "tcp:host=untrusted.invalid,port=1")
 
     def metadata(path: Path) -> SimpleNamespace:
@@ -453,10 +458,10 @@ def test_user_bus_selection_rejects_untrusted_paths_and_ignores_ambient_address(
 
     monkeypatch.setattr(Path, "lstat", metadata)
     if defect == "none":
-        assert native._user_bus_path() == Path("/run/user/1001/bus")
+        assert secret_transport.user_secret_bus_path() == Path("/run/user/1001/bus")
     else:
         with pytest.raises(AutomationCustodyError) as refused:
-            native._user_bus_path()
+            secret_transport.user_secret_bus_path()
         assert refused.value.reason is AutomationCustodyCode.UNAVAILABLE
 
 
@@ -489,7 +494,7 @@ def test_native_socket_deadline_covers_authentication_and_hello(tmp_path: Path, 
     started = time.monotonic()
     try:
         with pytest.raises(TimeoutError):
-            native._DeadlineBus(path, started + 0.1)
+            secret_transport.DeadlineSecretBus(path, started + 0.1)
         assert time.monotonic() - started < 1
     finally:
         release.set()
@@ -552,7 +557,7 @@ def test_native_bus_constructor_preserves_primary_when_socket_close_fails(
 
         monkeypatch.setattr(jeepney, "Parser", failed_parser)
     with pytest.raises(BaseException) as caught:
-        native._DeadlineBus(Path("/synthetic/bus"), time.monotonic() + 1)
+        secret_transport.DeadlineSecretBus(Path("/synthetic/bus"), time.monotonic() + 1)
     assert caught.value is primary
     assert caught.value.__dict__["cleanup_error"] is cleanup
     assert port.closed and port.close_calls == 1
@@ -746,11 +751,11 @@ class _FailingSessionClose:
     ) -> tuple[Any, ...]:
         self.calls.append(method)
         if method == "OpenSession":
-            assert path == native._ROOT and interface == native._SERVICE_IFACE
-            assert signature == "sv" and body[0] == native._ALGORITHM
+            assert path == secret_contracts.ROOT and interface == secret_contracts.SERVICE_IFACE
+            assert signature == "sv" and body[0] == secret_contracts.ALGORITHM
             assert body[1][0] == "ay" and len(body[1][1]) == 128
             return (("ay", b"\x04"), _SESSION)
-        assert method == "Close" and path == _SESSION and interface == native._SESSION_IFACE
+        assert method == "Close" and path == _SESSION and interface == secret_contracts.SESSION_IFACE
         raise self.failure
 
 
@@ -770,7 +775,10 @@ def test_encrypted_session_close_preserves_body_primary_and_wipes_keys(mode: str
     )
     bus = _FailingSessionClose(cleanup)
     captured: list[Any] = []
-    with pytest.raises(BaseException) as caught, native._session(cast(native._DeadlineBus, bus)) as session:
+    with (
+        pytest.raises(BaseException) as caught,
+        native._session(cast(secret_transport.DeadlineSecretBus, bus)) as session,
+    ):
         captured.append(session)
         assert session.aes_key is not None and session.my_private_key != 0
         if primary is not None:
@@ -799,7 +807,10 @@ def test_encrypted_session_close_retains_previous_cleanup_identity(kind: str) ->
     cleanup = asyncio.CancelledError("synthetic terminal session close cancellation")
     bus = _FailingSessionClose(cleanup)
     captured: list[Any] = []
-    with pytest.raises(BaseException) as caught, native._session(cast(native._DeadlineBus, bus)) as session:
+    with (
+        pytest.raises(BaseException) as caught,
+        native._session(cast(secret_transport.DeadlineSecretBus, bus)) as session,
+    ):
         captured.append(session)
         raise primary
     assert caught.value is primary

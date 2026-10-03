@@ -76,6 +76,7 @@ def test_optional_store_acquisition_cannot_block_password_or_admit_automation(
             capture_login=lambda _channel: native_login,
             secret_store=unavailable_store,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         clients: list[VerifiedRuntimeConnection] = []
         with ThreadPoolExecutor(max_workers=1) as pool:

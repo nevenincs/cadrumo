@@ -113,11 +113,7 @@ class XlsProvider(FinancialProvider):
             worksheets = read_legacy_workbook(self._read_source_bytes(path))
         except TabularSourceError as exc:
             raise InvalidFinancialSourceError(f"could not open legacy workbook {path.name}: {exc}") from exc
-        best: tuple[LegacyWorksheet, WorksheetLayoutMatch] | None = None
-        for worksheet in worksheets:
-            candidate = best_layout_match([cell.value for cell in row] for row in worksheet.rows[:LAYOUT_SAMPLE_ROWS])
-            if candidate is not None and (best is None or candidate.score > best[1].score):
-                best = (worksheet, candidate)
+        best = _best_worksheet_layout(worksheets)
         if best is None or best[1].score < MIN_LAYOUT_SCORE:
             raise InvalidFinancialSourceError("Workbook does not contain a supported bank-statement header row")
         worksheet, match = best
@@ -140,3 +136,15 @@ def _refuse_formula_data_rows(worksheet: LegacyWorksheet, *, header_index: int) 
                 f"worksheet {worksheet.name!r} contains formula cell at row {row_number}, "
                 f"column {column_number}; {FORMULA_CELL_REFUSAL}",
             )
+
+
+def _best_worksheet_layout(
+    worksheets: tuple[LegacyWorksheet, ...],
+) -> tuple[LegacyWorksheet, WorksheetLayoutMatch] | None:
+    """Choose the highest layout score while preserving first-worksheet ties."""
+    best: tuple[LegacyWorksheet, WorksheetLayoutMatch] | None = None
+    for worksheet in worksheets:
+        candidate = best_layout_match([cell.value for cell in row] for row in worksheet.rows[:LAYOUT_SAMPLE_ROWS])
+        if candidate is not None and (best is None or candidate.score > best[1].score):
+            best = (worksheet, candidate)
+    return best

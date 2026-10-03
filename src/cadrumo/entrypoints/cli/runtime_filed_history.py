@@ -9,7 +9,7 @@ from uuid import UUID
 
 import typer
 
-from ...application.live.filed_data_capture import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
+from ...application.live.filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
 from ...application.live.filed_history_operation import (
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FiledHistoryOperationRequest,

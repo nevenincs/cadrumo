@@ -27,14 +27,12 @@ from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .evidence import (
@@ -47,7 +45,7 @@ from .evidence import (
 from .evidence_port_identity import require_exact_evidence_ports
 from .evidence_ports import LedgerEvidencePortsFactory
 from .evidence_read_operation import LedgerEvidenceRecordProjection
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access
 
 LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID = "ledger.evidence.add"
 LEDGER_EVIDENCE_ADD_PHASE = LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
@@ -382,19 +380,13 @@ def _require_add_success_receipt(receipt: OperationTerminalReceipt, *, profile_i
 def _build_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDefinition:
     request_type = LedgerEvidenceAddRequest
     result_type = LedgerEvidenceAddExecutionResult
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=LedgerEvidenceAddExecutor,
-            build=lambda: LedgerEvidenceAddExecutor(ports_factory),
-        ),
-        phase_codes=(LEDGER_EVIDENCE_ADD_PHASE,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerEvidenceAddExecutor,
+        build=lambda: LedgerEvidenceAddExecutor(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -412,16 +404,7 @@ def resolve_ledger_evidence_add_access(
         request.payload, LedgerEvidenceAddRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
-    )
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_evidence_add_registration(

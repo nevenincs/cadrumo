@@ -26,7 +26,7 @@ from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle,
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.lifecycle_clock_gate import ModeloLifecycleClockPrecedesError
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_work_unit, rename_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.errors.error_codes import get_registered_error_code
@@ -164,7 +164,7 @@ def _workflow_profile() -> TaxpayerProfile:
 def _verify(
     revision_id: CalculationRevisionId, *, clock: datetime, operation: PinnedAuthorityOperation
 ) -> VerificationReport:
-    return verify_modelo_revision(
+    return verify_modelo_revision_with_preconditions(
         revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         operator_scope_ports=build_operator_scope_ports(),
@@ -173,7 +173,7 @@ def _verify(
         verification_repositories=build_test_verification_repository_bundle(),
         clock=clock,
         operation=operation,
-    )
+    ).report
 
 
 def _file(revision_id: CalculationRevisionId, *, clock: datetime, operation: PinnedAuthorityOperation) -> None:

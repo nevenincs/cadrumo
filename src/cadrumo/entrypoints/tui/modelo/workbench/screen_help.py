@@ -14,10 +14,12 @@ from .....application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormField,
 )
+from .....application.overview.calendar import holiday_coverage_statement
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from ...components.cell_text import wrap_words
-from .casilla_list import CasillaList, CasillaListEntry, CasillaListNote
+from .casilla_list import CasillaList
+from .casilla_list_models import CasillaListEntry, CasillaListNote
 from .grid import CasillaListRecords
 from .header import (
     deadline_help,
@@ -99,6 +101,8 @@ class WorkbenchHelpMixin:
             shifted = deadline_help(form, self._language, recorded=self.recorded)
             if shifted is not None:
                 lines.append(shifted)
+            if not self.recorded and form.deadline is not None:
+                lines.append(holiday_coverage_statement(form.deadline.holiday_coverage, None))
             lines.append(tr("tui.modelo.workbench.help.keys", keys=self._all_keys_text()))
         band.update(blocks_marked("\n".join(self._band_lines(band, lines))))
 

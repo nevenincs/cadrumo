@@ -9,14 +9,18 @@ import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.bienes_inversion.registered_operation import (
+from ...application.bienes_inversion.registered_contracts import (
     BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     BIENES_INVERSION_LIST_OPERATION_DEFINITION_ID,
     BIENES_INVERSION_VALIDATION_REFUSAL_CODE,
-    BienesInversionDeclareProjection,
+)
+from ...application.bienes_inversion.registered_requests import (
     BienesInversionDeclareRequest,
-    BienesInversionListProjection,
     BienesInversionListRequest,
+)
+from ...application.bienes_inversion.registered_result_contracts import (
+    BienesInversionDeclareProjection,
+    BienesInversionListProjection,
     BienesInversionRefusalProjection,
     BienInversionRecordProjection,
 )

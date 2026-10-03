@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#m303-compensacion-revision-split'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:8bd846e09f8a621e4358532b4fe540d205a6145fd353db74463c50355dbc675e'
-related:
-  - "[[2026-08-13-registry-suite-red-at-head-audit]]"
+related: []
 ---
 
 # `m303-compensacion-revision-split` research: `M303 compensacion carry across the 2024 revision split`

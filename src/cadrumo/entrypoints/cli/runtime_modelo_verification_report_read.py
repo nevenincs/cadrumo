@@ -7,13 +7,15 @@ from uuid import UUID
 
 import typer
 
-from ...application.modelo.verification_report_read_operation import (
+from ...application.modelo.verification_report_read_contracts import (
     MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID,
     MODELO_VERIFICATION_REPORT_VIEW_OPERATION_DEFINITION_ID,
-    ModeloVerificationReportListProjection,
     ModeloVerificationReportListRequest,
-    ModeloVerificationReportViewProjection,
     ModeloVerificationReportViewRequest,
+)
+from ...application.modelo.verification_report_read_projection import (
+    ModeloVerificationReportListProjection,
+    ModeloVerificationReportViewProjection,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

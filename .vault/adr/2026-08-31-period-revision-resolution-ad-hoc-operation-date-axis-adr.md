@@ -3,16 +3,16 @@ tags:
   - '#adr'
   - '#period-revision-resolution'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:96cd58218a39b7a05e2dd00ad8ca5bb7b8436c73cd8b2ebfff3eae8d1a6c1942'
+body_hash: 'sha256:2087e69ac154e7c54cc2259033532f352538cec3919d73b8e466147f67a19f15'
 related:
   - "[[2026-06-10-period-revision-resolution-adr]]"
   - '[[2026-06-10-period-revision-resolution-research]]'
 ---
 # `period-revision-resolution` ADR: an AD-HOC work target must carry its operation date | (**status:** `proposed`)
 
-## Context
+## Problem Statement
 
 This blocks the modelo 308 filing-year-2011 resolution gap. No registry datum
 changes under this decision.
@@ -73,6 +73,12 @@ selects the revision — WHEN the operation happened — is not in it. Measured 
 tree, only 4 production call sites pass `on=`, so in practice this resolves to a
 refusal.
 
+## Considerations
+
+- The two valid 308 revisions split on a calendar date inside filing year 2011; registry validity dates already express that boundary correctly.
+- AD-HOC has no month component, and annual applicability is not the legal formula in this order.
+- Only four of thirty production selection calls currently pass on=, all internal pass-throughs, so application services need the new field.
+
 ## Decision
 
 **An AD-HOC work target carries its operation date, and AD-HOC revision resolution
@@ -88,7 +94,7 @@ requires it.**
    a month, and the axis is still law-determined: the date selects, the operator
    never names a revision.
 
-## Rejected alternatives
+## Considered options
 
 **Invent period tokens** (`AD-HOC-H1` / `AD-HOC-H2`, or a month-qualified token).
 This fabricates AEAT period grammar. `aeat-registry-authority-flow` forbids an
@@ -111,6 +117,22 @@ so no wrong figure is ever produced — and the affected window is a single hist
 year whose filing period closed in 2012. That is why this is not urgent. It is still
 a real hole: modelo 308 cannot be computed for 2011 through the sanctioned path, and
 the same shape returns for any future modelo AEAT splits mid-year on a date.
+
+**Chosen — require the operation date only for AD-HOC.** It supplies the date that selects between the two legally non-overlapping revision windows while preserving the mandated (modelo, filing_year, period) axis for periodic and annual models.
+
+## Constraints
+
+- Use the date of the reported operation, not a filing timestamp, and never let the operator name a revision.
+- Keep the existing three-axis resolution unchanged for periodic and annual models.
+- Missing AD-HOC dates continue to fail closed; no registry date window is rewritten.
+
+## Implementation
+
+Add a required operation date to the AD-HOC work target and carry it through persistence and CLI input. Pass it to revision selection for AD-HOC targets, and retain the existing refusal when it is absent. Registry declarations need no change.
+
+## Rationale
+
+AEAT's 2011 order makes the 308 boundary effective on 1 July, without an ejercicio-keyed applicability formula. AD-HOC carries no month, so the period axis cannot select the correct side of that date. The chosen date axis represents the governing fact; synthetic period tokens, altered year ranges, or a softened uniqueness gate would each misstate or hide it.
 
 ## Consequences
 

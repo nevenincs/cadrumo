@@ -154,6 +154,16 @@ def test_application_renderer_preserves_present_zero_and_missing_key_two_distinc
         _render_application_record(record, key="2", amount=None)
 
 
+def test_application_renderer_treats_empty_optional_amount_as_absent() -> None:
+    record = _renderable_record()
+    ordinary_wire = _render_application_record(record, key="1", amount="")
+    assert ordinary_wire[175:186] == "00000000000"
+    require_m280_negative_imputation_context(record, ordinary_wire, source_digests=_SOURCE_DIGESTS)
+
+    with pytest.raises(FilingExportValidationError, match="requires key 2"):
+        _render_application_record(record, key="2", amount="")
+
+
 def test_application_zero_projection_refuses_changed_source_and_geometry() -> None:
     record = _renderable_record()
     with pytest.raises(FilingExportValidationError, match="reviewed source"):

@@ -86,11 +86,23 @@ def coverage_totals(rows: Iterable[RevisionCoverage]) -> dict[str, int]:
     listed = tuple(rows)
     return {
         "revisions": len(listed),
-        "declared": sum(1 for row in listed if row.declared),
-        "undeclared": sum(1 for row in listed if not row.declared),
-        "reviewed": sum(1 for row in listed if row.review_state == "reviewed"),
-        "casillas": sum(row.casillas for row in listed),
-        "on_form": sum(row.on_form for row in listed),
-        "working_figure": sum(row.working_figure for row in listed),
-        "unplaced": sum(row.unplaced for row in listed),
+        **_declaration_state_totals(listed),
+        **_placement_totals(listed),
+    }
+
+
+def _declaration_state_totals(rows: tuple[RevisionCoverage, ...]) -> dict[str, int]:
+    return {
+        "declared": sum(1 for row in rows if row.declared),
+        "undeclared": sum(1 for row in rows if not row.declared),
+        "reviewed": sum(1 for row in rows if row.review_state == "reviewed"),
+    }
+
+
+def _placement_totals(rows: tuple[RevisionCoverage, ...]) -> dict[str, int]:
+    return {
+        "casillas": sum(row.casillas for row in rows),
+        "on_form": sum(row.on_form for row in rows),
+        "working_figure": sum(row.working_figure for row in rows),
+        "unplaced": sum(row.unplaced for row in rows),
     }

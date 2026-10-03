@@ -13,8 +13,8 @@ from uuid import UUID
 
 import typer
 
-from ...adapters.local_runtime.framing import RuntimeTransportCleanup
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources

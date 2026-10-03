@@ -19,7 +19,11 @@ from .pydantic_error_detail import validation_error_detail
 from .render_profile_model import RenderProfile
 from .render_profile_model_base import RenderProfileDesignIdentity
 from .render_profile_rules import (
+    LiteralNumericRule,
     RenderProfileFragment,
+    SignedMonetaryCompositeRule,
+    SingletonNumericRule,
+    TelematicTransportChoiceRule,
     Width17MembershipRule,
 )
 from .render_profile_validation import _duplicates
@@ -40,17 +44,28 @@ def load_render_profile_for_revision(epoch_directory: Path, revision_id: Revisio
     if not is_registry_id(revision_id) or "/" in revision_id or "\\" in revision_id:
         raise RegistryValidationError(f"render-profile revision id is not a safe registry identity: {revision_id!r}")
     _require_render_profile_directory(epoch_directory)
+    members = _render_profile_epoch_members(epoch_directory)
+    selected = _revision_profile_directory(epoch_directory, revision_id, members)
+    return load_render_profile(epoch_directory if selected is None else selected)
+
+
+def _render_profile_epoch_members(epoch_directory: Path) -> tuple[Path, ...]:
     try:
-        members = tuple(iter_directory(epoch_directory, require_root=True))
+        return tuple(iter_directory(epoch_directory, require_root=True))
     except OSError as exc:
         raise RegistryValidationError(f"cannot inspect render-profile epoch directory: {epoch_directory}") from exc
-    fragments = tuple(path for path in members if path.suffix.casefold() == ".toml")
-    editions = tuple(path for path in members if path.is_dir() and not is_link_like(path))
+
+
+def _revision_profile_directory(
+    epoch_directory: Path,
+    revision_id: RevisionId,
+    members: tuple[Path, ...],
+) -> Path | None:
+    fragments, editions, invalid = _classify_render_profile_epoch_members(members)
     if fragments and editions:
         raise RegistryValidationError("render-profile epoch mixes unscoped fragments with revision directories")
     if fragments:
-        return load_render_profile(epoch_directory)
-    invalid = tuple(path.name for path in members if path not in editions or not is_registry_id(path.name))
+        return None
     if invalid:
         raise RegistryValidationError(f"render-profile epoch contains unsupported entries: {invalid!r}")
     selected = epoch_directory / revision_id
@@ -58,7 +73,17 @@ def load_render_profile_for_revision(epoch_directory: Path, revision_id: Revisio
         raise RegistryValidationError(
             f"render-profile epoch has no reviewed profile for revision {revision_id!r}: {epoch_directory}"
         )
-    return load_render_profile(selected)
+    return selected
+
+
+def _classify_render_profile_epoch_members(
+    members: tuple[Path, ...],
+) -> tuple[tuple[Path, ...], tuple[Path, ...], tuple[str, ...]]:
+    """Partition epoch entries with the loader's existing suffix and link rules."""
+    fragments = tuple(path for path in members if path.suffix.casefold() == ".toml")
+    editions = tuple(path for path in members if path.is_dir() and not is_link_like(path))
+    invalid = tuple(path.name for path in members if path not in editions or not is_registry_id(path.name))
+    return fragments, editions, invalid
 
 
 def _require_render_profile_directory(profile_directory: Path) -> None:
@@ -103,23 +128,50 @@ def _compile_fragments(fragments: Iterable[RenderProfileFragment]) -> RenderProf
     _require_unique_fragment_ids(ids)
     design_identity = _shared_fragment_identity(ordered)
     _require_fragment_identity(ordered, design_identity)
-    empty_assertions = tuple(fragment.empty_rule_assertion for fragment in ordered if fragment.empty_rule_assertion)
-    if empty_assertions and len(ordered) != 1:
-        raise RegistryValidationError("an empty render profile must be one complete exact-design fragment")
+    empty_assertion = _compile_empty_rule_assertion(ordered)
     width_rules = _compile_width_17_rules(rule for fragment in ordered for rule in fragment.width_17_rules)
     return RenderProfile(
         schema_version=RENDER_PROFILE_SCHEMA_VERSION,
         design_identity=design_identity,
         fragment_ids=ids,
         width_17_rules=width_rules,
-        singleton_rules=tuple(rule for fragment in ordered for rule in fragment.singleton_rules),
-        signed_composite_rules=tuple(rule for fragment in ordered for rule in fragment.signed_composite_rules),
-        literal_numeric_rules=tuple(rule for fragment in ordered for rule in fragment.literal_numeric_rules),
-        telematic_transport_choice_rules=tuple(
-            rule for fragment in ordered for rule in fragment.telematic_transport_choice_rules
-        ),
-        empty_rule_assertion=empty_assertions[0] if empty_assertions else None,
+        singleton_rules=_compile_singleton_rules(ordered),
+        signed_composite_rules=_compile_signed_composite_rules(ordered),
+        literal_numeric_rules=_compile_literal_numeric_rules(ordered),
+        telematic_transport_choice_rules=_compile_telematic_transport_rules(ordered),
+        empty_rule_assertion=empty_assertion,
     )
+
+
+def _compile_empty_rule_assertion(
+    fragments: tuple[RenderProfileFragment, ...],
+) -> Literal["canonical_eligibility_empty"] | None:
+    assertions = tuple(fragment.empty_rule_assertion for fragment in fragments if fragment.empty_rule_assertion)
+    if assertions and len(fragments) != 1:
+        raise RegistryValidationError("an empty render profile must be one complete exact-design fragment")
+    return assertions[0] if assertions else None
+
+
+def _compile_singleton_rules(fragments: tuple[RenderProfileFragment, ...]) -> tuple[SingletonNumericRule, ...]:
+    return tuple(rule for fragment in fragments for rule in fragment.singleton_rules)
+
+
+def _compile_signed_composite_rules(
+    fragments: tuple[RenderProfileFragment, ...],
+) -> tuple[SignedMonetaryCompositeRule, ...]:
+    return tuple(rule for fragment in fragments for rule in fragment.signed_composite_rules)
+
+
+def _compile_literal_numeric_rules(
+    fragments: tuple[RenderProfileFragment, ...],
+) -> tuple[LiteralNumericRule, ...]:
+    return tuple(rule for fragment in fragments for rule in fragment.literal_numeric_rules)
+
+
+def _compile_telematic_transport_rules(
+    fragments: tuple[RenderProfileFragment, ...],
+) -> tuple[TelematicTransportChoiceRule, ...]:
+    return tuple(rule for fragment in fragments for rule in fragment.telematic_transport_choice_rules)
 
 
 def _ordered_profile_fragments(fragments: Iterable[RenderProfileFragment]) -> tuple[RenderProfileFragment, ...]:

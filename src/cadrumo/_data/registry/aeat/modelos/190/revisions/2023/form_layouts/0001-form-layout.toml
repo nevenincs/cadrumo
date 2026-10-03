@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "4f6ffb8a17e1fbd8da4ca338715ebf4bb3ba232ffd53f9ff3b6307c09466dc15"
+source_state_digest = "c5da2d5f54f3713a4a717c91e62d905e7c0e60241f29472b6e14510723201e28"
 placements = [
     { casilla_id = "decl.complementaria", kind = "on_form", box_number = "121" },
     { casilla_id = "decl.correo-electronico", kind = "on_form" },
@@ -19,8 +19,8 @@ placements = [
     { casilla_id = "decl.retenciones-total", kind = "on_form", box_number = "03" },
     { casilla_id = "decl.sustitutiva", kind = "on_form", box_number = "122" },
     { casilla_id = "decl.total-percepciones", kind = "on_form", box_number = "01" },
-    { casilla_id = "perc.ano-nacimiento", kind = "on_form" },
-    { casilla_id = "perc.anualidades-alimentos", kind = "on_form" },
+    { casilla_id = "perc.ano-nacimiento", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.anualidades-alimentos", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "perc.ascendientes-75-mas-entero", kind = "on_form", box_number = "244" },
     { casilla_id = "perc.ascendientes-75-mas-total", kind = "on_form", box_number = "243" },
     { casilla_id = "perc.ascendientes-discapacidad-33-65-entero", kind = "on_form", box_number = "246" },
@@ -38,45 +38,45 @@ placements = [
     { casilla_id = "perc.computo-hijo-2", kind = "on_form", box_number = "252" },
     { casilla_id = "perc.computo-hijo-3", kind = "on_form", box_number = "253" },
     { casilla_id = "perc.contrato-relacion", kind = "on_form", box_number = "168" },
-    { casilla_id = "perc.descendientes-discapacidad-33-65-entero", kind = "on_form" },
-    { casilla_id = "perc.descendientes-discapacidad-33-65-total", kind = "on_form" },
-    { casilla_id = "perc.descendientes-discapacidad-65-entero", kind = "on_form" },
-    { casilla_id = "perc.descendientes-discapacidad-65-total", kind = "on_form" },
-    { casilla_id = "perc.descendientes-discapacidad-movilidad-entero", kind = "on_form" },
-    { casilla_id = "perc.descendientes-discapacidad-movilidad-total", kind = "on_form" },
+    { casilla_id = "perc.descendientes-discapacidad-33-65-entero", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.descendientes-discapacidad-33-65-total", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.descendientes-discapacidad-65-entero", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.descendientes-discapacidad-65-total", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.descendientes-discapacidad-movilidad-entero", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.descendientes-discapacidad-movilidad-total", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "perc.descendientes-menores-3-entero", kind = "on_form", box_number = "224" },
     { casilla_id = "perc.descendientes-menores-3-total", kind = "on_form", box_number = "223" },
-    { casilla_id = "perc.descendientes-resto-entero", kind = "on_form" },
-    { casilla_id = "perc.descendientes-resto-total", kind = "on_form" },
+    { casilla_id = "perc.descendientes-resto-entero", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.descendientes-resto-total", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "perc.discapacidad", kind = "on_form", box_number = "167" },
-    { casilla_id = "perc.ejercicio-devengo", kind = "on_form" },
-    { casilla_id = "perc.gastos-deducibles", kind = "on_form" },
-    { casilla_id = "perc.incapacidad-dineraria-percepcion", kind = "on_form" },
-    { casilla_id = "perc.incapacidad-dineraria-retenciones", kind = "on_form" },
-    { casilla_id = "perc.incapacidad-especie-ingresos-a-cuenta", kind = "on_form" },
-    { casilla_id = "perc.incapacidad-especie-repercutidos", kind = "on_form" },
-    { casilla_id = "perc.incapacidad-especie-valoracion", kind = "on_form" },
-    { casilla_id = "perc.ingresos-a-cuenta", kind = "on_form" },
-    { casilla_id = "perc.ingresos-a-cuenta-repercutidos", kind = "on_form" },
+    { casilla_id = "perc.ejercicio-devengo", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.gastos-deducibles", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.incapacidad-dineraria-percepcion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.incapacidad-dineraria-retenciones", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.incapacidad-especie-ingresos-a-cuenta", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.incapacidad-especie-repercutidos", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.incapacidad-especie-valoracion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.ingresos-a-cuenta", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.ingresos-a-cuenta-repercutidos", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "perc.movilidad-geografica", kind = "on_form", box_number = "170" },
-    { casilla_id = "perc.nif", kind = "on_form" },
-    { casilla_id = "perc.nif-conyuge-titular-unidad", kind = "on_form" },
-    { casilla_id = "perc.nif-representante-legal", kind = "on_form" },
-    { casilla_id = "perc.nombre", kind = "on_form" },
-    { casilla_id = "perc.pension-compensatoria", kind = "on_form" },
-    { casilla_id = "perc.percepcion-dineraria", kind = "on_form" },
-    { casilla_id = "perc.percepcion-especie", kind = "on_form" },
+    { casilla_id = "perc.nif", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.nif-conyuge-titular-unidad", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.nif-representante-legal", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.nombre", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.pension-compensatoria", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.percepcion-dineraria", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.percepcion-especie", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "perc.prestamos-vivienda-clave", kind = "on_form", box_number = "254" },
-    { casilla_id = "perc.provincia", kind = "on_form" },
-    { casilla_id = "perc.reducciones-aplicables", kind = "on_form" },
-    { casilla_id = "perc.retenciones-forales-araba", kind = "on_form" },
-    { casilla_id = "perc.retenciones-forales-bizkaia", kind = "on_form" },
-    { casilla_id = "perc.retenciones-forales-estatal", kind = "on_form" },
-    { casilla_id = "perc.retenciones-forales-gipuzkoa", kind = "on_form" },
-    { casilla_id = "perc.retenciones-forales-navarra", kind = "on_form" },
-    { casilla_id = "perc.retenciones-practicadas", kind = "on_form" },
+    { casilla_id = "perc.provincia", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.reducciones-aplicables", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.retenciones-forales-araba", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.retenciones-forales-bizkaia", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.retenciones-forales-estatal", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.retenciones-forales-gipuzkoa", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.retenciones-forales-navarra", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "perc.retenciones-practicadas", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "perc.situacion-familiar", kind = "on_form", box_number = "157" },
-    { casilla_id = "perc.subclave", kind = "on_form" },
+    { casilla_id = "perc.subclave", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "perc.titular-unidad-convivencia", kind = "on_form", box_number = "169" },
 ]
 
@@ -102,14 +102,35 @@ blocks = [
 ]
 
 [[revisions.2023.form_layouts.pages]]
-id = "modelo-190-perceptor"
-official_ref = "modelo-190-perceptor"
-heading_key = "modelo.schema.190.form.page.modelo-190-perceptor.heading"
-condition = "optional_record"
+id = "numbered-boxes"
+heading_key = "modelo.schema.190.form.page.numbered-boxes.heading"
 
 [[revisions.2023.form_layouts.pages.sections]]
-id = "general"
-heading_key = "modelo.schema.190.form.section.general.heading"
+id = "perceptor"
+heading_key = "modelo.schema.190.form.section.perceptor.heading"
 blocks = [
-    { kind = "repeating", id = "modelo-190-perceptor", row_source = "export_record", export_record_id = "modelo-190-perceptor", columns = [{ key = "perc-nif", heading_key = "modelo.schema.190.form.column.perc-nif.heading", casilla_id = "perc.nif" }, { key = "perc-nombre", heading_key = "modelo.schema.190.form.column.perc-nombre.heading", casilla_id = "perc.nombre" }, { key = "perc-clave", heading_key = "modelo.schema.190.form.column.perc-clave.heading", casilla_id = "perc.clave" }, { key = "perc-subclave", heading_key = "modelo.schema.190.form.column.perc-subclave.heading", casilla_id = "perc.subclave" }, { key = "perc-percepcion-dineraria", heading_key = "modelo.schema.190.form.column.perc-percepcion-dineraria.heading", casilla_id = "perc.percepcion-dineraria" }, { key = "perc-percepcion-especie", heading_key = "modelo.schema.190.form.column.perc-percepcion-especie.heading", casilla_id = "perc.percepcion-especie" }, { key = "perc-retenciones-practicadas", heading_key = "modelo.schema.190.form.column.perc-retenciones-practicadas.heading", casilla_id = "perc.retenciones-practicadas" }, { key = "perc-ingresos-a-cuenta", heading_key = "modelo.schema.190.form.column.perc-ingresos-a-cuenta.heading", casilla_id = "perc.ingresos-a-cuenta" }, { key = "perc-provincia", heading_key = "modelo.schema.190.form.column.perc-provincia.heading", casilla_id = "perc.provincia" }, { key = "perc-ceuta-melilla", heading_key = "modelo.schema.190.form.column.perc-ceuta-melilla.heading", casilla_id = "perc.ceuta-melilla" }, { key = "perc-ano-nacimiento", heading_key = "modelo.schema.190.form.column.perc-ano-nacimiento.heading", casilla_id = "perc.ano-nacimiento" }, { key = "perc-situacion-familiar", heading_key = "modelo.schema.190.form.column.perc-situacion-familiar.heading", casilla_id = "perc.situacion-familiar" }, { key = "perc-nif-representante-legal", heading_key = "modelo.schema.190.form.column.perc-nif-representante-legal.heading", casilla_id = "perc.nif-representante-legal" }, { key = "perc-ingresos-a-cuenta-repercutidos", heading_key = "modelo.schema.190.form.column.perc-ingresos-a-cuenta-repercutidos.heading", casilla_id = "perc.ingresos-a-cuenta-repercutidos" }, { key = "perc-ejercicio-devengo", heading_key = "modelo.schema.190.form.column.perc-ejercicio-devengo.heading", casilla_id = "perc.ejercicio-devengo" }, { key = "perc-nif-conyuge-titular-unidad", heading_key = "modelo.schema.190.form.column.perc-nif-conyuge-titular-unidad.heading", casilla_id = "perc.nif-conyuge-titular-unidad" }, { key = "perc-discapacidad", heading_key = "modelo.schema.190.form.column.perc-discapacidad.heading", casilla_id = "perc.discapacidad" }, { key = "perc-contrato-relacion", heading_key = "modelo.schema.190.form.column.perc-contrato-relacion.heading", casilla_id = "perc.contrato-relacion" }, { key = "perc-titular-unidad-convivencia", heading_key = "modelo.schema.190.form.column.perc-titular-unidad-convivencia.heading", casilla_id = "perc.titular-unidad-convivencia" }, { key = "perc-movilidad-geografica", heading_key = "modelo.schema.190.form.column.perc-movilidad-geografica.heading", casilla_id = "perc.movilidad-geografica" }, { key = "perc-descendientes-menores-3-total", heading_key = "modelo.schema.190.form.column.perc-descendientes-menores-3-total.heading", casilla_id = "perc.descendientes-menores-3-total" }, { key = "perc-descendientes-menores-3-entero", heading_key = "modelo.schema.190.form.column.perc-descendientes-menores-3-entero.heading", casilla_id = "perc.descendientes-menores-3-entero" }, { key = "perc-descendientes-resto-total", heading_key = "modelo.schema.190.form.column.perc-descendientes-resto-total.heading", casilla_id = "perc.descendientes-resto-total" }, { key = "perc-descendientes-resto-entero", heading_key = "modelo.schema.190.form.column.perc-descendientes-resto-entero.heading", casilla_id = "perc.descendientes-resto-entero" }, { key = "perc-descendientes-discapacidad-33-65-total", heading_key = "modelo.schema.190.form.column.perc-descendientes-discapacidad-33-65-total.heading", casilla_id = "perc.descendientes-discapacidad-33-65-total" }, { key = "perc-descendientes-discapacidad-33-65-entero", heading_key = "modelo.schema.190.form.column.perc-descendientes-discapacidad-33-65-entero.heading", casilla_id = "perc.descendientes-discapacidad-33-65-entero" }, { key = "perc-descendientes-discapacidad-movilidad-total", heading_key = "modelo.schema.190.form.column.perc-descendientes-discapacidad-movilidad-total.heading", casilla_id = "perc.descendientes-discapacidad-movilidad-total" }, { key = "perc-descendientes-discapacidad-movilidad-entero", heading_key = "modelo.schema.190.form.column.perc-descendientes-discapacidad-movilidad-entero.heading", casilla_id = "perc.descendientes-discapacidad-movilidad-entero" }, { key = "perc-descendientes-discapacidad-65-total", heading_key = "modelo.schema.190.form.column.perc-descendientes-discapacidad-65-total.heading", casilla_id = "perc.descendientes-discapacidad-65-total" }, { key = "perc-descendientes-discapacidad-65-entero", heading_key = "modelo.schema.190.form.column.perc-descendientes-discapacidad-65-entero.heading", casilla_id = "perc.descendientes-discapacidad-65-entero" }, { key = "perc-ascendientes-menores-75-total", heading_key = "modelo.schema.190.form.column.perc-ascendientes-menores-75-total.heading", casilla_id = "perc.ascendientes-menores-75-total" }, { key = "perc-ascendientes-menores-75-entero", heading_key = "modelo.schema.190.form.column.perc-ascendientes-menores-75-entero.heading", casilla_id = "perc.ascendientes-menores-75-entero" }, { key = "perc-ascendientes-75-mas-total", heading_key = "modelo.schema.190.form.column.perc-ascendientes-75-mas-total.heading", casilla_id = "perc.ascendientes-75-mas-total" }, { key = "perc-ascendientes-75-mas-entero", heading_key = "modelo.schema.190.form.column.perc-ascendientes-75-mas-entero.heading", casilla_id = "perc.ascendientes-75-mas-entero" }, { key = "perc-ascendientes-discapacidad-33-65-total", heading_key = "modelo.schema.190.form.column.perc-ascendientes-discapacidad-33-65-total.heading", casilla_id = "perc.ascendientes-discapacidad-33-65-total" }, { key = "perc-ascendientes-discapacidad-33-65-entero", heading_key = "modelo.schema.190.form.column.perc-ascendientes-discapacidad-33-65-entero.heading", casilla_id = "perc.ascendientes-discapacidad-33-65-entero" }, { key = "perc-ascendientes-discapacidad-movilidad-total", heading_key = "modelo.schema.190.form.column.perc-ascendientes-discapacidad-movilidad-total.heading", casilla_id = "perc.ascendientes-discapacidad-movilidad-total" }, { key = "perc-ascendientes-discapacidad-movilidad-entero", heading_key = "modelo.schema.190.form.column.perc-ascendientes-discapacidad-movilidad-entero.heading", casilla_id = "perc.ascendientes-discapacidad-movilidad-entero" }, { key = "perc-ascendientes-discapacidad-65-total", heading_key = "modelo.schema.190.form.column.perc-ascendientes-discapacidad-65-total.heading", casilla_id = "perc.ascendientes-discapacidad-65-total" }, { key = "perc-ascendientes-discapacidad-65-entero", heading_key = "modelo.schema.190.form.column.perc-ascendientes-discapacidad-65-entero.heading", casilla_id = "perc.ascendientes-discapacidad-65-entero" }, { key = "perc-computo-hijo-1", heading_key = "modelo.schema.190.form.column.perc-computo-hijo-1.heading", casilla_id = "perc.computo-hijo-1" }, { key = "perc-computo-hijo-2", heading_key = "modelo.schema.190.form.column.perc-computo-hijo-2.heading", casilla_id = "perc.computo-hijo-2" }, { key = "perc-computo-hijo-3", heading_key = "modelo.schema.190.form.column.perc-computo-hijo-3.heading", casilla_id = "perc.computo-hijo-3" }, { key = "perc-prestamos-vivienda-clave", heading_key = "modelo.schema.190.form.column.perc-prestamos-vivienda-clave.heading", casilla_id = "perc.prestamos-vivienda-clave" }, { key = "perc-reducciones-aplicables", heading_key = "modelo.schema.190.form.column.perc-reducciones-aplicables.heading", casilla_id = "perc.reducciones-aplicables" }, { key = "perc-gastos-deducibles", heading_key = "modelo.schema.190.form.column.perc-gastos-deducibles.heading", casilla_id = "perc.gastos-deducibles" }, { key = "perc-pension-compensatoria", heading_key = "modelo.schema.190.form.column.perc-pension-compensatoria.heading", casilla_id = "perc.pension-compensatoria" }, { key = "perc-anualidades-alimentos", heading_key = "modelo.schema.190.form.column.perc-anualidades-alimentos.heading", casilla_id = "perc.anualidades-alimentos" }, { key = "perc-incapacidad-dineraria-percepcion", heading_key = "modelo.schema.190.form.column.perc-incapacidad-dineraria-percepcion.heading", casilla_id = "perc.incapacidad-dineraria-percepcion" }, { key = "perc-incapacidad-dineraria-retenciones", heading_key = "modelo.schema.190.form.column.perc-incapacidad-dineraria-retenciones.heading", casilla_id = "perc.incapacidad-dineraria-retenciones" }, { key = "perc-incapacidad-especie-valoracion", heading_key = "modelo.schema.190.form.column.perc-incapacidad-especie-valoracion.heading", casilla_id = "perc.incapacidad-especie-valoracion" }, { key = "perc-incapacidad-especie-ingresos-a-cuenta", heading_key = "modelo.schema.190.form.column.perc-incapacidad-especie-ingresos-a-cuenta.heading", casilla_id = "perc.incapacidad-especie-ingresos-a-cuenta" }, { key = "perc-incapacidad-especie-repercutidos", heading_key = "modelo.schema.190.form.column.perc-incapacidad-especie-repercutidos.heading", casilla_id = "perc.incapacidad-especie-repercutidos" }, { key = "perc-complemento-ayuda-infancia", heading_key = "modelo.schema.190.form.column.perc-complemento-ayuda-infancia.heading", casilla_id = "perc.complemento-ayuda-infancia" }, { key = "perc-retenciones-forales-estatal", heading_key = "modelo.schema.190.form.column.perc-retenciones-forales-estatal.heading", casilla_id = "perc.retenciones-forales-estatal" }, { key = "perc-retenciones-forales-navarra", heading_key = "modelo.schema.190.form.column.perc-retenciones-forales-navarra.heading", casilla_id = "perc.retenciones-forales-navarra" }, { key = "perc-retenciones-forales-araba", heading_key = "modelo.schema.190.form.column.perc-retenciones-forales-araba.heading", casilla_id = "perc.retenciones-forales-araba" }, { key = "perc-retenciones-forales-gipuzkoa", heading_key = "modelo.schema.190.form.column.perc-retenciones-forales-gipuzkoa.heading", casilla_id = "perc.retenciones-forales-gipuzkoa" }, { key = "perc-retenciones-forales-bizkaia", heading_key = "modelo.schema.190.form.column.perc-retenciones-forales-bizkaia.heading", casilla_id = "perc.retenciones-forales-bizkaia" }] },
+    { kind = "field", id = "field-1", casilla_id = "perc.clave" },
+    { kind = "field", id = "field-2", casilla_id = "perc.ceuta-melilla" },
+    { kind = "field", id = "field-3", casilla_id = "perc.situacion-familiar" },
+    { kind = "field", id = "field-4", casilla_id = "perc.discapacidad" },
+    { kind = "field", id = "field-5", casilla_id = "perc.contrato-relacion" },
+    { kind = "field", id = "field-6", casilla_id = "perc.titular-unidad-convivencia" },
+    { kind = "field", id = "field-7", casilla_id = "perc.movilidad-geografica" },
+    { kind = "field", id = "field-8", casilla_id = "perc.descendientes-menores-3-total" },
+    { kind = "field", id = "field-9", casilla_id = "perc.descendientes-menores-3-entero" },
+    { kind = "field", id = "field-10", casilla_id = "perc.ascendientes-menores-75-total" },
+    { kind = "field", id = "field-11", casilla_id = "perc.ascendientes-menores-75-entero" },
+    { kind = "field", id = "field-12", casilla_id = "perc.ascendientes-75-mas-total" },
+    { kind = "field", id = "field-13", casilla_id = "perc.ascendientes-75-mas-entero" },
+    { kind = "field", id = "field-14", casilla_id = "perc.ascendientes-discapacidad-33-65-total" },
+    { kind = "field", id = "field-15", casilla_id = "perc.ascendientes-discapacidad-33-65-entero" },
+    { kind = "field", id = "field-16", casilla_id = "perc.ascendientes-discapacidad-movilidad-total" },
+    { kind = "field", id = "field-17", casilla_id = "perc.ascendientes-discapacidad-movilidad-entero" },
+    { kind = "field", id = "field-18", casilla_id = "perc.ascendientes-discapacidad-65-total" },
+    { kind = "field", id = "field-19", casilla_id = "perc.ascendientes-discapacidad-65-entero" },
+    { kind = "field", id = "field-20", casilla_id = "perc.computo-hijo-1" },
+    { kind = "field", id = "field-21", casilla_id = "perc.computo-hijo-2" },
+    { kind = "field", id = "field-22", casilla_id = "perc.computo-hijo-3" },
+    { kind = "field", id = "field-23", casilla_id = "perc.prestamos-vivienda-clave" },
+    { kind = "field", id = "field-24", casilla_id = "perc.complemento-ayuda-infancia" },
 ]

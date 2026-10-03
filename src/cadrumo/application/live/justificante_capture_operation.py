@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable
-from contextlib import asynccontextmanager
-from dataclasses import dataclass, replace
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
@@ -15,40 +14,23 @@ from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import FilingRecordId, SnapshotId
 from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
-from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.observations_repository import ObservationSourceKind
-from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_succeeded_receipt_references,
+    require_terminal_receipt_match,
 )
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
 from .justificante import JustificanteCaptureSnapshotService, capture_justificante_snapshot_outcome
@@ -57,6 +39,8 @@ from .justificante_ports import (
     JustificanteLiveReadPort,
     JustificanteRegistrationPorts,
 )
+from .live_operation_execution import fenced_persistence_guard, own_provider_browser, publish_live_capture_report
+from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
 from .session import LiveSessionWriteReceipt
 from .snapshot_base import SnapshotLifecycleState
 
@@ -123,21 +107,21 @@ class JustificanteCapturePorts:
 type JustificanteCaptureCompositionFactory = Callable[[str, PinnedAuthorityOperation], JustificanteCapturePorts]
 
 
+_RECEIPT_CONTRADICTION = "justificante capture result contradicts its terminal receipt"
+
+
 def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     report = JustificanteCaptureOperationReport.model_validate(result, strict=True)
     projection = report.projection
-    expected_effect = OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE
-    if (
-        receipt.identity.definition_id != JUSTIFICANTE_CAPTURE_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.bucket_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not expected_effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-    ):
-        raise ValueError("justificante capture result contradicts its terminal receipt")
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=JUSTIFICANTE_CAPTURE_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
+    require_succeeded_receipt_references(receipt, message=_RECEIPT_CONTRADICTION)
     return projection
 
 
@@ -172,17 +156,9 @@ class JustificanteCaptureExecutor:
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
         ports = self._composition_factory(bucket_id, context.authority_operation)
-        browser_resources = self._browser_resources_factory()
-        context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_PHASES[1])
-
-        @asynccontextmanager
-        async def fresh_local_guard() -> AsyncGenerator[None]:
-            await context.events.phase(_PHASES[2])
-            async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
-                yield
-
+        browser_resources = await own_provider_browser(
+            context, self._browser_resources_factory, acquire_phase=_PHASES[1]
+        )
         with browser_resources.activate():
             session_receipt = LiveSessionWriteReceipt(context.events.effect)
             outcome = await capture_justificante_snapshot_outcome(
@@ -194,7 +170,7 @@ class JustificanteCaptureExecutor:
                 read_port=ports.read_port,
                 registration_ports=ports.registration_ports,
                 verifier=ports.verifier,
-                effect_guard=fresh_local_guard,
+                effect_guard=fenced_persistence_guard(context, persist_phase=_PHASES[2]),
                 on_session_write=session_receipt,
                 authority_operation=context.authority_operation,
             )
@@ -227,10 +203,9 @@ class JustificanteCaptureExecutor:
         # The authenticity verdict is persisted on every successful capture,
         # including a content-addressed recapture of an existing PDF.
         report = JustificanteCaptureOperationReport(projection=projection, local_write_performed=True)
-        await context.events.phase(_PHASES[3])
-        await context.events.effect(OperationEffect.UPDATED)
-        async with context.cancellation.irreversible_section():
-            return await context.operands.put(report, written_at=now())
+        return await publish_live_capture_report(
+            context, report, result_phase=_PHASES[3], effect=OperationEffect.UPDATED
+        )
 
 
 def build_justificante_capture_definition(
@@ -243,34 +218,14 @@ def build_justificante_capture_definition(
     def build() -> JustificanteCaptureExecutor:
         return JustificanteCaptureExecutor(composition_factory, browser_resources_factory, provider_preflight)
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=JUSTIFICANTE_CAPTURE_DEFINITION_ID,
         request_type=JustificanteCaptureRequest,
         result_type=JustificanteCaptureOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=JustificanteCaptureRequest,
-            executor_type=JustificanteCaptureExecutor,
-            build=build,
-        ),
+        executor_type=JustificanteCaptureExecutor,
+        build=build,
         phase_codes=_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES,
     )
 
 
@@ -278,31 +233,18 @@ def resolve_justificante_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile disclosure and a fresh COMMIT fence."""
-    if request.definition_id != JUSTIFICANTE_CAPTURE_DEFINITION_ID or not isinstance(
-        request.payload, JustificanteCaptureRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
+    return resolve_whole_profile_capture_access(
+        request, context, definition_id=JUSTIFICANTE_CAPTURE_DEFINITION_ID, payload_type=JustificanteCaptureRequest
     )
-    return replace(resolved, policy=policy)
 
 
 def build_justificante_capture_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the closed summary and exact-profile capture policy."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=JustificanteCaptureRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=JustificanteCapturePublicResultV1,
-        ),
+        public_result_type=JustificanteCapturePublicResultV1,
         result_projector=_project_capture,
         access_resolver=resolve_justificante_capture_access,
     )

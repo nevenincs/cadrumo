@@ -18,7 +18,7 @@ from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.transport import RuntimeStatusRequest
+from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeSessionRequest
 from cadrumo.core.config import override_settings
 
 pytestmark = [
@@ -60,11 +60,15 @@ def test_installed_client_accepts_only_the_matching_native_cohort(tmp_path: Path
                 try:
                     assert client.profile_id == profile_id
                     assert client.frontend is OperationFrontendProjection.CLI
-                    status = client._connection.status(
-                        RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 3
+                    status = client._connection.session(
+                        RuntimeSessionRequest(
+                            action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                        ),
+                        deadline=time.monotonic() + 3,
                     )
                     assert status.runtime_boot_id == host.identity.boot_id
-                    assert status.accepting_connections
+                    assert isinstance(status, RuntimeAccessRefusal)
+                    assert status.code is RuntimeRefusalCode.UNAVAILABLE
                 finally:
                     client.close()
         finally:

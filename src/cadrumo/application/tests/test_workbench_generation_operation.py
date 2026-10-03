@@ -23,7 +23,7 @@ from cadrumo.application.modelo.declarations_calendar import (
     DeclarationsCalendarSource,
     DeclarationsCalendarSourceStateV1,
 )
-from cadrumo.application.modelo.declarations_workspace import (
+from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceCalculationRevisionRefV1,
@@ -75,11 +75,16 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
-    SecureProfileWorkbenchGenerationReadDoorV1,
+    assemble_workbench_generation,
+)
+from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
     WorkbenchGenerationV1,
-    assemble_workbench_generation,
+)
+from cadrumo.application.workbench_generation_modelo_contracts import (
+    PublicBlockerRef,
+    PublicModeloWorkConditionalRecargoPreview,
 )
 from cadrumo.application.workbench_generation_operation import (
     WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
@@ -87,14 +92,14 @@ from cadrumo.application.workbench_generation_operation import (
     WorkbenchGenerationOperationRequest,
     build_workbench_generation_operation_definition,
     build_workbench_generation_operation_registration,
+    resolve_workbench_generation_access,
 )
 from cadrumo.application.workbench_generation_projection import (
-    PublicBlockerRef,
-    PublicModeloWorkConditionalRecargoPreview,
     WorkbenchGenerationOperationProjection,
     project_workbench_generation,
     restore_workbench_generation,
 )
+from cadrumo.application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.core.operator_action_enums import OperatorActionAxis
@@ -443,6 +448,28 @@ def test_result_requires_profile_and_tax_disclosures_for_exact_subject() -> None
             ),
         )
     assert mismatch.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_result_without_a_registered_result_schema_is_refused_not_silently_undisclosed() -> None:
+    profile_id = uuid4()
+    request = cast(OperationRequest[BaseModel], cast(object, _request(profile_id)))
+    contract = _registry().lookup_public_contract(WORKBENCH_GENERATION_OPERATION_DEFINITION_ID)
+    schemaless = contract.model_copy(update={"result_schema": None})
+
+    def context(action: AccessAction) -> OperationAccessContext:
+        return OperationAccessContext(
+            profile_id=profile_id,
+            destination_id=uuid4(),
+            action=action,
+            frontend=OperationFrontendProjection.CLI,
+            contract=schemaless,
+            published_authority=Availability.AVAILABLE,
+        )
+
+    assert resolve_workbench_generation_access(request, context(AccessAction.SUBMIT)).policy.disclosures == frozenset()
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_workbench_generation_access(request, context(AccessAction.RESULT))
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 
 def test_public_projection_restores_generation_without_search_identity_transport() -> None:

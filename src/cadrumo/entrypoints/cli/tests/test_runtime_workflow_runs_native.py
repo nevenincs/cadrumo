@@ -12,7 +12,8 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....adapters.local_runtime.startup import RuntimeLaunchDoor
 from ....adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from ....adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT

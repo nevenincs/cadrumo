@@ -2155,6 +2155,37 @@ def graded_snapshot_modelo_workspace_capabilities(
     )
 
 
+def _require_graded_snapshot_cursor(cursor: ModeloWorkspaceCursorV1 | None) -> None:
+    """Require a paginated graded facet before any contributor is captured."""
+    if cursor is not None and cursor.facet not in _GRADED_SNAPSHOT_PAGINATED_FACETS:
+        raise ModeloWorkspaceStaleCursorError(
+            "graded snapshot paginates the schema, materialization and provenance facets; "
+            f"cursor names {cursor.facet.value}"
+        )
+
+
+def _require_graded_registry_snapshot(registry_projection: ModeloWorkspaceRegistryProjectionV1) -> RegistrySnapshot:
+    """Require the one captured registry snapshot before resolving its revision axes."""
+    snapshot = registry_projection.snapshot
+    if snapshot is None:
+        raise ModeloWorkspaceAbsentRegistryProjectionError(
+            "registry capture returned no snapshot for the resolved revision",
+        )
+
+    return snapshot
+
+
+def _require_graded_readiness(readiness_reports: tuple[ProjectionModeloReadiness, ...]) -> ProjectionModeloReadiness:
+    """Require the exact target readiness report from its one captured result."""
+    if not readiness_reports:
+        raise ModeloWorkspaceAbsentReadinessProjectionError(
+            "readiness capture returned no report for the resolved target",
+        )
+    readiness = readiness_reports[0]
+
+    return readiness
+
+
 def resolve_graded_snapshot_result(
     target: ModeloWorkspaceTargetV1,
     *,
@@ -2198,11 +2229,7 @@ def resolve_graded_snapshot_result(
     built for the resolved work unit, so the destinations read the same review
     the command line emits rather than assembling one of their own.
     """
-    if cursor is not None and cursor.facet not in _GRADED_SNAPSHOT_PAGINATED_FACETS:
-        raise ModeloWorkspaceStaleCursorError(
-            "graded snapshot paginates the schema, materialization and provenance facets; "
-            f"cursor names {cursor.facet.value}"
-        )
+    _require_graded_snapshot_cursor(cursor)
 
     work_port = ModeloWorkspaceWorkPortV1(
         request=modelo_work_selector_request_for_target(target, bucket_id=bucket_id),
@@ -2273,11 +2300,7 @@ def resolve_graded_snapshot_result(
         )
 
     registry_projection = registry_capture.projection
-    snapshot = registry_projection.snapshot
-    if snapshot is None:
-        raise ModeloWorkspaceAbsentRegistryProjectionError(
-            "registry capture returned no snapshot for the resolved revision",
-        )
+    snapshot = _require_graded_registry_snapshot(registry_projection)
 
     axes = resolve_modelo_workspace_revision_axes(resolution, registry_projection=registry_projection)
     resolved_target = ModeloWorkspaceResolvedTargetV1(
@@ -2361,11 +2384,7 @@ def resolve_graded_snapshot_result(
     )
     readiness_capture = readiness_port.capture_projection_with_epoch()
     readiness_reports = readiness_capture.projection.reports
-    if not readiness_reports:
-        raise ModeloWorkspaceAbsentReadinessProjectionError(
-            "readiness capture returned no report for the resolved target",
-        )
-    readiness = readiness_reports[0]
+    readiness = _require_graded_readiness(readiness_reports)
 
     schema_identity = resolve_graded_snapshot_schema_identity(snapshot)
     locale = capture_modelo_workspace_locale_summary(resolved_target, output_language=output_language)

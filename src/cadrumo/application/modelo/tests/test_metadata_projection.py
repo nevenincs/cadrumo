@@ -12,7 +12,7 @@ from ....core.period import Period
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ...operations.registry import OperationSchemaBindingV1
 from ..metadata_projection import ModeloWorkMetadataSnapshot
-from ..operation_definitions import ModeloWorkDiscardPublicResultV2, ModeloWorkRenamePublicResultV2
+from ..work_change_contracts import ModeloWorkDiscardPublicResultV2, ModeloWorkRenamePublicResultV2
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

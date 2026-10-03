@@ -3,23 +3,22 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f9a74c1f58abbd3ebf09583992da113a6687b4dea40022009d075526838193f9'
+body_hash: 'sha256:2db106ea10187fafe40da7af1050c250f849b45b2241c65fab0f508fa1f91f73'
 related: []
 ---
-
 # `repo-gate-integrity` audit: `the identifier ratchet scanned the tooling tree, hiding eighteen bare fields`
 
 ## Scope
 
+Trace why the identifier gate stopped scanning production fields after the gate moved from src into its tooling tree.
+
 ## Findings
 
-## Recommendations
+### Finding
 
-## Finding
-
- computed its
+computed its
 scan root as `Path(__file__).resolve().parents[2]`. That was correct while the
 file lived under `src/`. When it was relocated into its dev family home
 (`c0a7feef24`), the same upward arithmetic began naming `dev/` -- so the
@@ -36,7 +35,7 @@ package. Five adjudications whose modules had been promoted out of their
 underscore names were followed to their current homes in `d0bb89f338` --
 same model, field and reason in each case.
 
-## What the repaired gate reports
+### What the repaired gate reports
 
 Eighteen identifier-named model fields are declared bare `str` and are not
 adjudicated. They are not new; they were unreachable while the root was wrong.
@@ -65,7 +64,7 @@ gasto observation models. Two more are `continuidad_id` on registry rename
 records and their CLI payloads, and the rest are a content digest, a work-unit
 id and a casilla continuity id.
 
-## Why this is recorded rather than fixed here
+### Why this is recorded rather than fixed here
 
 Each site needs one of two things, and both are judgements rather than
 mechanics: type the field with its `core.identity` alias, or record a
@@ -79,7 +78,9 @@ refusal into a construction error.
 Making that call for eighteen sites, eight of them on the Modelo 210 filing
 path, is not something to absorb inside an unrelated tick.
 
-## Status
+## Recommendations
+
+### Status
 
 Open. The gate is live again and will hold the line at eighteen; each site
 needs an adjudication or an alias.

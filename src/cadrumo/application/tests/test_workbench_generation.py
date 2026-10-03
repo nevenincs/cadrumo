@@ -24,7 +24,7 @@ from ...domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
-from .. import workbench_generation as generation_module
+from .. import workbench_generation_calendar as calendar_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..ledger.action_ports import LedgerActionPorts
@@ -37,7 +37,7 @@ from ..ledger.workspace import (
 )
 from ..live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
-from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
+from ..modelo.declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
 from ..modelo.work_addressing import ModeloExactWorkUnitTarget
 from ..modelo.workspace import resolve_static_inspection_result
 from ..modelo.workspace_models import (
@@ -63,13 +63,15 @@ from ..user_profile.censal_operation import (
 )
 from ..workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
-    SecureProfileWorkbenchGenerationReadDoorV1,
-    WorkbenchGenerationAvailability,
-    WorkbenchGenerationInputsV1,
-    WorkbenchGenerationSourceResultV1,
     assemble_workbench_generation,
     assemble_workbench_generation_from,
 )
+from ..workbench_generation_contracts import (
+    WorkbenchGenerationAvailability,
+    WorkbenchGenerationInputsV1,
+    WorkbenchGenerationSourceResultV1,
+)
+from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -82,7 +84,7 @@ _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 def test_installed_calendar_reaches_latest_completed_filing_year() -> None:
     """The TUI calendar can select quarterly work from the completed tax year."""
-    assert generation_module._calendar_query_range(date(2026, 9, 21)) == OverviewCalendarRange(
+    assert calendar_module._calendar_query_range(date(2026, 9, 21)) == OverviewCalendarRange(
         from_date=date(2025, 1, 1),
         to_date=date(2026, 12, 31),
     )
@@ -101,6 +103,7 @@ def _test_censal_operation_definition():
         browser_session_factory=unopened_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=unopened_censal_fetch,
+        provider_preflight=lambda _profile_id, _operation: None,
     )
 
 
@@ -525,7 +528,7 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
     def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
         return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())  # type: ignore[arg-type]
 
-    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
         operation=authority_operation,
@@ -669,7 +672,7 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
         return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())  # type: ignore[arg-type]
 
-    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
     written = TransactionCatalogue.model_validate([_synthetic_transaction()])
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
@@ -711,7 +714,7 @@ def test_a_quiet_ledger_publishes_its_generation(
     def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
         return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())  # type: ignore[arg-type]
 
-    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
         operation=authority_operation,
@@ -747,7 +750,7 @@ def test_calendar_evidence_scope_preserves_available_empty_for_historical_filing
         evaluated_on=_NOW.date(),
     )
 
-    scoped = generation_module._scope_filing_records((historical,), schedule)
+    scoped = calendar_module._scope_filing_records((historical,), schedule)
 
     assert scoped == ()
 
@@ -891,7 +894,7 @@ def test_home_refuses_its_ledger_zone_rather_than_publishing_an_unmeasured_zero(
     in a summary is indistinguishable from whole truth once rendered.
     """
     from ..overview.home import HomeLedgerReadiness
-    from ..workbench_generation import _home_ledger_readiness
+    from ..workbench_generation_home import _home_ledger_readiness
 
     measured = _ledger_projection_with_statuses(LedgerWorkspaceStatus.READY)
     readiness = _home_ledger_readiness(measured)
@@ -931,7 +934,7 @@ def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
     from datetime import UTC, datetime
 
     from ..overview.home import HomeAccountSession, HomeAvailability, HomeSessionPosture, HomeZoneState
-    from ..workbench_generation import _secure_profile_home_input
+    from ..workbench_generation_home import _secure_profile_home_input
 
     observed_at = datetime(2026, 9, 4, tzinfo=UTC)
     home = _secure_profile_home_input(
@@ -969,7 +972,7 @@ def test_only_a_verified_calculation_reads_as_ready_on_home() -> None:
     for Home, and this asserts the whole table so a new calculation state
     cannot be added and silently default to anything.
     """
-    from ..workbench_generation import _HOME_DECLARATION_STATES
+    from ..workbench_generation_home import _HOME_DECLARATION_STATES
 
     assert set(_HOME_DECLARATION_STATES) == set(CalculationRevisionState), (
         "a calculation state has no declared Home reading, so it would raise or "
@@ -999,7 +1002,7 @@ def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeas
     with no `tui.home.reason.*` entry renders the degraded generic line, so an
     action invented to fill the zone would arrive unreadable.
     """
-    from ..workbench_generation import _home_ledger_actions
+    from ..workbench_generation_home import _home_ledger_actions
 
     populated = _ledger_projection_with_statuses(LedgerWorkspaceStatus.NEEDS_ATTENTION)
     offered = _home_ledger_actions(populated)
@@ -1051,7 +1054,7 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
     outstanding.
     """
     from ..overview.home import HomeDeclarationResume
-    from ..workbench_generation import _home_declaration_actions
+    from ..workbench_generation_home import _home_declaration_actions
 
     def _resume(state: HomeDeclarationState, unit: str) -> HomeDeclarationResume:
         return HomeDeclarationResume(
@@ -1112,7 +1115,7 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
         VerificationReportCatalogue,
         derive_verification_report_id,
     )
-    from ..workbench_generation import _dependency_blocked_revisions
+    from ..workbench_generation_home import _dependency_blocked_revisions
 
     def _catalogue(
         kind: ModeloVerificationFindingKind,
@@ -1254,7 +1257,7 @@ def test_the_filing_history_reads_the_bucket_event_log(
     """A bound event log makes the filing history observable, not permanently unavailable."""
     from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
     from ...domain.buckets.event_repository import build_bucket_event
-    from ..modelo.declarations_workspace import DeclarationsLifecycleKind, DeclarationsWorkspaceZone
+    from ..modelo.declarations_workspace_contracts import DeclarationsLifecycleKind, DeclarationsWorkspaceZone
 
     period = Period.from_year_and_code(2026, "1T")
     revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id

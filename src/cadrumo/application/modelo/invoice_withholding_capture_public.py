@@ -13,9 +13,9 @@ from pydantic import BaseModel, Field
 
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.spanish_postcode import SpanishPostcode, SpanishProvinceCode
+from ...core.spanish_postcode import SpanishProvinceCode
 from ..aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
-from ..aggregation.retenciones import Modelo193NonpaymentCause
+from ..aggregation.retenciones import Modelo180StructuredAddress, Modelo193NonpaymentCause
 from ..aggregation.service import PerModeloAggregationCommand
 from ..aggregation.withholding_observation_service import WithholdingMutationMode
 from ..aggregation.withholding_recognition import (
@@ -134,27 +134,10 @@ class PublicAnnualRecipientDetail(BaseModel):
         return cls.model_validate(public_value(value), strict=True)
 
 
-class PublicModelo180Address(BaseModel):
+class PublicModelo180Address(Modelo180StructuredAddress):
     """Complete structured property address without domain schema hooks."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    province_code: SpanishProvinceCode
-    municipality_code: str = Field(pattern=r"^\d{3}$")
-    municipality: str = Field(min_length=1, max_length=30)
-    locality: str = Field(min_length=1, max_length=30)
-    postal_code: SpanishPostcode
-    street_type: str = Field(min_length=1, max_length=5)
-    street_name: str = Field(min_length=1, max_length=50)
-    number_type: str = Field(min_length=1, max_length=3)
-    house_number: str = Field(min_length=1, max_length=5)
-    number_qualifier: str = Field(default="", max_length=3)
-    block: str = Field(default="", max_length=3)
-    portal: str = Field(default="", max_length=3)
-    staircase: str = Field(default="", max_length=3)
-    floor: str = Field(default="", max_length=3)
-    door: str = Field(default="", max_length=3)
-    complement: str = Field(default="", max_length=40)
 
 
 class PublicModelo180Property(BaseModel):

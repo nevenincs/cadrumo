@@ -119,6 +119,32 @@ def _installed_manifest_path() -> Path | None:
     return Path(spec.origin).parent / "driver" / "package" / "browsers.json"
 
 
+def _browser_manifest_entries(document: object) -> dict[object, dict[object, object]] | None:
+    if not is_object_dict(document):
+        return None
+    entries = document.get("browsers")
+    if not is_object_list(entries):
+        return None
+    by_name: dict[object, dict[object, object]] = {}
+    for entry in entries:
+        if is_object_dict(entry):
+            by_name[entry.get("name")] = entry
+    return by_name
+
+
+def _browser_build_from_manifest(
+    name: str,
+    by_name: dict[object, dict[object, object]],
+) -> BrowserBuild | None:
+    found = by_name.get(name)
+    if found is None or found.get("revisionOverrides"):
+        return None
+    revision = found.get("revision")
+    if not isinstance(revision, str) or not revision:
+        return None
+    return BrowserBuild(name=name, revision=revision)
+
+
 def required_browser_builds(manifest_path: Path | None = None) -> tuple[BrowserBuild, ...] | None:
     """Return the Chromium builds the installed Playwright pins, or ``None`` when unreadable.
 
@@ -133,24 +159,15 @@ def required_browser_builds(manifest_path: Path | None = None) -> tuple[BrowserB
         document: object = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    if not is_object_dict(document):
+    by_name = _browser_manifest_entries(document)
+    if by_name is None:
         return None
-    entries = document.get("browsers")
-    if not is_object_list(entries):
-        return None
-    by_name: dict[object, dict[object, object]] = {}
-    for entry in entries:
-        if is_object_dict(entry):
-            by_name[entry.get("name")] = entry
     builds: list[BrowserBuild] = []
     for name in _REQUIRED_MANIFEST_NAMES:
-        found = by_name.get(name)
-        if found is None or found.get("revisionOverrides"):
+        build = _browser_build_from_manifest(name, by_name)
+        if build is None:
             return None
-        revision = found.get("revision")
-        if not isinstance(revision, str) or not revision:
-            return None
-        builds.append(BrowserBuild(name=name, revision=revision))
+        builds.append(build)
     return tuple(builds)
 
 

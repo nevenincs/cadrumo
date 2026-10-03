@@ -34,7 +34,8 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
 from ....components.theme import install_cadrumo_themes
-from ..casilla_list import CasillaList, CasillaListEntry, CasillaListHeading, CasillaListItem
+from ..casilla_list import CasillaList
+from ..casilla_list_models import CasillaListEntry, CasillaListHeading, CasillaListItem
 from ..header import ChipLevel, attention_chips
 from ..navigator import NavigatorState, navigator_rows
 from ..page_items import (

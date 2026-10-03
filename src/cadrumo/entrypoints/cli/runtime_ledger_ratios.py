@@ -8,7 +8,7 @@ from uuid import UUID
 import typer
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.ledger.ratios_operation import (
+from ...application.ledger.ratios_contracts import (
     LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE,
     LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
     LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID,

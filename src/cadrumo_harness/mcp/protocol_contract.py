@@ -8,7 +8,7 @@ from typing import Any, NotRequired, TypedDict, cast
 
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRefusalV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.projection_pages import ProjectionPage

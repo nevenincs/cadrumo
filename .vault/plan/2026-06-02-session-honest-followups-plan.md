@@ -3,15 +3,14 @@ tags:
   - '#plan'
   - '#session-honest-followups'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:6f6affe80dd31bfbe2c914477101aa6f64f514c722881f13e2b7fa8ce39a417b'
 tier: L2
 related:
-  - '[[2026-06-02-suite-redgreen-2026-06-02-plan]]'
   - '[[2026-06-02-m303-parser-engine-totals-impedance-adr]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]'
-  - '[[2026-06-04-session-honest-followups-adr]]'
   - '[[2026-06-04-session-honest-followups-research]]'
+  - '[[2026-06-03-bare-invocation-bucket-session-gate-adr]]'
 ---
 
 # `session-honest-followups` `Session-honest follow-ups and substrate hardening` plan

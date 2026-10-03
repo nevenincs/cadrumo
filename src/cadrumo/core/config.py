@@ -35,7 +35,9 @@ from pydantic_settings import (
 from . import _config_runtime, _config_validation
 from . import config_live_tests as _live_test_config
 from . import config_support as _config_support
+from .auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE as _DEFAULT_CLAVE_MOVIL_ROUTE
 from .auth_provider import AuthProviderKind as _AuthProviderKind
+from .auth_provider import ClaveMovilRoute as _ClaveMovilRoute
 from .config_llm_fields import CadrumoLlmSettings
 from .config_state_root import (
     default_storage_root,
@@ -294,6 +296,20 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         default=SecretStr(DEV_TEST_DATABASE_PASSWORD),
         description="Development/test-only password used by secure-storage subprocess tests.",
     )
+    cadrumo_dev_runtime_session_override: str = Field(
+        default="",
+        description=(
+            "Development-only: exactly '1' disables native desktop/login-session admission "
+            "for the manually started runtime. Native same-account transport identity, "
+            "profile authentication, grants and connection binding remain required."
+        ),
+    )
+
+    @property
+    def dev_runtime_session_override_enabled(self) -> bool:
+        """Require an explicit literal-1 opt-in at the runtime owner."""
+        return self.cadrumo_dev_runtime_session_override == "1"
+
     cadrumo_blob_store_dir: Path = Field(
         default=Path("blobs"),
         description="Directory containing the encrypted blob store (content-addressed, classification-aware)",
@@ -467,6 +483,15 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     )
 
     # ── Browser Automation ──────────────────────────────────────────────────
+    cadrumo_chromium_data_root: Path = Field(
+        default=Path("chromium-data"),
+        description=(
+            "Root for isolated Chromium working profiles. Defaults to chromium-data "
+            "under CADRUMO_LOCAL_STORAGE_ROOT. Relative overrides use the application-data anchor. "
+            "Saved authentication cookies and state remain in encrypted profile storage."
+        ),
+    )
+
     cadrumo_browser_headless: bool = Field(
         default=True,
         description="Run browser in headless mode",
@@ -598,7 +623,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         description=(
             "Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. "
             "Used to stamp the persisted session with the operator's "
-            "identity and to pre-fill the non-QR fallback form. AEAT-regulated "
+            "identity and to fill the default app-request form. AEAT-regulated "
             "personal identifier under Spanish tax law; typed as SecretStr to "
             "prevent leakage through repr / model_dump / ValidationError."
         ),
@@ -607,7 +632,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         default=None,
         description=(
             "DNI validity / expiry date (YYYY-MM-DD) used by the "
-            "non-QR Cl@ve Móvil fallback form. Applies when the "
+            "default app-request Cl@ve Móvil form. Applies when the "
             "configured identity is a DNI."
         ),
     )
@@ -615,17 +640,20 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         default=None,
         description=(
             "NIE support number (número de soporte) used by the "
-            "non-QR Cl@ve Móvil fallback form. Applies when the "
+            "default app-request Cl@ve Móvil form. Applies when the "
             "configured identity is a NIE. AEAT-regulated personal "
             "identifier; typed as SecretStr to prevent leakage."
         ),
     )
     cadrumo_clave_prefer_non_qr: bool = Field(
-        default=False,
+        default=_DEFAULT_CLAVE_MOVIL_ROUTE is _ClaveMovilRoute.APP_REQUEST,
         description=(
-            "When true, the Cl@ve Móvil provider uses the non-QR fallback "
-            "(DNI/NIE + contraste) rather than the QR code. This still "
-            "requires operator-mediated completion in Cl@ve."
+            "Cl@ve Móvil route used when the active profile has not chosen "
+            "one. True (the default) identifies with DNI/NIE + contraste and "
+            "sends an approval request to the Cl@ve app, which works in a "
+            "terminal and keeps the CADRUMO_BROWSER_HEADLESS setting. Set "
+            "false to scan a QR code instead; the QR route always opens a "
+            "visible browser because the code must be seen."
         ),
     )
     cadrumo_clave_movil_timeout_ms: int = Field(
@@ -982,6 +1010,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
 
     @field_validator(
         "cadrumo_token_dir",
+        "cadrumo_chromium_data_root",
         "cadrumo_usage_ratios_path",
         "cadrumo_financial_txs_dir",
         "cadrumo_invoices_dir",

@@ -6,8 +6,9 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
-from ...adapters.local_runtime.framing import RuntimeTransportCleanup
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, frontend_failure_code
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import frontend_failure_code
+from ...adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from ...application.operations.error_detail import (
     OperationErrorDetailKind,
     OperationErrorDetailV1,

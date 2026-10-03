@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
-modified: '2026-08-15'
-body_hash: 'sha256:cbedd9fe017175be0ae768972e17c23a20def9af3636d6dc85f49cce8c7e1e85'
+modified: '2026-10-03'
+body_hash: 'sha256:348df63cb948a03b508ba8e142dbf54d75b70acf4e62663e182e3f595cfc9b1e'
 tier: L2
 related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
@@ -14,9 +14,13 @@ related:
   - '[[2026-06-21-m390-iva-carry-boxes-adr]]'
   - '[[2026-06-26-binding-resolver-contract-unification-plan]]'
   - '[[2026-07-10-binding-fold-in-carry-unification-research]]'
+  - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
 ---
 
 # `binding-fold-in-carry-unification` plan
+
+> Historical-plan clarification (2026-10-03): the completed `P01.S01`–`P01.S03` rows and their checkmarks preserve the original relation-aggregation design and execution evidence. Their proposed reuse of `BindingAggregationOp` for relations was superseded by the accepted ADR amendment recorded on 2026-06-26: current relation folds use separate `RelationAggregationOp` and the relation-specific accessor. The original rows and execution ledger remain historical evidence; the current contract is in `src/cadrumo/core/aggregation.py` and `src/cadrumo/domain/calculations/registry/relations.py`. The phase sequence and dependency language below describe the completed plan's author-time ordering.
 
 Collapse the cross-filing fold-in value layer onto one requirement record, one observation-fold helper, and one typed relation aggregation, anchor compensacion carry on the wallet authority, and delete the `MultiYearResolver` orphan, with every collapse proven behaviour-preserving against the full-calc, cross-period-continuity, and oracle suites.
 

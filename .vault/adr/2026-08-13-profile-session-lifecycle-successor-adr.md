@@ -7,9 +7,10 @@ related:
   - "[[2026-08-13-profile-password-custody-research]]"
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]'
+  - '[[2026-09-26-mcp-purpose-authentication-adr]]'
 supersedes:
   - '2026-07-24-profile-login-session-adr'
-modified: '2026-09-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:0e5818c6c62e8eb86634a5faa53bdf76a138092f92d745ecb7bb7397d997aa6f'
 ---

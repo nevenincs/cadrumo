@@ -995,7 +995,7 @@ def _parse_envelope(output: str) -> dict[str, JsonValue] | None:
     return {str(key): value for key, value in document.items()}
 
 
-def _resolve_json_path(document: Mapping[str, object], path: str) -> tuple[bool, object]:
+def resolve_json_path(document: Mapping[str, object], path: str) -> tuple[bool, object]:
     """Walk a dotted/bracketed json-path; return ``(found, value)``.
 
     Segment-form resolution rules:
@@ -1047,7 +1047,7 @@ def _capture_values(
         )
     captured: list[CapturedValue] = []
     for binding in frame.captures:
-        found, value = _resolve_json_path(envelope, binding.json_path)
+        found, value = resolve_json_path(envelope, binding.json_path)
         if not found:
             top_level = ", ".join(sorted(envelope))
             raise SequenceExecutionError(

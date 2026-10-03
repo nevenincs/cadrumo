@@ -38,7 +38,8 @@ from ......core.i18n.render import tr
 from ......core.period import Period
 from ....components.host import ScreenHostApp
 from ....tests.frame import screen_text
-from ..casilla_list import CasillaList, CasillaListEntry
+from ..casilla_list import CasillaList
+from ..casilla_list_models import CasillaListEntry
 from ..editor import (
     CasillaEditorPanel,
     CasillaEditorScreen,

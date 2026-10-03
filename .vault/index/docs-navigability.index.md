@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#docs-navigability'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4353f9a8a35349f09d658249986cc1390b9cc0cfb48d8fa9f0bd0b3b3b149550'
+body_hash: 'sha256:2dc8dbee8528cbbaf1a1b623c564955be1a7ffb9b811f56ce3258cbfeeae7c2b'
 related:
-  - '[[2026-06-01-docs-navigability-plan]]'
-  - '[[2026-06-04-docs-navigability-adr]]'
   - '[[2026-06-04-docs-navigability-research]]'
 ---
 
@@ -18,14 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#docs-navigability`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-docs-navigability-adr` - `docs-navigability` adr: `warning closeout authority alignment` | (**status:** `accepted`)
-
-### plan
-
-- `2026-06-01-docs-navigability-plan` - `docs-navigability` `documentation navigability cross-link campaign` plan
 
 ### research
 

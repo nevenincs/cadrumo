@@ -6,7 +6,7 @@ import asyncio
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.overview.home import HomeAccountSession, HomeSessionPosture
 from ...application.runtime.contracts import RuntimeRefusalError
 from ...application.runtime.profile_access import status_admits_session

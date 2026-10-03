@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#profile-requirement-grounding'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6d7cc3ee9e36507d84949a304c4492dda3480470266639b56e7de243aa1b1d24'
+body_hash: 'sha256:7c9479d1c9dab650774ec49be0e66fbe8f49b966345aa842bd7a40fd2df095f1'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
-
 # `profile-requirement-grounding` audit: `the per-operation requirement axis is empty and absent profile facts silently default`
 
+## Scope
+
 Two structural findings from a swarm sweep, both verified against the loaded schema and the real call graph rather than taken from sub-agent output. The first falsifies a premise the accepted ADR rests on; the second is the concrete mechanism by which an incomplete profile produces confident wrong output instead of a refusal.
+
+## Findings
 
 ### The per-operation `model_selectors` axis has zero `modelo_` entries, so the preflight filter can never match
 
@@ -199,3 +202,7 @@ The implemented branch is what this section specified, including the part flagge
 Locale parity confirmed across all four catalogues — `profile_readiness_setup_incomplete_missing` carries a real translated string in `en`, `es`, `ca` and `hu`, with the `%{missing}` placeholder present and no self-referencing scaffold placeholder. That is the check most likely to be skipped on a change like this, since the gate only bites once something sweeps the working copy.
 
 Worth noting for the standing goal: this closes one of the last refusals in the profile surface that named a lifecycle STATUS instead of a field gap. The remaining generic ones (`no_active_profile`, `no_active_bucket`) stay generic on purpose — with no profile at all, "create a profile" is the exact missing information.
+
+## Recommendations
+
+Resolve the unreachable per-modelo selector axis and make missing required profile facts refuse explicitly before declaring the accepted preflight design implemented.

@@ -10,7 +10,8 @@ import pytest
 
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ..profile_worker import ProfileWorkerProcess
-from ..windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
+from ..windows import WindowsRuntimeEndpoint
+from ..windows_channel import WindowsRuntimeChannel
 from ..windows_process import WindowsOwnedProcess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

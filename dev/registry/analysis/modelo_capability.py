@@ -233,82 +233,118 @@ def screen_authority(
     """Report every revision whose declared rung and its machinery disagree."""
     findings: list[ModeloCapabilityFinding] = []
     for row in capability_census(authority, modelo_ids):
-        if row.grade == "filing" and row.layouts == 0:
-            findings.append(
-                ModeloCapabilityFinding(
-                    modelo=row.modelo,
-                    revision=row.revision,
-                    kind="claims_filing_without_layout",
-                    detail="declares filing grade and no export layout to render it from",
-                )
-            )
-        if row.files_here and row.calculation_class == "filing" and not row.formulas:
-            findings.append(
-                ModeloCapabilityFinding(
-                    modelo=row.modelo,
-                    revision=row.revision,
-                    kind="claims_calculation_without_formulas",
-                    detail=(
-                        "the modelo declares a filing calculation class while this revision "
-                        "declares no formula, so nothing computes what the filing reports"
-                    ),
-                )
-            )
-        if row.files_here and not row.deadline_windows:
-            findings.append(
-                ModeloCapabilityFinding(
-                    modelo=row.modelo,
-                    revision=row.revision,
-                    kind="files_here_without_deadline",
-                    detail=(
-                        "reaches filing grade with a layout but declares no deadline window, "
-                        "so it cannot say when the filing is due"
-                    ),
-                )
-            )
-        # A revision with NO deadline window at all is reported by the condition
-        # above, once, rather than once per year of its window. Without this
-        # guard the two conditions both fire on it, which is the duplication
-        # this screen retired a condition for.
-        if row.files_here and row.deadline_windows and row.undated_window_years:
-            findings.append(
-                ModeloCapabilityFinding(
-                    modelo=row.modelo,
-                    revision=row.revision,
-                    kind="files_here_for_years_it_cannot_date",
-                    detail=(
-                        f"reaches filing grade and declares no deadline window for "
-                        f"{len(row.undated_window_years)} year(s) of its own window: "
-                        f"{list(row.undated_window_years)}"
-                    ),
-                )
-            )
-        if row.committed_tree and row.grade != "filing":
-            findings.append(
-                ModeloCapabilityFinding(
-                    modelo=row.modelo,
-                    revision=row.revision,
-                    kind="tree_ships_below_filing_grade",
-                    detail=(
-                        f"ships a committed export tree while declaring {row.grade} grade, "
-                        "so filing bytes are shipped for a revision that declares it cannot file"
-                    ),
-                )
-            )
-        if row.record_spelled_envelopes:
-            findings.append(
-                ModeloCapabilityFinding(
-                    modelo=row.modelo,
-                    revision=row.revision,
-                    kind="envelope_spelled_as_record",
-                    detail=(
-                        f"{row.record_spelled_envelopes} layout(s) carry an envelope_header record "
-                        "instead of a typed envelope, so the export boundary cannot see the envelope "
-                        "and refuses the product identity an enveloped filing requires"
-                    ),
-                )
-            )
+        findings.extend(_findings_for_capability(row))
     return tuple(findings)
+
+
+def _findings_for_capability(row: ModeloCapability) -> tuple[ModeloCapabilityFinding, ...]:
+    return (
+        *_filing_layout_findings(row),
+        *_filing_calculation_findings(row),
+        *_missing_deadline_findings(row),
+        *_undated_window_findings(row),
+        *_below_filing_tree_findings(row),
+        *_record_spelled_envelope_findings(row),
+    )
+
+
+def _filing_layout_findings(row: ModeloCapability) -> tuple[ModeloCapabilityFinding, ...]:
+    if row.grade == "filing" and row.layouts == 0:
+        return (
+            ModeloCapabilityFinding(
+                modelo=row.modelo,
+                revision=row.revision,
+                kind="claims_filing_without_layout",
+                detail="declares filing grade and no export layout to render it from",
+            ),
+        )
+    return ()
+
+
+def _filing_calculation_findings(row: ModeloCapability) -> tuple[ModeloCapabilityFinding, ...]:
+    if row.files_here and row.calculation_class == "filing" and not row.formulas:
+        return (
+            ModeloCapabilityFinding(
+                modelo=row.modelo,
+                revision=row.revision,
+                kind="claims_calculation_without_formulas",
+                detail=(
+                    "the modelo declares a filing calculation class while this revision "
+                    "declares no formula, so nothing computes what the filing reports"
+                ),
+            ),
+        )
+    return ()
+
+
+def _missing_deadline_findings(row: ModeloCapability) -> tuple[ModeloCapabilityFinding, ...]:
+    if row.files_here and not row.deadline_windows:
+        return (
+            ModeloCapabilityFinding(
+                modelo=row.modelo,
+                revision=row.revision,
+                kind="files_here_without_deadline",
+                detail=(
+                    "reaches filing grade with a layout but declares no deadline window, "
+                    "so it cannot say when the filing is due"
+                ),
+            ),
+        )
+    return ()
+
+
+def _undated_window_findings(row: ModeloCapability) -> tuple[ModeloCapabilityFinding, ...]:
+    # A revision with NO deadline window at all is reported by the condition
+    # above, once, rather than once per year of its window. Without this
+    # guard the two conditions both fire on it, which is the duplication
+    # this screen retired a condition for.
+    if row.files_here and row.deadline_windows and row.undated_window_years:
+        return (
+            ModeloCapabilityFinding(
+                modelo=row.modelo,
+                revision=row.revision,
+                kind="files_here_for_years_it_cannot_date",
+                detail=(
+                    f"reaches filing grade and declares no deadline window for "
+                    f"{len(row.undated_window_years)} year(s) of its own window: "
+                    f"{list(row.undated_window_years)}"
+                ),
+            ),
+        )
+    return ()
+
+
+def _below_filing_tree_findings(row: ModeloCapability) -> tuple[ModeloCapabilityFinding, ...]:
+    if row.committed_tree and row.grade != "filing":
+        return (
+            ModeloCapabilityFinding(
+                modelo=row.modelo,
+                revision=row.revision,
+                kind="tree_ships_below_filing_grade",
+                detail=(
+                    f"ships a committed export tree while declaring {row.grade} grade, "
+                    "so filing bytes are shipped for a revision that declares it cannot file"
+                ),
+            ),
+        )
+    return ()
+
+
+def _record_spelled_envelope_findings(row: ModeloCapability) -> tuple[ModeloCapabilityFinding, ...]:
+    if row.record_spelled_envelopes:
+        return (
+            ModeloCapabilityFinding(
+                modelo=row.modelo,
+                revision=row.revision,
+                kind="envelope_spelled_as_record",
+                detail=(
+                    f"{row.record_spelled_envelopes} layout(s) carry an envelope_header record "
+                    "instead of a typed envelope, so the export boundary cannot see the envelope "
+                    "and refuses the product identity an enveloped filing requires"
+                ),
+            ),
+        )
+    return ()
 
 
 def main() -> int:

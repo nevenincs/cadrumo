@@ -18,7 +18,9 @@ from __future__ import annotations
 import typer
 from pydantic import ValidationError
 
-from ...application.ledger.classify_operation import LedgerClassifyOperationResult
+from ...application.ledger.classify_result_contracts import (
+    LedgerClassifyOperationResult,
+)
 from ...application.ledger.ledger_add_contracts import LedgerAddOperationResult
 from ...application.ledger.models import (
     ManualLedgerTransactionPatch,

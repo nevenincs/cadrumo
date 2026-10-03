@@ -10,56 +10,31 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.aeat_certificado import AeatCertificadoId
 from ...core.identity.aeat_clave_liquidacion import AeatClaveLiquidacion
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect
 from ...core.text_bounds import NonEmptyStr, PositiveCount
-from ...core.time.clock import now
 from ...domain.notifications.sancion import SancionLiquidacion
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    DisclosureCategory,
-    DisclosurePermission,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import AccessAction, AccessDenialCode, DisclosureCategory, DisclosurePermission
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .notification_documents import (
-    NotificationDocumentRecord,
-    NotificationDocumentService,
-    NotificationParseRefusal,
+from .live_operation_execution import (
+    publish_live_read_report,
+    require_exact_profile_worker,
+    require_live_executor_identity,
 )
+from .live_operation_registration import build_live_operation_definition, require_live_read_receipt
+from .notification_documents import NotificationDocumentRecord, NotificationDocumentService, NotificationParseRefusal
 
 NOTIFICATION_DOCUMENT_VIEW_DEFINITION_ID = "live.notifications.document.view"
 NOTIFICATION_DOCUMENT_HISTORY_DEFINITION_ID = "live.notifications.document.history"
@@ -214,21 +189,6 @@ class NotificationDocumentHistoryOperationReport(BaseModel):
 NotificationDocumentServiceFactory = Callable[[], NotificationDocumentService]
 
 
-def _require_exact_profile(profile_id: UUID, subject_ref: str) -> str:
-    """Refuse a request outside the exact profile worker currently active."""
-    canonical_id = canonical_profile_bucket_id(profile_id)
-    if require_active_bucket_id() != canonical_id or subject_ref != profile_operation_subject(canonical_id):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return canonical_id
-
-
-def _require_operation_identity[Payload: BaseModel](
-    request: OperationRequest[Payload], context: OperationExecutorContext
-) -> None:
-    if context.identity.definition_id != request.definition_id or context.identity.subject_ref != request.subject_ref:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-
 def _require_document_record(record: NotificationDocumentRecord, *, bucket_id: str) -> None:
     """Refuse a repository record outside the exact service bucket."""
     if str(record.bucket_id) != bucket_id:
@@ -264,10 +224,10 @@ class NotificationDocumentViewExecutor:
         self, request: OperationRequest[NotificationDocumentViewRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        bucket_id = _require_exact_profile(payload.profile_id, request.subject_ref)
-        _require_operation_identity(request, context)
-        if request.definition_id != NOTIFICATION_DOCUMENT_VIEW_DEFINITION_ID:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        bucket_id = require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
+        require_live_executor_identity(request, context, definition_id=NOTIFICATION_DOCUMENT_VIEW_DEFINITION_ID)
         await context.events.phase(_VIEW_PHASES[0])
 
         def read() -> NotificationDocumentViewOperationReport:
@@ -285,10 +245,12 @@ class NotificationDocumentViewExecutor:
             )
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_VIEW_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="notification-document-view-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_VIEW_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="notification-document-view-result",
         )
 
 
@@ -302,10 +264,10 @@ class NotificationDocumentHistoryExecutor:
         self, request: OperationRequest[NotificationDocumentHistoryRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        bucket_id = _require_exact_profile(payload.profile_id, request.subject_ref)
-        _require_operation_identity(request, context)
-        if request.definition_id != NOTIFICATION_DOCUMENT_HISTORY_DEFINITION_ID:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        bucket_id = require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
+        require_live_executor_identity(request, context, definition_id=NOTIFICATION_DOCUMENT_HISTORY_DEFINITION_ID)
         await context.events.phase(_HISTORY_PHASES[0])
 
         def read() -> NotificationDocumentHistoryOperationReport:
@@ -315,50 +277,27 @@ class NotificationDocumentHistoryExecutor:
             return NotificationDocumentHistoryOperationReport(profile_id=payload.profile_id, records=records)
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_HISTORY_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="notification-document-history-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_HISTORY_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="notification-document-history-result",
         )
-
-
-def _capabilities() -> OperationCapabilities:
-    """Describe durable local reads with no provider or owned resource."""
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-        sensitive_input=OperationSensitiveInputPolicy.NONE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
 
 
 def build_notification_document_view_definition(
     service_factory: NotificationDocumentServiceFactory,
 ) -> OperationDefinition:
     """Declare an exact-profile local notification-document view."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=NOTIFICATION_DOCUMENT_VIEW_DEFINITION_ID,
         request_type=NotificationDocumentViewRequest,
         result_type=NotificationDocumentViewOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=NotificationDocumentViewRequest,
-            executor_type=NotificationDocumentViewExecutor,
-            build=lambda: NotificationDocumentViewExecutor(service_factory),
-        ),
+        executor_type=NotificationDocumentViewExecutor,
+        build=lambda: NotificationDocumentViewExecutor(service_factory),
         phase_codes=_VIEW_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 
 
@@ -366,35 +305,18 @@ def build_notification_document_history_definition(
     service_factory: NotificationDocumentServiceFactory,
 ) -> OperationDefinition:
     """Declare an exact-profile local notification-document history."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=NOTIFICATION_DOCUMENT_HISTORY_DEFINITION_ID,
         request_type=NotificationDocumentHistoryRequest,
         result_type=NotificationDocumentHistoryOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=NotificationDocumentHistoryRequest,
-            executor_type=NotificationDocumentHistoryExecutor,
-            build=lambda: NotificationDocumentHistoryExecutor(service_factory),
-        ),
+        executor_type=NotificationDocumentHistoryExecutor,
+        build=lambda: NotificationDocumentHistoryExecutor(service_factory),
         phase_codes=_HISTORY_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 
 
-def _validate_receipt(receipt: OperationTerminalReceipt, *, definition_id: str, profile_id: UUID) -> None:
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(str(profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-    ):
-        raise ValueError("notification document read result contradicts its terminal receipt")
+_RECEIPT_CONTRADICTION = "notification document read result contradicts its terminal receipt"
 
 
 def project_notification_document_record(record: NotificationDocumentRecord) -> NotificationDocumentViewPublicResultV1:
@@ -419,10 +341,11 @@ def _project_view(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     if type(result) is not NotificationDocumentViewOperationReport:
         raise ValueError("invalid notification-document view report")
     report = NotificationDocumentViewOperationReport.model_validate(result.model_dump(mode="python"), strict=True)
-    _validate_receipt(
+    require_live_read_receipt(
         receipt,
         definition_id=NOTIFICATION_DOCUMENT_VIEW_DEFINITION_ID,
-        profile_id=report.profile_id,
+        bucket_id=str(report.profile_id),
+        message=_RECEIPT_CONTRADICTION,
     )
     return project_notification_document_record(report.record)
 
@@ -431,10 +354,11 @@ def _project_history(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
     if type(result) is not NotificationDocumentHistoryOperationReport:
         raise ValueError("invalid notification-document history report")
     report = NotificationDocumentHistoryOperationReport.model_validate(result.model_dump(mode="python"), strict=True)
-    _validate_receipt(
+    require_live_read_receipt(
         receipt,
         definition_id=NOTIFICATION_DOCUMENT_HISTORY_DEFINITION_ID,
-        profile_id=report.profile_id,
+        bucket_id=str(report.profile_id),
+        message=_RECEIPT_CONTRADICTION,
     )
     documents = tuple(
         NotificationDocumentHistoryEntryPublicV1(
@@ -514,18 +438,9 @@ def build_notification_document_view_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind selected-record result fields to the exact-profile access resolver."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=NotificationDocumentViewRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=NotificationDocumentViewPublicResultV1,
-        ),
+        public_result_type=NotificationDocumentViewPublicResultV1,
         result_projector=_project_view,
         access_resolver=resolve_notification_document_view_access,
     )
@@ -535,18 +450,9 @@ def build_notification_document_history_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind parsed history result fields to whole-profile tax-value disclosure."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=NotificationDocumentHistoryRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=NotificationDocumentHistoryPublicResultV1,
-        ),
+        public_result_type=NotificationDocumentHistoryPublicResultV1,
         result_projector=_project_history,
         access_resolver=resolve_notification_document_history_access,
     )

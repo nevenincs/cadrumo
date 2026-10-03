@@ -178,15 +178,16 @@ def test_terminal_projector_distinguishes_success_reuse_rename_and_refusal() -> 
             }
         )
     )
-    with pytest.raises(ValidationError):
-        ModeloWorkCreateProjection(
-            profile_id=_PROFILE,
-            period=_PERIOD,
-            outcome=ModeloWorkCreateSuccess(
-                unit=foreign_unit,
-                reused=False,
-                name_applied=None,
-                applicability_guard_bypassed=False,
-                advisory_keys=(),
-            ),
-        )
+    for model, owner in ((ModeloWorkCreateProjection, "projection"), (ModeloWorkCreateResult, "result")):
+        with pytest.raises(ValidationError, match=f"work create {owner} belongs to another profile or period"):
+            model(
+                profile_id=_PROFILE,
+                period=_PERIOD,
+                outcome=ModeloWorkCreateSuccess(
+                    unit=foreign_unit,
+                    reused=False,
+                    name_applied=None,
+                    applicability_guard_bypassed=False,
+                    advisory_keys=(),
+                ),
+            )

@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#duplication-evidence-repair'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac043563919e54f6ea3024ca4421ca3c64d98322e6ee1cb3d3a0cd0f7bc68e69'
+body_hash: 'sha256:6e9d1cd74434d696ffddbf3a9fbc0abed6998b711a1a239c58ea52a7802147b6'
 related:
-  - '[[2026-07-17-duplication-evidence-repair-adr]]'
   - '[[2026-07-17-duplication-evidence-repair-ledger]]'
   - '[[2026-07-17-duplication-evidence-repair-plan]]'
   - '[[2026-07-22-duplication-evidence-repair-close-honesty-review-audit]]'
@@ -19,10 +18,6 @@ related:
 Auto-generated index of all documents tagged with `#duplication-evidence-repair`.
 
 ## Documents
-
-### adr
-
-- `2026-07-17-duplication-evidence-repair-adr` - `duplication-evidence-repair` adr: `duplication-evidence-repair rescope grounding` | (**status:** `accepted`)
 
 ### audit
 

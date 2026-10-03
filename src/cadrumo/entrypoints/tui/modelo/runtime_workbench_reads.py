@@ -16,9 +16,10 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.workbench_operations import (
     MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID,
     MODELO_WORK_FORM_OPERATION_DEFINITION_ID,

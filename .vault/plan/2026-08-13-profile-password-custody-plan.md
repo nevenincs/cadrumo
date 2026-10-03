@@ -9,7 +9,6 @@ related:
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
   - '[[2026-08-13-auth-certificate-lifecycle-successor-adr]]'
   - '[[2026-08-13-cli-action-envelope-successor-adr]]'
-  - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-13-profile-bucket-lifecycle-successor-adr]]'
   - '[[2026-08-13-profile-disaster-operations-successor-adr]]'
   - '[[2026-08-13-profile-portability-successor-adr]]'
@@ -18,7 +17,7 @@ related:
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-08-13-sealed-archive-transport-successor-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_hash: 'sha256:1bb4501b5b74db42bcec990ec60d69715e175abfcb14d48781b1a17a9b836821'
 ---
 

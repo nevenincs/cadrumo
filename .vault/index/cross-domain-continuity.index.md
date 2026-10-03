@@ -4,13 +4,10 @@ tags:
   - '#index'
   - '#cross-domain-continuity'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:18c3d0f9ae5c27bccc4da6a1843ceef599d3a5ae436dbfa1e501fc70e15c3e3c'
+body_hash: 'sha256:7c081873ef99de6311bfeafebdb936e16d37a9252146c2f4e86a9039ced905fa'
 related:
-  - '[[2026-05-27-cross-domain-continuity-exec]]'
-  - '[[2026-05-27-m200-cuota-formula-estado-binding-fix-exec]]'
-  - '[[2026-05-31-cross-domain-continuity-exec]]'
   - '[[2026-06-03-cross-domain-continuity-audit]]'
   - '[[2026-06-04-cross-domain-continuity-research]]'
   - '[[2026-07-01-cross-domain-continuity-audit]]'
@@ -53,12 +50,6 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-07-12-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `Wave 10 terminal audit`
 - `2026-07-14-cross-domain-continuity-checkpoint-audit` - `cross-domain-continuity` audit: `checkpoint declaration and honesty review`
 - `2026-07-14-cross-domain-continuity-persona-cadence-audit` - `cross-domain-continuity` audit: `quarterly persona cadence establishment`
-
-### exec
-
-- `2026-05-27-cross-domain-continuity-exec` - `cross-domain-continuity` historical placeholder exec
-- `2026-05-27-m200-cuota-formula-estado-binding-fix-exec` - `task-183` M200 cuota engine — formula rewrite + profile field + test migration
-- `2026-05-31-cross-domain-continuity-exec` - `cross-domain-continuity` — cross-domain handoff provenance audit closures (F1-F5)
 
 ### reference
 

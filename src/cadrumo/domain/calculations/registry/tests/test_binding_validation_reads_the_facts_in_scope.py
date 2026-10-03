@@ -31,12 +31,18 @@ from ....iva.schema import (
     IvaRateKind,
 )
 from ..errors import RegistryValidationError
+from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ..facts.schema import GovernedFact, GovernedFactCatalogue
 from ..governed_fact_scope import CandidateFactAuthority, governed_facts_in_scope, validating_governed_facts
-from ..iva_flow_catalogue import require_iva_flow_direction
+from ..iva_flow_catalogue import (
+    require_iva_flow_direction,
+    require_registry_declared_iva_flow_direction,
+    resolve_iva_flow_direction_catalogue,
+)
 from ..iva_rate_kind_catalogue import require_registry_declared_iva_rate_kind
 from ..ledger_iva_bindings import LedgerIvaProvider
 from ..schema import SupportedFilingYearsCatalogue
+from ..schema_references import TemporalSupportEnvelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -220,6 +226,47 @@ def test_a_binding_declaring_an_undeclared_rate_tier_is_refused() -> None:
         )
 
     assert "not declared by the facts registry" in str(refusal.value)
+
+
+class _RecordingFacts:
+    """Delegate to real candidate facts while recording which fact ids were asked."""
+
+    def __init__(self, inner: CandidateFactAuthority) -> None:
+        self._inner = inner
+        self.fact_ids: list[str] = []
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        self.fact_ids.append(str(query.fact_id))
+        return self._inner.resolve_governed_fact(query)
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        return self._inner.supported_filing_years()
+
+
+def test_a_flow_direction_is_validated_against_the_scoped_facts_it_checked() -> None:
+    scoped = _RecordingFacts(_scoped_facts())
+    with validating_governed_facts(scoped):
+        flow = require_registry_declared_iva_flow_direction("operacion_con_inversion")
+
+    assert flow.value == "operacion_con_inversion"
+    assert scoped.fact_ids == ["iva-invoice-classification-catalogue"]
+
+
+def test_flow_validation_outside_a_scope_refuses_instead_of_reading_the_published_authority() -> None:
+    assert governed_facts_in_scope() is None
+    with pytest.raises(RegistryValidationError, match="published authority artifact"):
+        require_registry_declared_iva_flow_direction("repercutido")
+
+
+def test_an_explicit_flow_authority_is_used_instead_of_the_scope() -> None:
+    explicit = _RecordingFacts(_scoped_facts())
+    ambient = _RecordingFacts(_scoped_facts())
+    with validating_governed_facts(ambient):
+        catalogue = resolve_iva_flow_direction_catalogue(effective_date=_EFFECTIVE, authority=explicit)
+
+    assert catalogue.issued_token.value == "repercutido"
+    assert explicit.fact_ids == ["iva-invoice-classification-catalogue"]
+    assert ambient.fact_ids == []
 
 
 def test_a_binding_validated_outside_a_scope_never_reaches_the_bundle() -> None:

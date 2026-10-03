@@ -227,7 +227,6 @@ def compose_runtime_ports() -> Iterator[None]:
     from .adapters.persistence.profile.justificante import JustificanteRepository
     from .adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
     from .adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
-    from .entrypoints.adapter_composition import _calculation_revision_catalogue_repository
     from .adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from .adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from .adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
@@ -261,6 +260,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .core.redaction.tax_identity_admission import bind_tax_identity_admission
     from .domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
+    from .entrypoints.adapter_composition import _calculation_revision_catalogue_repository
 
     with (
         bind_tax_identity_admission(RegistryTaxIdentityAdmission()),

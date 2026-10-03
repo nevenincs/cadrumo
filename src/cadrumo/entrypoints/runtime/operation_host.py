@@ -7,6 +7,7 @@ from collections.abc import AsyncGenerator
 from contextlib import ExitStack, asynccontextmanager
 from datetime import timedelta
 from math import isfinite
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import BaseModel, JsonValue, TypeAdapter
@@ -55,7 +56,7 @@ from ...application.user_profile.automation_enrollment import AutomationInventor
 from ...application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.projections import projection_for_taxpayer
-from ...application.workbench_generation import WorkbenchGenerationV1
+from ...application.workbench_generation_contracts import WorkbenchGenerationV1
 from ...application.workbench_generation_operation import (
     WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
     WorkbenchGenerationOperationRequest,
@@ -77,6 +78,9 @@ from ..operation_composition import compose_operation_dependencies
 from ..workbench_generation_composition import compose_secure_workbench_generation_provider
 from .automation_execution import WorkerAutomationAdministration
 from .operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
+
+if TYPE_CHECKING:
+    from ...application.operations.supervisor import OperationSupervisor
 
 _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
 
@@ -313,6 +317,10 @@ class ProfileWorkerOperationHost:
         A terminal failure is settled too; this acknowledgment claims no
         successful domain effect or available private result.
         """
+        supervisor = self._settlement_supervisor(identity, timeout)
+        return await self._await_settlement(supervisor, identity, timeout)
+
+    def _settlement_supervisor(self, identity: OperationIdentity, timeout: float) -> OperationSupervisor:
         original = self._submissions.get(identity.operation_id)
         services = self._services
         if (
@@ -325,10 +333,14 @@ class ProfileWorkerOperationHost:
             or not 0 < timeout <= 5
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        return services.submission.supervisor
+
+    async def _await_settlement(
+        self, supervisor: OperationSupervisor, identity: OperationIdentity, timeout: float
+    ) -> bool:
         wait = asyncio.timeout(timeout)
         try:
             async with wait:
-                supervisor = services.submission.supervisor
                 observed = await supervisor.inspect(identity.operation_id)
                 if observed.identity != identity:
                     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)

@@ -29,6 +29,51 @@
 # is not the measure of progress.
 
 schema_version = 4
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '390'
+revision = '2022'
+source_ref = 'aeat-dr-390-2022'
+source_sha256 = '7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe'
+remedy = 'republish'
+differing_records = 1
+reason = '''The committed layout represents the official Pág. 0 variable envelope only as a 328-byte auxiliary header. Its thirteen prefix roles at A6-A18 agree with the source, but that declaration cannot attest the ordered Pág. 1-8 body at A19, the relative closer at A20, or the variable emitted-byte total at A21. The current source-pinned render declares the complete filing envelope, while every committed page-record file reproduces byte for byte; only the layout record and its generation manifest differ.'''
+reconsideration_condition = 'Retire this row once the published layout reproduces the complete source-pinned filing envelope and the fresh comparison reports no record drift. Reassess if the official source hash, Pág. 0 prefix geometry, body order, closer or total rule, or any page-record bytes change.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '390'
+revision = '2023'
+source_ref = 'aeat-dr-390-2023'
+source_sha256 = '179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7'
+remedy = 'republish'
+differing_records = 1
+reason = '''The committed layout represents the official Pág. 0 variable envelope only as a 328-byte auxiliary header. Its thirteen prefix roles at A6-A18 agree with the source, but that declaration cannot attest the ordered Pág. 1-8 body at A19, the relative closer at A20, or the variable emitted-byte total at A21. The current source-pinned render declares the complete filing envelope, while every committed page-record file reproduces byte for byte; only the layout record and its generation manifest differ.'''
+reconsideration_condition = 'Retire this row once the published layout reproduces the complete source-pinned filing envelope and the fresh comparison reports no record drift. Reassess if the official source hash, Pág. 0 prefix geometry, body order, closer or total rule, or any page-record bytes change.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '390'
+revision = '2024'
+source_ref = 'aeat-dr-390-2024'
+source_sha256 = '8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0'
+remedy = 'republish'
+differing_records = 1
+reason = '''The committed layout represents the official Pág. 0 variable envelope only as a 328-byte auxiliary header. Its thirteen prefix roles at A6-A18 agree with the source, but that declaration cannot attest the ordered body at A19, including Pág. 2 bis, the relative closer at A20, or the variable emitted-byte total at A21. The current source-pinned render declares the complete filing envelope, while every committed page-record file reproduces byte for byte; only the layout record and its generation manifest differ.'''
+reconsideration_condition = 'Retire this row once the published layout reproduces the complete source-pinned filing envelope and the fresh comparison reports no record drift. Reassess if the official source hash, Pág. 0 prefix geometry, body order, closer or total rule, or any page-record bytes change.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '390'
+revision = '2025'
+source_ref = 'aeat-dr-390-2025'
+source_sha256 = '6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252'
+remedy = 'republish'
+differing_records = 1
+reason = '''The committed layout represents the official Pág. 0 variable envelope only as a 328-byte auxiliary header. Its thirteen prefix roles at A6-A18 agree with the source, but that declaration cannot attest the ordered body at A19, including Pág. 2 bis, the relative closer at A20, or the variable emitted-byte total at A21. The current source-pinned render declares the complete filing envelope, while every committed page-record file reproduces byte for byte; only the layout record and its generation manifest differ.'''
+reconsideration_condition = 'Retire this row once the published layout reproduces the complete source-pinned filing envelope and the fresh comparison reports no record drift. Reassess if the official source hash, Pág. 0 prefix geometry, body order, closer or total rule, or any page-record bytes change.'
+
 [[dispositions]]
 kind = 'below_floor'
 modelo = '232'

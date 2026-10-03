@@ -15,12 +15,12 @@ from ...application.aggregation.invoice_retencion import (
 from ...application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
 from ...application.aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
 from ...application.aggregation.withholding_filing_cadence import PERIODIC_WITHHOLDING_MODELOS
-from ...application.modelo.aggregate_operation import (
+from ...application.modelo.aggregate_projection import (
     ModeloAggregateGenerationAudit,
     ModeloAggregateProjection,
     ModeloAggregateWindow,
 )
-from ...application.modelo.invoice_withholding_capture_operation import ModeloInvoiceWithholdingCaptureProjection
+from ...application.modelo.invoice_withholding_capture_contracts import ModeloInvoiceWithholdingCaptureProjection
 from ...core.aggregation import RetencionClave
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity

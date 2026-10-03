@@ -45,6 +45,7 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -492,7 +493,8 @@ def _definition(
     phases: tuple[str, ...],
     secret_kind: str | None = None,
     request_storage: OperationRequestStoragePolicy = OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-    permitted_frontends: frozenset[OperationFrontendProjection] = frozenset(OperationFrontendProjection),
+    permitted_frontends: frozenset[OperationFrontendProjection] = ALL_OPERATION_FRONTENDS,
+    public_error_detail: bool = False,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -528,6 +530,7 @@ def _definition(
                 lifetime=timedelta(minutes=5),
             )
         ),
+        public_error_detail=public_error_detail,
     )
 
 
@@ -572,6 +575,7 @@ def build_auth_operation_definitions(
             phases=("auth.acquire.preflight", "auth.acquire.execute", "auth.acquire.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
             permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+            public_error_detail=True,
         ),
         _definition(
             definition_id=AUTH_LOGOUT_OPERATION_DEFINITION_ID,

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from dataclasses import replace
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -16,6 +15,7 @@ from ...core.identity.tax_id import tax_id_identity_token
 from ...core.identity_check_verdict import IdentityCheckVerdictValue
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -25,7 +25,7 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...core.time.clock import now
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -36,18 +36,20 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
-from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
+from ..operations.models import (
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_succeeded_receipt_references,
+    require_terminal_receipt_match,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..operations.operation_definition import OperationDefinition
+from ..operations.owner import OperationExecutorContext
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
+from .live_operation_execution import own_provider_browser
+from .live_operation_registration import build_live_operation_definition
 from .verify import VerifyObservation, VerifyService, VerifySurface
 from .verify_ports import VerifyObservationPersistencePort
 
@@ -130,22 +132,21 @@ def _definition_id(surface: VerifySurface) -> str:
     return VERIFY_TGVI_CAPTURE_DEFINITION_ID
 
 
+_RECEIPT_CONTRADICTION = "verify capture result contradicts its terminal receipt"
+
+
 def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     report = VerifyCaptureOperationReport.model_validate(result, strict=True)
     observation = report.observation
-    expected_effect = OperationEffect.UPDATED if report.newly_persisted else OperationEffect.NONE
-    if (
-        receipt.identity.definition_id != _definition_id(observation.surface)
-        or receipt.identity.subject_ref != profile_operation_subject(str(observation.bucket_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not expected_effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("verify capture result contradicts its terminal receipt")
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=_definition_id(observation.surface),
+        subject_ref=profile_operation_subject(str(observation.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED if report.newly_persisted else OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
+    require_succeeded_receipt_references(receipt, message=_RECEIPT_CONTRADICTION)
     return VerifyCapturePublicResultV1.from_record(observation)
 
 
@@ -187,9 +188,7 @@ class VerifyCaptureExecutor:
 
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
-        resources = self._browser_resources_factory()
-        context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_PHASES[1])
+        resources = await own_provider_browser(context, self._browser_resources_factory, acquire_phase=_PHASES[1])
         with resources.activate():
             observed = await self._acquire(self._surface, payload.nif, payload.expected, context.authority_operation)
         if tax_id_identity_token(observed.nif) != tax_id_identity_token(payload.nif):
@@ -238,15 +237,13 @@ def build_verify_capture_definition(
             provider_preflight=provider_preflight,
         )
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=_definition_id(surface),
         request_type=VerifyCaptureRequest,
         result_type=VerifyCaptureOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=VerifyCaptureRequest, executor_type=VerifyCaptureExecutor, build=build
-        ),
+        executor_type=VerifyCaptureExecutor,
+        build=build,
         phase_codes=_PHASES,
-        interaction_kinds=frozenset(),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -257,12 +254,8 @@ def build_verify_capture_definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
         ),
     )
 
@@ -276,23 +269,14 @@ def resolve_verify_capture_access(
         VERIFY_TGVI_CAPTURE_DEFINITION_ID,
     } or not isinstance(request.payload, VerifyCaptureRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_verify_capture_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind safe observation projection and exact-profile capture access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=VerifyCaptureRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=VerifyCapturePublicResultV1
-        ),
+        public_result_type=VerifyCapturePublicResultV1,
         result_projector=_project_capture,
         access_resolver=resolve_verify_capture_access,
     )

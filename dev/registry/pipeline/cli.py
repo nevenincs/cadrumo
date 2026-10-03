@@ -33,7 +33,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
-from ._export_tree import RenderedExportTree, render_complete_export_tree
+from ._export_tree import render_complete_export_tree
 from ._form_layout_companion import prepare_generated_form_layout_companion
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import publish_validated_generated_export_tree
@@ -57,6 +57,7 @@ from .edition_candidate_staging import (
     write_complete_edition,
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
+from .export_tree_models import RenderedExportTree
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from .render_check import (
     GeneratedExportBootstrapTransport,

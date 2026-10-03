@@ -27,7 +27,7 @@ from textual.screen import Screen
 
 from .....application.modelo.action_errors import modelo_edit_refusal_error
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from .....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from .....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAddressV1,

@@ -44,6 +44,7 @@ from ..operations.access_resolution import (
     HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
     RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
     OperationAccessContext,
+    OperationAccessProfile,
     ResolvedOperationAccess,
     bind_operation_access_profile,
     require_declared_frontend_and_action,
@@ -54,14 +55,10 @@ from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -459,23 +456,40 @@ def resolve_modelo_audit_operation_access(
 ) -> ResolvedOperationAccess:
     """Authorize exact purpose/profile and complete reviewed destination disclosure."""
     expected = request.definition_id
-    recording = expected == MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID
-    query = expected == MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID
+    recording, query = _audit_access_mode(expected)
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=expected,
+        payload_type=ModeloAuditExportRequest if recording else ModeloAuditReadRequest,
+        access_profile_id=context.profile_id,
+        exact_type=True,
+    )
+    frontends, access_profile = _audit_access_policy(recording=recording, query=query)
+    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
+    require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
+    return bind_operation_access_profile(
+        context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
+    )
+
+
+def _audit_access_mode(expected: str) -> tuple[bool, bool]:
     if expected not in {
         MODELO_AUDIT_READ_OPERATION_DEFINITION_ID,
         MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID,
         MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID,
     }:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = request.payload
-    if type(payload) is not (ModeloAuditExportRequest if recording else ModeloAuditReadRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if not isinstance(payload, (ModeloAuditReadRequest, ModeloAuditExportRequest)):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return (
+        expected == MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID,
+        expected == MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID,
+    )
+
+
+def _audit_access_policy(
+    *,
+    recording: bool,
+    query: bool,
+) -> tuple[frozenset[OperationFrontendProjection], OperationAccessProfile]:
     frontends = _HUMAN_FRONTENDS if recording else _QUERY_FRONTENDS if query else _HUMAN_FRONTENDS
     access_profile = (
         HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
@@ -484,11 +498,7 @@ def resolve_modelo_audit_operation_access(
         if query
         else HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     )
-    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
-    require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
-    return bind_operation_access_profile(
-        context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
-    )
+    return frontends, access_profile
 
 
 def project_modelo_audit_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -525,19 +535,13 @@ def build_modelo_audit_operation_definitions(
 ) -> tuple[OperationDefinition, ...]:
     """Enroll canonical integrity reads and separately authorized human ZIP output."""
     reads = tuple(
-        OperationDefinition(
+        build_single_phase_definition(
             definition_id=definition_id,
             request_type=ModeloAuditReadRequest,
             result_type=result_type,
-            executor_factory=OperationExecutorFactory(
-                request_type=ModeloAuditReadRequest,
-                executor_type=ModeloAuditReadExecutor,
-                build=lambda query=query: ModeloAuditReadExecutor(factory, query=query),
-            ),
-            phase_codes=(definition_id,),
-            interaction_kinds=frozenset(),
+            executor_type=ModeloAuditReadExecutor,
+            build=lambda query=query: ModeloAuditReadExecutor(factory, query=query),
             capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
-            reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
             permitted_frontends=frontends,
         )
         for definition_id, result_type, query, frontends in (
@@ -545,19 +549,13 @@ def build_modelo_audit_operation_definitions(
             (MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID, ModeloAuditQueryExecutionResult, True, _QUERY_FRONTENDS),
         )
     )
-    recording = OperationDefinition(
+    recording = build_single_phase_definition(
         definition_id=MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID,
         request_type=ModeloAuditExportRequest,
         result_type=ModeloAuditExportExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloAuditExportRequest,
-            executor_type=ModeloAuditExportExecutor,
-            build=lambda: ModeloAuditExportExecutor(factory),
-        ),
-        phase_codes=(MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloAuditExportExecutor,
+        build=lambda: ModeloAuditExportExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=_HUMAN_FRONTENDS,
     )
     return (*reads, recording)

@@ -14,7 +14,8 @@ from cadrumo.adapters.local_runtime.automation_requester import (
     AutomationRequesterUncertainError,
 )
 from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store

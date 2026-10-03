@@ -12,16 +12,12 @@ from ..modelo.verification_repository_ports import VerificationRepositoryBundleF
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -218,22 +214,14 @@ def build_ledger_status_definition(
     ports: LedgerActionPortsFactory, repositories: VerificationRepositoryBundleFactory
 ) -> OperationDefinition:
     """Register the existing read services without mutation or provider authority."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_STATUS_OPERATION_DEFINITION_ID,
         request_type=LedgerStatusRequest,
         result_type=LedgerStatusProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerStatusRequest,
-            executor_type=LedgerStatusExecutor,
-            build=lambda: LedgerStatusExecutor(ports, repositories),
-        ),
-        phase_codes=(LEDGER_STATUS_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerStatusExecutor,
+        build=lambda: LedgerStatusExecutor(ports, repositories),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

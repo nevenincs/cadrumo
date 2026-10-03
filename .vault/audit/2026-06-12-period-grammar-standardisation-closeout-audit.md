@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#period-grammar-standardisation'
 date: '2026-06-12'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:eef67e1bec2ecd01654147b3428763e9174f3172b46667a694597e9300d4b260'
-related:
-  - '[[2026-06-11-period-grammar-standardisation-plan]]'
+related: []
 ---
 
 # `period-grammar-standardisation` Closeout Audit

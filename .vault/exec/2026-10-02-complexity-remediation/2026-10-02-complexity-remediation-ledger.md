@@ -5,40 +5,14 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3832b92751a6875ddd2e7a763965c9f341efb152d0d5488de149123b43ce8ac4'
+body_hash: 'sha256:d078c33cca6e89a8b0537f8b68c33bbfd4448df238c8dfa1d5b725a505985d4f'
 related:
   - "[[2026-10-02-complexity-remediation-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `complexity-remediation` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S04` `M` `packaging/homebrew/generate.py`
 - `S04` `M` `dev/packaging/constraint_effect.py`
@@ -1814,6 +1788,706 @@ related:
 - `S07` `verify:` `four outer composition owners CC MI cognitive zero Ruff format ty` -> `pass`
 - `S07` `verify:` `actual Google configuration persistence digest refusal and idempotent logout two owning tests` -> `pass`
 - `S07` `verify:` `spreadsheet assembly runtime management and evidence extraction owning cohort 21 tests` -> `pass`
+- `S05` `verify:` `just audit-complexity 20261003T040851.395611Z-audit-complexity-30172-2cd0f7d7 exit 0` -> `pass`
+- `S05` `verify:` `required zero hotspots: latest whole filesystem inventory has 591 findings` -> `fail`
+- `S07` `M` `src/cadrumo/entrypoints/calendar_evidence_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/overview_read_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/live_state_composition.py`
+- `S07` `A` `src/cadrumo/entrypoints/tests/test_overview_calendar_survey.py`
+- `S07` `verify:` `four shared composition files fixed detector scan zero hotspots` -> `pass`
+- `S07` `verify:` `four shared composition files Ruff and format` -> `pass`
+- `S07` `verify:` `six calendar encrypted/native owning tests 20261003T040652.436742Z-pytest-32976-64ad9605` -> `pass`
+- `S07` `verify:` `two isolated diagnostic runtime_connection_closed reruns 20261003T040139.219800Z-pytest-45928-c759f0e6` -> `pass`
+- `S07` `verify:` `registry and calendar owning verification 20261003T042021.416225Z-pytest-4912-7ad7a06e collection` -> `fail`
+- `S07` `verify:` `calendar locked-profile regression suite 20261003T042516.381124Z-pytest-49260-752f1d3a setup` -> `fail`
+- `S07` `verify:` `shared composition ty after concurrent edits` -> `fail`
+- `S11` `M` `src/cadrumo/adapters/inbound/financial/providers/detection.py`
+- `S11` `M` `src/cadrumo/adapters/inbound/financial/providers/xls.py`
+- `S11` `M` `src/cadrumo/adapters/inbound/notificacion/sancion.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/google/google_configuration_refusal.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/google/impersonation.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/google/oauth_flow.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/aeat/sede/filed_data_capture_port.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/calculation_summary_pdf/structure_tagging.py`
+- `S11` `verify:` `nine adapter boundary files fixed detector zero hotspots` -> `pass`
+- `S11` `verify:` `nine adapter boundary files Ruff format and focused ty` -> `pass`
+- `S11` `verify:` `127 selected parser OAuth PDF/declaration tests 20261003T042516.371506Z-pytest-65012-163dfa17 setup` -> `fail`
+- `S11` `by:` `root`
+- `S05` `verify:` `just audit-complexity 20261003T044210.671191Z-audit-complexity-6100-e98eeae7 exit 0` -> `pass`
+- `S05` `verify:` `required full zero findings: current live measured population561` -> `fail`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/macos_manager.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/macos_job_projection.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/macos_user_manager.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/macos_job_native.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/macos_agent_storage.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/windows_manager.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/windows_task_definition.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/runtime_manager_composition.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_manager.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_manager_native.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_stop_owned_process.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_service_definitions.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_manager.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/windows_managed_runtime_fixture.py`
+- `S11` `verify:` `all seven macOS/Windows manager and canonical native-definition owner files zero fixed-detector findings` -> `pass`
+- `S11` `verify:` `focused manager owner ty and Ruff` -> `pass`
+- `S11` `verify:` `normal fixtures unit and integration all103 owner tests 20261003T044404.972681Z-pytest-76944-78c44b80` -> `pass`
+- `S11` `verify:` `adapter and calendar batch 126 pass five prerequisite failures 20261003T043417.114253Z-pytest-32392-476441e7` -> `fail`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/linux_manager.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/linux_service_configuration.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/linux_service_inspection.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_manager.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_manager_configuration.py`
+- `S11` `verify:` `Linux manager, configuration and inspection complexity (zero findings)` -> `pass`
+- `S11` `verify:` `Linux production and exact consumer Ruff, ty and BasedPyright` -> `pass`
+- `S11` `verify:` `Normal Linux manager/configuration/integration batch (9 passed, 33 native cases skipped on Windows)` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/withholding_observation_workflow.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/profile/transaction_row_contracts.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/profile/transaction_iva_migration.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/profile/transaction_date_projection.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/profile/transaction_storage_failures.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/catalogue_creation.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/operations/journal.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/tests/test_transactions_repository.py`
+- `S11` `verify:` `Persistence atomic cohort official metrics (all eight production files zero)` -> `pass`
+- `S11` `verify:` `Persistence atomic cohort Ruff, format, ty and BasedPyright` -> `pass`
+- `S11` `verify:` `Normal persistence owning batch before helper-name correction (79 passed, 10 naming regression failures)` -> `fail`
+- `S11` `verify:` `Normal affected transaction partition batch after correction (30 passed)` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/automation_decision.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S11` `verify:` `Runtime host/connection/decision official metrics (zero)` -> `pass`
+- `S11` `verify:` `Runtime host/connection/decision Ruff, format, ty, BasedPyright` -> `pass`
+- `S11` `verify:` `Normal server, cleanup, drain, owner-control transport and automation decision pytest batch (62 passed)` -> `pass`
+- `S05` `verify:` `just audit-complexity advisory report (526 findings, complete measured population)` -> `pass`
+- `S05` `verify:` `Whole-codebase zero-finding acceptance at 526 findings` -> `fail`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/frontend_client_contracts.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/frontend_operation_client.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/frontend_profile_view_client.py`
+- `S11` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S11` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S11` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S11` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
+- `S11` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
+- `S11` `M` `src/cadrumo_harness/mcp/tests/test_handover_cleanup.py`
+- `S11` `M` `src/cadrumo_harness/mcp/tests/test_result_page_tool.py`
+- `S11` `M` `src/cadrumo_harness/mcp/tests/test_submission_uncertainty.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/registered_operation_errors.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/registered_operation_projections.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/registered_operation_responses.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/registered_operation_reviews.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_attestation.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_list.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_metadata.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_revision.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_work_create.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_work_inventory.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_workflow_resume.py`
+- `S11` `M` `src/cadrumo/entrypoints/tests/test_runtime_credentials.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/runtime_access_actions.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/runtime_account_session.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/__main__.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/aeat_sync/runtime_handoff.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_work_create.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/operations/runtime_controller.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/operations/runtime_profile_session.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/profile/runtime_auth_configuration.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/profile/runtime_manager.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/profile/runtime_overview.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/secret/automation_decision.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_attempt.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_recovery.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_workbench.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_automation_requester_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_password_rotation.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_runtime_auth_field.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_runtime_manager.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_runtime_overview.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_await_terminal_projection.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_runtime_access_loss.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_runtime_handoff.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_decision_client.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_descendants_operation.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_grant_change.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_secret.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_plantilla_media_client.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_projection_pages.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_runtime_password_rotation.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/google_consent_observation.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/google_consent_response.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/google_consent_review.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/passphrase.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/plantilla_media.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/profile_status_cli.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/runtime_automation_request.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/runtime_censal_observation.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/runtime_censal_projection.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/runtime_censal_response.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/runtime_censal_review.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/runtime_descendants.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/runtime_google_consent.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/runtime_profile_view.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/_capabilities_cli.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/_profile_inspect.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_attestation.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_filing_record_list.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_create.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_quickfile_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_workflow_runs_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_configuration_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_profile_mutation_boundary.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/automation_inventory.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/automation_requester.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/modelo_metadata.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/operation_settlement.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/profile_mutations.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/profile_password_rotation.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/workbench_generation.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_automation_decision.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_automation_inventory.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_frontend_access_management.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_frontend_failure_code.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_operation_settlement.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_password_rotation.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_projection_page_client.py`
+- `S11` `M` `dev/docs/sequences/tests/test_runner.py`
+- `S11` `M` `dev/agent_eval/tests/test_installed_mcp_autonomous_reconnect.py`
+- `S11` `M` `dev/agent_eval/tests/test_mcp_frontend_session_lock_parity.py`
+- `S11` `M` `dev/agent_eval/tests/test_runtime_automation_grant_lock_parity.py`
+- `S11` `M` `dev/agent_eval/tests/test_runtime_automation_management_parity.py`
+- `S11` `M` `dev/acceptance/income_tax/tests/test_installed_tui_child.py`
+- `S11` `verify:` `Frontend capability official metrics (all four production owners zero)` -> `pass`
+- `S11` `verify:` `Frontend production Ruff, format, ty and BasedPyright` -> `pass`
+- `S11` `verify:` `Canonical frontend contract imports in 122 consumers` -> `pass`
+- `S11` `verify:` `Normal frontend/admitted profile view/paging/MCP batch (39 passed, one structural test fixture failure and five native login deadline gaps)` -> `fail`
+- `S11` `verify:` `Corrected structural fixture and focused paging tests (15 passed)` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/windows_desktop_logon.py`
+- `S11` `verify:` `Profile runner and Windows witness metrics (all four zero)` -> `pass`
+- `S11` `verify:` `Profile runner and Windows witness Ruff, format, ty and BasedPyright` -> `pass`
+- `S11` `verify:` `Normal profile mutation/rotation/inventory owning batch including native mutations (20 passed)` -> `pass`
+- `S11` `verify:` `Windows witness owning tests (42 passed, two native acceptance opt-in cases skipped)` -> `pass`
+- `S05` `verify:` `just audit-complexity 20261003T053616.759177Z advisory exit 0 measured complete population with 484 hotspots` -> `pass`
+- `S05` `verify:` `whole-codebase zero-hotspot acceptance at 484 findings` -> `fail`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/worker_authorization.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/worker_authorization_client.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/worker_authorization_lease.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/worker_authorization_refusals.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_approval_task_authority.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_password_rotation_authority.py`
+- `S11` `verify:` `official measured 4 worker authorization production owners all zero` -> `pass`
+- `S11` `verify:` `Ruff format ty BasedPyright worker authorization changed cohort` -> `pass`
+- `S11` `verify:` `normal native worker authorization release expiry cancellation approval channel phase and owning boundary batch 12 pass 1 fixture binding conflict` -> `fail`
+- `S11` `verify:` `isolated password rotation exact task permit owning test 1 pass` -> `pass`
+- `S11` `verify:` `paging fixture Ruff ty corrected override signatures` -> `pass`
+- `S11` `verify:` `representative native projection page race retry fails during 25-second password login before paging` -> `fail`
+- `S05` `verify:` `just audit-complexity 20261003T060213.775837Z advisory exit 0 measured complete population with 446 hotspots` -> `pass`
+- `S05` `verify:` `whole-codebase zero-hotspot acceptance at 446 findings` -> `fail`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_store.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_records.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_native_binding.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_control_storage.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_profile_lock.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_control_publication.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_enrollment_custody.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_denial_custody.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_native_identity.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_control_projection.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_denial_projection.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_retirement.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_retirement_io.py`
+- `S11` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S11` `M` `dev/agent_eval/tests/test_installed_linux_refusal_stdio.py`
+- `S11` `M` `dev/agent_eval/tests/test_installed_mcp_runtime_recovery.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_automation_decision.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_enrollment.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/native_api_cli_support.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_fixture_cleanup.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_decision_native.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_client_credentials.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_client_credentials.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_denial.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_publication_recovery.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_macos_keychain_native.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_secret_store_native.py`
+- `S11` `verify:` `official 13 automation custody production owners measured zero` -> `pass`
+- `S11` `verify:` `Ruff formatting and scoped ty plus BasedPyright all 13 production owners` -> `pass`
+- `S11` `verify:` `normal complete owning custody store denial publication recovery enrollment administration native acquisition 118 passed 1 native unavailable skip` -> `pass`
+- `S11` `verify:` `pre-cohort unit-only custody baseline 61 pass 1 native unavailable skip 57 deselected` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/windows_login.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/windows_desktop_observation.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/windows_login_native.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_login_inventory.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_login_inventory_native.py`
+- `S11` `verify:` `official 3 Windows login production owners measured zero` -> `pass`
+- `S11` `verify:` `Ruff format ty and BasedPyright Linux and explicit Windows target three Windows login owners` -> `pass`
+- `S11` `verify:` `first Windows login owning batch 37 pass 2 incomplete inventory regression failures` -> `fail`
+- `S11` `verify:` `corrected complete normal Windows login inventory batch 39 pass 2 explicit native acceptance selection skips` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/enrollment_client.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/runtime_client.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/manager_commands.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/tests/test_manager_command_sync.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_secret_target.py`
+- `S11` `verify:` `Official exact-file CC MI cognitive measurement of enrollment, runtime cleanup, credential reconciliation, manager commands, and secret target: zero` -> `pass`
+- `S11` `verify:` `Ruff check format ty and basedpyright on changed production owners` -> `pass`
+- `S11` `verify:` `Enrollment runtime cleanup and credential-write reconciliation owning normal tests: 39 passed; 20261003T062217.382057Z-pytest-41868-58c1db5e` -> `pass`
+- `S11` `verify:` `Sync manager-command normal boundary tests: 6 passed; 20261003T062741.832612Z-pytest-90372-922e2910` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/profile_worker_lifetime.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/profile_worker_transport.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/profile_worker_operation_client.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/profile_worker_human_admission.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/worker_resource_cleanup.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/worker_native_identity.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/worker_admission_budget.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_worker_cleanup.py`
+- `S11` `verify:` `Official measurement of eight profile-worker production owners: zero` -> `pass`
+- `S11` `verify:` `Profile-worker production cohort Ruff format ty basedpyright` -> `pass`
+- `S11` `verify:` `Profile-worker cleanup and startup boundary tests: baseline 42 passed and post-refactor 42 passed; 20261003T061825.644257Z-pytest-73792` -> `pass`
+- `S11` `verify:` `Real Windows profile-worker native suite: 6 passed 1 failed in 489 seconds; 20261003T061934.594647Z-pytest-27068-37aec39a` -> `fail`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/framing.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/runtime_frame_io.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/runtime_transport_cleanup.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/runtime_verified_transport.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/runtime_profile_transport.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/runtime_enrollment_transport.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/runtime_operation_transport.py`
+- `S11` `M` `src/cadrumo_harness/mcp/tests/test_adapter_cleanup.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime_management.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/runtime_profile_binding.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/access_management.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/enrollment_connections.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/managed_windows_runtime.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/submission_stream.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/worker_operation_requests.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/worker_service.py`
+- `S11` `M` `src/cadrumo/entrypoints/tests/test_runtime_management.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/runtime_management_cleanup.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/linux_worker_parent_fixture.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/operation_transport_support.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_worker_exit_cleanup.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/windows_worker_parent_fixture.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_registered_operation.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/management_status.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/profile_worker_transport.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/startup.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/windows.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/windows_managed_stop.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/worker_authorization_lease.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/worker_lease_transfer.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/profile_worker_support.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/readiness_fixture.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_access_management_framing.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_connection_serialization.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_enrollment_framing.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_framing.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_launch_door.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_launch_door_cleanup.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_management_status.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_client.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_credentials_cleanup.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_server_cleanup.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_submission_stream_client.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_channel_cleanup.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_managed_stop.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_manager_restart_native.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_manager_stop_native.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_lease_transfer.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/worker_approval_phase_fixture.py`
+- `S11` `M` `dev/agent_eval/tests/test_installed_mcp_tui_grant_parity.py`
+- `S11` `verify:` `Seven canonical framing transport owners official CC MI cognitive measurement: zero` -> `pass`
+- `S11` `verify:` `Canonical framing owners Ruff ty basedpyright and 72-file import formatting` -> `pass`
+- `S11` `verify:` `Six normal owning framing serialization enrollment management scope-transfer and streamed-payload suites: 78 passed; 20261003T063920.218798Z-pytest-14072-925ac0b5` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_worker.py`
+- `S11` `verify:` `Isolated native lease refresh expiry after explicit prepare_api_admission before lease mint: 1 passed; 20261003T063920.737329Z-pytest-84360-6050717a` -> `pass`
+- `S11` `verify:` `Secret target real owning refusal boundary: 13 passed; 20261003T063521.982240Z-pytest-48320-73c3d5f7` -> `pass`
+- `S05` `verify:` `Full just audit-complexity: all filesystem sources measured 390 current findings; 20261003T063936.663977Z-audit-complexity-34976-12b17065` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/windows_process.py`
+- `S11` `verify:` `WindowsProcessScope official CC MI Cog zero and Ruff ty explicit-Windows basedpyright` -> `pass`
+- `S11` `verify:` `Windows retained-handle cleanup fault ports: 16 passed; 20261003T064313.837053Z-pytest-80028` -> `pass`
+- `S11` `verify:` `Real Windows native creation-time Job and abrupt-owner-loss suite: 8 passed; 20261003T064343.634221Z-pytest-50020` -> `pass`
+- `S11` `verify:` `Management and operation settlement owning boundaries: 15 passed; 20261003T064130.185377Z-pytest-89524` -> `pass`
+- `S11` `verify:` `Passive-read stage Ruff ty basedpyright` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/macos_process.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/service_definitions.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/kdf_calibration_search.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/windows_task_process.py`
+- `S11` `verify:` `Official exact-file mac watch service KDF protected-latch launch metadata and task-ancestry measurements: zero` -> `pass`
+- `S11` `verify:` `Mac native-port identity/descriptor-retirement owning tests: 31 passed; 20261003T064751.614638Z-pytest-27844` -> `pass`
+- `S11` `verify:` `Service definition and KDF search owning normal suites: 70 passed; 20261003T064928.378173Z-pytest-69436` -> `pass`
+- `S11` `verify:` `Protected Windows managed-stop owning native-port tests: 32 passed; 20261003T065555.175327Z-pytest-32836` -> `pass`
+- `S11` `verify:` `Launch-door cleanup and native task ancestry suites: 28 passed 3 native Unix substitution skips; 20261003T065736.034995Z-pytest-71256` -> `pass`
+- `S11` `verify:` `Changed owner Ruff ty and applicable scoped basedpyright` -> `pass`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/windows_channel.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/windows_native_io.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/managed_windows_attempts.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/runtime_profile_cli_fixture.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/login.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/worker_transport.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_worker_startup.py`
+- `S11` `verify:` `Three canonical Windows pipe owner exact CC MI cognitive measurements: zero` -> `pass`
+- `S11` `verify:` `Windows pipe owners Ruff ty and explicit-Windows basedpyright zero errors` -> `pass`
+- `S11` `verify:` `Windows channel and profile-worker startup cleanup owning normal suites: 67 passed; 20261003T070101.164412Z-pytest-23024` -> `pass`
+- `S11` `verify:` `Real Windows pipe and stop-latch native integration suite: 9 passed; 20261003T070232.576097Z-pytest-33372` -> `pass`
+- `S05` `verify:` `just audit-complexity complete population 20261003T070151.536965Z-audit-complexity-56220-b9dda53a 350 findings` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/macos_keychain_store.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/macos_keychain_contracts.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/macos_core_foundation.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/macos_keychain_policy.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/macos_login_keychain.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_macos_keychain_store.py`
+- `S11` `verify:` `Ruff format check and lint 7 canonical Keychain paths` -> `pass`
+- `S11` `verify:` `ty and basedpyright 5 production Keychain defining owners` -> `pass`
+- `S11` `verify:` `official complexity measurement 5 Keychain owners 0 findings` -> `pass`
+- `S11` `verify:` `normal owning Keychain native-protocol suite 49 passed 4 macOS platform skips 20261003T071633.414353Z-pytest-41952-f140c896` -> `pass`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/export_field_validation.py`
+- `S08` `A` `src/cadrumo/domain/calculations/registry/export_record_components.py`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/export_parse.py`
+- `S08` `verify:` `Ruff format lint ty and basedpyright 4 canonical export component owners` -> `pass`
+- `S08` `verify:` `official complexity export field validation record components schema and parsing 0 findings` -> `pass`
+- `S08` `verify:` `normal test_signed_text_date_components 4 passed in 20261003T070227.639836Z-pytest-79692-711ae806 before later corpus timeout` -> `pass`
+- `S08` `by:` `root`
+- `S07` `verify:` `Ruff format lint ty and basedpyright shared runtime management stages` -> `pass`
+- `S07` `verify:` `official complexity shared runtime management 0 findings` -> `pass`
+- `S07` `verify:` `normal runtime management owning suites 27 passed 20261003T070534.719433Z-pytest-3944` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_secret_store.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/gnome_collection_protection.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_gnome_collection_id.py`
+- `S11` `verify:` `Ruff format lint ty and basedpyright SQL batch native credential receipt and GNOME owners` -> `pass`
+- `S11` `verify:` `official complexity SQL batch native credential receipt and GNOME owners 0 findings` -> `pass`
+- `S11` `verify:` `normal SQL batch suites 9 passed 20261003T070446.764672-pytest-50664` -> `pass`
+- `S11` `verify:` `normal Windows credential fault-port tests 5 passed 1 native facility skip 20261003T070926.418383Z-pytest-47760` -> `pass`
+- `S11` `verify:` `normal receipt and GNOME combined suite 28 passed 8 facility failures 44 platform skips 20261003T070644.021636Z-pytest-42928` -> `fail`
+- `S11` `verify:` `normal canonical collection path parser cases 12 passed 20261003T070933.720421Z-pytest-43380` -> `pass`
+- `S05` `verify:` `just audit-complexity complete configured population 294 findings 20261003T072933.086878Z-audit-complexity-56280-72a32adc` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/linux_secret_service_store.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/linux_secret_bus.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/linux_secret_contracts.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/linux_secret_cleanup.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_linux_secret_service_store.py`
+- `S11` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_secret_service_protocol_contracts.py`
+- `S11` `verify:` `Ruff format lint ty and basedpyright Secret Service production owners 0 errors` -> `pass`
+- `S11` `verify:` `official complexity 4 Secret Service owners 0 findings` -> `pass`
+- `S11` `verify:` `normal portable exact path tuple and retained cleanup contracts 19 passed 20261003T073912.612131Z-pytest-29640-bd3ddb3b` -> `pass`
+- `S11` `verify:` `scan_complexity complete src/cadrumo/adapters 0 findings` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/local_observation_operation.py`
+- `S06` `A` `src/cadrumo/application/modelo/local_observation_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/local_observation_projection.py`
+- `S06` `M` `src/cadrumo/application/modelo/aggregate_operation.py`
+- `S06` `A` `src/cadrumo/application/modelo/aggregate_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/aggregate_ports.py`
+- `S06` `A` `src/cadrumo/application/modelo/aggregate_request.py`
+- `S06` `A` `src/cadrumo/application/modelo/aggregate_projection.py`
+- `S06` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_local_observation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_aggregate.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_local_observation.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_local_observation_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_aggregate_operation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_aggregate.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_payment_capital_withholding_aggregate_cli.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_payment_withholding_aggregate_cli.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_aggregate_annual_withholding_rows.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_calculate_loads_profile_once.py`
+- `S06` `verify:` `Ruff format lint ty and basedpyright 8 local observation and aggregate production owners` -> `pass`
+- `S06` `verify:` `official complexity 8 local observation and aggregate defining owners 0 findings` -> `pass`
+- `S06` `verify:` `normal local observation owning schema projection access and CLI bridge 10 passed 20261003T074234.455674Z-pytest-56100-6e402f19` -> `pass`
+- `S06` `verify:` `normal aggregate owning execution and CLI bridge 28 passed 20261003T075142.180009Z-pytest-87540-d8d1ca76` -> `pass`
+- `S06` `by:` `root`
+- `S11` `verify:` `basedpyright final service_definitions KDF startup modelo_metadata and Windows task stages 0 errors 0 warnings 0 notes` -> `pass`
+- `S05` `verify:` `just audit-complexity complete configured population 250 findings 20261003T080046.607363Z-audit-complexity-41552-afc86f5c` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/declaration_summary.py`
+- `S06` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S06` `M` `src/cadrumo/application/modelo/declarations_portfolio.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_report_verification.py`
+- `S06` `verify:` `Ruff format lint ty and basedpyright four declaration and report read owners` -> `pass`
+- `S06` `verify:` `official complexity declaration summary list portfolio and report verification 0 findings` -> `pass`
+- `S06` `verify:` `normal declaration list and readonly report tests 17 passed 20261003T075957.726358Z-pytest-63088-281ae031` -> `pass`
+- `S06` `verify:` `real persisted declaration and portfolio integration tests 26 passed 20261003T080238.430059Z-pytest-29916-2934ed42` -> `pass`
+- `S06` `verify:` `report verification operation source and disclosure tests 5 passed 20261003T080538.122554Z-pytest-63228-1e187a60` -> `pass`
+- `S06` `verify:` `normal PDF tamper suite 13 failed 4 passed 20261003T080039.513767Z-pytest-4828-97cf6115` -> `fail`
+- `S06` `verify:` `captured original report owner with current unchanged interpreting dependencies PDF tamper suite 13 failed 4 passed 20261003T080247.166864Z-pytest-88656-70467039` -> `fail`
+- `S08` `M` `src/cadrumo/domain/foreign_assets/register.py`
+- `S08` `verify:` `Ruff/check/format, ty and basedpyright on live M720 register` -> `pass`
+- `S08` `verify:` `Official measure_population: M720 register CC/MI/Cog total 0` -> `pass`
+- `S08` `verify:` `21 M720 register invariants and registered refusal cause tests; 20261003T082745.501554Z-pytest-73920-a5391f0b exit 0` -> `pass`
+- `S05` `M` `whole production code audit`
+- `S05` `verify:` `just audit-complexity complete scan exit 0, 222 findings; .logs/audit-runs/2026-10-03/20261003T082613.407386Z-audit-complexity-40760-e3599031/run.log` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_finding_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_gate_findings.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_required_fields.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_iva_evidence.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_oss_evidence.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_revision_findings.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_report_facts.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_model_findings.py`
+- `S06` `M` `src/cadrumo/application/modelo/verification_cross_period.py`
+- `S06` `M` `src/cadrumo/application/modelo/verification_predicates.py`
+- `S06` `M` `11 direct canonical verification consumers listed in .logs/complexity/verification-all-consumer-paths.json`
+- `S06` `verify:` `Ruff format/check and ty/Based: verification nine-owner cohort; Based small cross-period/predicate cohort 0 errors` -> `pass`
+- `S06` `verify:` `Official eleven-module CC/MI/Cog measurement 0 after final checked sources` -> `pass`
+- `S06` `verify:` `13 finding/refusal/typed-report tests; 20261003T082052.257504Z-pytest-70208-427a13bf exit 0` -> `pass`
+- `S06` `verify:` `25 predicate/M123/M151/substance tests; 20261003T081237.079829Z-pytest-53880 exit 0` -> `pass`
+- `S06` `verify:` `47 live persistence/real registry verification, pointer repair/idempotency, drift, authority refusal and wallet/cross-period tests; 20261003T082652.181110Z-pytest-32692-76ac29b1 exit 0` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/declarations_workspace.py`
+- `S06` `A` `src/cadrumo/application/modelo/declarations_workspace_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/declarations_workspace_joins.py`
+- `S06` `M` `src/cadrumo/core/errors/registry/_application_part3b.py`
+- `S06` `M` `src/cadrumo/application/modelo/verification_report_read_operation.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_report_read_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_report_public_facts.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_report_scalar_facts.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_report_read_projection.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_report_read_capture.py`
+- `S06` `A` `src/cadrumo/application/modelo/verification_report_read_access.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_projection.py`
+- `S06` `M` `52 canonical consumers/check paths listed in .logs/complexity/declaration-read-consumer-paths.json`
+- `S06` `verify:` `Official scoped measure of ten declaration/report owners and calculation snapshot: CC/MI/Cog total 0` -> `pass`
+- `S06` `verify:` `Ruff/check/format, ty and BasedPyright for live production cohorts 0 errors; 52 canonical consumer paths Ruff/check/format` -> `pass`
+- `S06` `verify:` `41 read executor/admission/overlimit/full-detail projection, pure join, settlement and CLI tests; 20261003T083748.609577Z-pytest-57008-7e3e0f23 exit 0` -> `pass`
+- `S06` `verify:` `Real encrypted calculation snapshot integration round-trip, exact coordinate and duplicate-fact refusals; 20261003T083606.803455Z-pytest-85048-5aaa7c1d exit 0` -> `pass`
+- `S05` `verify:` `just audit-complexity complete scan exit 0, 184 findings; .logs/audit-runs/2026-10-03/20261003T084329.303630Z-audit-complexity-65828-3c74d715/run.log` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/dependency_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/revision_inventory_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/lifecycle_history_operation.py`
+- `S06` `verify:` `Ruff, ty, BasedPyright four-owner live cohort pass and official CC/MI/Cog total 0` -> `pass`
+- `S06` `verify:` `Production operation registry composition smoke: 272 real definitions` -> `pass`
+- `S06` `verify:` `24 owning/refusal/admission tests and real secure runtime verification/no-op, sealed revision, amendment admission, complete inventory; 20261003T084500.188303Z-pytest-42772-facec82a exit 0` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/profile_export_binding.py`
+- `S06` `M` `src/cadrumo/application/modelo/value_presentation.py`
+- `S06` `M` `src/cadrumo/application/modelo/edit_value_grammar.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_advisory_projection.py`
+- `S06` `M` `src/cadrumo/application/modelo/declarations_calendar.py`
+- `S06` `verify:` `Ruff, ty, BasedPyright five-owner live cohort pass; official CC/MI/Cog total 0` -> `pass`
+- `S06` `verify:` `101 exact type/language/value/grammar/calendar/advisory and real declared profile-source tests; 20261003T085048.806702Z-pytest-55124-89aa4e84 exit 0` -> `pass`
+- `S05` `verify:` `just audit-complexity complete scan exit 0, 156 findings; .logs/audit-runs/2026-10-03/20261003T090337.080897Z-audit-complexity-44872-a16fba1a/run.log` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S06` `A` `src/cadrumo/application/modelo/work_change_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/work_calculation_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/work_verification_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/work_filing_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/work_export_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/work_amend_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/edit_apply_scalar_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/edit_apply_row_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/edit_apply_contracts.py`
+- `S06` `A` `src/cadrumo/application/modelo/edit_apply_operand_contracts.py`
+- `S06` `M` `src/cadrumo/core/tests/test_country_fields_use_one_annotation.py`
+- `S06` `M` `src/cadrumo/core/tests/test_currency_fields_use_one_annotation.py`
+- `S06` `verify:` `Official eleven lifecycle canonical owners: CC=0 MI=0 Cog=0` -> `pass`
+- `S06` `verify:` `Focused Ruff, ty, basedpyright and production composition 272 definitions` -> `pass`
+- `S06` `verify:` `62 canonical direct and qualified consumers Ruff and formatting` -> `pass`
+- `S06` `verify:` `Lifecycle conformance, edit wire mirrors, amendment, export projection and composition: 113 passed (20261003T090105.731061Z-pytest-31476)` -> `pass`
+- `S06` `verify:` `Original/current validation and serialization schemas, all 33 moved models exact equality` -> `pass`
+- `S06` `verify:` `Country annotation gate after exact intake-contract exception-path migration: 5 passed` -> `pass`
+- `S06` `verify:` `Currency annotation gate after exact intake/add-contract exception-path migrations: 5 passed (20261003T090953.995564Z-pytest-90752)` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/filing_chain_reconciliation.py`
+- `S06` `M` `src/cadrumo/application/modelo/filing_record_list_operation.py`
+- `S06` `A` `src/cadrumo/application/modelo/filing_record_list_contracts.py`
+- `S06` `M` `src/cadrumo/application/modelo/reconciliation_list_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_list.py`
+- `S06` `M` `src/cadrumo/application/modelo/filing_record_import_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/filing_record_view_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_filing_record_list_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_filing_record_import_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_filing_record_view_operation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_filing_record_list.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_filing_record_import.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_filing_record_view.py`
+- `S06` `verify:` `Official five canonical filing/reconciliation owners zero CC/MI/Cog` -> `pass`
+- `S06` `verify:` `Ruff/format all sixteen owners and direct consumers; focused ty/basedpyright; production composition 272 definitions` -> `pass`
+- `S06` `verify:` `Filing record, reconciliation, selection and real filing-chain persistence tests: 35 passed (20261003T092011.216937Z-pytest-86588)` -> `pass`
+- `S06` `verify:` `Post-contract relocation CLI/list/wire and real M303 authored evidence/admission: 52 passed (20261003T092537.838233Z-pytest-56724)` -> `pass`
+- `S05` `verify:` `just audit-complexity completed exit 0 with 120 current findings, 20261003T092544.787721Z-audit-complexity-70228` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/_art109_activity_income.py`
+- `S06` `M` `src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py`
+- `S06` `M` `src/cadrumo/application/modelo/art52_advisory.py`
+- `S06` `M` `src/cadrumo/application/modelo/lifecycle_advisories.py`
+- `S06` `M` `src/cadrumo/application/modelo/_objective_estimation_advisory.py`
+- `S06` `M` `src/cadrumo/application/modelo/projection.py`
+- `S06` `verify:` `Official six advisory/projection owners zero CC/MI/Cog` -> `pass`
+- `S06` `verify:` `Focused Ruff/format/ty/basedpyright six owners` -> `pass`
+- `S06` `verify:` `Advisory, lifecycle, exact projection-channel, real Art109-period and encrypted compare suites: 73 passed (20261003T093438.346596Z-pytest-46264)` -> `pass`
+- `S06` `verify:` `All six owning Art52 advisory cases passed; 33 unrelated cases deselected by -k art52 (20261003T093730.844369Z-pytest-43128)` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/_m303_m349_reconcile.py`
+- `S06` `M` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
+- `S06` `M` `src/cadrumo/application/modelo/_calculation_source_staging.py`
+- `S06` `M` `src/cadrumo/application/modelo/_ledger_drift_gate.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculate_input.py`
+- `S06` `verify:` `Official five calculation owners CC/MI/Cog zero` -> `pass`
+- `S06` `verify:` `Focused Ruff/format/ty/basedpyright five calculation owners` -> `pass`
+- `S06` `verify:` `Cross-model reconciliation, row calculation, M349 context, unresolved binding and real ledger drift batch: 46 passed and 1 M349 summary failure (20261003T092842.326998Z-pytest-47260)` -> `fail`
+- `S06` `verify:` `Final observer extraction real encrypted ledger-drift suite: 18 passed (20261003T093812.682329Z-pytest-3088)` -> `pass`
+- `S06` `verify:` `Captured original/current M349 summary output equality on owning failure input: one passed (20261003T093903.320798Z-pytest-87156)` -> `pass`
+- `S06` `M` `src/cadrumo/application/calculations/m303_carry_ingress.py`
+- `S06` `M` `src/cadrumo/application/calculations/binding_prefill.py`
+- `S06` `M` `src/cadrumo/application/calculations/cross_period_clean_state.py`
+- `S06` `M` `src/cadrumo/application/modelo/_registry_helpers.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_resolution.py`
+- `S06` `verify:` `Official six ingress/replay owners CC/MI/Cog zero` -> `pass`
+- `S06` `verify:` `Focused Ruff/format/ty/basedpyright six owners` -> `pass`
+- `S06` `verify:` `Carry mapping revision selection, period inventory, replay, override and source issue tests: 54 passed (20261003T094521.015634Z-pytest-77116)` -> `pass`
+- `S06` `verify:` `Exact binding-prefill and M303 ingress legitimate population plus binding treatment cases: 4 passed, 15 unrelated deselected by -k (20261003T094721.727046Z-pytest-41216)` -> `pass`
+- `S05` `verify:` `just audit-complexity completed exit 0 with 70 current findings, 20261003T094401.051024Z-audit-complexity-78924` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/taxation_comparison.py`
+- `S06` `M` `src/cadrumo/application/modelo/export.py`
+- `S06` `M` `src/cadrumo/application/modelo/revision_persistence.py`
+- `S06` `M` `src/cadrumo/application/modelo/workspace.py`
+- `S06` `verify:` `Official four export/taxation/filing/workspace owners CC/MI/Cog zero` -> `pass`
+- `S06` `verify:` `Focused Ruff/format/ty/basedpyright four owners` -> `pass`
+- `S06` `verify:` `Taxation/workspace, real filing grant CAS/rollback and wallet export tests: 70 passed (20261003T095232.226184Z-pytest-88856)` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/_edit_execution.py`
+- `S06` `M` `src/cadrumo/application/modelo/edit_admission.py`
+- `S06` `M` `src/cadrumo/application/modelo/export_projection.py`
+- `S06` `M` `src/cadrumo/application/modelo/filing_record_ownership.py`
+- `S06` `verify:` `edit/receipt owners: Ruff, ty, BasedPyright and official scoped complexity` -> `pass`
+- `S06` `verify:` `37 owning edit-admission/refusal/export-receipt/filing-ownership tests; .logs/test-runs/2026-10-03/20261003T100138.547197Z-pytest-91056-f37ae167/run.log` -> `pass`
+- `S06` `verify:` `14 additional real export output/Nota 3/refund/charge/publication tests; .logs/test-runs/2026-10-03/20261003T100002.591125Z-pytest-20004/run.log` -> `pass`
+- `S05` `verify:` `just audit-complexity; .logs/audit-runs/2026-10-03/20261003T100012.747439Z-audit-complexity-50960-5113802e/run.log` -> `pass`
+- `S06` `M` `src/cadrumo/application/provisioning_browser.py`
+- `S06` `M` `src/cadrumo/application/provisioning_runtime.py`
+- `S06` `M` `src/cadrumo/application/workstation_check_operation.py`
+- `S06` `M` `src/cadrumo/application/aeat_sync/_workspace_projection.py`
+- `S06` `M` `src/cadrumo/application/operations/error_detail.py`
+- `S06` `M` `src/cadrumo/application/tests/test_provisioning_hardware_contention.py`
+- `S06` `verify:` `Generic five owners: Ruff, ty, BasedPyright and official scoped complexity zero` -> `pass`
+- `S06` `verify:` `140 owning provisioning/workstation/AEAT workspace/error-detail tests (all markers); C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T101037.740470Z-pytest-34560-d08eaac5/run.log` -> `pass`
+- `S05` `verify:` `just audit-complexity; .logs/audit-runs/2026-10-03/20261003T101635.616260Z-audit-complexity-60832-0a963e39/run.log` -> `pass`
+- `S09` `M` `dev/registry/pipeline/note_literals.py`
+- `S09` `M` `dev/registry/compiler/modelo_projections.py`
+- `S09` `M` `dev/registry/compiler/record_design_pdf_state.py`
+- `S09` `verify:` `Four development owners plus sequence runner: Ruff/format/ty and official complexity zero` -> `pass`
+- `S09` `verify:` `BasedPyright on four actual development targets` -> `pass`
+- `S09` `verify:` `Combined compare/note/projection/PDF suite .logs current run 101155.246487Z-pytest-89476-507622d9: completed cases before full PDF-corpus timeout; complete suite` -> `fail`
+- `S09` `verify:` `Sequence integration 101558.185374Z-pytest-88928-e962e631: production live-registry transient NameError, current import restored by concurrent owner; pending stable retry` -> `fail`
+- `S09` `by:` `root`
+- `S06` `M` `src/cadrumo/application/modelo/work_review_operation.py`
+- `S06` `A` `src/cadrumo/application/modelo/work_review_contracts.py`
+- `S06` `M` `src/cadrumo/application/modelo/review_package_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/review_package_exchange_operation.py`
+- `S06` `A` `src/cadrumo/application/modelo/filing_record_import_contracts.py`
+- `S06` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/external_import_actions.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_work_review.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_import.py`
+- `S06` `verify:` `Eight canonical final Modelo owners: Ruff/format/ty/BasedPyright and official complexity zero` -> `pass`
+- `S06` `verify:` `13 model validation AND serialization schemas exact before/after equality; .logs/complexity/final-modelo-schema-parity.json` -> `pass`
+- `S06` `verify:` `85 owning work-review/filing import/package crypto/reconciliation/CLI/real CSV import cases; C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T102651.801809Z-pytest-47768-121d3a86/run.log` -> `pass`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`
+- `S08` `verify:` `Exact applicability sources: Ruff/format/ty/BasedPyright and official CC/MI/cognitive zero` -> `pass`
+- `S08` `verify:` `29 applicability owning tests; C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T102919.971177Z-pytest-61256-98fdc2b2/run.log` -> `pass`
+- `S05` `verify:` `just audit-complexity; .logs/audit-runs/2026-10-03/20261003T103213.094467Z-audit-complexity-91780-cdd74610/run.log` -> `pass`
+- `S09` `M` `dev/registry/analysis/regulatory_prose_parser_channel.toml`
+- `S09` `verify:` `Census, largest parser and undeclared-parser negative proof: 3 passed; C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T104144.337490Z-pytest-5668-322d3b39/run.log` -> `pass`
+- `S05` `verify:` `just audit-complexity; .logs/audit-runs/2026-10-03/20261003T103934.060430Z-audit-complexity-54836-c2c52b90/run.log` -> `pass`
+- `S05` `verify:` `just check-types --count completed and reported 147 findings; count-mode exit 0 is not a clean type gate` -> `fail`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_guard_action_recovery.py`
+- `S07` `verify:` `Ruff/format/ty focused recovery test` -> `pass`
+- `S07` `verify:` `All-marker isolated real native clean-root -> projected create -> locked login -> authenticated ratios write -> close/relogin -> persisted ratios: 1 passed; C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T104933.063023Z-pytest-63140-b0264f4a/run.log` -> `pass`
+- `S06` `M` `src/cadrumo/application/live/verify_read_operation.py`
+- `S06` `M` `src/cadrumo/application/live/filed_history_operation.py`
+- `S06` `A` `src/cadrumo/application/live/verify_read_contracts.py`
+- `S06` `A` `src/cadrumo/application/live/filed_history_discovery.py`
+- `S06` `A` `src/cadrumo/application/live/filed_history_pull.py`
+- `S06` `A` `src/cadrumo/application/live/filed_history_events.py`
+- `S06` `verify:` `uv run --no-sync pytest -n 0 -m '' -q src/cadrumo/application/live/tests/test_verify_read_operation.py src/cadrumo/entrypoints/cli/tests/test_runtime_verify_read.py src/cadrumo/entrypoints/tests/test_filed_history_operation.py src/cadrumo/application/live/tests/test_filed_history_stage_failures.py (50 passed; 20261003T105352.561109Z-pytest-53284-f71157c3)` -> `pass`
+- `S06` `verify:` `Ruff, format, ty and BasedPyright final verify_read_operation.py and filed_history_operation.py owners (all exit 0)` -> `pass`
+- `S06` `verify:` `Production composition builds 272 definitions, 272 registrations and 272 public contracts; canonical live, ledger, work-review and filing-import schema bindings and runtime transport imports` -> `pass`
+- `S09` `M` `dev/registry/pipeline/render_profile_authority.py`
+- `S09` `verify:` `Official complexity scope dev/registry/pipeline/render_profile_authority.py after width stage extraction (0 findings)` -> `pass`
+- `S09` `verify:` `Ruff check, Ruff format check and ty check render_profile_authority.py (exit 0)` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -n 0 -m '' -q dev/registry/pipeline/tests/test_signed_composite_render_profile.py (34 passed; 20261003T105958.533474Z-pytest-27448-e7cfe6a8)` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -n 0 -m '' -q dev/registry/pipeline/tests/test_signed_composite_render_profile.py dev/registry/pipeline/tests/test_render_profile.py (M347 authority collection refusal; 20261003T105341.482242Z-pytest-67572-d5549391)` -> `fail`
+- `S09` `verify:` `Luna registry final seven-source all-marker owning suite (422 passed, 21 failed; 20261003T102853.832580Z-pytest-70340-381e8933)` -> `fail`
+- `S05` `verify:` `just audit-complexity (exit 0; 3 findings; 20261003T105133.445284Z-audit-complexity-23804-aed563a1)` -> `fail`
+- `S09` `verify:` `uv run --no-sync pytest -n 0 -m '' -q dev/registry/pipeline/tests/test_note_literal_derivation.py dev/registry/tests/test_modelo_projections.py dev/registry/tests/test_record_design_pdf.py -k 'not corpus_is_discovered_and_parseable and not registered_record_design_sources_are_discovered_and_parseable and not every_provenance_only_design_still_earns_its_stamp' (37 passed, 3 excluded whole-corpus cases; 20261003T110303.480691Z-pytest-67812-761abf56)` -> `pass`
+- `S09` `verify:` `Final dev4 plus compare owning run (collection refused current unregistered ForeignAssetRecordJoinRefusedError; 20261003T110040.420177Z-pytest-48200-3d60f6bd)` -> `fail`
+- `S05` `verify:` `just audit-complexity (exit 0; 4 findings; 20261003T110552.813629Z-audit-complexity-29508-75b7303d)` -> `fail`
+- `S06` `M` `src/cadrumo/application/overview/explain.py`
+- `S06` `M` `src/cadrumo/application/overview/calendar.py`
+- `S06` `verify:` `Official scope src/cadrumo/application/overview after calendar and explain extracts (0 findings)` -> `pass`
+- `S06` `verify:` `Ruff check, Ruff format check, ty and BasedPyright exact final overview explain/calendar owners (all exit 0)` -> `pass`
+- `S06` `verify:` `uv run --no-sync pytest owning test_explain.py (20 passed; 20261003T111155.035863Z-pytest-26488-dcdaaa55)` -> `pass`
+- `S06` `verify:` `uv run --no-sync pytest owning test_calendar.py test_calendar_applicability_consistency.py test_obligation_coverage.py (94 passed; 20261003T111106.279935Z-pytest-62968-8ec4a00c)` -> `pass`
+- `S05` `A` `.vault/audit/2026-10-03-complexity-remediation-audit.md`
+- `S05` `verify:` `just check-types --count (142 findings; count-only exit 0)` -> `fail`
+- `S05` `verify:` `Integrated review of canonical owners, actual composition schema/access bindings, receipt/refusal/output-release and cleanup paths (no confirmed high/critical finding; verification gaps remain)` -> `pass`
+- `S05` `verify:` `just audit-complexity (0 hotspots across src/cadrumo, src/cadrumo_harness, dev, packaging; exit0; 20261003T111510.709092Z-audit-complexity-61152-ac2490ea)` -> `pass`
+- `S05` `verify:` `uv run --no-sync python build_production_operation_registry (fresh graph builds after current foreign-asset error registration)` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -n 0 -m '' -q dev/docs/sequences/tests/test_compare.py (49 passed; 20261003T111618.009997Z-pytest-25552-dc838fa9)` -> `pass`
+- `S05` `verify:` `vaultspec-core check feature complexity-remediation (0 errors, 0 warnings; no fixes)` -> `pass`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/tests/test_applicability_canonical.py`
+- `S08` `verify:` `Official current domain registry scope applicability.py (zero CC/MI/cognitive findings)` -> `pass`
+- `S08` `verify:` `Exact applicability.py Ruff, format, ty and BasedPyright (all exit0)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest owning overview test_applicability.py domain test_applicability_canonical.py test_calendar_applicability_consistency.py (34 passed; 20261003T111539.368643Z-pytest-41384-322729c9)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/domain/calculations/registry/tests/test_applicability_canonical.py (9 passed; 20261003T112810.327975Z-pytest-30652-b1bcfd62)` -> `pass`
+- `S08` `verify:` `Exact final test_applicability_canonical.py Ruff check, format check, ty and BasedPyright (all exit0)` -> `pass`
+- `S05` `verify:` `Production-source freshness enumeration after completed zero interval (5 later changed files)` -> `fail`
+- `S05` `verify:` `just audit-complexity fresh concurrent-input scan (1 current CC16 finding; exit0; 20261003T113108.484616Z-audit-complexity-58928-875d84dc)` -> `fail`
+- `S06` `verify:` `Final overview scope official CC/MI/cognitive zero after registration stage extraction` -> `pass`
+- `S06` `verify:` `Ruff check, format check, ty and BasedPyright final explain.py (all exit0)` -> `pass`
+- `S06` `verify:` `uv run --no-sync pytest owning test_explain.py (20 passed; 20261003T115200.649188Z-pytest-23188-814c54ac)` -> `pass`
+- `S06` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S06` `verify:` `Official exact invoices/source_resolver.py scope after threshold and exclusion-query extractions (0 CC/MI/cognitive findings)` -> `pass`
+- `S06` `verify:` `Ruff check, Ruff format check, ty and BasedPyright source_resolver.py final (all exit0)` -> `pass`
+- `S06` `verify:` `Focused M347 threshold warning suite (1 passed,2 failed; 20261003T113700.812834Z-pytest-37340-3c2c4ba9)` -> `fail`
+- `S06` `verify:` `Focused M347 exclusion warning suite (2 passed,1 failed; 20261003T114606.467510Z-pytest-21776-f9c7bc75)` -> `fail`
+- `S06` `verify:` `Isolated captured-original/current M347 fixture parity replay (.logs/complexity/test_source_resolver_captured_parity.py;1 passed;20261003T115343.390004Z-pytest-83136-dd2fa3cd)` -> `pass`
+- `S05` `M` `.vault/audit/2026-10-03-complexity-remediation-audit.md`
+- `S05` `verify:` `just audit-complexity latest final (0 hotspots across all four configured production roots;exit0;20261003T115300.844754Z-audit-complexity-77960-c3f20c18)` -> `pass`
+- `S05` `verify:` `Filesystem source_population freshness since latest full start and exact changed-source measure_population (1 changed production file,0 CC/MI/cognitive hotspots)` -> `pass`
+- `S05` `verify:` `Final integrated review (PENDING broader authority/native matrix/type evidence; no confirmed high/critical refactor regression)` -> `pass`
 
 ## Notes
 
@@ -1892,3 +2566,108 @@ related:
 - `S05` Log .logs/audit-runs/2026-10-03/20261003T033640.714556Z-audit-complexity-18028-5987ea1a/run.log. Live-interval scanner count680, down from761; unchanged configured roots and CC/MI/cognitive thresholds. Advisory exit0 is not zero acceptance. Fleet continues S06/S07/S09/S11 with final complete population and integrated review still open.
 - `S07` Unit lane log20261003T034221.785154Z; 14 integration cases deselected, not acceptance evidence. The original preflight body yields the identical refusal-provisioned-storage assertion on the same fixture in baseline replay20261003T034833.401108Z. No source-route expectation or storage/secret read gate was changed. Native transport cleanup still joins its release thread and retains actual owner custody on failure; released-resource references are discarded only in the original unconditional finalization phase. Native CLI scenarios remain running; do not infer their success from unit checks.
 - `S07` S07 remains open for TUI, runtime and other shared compositions. Partial unit marker runs leave native cases unverified (74 selected/103 deselected; 55 selected/73 deselected). Native scenario log20261003T034221.750371Z has six passes and four failures; original-function replay20261003T035414.491000Z reproduces both calendar terminal INTERNAL failures and the maritime fixture KeyError0525. The verify scenario stopped at `runtime_unavailable` while creating M130 before its changed selector; isolated rerun remains pending. Expanded diagnostics run20261003T033425.785473Z has61 passed and two `runtime_connection_closed` failures; exact isolated reruns remain pending. No unsupported schema, unknown-provider output, runtime deadline, financial authority, source exclusion or detector threshold was changed to hide failures. Google branch effects preserve admission, review acknowledgement, credential/store handoff, commit order and bounded original refusal facts; scoped tests use canonical persistence. Spreadsheet grouping strict alignment and cleanup-resource custody remain intact. Original complete CLI source roots remain scanned.
+- `S05` Advisory command exit 0 does not close the zero-hotspot requirement; remediation continues with detector thresholds and population unchanged.
+- `S07` Owning registry collection stopped at external `lifecycle_advisories.py` conflict line16; calendar setup stopped at external `custody/automation_store.py` conflict line44. All checks remain pending against a parseable graph. Type check has 10 missing aggregate/invoice-withholding builder diagnostics after concurrent application changes; other three composition owners typecheck. The locked-profile extraction had a shadowed active ID; repaired and added behavioral exclusion/order cases. Native verify/file retry still stopped at unchanged M130 create `runtime_unavailable` before selector, not positive acceptance.
+- `S11` Every selected case stopped in global `compose_runtime_ports` setup at external `custody/automation_store.py` conflict line44, before changed adapter logic. Preserve complete log and rerun applicable owning tests after the shared graph becomes parseable. No acceptance claim from setup failure.
+- `S05` All production files were measured successfully after external conflicts settled. Current live inventory includes concurrent new runtime/bootstrap complexity; continued remediation across unchanged detector population and thresholds.
+- `S11` 103 manager tests include real Windows COM in-memory definition acceptance; native macOS execution is unavailable on this host. Five broader adapter failures stop before changed logic: two summary cases require development software identity authority scope and three Modelo130 fixture payloads mismatch the declared version-programa literal. Calendar locked-profile four-case regression tests passed in the same normal fixture batch. Native launchd entry-module main guard moved after all extracted helper definitions; cleanup and pointer release custody retained.
+- `S11` Configuration lock and CAS fences retain their original operation sequence. Consumers import the defining configuration and inspection owners directly.
+- `S11` Native Linux filesystem behavior was not executed on this Windows host. Evidence: .logs/audit-runs/2026-10-03/20261003T044930.120851Z-pytest-48804-eba375a0/run.log.
+- `S11` Preparation stages preserve one atomic secure-object batch, exact source revision assertions, allocation liability checks, callback admission and journal lock custody. Canonical schema, IVA migration and date projection owners have direct imports.
+- `S11` The initial run loaded the helper before a name-collision fix and found 10 partition failures. All affected owning files were rerun after correction and their 30 cases passed; 89 unique cases across the original and corrective runs now have applicable passing evidence.
+- `S11` Logs: C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T050306.268584Z-pytest-57060-89e634c5/run.log and 20261003T050442.589095Z-pytest-86292-3e8390dc/run.log.
+- `S11` The connection capability owns request-local admission and native owner preview identity; transport hosting retains singleton and drain supervision. Nested cleanup and semaphore release fences preserve their original order.
+- `S11` Automation decision retains operation identity, observed condition/effect and password disposal in its original try/finally; no automatic resubmission introduced.
+- `S11` Evidence: C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T051558.429569Z-pytest-21312-02c3cb2e/run.log.
+- `S05` Complete run: .logs/audit-runs/2026-10-03/20261003T050342.512838Z-audit-complexity-73492-99073b0c/run.log. Advisory exit zero does not satisfy the user's zero-finding objective; all four available agent slots remain active.
+- `S11` Connection ownership and human login remain with RuntimeFrontendClient; operation exchange and complete one-revision view collection have defining capability owners. Public contract consumers now import their canonical owner directly.
+- `S11` The real complete-stream and exact native profile-status pin tests passed. The old SimpleNamespace fixture lacked the real inherited collection helpers; it now exercises the actual capability with overridden public operation replies, preserving the refusal/no-result assertion.
+- `S11` Five native projection cases failed at password admission before paging. These are pending native prerequisites; a pre-refactor baseline for these exact cases is not yet established.
+- `S11` Logs: C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T052534.347524Z-pytest-15352-42749406/run.log and 20261003T053755.985361Z-pytest-63836-9b132bdd/run.log.
+- `S11` Submitted identities, observed effects, one-time submission, old-host retirement rules and both original credential disposal fences are retained. Native token/station conditions retain their original short-circuit sequence and owned-handle scope.
+- `S11` 20-case log: C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T052848.736173Z-pytest-87256-d6c30a45/run.log.
+- `S11` 42-case log: C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T053314.259838Z-pytest-69460-27ed38ae/run.log. Native Windows inventory acceptance was not claimed for the two skipped opt-in cases.
+- `S05` The advisory command exit is passing but zero is not achieved. Current filesystem measured; no thresholds, exclusions or baseline weakened. Receipt .logs/audit-runs/2026-10-03/20261003T053616.759177Z-audit-complexity-57600-86569d4c/run.log.
+- `S11` Native transport owning outcomes have applicable passing evidence for all 13 selected cases across main batch and isolated rotation retry. Main combined process failed profile fixture binding before rotation test body; exact isolated retry passed 22.43s. Receipts 20261003T055014.924313Z-pytest-50968-7b4b999d and 20261003T055214.364337Z-pytest-40760-9f534e47 under Temp .logs/test-runs/2026-10-03. Native paging gap remains open: original-source baseline not established, retry 20261003T054724.381420Z-pytest-40824-dc195507 same `DEADLINE_EXCEEDED` at setup. First retry collection hit in-flight application extraction; graph settled before representative retry.
+- `S05` This population includes earlier Windows login source captured before its final zero cohort. Filesystem is live and measured completely. Receipt .logs/audit-runs/2026-10-03/20261003T060213.775837Z-audit-complexity-45128-0b21d090/run.log. No exclusions or thresholds changed.
+- `S11` Preserved root lock ownership, filesystem/native durability separation, exact predecessor/successor witnesses, denial fences, CAS revisions, and wipeable material. Exact 23 namespace/retirement consumers now import canonical defining owners; no facade or alias. Initial helper migration had missing native namespace imports, fixed before final owning suite. Broad directory ty reported 76 unrelated macOS keychain native binding attributes, retained for that remaining cohort; explicit changed 13-owner ty is clean. Complete owning receipt Temp .logs/test-runs/2026-10-03/20261003T055935.115669Z-pytest-69672-ef9c816a/run.log, 475.80s. Native Credential Manager skipped WinError1312.
+- `S11` Own extraction initially returned complete for three ambiguous desktop branches; existing detector tests exposed two outcomes. All three restored False, validated 39 cases. Exact native consumer private reader names migrated to canonical public native readers; first expanded collection failed stale reader imports, fixed before final receipt. Current-process native capture/refusal passes; selected complete-desktop native tests skipped without explicit facility opt-in. Final receipt Temp .logs/test-runs/2026-10-03/20261003T060936.800343Z-pytest-81880-f79117b9/run.log.
+- `S11` Manager tests exercise real command/output/owned-cleanup boundary with subprocess ports; no native Linux manager acceptance on Windows.
+- `S11` Native refresh/idle expiry case receives `CREDENTIAL_REJECTED` during refresh of a two-second lease after cold graph setup; baseline not established. Root owns smallest isolated retry and timing diagnosis. Six native isolation, wrong-key, human-candidate, mutation, owner-death and idle-worker-death cases passed.
+- `S11` Helper relocation preserves exact lock scope, readiness-before-secret order, bounded payloads, correlated replies, wiping, and success-only retained channel cleanup. Failed one-shot script returned no consumer list after applying canonical relocation; continuation used fresh sources and validated final graph. No compatibility re-export.
+- `S11` The earlier native lease failure reproduced in isolation before fixture correction (20261003T063315.368373Z-pytest-64184). Cold application preparation consumed the original two-second lease before refresh. Only test setup now prepares the graph through the production door before minting that lease; two-second initial expiry, four-second renewal and all production budgets unchanged. Seven native cases now have applicable passes across the whole suite and isolated correction.
+- `S05` Advisory command exit zero is not the requested zero-finding gate. Scan began before root Windows scope and passive-read stages reached zero; application/registry/runtime ongoing. Final zero and integrated L1 review remain open.
+- `S11` Workbench generation restoration helper awaits applicable installed-runtime coverage; initial combined test selection named a nonexistent adapter test and collected zero (20261003T064104.721539Z-pytest-15720). Correct management/settlement selection passed. Workbench acceptance not claimed from unit helpers.
+- `S11` No native macOS or Linux acceptance claimed on Windows. Explicit Windows stop-latch basedpyright reports zero errors and an existing stub-only `_win32typing` source-resolution warning. Metadata operation adapter acceptance still pending real registered operation coverage.
+- `S11` Existing stub-only `_win32typing` source-resolution warning remains. Two intermediate renamed-public-symbol lint findings were corrected before final gate. Native tests prove retained-process birth equality, pending I/O cancellation, native event owner ACL/collision and first-instance lifetime.
+- `S05` Advisory exit 0 measures 350 remaining findings; zero-finding acceptance is still open. This complete snapshot precedes additional clean adapter, runtime, filing, and registry cohorts.
+- `S11` Native macOS Security.framework acceptance cannot run on this Windows host; the four platform skips do not establish it. Explicit native bridge fields eliminated 74 pre-existing ty diagnostics without changing platform gates or suppressing checks.
+- `S08` These component validators appeared in the live changing graph after the earlier domain checkpoint. The later all-bundled-design PDF test exceeded 300 seconds in unchanged pdfplumber page geometry; that broader command is not claimed green.
+- `S11` Eight receipt acceptance cases fail before the refactored body at `require_os_credential_store:` WinVaultKeyring CredRead WinError 1312, no usable Windows logon credential store. One actual Windows Credential Manager case is skipped for the same host facility. Linux native metadata and PIDFD cases retain 44 platform skips; portable path cases do not establish installed native acceptance.
+- `S05` Complete advisory snapshot 294 findings; final zero-finding acceptance remains open. Subsequent whole-adapter scan reports zero after Linux/POSIX and Secret Service cohorts settled.
+- `S11` All 91 original Linux dependency/kernel and installed-GNOME cases skip on Windows (20261003T072930.888038Z-pytest-88668-d2da510e); this is an installed Linux coverage gap. Basedpyright retains 3 missing-module-source warnings for platform-excluded jeepney/SecretStorage. Initial new portable test assertions used ErrorCode then a nonexistent refusal attribute; corrected to the owning error's reason field before the passing 19-case run, with production refusals unchanged.
+- `S06` The aggregate native producer's existing optional result remains optional in its new stage. Fenced mutation sections, UNKNOWN delivery effect, pre-write refusal handling, revision bracketing, and readback publication order remain in the registered executors. Installed local-observation supervisor acceptance is still queued against the changing shared runtime graph.
+- `S11` Final explicit Basedpyright scope also covers the previously logged service/KDF and launch/metadata cohorts.
+- `S05` Complete advisory snapshot 250 findings; zero-finding acceptance remains open. A concurrent domain change added two M720AssetIdentifier findings and activity-asset/workflow contract owners were in transition during this read.
+- `S06` All thirteen PDF failures have the same pre-existing failure identity under both current and captured original owner: `development_mock_software_identity` requires an explicit authority operation or scope, reached by unchanged `calculation_summary_presentation` from the document text-layer check. No authority data or contract refusal was weakened. The 26 persisted tests carry existing SQLAlchemy tuple deprecation warnings.
+- `S08` Cleared the concurrently reintroduced identifier validator findings by preserving the exact scheme dispatch and extracting canonical IBAN and issuer-country checks in their original order. All validator decorators and registered errors remain intact.
+- `S05` Whole gate remains open at 222 findings. Scan began before subsequent M720 and workbench/diagnostics changes; advisory exit 0 is not zero acceptance.
+- `S06` Actual helpers and immutable finding contracts moved to their defining owners; consumers directly import them. Source scan .logs/complexity/verification-action-cohort-paths.json tracks the nine-owner cohort; all consumer paths were checked. Commit/co-commit, participation writes, pointer repair and bucket event publication remain in `verification_actions.py` in the original order. Scoped binding failure does not fall through to scalar/template fallback. Existing 1867 SQLAlchemy tuple deprecation warnings retained.
+- `S06` Complete report reads, scalar facts, profile/period admission, pure declaration contracts and catalogue joins have canonical defining owners and exact consumer imports. Error registry entry points to its actual moved defining class. Structural pure-projection test now checks all three owning modules. Initial report test failure from stale monkeypatch module target corrected to canonical capture owner and existing immutable bound name; final 41 pass. Calculation snapshot coordinate, scalar, summary and row checks preserve original refusal order and native tags.
+- `S05` Whole gate remains open at 184 findings. No thresholds, baseline, exclusions or audit exit contract changed.
+- `S06` Dependency target/private-clean-state checks, exact profile port checks, selector coordinate/confirmed-receipt conjunctions and granting evidence retain original order/short-circuit behavior. Top-level access/read helpers remove nested complexity; two-argument bound resolver closure retained to satisfy enforced operation registration callable contract. Initial static narrowing loss and extra-keyword partial signature corrected before final passing evidence. Original read-side catalogues remain immutable.
+- `S06` Preserved first applicable text binding order, absent-profile no-I/O shortcut, missing-only gap semantics, typed values, unrounded percentages, ratio unknown state, truthful calendar age/evidence axes and original validation order. Extracted optional grammar bounds and diagnostic printed-box projections without moving authority reads.
+- `S05` Whole gate remains open at 156 findings, with three Luna max remediation lanes continuing. Advisory exit 0 is not zero acceptance.
+- `S06` The additional schema comparison detected a renamed named-union schema reference after behavior tests passed. Restored the actual private union in its scalar contract owner; the separate bounds helper accepts the concrete union. No compatibility aliases or schema exclusions were added. Review exact consumer inventory in .logs/complexity/lifecycle-contract-all-consumers.json; DTO-only canonical moves retained executor/writer ownership and declaration priority.
+- `S06` Country/currency detector exception reasons and detector logic remain unchanged; only exact reviewed definition paths were migrated. Initial stale-path failures were resolved and are recorded in their run logs. Whole application inventory remains open.
+- `S06` Kept exact register/evidence normalization and short-circuit comparison order, refusal priority, canonical row ordering, and filing-chain co-commit ownership. Actual filing-list DTO/filter/order definitions and nine consumers moved canonically after helper extraction exposed MI18.9; final five-owner measurement is zero. Original four owner sources captured before writes in `.logs/complexity/*-before-read-stages.py.` Existing SQLAlchemy tuple deprecation warnings remain visible.
+- `S05` Count reflects the complete unchanged configured production population during concurrent remediation. Exit zero is the advisory command contract and does not certify zero hotspots. Work continues until the current finding count is zero; this run is not final acceptance.
+- `S06` Preserved original authority/date resolution order, missing/ambiguous semantic role refusals, provenance completeness, warning-only semantics, profile volume threshold order and zero-maritime default conditions. No calculations or legal parameter values changed.
+- `S06` M349 owning test expects two declared-summary binding keys which are absent in both captured original and current summary maps when given the exact same published revision and row union. Classification is unchanged under current imported dependencies, established by .logs/complexity/m349-summary-original-parity.json; the original source was captured before any cohort write. Preserved authority selection, recipe tolerance, source omission/unknown semantics, refusal order and evidence-observer contents. No authority data, detector or test assertion changed.
+- `S06` Retained closed carry mapping type/scope/date/key/code checks and original exception translation, provenance coordinate matching, filing-grade inventory coverage/order, scalar detail-row refusal, explicit durable reason narrowing and replay channel de-duplication.
+- `S05` All configured roots were scanned without threshold/population changes. Advisory exit zero does not certify no findings; continue S06/S09 remediation and final review.
+- `S06` Preserved both engine-run order and evidence completeness refusals; exact granting report checks, credit operand/type narrowing and terminal report binding; staged bytes then event then publication then artifact receipt verification then completeness re-read; every workspace capture retained original authority/coordinate/read order.
+- `S06` Four current owners have zero findings. True pre-edit snapshots retained in `.logs/complexity/*-before-final-edit-stages.py.` Preserve registry-before-fallback refusal, current calculation-head-before-snapshot admission, grant digest/lifetime/CAS fences, and exact filing ownership refusal priority.
+- `S06` Additional export cases supplement the prior passing 70-test export/taxation/workspace/revision cohort. No authority or receipt schema changed.
+- `S05` Completed official whole-tree advisory scan: 53 findings remain; advisory exit 0 does not establish zero. Scan predates final edit/receipt and ongoing worker reductions; all remaining roots remain open.
+- `S06` Latest pull byte/completion/refusal state survives caught HTTP errors; terminal-success cannot override callback HTTPError into a pulled result, with one concrete regression proof. Native workers were not invoked by this suite.
+- `S06` Preserved load preflight/confirmation reread, exact secure operand/receipt fences and error-detail refusal priority; originals are `*-before-root-transfer.py.` Earlier export supplement exact log is C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T100002.591125Z-pytest-20004-932ecf8b/run.log.
+- `S05` Completed whole-tree official scan reports 32 findings (exit 0 advisory), predating the root final Modelo reductions. Three domain applicability findings newly reappeared during concurrent source changes and are assigned for remediation; no detector threshold or root changed.
+- `S05` Registry generated-tree batch concluded 85 passed, 39 failed, 2 setup cache-fingerprint errors; exact C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T094208.552887Z-pytest-82692-adad7cf2/run.log. Source/provenance/generated-output mismatches and target existence explain observed branches but captured-original parity is unavailable for `_tree_validation,` so causality remains unproven.
+- `S09` Captured originals before dev stages retained. Exact canonical runner resolver renamed public with direct consumers; complete runner BasedPyright adds 19 diagnostics on retained private keyring access and untyped JSON/path helpers. Four actual target owners pass; no suppressions were introduced. Those diagnostics remain visible for integrated review.
+- `S09` Preserve exact M341 source SHA/statement/ordinal/literal admission, provenance/review grouping before filing-date split validation, content-column detection before column reconstruction, unread-record routing before geometry checks, and authored-only sandbox normalization/native-destination detector teeth. Full corpus timeout occurred in existing PDF geometry extraction; do not treat unfinished test as passing.
+- `S06` Canonical contracts own real DTOs, bounds and lexical validators; direct consumers migrated. Preserve finite/canonical decimal checks, casilla admission/source exclusivity, exact receipt correlation, export identity before repository token reread, crypto writer unknown/partial/none order and final-artifact confirmation, operator work-addressing and reconciliation evidence-before-write order.
+- `S06` True six-file pre-stage snapshots are `*-before-final-modelo-stages.py.` Contract migration required placing the original private Annotated aliases with their actual definitions; final graph has no reverse contract-to-operation import, shim or schema exclusion. No authority data changed.
+- `S08` Three reintroduced findings cleared on fresh live sources; dotted-path section validation, payer-fact value/period decisions and positive rule gates preserve source order. Captured originals plus hashes retained; no authority/data/test edits.
+- `S05` Completed whole-tree official scan now reports 2 findings, both `verify_read_operation.py` (CC11 optional fields validator and MI15.9). Every other configured production root is zero at this scan. Final live owner still executing; exit 0 remains advisory until true zero.
+- `S09` Migrated six exact regulatory-prose enrollment homes to their actual canonical parsers, removed six proven stale former-owner rows, preserved detector semantics and corpus/reason authority boundaries. No regulatory value/data/gate threshold changed.
+- `S09` Current prose-owner census and the representative withheld enrollment defect both pass. Earlier missing and stale enrollment failures are resolved.
+- `S05` Official full-tree scan completed with 1 finding: newly reintroduced `render_profile_authority._validate_composite_segment` CC13; root accepted exact-file ownership to clear it. Every other configured root zero.
+- `S05` Broader verification remains visible: current root dev PDF suite reached a stale Modelo720 form-layout `source_state_digest` failure then full registered-PDF corpus geometry timeout (103341.491852Z-pytest-564-18cc0920). The retry excluded only the first whole-PDF corpus case; a second whole-source corpus case still timed out. No timeout/authority validation policy was changed. Causality of this authority-data failure remains unproven.
+- `S07` Recovery fixture now explicitly creates the isolated physical storage root and starts/stops the existing native runtime fixture. Retried commands use bounded explicit profile password proofs, preserving actual runtime/persistence handoffs without depending on host keychain custody.
+- `S07` The successful explicit-proof invocation has the canonical process-scoped session warning by design `(runtime_profile_admission.py` and `_profile_authentication_notice.py).` Test asserts warning plus exact session-not-persisted notice code, retains exact original result and persisted-state assertions. Production auth/guard behavior and refusal expectations unchanged; true original test captured before fixture edits. Earlier runtime-unavailable/endpoint/keychain and status failures are resolved on this current test flow.
+- `S06` Canonical live contracts/stages reside in actual defining owners and consumers use those owners. Removed stale `__all__` re-export names from the two operation owners. Actual encrypted-child receipt joining, dry-run zero effect, foreign profile refusal, exact public projection and provider cleanup checks passed in the final 50-test run at C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T105352.561109Z-pytest-53284-f71157c3/run.log.
+- `S06` Read-only integrated reviewer found no high/critical regression in reviewed composition paths. Six M036/audit marker expectations remain an unresolved applicable verification question; not claimed passed.
+- `S09` Final width validator preserves width-nature, duplicate statement and nature mismatch refusal before anchor-width refusal; existing currency, signed-sum, descriptive-prose and magnitude rules retain order. True pre-stage snapshot `.logs/complexity/render_profile_authority-before-final-width-stage.py.` The re.split result cast only supplies the existing string-only pattern/input typing; no grammar or parser-enrollment weakening.
+- `S09` Focused signed-composite positive, malformed/contradictory/duplicate/anchor, wire-case, partition and lossless codec cases all passed in the 34-test run. Broader `test_render_profile` collection refused current M347/2011-2024 undeclared targets decl.importe-total-anual and decl.total-personas-entidades. This is an unclassified concurrent authority-input failure, not a proved unchanged baseline. Editable UV builds currently fail at the same validator; --no-sync retains the installed runtime for checks.
+- `S09` Seven-source 422/21 suite failures remain unclassified: M353 eligible design selection, M232 variable-envelope authority, inline span/refusal mismatches, stale M720 layout digest, M347 `legal_refs` ordering and M200/303/220 workbook geometry/shape contracts. Current materialisation/render-owner private import and workbook type diagnostics have original source evidence but not an exact original whole-check receipt. No authority data, threshold, timeout or refusal contract changed to hide them.
+- `S05` Final-width owner cleared; concurrent overview edits introduced `_extract_profile_facts` CC13/cognitive21 and `applicability_profile_fact_keys` CC12. New disjoint Luna max remediation owns application/overview/explain.py. All other configured roots had zero findings at this completed scan. Advisory exit 0 is not zero acceptance.
+- `S09` The 37-test pass covers exact source-grounded note literals, parameter provenance grouping/refusal, generated/native PDF parser round-trips and empty-design fail-closed behavior. Three earlier broad authority/corpus failures/timeouts remain excluded from this focused command and unverified; no marker or timeout change. Compare's final repeat stopped before test bodies at the concurrently added foreign-assets error class missing an ErrorCode declaration. Earlier composition and compare evidence predates that import blockage; current graph freshness must not be claimed.
+- `S05` Concurrent source additions reintroduced calendar schedule classification CC11/cognitive21 and domain applicability exclusion/payer-reading CC11 each. Explicit disjoint owners are calendar.py, explain.py and applicability.py; final full zero remains open. No detector or source-population change.
+- `S06` Cleared five concurrently introduced overview CC/cognitive findings with ordered fact-extraction/key-collection stages and per-obligation calendar projection. Preserved explicit empty values, exclusion order, flattened payer-fact facts and current applicability-evidence disagreement warning/return semantics. No test authored by these workers, source-population change, authority data edit or public schema widening.
+- `S06` True pre-edits retained at C:/Users/hello/AppData/Local/Temp/cadrumo-overview-explain.before-20261003T130000438.py and cadrumo-calendar.py.before-classification-2026-10-03. Optional captured-source overview parity probe did not complete fixture setup because a generation-pinned authority context was required; the 20 and 94 current owning passes are acceptance evidence, not an exact full old/new parity claim.
+- `S05` Count-only type check returned 142 current findings (previous checkpoint147). Exit0 in count mode is not a clean type gate. No diagnostic suppression or whole-QA pass claim.
+- `S05` Integrated review audit scaffolded via owning Vaultspec create verb; verdict PENDING pending final zero and applicable unresolved broader checks. Error-detail capture/read policy preserved; missing M036/audit expectations retained as visible coverage gap.
+- `S05` Official complete four-root scanner measured zero current CC, MI and cognitive findings after final production source writes; run started2026-10-03T11:15:10.709092Z and finished2026-10-03T11:17:58.307302Z. Receipt .logs/audit-runs/2026-10-03/20261003T111510.709092Z-audit-complexity-61152-ac2490ea/run.log and run.json. Detector and configured production population unchanged.
+- `S05` The user's zero-complexity count requirement is achieved at this completed live-tree interval. Integrated audit stays PENDING for broader authority, native matrix and type verification; S05 is not marked wholly complete. Direct moved ledger-derived branch tests and fresh comparison owning repeat are still finishing.
+- `S09` Fresh comparison owning suite now passes after the concurrent foreign-asset error-code entry was declared. Real native CLI golden generation/round-trip and representative corrupt golden, extra key, exact sandbox path and pre-tokenized live-output defects pass; no mocked operation behavior or policy relaxation. The earlier import collection gap is resolved for this command and current registry build; authority/corpus/type gaps remain.
+- `S05` Five informational execution-mapping entries correspond to Steps left open for applicable unresolved verification; no schema, frontmatter, markdown, link, reference or encoding defect was reported. The audit's current Scope leads with the achieved zero-count receipt and PENDING integrated review, preserving historical Findings and appended recoveries.
+- `S08` Cleared two reintroduced applicability findings through ordered eligible-exclusion evaluation/selection and payer derivation/disagreement stages. Captured live pre-edit source and preserved concurrent ledger-derived evidence semantics, legal-holding priority, authored exclusion order, period companion and unknown/no/yes distinctions. No authority data or production policy changed.
+- `S08` Nine-case suite uses real hydrated M720/M136/M347 rules and typed profiles. Covers derived yes/no vs declared/unanswered, unknown/missing evidence, no ledger substitution for period companion, legal exclusion priority and first undetermined authored order. Interim new-test rationale expectation confused generated INCOMPLETE with configured legal reason; final expectation exercises the actual typed exclusion evaluation and preserved aggregate selection. No production code changed after the official full-zero scan.
+- `S05` Five later modified production sources were discovered through the same filesystem-derived `source_population` policy, not Git: `aggregation/source_mesh.py,` `invoices/source_resolver.py,` `modelo/calculation_notes.py,` `registry/invoice_bindings.py,` `registry/m347_threshold.py.` Four remain scopedzero; `source_resolver._m347_threshold_reading_advisories` CC16 is the sole full-tree finding at this later interval. Accepted exact-file disjoint remediation ownership; historical completed zero remains valid for its earlier interval, current final acceptance requires fresh zero.
+- `S06` Freshness caught new CC11 `build_overview_explain` after six concurrent source updates. Extracted only registered/unmodeled/unknown modelo validation and retained exact refusal contexts, pinned operation, resolved filing year, applicability-evidence profile/ledger propagation and year-profile fact ordering. Pre-edit capture C:/Users/hello/AppData/Local/Temp/cadrumo-explain.py.before-modelo-validation-2026-10-03; no consumer/test/authority/data modifications.
+- `S06` Cleared concurrent CC16 threshold reading and CC11 exclusion-reading hotspots. Preserve original observations, year-end effective date, actual declarable set, sorted invoice labels, bucket order, category-before-withholding order, per-bucket warnings before final nonpositive warning, exact messages/remedies/legal refs. Actual types imported from defining owners; no schema/fiscal policy/data changes.
+- `S06` Exact captured-original/current parity used isolated AST-loaded functions and copied globals, without shared source replacement or global production patching, with identical fixture invoices and current pinned authority. D observes claveD/count1 and original/current threshold diagnostics both empty. E2024 direct binding/public count0 before diagnostics; E2025 count1; both original/current tuples empty. Export-assimilated input is claveB/categoryNone with count1 and original/current exclusion tuples empty. Thus these three failed warning expectations are unchanged by the extractions on the checked current inputs; broader failure causes remain with authority/classification inputs.
+- `S06` Before-threshold snapshot C:/Users/hello/AppData/Local/Temp/cadrumo-source-resolver.before-20261003T133149668.py; before-exclusion snapshot recorded by worker against latest30A526AF source, final8C646EA5 source after normalization. Parity log C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-03/20261003T115343.390004Z-pytest-83136-dd2fa3cd/run.log.
+- `S05` Latest completed whole scan 2026-10-03T11:53:00.844754Z through11:55:11.690201Z; source and thresholds unchanged. Post-run current `source_resolver.py` was remeasured at0 after a further concurrent edit; all other current production sources have unchanged timestamps since start. Zero count is current at this check; it does not claim future concurrent authoring cannot add a hotspot.
+- `S05` User's production complexity objective is achieved. Final audit preserves rolling checkpoint findings, captures additional invoice unchanged-by-extraction parity, and leads with latest zero receipt plus PENDING integrated verdict. S05 and remaining applicable verification Steps stay open; no Git or external state mutated.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Protocol
 from uuid import UUID
@@ -25,17 +25,13 @@ from ...domain.transactions.models import BucketTransactionRef
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..transactions.diagnostics import LedgerImportDiagnosticKind
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_import import (
     LedgerProviderID,
@@ -47,7 +43,7 @@ from .actions_import import (
 from .import_ports import LedgerImportPorts
 from .models import LedgerSourceImportCommand, LedgerSourceImportResult
 from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 
 LEDGER_IMPORT_OPERATION_DEFINITION_ID = "ledger.import"
 MAX_LEDGER_IMPORT_FILES = 128
@@ -294,6 +290,58 @@ def _project_result_facts(
     )
 
 
+def _aggregate_import_file_results(
+    execution: LedgerImportExecutionResult,
+) -> LedgerSourceImportResult | None:
+    """Return no result, the single source result, or its canonical aggregate."""
+    backend_results = tuple(item.result for item in execution.files)
+    if not backend_results:
+        return None
+    if len(backend_results) == 1:
+        return backend_results[0]
+    return aggregate_ledger_import_results(backend_results)
+
+
+def _expected_import_effect(
+    execution: LedgerImportExecutionResult,
+    aggregate: LedgerSourceImportResult | None,
+) -> OperationEffect:
+    """Derive the public effect from persisted import facts, not the request alone."""
+    if not execution.dry_run and aggregate is not None and aggregate.imported > 0:
+        return OperationEffect.UPDATED
+    return OperationEffect.NONE
+
+
+def _empty_import_result_facts(bucket_id: str) -> _LedgerImportResultFacts:
+    """Represent an all-refused or empty result without inventing a source row."""
+    return _LedgerImportResultFacts(
+        rows=0,
+        imported=0,
+        skipped=0,
+        likely_duplicates=0,
+        bucket_id=bucket_id,
+        import_batch_id=None,
+        bucket_event_ids=(),
+        imported_transaction_refs=(),
+        skipped_transaction_refs=(),
+        likely_duplicate_transaction_refs=(),
+        validations=(),
+        sources=(),
+        diagnostics=(),
+    )
+
+
+def _project_import_result_facts(
+    aggregate: LedgerSourceImportResult | None,
+    *,
+    bucket_id: str,
+) -> _LedgerImportResultFacts:
+    """Apply the safe source-result allowlist or its truthful empty state."""
+    if aggregate is None:
+        return _empty_import_result_facts(bucket_id)
+    return _project_result_facts(aggregate, bucket_id=bucket_id)
+
+
 def project_ledger_import_result(
     result: BaseModel,
     terminal_receipt: OperationTerminalReceipt,
@@ -309,40 +357,11 @@ def project_ledger_import_result(
     ):
         raise ValueError("ledger import terminal receipt does not match its exact operation")
     bucket_id = str(result.profile_id)
-    backend_results = tuple(item.result for item in result.files)
-    aggregate = (
-        None
-        if not backend_results
-        else backend_results[0]
-        if len(backend_results) == 1
-        else aggregate_ledger_import_results(backend_results)
-    )
-    expected_effect = (
-        OperationEffect.UPDATED
-        if not result.dry_run and aggregate is not None and aggregate.imported > 0
-        else OperationEffect.NONE
-    )
+    aggregate = _aggregate_import_file_results(result)
+    expected_effect = _expected_import_effect(result, aggregate)
     if terminal_receipt.effect is not expected_effect:
         raise ValueError("ledger import effect does not match its settled import result")
-    facts = (
-        _project_result_facts(aggregate, bucket_id=bucket_id)
-        if aggregate is not None
-        else _LedgerImportResultFacts(
-            rows=0,
-            imported=0,
-            skipped=0,
-            likely_duplicates=0,
-            bucket_id=bucket_id,
-            import_batch_id=None,
-            bucket_event_ids=(),
-            imported_transaction_refs=(),
-            skipped_transaction_refs=(),
-            likely_duplicate_transaction_refs=(),
-            validations=(),
-            sources=(),
-            diagnostics=(),
-        )
-    )
+    facts = _project_import_result_facts(aggregate, bucket_id=bucket_id)
     return LedgerImportResultProjection(
         profile_id=result.profile_id,
         rows=facts.rows,
@@ -365,6 +384,162 @@ def project_ledger_import_result(
     )
 
 
+def _prepare_import_file(
+    path: Path,
+    *,
+    bucket_id: str,
+    payload: LedgerImportRequest,
+    ports: LedgerImportOperationPorts,
+    remaining_row_capacity: int,
+) -> PreparedLedgerSourceImport | LedgerImportFileRefusal:
+    """Stage one source, or return its safe refusal before persistence."""
+    command = LedgerSourceImportCommand(
+        bucket_id=bucket_id,
+        path=path,
+        provider=payload.provider.value,
+        dry_run=payload.dry_run,
+        verify=payload.verify,
+        source=payload.verify_source,
+        period=payload.period.to_period() if payload.period is not None else None,
+        actor=bucket_id,
+        source_command="aeat app ledger import",
+    )
+    try:
+        prepared = prepare_ledger_source_import(command, ports=ports.import_ports)
+    except TransactionValidationError:
+        return LedgerImportFileRefusal(
+            file_name=_safe_file_name(path),
+            reason_code="transaction_validation",
+        )
+    if len(prepared.source.parsed_rows) > remaining_row_capacity:
+        return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="result_limit")
+    return prepared
+
+
+def _compose_staged_imports(
+    *,
+    bucket_id: str,
+    payload: LedgerImportRequest,
+    operation: PinnedAuthorityOperation,
+    ports_factory: LedgerImportOperationPortsFactory,
+) -> tuple[
+    LedgerImportOperationPorts,
+    list[tuple[Path, PreparedLedgerSourceImport]],
+    list[LedgerImportFileRefusal],
+]:
+    """Compose exact-profile ports and stage admissible source files in request order."""
+    ports = ports_factory(bucket_id=bucket_id, operation=operation)
+    if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    staged: list[tuple[Path, PreparedLedgerSourceImport]] = []
+    refusals: list[LedgerImportFileRefusal] = []
+    staged_rows = 0
+    for path in payload.files:
+        outcome = _prepare_import_file(
+            path,
+            bucket_id=bucket_id,
+            payload=payload,
+            ports=ports,
+            remaining_row_capacity=MAX_LEDGER_IMPORT_ROWS - staged_rows,
+        )
+        if isinstance(outcome, LedgerImportFileRefusal):
+            refusals.append(outcome)
+            continue
+        staged_rows += len(outcome.source.parsed_rows)
+        staged.append((path, outcome))
+    return ports, staged, refusals
+
+
+def _persist_staged_imports(
+    *,
+    bucket_id: str,
+    payload: LedgerImportRequest,
+    ports: LedgerImportOperationPorts,
+    staged: list[tuple[Path, PreparedLedgerSourceImport]],
+    refusals: list[LedgerImportFileRefusal],
+) -> LedgerImportExecutionResult:
+    """Persist staged imports in order and append persistence refusals afterward."""
+    files: list[_LedgerImportExecutionFile] = []
+    for path, prepared in staged:
+        try:
+            result = persist_prepared_ledger_source_import(
+                prepared,
+                transaction_repository=ports.transaction_repository,
+                bucket_event_repository=ports.bucket_event_repository,
+                currency_normalizer=ports.currency_normalizer,
+            )
+        except TransactionValidationError:
+            refusals.append(
+                LedgerImportFileRefusal(
+                    file_name=_safe_file_name(path),
+                    reason_code="transaction_validation",
+                ),
+            )
+            continue
+        files.append(_LedgerImportExecutionFile(file_name=_safe_file_name(path), result=result))
+    return LedgerImportExecutionResult(
+        profile_id=payload.profile_id,
+        dry_run=payload.dry_run,
+        verify=payload.verify,
+        period=payload.period,
+        files=tuple(files),
+        refused_files=tuple(refusals),
+    )
+
+
+async def _publish_staged_imports(
+    context: OperationExecutorContext,
+    *,
+    bucket_id: str,
+    payload: LedgerImportRequest,
+    ports: LedgerImportOperationPorts,
+    staged: list[tuple[Path, PreparedLedgerSourceImport]],
+    refusals: list[LedgerImportFileRefusal],
+) -> str:
+    """Publish a dry-run or all-refused result without entering COMMIT."""
+    execution = await asyncio.to_thread(
+        _persist_staged_imports,
+        bucket_id=bucket_id,
+        payload=payload,
+        ports=ports,
+        staged=staged,
+        refusals=refusals,
+    )
+    reference = await context.operands.put(execution, written_at=now())
+    await context.events.effect(OperationEffect.NONE)
+    return reference
+
+
+async def _commit_staged_imports(
+    context: OperationExecutorContext,
+    *,
+    bucket_id: str,
+    payload: LedgerImportRequest,
+    ports: LedgerImportOperationPorts,
+    staged: list[tuple[Path, PreparedLedgerSourceImport]],
+    refusals: list[LedgerImportFileRefusal],
+) -> str:
+    """Settle the irreversible import with UNKNOWN then its measured final effect."""
+    async with context.cancellation.irreversible_section():
+        await context.events.effect(OperationEffect.UNKNOWN)
+        execution = await asyncio.to_thread(
+            _persist_staged_imports,
+            bucket_id=bucket_id,
+            payload=payload,
+            ports=ports,
+            staged=staged,
+            refusals=refusals,
+        )
+        effect = (
+            OperationEffect.UPDATED
+            if any(item.result.imported > 0 for item in execution.files)
+            else OperationEffect.NONE
+        )
+        reference = await context.operands.put(execution, written_at=now())
+        await context.events.effect(effect)
+        return reference
+
+
 class LedgerImportExecutor:
     """Stage source bytes first, then persist pinned parsed rows under COMMIT."""
 
@@ -380,126 +555,47 @@ class LedgerImportExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_IMPORT_OPERATION_DEFINITION_ID)
-
-        def compose() -> tuple[
-            LedgerImportOperationPorts,
-            list[tuple[Path, PreparedLedgerSourceImport]],
-            list[LedgerImportFileRefusal],
-        ]:
-            operation = context.authority_operation
-            ports = self._ports(bucket_id=bucket_id, operation=operation)
-            if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            staged: list[tuple[Path, PreparedLedgerSourceImport]] = []
-            refusals: list[LedgerImportFileRefusal] = []
-            staged_rows = 0
-            for path in payload.files:
-                command = LedgerSourceImportCommand(
-                    bucket_id=bucket_id,
-                    path=path,
-                    provider=payload.provider.value,
-                    dry_run=payload.dry_run,
-                    verify=payload.verify,
-                    source=payload.verify_source,
-                    period=payload.period.to_period() if payload.period is not None else None,
-                    actor=bucket_id,
-                    source_command="aeat app ledger import",
-                )
-                try:
-                    prepared = prepare_ledger_source_import(command, ports=ports.import_ports)
-                except TransactionValidationError:
-                    refusals.append(
-                        LedgerImportFileRefusal(
-                            file_name=_safe_file_name(path),
-                            reason_code="transaction_validation",
-                        ),
-                    )
-                    continue
-                row_count = len(prepared.source.parsed_rows)
-                if staged_rows + row_count > MAX_LEDGER_IMPORT_ROWS:
-                    refusals.append(
-                        LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="result_limit"),
-                    )
-                    continue
-                staged_rows += row_count
-                staged.append((path, prepared))
-            return ports, staged, refusals
-
-        ports, staged, refusals = await asyncio.to_thread(compose)
-
-        def persist() -> LedgerImportExecutionResult:
-            files: list[_LedgerImportExecutionFile] = []
-            for path, prepared in staged:
-                try:
-                    result = persist_prepared_ledger_source_import(
-                        prepared,
-                        transaction_repository=ports.transaction_repository,
-                        bucket_event_repository=ports.bucket_event_repository,
-                        currency_normalizer=ports.currency_normalizer,
-                    )
-                except TransactionValidationError:
-                    refusals.append(
-                        LedgerImportFileRefusal(
-                            file_name=_safe_file_name(path),
-                            reason_code="transaction_validation",
-                        ),
-                    )
-                    continue
-                files.append(
-                    _LedgerImportExecutionFile(file_name=_safe_file_name(path), result=result),
-                )
-            return LedgerImportExecutionResult(
-                profile_id=payload.profile_id,
-                dry_run=payload.dry_run,
-                verify=payload.verify,
-                period=payload.period,
-                files=tuple(files),
-                refused_files=tuple(refusals),
-            )
-
-        async def publish(effect: OperationEffect) -> str:
-            execution = await asyncio.to_thread(persist)
-            reference = await context.operands.put(execution, written_at=now())
-            await context.events.effect(effect)
-            return reference
-
+        ports, staged, refusals = await asyncio.to_thread(
+            _compose_staged_imports,
+            bucket_id=bucket_id,
+            payload=payload,
+            operation=context.authority_operation,
+            ports_factory=self._ports,
+        )
         if payload.dry_run or not staged:
             return await await_cancellation_complete(
-                publish(OperationEffect.NONE),
+                _publish_staged_imports(
+                    context,
+                    bucket_id=bucket_id,
+                    payload=payload,
+                    ports=ports,
+                    staged=staged,
+                    refusals=refusals,
+                ),
                 task_name="ledger-import-preview" if payload.dry_run else "ledger-import-refusals",
             )
-
-        async def commit() -> str:
-            async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
-                execution = await asyncio.to_thread(persist)
-                effect = (
-                    OperationEffect.UPDATED
-                    if any(item.result.imported > 0 for item in execution.files)
-                    else OperationEffect.NONE
-                )
-                reference = await context.operands.put(execution, written_at=now())
-                await context.events.effect(effect)
-                return reference
-
-        return await await_cancellation_complete(commit(), task_name="ledger-import-publication")
+        return await await_cancellation_complete(
+            _commit_staged_imports(
+                context,
+                bucket_id=bucket_id,
+                payload=payload,
+                ports=ports,
+                staged=staged,
+                refusals=refusals,
+            ),
+            task_name="ledger-import-publication",
+        )
 
 
 def build_ledger_import_definition(ports: LedgerImportOperationPortsFactory) -> OperationDefinition:
     """Declare a durable, exact-profile local import with honest effects."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
         request_type=LedgerImportRequest,
         result_type=LedgerImportExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerImportRequest,
-            executor_type=LedgerImportExecutor,
-            build=lambda: LedgerImportExecutor(ports),
-        ),
-        phase_codes=(LEDGER_IMPORT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerImportExecutor,
+        build=lambda: LedgerImportExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -512,18 +608,8 @@ def resolve_ledger_import_access(
         request.payload, LedgerImportRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
-    )
-    if request.payload.dry_run:
-        return resolved
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
+    resolve = resolve_ledger_read_access if request.payload.dry_run else resolve_ledger_commit_access
+    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_import_registration(

@@ -28,14 +28,12 @@ from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .evidence import (
@@ -48,7 +46,7 @@ from .evidence import (
 )
 from .evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
 from .evidence_read_operation import LedgerEvidenceRecordProjection
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access
 
 LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID = "ledger.evidence.update"
 LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID = "ledger.evidence.remove"
@@ -481,6 +479,24 @@ def _preflight_result_size(result: BaseModel) -> None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
+def _require_successful_mutation_receipt(
+    receipt: OperationTerminalReceipt,
+    *,
+    expected_effect: OperationEffect,
+) -> None:
+    """Require the complete success-only terminal shape for one evidence mutation."""
+    if (
+        receipt.condition is not OperationTerminalCondition.SUCCEEDED
+        or receipt.result_ref is None
+        or receipt.refusal_ref is not None
+        or receipt.refusal_detail_ref is not None
+        or receipt.failure_error_code is not None
+        or receipt.diagnostic_ref is not None
+        or receipt.effect is not expected_effect
+    ):
+        raise ValueError("ledger evidence mutation has an incompatible terminal receipt")
+
+
 def _project_terminal_result(
     result: BaseModel,
     receipt: OperationTerminalReceipt,
@@ -496,16 +512,7 @@ def _project_terminal_result(
         raise ValueError("invalid ledger evidence mutation result or operation identity")
     if receipt.identity.subject_ref != profile_operation_subject(str(profile_id)):
         raise ValueError("ledger evidence mutation result belongs to another subject")
-    if (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or receipt.effect is not expected_effect
-    ):
-        raise ValueError("ledger evidence mutation has an incompatible terminal receipt")
+    _require_successful_mutation_receipt(receipt, expected_effect=expected_effect)
     return public_result
 
 
@@ -547,23 +554,15 @@ def _build_definition(
     ports_factory: LedgerEvidencePortsFactory,
     allow_no_effect: bool = False,
 ) -> OperationDefinition:
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=executor_type,
-            build=lambda: executor_type(ports_factory),
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
-        capabilities=(
-            RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-            if allow_no_effect
-            else RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        executor_type=executor_type,
+        build=lambda: executor_type(ports_factory),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+        if allow_no_effect
+        else RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -599,16 +598,7 @@ def resolve_ledger_evidence_update_access(
         request.payload, LedgerEvidenceUpdateRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
-    )
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def resolve_ledger_evidence_remove_access(
@@ -619,16 +609,7 @@ def resolve_ledger_evidence_remove_access(
         request.payload, LedgerEvidenceRemoveRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
-    )
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_evidence_update_registration(

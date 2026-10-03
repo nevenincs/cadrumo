@@ -14,6 +14,8 @@ from ...application.modelo.metadata_read_operation import (
 from ...application.modelo.operation_definitions import (
     MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
+)
+from ...application.modelo.work_change_contracts import (
     ModeloWorkDiscardPublicResultV2,
     ModeloWorkDiscardRequest,
     ModeloWorkRenamePublicResultV2,
@@ -32,7 +34,9 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from .frontend_client import RuntimeFrontendClient, frontend_failure_code
+from .frontend_client import RuntimeFrontendClient
+from .frontend_client_contracts import frontend_failure_code
+from .operation_run_error_context import operation_run_error_context
 from .operation_settlement import (
     PinnedConnection,
     read_settled_result_bytes,
@@ -70,14 +74,12 @@ class ModeloMetadataRunError(CadrumoError):
         self.reason = code
         self.terminal_condition = terminal_condition
         self.effect = effect
-        context = {
-            "reason": code,
-            "operation_id": str(operation_id),
-            "effect": effect.value if effect is not None else "unknown",
-        }
-        if terminal_condition is not None:
-            context["terminal_condition"] = terminal_condition.value
-        super().__init__(code, context=context)
+        super().__init__(
+            code,
+            context=operation_run_error_context(
+                code=code, operation_id=operation_id, terminal_condition=terminal_condition, effect=effect
+            ),
+        )
 
 
 def _result(
@@ -118,14 +120,7 @@ def _run(
     expected_result = OperationSchemaIdentityV1.from_model(
         schema_id=f"{definition_id}.result", schema_version=result_version, model_type=result_type
     )
-    if (
-        contract.definition_id != definition_id
-        or contract.request_schema != expected_request
-        or contract.result_schema != expected_result
-        or client.frontend not in contract.permitted_frontends
-        or contract.ephemeral_secret_required
-    ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    _require_metadata_contract(client, contract, definition_id, expected_request, expected_result)
     pinned = PinnedConnection.of(client)
     submitted = submit_operation(
         client,
@@ -259,3 +254,21 @@ __all__ = [
     "read_modelo_work_metadata",
     "run_modelo_metadata_mutation",
 ]
+
+
+def _require_metadata_contract(
+    client: RuntimeFrontendClient,
+    contract: OperationPublicDefinitionContractV1,
+    definition_id: str,
+    expected_request: OperationSchemaIdentityV1,
+    expected_result: OperationSchemaIdentityV1,
+) -> None:
+    """Require the exact metadata operation door before recording a submission."""
+    if (
+        contract.definition_id != definition_id
+        or contract.request_schema != expected_request
+        or contract.result_schema != expected_result
+        or client.frontend not in contract.permitted_frontends
+        or contract.ephemeral_secret_required
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

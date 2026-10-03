@@ -42,13 +42,12 @@ from ..operations.access_resolution import OperationAccessContext, ResolvedOpera
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
 )
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -62,11 +61,11 @@ from ..user_profile.access_contracts import (
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
+from .edit_apply_contracts import ModeloEditApplySubmissionV1
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditPreflightEvaluatedV1, ModeloEditRefusedV1
 from .edit_preflight import preflight_modelo_edit
 from .edit_refusal_projection import ModeloEditRefusalProjectionStore
-from .operation_definitions import ModeloEditApplySubmissionV1
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .workbench_projection import ModeloWorkbenchFormProjectionV1, project_modelo_workbench_form
@@ -495,15 +494,13 @@ def _definition(
     executor_type: type[object],
     build: Callable[[], object],
 ) -> OperationDefinition:
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(request_type=request_type, executor_type=executor_type, build=build),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
+        executor_type=executor_type,
+        build=build,
         capabilities=_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=_HUMAN_FRONTENDS,
     )
 

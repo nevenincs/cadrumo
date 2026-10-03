@@ -31,7 +31,7 @@ def require_automation_secret_target(namespace: str, account: str) -> None:
         or len(namespace) <= len(AUTOMATION_NAMESPACE_PREFIX)
         or not account
         or len(namespace) + len(account) > _MAX_TARGET_CHARACTERS
-        or any(ord(character) < 32 or ord(character) == 127 for character in namespace + account)
+        or _has_control_character(namespace, account)
     ):
         raise AutomationCustodyError(AutomationCustodyCode.INVALID)
     try:
@@ -39,3 +39,8 @@ def require_automation_secret_target(namespace: str, account: str) -> None:
         account.encode("utf-8", errors="strict")
     except UnicodeError:
         raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+
+
+def _has_control_character(namespace: str, account: str) -> bool:
+    """Refuse native credential targets containing control characters."""
+    return any(ord(character) < 32 or ord(character) == 127 for character in namespace + account)

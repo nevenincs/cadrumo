@@ -25,7 +25,7 @@ from .....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
-from .casilla_list import AddressKey
+from .casilla_list_models import AddressKey
 from .navigator import applicable_fields, presented_form
 from .page_items import workbench_pages
 from .sources import OpenSourceSurface

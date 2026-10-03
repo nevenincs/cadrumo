@@ -20,7 +20,8 @@ from ....adapters.local_runtime.automation_decision import (
     AutomationDecisionCompletion,
     run_automation_decision,
 )
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.access_contracts import AccessDenialCode

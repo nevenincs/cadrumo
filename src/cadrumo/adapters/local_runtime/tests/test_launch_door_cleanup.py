@@ -20,12 +20,13 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
-from cadrumo.application.runtime.management import RuntimeManagerInspection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.logging import get_logger
 
 from .. import startup
-from ..framing import RuntimeTransportCleanup, VerifiedRuntimeConnection, write_document
+from ..framing import VerifiedRuntimeConnection
+from ..runtime_frame_io import write_document
+from ..runtime_transport_cleanup import RuntimeTransportCleanup
 from ..startup import RuntimeLaunchDoor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -223,24 +224,6 @@ class _RefusingStartupEndpoint:
         raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_NOT_READY)
 
 
-class _FailingStartupManager:
-    def __init__(self, primary: BaseException) -> None:
-        self.primary = primary
-        self.inspect_calls = 0
-        self.body_failed = False
-
-    async def inspect(self) -> RuntimeManagerInspection:
-        self.inspect_calls += 1
-        self.body_failed = True
-        raise self.primary
-
-    async def start(self) -> None:
-        raise AssertionError("unexpected native start after refused inspection")
-
-    async def stop(self) -> None:
-        raise AssertionError("unexpected native stop during launch")
-
-
 type _FaultHandlerFactory = Callable[[BaseException, Callable[[], bool]], _DiagnosticFailureHandler]
 
 
@@ -268,77 +251,6 @@ def fault_handler(monkeypatch: pytest.MonkeyPatch) -> Generator[_FaultHandlerFac
             handler.close()
         logger.setLevel(previous_level)
         logger.propagate = previous_propagate
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("primary_kind", ["typed", "cancel"])
-async def test_startup_handler_interruption_preserves_exact_native_primary(
-    fault_handler: _FaultHandlerFactory,
-    primary_kind: str,
-) -> None:
-    primary = (
-        RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        if primary_kind == "typed"
-        else asyncio.CancelledError("synthetic native cancellation")
-    )
-    endpoint, manager = _RefusingStartupEndpoint(), _FailingStartupManager(primary)
-    handler = fault_handler(KeyboardInterrupt("synthetic diagnostic interruption"), lambda: manager.body_failed)
-    door = RuntimeLaunchDoor(
-        endpoint,
-        expected=RuntimeClientHello(product_version="cleanup-test", storage_identity="a" * 64),
-        manager=manager,
-    )
-    with pytest.raises(type(primary)) as caught:
-        await door.open(timeout=1)
-    assert caught.value is primary
-    assert endpoint.connect_calls == manager.inspect_calls == 1
-    assert handler.failure_calls == 1
-
-
-@pytest.mark.asyncio
-async def test_ordinary_startup_handler_failure_does_not_prevent_native_attempt(
-    fault_handler: _FaultHandlerFactory,
-) -> None:
-    primary = RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-    endpoint, manager = _RefusingStartupEndpoint(), _FailingStartupManager(primary)
-    handler = fault_handler(OSError("synthetic diagnostic failure"), lambda: True)
-    door = RuntimeLaunchDoor(
-        endpoint,
-        expected=RuntimeClientHello(product_version="cleanup-test", storage_identity="a" * 64),
-        manager=manager,
-    )
-    with pytest.raises(RuntimeRefusalError) as caught:
-        await door.open(timeout=1)
-    assert caught.value is primary
-    assert endpoint.connect_calls == manager.inspect_calls == 1
-    assert handler.failure_calls > 0
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "interruption",
-    [
-        pytest.param(KeyboardInterrupt("synthetic interruption"), id="keyboard"),
-        pytest.param(asyncio.CancelledError("synthetic cancellation"), id="cancel"),
-    ],
-)
-async def test_new_startup_handler_interruption_remains_exact_before_native_attempt(
-    fault_handler: _FaultHandlerFactory,
-    interruption: BaseException,
-) -> None:
-    endpoint = _RefusingStartupEndpoint()
-    manager = _FailingStartupManager(RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE))
-    handler = fault_handler(interruption, lambda: True)
-    door = RuntimeLaunchDoor(
-        endpoint,
-        expected=RuntimeClientHello(product_version="cleanup-test", storage_identity="a" * 64),
-        manager=manager,
-    )
-    with pytest.raises(type(interruption)) as caught:
-        await door.open(timeout=1)
-    assert caught.value is interruption
-    assert endpoint.connect_calls == manager.inspect_calls == 0
-    assert handler.failure_calls == 1
 
 
 @pytest.mark.asyncio

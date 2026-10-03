@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Self
+from typing import Any, Final, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -30,6 +30,8 @@ from ...domain.renta.actividad_asset.election import (
     DefiniteUsefulLife,
     DigitOrder,
     DirectEstimationRegime,
+    ElectionReference,
+    EvidenceReference,
     LowValueElection,
     PlanAnnualAmount,
     PlanApprovalKind,
@@ -55,6 +57,27 @@ from .operations import ActivityAssetFilingHandoff
 
 def _decimal(value: PublicDecimal | None) -> Decimal | None:
     return None if value is None else Decimal(value.decimal)
+
+
+_CHARGE_DECIMAL_FIELDS: Final = ("amount", "free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap")
+"""Decimal facts a scheduled charge and a recorded claim both carry."""
+
+
+def _public_charge_fields(value: BaseModel) -> dict[str, Any]:
+    """Copy a domain charge field by field, carrying its decimals as public decimals."""
+    data = value.model_dump(mode="python")
+    for name in _CHARGE_DECIMAL_FIELDS:
+        amount = data[name]
+        data[name] = PublicDecimal(decimal=str(amount)) if amount is not None else None
+    return data
+
+
+def _domain_charge_fields(snapshot: BaseModel) -> dict[str, Any]:
+    """Copy a charge snapshot field by field, restoring its public decimals."""
+    data: dict[str, Any] = {name: getattr(snapshot, name) for name in type(snapshot).model_fields}
+    for name in _CHARGE_DECIMAL_FIELDS:
+        data[name] = _decimal(data[name])
+    return data
 
 
 class AcquisitionLineageSnapshot(BaseModel):
@@ -179,7 +202,7 @@ class PlanAnnualAmountSnapshot(BaseModel):
 class ApprovedAmortizationPlanSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    approval_reference: str = Field(min_length=1, max_length=256)
+    approval_reference: ElectionReference
     approval_kind: PlanApprovalKind
     submitted_on: date
     resolved_on: date
@@ -208,7 +231,7 @@ class ApprovedAmortizationPlanSnapshot(BaseModel):
 class SmallEnterpriseEvidenceSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    evidence_reference: str = Field(min_length=1, max_length=512)
+    evidence_reference: EvidenceReference
     made_available_on: date
     prior_period_net_turnover: PublicDecimal
 
@@ -231,8 +254,8 @@ class SmallEnterpriseEvidenceSnapshot(BaseModel):
 class LowValueElectionSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    election_reference: str = Field(min_length=1, max_length=256)
-    new_material_evidence_reference: str = Field(min_length=1, max_length=512)
+    election_reference: ElectionReference
+    new_material_evidence_reference: EvidenceReference
     unit_acquisition_value: PublicDecimal
 
     @classmethod
@@ -267,7 +290,7 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
     useful_life: DefiniteUsefulLife | None = None
     small_enterprise: SmallEnterpriseEvidenceSnapshot | None = None
     low_value: LowValueElectionSnapshot | None = None
-    research_development_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
+    research_development_evidence_reference: EvidenceReference | None = None
     charging_infrastructure: ChargingInfrastructureEvidence | None = None
     renewable_self_consumption: RenewableSelfConsumptionEvidence | None = None
 
@@ -418,43 +441,19 @@ class AmortizationClaimSnapshot(BaseModel):
     calculation_revision_id: CalculationRevisionId | None = None
     filing_revision_id: Hex64Str | None = None
     method: AmortizationMethod = AmortizationMethod.LINEAR
-    free_depreciation_election_reference: str | None = Field(default=None, min_length=1, max_length=256)
-    free_depreciation_new_material_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
+    free_depreciation_election_reference: ElectionReference | None = None
+    free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: PublicDecimal | None = None
     free_depreciation_annual_cap: PublicDecimal | None = None
 
     @classmethod
     def from_domain(cls, value: AmortizationClaim) -> Self:
         """Project a canonical history claim to its public wire representation."""
-        data = value.model_dump(mode="python")
-        for name in ("amount", "free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap"):
-            amount = data[name]
-            data[name] = PublicDecimal(decimal=str(amount)) if amount is not None else None
-        return cls(**data)
+        return cls(**_public_charge_fields(value))
 
     def to_domain(self) -> AmortizationClaim:
         """Restore and revalidate the canonical history claim."""
-        return AmortizationClaim(
-            asset_id=self.asset_id,
-            asset_revision_id=self.asset_revision_id,
-            asset_kind=self.asset_kind,
-            tax_year=self.tax_year,
-            covered_from=self.covered_from,
-            covered_until=self.covered_until,
-            amount=Decimal(self.amount.decimal),
-            schedule_fingerprint=self.schedule_fingerprint,
-            authority_generation=self.authority_generation,
-            source_reference=self.source_reference,
-            creating_operation=self.creating_operation,
-            supersedes_claim_id=self.supersedes_claim_id,
-            calculation_revision_id=self.calculation_revision_id,
-            filing_revision_id=self.filing_revision_id,
-            method=self.method,
-            free_depreciation_election_reference=self.free_depreciation_election_reference,
-            free_depreciation_new_material_evidence_reference=self.free_depreciation_new_material_evidence_reference,
-            free_depreciation_unit_acquisition_value=_decimal(self.free_depreciation_unit_acquisition_value),
-            free_depreciation_annual_cap=_decimal(self.free_depreciation_annual_cap),
-        )
+        return AmortizationClaim(**_domain_charge_fields(self))
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -510,40 +509,19 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     method: AmortizationMethod = AmortizationMethod.LINEAR
-    free_depreciation_election_reference: str | None = Field(default=None, min_length=1, max_length=256)
-    free_depreciation_new_material_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
+    free_depreciation_election_reference: ElectionReference | None = None
+    free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: PublicDecimal | None = None
     free_depreciation_annual_cap: PublicDecimal | None = None
 
     @classmethod
     def from_domain(cls, value: ScheduledAmortizationCharge) -> Self:
         """Project one pinned-authority forecast into the public wire form."""
-        data = value.model_dump(mode="python")
-        for name in ("amount", "free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap"):
-            amount = data[name]
-            data[name] = PublicDecimal(decimal=str(amount)) if amount is not None else None
-        return cls(**data)
+        return cls(**_public_charge_fields(value))
 
     def to_domain(self) -> ScheduledAmortizationCharge:
         """Restore and revalidate the schedule used for claim creation."""
-        return ScheduledAmortizationCharge(
-            asset_id=self.asset_id,
-            asset_revision_id=self.asset_revision_id,
-            tax_year=self.tax_year,
-            covered_from=self.covered_from,
-            covered_until=self.covered_until,
-            service_days=self.service_days,
-            calendar_days=self.calendar_days,
-            amount=Decimal(self.amount.decimal),
-            schedule_fingerprint=self.schedule_fingerprint,
-            authority_generation=self.authority_generation,
-            source_reference=self.source_reference,
-            method=self.method,
-            free_depreciation_election_reference=self.free_depreciation_election_reference,
-            free_depreciation_new_material_evidence_reference=self.free_depreciation_new_material_evidence_reference,
-            free_depreciation_unit_acquisition_value=_decimal(self.free_depreciation_unit_acquisition_value),
-            free_depreciation_annual_cap=_decimal(self.free_depreciation_annual_cap),
-        )
+        return ScheduledAmortizationCharge(**_domain_charge_fields(self))
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

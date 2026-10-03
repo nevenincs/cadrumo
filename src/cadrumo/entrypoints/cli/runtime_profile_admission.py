@@ -11,7 +11,8 @@ import typer
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...adapters.persistence.storage.errors import KeyringUnavailableError
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.profile_preconditions import profile_session_failure_verdict

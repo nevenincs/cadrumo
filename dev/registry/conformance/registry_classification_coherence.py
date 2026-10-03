@@ -78,6 +78,8 @@ from cadrumo.domain.calculations.registry.ids import ModeloId
 from cadrumo.domain.calculations.registry.modelo_obligation_scope import resolve_modelo_obligation_scope
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import CalculationClass, CalculationClassField
+from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import CalculationCompletenessManifest
 
 from ..compiler.fact_providers import compile_authored_fact_catalogue
 from ..compiler.loader import load_registry_tree, load_shared_catalogues
@@ -515,24 +517,42 @@ def _census_declared_axes(modelos: tuple[ModeloDefinition, ...]) -> tuple[Declar
     manifests = tuple(revision.completeness_manifest for revision in revisions if revision.completeness_manifest)
 
     return (
-        DeclaredAxisUsage(
-            axis="calculation_class.summary",
-            declaration_count=sum(1 for modelo in modelos if modelo.calculation_class == "summary"),
-            population=len(modelos),
-        ),
-        DeclaredAxisUsage(
-            axis="extraction_profile.confidence.review_required",
-            declaration_count=sum(1 for profile in profiles if profile.confidence == "review_required"),
-            population=len(profiles),
-        ),
-        DeclaredAxisUsage(
-            axis="extraction_profile.verification_source.real_aeat_corpus_pdf",
-            declaration_count=sum(1 for profile in profiles if profile.verification_source == "real_aeat_corpus_pdf"),
-            population=len(profiles),
-        ),
-        DeclaredAxisUsage(
-            axis="completeness_manifest.manual_extraction",
-            declaration_count=sum(1 for manifest in manifests if manifest.manual_extraction),
-            population=len(manifests),
-        ),
+        _calculation_summary_axis_usage(modelos),
+        _review_required_profile_axis_usage(profiles),
+        _real_corpus_profile_axis_usage(profiles),
+        _manual_extraction_manifest_axis_usage(manifests),
+    )
+
+
+def _calculation_summary_axis_usage(modelos: tuple[ModeloDefinition, ...]) -> DeclaredAxisUsage:
+    return DeclaredAxisUsage(
+        axis="calculation_class.summary",
+        declaration_count=sum(1 for modelo in modelos if modelo.calculation_class == "summary"),
+        population=len(modelos),
+    )
+
+
+def _review_required_profile_axis_usage(profiles: tuple[ExtractionProfileDefinition, ...]) -> DeclaredAxisUsage:
+    return DeclaredAxisUsage(
+        axis="extraction_profile.confidence.review_required",
+        declaration_count=sum(1 for profile in profiles if profile.confidence == "review_required"),
+        population=len(profiles),
+    )
+
+
+def _real_corpus_profile_axis_usage(profiles: tuple[ExtractionProfileDefinition, ...]) -> DeclaredAxisUsage:
+    return DeclaredAxisUsage(
+        axis="extraction_profile.verification_source.real_aeat_corpus_pdf",
+        declaration_count=sum(1 for profile in profiles if profile.verification_source == "real_aeat_corpus_pdf"),
+        population=len(profiles),
+    )
+
+
+def _manual_extraction_manifest_axis_usage(
+    manifests: tuple[CalculationCompletenessManifest, ...],
+) -> DeclaredAxisUsage:
+    return DeclaredAxisUsage(
+        axis="completeness_manifest.manual_extraction",
+        declaration_count=sum(1 for manifest in manifests if manifest.manual_extraction),
+        population=len(manifests),
     )

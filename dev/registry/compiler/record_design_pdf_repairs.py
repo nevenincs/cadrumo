@@ -11,12 +11,7 @@ from cadrumo.core.resources.bundled_data import resolve_corpus_binary
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.pipeline.source_defects import SupplementalBlankRunDeclaration, supplemental_blank_run_for
 
-from .record_design_pdf_rows import (
-    PdfRow,
-    parse_pdf_row,
-    unnamed_position_candidate,
-)
-
+from .record_design_pdf_rows import PdfRow, parse_pdf_row, unnamed_position_candidate
 
 _M270_2023_SOURCE_SHA256 = "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92"
 

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:14a9abcacf690e969f3001f1a5ba414c480f24e195fa03c2c35e44a4b292e2db'
 related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
   - "[[2026-09-02-object-name-declustering-adr]]"
   - "[[2026-09-07-object-name-declustering-receipt-inventory-freshness-conflict-audit]]"
 ---

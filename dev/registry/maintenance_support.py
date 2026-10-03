@@ -1083,6 +1083,19 @@ def revision_selection_coordinates(
     """
     if not 2000 <= assessment_horizon <= 2099:
         raise ValueError("assessment_horizon must be between 2000 and 2099")
+    declared = _declared_selection_years(revision, assessment_horizon)
+    if not declared:
+        raise RegistryValidationError(
+            f"revision {revision.id!r} declares no filing year through coverage horizon {assessment_horizon}"
+        )
+    # Nothing resolves below the supported floor, so a year there has no
+    # coordinate to assess; a revision entirely below it contributes none.
+    years = tuple(year for year in declared if year >= assessment_floor)
+    selector = revision.period_selector
+    return tuple((filing_year, period) for filing_year in years for period in selector.periods_for_year(filing_year))
+
+
+def _declared_selection_years(revision: ModeloRevision, assessment_horizon: int) -> tuple[int, ...]:
     selector = revision.period_selector
     if selector.years:
         declared = tuple(year for year in sorted(selector.years) if year <= assessment_horizon)
@@ -1093,14 +1106,7 @@ def revision_selection_coordinates(
             )
         end = min(selector.year_to or assessment_horizon, assessment_horizon)
         declared = tuple(range(selector.year_from, end + 1))
-    if not declared:
-        raise RegistryValidationError(
-            f"revision {revision.id!r} declares no filing year through coverage horizon {assessment_horizon}"
-        )
-    # Nothing resolves below the supported floor, so a year there has no
-    # coordinate to assess; a revision entirely below it contributes none.
-    years = tuple(year for year in declared if year >= assessment_floor)
-    return tuple((filing_year, period) for filing_year in years for period in selector.periods_for_year(filing_year))
+    return declared
 
 
 @dataclass(frozen=True, slots=True)

@@ -5,10 +5,8 @@ from __future__ import annotations
 import time
 from uuid import UUID, uuid4
 
-from ....adapters.local_runtime.frontend_client import (
-    RuntimeFrontendClient,
-    RuntimeFrontendRefusedError,
-)
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.frontend_projection import OperationReviewAvailableInteractionV1
 from ....application.operations.frontend_requests import (
     OperationObservationRefusalV1,

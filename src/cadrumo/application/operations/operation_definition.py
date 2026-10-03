@@ -171,4 +171,43 @@ from .registry import OperationFrontendProjection, OperationReconciliationPolicy
 
 OperationDefinition.model_rebuild(_types_namespace=globals())
 
-__all__ = ["OperationDefinition", "OperationExecutorFactory"]
+
+def build_single_phase_definition(
+    *,
+    definition_id: str,
+    request_type: type[BaseModel],
+    result_type: type[BaseModel] | None,
+    executor_type: type[object],
+    build: Callable[[], object],
+    capabilities: OperationCapabilities,
+    permitted_frontends: frozenset[OperationFrontendProjection],
+    action_reference: ActionReference | None = None,
+    ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
+    transient_financial_operands: tuple[OperationTransientFinancialOperandDeclaration, ...] = (),
+    refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset(),
+    public_error_detail: bool = False,
+) -> OperationDefinition:
+    """Declare ``definition_id`` as its own sole phase: no interactions, interrupted on owner loss."""
+    return OperationDefinition(
+        definition_id=definition_id,
+        request_type=request_type,
+        result_type=result_type,
+        executor_factory=OperationExecutorFactory(
+            request_type=request_type,
+            executor_type=executor_type,
+            build=build,
+        ),
+        phase_codes=(definition_id,),
+        interaction_kinds=frozenset(),
+        capabilities=capabilities,
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=permitted_frontends,
+        action_reference=action_reference,
+        ephemeral_secret=ephemeral_secret,
+        transient_financial_operands=transient_financial_operands,
+        refusal_detail_codes=refusal_detail_codes,
+        public_error_detail=public_error_detail,
+    )
+
+
+__all__ = ["OperationDefinition", "OperationExecutorFactory", "build_single_phase_definition"]

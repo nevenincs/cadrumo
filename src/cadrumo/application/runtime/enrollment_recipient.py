@@ -146,8 +146,7 @@ class VolatileEnrollmentRecipient:
         self, record: EnrollmentRecord, action: EnrollmentWorkAction, candidate: SecretBytes | None
     ) -> EnrollmentWorkResult:
         binding = self._binding(record)
-        if candidate is not None and self._issuer.verifier(candidate)[0] != binding.key_id:
-            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        self._require_candidate_matches(binding, candidate)
         remaining = min(
             _PRODUCER_MAX_SECONDS,
             self._offer_remaining(),
@@ -157,6 +156,16 @@ class VolatileEnrollmentRecipient:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         work = EnrollmentWork(uuid4(), action, binding, candidate, self._complete)
         pending = _Pending(work, time.monotonic() + remaining, record.expires_at)
+        result, refusal = self._publish_and_wait(pending, record)
+        return self._resolve_exchange_result(result, refusal)
+
+    def _require_candidate_matches(self, binding: EnrollmentCredentialBinding, candidate: SecretBytes | None) -> None:
+        if candidate is not None and self._issuer.verifier(candidate)[0] != binding.key_id:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+
+    def _publish_and_wait(
+        self, pending: _Pending, record: EnrollmentRecord
+    ) -> tuple[EnrollmentWorkResult | None, AutomationCustodyCode | None]:
         with self._condition:
             if self._closed:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
@@ -164,20 +173,29 @@ class VolatileEnrollmentRecipient:
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
             self._pending = pending
             self._condition.notify_all()
-            while pending.refusal is None and (pending.result is None or pending.borrowed):
-                left = min(
-                    pending.deadline - time.monotonic(),
-                    self._offer_remaining(),
-                    (record.expires_at - now()).total_seconds(),
-                )
-                if left <= 0:
-                    self._fail_locked(AutomationCustodyCode.UNAVAILABLE)
-                    break
-                self._condition.wait(min(left, _CLOCK_RECHECK_SECONDS))
+            self._wait_for_exchange(pending, record)
             result, refusal = pending.result, pending.refusal
             if self._pending is pending:
                 self._pending = None
             self._condition.notify_all()
+        return result, refusal
+
+    def _wait_for_exchange(self, pending: _Pending, record: EnrollmentRecord) -> None:
+        while pending.refusal is None and (pending.result is None or pending.borrowed):
+            left = min(
+                pending.deadline - time.monotonic(),
+                self._offer_remaining(),
+                (record.expires_at - now()).total_seconds(),
+            )
+            if left <= 0:
+                self._fail_locked(AutomationCustodyCode.UNAVAILABLE)
+                break
+            self._condition.wait(min(left, _CLOCK_RECHECK_SECONDS))
+
+    @staticmethod
+    def _resolve_exchange_result(
+        result: EnrollmentWorkResult | None, refusal: AutomationCustodyCode | None
+    ) -> EnrollmentWorkResult:
         if refusal is not None:
             raise AutomationCustodyError(refusal)
         if result is None:
@@ -202,6 +220,13 @@ class VolatileEnrollmentRecipient:
     @contextmanager
     def borrow(self) -> Generator[EnrollmentWork | None]:
         """Poll for at most five seconds; the borrower owns completion and cleanup."""
+        work = self._borrow_available_work()
+        try:
+            yield work
+        finally:
+            self._release_borrow(work)
+
+    def _borrow_available_work(self) -> EnrollmentWork | None:
         with self._condition:
             remaining = self._offer_remaining()
             if self._closed or remaining <= 0:
@@ -212,70 +237,82 @@ class VolatileEnrollmentRecipient:
                 self._require_open()
                 left = min(deadline - time.monotonic(), self._offer_remaining())
                 if left <= 0:
-                    yield_none = True
-                    break
+                    return None
                 self._condition.wait(min(left, _CLOCK_RECHECK_SECONDS))
                 pending = self._pending
-            else:
-                yield_none = False
-            if yield_none:
-                work = None
-            else:
-                if pending is None:
-                    raise AutomationCustodyError(AutomationCustodyCode.INVALID)
-                pending.borrowed = True
-                work = pending.work
-        try:
-            yield work
-        finally:
-            if work is not None:
-                with self._condition:
-                    current = self._pending
-                    if current is not None and current.work is work:
-                        if current.result is None and current.refusal is None:
-                            self._fail_locked(AutomationCustodyCode.UNAVAILABLE)
-                        else:
-                            current.borrowed = False
-                            self._condition.notify_all()
-                    work.candidate = None
+            if pending is None:
+                raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+            pending.borrowed = True
+            return pending.work
+
+    def _release_borrow(self, work: EnrollmentWork | None) -> None:
+        if work is None:
+            return
+        with self._condition:
+            current = self._pending
+            if current is not None and current.work is work:
+                if current.result is None and current.refusal is None:
+                    self._fail_locked(AutomationCustodyCode.UNAVAILABLE)
+                else:
+                    current.borrowed = False
+                    self._condition.notify_all()
+            work.candidate = None
 
     def _require_open(self) -> None:
         if self._closed:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
 
+    def _require_current_completion(self, pending: _Pending | None, work: EnrollmentWork, command_id: UUID) -> _Pending:
+        if self._closed:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        if pending is None:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        if not pending.borrowed:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        if pending.work is not work:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        if command_id != work.command_id:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        if pending.result is not None:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        if pending.refusal is not None:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        return pending
+
+    def _require_completion_deadline(self, pending: _Pending) -> None:
+        if pending.deadline <= time.monotonic() or self._offer_remaining() <= 0 or pending.record_expires_at <= now():
+            self._fail_locked(AutomationCustodyCode.UNAVAILABLE)
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+    def _record_completion(self, pending: _Pending, work: EnrollmentWork, result: EnrollmentWorkResult) -> None:
+        if isinstance(result, EnrollmentRefused):
+            pending.refusal = result.reason
+        elif self._is_store_acknowledgement(work, result) or self._is_missing_answer(work, result):
+            pending.result = result
+        elif work.action is EnrollmentWorkAction.POSSESSION and isinstance(result, EnrollmentPresent):
+            self._record_present_credential(pending, work, result)
+        else:
+            raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+
+    @staticmethod
+    def _is_store_acknowledgement(work: EnrollmentWork, result: EnrollmentWorkResult) -> bool:
+        return work.action is EnrollmentWorkAction.STORE and isinstance(result, EnrollmentStored)
+
+    @staticmethod
+    def _is_missing_answer(work: EnrollmentWork, result: EnrollmentWorkResult) -> bool:
+        return work.action is EnrollmentWorkAction.POSSESSION and isinstance(result, EnrollmentMissing)
+
+    def _record_present_credential(self, pending: _Pending, work: EnrollmentWork, result: EnrollmentPresent) -> None:
+        if self._issuer.verifier(result.credential)[0] != work.credential_binding.key_id:
+            self._fail_locked(AutomationCustodyCode.CREDENTIAL_REJECTED)
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        pending.result = result
+
     def _complete(self, work: EnrollmentWork, command_id: UUID, result: EnrollmentWorkResult) -> None:
         with self._condition:
-            pending = self._pending
-            if (
-                self._closed
-                or pending is None
-                or not pending.borrowed
-                or pending.work is not work
-                or command_id != work.command_id
-                or pending.result is not None
-                or pending.refusal is not None
-            ):
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-            if (
-                pending.deadline <= time.monotonic()
-                or self._offer_remaining() <= 0
-                or pending.record_expires_at <= now()
-            ):
-                self._fail_locked(AutomationCustodyCode.UNAVAILABLE)
-                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-            if isinstance(result, EnrollmentRefused):
-                pending.refusal = result.reason
-            elif (work.action is EnrollmentWorkAction.STORE and isinstance(result, EnrollmentStored)) or (
-                work.action is EnrollmentWorkAction.POSSESSION and isinstance(result, EnrollmentMissing)
-            ):
-                pending.result = result
-            elif work.action is EnrollmentWorkAction.POSSESSION and isinstance(result, EnrollmentPresent):
-                if self._issuer.verifier(result.credential)[0] != work.credential_binding.key_id:
-                    self._fail_locked(AutomationCustodyCode.CREDENTIAL_REJECTED)
-                    raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-                pending.result = result
-            else:
-                raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+            pending = self._require_current_completion(self._pending, work, command_id)
+            self._require_completion_deadline(pending)
+            self._record_completion(pending, work, result)
             self._condition.notify_all()
 
     def _fail_locked(self, reason: AutomationCustodyCode) -> None:

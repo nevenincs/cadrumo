@@ -313,32 +313,10 @@ def _resolve_caller_supplied_prior_compensation(
     if decision is None:
         return None
     if _decision_is_missing_local_authority(decision):
-        if any(amount != Decimal("0") for amount in supplied_amounts):
-            blocked_reason, blocked_message = _blocked_refusal(decision)
-            _raise_iva_wallet_precondition(
-                subject_leaf_key="modelo.work.calculate",
-                reason_code=blocked_reason,
-                translated_message=blocked_message,
-                evidence_values={
-                    "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
-                    "nonzero_amount_count": sum(amount != Decimal("0") for amount in supplied_amounts),
-                    "wallet_blocked": True,
-                },
-                context={"divergence": str(decision.divergence), "reason": blocked_reason},
-            )
+        _require_no_unproven_prior_amounts(decision, supplied_amounts)
         return None
     if _decision_has_concrete_zero_authority(decision):
-        if any(amount != Decimal("0") for amount in supplied_amounts):
-            _raise_iva_wallet_precondition(
-                subject_leaf_key="modelo.work.calculate",
-                reason_code="caller_binding_conflict",
-                translated_message="application.modelo.errors.iva_wallet_caller_binding_conflict",
-                evidence_values={
-                    "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
-                    "nonzero_amount_count": sum(amount != Decimal("0") for amount in supplied_amounts),
-                },
-            )
-        decision = _non_blocking_concrete_zero_authority_decision(decision)
+        decision = _accept_only_zero_supplied_amounts(decision, supplied_amounts)
     if not decision.blocked:
         decision = _require_first_period_zero_decision_grounded(
             work_unit,
@@ -349,6 +327,43 @@ def _resolve_caller_supplied_prior_compensation(
         )
     _save_iva_compensation_decision(decision, repository=repository)
     return decision
+
+
+def _require_no_unproven_prior_amounts(
+    decision: IvaCompensationReconciliationDecision,
+    supplied_amounts: tuple[Decimal, ...],
+) -> None:
+    if not any(amount != Decimal("0") for amount in supplied_amounts):
+        return
+    blocked_reason, blocked_message = _blocked_refusal(decision)
+    _raise_iva_wallet_precondition(
+        subject_leaf_key="modelo.work.calculate",
+        reason_code=blocked_reason,
+        translated_message=blocked_message,
+        evidence_values={
+            "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
+            "nonzero_amount_count": sum(amount != Decimal("0") for amount in supplied_amounts),
+            "wallet_blocked": True,
+        },
+        context={"divergence": str(decision.divergence), "reason": blocked_reason},
+    )
+
+
+def _accept_only_zero_supplied_amounts(
+    decision: IvaCompensationReconciliationDecision,
+    supplied_amounts: tuple[Decimal, ...],
+) -> IvaCompensationReconciliationDecision:
+    if any(amount != Decimal("0") for amount in supplied_amounts):
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="caller_binding_conflict",
+            translated_message="application.modelo.errors.iva_wallet_caller_binding_conflict",
+            evidence_values={
+                "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
+                "nonzero_amount_count": sum(amount != Decimal("0") for amount in supplied_amounts),
+            },
+        )
+    return _non_blocking_concrete_zero_authority_decision(decision)
 
 
 def resolve_iva_compensation_decision_for_calculation(

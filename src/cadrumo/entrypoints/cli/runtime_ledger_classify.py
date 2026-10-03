@@ -7,18 +7,22 @@ from typing import cast
 
 import typer
 
-from ...application.ledger.classify_operation import (
+from ...application.ledger.classify_requests import (
     LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
-    LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
-    LEDGER_OPERATOR_IVA_DEFINITION_ID,
-    LedgerClassifyOperationResult,
     LedgerClassifyPatch,
     LedgerClassifyPatchField,
     LedgerClassifyRequest,
+)
+from ...application.ledger.classify_result_contracts import (
+    LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
+    LedgerClassifyOperationResult,
+)
+from ...application.ledger.models import ManualLedgerTransactionPatch
+from ...application.ledger.operator_iva_contracts import (
+    LEDGER_OPERATOR_IVA_DEFINITION_ID,
     LedgerOperatorIvaRequest,
     LedgerOperatorIvaResult,
 )
-from ...application.ledger.models import ManualLedgerTransactionPatch
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.enums import BusinessClassification
 from .ledger_classify_correlation import (

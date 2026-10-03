@@ -14,8 +14,9 @@ from uuid import UUID, uuid4
 import pytest
 import typer
 
-from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection, write_document
+from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.runtime_frame_io import write_document
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -108,6 +109,7 @@ def _contract() -> OperationPublicDefinitionContractV1:
         browser_session_factory=unused_port,
         operator_scope_ports=unused_port,
         censal_fetch_port=unused_port,
+        provider_preflight=lambda _profile_id, _operation: None,
     )
     return build_censal_operation_registration(definition).contract
 

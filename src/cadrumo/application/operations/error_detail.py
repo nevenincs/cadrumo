@@ -22,6 +22,7 @@ result read with the definition's own RESULT authority.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from enum import StrEnum
 from functools import cache
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
@@ -36,6 +37,7 @@ from ...core.errors.error_codes import (
 )
 from ...core.errors.hierarchy import CadrumoError
 from ...core.errors.record_fault import internal_record_fault_context
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationLifecycle, OperationTerminalCondition
 from ..cli_exception_preconditions import cli_exception_envelope_view, nested_terminal_precondition_verdict
@@ -46,10 +48,15 @@ from .frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from .registry import OperationRegistry, OperationSchemaIdentityV1
+from .registry import OperationPublicDefinitionContractV1, OperationRegistry, OperationSchemaIdentityV1
 
 if TYPE_CHECKING:
-    from .persistence.journal import OperationObservationReader, OperationSecureReferenceStore
+    from .models import OperationTerminalReceipt
+    from .persistence.journal import (
+        OperationObservationReader,
+        OperationPersistedSnapshot,
+        OperationSecureReferenceStore,
+    )
 
 #: Public schema identity under which a refused or failed operation's detail is read.
 OPERATION_ERROR_DETAIL_SCHEMA_ID: Final[str] = "operation.error_detail"
@@ -205,13 +212,16 @@ def _refusal(code: OperationResultProjectionRefusalCode) -> OperationResultProje
     return OperationResultProjectionRefusalV1(code=code, requested_version=1, diagnostic_ref=None)
 
 
-async def resolve_operation_error_detail(
+@dataclass(frozen=True, slots=True)
+class _TerminalErrorDetailSnapshot:
+    snapshot: OperationPersistedSnapshot
+    receipt: OperationTerminalReceipt
+
+
+async def _terminal_snapshot_or_refusal(
     reader: OperationObservationReader,
-    registry: OperationRegistry,
-    operands: OperationSecureReferenceStore,
     request: OperationResultProjectionRequestV1,
-) -> OperationResultProjectionSuccessV1[OperationErrorDetailV1] | OperationResultProjectionRefusalV1:
-    """Release one refused or failed operation's stored detail, or a typed refusal."""
+) -> _TerminalErrorDetailSnapshot | OperationResultProjectionRefusalV1:
     from .persistence.journal import OperationPersistedSnapshot
     from .projection_services import read_snapshot
 
@@ -225,6 +235,14 @@ async def resolve_operation_error_detail(
         return _refusal(OperationResultProjectionRefusalCode.OPERATION_NOT_TERMINAL)
     if snapshot.revision != request.terminal_revision:
         return _refusal(OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION)
+    return _TerminalErrorDetailSnapshot(snapshot=snapshot, receipt=receipt)
+
+
+def _contract_or_refusal(
+    snapshot: OperationPersistedSnapshot,
+    registry: OperationRegistry,
+    request: OperationResultProjectionRequestV1,
+) -> OperationPublicDefinitionContractV1 | OperationResultProjectionRefusalV1:
     try:
         contract = registry.lookup_public_registration(snapshot.identity.definition_id).contract
     except Exception:
@@ -234,6 +252,13 @@ async def resolve_operation_error_detail(
         or request.definition_contract_digest != contract.definition_contract_digest
     ):
         return _refusal(OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH)
+    return contract
+
+
+def _detail_shape_refusal(
+    receipt: OperationTerminalReceipt,
+    request: OperationResultProjectionRequestV1,
+) -> ContentDigest | OperationResultProjectionRefusalV1:
     if request.result_schema != operation_error_detail_schema():
         return _refusal(OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH)
     if (
@@ -241,11 +266,39 @@ async def resolve_operation_error_detail(
         or receipt.error_detail_ref is None
     ):
         return _refusal(OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE)
+    return receipt.error_detail_ref
+
+
+async def _read_encrypted_error_detail(
+    operands: OperationSecureReferenceStore,
+    reference: ContentDigest,
+) -> OperationErrorDetailV1 | OperationResultProjectionRefusalV1:
     try:
-        stored = await operands.resolve(receipt.error_detail_ref, OperationErrorDetailV1)
-        detail = OperationErrorDetailV1.model_validate(stored.model_dump(mode="python"))
+        stored = await operands.resolve(reference, OperationErrorDetailV1)
+        return OperationErrorDetailV1.model_validate(stored.model_dump(mode="python"))
     except Exception:
         return _refusal(OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE)
+
+
+async def resolve_operation_error_detail(
+    reader: OperationObservationReader,
+    registry: OperationRegistry,
+    operands: OperationSecureReferenceStore,
+    request: OperationResultProjectionRequestV1,
+) -> OperationResultProjectionSuccessV1[OperationErrorDetailV1] | OperationResultProjectionRefusalV1:
+    """Release one refused or failed operation's stored detail, or a typed refusal."""
+    terminal = await _terminal_snapshot_or_refusal(reader, request)
+    if isinstance(terminal, OperationResultProjectionRefusalV1):
+        return terminal
+    contract = _contract_or_refusal(terminal.snapshot, registry, request)
+    if isinstance(contract, OperationResultProjectionRefusalV1):
+        return contract
+    reference = _detail_shape_refusal(terminal.receipt, request)
+    if isinstance(reference, OperationResultProjectionRefusalV1):
+        return reference
+    detail = await _read_encrypted_error_detail(operands, reference)
+    if isinstance(detail, OperationResultProjectionRefusalV1):
+        return detail
     return OperationResultProjectionSuccessV1[OperationErrorDetailV1](
         result_schema=operation_error_detail_schema(),
         definition_contract_digest=contract.definition_contract_digest,

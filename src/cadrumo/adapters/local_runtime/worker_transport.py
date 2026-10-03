@@ -7,8 +7,11 @@ from pathlib import Path
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .posix import PosixRuntimeChannel, PosixRuntimeEndpoint, posix_owner_uid
-from .windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
+from .posix import posix_owner_uid
+from .posix_channel import PosixRuntimeChannel
+from .posix_endpoint import PosixRuntimeEndpoint
+from .windows import WindowsRuntimeEndpoint
+from .windows_channel import WindowsRuntimeChannel
 
 WorkerChannel = WindowsRuntimeChannel | PosixRuntimeChannel
 WorkerEndpoint = WindowsRuntimeEndpoint | PosixRuntimeEndpoint

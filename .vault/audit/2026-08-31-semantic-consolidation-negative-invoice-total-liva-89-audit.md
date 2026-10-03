@@ -3,14 +3,49 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:73a9c13df06407c6941f73b88d45bb00f4d78e09013c55d108bf61927b3b5626'
+body_hash: 'sha256:f92e25686abe15394944a2bacb037f7d42c586b2b0a85c6f6e6b28eb793cfb4f'
 related: []
 ---
 
 # `semantic-consolidation` audit: `negative invoice total liva 89`
 
+## Scope
+
+Assess whether the negative invoice total observed for LIVA 89 is a legitimate transaction or a defect, grounded in the code and regulation.
+
+## Findings
+The two clauses are not the same finding and should not be ruled on together.
+
+**The rectificativa form is a restriction, not necessarily a defect.** Art. 15.5
+permits either the signed difference or the post-correction absolute values. A
+non-negative model supports the absolute form only. That is narrower than the
+regulation allows but it is a form the regulation permits, so an operator can
+always comply -- at the cost of being unable to record a rectificativa the way
+their counterparty may have issued it.
+
+**The art. 15.2 netting case looks like a genuine gap.** That paragraph produces
+an ORDINARY invoice for a later supply, whose result the regulation explicitly
+allows to be negative. There is no absolute form to fall back on: the document
+is what it is, and its total is below zero. A non-negative `grand_total` cannot
+represent it.
+
+## Recommendations
+The bounds were NOT removed. Widening what the invoice model accepts changes
+what the application will carry into a filing, on a regulated surface, and the
+`no-silent-under-declaration` companion cuts both ways here -- a negative total
+admitted carelessly is as much an error as one refused wrongly.
+
+The ruling needed is narrow:
+
+1. Does the product intend to support the signed-difference rectificativa form,
+   or require the absolute form (art. 15.5 permits either)?
+2. Is the art. 15.2 netted-return invoice in scope? If yes, `grand_total` at
+   minimum must admit a negative value, and the arithmetic validator and every
+   downstream aggregation need re-examining for the same assumption.
+
+Question 2 is the one that decides whether this is a restriction or a defect.
 ## Provenance
 
 Agent-authored from the BUNDLED consolidated corpus. Every quotation below was
@@ -66,37 +101,3 @@ difference.
 la rectificación determine una minoración de las cuotas inicialmente
 repercutidas", with art. 89.Uno routing base-imponible modifications through
 art. 80.
-
-## Assessment
-
-The two clauses are not the same finding and should not be ruled on together.
-
-**The rectificativa form is a restriction, not necessarily a defect.** Art. 15.5
-permits either the signed difference or the post-correction absolute values. A
-non-negative model supports the absolute form only. That is narrower than the
-regulation allows but it is a form the regulation permits, so an operator can
-always comply -- at the cost of being unable to record a rectificativa the way
-their counterparty may have issued it.
-
-**The art. 15.2 netting case looks like a genuine gap.** That paragraph produces
-an ORDINARY invoice for a later supply, whose result the regulation explicitly
-allows to be negative. There is no absolute form to fall back on: the document
-is what it is, and its total is below zero. A non-negative `grand_total` cannot
-represent it.
-
-## What is needed, and what was deliberately not done
-
-The bounds were NOT removed. Widening what the invoice model accepts changes
-what the application will carry into a filing, on a regulated surface, and the
-`no-silent-under-declaration` companion cuts both ways here -- a negative total
-admitted carelessly is as much an error as one refused wrongly.
-
-The ruling needed is narrow:
-
-1. Does the product intend to support the signed-difference rectificativa form,
-   or require the absolute form (art. 15.5 permits either)?
-2. Is the art. 15.2 netted-return invoice in scope? If yes, `grand_total` at
-   minimum must admit a negative value, and the arithmetic validator and every
-   downstream aggregation need re-examining for the same assumption.
-
-Question 2 is the one that decides whether this is a restriction or a defect.

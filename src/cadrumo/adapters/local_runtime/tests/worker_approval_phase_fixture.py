@@ -21,7 +21,8 @@ from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-from ..framing import VerifiedRuntimeConnection, read_document, write_document, write_secret
+from ..framing import VerifiedRuntimeConnection
+from ..runtime_frame_io import read_document, write_document, write_secret
 from ..windows import WindowsRuntimeEndpoint
 from ..worker_authorization import worker_authorization_namespace
 from ..worker_authorization_client import WorkerAuthorizationClient

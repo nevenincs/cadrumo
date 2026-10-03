@@ -8,7 +8,7 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.modelo.filing_record_import_operation import (
+from cadrumo.application.modelo.filing_record_import_contracts import (
     MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID

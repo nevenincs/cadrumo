@@ -148,7 +148,7 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
         def provider_preflight(profile_id_arg: UUID, pinned_authority: PinnedAuthorityOperation) -> None:
             preflight_calls.append((profile_id_arg, pinned_authority))
 
-        def composition_factory(_output_root: Path) -> FiledHistoryComposition:
+        def composition_factory(output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
             return cast(FiledHistoryComposition, composition)
 
         def unused_sync_run_repository_factory() -> SyncRunRecordRepositoryProtocol:

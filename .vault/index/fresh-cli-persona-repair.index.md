@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#fresh-cli-persona-repair'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f62eedcd7b1f2e046f96a0158fdabfd2f3054dd7c29bbc705a21fbb05f36cfc9'
+body_hash: 'sha256:c7620a725d602743590f36955ec5429efb6af923c7f503c66be58c133ce61982'
 related:
-  - '[[2026-06-04-fresh-cli-persona-repair-adr]]'
   - '[[2026-06-04-fresh-cli-persona-repair-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#fresh-cli-persona-repair`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-fresh-cli-persona-repair-adr` - `fresh-cli-persona-repair` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

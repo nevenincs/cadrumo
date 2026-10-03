@@ -13,29 +13,22 @@ from ...core.hashing import canonical_json_bytes
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import profile_operation_subject
 from ...core.time.utc import validate_utc_aware
 from ...domain.buckets.event import BucketEventId
 from ...domain.modelos.filing_text import ModeloActorLabel
 from ..operations.access_resolution import (
-    ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_period_independent_admission,
+    bind_replayed_period_independent_access,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -117,16 +110,23 @@ class ModeloReconciliationListProjection(BaseModel):
         """Reject cross-profile, out-of-scope, duplicate, or reordered rows."""
         if self.reconciliation_count != len(self.reconciliations):
             raise ValueError("reconciliation history count does not match its rows")
-        if any(row.bucket_id != str(self.profile_id) for row in self.reconciliations):
-            raise ValueError("reconciliation history contains another profile")
-        if self.work_unit_id is not None and any(row.work_unit_id != self.work_unit_id for row in self.reconciliations):
-            raise ValueError("reconciliation history exceeds its requested work unit")
+        _require_reconciliation_list_filter(self)
         if len({row.event_id for row in self.reconciliations}) != len(self.reconciliations):
             raise ValueError("reconciliation history repeats an event")
         expected = tuple(sorted(self.reconciliations, key=lambda row: (row.reconciled_at, row.event_id)))
         if self.reconciliations != expected:
             raise ValueError("reconciliation history is not in canonical order")
         return self
+
+
+def _require_reconciliation_list_filter(projection: ModeloReconciliationListProjection) -> None:
+    """Validate profile and optional work-unit scope before identity and order."""
+    if any(row.bucket_id != str(projection.profile_id) for row in projection.reconciliations):
+        raise ValueError("reconciliation history contains another profile")
+    if projection.work_unit_id is not None and any(
+        row.work_unit_id != projection.work_unit_id for row in projection.reconciliations
+    ):
+        raise ValueError("reconciliation history exceeds its requested work unit")
 
 
 class ModeloReconciliationListExecutor:
@@ -170,19 +170,13 @@ class ModeloReconciliationListExecutor:
 
 def build_modelo_reconciliation_list_definition() -> OperationDefinition:
     """Declare a credential-free, recorded, nonmutating history read."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,
         request_type=ModeloReconciliationListRequest,
         result_type=ModeloReconciliationListProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloReconciliationListRequest,
-            executor_type=ModeloReconciliationListExecutor,
-            build=ModeloReconciliationListExecutor,
-        ),
-        phase_codes=(MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloReconciliationListExecutor,
+        build=ModeloReconciliationListExecutor,
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
@@ -193,26 +187,14 @@ def build_modelo_reconciliation_list_registration(
     """Require unrestricted all-period consent for reconciliation history."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != definition.definition_id or not isinstance(
-            payload, ModeloReconciliationListRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            require_period_independent_admission(
-                admitted, profile_id=context.profile_id, definition_id=request.definition_id
-            )
-        return bind_operation_access_profile(
-            context,
-            LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            periods=frozenset(),
+        require_access_request_profile_payload(
+            request,
+            definition_id=definition.definition_id,
+            payload_type=ModeloReconciliationListRequest,
+            access_profile_id=context.profile_id,
+        )
+        return bind_replayed_period_independent_access(
+            context, LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS, definition_id=request.definition_id
         )
 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(

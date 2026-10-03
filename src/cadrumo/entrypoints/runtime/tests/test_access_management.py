@@ -152,6 +152,7 @@ def test_native_human_lock_resume_selected_grant_and_revoke_key(tmp_path: Path) 
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)

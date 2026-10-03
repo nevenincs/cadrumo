@@ -30,8 +30,10 @@ from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation imp
 )
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateExecutor,
+)
+from cadrumo.application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculatePublicResultV2,
     ModeloWorkCalculateRequest,

@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#marcos-214'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5678d01ecc0e356b81292e2bb3fbefff366dd6ba59f192a6dffe45063e464e6a'
+body_hash: 'sha256:be13d41d8b3b4e2a160f026ca26003bec8b21ca283d9ab5337cb47ffc50fb5c7'
 related:
-  - '[[2026-06-04-marcos-214-adr]]'
   - '[[2026-06-04-marcos-214-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#marcos-214`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-marcos-214-adr` - `marcos-214` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

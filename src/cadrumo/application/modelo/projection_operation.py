@@ -25,6 +25,7 @@ from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDAT
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_payload
 from ..operations.registry import (
     ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
@@ -537,11 +538,9 @@ def _registration(
     result_type: type[ModeloProjectOperationProjection] | type[ModeloCompareOperationProjection],
 ) -> OperationPublicDefinitionRegistrationV1:
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        if request.definition_id != definition.definition_id or type(request.payload) is not request_type:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        payload = request.payload
-        if not isinstance(payload, ModeloProjectOperationRequest | ModeloCompareOperationRequest):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        payload = require_access_request_payload(
+            request, definition_id=definition.definition_id, payload_type=request_type, exact_type=True
+        )
         # The migration traverses the entire stored revision catalogue, not
         # only the displayed filing years, so each action needs all periods.
         resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())

@@ -101,9 +101,11 @@ class _Factory:
     def __init__(self, *, bucket_id: str | None = None) -> None:
         self.bucket_id = bucket_id
         self.requested: list[str] = []
+        self.operations: list[object] = []
 
-    def __call__(self, *, bucket_id: str) -> ModeloIvaWalletSeedPorts:
+    def __call__(self, *, bucket_id: str, operation: object) -> ModeloIvaWalletSeedPorts:
         self.requested.append(bucket_id)
+        self.operations.append(operation)
         selected = self.bucket_id if self.bucket_id is not None else bucket_id
         return cast(
             ModeloIvaWalletSeedPorts,
@@ -332,6 +334,7 @@ def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkey
     assert result_ref == "result-reference"
     assert authority.coordinates == [("303", 2024, "4T")]
     assert factory.requested == [str(_PROFILE)]
+    assert factory.operations == [authority]
     assert seen[0]["bucket_id"] == str(_PROFILE)
     assert seen[0]["operation"] is authority
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
@@ -471,6 +474,7 @@ def test_override_executor_uses_pinned_authority_and_refuses_ungrounded_decision
     assert result_ref == "result-reference"
     assert authority.coordinates == [("303", 2024, "4T")]
     assert factory.requested == [str(_PROFILE)]
+    assert factory.operations == [authority]
     assert seen[0]["bucket_id"] == str(_PROFILE)
     assert seen[0]["operation"] is authority
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]

@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:2ddb13042f7b9aede4b6ce4ee3da2c10243c30611f5f6b24861ade5d1c890c22'
 related:
   - "[[2026-08-11-censal-sync-control-architecture-research]]"
-  - "[[2026-08-09-cli-action-envelope-hardening-adr]]"
   - "[[2026-08-08-sync-control-surface-adr]]"
   - "[[2026-06-10-cli-envelope-notice-standardisation-adr]]"
   - "[[2026-06-30-agent-harness-adr]]"

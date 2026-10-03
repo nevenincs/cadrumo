@@ -13,7 +13,7 @@ if __name__ == "__main__":
     # business seeing. ``setdefault`` leaves an operator's explicit value alone.
     os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
 
-    from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+    from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
     from ...application.runtime.contracts import RuntimeRefusalError
     from ...core.async_cleanup import AsyncResourceCleanupError
     from .launcher import TUI_MODULE_ARGUMENT_ERROR_EXIT_CODE, TuiModuleArgumentError, run_module

@@ -13,7 +13,7 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.modelo.declaration_targets import DeclarationTarget
 from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow, declaration_list_rows
-from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language, tr

@@ -165,15 +165,24 @@ def ratio_unit(data_type: str, maximum: Decimal | None) -> ModeloEditRatioUnit |
     return ModeloEditRatioUnit.UNDECLARED
 
 
+def _casilla_fraction_digits(family: ModeloEditValueFamily, is_money: bool) -> int | None:
+    fraction_digits: int | None = MONEY_FRACTION_DIGITS if is_money else None
+    if family is ModeloEditValueFamily.INTEGER:
+        fraction_digits = 0
+    return fraction_digits
+
+
+def _canonical_grammar_bound(value: Decimal | None) -> str | None:
+    return None if value is None else canonical_decimal_string(value)
+
+
 def casilla_value_grammar(casilla: CasillaDefinition) -> ModeloEditValueGrammarV1:
     """Project one casilla definition onto its entry grammar."""
     data_type = str(casilla.data_type)
     family, channel = _casilla_family_and_channel(data_type)
     constraints = casilla.constraints
     is_money = data_type == CasillaDataType.MONEY
-    fraction_digits: int | None = MONEY_FRACTION_DIGITS if is_money else None
-    if family is ModeloEditValueFamily.INTEGER:
-        fraction_digits = 0
+    fraction_digits = _casilla_fraction_digits(family, is_money)
     maximum = constraints.max_value if constraints is not None else None
     minimum = constraints.min_value if constraints is not None else None
     return ModeloEditValueGrammarV1(
@@ -182,8 +191,8 @@ def casilla_value_grammar(casilla: CasillaDefinition) -> ModeloEditValueGrammarV
         channel=channel,
         max_fraction_digits=fraction_digits,
         sign=constraints.sign if constraints is not None else CasillaSignConstraint.ANY,
-        minimum=None if minimum is None else canonical_decimal_string(minimum),
-        maximum=None if maximum is None else canonical_decimal_string(maximum),
+        minimum=_canonical_grammar_bound(minimum),
+        maximum=_canonical_grammar_bound(maximum),
         choices=(
             tuple(ModeloEditChoiceV1(code=token) for token in constraints.enum)
             if constraints is not None and constraints.enum is not None

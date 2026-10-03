@@ -20,7 +20,7 @@ from cadrumo.application.modelo.action_errors import (
 )
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
 from cadrumo.application.modelo.filing_actions import get_verification_report, list_verification_reports
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
 from cadrumo.domain.buckets.event import BucketEventType
@@ -122,7 +122,7 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
         pytest.raises(CalculationRevisionPersistenceError, match="disagrees with its parent WorkUnit"),
         bundled_indexed_authority().operation() as operation,
     ):
-        verify_modelo_revision(
+        verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_repositories_for_test(repos),
@@ -421,7 +421,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     )
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_repositories_for_test(repos),
@@ -430,7 +430,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is False
     assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
@@ -508,7 +508,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
-        first = verify_modelo_revision(
+        first = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_repositories_for_test(repos),
@@ -517,7 +517,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert first.granted_verificado_completo is True
     with bundled_indexed_authority().operation() as operation:
         refreshed_state = get_calculation_revision(
@@ -549,7 +549,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
 
     # Re-verify at a LATER clock (T3): must collapse, not refuse.
     with bundled_indexed_authority().operation() as operation:
-        second = verify_modelo_revision(
+        second = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_repositories_for_test(repos),
@@ -558,7 +558,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
             clock=T3,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     # Same content-addressed report; anti-tautology — run_at stays T2, NOT re-stamped to T3.
     assert second.verification_report_id == first.verification_report_id
@@ -638,7 +638,7 @@ def test_verify_refuses_non_draft_revision_with_no_granting_report(repos: Repos)
         pytest.raises(CalculationRevisionStateError, match=r"state|DRAFT|draft"),
         bundled_indexed_authority().operation() as operation,
     ):
-        verify_modelo_revision(
+        verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_repositories_for_test(repos),

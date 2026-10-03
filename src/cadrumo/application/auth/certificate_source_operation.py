@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -274,7 +273,7 @@ def _certificate_source_disclosures(
             projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
             category=DisclosureCategory.OPERATION_METADATA,
         )
-        disclosures = frozenset((cast(Any, disclosure),))
+        disclosures = frozenset((disclosure,))
     elif context.action is AccessAction.RESULT:
         schema = context.contract.result_schema
         if schema is None or schema.schema_id != request.definition_id + ".result":
@@ -284,7 +283,7 @@ def _certificate_source_disclosures(
             projection_id=schema.schema_id,
             category=DisclosureCategory.PROFILE_VALUES,
         )
-        disclosures = frozenset((cast(Any, disclosure),))
+        disclosures = frozenset((disclosure,))
     return disclosures
 
 

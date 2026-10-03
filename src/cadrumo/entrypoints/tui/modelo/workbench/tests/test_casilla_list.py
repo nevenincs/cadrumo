@@ -29,7 +29,8 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ....components.theme import install_cadrumo_themes
-from ..casilla_list import CasillaList, CasillaListEntry, CasillaListHeading, CasillaListItem, CasillaListNote
+from ..casilla_list import CasillaList
+from ..casilla_list_models import CasillaListEntry, CasillaListHeading, CasillaListItem, CasillaListNote
 from ..vocabulary import origin_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

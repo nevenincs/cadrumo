@@ -42,7 +42,7 @@ from ..operations.public_mirror import (
     restore_public_mirror,
 )
 from ..operations.public_period import PublicPeriod
-from ..workbench_generation_projection import PublicCasillaConstraints, PublicModeloVerificationFinding
+from ..workbench_generation_modelo_contracts import PublicCasillaConstraints, PublicModeloVerificationFinding
 from .calculation_report import CalculationReportRowRole
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1

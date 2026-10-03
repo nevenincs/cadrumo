@@ -22,7 +22,7 @@ import keyring
 import keyring.backends.null
 import keyring.core
 
-from cadrumo.adapters.local_runtime.posix import PosixRuntimeEndpoint
+from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
@@ -158,7 +158,6 @@ def sequence_runtime(root: Path) -> Generator[RuntimeTransportServer]:
             stop=stop,
             profiles=profiles,
             boot_id=boot,
-            owner_stop_available=False,
         )
         context = copy_context()
 

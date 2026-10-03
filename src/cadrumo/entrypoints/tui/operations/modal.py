@@ -25,7 +25,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,

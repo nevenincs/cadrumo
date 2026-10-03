@@ -18,7 +18,7 @@ from ..calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
 )
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 
 _MATERNIDAD_FORMULA_SPEC_ID = "lirpf-art-81-maternity-formula-spec"
@@ -39,11 +39,7 @@ def _resolve_maternidad_formula_spec(
 ) -> tuple[GovernedFactSource, date, dict[str, str]]:
     """Resolve and validate the dated mapping that names maternity operands."""
     effective_date = date(filing_year, 12, 31)
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "maternity formula specification requires an explicit authority operation or scope",
-        )
+    authority = require_governed_fact_authority(authority, subject="maternity formula specification")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_MATERNIDAD_FORMULA_SPEC_ID,

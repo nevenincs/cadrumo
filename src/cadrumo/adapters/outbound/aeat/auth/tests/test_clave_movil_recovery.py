@@ -93,6 +93,14 @@ async def test_resume_recaptures_cookies_rotated_by_live_probe(tmp_path: Path, k
             '<span id="spanCodigoVerificacion">ABC</span>',
             ClaveMovilPageState.WAITING,
         ),
+        (
+            # AEAT's waiting page as served on 2026-10-03: the code moved out of #spanCodigoVerificacion.
+            "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/ObtenerClaveMovil?ref=/wlpl/TEWV-CORE/ResumenVlt",
+            '<div id="divEsperaActiva"><div id="divRegistradoActivado"><div class="negrita codigoVerificacion">'
+            'Código</div><div class="negrita codigoVerificacion fuenteTamanyo3em">ABC</div></div>'
+            '<input type="button" id="botonCancelar"></div>',
+            ClaveMovilPageState.WAITING,
+        ),
         ("https://www6.agenciatributaria.gob.es/login", "Petición pendiente", ClaveMovilPageState.PENDING),
     ],
 )

@@ -19,17 +19,15 @@ from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
+)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_classification import bulk_classify_from_csv
@@ -40,7 +38,7 @@ from .commit_fence import (
 )
 from .models import BulkClassifyResult
 from .protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access
 
 LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID = "ledger.classify.bulk"
 LEDGER_BULK_CLASSIFY_VALIDATION_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
@@ -229,19 +227,13 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
 
 def build_ledger_bulk_classify_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
     """Declare exact-profile CLI classification with protected request and result."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
         request_type=LedgerBulkClassifyRequest,
         result_type=LedgerBulkClassifyExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerBulkClassifyRequest,
-            executor_type=LedgerBulkClassifyExecutor,
-            build=lambda: LedgerBulkClassifyExecutor(ports_factory),
-        ),
-        phase_codes=(LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerBulkClassifyExecutor,
+        build=lambda: LedgerBulkClassifyExecutor(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_BULK_CLASSIFY_VALIDATION_REFUSAL_CODE}),
     )
@@ -257,11 +249,7 @@ def resolve_ledger_bulk_classify_access(
         or not isinstance(request.payload, LedgerBulkClassifyRequest)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_bulk_classify_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

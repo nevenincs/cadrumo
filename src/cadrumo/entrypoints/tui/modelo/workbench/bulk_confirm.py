@@ -40,7 +40,8 @@ from .....application.modelo.work_form_models import (
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from ...components.theme import tokenised
-from .casilla_list import CasillaListEntry, value_text
+from .casilla_list_models import CasillaListEntry
+from .casilla_list_values import value_text
 from .dialog_width import fit_dialog_width
 from .status_bar import StatusBar
 

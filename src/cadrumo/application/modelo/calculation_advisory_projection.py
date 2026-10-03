@@ -194,6 +194,26 @@ class PrintedBoxNumberSnapshot(BaseModel):
     number: str = Field(min_length=1, max_length=32)
 
 
+def _fallback_recargo_legal_ref(
+    posture: ModeloWorkDeadlinePosture | None, operation: PinnedAuthorityOperation
+) -> str | None:
+    return (
+        modelo_rendering_value("extemporaneous_recargo.legal_ref", authority=operation)
+        if posture is not None and posture.days_overdue is not None and posture.conditional_recargo_preview is None
+        else None
+    )
+
+
+def _diagnostic_printed_box_numbers(
+    named: tuple[CasillaId, ...], boxes: PrintedBoxes | None
+) -> tuple[PrintedBoxNumberSnapshot, ...]:
+    return tuple(
+        PrintedBoxNumberSnapshot(casilla_id=casilla_id, number=number)
+        for casilla_id in named
+        if boxes is not None and (number := boxes.number(str(casilla_id))) is not None
+    )
+
+
 class ModeloCalculationAdvisories(BaseModel):
     """All calculation-only presentation facts frozen at the admitted writer.
 
@@ -222,11 +242,7 @@ class ModeloCalculationAdvisories(BaseModel):
     ) -> Self:
         """Capture all advisories under the calculation's pinned registry lease."""
         posture = modelo_work_deadline_posture(result.work_unit, operation=operation)
-        fallback_ref = (
-            modelo_rendering_value("extemporaneous_recargo.legal_ref", authority=operation)
-            if posture is not None and posture.days_overdue is not None and posture.conditional_recargo_preview is None
-            else None
-        )
+        fallback_ref = _fallback_recargo_legal_ref(posture, operation)
         named = tuple(dict.fromkeys(row.casilla_id for row in result.source_diagnostics if row.casilla_id is not None))
         boxes = (
             snapshot_printed_boxes(
@@ -248,11 +264,7 @@ class ModeloCalculationAdvisories(BaseModel):
             m210_plazo=tuple(ModeloM210PlazoAdvisoryV1.from_resolution(row) for row in result.plazo_resolutions),
             deadline=ModeloWorkDeadlinePostureSnapshot.from_posture(posture) if posture is not None else None,
             fallback_recargo_legal_ref=fallback_ref,
-            printed_boxes=tuple(
-                PrintedBoxNumberSnapshot(casilla_id=casilla_id, number=number)
-                for casilla_id in named
-                if boxes is not None and (number := boxes.number(str(casilla_id))) is not None
-            ),
+            printed_boxes=_diagnostic_printed_box_numbers(named, boxes),
         )
 
     def to_diagnostics(self) -> tuple[CalculationSourceDiagnostic, ...]:

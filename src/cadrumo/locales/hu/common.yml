@@ -2907,6 +2907,7 @@ tui:
     sessions_empty: Nincsenek aktuális munkamenetek.
     sessions_locked: 'Zárolt munkamenetek: {session_ids}'
     title: Profilhozzáférés
+    unknown: Ismeretlen
     view_automation: Automatizált hozzáférés megtekintése
   runtime_login:
     cancel: Mégse
@@ -2930,51 +2931,6 @@ tui:
     refused: A bejelentkezés elutasítva.
     submit: Bejelentkezés
     title: Bejelentkezés egy profilba
-  runtime_management:
-    availability:
-      available: Elérhető
-      refused: Elutasítva
-      unavailable: Nem érhető el
-      unknown: Ismeretlen
-      unsupported: Nem támogatott
-    busy: A helyi futtatókörnyezet állapotának ellenőrzése…
-    disable: Kézi indítás
-    enable: Indítás bejelentkezéskor
-    kind:
-      linux_user_service: Linux felhasználói szolgáltatás
-      macos_agent: macOS indítóügynök
-      windows_task: Windows ütemezett feladat
-    labels:
-      binding_matches: Ehhez a telepítéshez tartozik
-      listener: Figyelő végpont
-      login_autostart: Bejelentkezéskor indul
-      manager_availability: Kezelő elérhetősége
-      manager_kind: Kezelő típusa
-      process_state: Folyamat állapota
-      provisioned: Kiépítve
-    listener:
-      draining: Leállás alatt
-      ready: Kész
-      refused: Elutasítva
-      unavailable: Nem érhető el
-      unknown: Ismeretlen
-    not_reported: Nincs adat
-    open: Futtatókörnyezet kezelése
-    open_help: A helyi futtatókörnyezet megtekintése, indítása és beállítása.
-    process:
-      running: Fut
-      starting: Indítás alatt
-      stopped: Leállítva
-      unknown: Ismeretlen
-    refused: A futtatókörnyezet állapotát nem sikerült megerősíteni.
-    start: Indítás
-    stop: Leállítás
-    stop_accepted: A leállítás elfogadva; a futtatókörnyezet leállóban van.
-    stop_cancel: Maradjon futásban
-    stop_confirm: Minden profil és feladat leállítása
-    stop_scope: Leállítja a megosztott futtatókörnyezetet minden profil és feladat
-      számára?
-    title: Helyi futtatókörnyezet kezelése
   search:
     action:
       classify_ledger: Nyilvántartás osztályozása

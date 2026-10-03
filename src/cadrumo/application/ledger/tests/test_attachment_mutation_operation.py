@@ -24,10 +24,13 @@ from ....application.ledger.attachment_mutation_operation import (
     LedgerDetachExecutor,
     LedgerDetachRequest,
 )
+from ....application.operations import profile_guard
 from ....application.operations.models import OperationRequest
 from ....application.operations.owner import OperationExecutorContext
 from ....application.operations.refusal_evidence import OperationRefusalEvidence
 from ....application.review.filter import LedgerReviewStatus
+from ....application.user_profile.access_contracts import AccessDenialCode
+from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.attachments.errors import AttachmentNotFoundError
 from ....domain.transactions.errors import TransactionValidationError
@@ -96,6 +99,8 @@ def _context(
     *,
     profile_id: UUID = _PROFILE,
     operation_id: operation_module.LedgerAttachmentOperationId = LEDGER_ATTACH_OPERATION_DEFINITION_ID,
+    identity_definition_id: operation_module.LedgerAttachmentOperationId | None = None,
+    phase_calls: list[str] | None = None,
 ):
     active = False
 
@@ -112,6 +117,8 @@ def _context(
 
     class Events:
         async def phase(self, phase: str) -> None:
+            if phase_calls is not None:
+                phase_calls.append(phase)
             assert phase == operation_id
 
         async def effect(self, effect: OperationEffect) -> None:
@@ -133,7 +140,7 @@ def _context(
         OperationExecutorContext,
         SimpleNamespace(
             identity=SimpleNamespace(
-                definition_id=operation_id,
+                definition_id=operation_id if identity_definition_id is None else identity_definition_id,
                 subject_ref=subject,
             ),
             authority_operation=object(),
@@ -200,7 +207,7 @@ async def test_attach_marks_unknown_then_updated_and_publishes_outside_commit(
         assert effects == [OperationEffect.UNKNOWN]
         return SimpleNamespace(bucket_event_ids=("e" * 64,))
 
-    monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "resolve_transaction_id", lambda _prefix, _ids: _TRANSACTION_ID)
     monkeypatch.setattr(operation_module, "attach_manual_transaction_evidence", attach)
     monkeypatch.setattr(operation_module, "_operation_projection", lambda *_args: _projection())
@@ -225,7 +232,7 @@ async def test_attach_canonical_validation_refusal_restores_none_effect(
     def attach(**_kwargs: object) -> object:
         raise TransactionValidationError("attachment reference is not valid")
 
-    monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "resolve_transaction_id", lambda _prefix, _ids: _TRANSACTION_ID)
     monkeypatch.setattr(operation_module, "attach_manual_transaction_evidence", attach)
 
@@ -248,7 +255,7 @@ async def test_attach_reverse_manifest_failure_is_known_partial_effect(
     def attach(**_kwargs: object) -> object:
         raise AttachmentNotFoundError("manifest disappeared after transaction commit")
 
-    monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "resolve_transaction_id", lambda _prefix, _ids: _TRANSACTION_ID)
     monkeypatch.setattr(operation_module, "attach_manual_transaction_evidence", attach)
 
@@ -272,7 +279,7 @@ async def test_detach_marks_unknown_then_updated_and_publishes_outside_commit(
         assert effects == [OperationEffect.UNKNOWN]
         return SimpleNamespace(bucket_event_ids=("e" * 64,))
 
-    monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "resolve_transaction_id", lambda _prefix, _ids: _TRANSACTION_ID)
     monkeypatch.setattr(operation_module, "detach_manual_transaction_attachments", detach)
     monkeypatch.setattr(
@@ -292,3 +299,36 @@ async def test_detach_marks_unknown_then_updated_and_publishes_outside_commit(
     assert action_calls[0]["bucket_id"] == str(_PROFILE)
     assert action_calls[0]["transaction_id"] == _TRANSACTION_ID
     assert action_calls[0]["attachment_ids"] == (_ATTACHMENT_ID,)
+
+
+@pytest.mark.asyncio
+async def test_attach_refuses_matching_wrong_definition_before_phase_or_ports(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    effects: list[OperationEffect] = []
+    phase_calls: list[str] = []
+    context = _context(
+        effects,
+        identity_definition_id=LEDGER_DETACH_OPERATION_DEFINITION_ID,
+        phase_calls=phase_calls,
+    )
+    request = _request().model_copy(update={"definition_id": LEDGER_DETACH_OPERATION_DEFINITION_ID})
+    ports_calls: list[str] = []
+
+    def active_bucket_must_not_be_read() -> str:
+        raise AssertionError("expected-definition refusal must precede the shared profile guard")
+
+    def unexpected_ports_factory(*, bucket_id: str, operation: object) -> LedgerActionPorts:
+        _ = operation
+        ports_calls.append(bucket_id)
+        raise AssertionError("expected-definition refusal must precede port composition")
+
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", active_bucket_must_not_be_read)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        await LedgerAttachExecutor(unexpected_ports_factory).execute(request, context)
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert phase_calls == []
+    assert ports_calls == []
+    assert effects == []

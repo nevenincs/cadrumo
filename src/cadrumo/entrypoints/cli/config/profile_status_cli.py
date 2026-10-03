@@ -6,7 +6,7 @@ from uuid import UUID
 
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.view_operation import ProfileViewPageKind, ProfileViewStatusItem
 from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id

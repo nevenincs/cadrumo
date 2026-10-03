@@ -86,6 +86,17 @@ orphan the file member nested inside it.
 
 
 _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
+    _location(
+        StorageCategory.CHROMIUM_DATA,
+        "chromium-data",
+        consumer_module="adapters/outbound/aeat/browser/session.py",
+        settings_field="cadrumo_chromium_data_root",
+        # Browser owners remove their own working directories on close.
+        # Generic reclaim must not remove profiles belonging to live browsers.
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
     # ── State substrate and identity ────────────────────────────────────────
     _location(
         StorageCategory.TOKENS,

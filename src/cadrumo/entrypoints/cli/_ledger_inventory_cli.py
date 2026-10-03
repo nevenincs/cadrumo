@@ -8,7 +8,7 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
-from ...application.inventory.registered_operation import (
+from ...application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,

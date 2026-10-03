@@ -183,7 +183,9 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             fecha = (self._settings.cadrumo_clave_movil_dni_fecha or "").strip()
             if not fecha:
                 raise ClaveMovilConfigurationError(
-                    "CADRUMO_CLAVE_MOVIL_DNI_FECHA is required for the non-QR DNI fallback (format YYYY-MM-DD).",
+                    "CADRUMO_CLAVE_MOVIL_DNI_FECHA (format YYYY-MM-DD) is required for the default "
+                    "app-request route with a DNI; set CADRUMO_CLAVE_PREFER_NON_QR=false to scan a QR "
+                    "code in a visible browser instead.",
                 )
             await type_text(surface.dni_fecha_input_selector, fecha)
         else:
@@ -191,7 +193,9 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             soporte = unwrap_optional_secret(self._settings.cadrumo_clave_movil_nie_soporte).strip()
             if not soporte:
                 raise ClaveMovilConfigurationError(
-                    "CADRUMO_CLAVE_MOVIL_NIE_SOPORTE is required for the non-QR NIE fallback.",
+                    "CADRUMO_CLAVE_MOVIL_NIE_SOPORTE is required for the default app-request route "
+                    "with a NIE; set CADRUMO_CLAVE_PREFER_NON_QR=false to scan a QR code in a visible "
+                    "browser instead.",
                 )
             await type_text(surface.nie_soporte_input_selector, soporte)
         await wait_for(surface.continue_button_visible_selector, timeout=self._navigation_timeout_ms)
@@ -221,30 +225,50 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
     async def _drive_clave_entry(self, page: BrowserPagePort, *, dni_nie: str, target_path: str) -> None:
         """Reach a challenge or accepted session from the state AEAT actually renders."""
         acted: set[ClaveMovilPageState] = set()
-        async with asyncio.timeout(self._navigation_timeout_ms / 1000):
-            while True:
-                state = await self._observe_clave_page(page, target_path)
-                await self._raise_if_pending_request_error(page)
-                if state in {
-                    ClaveMovilPageState.WAITING,
-                    ClaveMovilPageState.REPRESENTATION,
-                    ClaveMovilPageState.AUTHENTICATED,
-                }:
-                    return
-                if state is ClaveMovilPageState.QR and not self._settings.cadrumo_clave_prefer_non_qr:
-                    return
-                # Never send a second identity submission merely because its
-                # asynchronous response has not replaced the form yet.
-                if state not in acted:
-                    if state is ClaveMovilPageState.SELECTOR:
-                        await self._click_clave_movil_button(page)
-                    elif state is ClaveMovilPageState.QR:
-                        await page.click(self._clave_surface().non_qr_link_selector)
-                    elif state is ClaveMovilPageState.IDENTITY:
-                        await self._drive_non_qr_fallback(page, dni_nie)
-                    if state is not ClaveMovilPageState.UNKNOWN:
-                        acted.add(state)
-                await asyncio.sleep(0.2)
+        try:
+            async with asyncio.timeout(self._navigation_timeout_ms / 1000) as budget:
+                while True:
+                    state = await self._observe_clave_page(page, target_path)
+                    await self._raise_if_pending_request_error(page)
+                    if state in {
+                        ClaveMovilPageState.WAITING,
+                        ClaveMovilPageState.REPRESENTATION,
+                        ClaveMovilPageState.AUTHENTICATED,
+                    }:
+                        return
+                    if state is ClaveMovilPageState.QR and not self._settings.cadrumo_clave_prefer_non_qr:
+                        return
+                    # Never send a second identity submission merely because its
+                    # asynchronous response has not replaced the form yet.
+                    if state not in acted:
+                        if state is ClaveMovilPageState.SELECTOR:
+                            await self._click_clave_movil_button(page)
+                        elif state is ClaveMovilPageState.QR:
+                            await page.click(self._clave_surface().non_qr_link_selector)
+                        elif state is ClaveMovilPageState.IDENTITY:
+                            await self._drive_non_qr_fallback(page, dni_nie)
+                            # The submission issues AEAT's petition, which stays valid for the
+                            # whole approval window; page-load budgets must not cut it short.
+                            budget.reschedule(
+                                asyncio.get_running_loop().time() + self._settings.cadrumo_clave_movil_timeout_ms / 1000
+                            )
+                        if state is not ClaveMovilPageState.UNKNOWN:
+                            acted.add(state)
+                    await asyncio.sleep(0.2)
+        except TimeoutError as exc:
+            await self._cancel_pending_auth_request(page)
+            diagnostic_id = await self._dump_diagnostic(page, reason="clave-entry-state-not-reached")
+            raise ClaveMovilApprovalTimeoutError(
+                "AEAT Cl@ve Móvil did not reach a recognised waiting, representation or "
+                "authenticated state within the login budget.",
+                failure_mode=ClaveMovilFailureMode.PUSH_WAIT_STATE_NOT_REACHED,
+                context={
+                    "reason": "aeat-clave-movil-entry-state-not-reached",
+                    "current_url": _url_diagnostic(getattr(page, "url", "") or ""),
+                    "target_path": target_path,
+                    "diagnostic_id": diagnostic_id,
+                },
+            ) from exc
 
     async def _push_wait_state_signals(
         self,

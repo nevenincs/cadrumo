@@ -21,6 +21,7 @@ from typing import Protocol, runtime_checkable
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_revision_members import ConstructDefinition
 
 from ._validate_helpers import missing_refs as _missing_refs
 from .validate_evidence import EvidenceValidator
@@ -84,47 +85,81 @@ def validate_construct_closure(
     """
     failures: list[str] = []
     for construct in revision.constructs:
-        owner = f"construct {construct.id}"
-        failures.extend(_missing_refs(scope, owner, construct.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(scope, owner, construct.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_source_tier(scope, owner, construct.source_refs, "official_source_guidance"))
-        construct_legal_refs = set(construct.legal_refs)
-        construct_source_refs = set(construct.source_refs)
-        for kind, attr in CONSTRUCT_MEMBER_ATTRIBUTES.items():
-            known = member_objects[kind]
-            for member_id in getattr(construct, attr):
-                member = known.get(member_id)
-                if member is None:
-                    failures.append(f"{scope}: construct {construct.id!r} references unknown {kind} {member_id!r}")
-                    continue
-                if not isinstance(member, _ConstructMember):
-                    raise AttributeError(f"{kind} {member_id!r} does not expose legal_refs and source_refs")
-                # Every member kind in ``CONSTRUCT_MEMBER_ATTRIBUTES`` declares
-                # ``legal_refs`` and ``source_refs`` (verified across all 14
-                # kinds' classes: casilla, formula, parameter, binding,
-                # relation, export layout,
-                # extraction profile, cross-reference, workbook parity
-                # reference, verification expectation, application link,
-                # deadline window, filing schedule, dependency
-                # classification). ``getattr`` with no default, not a
-                # ``getattr(..., default=())`` reach-around: a member kind
-                # ever added here whose class does NOT declare the field
-                # must fail loud with ``AttributeError``, never silently
-                # under-count the construct's required grounding. The no-default
-                # form (rather than ``member.legal_refs``) is what lets this
-                # accept ``member_objects`` typed generically at this boundary.
-                member_legal_refs = set(member.legal_refs)
-                missing_legal = sorted(member_legal_refs.difference(construct_legal_refs))
-                if missing_legal:
-                    failures.append(
-                        f"{scope}: construct {construct.id!r} does not include legal refs "
-                        f"{missing_legal!r} required by {kind} {member_id!r}",
-                    )
-                member_source_refs = set(member.source_refs)
-                missing_sources = sorted(member_source_refs.difference(construct_source_refs))
-                if missing_sources:
-                    failures.append(
-                        f"{scope}: construct {construct.id!r} does not include source refs "
-                        f"{missing_sources!r} required by {kind} {member_id!r}",
-                    )
+        failures.extend(_construct_grounding_failures(scope, construct, legal_refs, source_refs, evidence))
+        failures.extend(_construct_member_failures(scope, construct, member_objects))
+    return failures
+
+
+def _construct_grounding_failures(
+    scope: str,
+    construct: ConstructDefinition,
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+) -> list[str]:
+    owner = f"construct {construct.id}"
+    failures = _missing_refs(scope, owner, construct.legal_refs, legal_refs, "legal")
+    failures.extend(_missing_refs(scope, owner, construct.source_refs, source_refs, "source"))
+    failures.extend(evidence.require_source_tier(scope, owner, construct.source_refs, "official_source_guidance"))
+    return failures
+
+
+def _construct_member_failures(
+    scope: str,
+    construct: ConstructDefinition,
+    member_objects: Mapping[str, Mapping[str, object]],
+) -> list[str]:
+    failures: list[str] = []
+    construct_legal_refs = set(construct.legal_refs)
+    construct_source_refs = set(construct.source_refs)
+    for kind, attr in CONSTRUCT_MEMBER_ATTRIBUTES.items():
+        known = member_objects[kind]
+        for member_id in getattr(construct, attr):
+            member = known.get(member_id)
+            if member is None:
+                failures.append(f"{scope}: construct {construct.id!r} references unknown {kind} {member_id!r}")
+                continue
+            if not isinstance(member, _ConstructMember):
+                raise AttributeError(f"{kind} {member_id!r} does not expose legal_refs and source_refs")
+            failures.extend(
+                _construct_member_grounding_failures(
+                    scope,
+                    construct,
+                    kind,
+                    member_id,
+                    member,
+                    construct_legal_refs,
+                    construct_source_refs,
+                )
+            )
+    return failures
+
+
+def _construct_member_grounding_failures(
+    scope: str,
+    construct: ConstructDefinition,
+    kind: str,
+    member_id: str,
+    member: _ConstructMember,
+    construct_legal_refs: set[str],
+    construct_source_refs: set[str],
+) -> list[str]:
+    # Every member kind in ``CONSTRUCT_MEMBER_ATTRIBUTES`` declares both refs.
+    # Reading them directly preserves loud refusal if a future member drops
+    # either required grounding field.
+    member_legal_refs = set(member.legal_refs)
+    missing_legal = sorted(member_legal_refs.difference(construct_legal_refs))
+    failures: list[str] = []
+    if missing_legal:
+        failures.append(
+            f"{scope}: construct {construct.id!r} does not include legal refs "
+            f"{missing_legal!r} required by {kind} {member_id!r}",
+        )
+    member_source_refs = set(member.source_refs)
+    missing_sources = sorted(member_source_refs.difference(construct_source_refs))
+    if missing_sources:
+        failures.append(
+            f"{scope}: construct {construct.id!r} does not include source refs "
+            f"{missing_sources!r} required by {kind} {member_id!r}",
+        )
     return failures

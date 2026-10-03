@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#ledger-evidence-atomicity'
 date: '2026-07-17'
-modified: '2026-07-19'
+modified: '2026-10-03'
 body_hash: 'sha256:d7209edca112faf550c51478b723bba4992a52bc43fadfb4d5f6792345e5cde2'
 related:
   - "[[2026-07-17-ledger-evidence-atomicity-plan]]"
-  - "[[2026-07-17-ledger-evidence-atomicity-adr]]"
   - "[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]"
+  - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---
 
 # `ledger-evidence-atomicity` audit: `ledger evidence durable-layer continuous-gate review`

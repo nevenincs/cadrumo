@@ -58,7 +58,7 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
-from ..casilla_list import CasillaListHeading
+from ..casilla_list_models import CasillaListHeading
 from ..header import missing_count
 from ..issue_projection import issue_lines
 from ..issue_scale import IssueLevel, IssueLine

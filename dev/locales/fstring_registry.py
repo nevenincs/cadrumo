@@ -649,7 +649,7 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
     """
     from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
     from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarSource
-    from cadrumo.application.modelo.declarations_workspace import (
+    from cadrumo.application.modelo.declarations_workspace_contracts import (
         DeclarationsLifecycleKind,
         DeclarationsWorkspaceAvailability,
     )

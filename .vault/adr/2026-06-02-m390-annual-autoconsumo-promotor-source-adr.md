@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m390-annual-autoconsumo-promotor-source'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:9b5ba853c26f4f590c8eeaebbf9272830ce8eea559bb9c700ff06284f88e49c7'
+modified: '2026-10-03'
+body_hash: 'sha256:5b16a4db2215e8276c6f485620579cb209014de134e79e404af2d8ceb2d1f969'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
@@ -55,9 +55,8 @@ Profile-sourced manual transcription is simpler to author (one binding entry, no
 
 Hand registry-authoring to coder1-2 (full M303↔M390 context). Single commit, ~5-7 TOML edits + 1 anti-tautology test.
 
-## Status
+## Carry decision relationship
 
-Accepted and in force. The `previous_filing`-over-quarterly-M303 annual fold-in this
 ADR establishes aligns to the canonical carry/fold-in direction in the PHASE ADRs (not
 a central apex doc): the future phase-2.3 (fold-in/carry) ADR unifies it with the one
 compensación-carry mechanism anchored on the foundational

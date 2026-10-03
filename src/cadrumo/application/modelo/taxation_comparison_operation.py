@@ -14,6 +14,7 @@ from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.period import Period
 from ...core.time.clock import now
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
@@ -25,14 +26,10 @@ from ..operations.access_resolution import (
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -166,19 +163,13 @@ class ModeloTaxationComparisonExecutor:
 
 def build_modelo_taxation_comparison_definition(factory: TaxationComparisonPortsFactory) -> OperationDefinition:
     """Declare a recorded, nonmutating, profile-bound calculation."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,
         request_type=ModeloTaxationComparisonRequest,
         result_type=ModeloTaxationComparisonProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloTaxationComparisonRequest,
-            executor_type=ModeloTaxationComparisonExecutor,
-            build=lambda: ModeloTaxationComparisonExecutor(factory),
-        ),
-        phase_codes=(MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloTaxationComparisonExecutor,
+        build=lambda: ModeloTaxationComparisonExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -189,29 +180,8 @@ def build_modelo_taxation_comparison_registration(
     """Bind one selected work period and the result disclosure to the profile."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != definition.definition_id or not isinstance(
-            payload, ModeloTaxationComparisonRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if context.authority_operation is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            periods = require_single_period_admission(
-                admitted, profile_id=context.profile_id, definition_id=request.definition_id
-            )
-        else:
-            ports = factory(bucket_id=str(payload.profile_id))
-            unit = ports.work_unit_reader.load().get(payload.work_unit_id)
-            if unit is None or unit.bucket_id != str(payload.profile_id) or unit.work_unit_id != payload.work_unit_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            periods = frozenset({unit.period})
+        payload = _require_taxation_comparison_request(request, context, definition)
+        periods = _taxation_comparison_periods(request, context, payload, factory)
 
         return bind_operation_access_profile(
             context,
@@ -226,6 +196,41 @@ def build_modelo_taxation_comparison_registration(
         public_result_type=ModeloTaxationComparisonProjection,
         access_resolver=resolve,
     )
+
+
+def _require_taxation_comparison_request(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    definition: OperationDefinition,
+) -> ModeloTaxationComparisonRequest:
+    payload = request.payload
+    if request.definition_id != definition.definition_id or not isinstance(payload, ModeloTaxationComparisonRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if context.authority_operation is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
+        str(payload.profile_id)
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
+
+
+def _taxation_comparison_periods(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    payload: ModeloTaxationComparisonRequest,
+    factory: TaxationComparisonPortsFactory,
+) -> frozenset[Period]:
+    admitted = context.admitted_request
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        return require_single_period_admission(
+            admitted, profile_id=context.profile_id, definition_id=request.definition_id
+        )
+    ports = factory(bucket_id=str(payload.profile_id))
+    unit = ports.work_unit_reader.load().get(payload.work_unit_id)
+    if unit is None or unit.bucket_id != str(payload.profile_id) or unit.work_unit_id != payload.work_unit_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    return frozenset({unit.period})
 
 
 __all__ = [

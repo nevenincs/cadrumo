@@ -30,10 +30,10 @@ from .....application.modelo.export_projection import (
 )
 from .....application.modelo.operation_definitions import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
-    ModeloExportSettledResult,
     build_modelo_export_definition,
     build_modelo_export_registration,
 )
+from .....application.modelo.work_export_contracts import ModeloExportSettledResult
 from .....application.operations.models import OperationIdentity, OperationTerminalReceipt
 from .....core.calculation_report_format import CalculationReportDocumentFormat
 from .....core.config import override_settings

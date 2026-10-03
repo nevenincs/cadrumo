@@ -171,6 +171,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.auth.diagnostics.view",
+            target_command_key="config.auth.diagnostics.view",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="diagnostic_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="diagnostic_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.auth.login",
             target_command_key="config.auth.login",
             argument_specifications=(

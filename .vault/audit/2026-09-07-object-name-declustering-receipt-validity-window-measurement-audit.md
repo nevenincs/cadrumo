@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:37070bb1f15be1eb9beac4c53447355456012f1b761d24fe37bcbc8107f6e67f'
 related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
   - "[[2026-09-02-object-name-declustering-adr]]"
   - "[[2026-09-07-object-name-declustering-receipt-scope-and-teardown-authority-audit]]"
 ---

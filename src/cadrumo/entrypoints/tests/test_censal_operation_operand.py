@@ -57,6 +57,7 @@ def _test_censal_operation_definition():
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=build_censal_fetch_port(),
+        provider_preflight=lambda _profile_id, _operation: None,
     )
 
 

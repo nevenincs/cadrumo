@@ -13,15 +13,15 @@ import typer
 from ....application.operations.public_period import PublicPeriod
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....application.workflow.abort import WorkflowAbortReason
+from ....application.workflow.obligation_snapshot import WorkflowObligationSnapshot
 from ....application.workflow.resume import WorkflowResumeContext, WorkflowResumeTargetResolution
-from ....application.workflow.resume_operation import (
+from ....application.workflow.resume_contracts import (
     WorkflowResumeAddress,
     WorkflowResumeProjection,
     WorkflowResumeRequest,
     WorkflowResumeSuccess,
 )
 from ....application.workflow.run_models import WorkflowObligationFacts
-from ....application.workflow.run_projection import WorkflowObligationSnapshot
 from ....core.modelo import Modelo
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period

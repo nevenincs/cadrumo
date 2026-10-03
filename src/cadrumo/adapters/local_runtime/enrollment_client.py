@@ -105,32 +105,12 @@ class NativeEnrollmentClient:
 
     def _pin_receipt(self, receipt: AutomationReceiptProjection) -> AutomationReceiptProjection:
         prepared = self.prepared
-        if (
-            receipt.profile_id != prepared.profile_binding.profile_id
-            or receipt.request_id != prepared.enrollment_request_id
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        if (receipt.key_id is None) != (receipt.credential_reference is None):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        _require_prepared_receipt(receipt, prepared)
         earlier = self._receipt
-        if earlier is not None and (
-            receipt.review_digest != earlier.review_digest
-            or receipt.grant_id != earlier.grant_id
-            or (
-                earlier.key_id is not None
-                and (receipt.key_id != earlier.key_id or receipt.credential_reference != earlier.credential_reference)
-            )
-        ):
+        if earlier is not None and _receipt_changed(receipt, earlier):
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
         offer = self._offer
-        if offer is not None and (
-            receipt.review_digest != offer.review_digest
-            or receipt.grant_id != offer.grant_id
-            or (
-                receipt.key_id is not None
-                and (receipt.key_id != offer.key_id or receipt.credential_reference != offer.credential_reference)
-            )
-        ):
+        if offer is not None and _receipt_differs_from_offer(receipt, offer):
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
         if (
             earlier is not None
@@ -145,9 +125,7 @@ class NativeEnrollmentClient:
         prepared, receipt = self.prepared, self._receipt
         if (
             receipt is None
-            or offer.profile_binding != prepared.profile_binding
-            or offer.client_id != prepared.client_id
-            or offer.destination_id != prepared.destination_id
+            or _offer_differs_from_prepared(offer, prepared)
             or offer.review_digest != receipt.review_digest
             or offer.grant_id != receipt.grant_id
             or (
@@ -328,3 +306,47 @@ class NativeEnrollmentClient:
             key_id=receipt.key_id,
             review_digest=receipt.review_digest,
         )
+
+
+def _receipt_changed(receipt: AutomationReceiptProjection, earlier: AutomationReceiptProjection) -> bool:
+    """Preserve the review and any previously pinned key identity."""
+    return (
+        receipt.review_digest != earlier.review_digest
+        or receipt.grant_id != earlier.grant_id
+        or (
+            earlier.key_id is not None
+            and (receipt.key_id != earlier.key_id or receipt.credential_reference != earlier.credential_reference)
+        )
+    )
+
+
+def _receipt_differs_from_offer(receipt: AutomationReceiptProjection, offer: EnrollmentCredentialBinding) -> bool:
+    """Require delivered credential identity to match the same reviewed enrollment."""
+    return (
+        receipt.review_digest != offer.review_digest
+        or receipt.grant_id != offer.grant_id
+        or (
+            receipt.key_id is not None
+            and (receipt.key_id != offer.key_id or receipt.credential_reference != offer.credential_reference)
+        )
+    )
+
+
+def _offer_differs_from_prepared(offer: EnrollmentCredentialBinding, prepared: RuntimeEnrollmentPrepared) -> bool:
+    """Require the exact prepared profile, client and destination before pinning a delivery."""
+    return (
+        offer.profile_binding != prepared.profile_binding
+        or offer.client_id != prepared.client_id
+        or offer.destination_id != prepared.destination_id
+    )
+
+
+def _require_prepared_receipt(receipt: AutomationReceiptProjection, prepared: RuntimeEnrollmentPrepared) -> None:
+    """Require the original prepared enrollment and paired credential coordinates."""
+    if (
+        receipt.profile_id != prepared.profile_binding.profile_id
+        or receipt.request_id != prepared.enrollment_request_id
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    if (receipt.key_id is None) != (receipt.credential_reference is None):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

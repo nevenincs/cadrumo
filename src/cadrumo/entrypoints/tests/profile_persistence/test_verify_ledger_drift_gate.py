@@ -48,7 +48,7 @@ from cadrumo.application.ledger.actions_manual import (
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from cadrumo.application.modelo.profile_readiness_gate import load_modelo_work_profile
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
@@ -241,7 +241,7 @@ def _verify(
     verification_ports: VerificationRepositoryBundle | None = None,
 ) -> VerificationReport:
     with bundled_indexed_authority().operation() as operation:
-        return verify_modelo_revision(
+        return verify_modelo_revision_with_preconditions(
             revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator",
@@ -251,7 +251,7 @@ def _verify(
             clock=_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
 
 def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path) -> None:

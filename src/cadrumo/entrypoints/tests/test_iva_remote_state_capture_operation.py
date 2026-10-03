@@ -347,7 +347,7 @@ def test_supervisor_captures_iva_remote_state_for_exact_mcp_profile(tmp_path: Pa
             provider_preflights.append((profile_arg, pinned_authority))
             trace.append("provider-preflight")
 
-        def composition_factory(output_root: Path) -> FiledHistoryComposition:
+        def composition_factory(output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
             composition_roots.append(output_root)
             trace.append("composition")
             return cast(FiledHistoryComposition, composition)

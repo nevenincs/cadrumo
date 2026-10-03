@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from ....core.time.clock import today_madrid
 from ...iva.flow import IvaFlowDirection, IvaSettlementSide
@@ -24,14 +24,10 @@ from .facts.string_mapping import (
     StringMappingPolicy,
     unique_mapping_legal_refs,
 )
-from .governed_fact_scope import governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IVA flow catalogue"
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "iva-invoice-classification-catalogue"
 _FLOW_ORDER_KEY = "flow_direction.order"
@@ -312,13 +308,9 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
 def resolve_iva_flow_direction_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaFlowDirectionCatalogue:
-    """Resolve the dated IVA flow and settlement vocabulary from fact 0083.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
-    """
+    """Resolve the dated IVA flow and settlement vocabulary from fact 0083."""
     return _catalogue(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 
 
@@ -326,13 +318,9 @@ def require_iva_flow_direction(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaFlowDirection:
-    """Return a flow token only when the selected registry declares it.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
-    """
+    """Return a flow token only when the selected registry declares it."""
     return resolve_iva_flow_direction_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -353,7 +341,7 @@ def require_registry_declared_iva_flow_direction(value: object) -> IvaFlowDirect
             "scope; registry validation must not resolve a flow direction through the "
             "published authority artifact",
         )
-    return resolve_iva_flow_direction_catalogue(effective_date=today_madrid()).require(value)
+    return resolve_iva_flow_direction_catalogue(effective_date=today_madrid(), authority=authority).require(value)
 
 
 __all__ = [

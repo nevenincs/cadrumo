@@ -46,6 +46,7 @@ from __future__ import annotations
 import difflib
 import json
 from collections.abc import Mapping
+from typing import cast
 
 from cadrumo.tests.golden_comparison import canonicalise, differing_paths, mask_document
 
@@ -60,7 +61,7 @@ from .golden_store import (
     normalise_text_output,
     refresh_invocation,
 )
-from .runner import FrameExecution, SequenceTranscript, _resolve_json_path
+from .runner import FrameExecution, SequenceTranscript, resolve_json_path
 from .schema import ExpectAssertion, ExpectLiteral, FrameKind, ParsedSequence
 
 __all__ = [
@@ -283,9 +284,12 @@ def _compare_envelope(
             masked_actual = mask_host_conditional_details(mask_document(live_envelope))
             if not isinstance(masked_expected, Mapping) or not isinstance(masked_actual, Mapping):
                 problems.append(f"{at}: masking returned a non-document, so the envelopes cannot be compared")
-            elif canonicalise(masked_expected) != canonicalise(masked_actual):
-                diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
-                problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
+            else:
+                expected_document = cast(Mapping[str, object], masked_expected)
+                actual_document = cast(Mapping[str, object], masked_actual)
+                if canonicalise(expected_document) != canonicalise(actual_document):
+                    diff = ", ".join(sorted(differing_paths(expected_document, actual_document)))
+                    problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
     elif actual.envelope is not None:
         problems.append(
             f"{at}: the golden expects no JSON envelope but the live output now carries "
@@ -324,6 +328,13 @@ def _compare_text_streams(
             problems.append(f"{at}: stderr text diverged:\n{_unified_diff(expected_stderr, live_stderr)}")
 
 
+def _live_destination_is_sandbox_token(value: object) -> bool:
+    """Reject authored placeholder paths in a live destination."""
+    return isinstance(value, str) and value.startswith(
+        (SANDBOX_WORKDIR_PLACEHOLDER + "/", SANDBOX_WORKDIR_PLACEHOLDER + "\\"),
+    )
+
+
 def _evaluate_assertion(
     assertion: ExpectAssertion, execution: FrameExecution, transcript: SequenceTranscript, at: str, problems: list[str]
 ) -> None:
@@ -346,11 +357,9 @@ def _evaluate_assertion(
             "'--format json')",
         )
         return
-    found, value = _resolve_json_path(execution.envelope, assertion.json_path)
+    found, value = resolve_json_path(execution.envelope, assertion.json_path)
     if explicit_sandbox_path and found:
-        if isinstance(value, str) and value.startswith(
-            (SANDBOX_WORKDIR_PLACEHOLDER + "/", SANDBOX_WORKDIR_PLACEHOLDER + "\\"),
-        ):
+        if _live_destination_is_sandbox_token(value):
             problems.append(
                 f"{at}: @expect {assertion.json_path} == {rendered} failed — "
                 "live output must report a native destination, not a sandbox token",
@@ -363,7 +372,7 @@ def _evaluate_assertion(
             storage_root=transcript.storage_root,
             workdir=transcript.workdir,
         )
-        found, value = _resolve_json_path(envelope, assertion.json_path)
+        found, value = resolve_json_path(envelope, assertion.json_path)
     if not found:
         problems.append(
             f"{at}: @expect path {assertion.json_path!r} is missing from the live "

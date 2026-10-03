@@ -191,6 +191,9 @@ class _ContraparteClaveAccumulator(BaseModel):
     party_tax_id: TaxIdIdentityToken
     clave: str
     party_legal_name: str | None
+    cash_accounting_operation: bool
+    reverse_charge_recipient: bool
+    annual_computation_basis: bool
     importe_total: Decimal
     importe_q1: Decimal
     importe_q2: Decimal
@@ -205,12 +208,15 @@ def _build_contraparte_clave_rows(
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     """Group invoice observations into modelo 347 contraparte rows.
 
-    Mirrors :func:`_build_operator_clave_rows`'s (country, counterparty,
-    clave) grouping shape exactly, keyed on ``operation_clave`` -- M347's own
+    Extends :func:`_build_operator_clave_rows`'s (country, counterparty,
+    clave) grouping shape, keyed on ``operation_clave`` -- M347's own
     clave vocabulary -- rather than M349's ``intracommunity_clave``. The two
     fields are disjoint by construction (:class:`InvoiceObservation`'s
     validators enforce each against its own closed set), so an observation
-    can only ever be grouped by the one this function reads.
+    can only ever be grouped by the one this function reads. The key also
+    carries the per-record facts the design relates separately
+    (:data:`_ContraparteRowKey`), so each record's marks describe every
+    operation it totals.
 
     Aggregates ``invoice_total_amount`` rather than ``base_amount``: RD
     1065/2007 art. 34.2.a) requires the declared IMPORTE ANUAL to be the
@@ -240,7 +246,7 @@ def _build_contraparte_clave_rows(
     exceeded, ``>``, never merely reached.
     """
     observations = m347_threshold_filter(observations)
-    grouped: dict[tuple[str, str, str], _ContraparteClaveAccumulator] = {}
+    grouped: dict[_ContraparteRowKey, _ContraparteClaveAccumulator] = {}
     for observation in observations:
         if observation.operation_clave is None:
             continue
@@ -249,11 +255,7 @@ def _build_contraparte_clave_rows(
                 f"invoice observation {observation.invoice_id!r} declares operation_clave "
                 f"{observation.operation_clave!r} but no invoice_total_amount",
             )
-        key = (
-            observation.country_code,
-            observation.party_tax_id,
-            observation.operation_clave,
-        )
+        key = _contraparte_row_key(observation, observation.operation_clave)
         bucket = grouped.setdefault(
             key,
             _ContraparteClaveAccumulator(
@@ -261,6 +263,9 @@ def _build_contraparte_clave_rows(
                 party_tax_id=observation.party_tax_id,
                 clave=observation.operation_clave,
                 party_legal_name=observation.party_legal_name,
+                cash_accounting_operation=observation.cash_accounting_operation,
+                reverse_charge_recipient=observation.reverse_charge_recipient,
+                annual_computation_basis=observation.annual_computation_basis,
                 importe_total=Decimal("0"),
                 importe_q1=Decimal("0"),
                 importe_q2=Decimal("0"),
@@ -277,13 +282,66 @@ def _build_contraparte_clave_rows(
         (grouped[key] for key in sorted(grouped)),
         values=lambda bucket: {
             "importe_total": bucket.importe_total,
-            "importe_q1": bucket.importe_q1,
-            "importe_q2": bucket.importe_q2,
-            "importe_q3": bucket.importe_q3,
-            "importe_q4": bucket.importe_q4,
+            **_m347_quarter_amounts(bucket),
             **_m347_declarado_identification(bucket.party_tax_id, bucket.country_code),
+            "cash_accounting_mark": _M347_ROW_MARK if bucket.cash_accounting_operation else "",
+            "reverse_charge_mark": _M347_ROW_MARK if bucket.reverse_charge_recipient else "",
         },
     )
+
+
+_ContraparteRowKey = tuple[str, str, str, bool, bool, bool]
+"""One declarado record: counterparty, clave and the operations the design relates apart.
+
+RD 1065/2007 art. 34.1 has the criterio de caja operations (letter j) and those
+where the declarant is the sujeto pasivo destinatario (letter k) "se harán
+constar separadamente de otras operaciones que, en su caso, se realicen entre las
+mismas partes", and the 2025 record design marks each with an "X" (pos. 281, 282)
+"debiendo consignarlas separadamente del resto". Each is therefore part of the
+record key, so one counterparty's operations split into one record per
+combination rather than one flag stamped on a mixed total. The annual-basis
+flag follows from the filer and the criterio de caja flag, so it never splits a
+record on its own; it is keyed so a record cannot mix quarterly and annual
+operations.
+"""
+
+#: The record design's mark for a separately related operation ("Se pondrá una "X"").
+_M347_ROW_MARK = "X"
+
+
+def _contraparte_row_key(observation: InvoiceObservation, clave: str) -> _ContraparteRowKey:
+    return (
+        observation.country_code,
+        observation.party_tax_id,
+        clave,
+        observation.cash_accounting_operation,
+        observation.reverse_charge_recipient,
+        observation.annual_computation_basis,
+    )
+
+
+def _m347_quarter_amounts(bucket: _ContraparteClaveAccumulator) -> dict[str, Decimal | str]:
+    """The four quarterly amounts, or no content when the record is reported on an annual basis.
+
+    The 2025 design says of every quarterly amount (pos. 136-151 and the three
+    that follow): "Este campo no tendrá contenido cuando se trate de información
+    suministrada por las entidades a las que sea de aplicación la Ley 49/1960 ...
+    sobre la propiedad horizontal, o por sujetos pasivos que realicen operaciones
+    a las que sea de aplicación el régimen especial del criterio de caja ...
+    Tampoco tendrá contenido cuando se trate de suministrar información relativa
+    a operaciones incluidas en el régimen especial del criterio de caja por parte
+    de los sujetos pasivos destinatarios de las mismas." An empty value is the
+    absence the design asks for, not a zero amount; the annual total still
+    carries the operations.
+    """
+    if bucket.annual_computation_basis:
+        return dict.fromkeys(_M347_QUARTER_ROW_FIELDS.values(), "")
+    return {
+        "importe_q1": bucket.importe_q1,
+        "importe_q2": bucket.importe_q2,
+        "importe_q3": bucket.importe_q3,
+        "importe_q4": bucket.importe_q4,
+    }
 
 
 def _m347_declarado_identification(party_tax_id: str, country_code: str) -> dict[str, str]:
@@ -295,15 +353,29 @@ def _m347_declarado_identification(party_tax_id: str, country_code: str) -> dict
     COMUNITARIO slot, "incompatible (excluyente)" with the Spanish NIF, carrying
     the Member State prefix and number. A counterparty observed in another
     country is therefore declared by country, and by NIF-IVA only when its
-    identifier has the structure the NIF-IVA catalogue publishes for that State.
+    identifier has the structure the NIF-IVA catalogue publishes for that State,
+    and gets CÓDIGO PROVINCIA 99. A Spanish declarado's provincia is that of its
+    domicilio fiscal, which the invoice records only inside free-text addresses,
+    so it is left without content rather than parsed out of prose.
     """
     if country_code == SPAIN_COUNTRY_CODE:
-        return {"declarado_tax_id": party_tax_id, "residence_country_code": "", "community_vat_number": ""}
+        return {
+            "declarado_tax_id": party_tax_id,
+            "residence_country_code": "",
+            "community_vat_number": "",
+            "provincia_code": "",
+        }
     return {
         "declarado_tax_id": "",
         "residence_country_code": country_code,
         "community_vat_number": _community_vat_number(party_tax_id, country_code),
+        "provincia_code": _M347_NON_RESIDENT_PROVINCIA,
     }
+
+
+#: CÓDIGO PROVINCIA for a declarado observed outside Spain (both 347 designs, pos.
+#: 77-78): "En el caso de no residentes sin establecimiento permanente se consignará 99."
+_M347_NON_RESIDENT_PROVINCIA = "99"
 
 
 def _community_vat_number(party_tax_id: str, country_code: str) -> str:

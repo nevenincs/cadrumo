@@ -13,7 +13,8 @@ from textual.binding import Binding
 from textual.containers import Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Static
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.contracts import RuntimeRefusalError
 from ...application.runtime.profile_access import status_admits_session
@@ -23,8 +24,6 @@ from ...core.i18n.render import tr
 from ...core.time.clock import now
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from .components.theme import BASE_CSS, install_cadrumo_themes, tokenised
-from .runtime_management import RuntimeManagementScreen
-from .runtime_management_cleanup import RuntimeManagementCleanup
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 
 _STATUS_INTERVAL_SECONDS = 10.0
@@ -85,7 +84,6 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         *,
         profile_label: str,
         requester_factory: RestrictedRequesterFactory | None = None,
-        runtime_management_cleanup: RuntimeManagementCleanup | None = None,
     ) -> None:
         """Pin the caller-owned TUI connection without taking ownership of close."""
         super().__init__()
@@ -96,9 +94,6 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         self._session_id: UUID = client.session_id
         self._profile_label = profile_label
         self._requester_factory = requester_factory
-        self._runtime_management_cleanup = (
-            RuntimeManagementCleanup() if runtime_management_cleanup is None else runtime_management_cleanup
-        )
         self._cleared = False
         self._locking = False
         self._reading = False
@@ -119,7 +114,6 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             with Horizontal():
                 if self._requester_factory is not None:
                     yield Button(tr("tui.automation_request.title"), id="restricted-request-access")
-                yield Button(tr("tui.runtime_management.open"), id="restricted-runtime-status")
                 yield Button(tr("tui.restricted.lock"), id="restricted-lock")
                 yield Button(tr("tui.restricted.change_user"), id="restricted-change-user")
                 yield Button(tr("tui.restricted.close"), id="restricted-close")
@@ -289,12 +283,6 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
                 self.push_screen(factory(self._client))
             except Exception:
                 self.query_one("#restricted-availability", Static).update(tr("tui.automation_request.invalid"))
-
-    @on(Button.Pressed, "#restricted-runtime-status")
-    def _runtime_status_pressed(self) -> None:
-        """Inspect the passive runtime manager independently of API authority."""
-        if not self._locking:
-            self.push_screen(RuntimeManagementScreen(cleanup=self._runtime_management_cleanup))
 
     def action_leave(self) -> None:
         """Leave normally without revoking another authority or closing the client."""

@@ -16,7 +16,7 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
-from ..verification_actions import _classify_verification_outcome
+from ..verification_report_facts import classify_verification_outcome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,13 +44,13 @@ def _stale() -> ModeloVerificationFinding:
 
 
 def test_a_stale_calculation_beside_a_missing_required_box_is_blocked() -> None:
-    verdict = _classify_verification_outcome(findings=[_missing(), _stale()], missing_required=[_MISSING_BOX])
+    verdict = classify_verification_outcome(findings=[_missing(), _stale()], missing_required=[_MISSING_BOX])
 
     assert verdict == (VerificationCompletenessStatus.BLOCKED, False)
 
 
 def test_a_stale_calculation_alone_is_blocked() -> None:
-    assert _classify_verification_outcome(findings=[_stale()], missing_required=[]) == (
+    assert classify_verification_outcome(findings=[_stale()], missing_required=[]) == (
         VerificationCompletenessStatus.BLOCKED,
         False,
     )
@@ -58,6 +58,6 @@ def test_a_stale_calculation_alone_is_blocked() -> None:
 
 def test_a_missing_required_box_alone_is_incomplete() -> None:
     """Teeth for the rule above: only what entering values cannot release makes the check blocked."""
-    verdict = _classify_verification_outcome(findings=[_missing()], missing_required=[_MISSING_BOX])
+    verdict = classify_verification_outcome(findings=[_missing()], missing_required=[_MISSING_BOX])
 
     assert verdict == (VerificationCompletenessStatus.INCOMPLETE, False)

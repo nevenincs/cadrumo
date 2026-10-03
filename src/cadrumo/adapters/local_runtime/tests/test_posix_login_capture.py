@@ -20,8 +20,9 @@ import pytest
 from cadrumo.application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
 
-from .. import linux_login, macos_login, posix
+from .. import linux_login, macos_login, posix_channel
 from ..macos_login import MacosLoginBinding, MacosSessionObservation
+from ..posix_channel import PosixRuntimeChannel
 
 pytestmark = pytest.mark.hex_outbound_adapter
 
@@ -53,10 +54,12 @@ class _KernelSocket:
 
 
 @pytest.fixture
-def channel(monkeypatch: pytest.MonkeyPatch) -> Iterator[posix.PosixRuntimeChannel]:
-    monkeypatch.setattr(posix, "_peer", lambda _socket: RuntimePeer(os_owner_id="synthetic-owner", process_id=123))
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="linux"))
-    connected = posix.PosixRuntimeChannel(cast(socket.socket, _KernelSocket()))
+def channel(monkeypatch: pytest.MonkeyPatch) -> Iterator[PosixRuntimeChannel]:
+    monkeypatch.setattr(
+        posix_channel, "_peer", lambda _socket: RuntimePeer(os_owner_id="synthetic-owner", process_id=123)
+    )
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="linux"))
+    connected = PosixRuntimeChannel(cast(socket.socket, _KernelSocket()))
     try:
         yield connected
     finally:
@@ -73,9 +76,9 @@ def peer_fd(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[int, list[int]]]:
         closed.append(owned)
         native_close(owned)
 
-    monkeypatch.setattr(posix, "os", SimpleNamespace(get_inheritable=os.get_inheritable, close=close_owned))
-    monkeypatch.setattr(posix, "_linux_peer_pidfd", lambda _socket: descriptor)
-    monkeypatch.setattr(posix, "_require_live_linux_pidfd", lambda _descriptor: None)
+    monkeypatch.setattr(posix_channel, "os", SimpleNamespace(get_inheritable=os.get_inheritable, close=close_owned))
+    monkeypatch.setattr(posix_channel, "_linux_peer_pidfd", lambda _socket: descriptor)
+    monkeypatch.setattr(posix_channel, "_require_live_linux_pidfd", lambda _descriptor: None)
     try:
         yield descriptor, closed
     finally:
@@ -85,7 +88,7 @@ def peer_fd(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[int, list[int]]]:
 
 @pytest.mark.unit
 def test_capture_borrows_noninheritable_fd_then_closes_once(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
 ) -> None:
     descriptor, closed = peer_fd
     evidence = _LoginEvidence()
@@ -109,7 +112,7 @@ def test_capture_borrows_noninheritable_fd_then_closes_once(
 def test_capture_refusal_releases_fd_and_preserves_reason(
     failure_at: str,
     monkeypatch: pytest.MonkeyPatch,
-    channel: posix.PosixRuntimeChannel,
+    channel: PosixRuntimeChannel,
     peer_fd: tuple[int, list[int]],
 ) -> None:
     descriptor, closed = peer_fd
@@ -130,7 +133,7 @@ def test_capture_refusal_releases_fd_and_preserves_reason(
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         return _LoginEvidence()
 
-    monkeypatch.setattr(posix, "_require_live_linux_pidfd", alive)
+    monkeypatch.setattr(posix_channel, "_require_live_linux_pidfd", alive)
     monkeypatch.setattr(linux_login, "capture_linux_login", capture)
     with pytest.raises(RuntimeRefusalError) as refused:
         channel.capture_login()
@@ -142,7 +145,7 @@ def test_capture_refusal_releases_fd_and_preserves_reason(
 
 @pytest.mark.unit
 def test_inheritable_fd_refuses_before_login_helper(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
 ) -> None:
     descriptor, closed = peer_fd
     os.set_inheritable(descriptor, True)
@@ -159,7 +162,7 @@ def test_inheritable_fd_refuses_before_login_helper(
 
 @pytest.mark.unit
 def test_reentrant_close_refuses_captured_evidence_and_releases_fd(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
 ) -> None:
     descriptor, closed = peer_fd
 
@@ -177,14 +180,14 @@ def test_reentrant_close_refuses_captured_evidence_and_releases_fd(
 
 @pytest.mark.unit
 def test_native_fd_inspection_failure_releases_owned_fd(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
 ) -> None:
     descriptor, closed = peer_fd
 
     def unavailable(_held: int) -> bool:
         raise OSError(errno.EBADF, "synthetic native inspection failure")
 
-    monkeypatch.setattr(posix.os, "get_inheritable", unavailable)
+    monkeypatch.setattr(posix_channel.os, "get_inheritable", unavailable)
     with pytest.raises(RuntimeRefusalError) as refused:
         channel.capture_login()
     assert refused.value.reason is RuntimeRefusalCode.UNAVAILABLE
@@ -194,7 +197,7 @@ def test_native_fd_inspection_failure_releases_owned_fd(
 
 @pytest.mark.unit
 def test_close_waits_for_capture_and_fd_release(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel, peer_fd: tuple[int, list[int]]
 ) -> None:
     descriptor, closed = peer_fd
     entered, release, closing = Event(), Event(), Event()
@@ -232,9 +235,9 @@ def test_close_waits_for_capture_and_fd_release(
 
 @pytest.mark.unit
 def test_unsupported_platform_refuses_private_capture_without_socket_option(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel
 ) -> None:
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="win32"))
     with pytest.raises(RuntimeRefusalError) as refused:
         channel.capture_login()
     assert refused.value.reason is RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
@@ -242,9 +245,9 @@ def test_unsupported_platform_refuses_private_capture_without_socket_option(
 
 @pytest.mark.unit
 def test_darwin_capture_passes_held_socket_and_owner_without_granting_eligibility(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel
 ) -> None:
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="darwin"))
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="darwin"))
     binding = MacosLoginBinding(os_owner_id="synthetic-owner", audit_session_id=100022)
     observed: list[tuple[socket.socket, str]] = []
 
@@ -271,9 +274,9 @@ def test_darwin_capture_passes_held_socket_and_owner_without_granting_eligibilit
 
 @pytest.mark.unit
 def test_darwin_closed_channel_never_calls_native_capture(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel
 ) -> None:
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="darwin"))
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="darwin"))
     calls = 0
 
     def unexpected_capture(_held: socket.socket, *, expected_owner: str) -> MacosLoginBinding:
@@ -290,10 +293,8 @@ def test_darwin_closed_channel_never_calls_native_capture(
 
 
 @pytest.mark.unit
-def test_darwin_helper_refusal_is_preserved(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel
-) -> None:
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="darwin"))
+def test_darwin_helper_refusal_is_preserved(monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel) -> None:
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="darwin"))
 
     def refuse(_held: socket.socket, *, expected_owner: str) -> MacosLoginBinding:
         assert expected_owner == "synthetic-owner"
@@ -308,9 +309,9 @@ def test_darwin_helper_refusal_is_preserved(
 
 @pytest.mark.unit
 def test_darwin_reentrant_close_prevents_releasing_captured_evidence(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel
 ) -> None:
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="darwin"))
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="darwin"))
     binding = MacosLoginBinding(os_owner_id="synthetic-owner", audit_session_id=100022)
 
     def capture(held: socket.socket, *, expected_owner: str) -> MacosLoginBinding:
@@ -328,9 +329,9 @@ def test_darwin_reentrant_close_prevents_releasing_captured_evidence(
 
 @pytest.mark.unit
 def test_darwin_close_waits_until_native_capture_completes(
-    monkeypatch: pytest.MonkeyPatch, channel: posix.PosixRuntimeChannel
+    monkeypatch: pytest.MonkeyPatch, channel: PosixRuntimeChannel
 ) -> None:
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="darwin"))
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="darwin"))
     binding = MacosLoginBinding(os_owner_id="synthetic-owner", audit_session_id=100022)
     entered, release, closing = Event(), Event(), Event()
     observed: list[tuple[socket.socket, str]] = []
@@ -367,23 +368,23 @@ def test_darwin_close_waits_until_native_capture_completes(
 @pytest.mark.unit
 @pytest.mark.parametrize("machine", ["x86_64", "aarch64", "sparc64"])
 def test_absent_python_constant_only_uses_verified_generic_abis(machine: str, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="linux"))
-    monkeypatch.setattr(posix, "socket", SimpleNamespace())
-    monkeypatch.setattr(posix, "platform", SimpleNamespace(machine=lambda: machine))
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="linux"))
+    monkeypatch.setattr(posix_channel, "socket", SimpleNamespace())
+    monkeypatch.setattr(posix_channel, "platform", SimpleNamespace(machine=lambda: machine))
     if machine == "sparc64":
         with pytest.raises(RuntimeRefusalError) as refused:
-            posix._linux_peer_pidfd_option()
+            posix_channel._linux_peer_pidfd_option()
         assert refused.value.reason is RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
     else:
-        assert posix._linux_peer_pidfd_option() == 77
+        assert posix_channel._linux_peer_pidfd_option() == 77
 
 
 @pytest.mark.unit
 def test_exposed_socket_constant_supports_other_kernel_abis(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="linux"))
-    monkeypatch.setattr(posix, "socket", SimpleNamespace(SO_PEERPIDFD=86))
-    monkeypatch.setattr(posix, "platform", SimpleNamespace(machine=lambda: "sparc64"))
-    assert posix._linux_peer_pidfd_option() == 86
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="linux"))
+    monkeypatch.setattr(posix_channel, "socket", SimpleNamespace(SO_PEERPIDFD=86))
+    monkeypatch.setattr(posix_channel, "platform", SimpleNamespace(machine=lambda: "sparc64"))
+    assert posix_channel._linux_peer_pidfd_option() == 86
 
 
 @pytest.mark.unit
@@ -393,9 +394,9 @@ def test_missing_kernel_option_refuses_without_numeric_pid_fallback(monkeypatch:
             assert level == socket.SOL_SOCKET and option == 77
             raise OSError(errno.ENOPROTOOPT, "synthetic unavailable facility")
 
-    monkeypatch.setattr(posix, "_linux_peer_pidfd_option", lambda: 77)
+    monkeypatch.setattr(posix_channel, "_linux_peer_pidfd_option", lambda: 77)
     with pytest.raises(RuntimeRefusalError) as refused:
-        posix._linux_peer_pidfd(cast(socket.socket, MissingKernelOption()))
+        posix_channel._linux_peer_pidfd(cast(socket.socket, MissingKernelOption()))
     assert refused.value.reason is RuntimeRefusalCode.UNAVAILABLE
     assert "synthetic" not in str(refused.value)
 
@@ -411,10 +412,10 @@ def test_native_poll_reports_peer_death_without_waiting(monkeypatch: pytest.Monk
             assert timeout == 0
             return [(123, 1)]
 
-    monkeypatch.setattr(posix, "sys", SimpleNamespace(platform="linux"))
-    monkeypatch.setattr(posix, "select", SimpleNamespace(poll=KernelPoll, POLLIN=1, POLLERR=8, POLLHUP=16))
+    monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="linux"))
+    monkeypatch.setattr(posix_channel, "select", SimpleNamespace(poll=KernelPoll, POLLIN=1, POLLERR=8, POLLHUP=16))
     with pytest.raises(RuntimeRefusalError) as refused:
-        posix._require_live_linux_pidfd(123)
+        posix_channel._require_live_linux_pidfd(123)
     assert refused.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
 
 
@@ -426,14 +427,14 @@ def test_native_kernel_pidfd_is_caller_owned_and_noninheritable() -> None:
         descriptor = _native_peer_pidfd(left)
         try:
             assert not os.get_inheritable(descriptor)
-            posix._require_live_linux_pidfd(descriptor)
+            posix_channel._require_live_linux_pidfd(descriptor)
             with open(f"/proc/self/fdinfo/{descriptor}", encoding="ascii") as information:
                 lines = information.read().splitlines()
             assert f"Pid:\t{os.getpid()}" in lines
             left.close()
             # The socket and returned PIDFD have independent ownership.
             os.fstat(descriptor)
-            posix._require_live_linux_pidfd(descriptor)
+            posix_channel._require_live_linux_pidfd(descriptor)
         finally:
             os.close(descriptor)
         with pytest.raises(OSError) as released:
@@ -448,13 +449,13 @@ def _native_peer_pidfd(connected: socket.socket) -> int:
     # Distinguish a missing kernel option before exercising the owning getter;
     # its other failures must remain test failures, not capability skips.
     try:
-        probe = connected.getsockopt(socket.SOL_SOCKET, posix._linux_peer_pidfd_option())
+        probe = connected.getsockopt(socket.SOL_SOCKET, posix_channel._linux_peer_pidfd_option())
     except OSError as error:
         if error.errno == errno.ENOPROTOOPT:
             pytest.skip("native kernel lacks SO_PEERPIDFD; kernel acceptance unavailable")
         raise
     os.close(probe)
-    return posix._linux_peer_pidfd(connected)
+    return posix_channel._linux_peer_pidfd(connected)
 
 
 def _child_connect_and_transfer(address: str, control: socket.socket) -> None:
@@ -506,10 +507,10 @@ def test_native_kernel_pidfd_detects_original_peer_exit_with_transferred_stream_
         level, kind, packed = ancillary[0]
         assert level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS
         retained = socket.socket(fileno=struct.unpack("i", packed)[0])
-        peer_pid, peer_uid, _ = posix._linux_peer_credentials(accepted)
+        peer_pid, peer_uid, _ = posix_channel._linux_peer_credentials(accepted)
         assert peer_pid == process_id and peer_uid == os.getuid()
         descriptor = _native_peer_pidfd(accepted)
-        posix._require_live_linux_pidfd(descriptor)
+        posix_channel._require_live_linux_pidfd(descriptor)
         parent_control.sendall(b"X")
         exited, status = os.waitpid(process_id, 0)
         reaped = True
@@ -519,7 +520,7 @@ def test_native_kernel_pidfd_detects_original_peer_exit_with_transferred_stream_
         retained.sendall(b"R")
         assert accepted.recv(1) == b"R"
         with pytest.raises(RuntimeRefusalError) as refused:
-            posix._require_live_linux_pidfd(descriptor)
+            posix_channel._require_live_linux_pidfd(descriptor)
         assert refused.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
     finally:
         parent_control.close()

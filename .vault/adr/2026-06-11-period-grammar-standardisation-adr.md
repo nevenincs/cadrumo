@@ -3,10 +3,9 @@ tags:
   - '#adr'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:507884c36463be8a4162e9f0527c4934faa4ed8164e900c4ed95a26e5108eeff'
 related:
-  - "[[2026-06-11-period-grammar-standardisation-plan]]"
   - "[[2026-06-04-registry-period-code-union-research]]"
   - "[[2026-06-10-ledger-filter-period-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"

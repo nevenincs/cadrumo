@@ -31,7 +31,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..preconditions import ModeloPreconditionFailure
-from ..verification_actions import _append_iva_selected_scope_evidence_finding
+from ..verification_iva_evidence import append_iva_selected_scope_evidence_finding
 from ..work_form_models import finding_action_locale_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -174,7 +174,7 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
     work, target = _work_and_target(repository.bucket_id, issues)
     findings: list[ModeloVerificationFinding] = []
     failures: dict[int, ModeloPreconditionFailure] = {}
-    _append_iva_selected_scope_evidence_finding(
+    append_iva_selected_scope_evidence_finding(
         work_unit=work,
         target=target,
         transaction_repository=repository,

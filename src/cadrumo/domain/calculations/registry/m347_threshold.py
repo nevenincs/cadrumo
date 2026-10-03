@@ -114,12 +114,17 @@ class M347DeclarableSet:
     bucket with no floor whose summed total is zero or negative: the bucket
     relates them whatever their amount, but a nil or negative annual total is
     the case the declaration's own sign field exists for and is not settled by
-    the floor rule.
+    the floor rule. ``floored_nonpositive`` holds the pairs a bucket WITH a
+    floor leaves out because their summed total is zero or negative -- the
+    total a counterparty's rectifications net to once they reach or exceed its
+    operations (RD 1065/2007 art. 34.4) -- which the floor rule does not relate
+    although the same sign field could carry them.
     """
 
     buckets: M347ThresholdBuckets
     declarable: frozenset[tuple[str, str]]
     unconditional_nonpositive: frozenset[tuple[str, str]] = frozenset()
+    floored_nonpositive: frozenset[tuple[str, str]] = frozenset()
 
     def admits(self, party_tax_id: str, clave: str) -> bool:
         """Whether an operation with ``party_tax_id`` under ``clave`` is declared."""
@@ -128,6 +133,10 @@ class M347DeclarableSet:
     def admits_unconditional_nonpositive(self, party_tax_id: str, clave: str) -> bool:
         """Whether that operation is declared by a no-floor bucket on a zero or negative total."""
         return (party_tax_id, self.buckets.bucket_of(clave).token) in self.unconditional_nonpositive
+
+    def leaves_out_floored_nonpositive(self, party_tax_id: str, clave: str) -> bool:
+        """Whether that operation is left out by a floored bucket because its total is zero or negative."""
+        return (party_tax_id, self.buckets.bucket_of(clave).token) in self.floored_nonpositive
 
 
 def _resolve_m347_floor_fact(
@@ -327,18 +336,20 @@ def m347_declarable_party_buckets(
         totals[party_tax_id] = totals.get(party_tax_id, Decimal("0")) + amount
     declarable: set[tuple[str, str]] = set()
     unconditional_nonpositive: set[tuple[str, str]] = set()
+    floored_nonpositive: set[tuple[str, str]] = set()
     for bucket in buckets.buckets:
         totals = bucket_totals[bucket.token]
+        nonpositive = {(party_tax_id, bucket.token) for party_tax_id, total in totals.items() if total <= 0}
         if bucket.floor is None:
             parties = frozenset(totals)
-            unconditional_nonpositive.update(
-                (party_tax_id, bucket.token) for party_tax_id, total in totals.items() if total <= 0
-            )
+            unconditional_nonpositive.update(nonpositive)
         else:
             parties = _declarable_party_ids(totals, floor=bucket.floor)
+            floored_nonpositive.update(nonpositive)
         declarable.update((party_tax_id, bucket.token) for party_tax_id in parties)
     return M347DeclarableSet(
         buckets=buckets,
         declarable=frozenset(declarable),
         unconditional_nonpositive=frozenset(unconditional_nonpositive),
+        floored_nonpositive=frozenset(floored_nonpositive),
     )

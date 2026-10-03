@@ -3,10 +3,14 @@ tags:
   - '#adr'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-09-29'
+modified: '2026-10-03'
 body_hash: 'sha256:ce18b318b8a58ac7e2a2544f501c6e1c62e472153817e612431023540481cba8'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
+  - '[[2026-06-01-docs-cli-buildtime-adr]]'
+  - '[[2026-06-01-docs-educational-surface-adr]]'
+  - '[[2026-06-14-docs-tooling-separation-adr]]'
+  - '[[2026-06-30-deterministic-output-replay-substrate-adr]]'
 ---
 
 # `docs-cli-sequences` adr: `interactive executed CLI sequence docs` | (**status:** `accepted`)

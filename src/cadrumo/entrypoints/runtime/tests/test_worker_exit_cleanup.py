@@ -16,7 +16,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.local_runtime.framing import write_document
+from cadrumo.adapters.local_runtime.runtime_frame_io import write_document
 from cadrumo.adapters.local_runtime.worker_transport import WorkerChannel, WorkerEndpoint
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.operations.drain import OperationDrainResult
@@ -34,7 +34,7 @@ from cadrumo.application.runtime.profile_worker import (
 )
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
-from cadrumo.entrypoints.runtime import worker
+from cadrumo.entrypoints.runtime import worker, worker_service
 from cadrumo.entrypoints.runtime.operation_host import ProfileWorkerOperationHost
 from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
 
@@ -174,7 +174,7 @@ def _entry(
     monkeypatch.setattr(worker, "ProfileWorkerHumanLogin", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(worker, "profile_adapter_composition", nullcontext)
     monkeypatch.setattr(worker, "live_exchange_rate_composition", nullcontext)
-    monkeypatch.setattr(worker, "_serve", serve)
+    monkeypatch.setattr(worker_service, "_serve", serve)
     return _Entry(
         identity,
         control,
@@ -312,7 +312,7 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
     local_failure: bool,
 ) -> None:
     """Real frame decoding/serve/run retire a fault port, never a terminal task."""
-    serve = worker._serve
+    serve = worker_service._serve
     entry = _entry(monkeypatch, tmp_path)
     entered, release = threading.Event(), threading.Event()
     cancellation = asyncio.CancelledError("control cancelled during operation frame read")
@@ -357,8 +357,8 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
     monkeypatch.setattr(worker, "ProfileWorkerCustody", lambda *_args, **_kwargs: custody)
     monkeypatch.setattr(worker, "ProfileWorkerOperationHost", lambda *_args, **_kwargs: operations)
     monkeypatch.setattr(worker, "ProfileWorkerHumanLogin", lambda *_args, **_kwargs: human)
-    monkeypatch.setattr(worker, "WorkerSubmissionStaging", lambda: uploads)
-    monkeypatch.setattr(worker, "_serve", serve)
+    monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
+    monkeypatch.setattr(worker_service, "_serve", serve)
     try:
         with pytest.raises(BaseException) as caught:
             worker.run(entry.arguments)
@@ -408,8 +408,8 @@ async def test_serve_clean_stop_drains_once_and_keeps_native_and_custody_ownersh
     control.queue(ProfileWorkerRequest(root=ProfileWorkerControlRequest(action="stop", request_id=uuid4())))
     custody, human, uploads = _ServeCustody(), _Release(), _Release()
     operations = _Operations(0)
-    monkeypatch.setattr(worker, "WorkerSubmissionStaging", lambda: uploads)
-    await worker._serve(
+    monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
+    await worker_service._serve(
         cast(WorkerChannel, control),
         cast(WorkerChannel, operation),
         cast(ProfileWorkerCustody, custody),
@@ -430,9 +430,9 @@ async def test_serve_preserves_control_failure_retires_all_local_owners_and_leav
     control, operation = _Channel(read_failure=primary), _Channel()
     custody, human, uploads = _Release(), _Release(failures), _Release(failures)
     operations = _Operations(failures)
-    monkeypatch.setattr(worker, "WorkerSubmissionStaging", lambda: uploads)
+    monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
     with pytest.raises(ValueError) as caught:
-        await worker._serve(
+        await worker_service._serve(
             cast(WorkerChannel, control),
             cast(WorkerChannel, operation),
             cast(ProfileWorkerCustody, custody),
@@ -472,9 +472,9 @@ async def test_serve_repeated_cancellation_waits_for_cleanup_and_preserves_origi
             return await super().close()
 
     operations = PendingOperations(1)
-    monkeypatch.setattr(worker, "WorkerSubmissionStaging", lambda: uploads)
+    monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
     running = asyncio.create_task(
-        worker._serve(
+        worker_service._serve(
             cast(WorkerChannel, control),
             cast(WorkerChannel, operation),
             cast(ProfileWorkerCustody, custody),

@@ -9,7 +9,7 @@ import typer
 from pydantic import ValidationError
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.ledger.lifecycle_mutation_operation import (
+from ...application.ledger.lifecycle_contracts import (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
     LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE,
@@ -19,6 +19,8 @@ from ...application.ledger.lifecycle_mutation_operation import (
     LedgerLifecycleMutationRequest,
     LedgerLifecycleOperationId,
     LedgerLifecycleOperationResult,
+)
+from ...application.ledger.lifecycle_mutation_operation import (
     LedgerLifecycleValidationRefusedError,
 )
 from ...application.review.filter import LedgerReviewStatus

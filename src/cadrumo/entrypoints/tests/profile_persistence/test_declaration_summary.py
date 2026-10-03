@@ -10,7 +10,7 @@ import pytest
 
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.declaration_summary import DeclarationSummaryState, declaration_summary
-from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.work_form_models import ModeloFormResultDirection
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.calculation_revision_amendment import (

@@ -19,7 +19,7 @@ import pytest
 import typer
 from typer.core import TyperCommand
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
@@ -411,6 +411,7 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
         capture_login=lambda _channel: _NativeLoginObservation(),
         secret_store=lambda: native,
     )
+    profiles.prepare_registry()
     server = RuntimeTransportServer(
         endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
     )

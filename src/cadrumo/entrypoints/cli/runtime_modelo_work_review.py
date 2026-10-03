@@ -7,7 +7,7 @@ from uuid import UUID
 
 import typer
 
-from ...application.modelo.work_review_operation import (
+from ...application.modelo.work_review_contracts import (
     MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID,
     ModeloWorkReviewProjection,
     ModeloWorkReviewRequest,

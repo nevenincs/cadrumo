@@ -6,7 +6,7 @@ from uuid import UUID
 
 import typer
 
-from ....application.user_profile.operations import (
+from ....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
 )

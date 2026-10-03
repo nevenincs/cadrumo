@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language

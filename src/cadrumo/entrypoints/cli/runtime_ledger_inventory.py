@@ -10,23 +10,25 @@ import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.inventory.registered_operation import (
+from ...application.inventory.registered_projections import (
+    InventoryClosingAuthorityOperationProjection,
+    InventoryCreateProjection,
+    InventoryLedgerProjection,
+    InventoryListProjection,
+    InventoryMovementAddProjection,
+    InventoryRefusalProjection,
+    InventoryValuationOperationProjection,
+)
+from ...application.inventory.registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
-    InventoryClosingAuthorityOperationProjection,
     InventoryClosingAuthorityRecordRequest,
-    InventoryCreateProjection,
     InventoryCreateRequest,
-    InventoryLedgerProjection,
-    InventoryListProjection,
     InventoryListRequest,
-    InventoryMovementAddProjection,
     InventoryMovementAddRequest,
-    InventoryRefusalProjection,
-    InventoryValuationOperationProjection,
     InventoryValuationPreviewRequest,
 )
 from ...core.bucket_pointer import require_active_bucket_id

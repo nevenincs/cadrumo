@@ -32,7 +32,7 @@ from .cli_runner import invoke_cached_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "0ac1e000-0000-4000-8000-000000515003"
-_MISSING_SCOPE = "requires an explicit authority operation or scope"
+_MISSING_SCOPE = "requires an explicit generation-pinned governed-fact scope"
 
 
 @pytest.fixture

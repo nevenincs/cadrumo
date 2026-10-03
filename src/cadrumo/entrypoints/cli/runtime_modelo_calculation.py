@@ -11,12 +11,12 @@ from ...application.modelo.calculation_projection import (
     ModeloCalculationSnapshot,
     ModeloCalculationSummarySnapshot,
 )
-from ...application.modelo.operation_definitions import (
-    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+from ...application.modelo.operation_definitions import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
+from ...application.modelo.work_calculation_contracts import (
     ModeloWorkCalculatePublicResultV2,
     ModeloWorkCalculateRequest,
 )
-from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.operations.public_scalar import PublicDecimal, PublicNamedScalar
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.external_constants import OutputLanguage

@@ -25,6 +25,7 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.models import OperationId
 from ...application.operations.registry import OperationPublicDefinitionContractV1
+from ...application.operations.secret_submission import OperationSecretRequirement
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import bounded_deadline_after, remaining_budget
 from ...application.runtime.operation_access import (
@@ -33,6 +34,7 @@ from ...application.runtime.operation_access import (
     RuntimeOperationObserve,
     RuntimeOperationObserved,
     RuntimeOperationProjected,
+    RuntimeOperationReply,
     RuntimeOperationResult,
 )
 from ...application.user_profile.access_contracts import AccessDenialCode
@@ -45,7 +47,8 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from .frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError, frontend_failure_code
+from .frontend_client import RuntimeFrontendClient
+from .frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
 from .operation_settlement import PinnedConnection, submit_operation
 from .profile_mutations import ProfileMutationRunError
 
@@ -163,27 +166,7 @@ def _fresh_result(
         ),
         deadline=deadline,
     )
-    if (
-        not isinstance(reply, RuntimeOperationProjected)
-        or reply.operation_id != operation_id
-        or reply.projection_kind != "result"
-    ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    if reply.document.get("outcome") == "refused":
-        refusal = OperationResultProjectionRefusalV1.model_validate_json(canonical_json_bytes(reply.document))
-        raise RuntimeFrontendRefusedError(refusal.code.value)
-    result = OperationResultProjectionSuccessV1[ProfilePassphraseRotationResultProjection].model_validate_json(
-        canonical_json_bytes(reply.document)
-    )
-    outcome = result.projection.outcome
-    if (
-        result.result_schema != contract.result_schema
-        or result.definition_contract_digest != contract.definition_contract_digest
-        or outcome.profile_id != str(client.profile_id)
-        or not outcome.dek_epoch_preserved
-    ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    return outcome
+    return _validated_rotation_outcome(client, reply, operation_id, contract)
 
 
 def _read_with_replacement(
@@ -239,13 +222,7 @@ def run_profile_password_rotation(
         if not all(isinstance(value, bytearray) for value in buffers):
             raise TypeError("password rotation requires mutable credential buffers")
         deadline = bounded_deadline_after(timeout, subject="password rotation")
-        contract = client.contract(PROFILE_ROTATION_OPERATION_DEFINITION_ID, deadline=deadline)
-        if (
-            contract.definition_id != PROFILE_ROTATION_OPERATION_DEFINITION_ID
-            or contract.result_schema is None
-            or contract.result_schema.schema_id != PROFILE_ROTATION_RESULT_SCHEMA_ID
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        contract = _rotation_contract(client, deadline)
         pinned = PinnedConnection.of(client)
         original_session = pinned.session_id
         payload = ProfilePassphraseRotationOperationRequest(profile_id=client.profile_id)
@@ -259,13 +236,7 @@ def run_profile_password_rotation(
         )
         operation_id = submitted.receipt.operation_id
         requirement = submitted.receipt.secret_requirement
-        if (
-            requirement is None
-            or requirement.identity.operation_id != operation_id
-            or requirement.identity.definition_id != contract.definition_id
-            or requirement.identity.subject_ref != profile_operation_subject(str(client.profile_id))
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        requirement = _require_rotation_secret(client, requirement, operation_id, contract)
         secret = _secret_document(current_passphrase, new_passphrase, new_passphrase_confirmation)
         try:
             delivered = client.submit_secret(requirement, secret, timeout=remaining_budget(deadline))
@@ -273,27 +244,7 @@ def run_profile_password_rotation(
             secret[:] = bytes(len(secret))
         if delivered.operation_id != operation_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        try:
-            started = client.operation(
-                RuntimeOperationControl(
-                    action="operation_start",
-                    request_id=uuid4(),
-                    profile_id=client.profile_id,
-                    session_id=original_session,
-                    operation_id=operation_id,
-                ),
-                deadline=deadline,
-            )
-            if not isinstance(started, RuntimeOperationAcknowledged) or started.operation_id != operation_id:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            _settled(client, operation_id, contract, deadline=deadline)
-        except RuntimeFrontendRefusedError:
-            # Deliberate retirement removes old read authority. Fresh password
-            # admission and the exact canonical result must still prove success.
-            pass
-        except RuntimeRefusalError as error:
-            if error.reason not in {RuntimeRefusalCode.CONNECTION_CLOSED, RuntimeRefusalCode.UNAVAILABLE}:
-                raise
+        _start_retiring_rotation(client, operation_id, contract, original_session, deadline)
         outcome = _read_with_replacement(
             client,
             operation_id,
@@ -314,3 +265,93 @@ def run_profile_password_rotation(
     finally:
         _wipe_buffers(buffers)
     raise failure
+
+
+def _validated_rotation_outcome(
+    client: RuntimeFrontendClient,
+    reply: RuntimeOperationReply,
+    operation_id: OperationId,
+    contract: OperationPublicDefinitionContractV1,
+) -> ProfilePassphraseRotationOutcome:
+    """Require the exact result envelope and preserved DEK epoch after fresh login."""
+    if (
+        not isinstance(reply, RuntimeOperationProjected)
+        or reply.operation_id != operation_id
+        or reply.projection_kind != "result"
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    if reply.document.get("outcome") == "refused":
+        refusal = OperationResultProjectionRefusalV1.model_validate_json(canonical_json_bytes(reply.document))
+        raise RuntimeFrontendRefusedError(refusal.code.value)
+    result = OperationResultProjectionSuccessV1[ProfilePassphraseRotationResultProjection].model_validate_json(
+        canonical_json_bytes(reply.document)
+    )
+    outcome = result.projection.outcome
+    if (
+        result.result_schema != contract.result_schema
+        or result.definition_contract_digest != contract.definition_contract_digest
+        or outcome.profile_id != str(client.profile_id)
+        or not outcome.dek_epoch_preserved
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return outcome
+
+
+def _rotation_contract(client: RuntimeFrontendClient, deadline: float) -> OperationPublicDefinitionContractV1:
+    """Require the canonical rotation definition and its closed result schema."""
+    contract = client.contract(PROFILE_ROTATION_OPERATION_DEFINITION_ID, deadline=deadline)
+    if (
+        contract.definition_id != PROFILE_ROTATION_OPERATION_DEFINITION_ID
+        or contract.result_schema is None
+        or contract.result_schema.schema_id != PROFILE_ROTATION_RESULT_SCHEMA_ID
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return contract
+
+
+def _require_rotation_secret(
+    client: RuntimeFrontendClient,
+    requirement: OperationSecretRequirement | None,
+    operation_id: OperationId,
+    contract: OperationPublicDefinitionContractV1,
+) -> OperationSecretRequirement:
+    """Bind the borrowed password channel to this submitted rotation identity."""
+    if (
+        requirement is None
+        or requirement.identity.operation_id != operation_id
+        or requirement.identity.definition_id != contract.definition_id
+        or requirement.identity.subject_ref != profile_operation_subject(str(client.profile_id))
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return requirement
+
+
+def _start_retiring_rotation(
+    client: RuntimeFrontendClient,
+    operation_id: OperationId,
+    contract: OperationPublicDefinitionContractV1,
+    original_session: UUID,
+    deadline: float,
+) -> None:
+    """Start once and accept only the original host-retirement refusal classes."""
+    try:
+        started = client.operation(
+            RuntimeOperationControl(
+                action="operation_start",
+                request_id=uuid4(),
+                profile_id=client.profile_id,
+                session_id=original_session,
+                operation_id=operation_id,
+            ),
+            deadline=deadline,
+        )
+        if not isinstance(started, RuntimeOperationAcknowledged) or started.operation_id != operation_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        _settled(client, operation_id, contract, deadline=deadline)
+    except RuntimeFrontendRefusedError:
+        # Deliberate retirement removes old read authority. Fresh password
+        # admission and the exact canonical result must still prove success.
+        pass
+    except RuntimeRefusalError as error:
+        if error.reason not in {RuntimeRefusalCode.CONNECTION_CLOSED, RuntimeRefusalCode.UNAVAILABLE}:
+            raise

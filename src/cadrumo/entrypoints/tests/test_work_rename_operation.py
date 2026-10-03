@@ -23,24 +23,11 @@ from ...application.modelo.lifecycle_advisories import ModeloLifecycleAdvisories
 from ...application.modelo.operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     ModeloExportExecutor,
-    ModeloExportRequest,
-    ModeloWorkAmendBaseline,
     ModeloWorkAmendExecutor,
-    ModeloWorkAmendOverride,
-    ModeloWorkAmendRequest,
-    ModeloWorkDiscardBaseline,
     ModeloWorkDiscardExecutor,
-    ModeloWorkDiscardPublicResultV2,
-    ModeloWorkFileApproval,
     ModeloWorkFileExecutor,
-    ModeloWorkFilePublicResultV2,
-    ModeloWorkFileRequest,
     ModeloWorkRenameExecutor,
-    ModeloWorkRenamePublicResultV2,
-    ModeloWorkRenameRequest,
     ModeloWorkVerifyExecutor,
-    ModeloWorkVerifyPublicResultV2,
-    ModeloWorkVerifyRequest,
     build_modelo_export_definition,
     build_modelo_work_amend_definition,
     build_modelo_work_discard_definition,
@@ -55,6 +42,24 @@ from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.modelo.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...application.modelo.verification_preconditions import ModeloVerificationResult
 from ...application.modelo.verification_projection import ModeloVerificationSnapshot
+from ...application.modelo.work_amend_contracts import (
+    ModeloWorkAmendBaseline,
+    ModeloWorkAmendOverride,
+    ModeloWorkAmendRequest,
+)
+from ...application.modelo.work_change_contracts import (
+    ModeloWorkDiscardBaseline,
+    ModeloWorkDiscardPublicResultV2,
+    ModeloWorkRenamePublicResultV2,
+    ModeloWorkRenameRequest,
+)
+from ...application.modelo.work_export_contracts import ModeloExportRequest
+from ...application.modelo.work_filing_contracts import (
+    ModeloWorkFileApproval,
+    ModeloWorkFilePublicResultV2,
+    ModeloWorkFileRequest,
+)
+from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationConflictScope,

@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from .....core.async_cleanup import (
     AsyncCloseable,
+    await_cancellation_complete,
     close_async_resources,
 )
 from .....core.logging import get_logger
@@ -410,7 +411,23 @@ async def _start_playwright() -> Playwright:
         from playwright.async_api import async_playwright
 
         playwright_manager = async_playwright()
-        return await playwright_manager.start()
+        started: Playwright | None = None
+
+        async def start_owned() -> None:
+            nonlocal started
+            started = await playwright_manager.start()
+
+        try:
+            await await_cancellation_complete(start_owned(), task_name="cadrumo-playwright-start")
+        except asyncio.CancelledError:
+            if started is not None:
+                await close_async_resources(
+                    _SharedPlaywrightRuntimeOwner(started), task_name="cadrumo-playwright-start-cancel"
+                )
+            raise
+        if started is None:
+            raise RuntimeError("Playwright startup completed without an owned runtime")
+        return started
     except Exception as exc:
         raise BrowserError(
             "Playwright runtime start failed",

@@ -7,7 +7,7 @@ from enum import StrEnum
 from typing import cast
 
 from ...application.ledger.actions_common import display_decimal
-from ...application.ledger.classify_operation import (
+from ...application.ledger.classify_requests import (
     LedgerClassifyM210Options,
     LedgerClassifyPatchField,
 )

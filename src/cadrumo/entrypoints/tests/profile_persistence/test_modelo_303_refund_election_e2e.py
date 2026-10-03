@@ -69,7 +69,7 @@ from ....application.modelo.action_errors import ModeloRefundElectionNotEligible
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.filing_actions import file_modelo_revision
 from ....application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.auth_provider import AuthProviderKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -159,13 +159,13 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
-        return verify_modelo_revision(
+        return verify_modelo_revision_with_preconditions(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
             operation=operation,
             **kwargs,
-        )
+        ).report
 
 
 def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:

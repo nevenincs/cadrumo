@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a1e7f56c0aa48f0144f82aea4cbe5408b1bde56ba7b881493f2849f99d915d38'
-related:
-  - "[[2026-08-14-test-harness-sanity-plan]]"
+related: []
 ---
 # `test-harness-sanity` audit: harness performance
 

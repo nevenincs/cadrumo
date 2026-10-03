@@ -2138,7 +2138,7 @@
 # 
 # # Sin actividad. "X o blanco". Carried by the shipped no-activity marker, whose
 # # producer reads only the draft's result disposition and discards the modelo
-# # (`del draft` in `_record_field_renderer.py`), so it is behaviourally neutral
+# # (`del draft` in `record_field_renderer.py`), so it is behaviourally neutral
 # # despite its m303_ name. No validator scopes a computed_key to one modelo.
 # [[revisions."2026-y-siguientes".export_layouts.records.fields]]
 # id = "modelo-322-page-02-338"

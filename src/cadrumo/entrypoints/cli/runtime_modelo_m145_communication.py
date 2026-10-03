@@ -9,7 +9,7 @@ import typer
 from pydantic import ValidationError
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.modelo.m145_communication_operation import (
+from ...application.modelo.m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID,

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:127ae7f4ed484ff4174a837b9f5d253b7de53219f970b9b8bce095201579047b'
+body_hash: 'sha256:105ef5af688888f17633f055860c31507fe08f116a0ac27c2f4c8c66fb32cf3c'
 related:
   - "[[2026-08-28-corpus-evidence-integrity-corpus-anchor-resolvability-audit]]"
 ---
@@ -14,9 +14,15 @@ related:
 
 ## Scope
 
+Measure whether wrong-value witnesses on corpus required-text citations distinguish law text that contains the source concept from material that merely exists.
+
 ## Findings
 
+Whole-law sources accepted all tested wrong values, showing that presence alone has weak false-positive power and byte size is a poor proxy for evidentiary precision.
+
 ## Recommendations
+
+Evaluate corpus citation checks by their ability to reject controlled wrong-value witnesses before treating presence as meaningful legal grounding.
 
 ## The measurement this campaign should have made first
 

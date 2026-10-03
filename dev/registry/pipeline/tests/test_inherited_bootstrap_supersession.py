@@ -13,8 +13,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
 from .. import bootstrap_supersession
-from .._export_tree import RenderedExportTree
 from .._tree_publication import publish_validated_generated_export_tree
+from .._tree_validation import GeneratedExportTreeValidationContext
 from ..bootstrap_supersession import (
     bootstrap_layout_supersession_fingerprint,
     bootstrap_manual_source_revision_root,
@@ -28,12 +28,14 @@ from ..cli import (
     check_prepared_invocation,
     prepare_generated_tree_invocation,
 )
+from ..export_fragment_provenance import ExportFragmentTarget
+from ..export_tree_models import RenderedExportTree
 from ..tree_publication_contracts import (
     GeneratedExportSupersession,
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
 )
-from ..tree_publication_supersession import _retarget_reviewed_constructs
+from ..tree_publication_supersession import _install_generated_form_companion, _retarget_reviewed_constructs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -66,6 +68,43 @@ _CASES = (
         "c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a",
     ),
 )
+
+
+def test_inherited_generated_form_companion_uses_canonical_local_filename(tmp_path: Path) -> None:
+    """A detached validation filename must not enter the thin published child."""
+    source_modelo_root = bundled_path("registry", "aeat", "modelos", "131")
+    source_fragment = source_modelo_root / "revisions" / "2026-late" / "form_layouts" / "0001-form-layout.toml"
+    assert source_fragment.is_file()
+    candidate_root = tmp_path / "candidate" / "registry" / "aeat"
+    candidate_form_root = candidate_root / "modelos" / "131" / "revisions" / "2026-late" / "form_layouts"
+    candidate_form_root.mkdir(parents=True)
+    (candidate_form_root / "0001-complete-edition.toml").write_bytes(source_fragment.read_bytes())
+    staged_revision_root = tmp_path / "staged-child"
+    staged_form_root = staged_revision_root / "form_layouts"
+    staged_form_root.mkdir(parents=True)
+    (staged_form_root / "0001-form-layout.toml").write_text("stale generated companion", encoding="utf-8")
+    context = GeneratedExportTreePublicationContext(
+        validation=GeneratedExportTreeValidationContext(
+            registry_root=candidate_root,
+            source_root=bundled_path(),
+            target=ExportFragmentTarget(modelo="131", revision_id="2026-late", design_epoch="2026-late"),
+            filing_year=2026,
+            period="3T",
+        ),
+        temporary_root=tmp_path,
+        target_root=tmp_path / "live-registry",
+        target_export_root=staged_revision_root / "export",
+    )
+
+    _install_generated_form_companion(
+        context=context,
+        staged_revision_root=staged_revision_root,
+        source_modelo_root=source_modelo_root,
+        revision_id="2026-late",
+    )
+
+    assert [path.name for path in staged_form_root.iterdir()] == ["0001-form-layout.toml"]
+    assert (staged_form_root / "0001-form-layout.toml").read_bytes() == source_fragment.read_bytes()
 
 
 @pytest.mark.parametrize("modelo,revision,ancestor,layout_id,references,source_ref,source_sha256", _CASES)

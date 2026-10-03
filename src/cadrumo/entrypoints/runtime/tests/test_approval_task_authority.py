@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sys
 from collections.abc import AsyncGenerator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
@@ -14,10 +15,8 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import changed, lease, worker_profiles
-from cadrumo.adapters.local_runtime.worker_authorization_client import (
-    WorkerAuthorizationClient,
-    WorkerAuthorizationLease,
-)
+from cadrumo.adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
+from cadrumo.adapters.local_runtime.worker_authorization_lease import WorkerAuthorizationLease
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, new_operation_id
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
@@ -39,6 +38,7 @@ from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.runtime.operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
+from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -195,8 +195,7 @@ async def _establish_provenance(authority: ProfileWorkerOperationAuthority, iden
         assert provenance.identity == identity
 
 
-@pytest.mark.asyncio
-async def test_exact_task_permit_and_cancellation_complete_publication(tmp_path: Path) -> None:
+async def _exercise(tmp_path: Path) -> None:
     with _authority(tmp_path) as (authority, client, identity, binding, custody):
         await _establish_provenance(authority, identity)
         with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
@@ -238,3 +237,19 @@ async def test_exact_task_permit_and_cancellation_complete_publication(tmp_path:
             await asyncio.wait_for(task, 10)
         assert client.released.is_set()
         assert client.leases[-1].calls == 1 and not client.leases[-1].active
+
+
+def test_exact_task_permit_and_cancellation_complete_publication(tmp_path: Path) -> None:
+    """Keep the immutable worker binding inside its own process lifetime."""
+    result = run_audited_process(
+        [sys.executable, "-m", "cadrumo.entrypoints.runtime.tests.test_approval_task_authority", str(tmp_path)],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+if __name__ == "__main__":
+    asyncio.run(_exercise(Path(sys.argv[1])))

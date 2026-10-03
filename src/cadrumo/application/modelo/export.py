@@ -81,7 +81,7 @@ from ...domain.calculations.registry.applicability_modelo202 import derive_model
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
+from ...domain.deadlines.models import ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.filing.errors import FilingExportError
 from ...domain.filing.protocols import ModeloInputs
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
@@ -852,6 +852,28 @@ def _build_export_producer_snapshot(
         ) from exc
 
 
+def _m303_nota_three_requires_refund_account(
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    prior_domiciliation_election: PriorDomiciliationElection,
+    amendment_evidence: AmendmentEvidence | None,
+) -> bool:
+    """Read Nota 3 only for a rectificativa that keeps the prior domiciliation."""
+    nota_three = (
+        str(work_unit.modelo) == Modelo("303").value
+        and amendment_evidence is not None
+        and amendment_evidence.is_rectificativa
+        and prior_domiciliation_election is PriorDomiciliationElection.KEEP
+        and revision.casilla_values.get(validated_casilla_id("111", surface="M303 Nota 3 account page")) is not None
+    )
+    return nota_three
+
+
+def _export_refund_account_is_missing(refund_account: RefundAccount | None) -> bool:
+    """Require a present refund account with its IBAN or SWIFT/BIC identity."""
+    return refund_account is None or not (refund_account.iban or refund_account.swift_bic)
+
+
 def _require_export_accounts(
     command: ModeloExportCommand,
     *,
@@ -878,16 +900,12 @@ def _require_export_accounts(
                 context=context,
             )
         return False
-    nota_three = (
-        str(work_unit.modelo) == Modelo("303").value
-        and amendment_evidence is not None
-        and amendment_evidence.is_rectificativa
-        and prior_domiciliation_election is PriorDomiciliationElection.KEEP
-        and revision.casilla_values.get(validated_casilla_id("111", surface="M303 Nota 3 account page")) is not None
+    nota_three = _m303_nota_three_requires_refund_account(
+        work_unit, revision, prior_domiciliation_election, amendment_evidence
     )
     if result_disposition_is_refund(resolved_result_disposition) or nota_three:
         refund_account = iva_profile.refund_account if iva_profile is not None else None
-        if refund_account is None or not (refund_account.iban or refund_account.swift_bic):
+        if _export_refund_account_is_missing(refund_account):
             raise ModeloRefundAccountMissingError(
                 "the export's account page requires a refund account on file",
                 context=context,
@@ -1028,6 +1046,19 @@ def _resolve_m303_filing_facts_for_export(
     return filing_facts
 
 
+def _export_completeness_unverified(work_unit: WorkUnit, schema_provider: RegistrySchemaAccessor) -> bool:
+    """Re-read the export subview after publication and report missing completeness."""
+    _export_subview = schema_provider.get_subview(str(work_unit.modelo))
+    _export_layout = _export_subview.export_layouts[0] if _export_subview.export_layouts else None
+    completeness_unverified = (
+        _export_layout is not None
+        and _export_layout.format is ExportLayoutFormat.FIXED_WIDTH
+        and _export_subview.completeness_manifest is None
+    )
+
+    return completeness_unverified
+
+
 def _persist_exported_draft(
     *,
     command: ModeloExportCommand,
@@ -1132,13 +1163,7 @@ def _persist_exported_draft(
     # completeness manifest cannot be structural-parity-verified (the pre-write
     # gate in export_draft only runs when a manifest is present), so surface a
     # non-blocking advisory rather than implying the export was verified.
-    _export_subview = schema_provider.get_subview(str(work_unit.modelo))
-    _export_layout = _export_subview.export_layouts[0] if _export_subview.export_layouts else None
-    completeness_unverified = (
-        _export_layout is not None
-        and _export_layout.format is ExportLayoutFormat.FIXED_WIDTH
-        and _export_subview.completeness_manifest is None
-    )
+    completeness_unverified = _export_completeness_unverified(work_unit, schema_provider)
 
     return ModeloExportResult(
         calculation_revision_id=command.calculation_revision_id,

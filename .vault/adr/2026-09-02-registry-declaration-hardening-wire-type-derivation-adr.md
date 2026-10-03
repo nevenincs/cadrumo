@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#registry-declaration-hardening'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:bc4f12b23617b63bd43149fd6c8de6bd7a52b692626869662033954e0054a088'
 related:
   - "[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]"
   - "[[2026-09-02-registry-declaration-hardening-declaration-kinds-adr]]"
-  - "[[2026-09-02-registry-declaration-hardening-plan]]"
 ---
 
 # `registry-declaration-hardening` adr: `An export field derives its wire type and scale from the casilla, or attests why not` | (**status:** `proposed`)

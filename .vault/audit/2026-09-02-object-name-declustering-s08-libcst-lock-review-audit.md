@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:c22dab8dfcdfde81a0212eea3ba01fcd52a5b8304aa4e71cdff0855a0bf1eb69'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+related: []
 ---
 
 # `object-name-declustering` audit: `s08 libcst lock review`

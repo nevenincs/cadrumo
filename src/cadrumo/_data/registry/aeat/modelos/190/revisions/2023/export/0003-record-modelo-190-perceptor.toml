@@ -1,0 +1,114 @@
+[[revisions.2023.export_layouts]]
+id = 'modelo-190-fichero-boe'
+
+[[revisions.2023.export_layouts.records]]
+id = 'modelo-190-perceptor'
+record_type = 'perceptor'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-navarra'
+offset = 336
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-navarra'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-araba'
+offset = 349
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-araba'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-gipuzkoa'
+offset = 362
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-gipuzkoa'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-bizkaia'
+offset = 375
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-bizkaia'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-190-perc-blancos-388'
+offset = 388
+length = 113
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2023']
+
+[revisions.2023.export_layouts.records.row_field_casilla_ids]

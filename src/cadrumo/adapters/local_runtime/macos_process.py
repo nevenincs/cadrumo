@@ -78,18 +78,7 @@ def decode_macos_process_info(payload: bytes, *, pid: int, expected_owner: str) 
     if len(payload) != ctypes.sizeof(_BsdProcessInfo) or type(pid) is not int or not 0 < pid <= 2_147_483_647:
         raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
     value = _BsdProcessInfo.from_buffer_copy(payload)
-    if (
-        value.pid != pid
-        or str(value.uid) != expected_owner
-        or value.real_uid != value.uid
-        or value.saved_uid != value.uid
-        or value.status == 5
-        or value.flags & 4
-        or value.started_seconds <= 0
-        or not 0 <= value.started_microseconds < 1_000_000
-        or value.group_id <= 0
-    ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+    _require_bsd_process_identity(value, pid, expected_owner)
     return MacosProcessObservation(
         pid=pid,
         os_owner_id=expected_owner,
@@ -174,42 +163,18 @@ class MacosProcessWatch:
             ):
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         except BaseException as error:
-            primary = (
-                RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-                if isinstance(error, (AttributeError, OSError))
-                else error
-            )
-            if primary is not error:
-                for name in ("async_cleanup_error", "cleanup_error"):
-                    previous = error.__dict__.get(name)
-                    if isinstance(previous, BaseException):
-                        primary.__dict__[name] = previous
-            try:
-                self.close()
-            except BaseException as cleanup:
-                previous = primary.__dict__.get("cleanup_error")
-                if isinstance(previous, AsyncResourceCleanupError):
-                    # The FD slot may have been consumed despite native failure.
-                    # Preserve earlier retry owners; this failure is diagnostic,
-                    # never another authority to close a reusable descriptor.
-                    diagnostic = AsyncResourceCleanupError(
-                        (), (cleanup,), retry_task_name="macos-process-watch-cleanup", close_attempts=1
-                    )
-                    retained = previous.merged_with(diagnostic)
-                    retained.__cause__ = cleanup
-                    primary.__dict__["cleanup_error"] = retained
-                    if primary.__dict__.get("async_cleanup_error") is previous:
-                        primary.__dict__["async_cleanup_error"] = retained
-                elif isinstance(previous, BaseException) and previous is not cleanup:
-                    primary.__dict__["cleanup_error"] = BaseExceptionGroup(
-                        "macOS process watch cleanup failed", (previous, cleanup)
-                    )
-                elif cleanup is not primary:
-                    primary.__dict__["cleanup_error"] = cleanup
-                primary.add_note("Process watch native close also failed; its descriptor capability was retired")
+            primary = _watch_failure(error)
+            self._close_failed_watch(primary)
             if primary is error:
                 raise
             raise primary from error
+
+    def _close_failed_watch(self, primary: BaseException) -> None:
+        """Retire the descriptor once and preserve all prior cleanup ownership."""
+        try:
+            self.close()
+        except BaseException as cleanup:
+            _retain_watch_close_failure(primary, cleanup)
 
     def _event(self, *, change: _KernelEvent | None = None, timeout: float = 0) -> bool:
         if self._descriptor < 0 or not math.isfinite(timeout) or timeout < 0 or timeout > 60:
@@ -237,10 +202,7 @@ class MacosProcessWatch:
                 1,
                 ctypes.byref(duration),
             )
-            if count < 0 or (count and event.flags & 0x4000):
-                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-            if count and (event.ident != self.observation.pid or event.filter != -5):
-                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            _require_kernel_event(count, event, self.observation.pid)
             if count and event.events & 0x80000000:
                 self._exited = True
             return self._exited
@@ -272,4 +234,62 @@ class MacosProcessWatch:
             os.close(descriptor)
 
 
-__all__ = ["MacosProcessObservation", "MacosProcessWatch", "decode_macos_process_info", "read_macos_process"]
+def _require_bsd_process_identity(value: _BsdProcessInfo, pid: int, expected_owner: str) -> None:
+    """Admit only the expected live native identity and complete creation timestamp."""
+    if (
+        value.pid != pid
+        or str(value.uid) != expected_owner
+        or value.real_uid != value.uid
+        or value.saved_uid != value.uid
+        or value.status == 5
+        or value.flags & 4
+        or value.started_seconds <= 0
+        or not 0 <= value.started_microseconds < 1_000_000
+        or value.group_id <= 0
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+
+
+def _watch_failure(error: BaseException) -> BaseException:
+    """Translate native watch failures while retaining attached cleanup owners."""
+    primary = (
+        RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) if isinstance(error, (AttributeError, OSError)) else error
+    )
+    if primary is not error:
+        for name in ("async_cleanup_error", "cleanup_error"):
+            previous = error.__dict__.get(name)
+            if isinstance(previous, BaseException):
+                primary.__dict__[name] = previous
+    return primary
+
+
+def _retain_watch_close_failure(primary: BaseException, cleanup: BaseException) -> None:
+    """Preserve a consumed descriptor as diagnostic and retain earlier retry owners."""
+    previous = primary.__dict__.get("cleanup_error")
+    if isinstance(previous, AsyncResourceCleanupError):
+        # The FD slot may have been consumed despite native failure.
+        # Preserve earlier retry owners; this failure is diagnostic,
+        # never another authority to close a reusable descriptor.
+        diagnostic = AsyncResourceCleanupError(
+            (), (cleanup,), retry_task_name="macos-process-watch-cleanup", close_attempts=1
+        )
+        retained = previous.merged_with(diagnostic)
+        retained.__cause__ = cleanup
+        primary.__dict__["cleanup_error"] = retained
+        if primary.__dict__.get("async_cleanup_error") is previous:
+            primary.__dict__["async_cleanup_error"] = retained
+    elif isinstance(previous, BaseException) and previous is not cleanup:
+        primary.__dict__["cleanup_error"] = BaseExceptionGroup(
+            "macOS process watch cleanup failed", (previous, cleanup)
+        )
+    elif cleanup is not primary:
+        primary.__dict__["cleanup_error"] = cleanup
+    primary.add_note("Process watch native close also failed; its descriptor capability was retired")
+
+
+def _require_kernel_event(count: int, event: _KernelEvent, pid: int) -> None:
+    """Refuse native errors or an event for another process before latching exit."""
+    if count < 0 or (count and event.flags & 0x4000):
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+    if count and (event.ident != pid or event.filter != -5):
+        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)

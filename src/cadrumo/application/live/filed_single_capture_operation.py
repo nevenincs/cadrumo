@@ -2,57 +2,41 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from pathlib import Path
+from typing import TypedDict
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
-from ...core.identity.profile import canonical_profile_bucket_id
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect
 from ...core.period import Period
-from ...core.time.clock import now
-from ..ledger.read_access import resolve_ledger_read_access
 from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
+    RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
     OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
-from ..user_profile.access_errors import ProfileAccessRefusedError
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from .filed_data_capture import capture_filed_data
 from .filed_history_operation import (
     FiledHistoryBrowserResourcesFactory,
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
 )
-from .remote_state_models import FiledDataCaptureReport
-from .session import LiveSessionWriteReceipt
+from .live_operation_execution import (
+    own_provider_browser,
+    publish_live_capture_report,
+    require_exact_profile_worker,
+    track_capture_session,
+)
+from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .remote_state_models import FiledCaptureEvidenceTally, FiledDataCaptureReport
 
 FILED_SINGLE_CAPTURE_DEFINITION_ID = "live.filed-capture.single"
 _PHASES = ("filed-capture.preflight", "filed-capture.acquire", "filed-capture.result")
@@ -161,14 +145,29 @@ def public_filed_reconciliation(row: FilingReconciliationResult) -> FiledReconci
     )
 
 
-def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
-    """Expose only the complete, explicitly declared safe result fields."""
-    del receipt
-    report = FiledDataCaptureReport.model_validate(result, strict=True)
-    return FiledSingleCapturePublicResultV1(
-        output_root=report.output_root,
-        modelo=report.modelo,
-        year=report.year,
+class FiledCaptureTallyFieldsV1(TypedDict):
+    """The public form of the evidence tally every filed capture result carries."""
+
+    captured_count: int
+    reached_count: int
+    observation_paths: tuple[str, ...]
+    artefact_refs: tuple[str, ...]
+    justificante_metadata_count: int
+    justificante_csvs: tuple[str, ...]
+    filing_evidence_stamped_count: int
+    filing_record_ids: tuple[str, ...]
+    filing_evidence_conflict_count: int
+    filing_evidence_conflict_record_ids: tuple[str, ...]
+    casilla_count: int
+    calculation_observation_count: int
+    calculation_observation_keys: tuple[str, ...]
+    evidence_notices: tuple[FiledCaptureNoticeV1, ...]
+    reconciliations: tuple[FiledReconciliationV1, ...]
+
+
+def public_filed_capture_tally(report: FiledCaptureEvidenceTally) -> FiledCaptureTallyFieldsV1:
+    """Project the shared evidence tally of a single, source or bulk filed capture."""
+    return FiledCaptureTallyFieldsV1(
         captured_count=report.captured_count,
         reached_count=report.reached_count,
         observation_paths=report.observation_paths,
@@ -184,6 +183,22 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> Bas
         calculation_observation_keys=report.calculation_observation_keys,
         evidence_notices=tuple(public_filed_capture_notice(notice) for notice in report.evidence_notices),
         reconciliations=tuple(public_filed_reconciliation(row) for row in report.reconciliation_results),
+    )
+
+
+def filed_capture_tally_effect(report: FiledCaptureEvidenceTally) -> OperationEffect:
+    """Report an update exactly when the capture persisted an observation or stamped filing evidence."""
+    if report.captured_count or report.calculation_observation_count or report.filing_evidence_stamped_count:
+        return OperationEffect.UPDATED
+    return OperationEffect.NONE
+
+
+def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+    """Expose only the complete, explicitly declared safe result fields."""
+    del receipt
+    report = FiledDataCaptureReport.model_validate(result, strict=True)
+    return FiledSingleCapturePublicResultV1(
+        output_root=report.output_root, modelo=report.modelo, year=report.year, **public_filed_capture_tally(report)
     )
 
 
@@ -206,20 +221,17 @@ class FiledSingleCaptureExecutor:
     ) -> str:
         """Capture one selected pair and publish its complete encrypted accounting."""
         payload = request.payload
-        profile_id = canonical_profile_bucket_id(payload.profile_id)
-        if require_active_bucket_id() != profile_id or request.subject_ref != profile_operation_subject(profile_id):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
         period = Period.from_year_and_code(payload.year, payload.period) if payload.period is not None else None
         composition = self._composition_factory(payload.output_root, operation=context.authority_operation)
-        resources = self._browser_resources_factory()
-        context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_PHASES[1])
+        resources = await own_provider_browser(context, self._browser_resources_factory, acquire_phase=_PHASES[1])
         # Remote acquisition and any local writes can be interrupted at distinct
         # points. Until a report settles, the committed effect is unknown.
-        await context.events.effect(OperationEffect.UNKNOWN)
-        session_receipt = LiveSessionWriteReceipt(context.events.effect)
+        session_receipt = await track_capture_session(context, may_write=True)
         with (
             retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
             resources.activate(),
@@ -237,15 +249,9 @@ class FiledSingleCaptureExecutor:
                 on_session_write=session_receipt,
                 operation=context.authority_operation,
             )
-        effect = (
-            OperationEffect.UPDATED
-            if report.captured_count or report.calculation_observation_count or report.filing_evidence_stamped_count
-            else OperationEffect.NONE
+        return await publish_live_capture_report(
+            context, report, result_phase=_PHASES[2], effect=session_receipt.combine(filed_capture_tally_effect(report))
         )
-        await context.events.phase(_PHASES[2])
-        await context.events.effect(session_receipt.combine(effect))
-        async with context.cancellation.irreversible_section():
-            return await context.operands.put(report, written_at=now())
 
 
 def build_filed_single_capture_definition(
@@ -258,34 +264,14 @@ def build_filed_single_capture_definition(
     def build() -> FiledSingleCaptureExecutor:
         return FiledSingleCaptureExecutor(composition_factory, browser_resources_factory, provider_preflight)
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=FILED_SINGLE_CAPTURE_DEFINITION_ID,
         request_type=FiledSingleCaptureRequest,
         result_type=FiledDataCaptureReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=FiledSingleCaptureRequest,
-            executor_type=FiledSingleCaptureExecutor,
-            build=build,
-        ),
+        executor_type=FiledSingleCaptureExecutor,
+        build=build,
         phase_codes=_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
     )
 
 
@@ -293,29 +279,16 @@ def resolve_filed_single_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile capture authority and a fresh COMMIT fence."""
-    if request.definition_id != FILED_SINGLE_CAPTURE_DEFINITION_ID or not isinstance(
-        request.payload, FiledSingleCaptureRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
+    return resolve_whole_profile_capture_access(
+        request, context, definition_id=FILED_SINGLE_CAPTURE_DEFINITION_ID, payload_type=FiledSingleCaptureRequest
     )
-    return replace(resolved, policy=policy)
 
 
 def build_filed_single_capture_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind stable public request/result schemas and whole-profile access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=FiledSingleCaptureRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=FiledSingleCapturePublicResultV1,
-        ),
+        public_result_type=FiledSingleCapturePublicResultV1,
         result_projector=_project_result,
         access_resolver=resolve_filed_single_capture_access,
     )

@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#cli-authority-quality-backlog'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c774859a118265858b66b2c180dd3d4b316dc75102c00b35dba22c48e1895852'
+body_hash: 'sha256:8e8baf06dadbca63426cd23eb18b4668519911c11841bb310c7645170a5d2cfc'
 related:
-  - '[[2026-07-17-cli-authority-quality-backlog-adr]]'
   - '[[2026-07-17-cli-authority-quality-backlog-ledger]]'
   - '[[2026-07-17-cli-authority-quality-backlog-plan]]'
   - '[[2026-07-18-cli-authority-quality-backlog-adr]]'
@@ -24,7 +23,6 @@ Auto-generated index of all documents tagged with `#cli-authority-quality-backlo
 
 ### adr
 
-- `2026-07-17-cli-authority-quality-backlog-adr` - `cli-authority-quality-backlog` adr: `cli-authority-quality-backlog rescope grounding` | (**status:** `accepted`)
 - `2026-07-18-cli-authority-quality-backlog-adr` - `cli-authority-quality-backlog` adr: `S27 clave-diagnostics namespace authority: storage registry is canonical` | (**status:** `accepted`)
 
 ### audit

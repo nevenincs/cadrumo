@@ -11,15 +11,11 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec
 from ..user_profile.access_contracts import AccessDenialCode
@@ -152,22 +148,14 @@ class LedgerListExecutor:
 
 def build_ledger_list_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
     """Register a private-query read without commit or provider authority."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_LIST_OPERATION_DEFINITION_ID,
         request_type=LedgerListRequest,
         result_type=LedgerListProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerListRequest,
-            executor_type=LedgerListExecutor,
-            build=lambda: LedgerListExecutor(ports),
-        ),
-        phase_codes=(LEDGER_LIST_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerListExecutor,
+        build=lambda: LedgerListExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

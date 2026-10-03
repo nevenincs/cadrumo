@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-07-01'
-modified: '2026-08-15'
-body_hash: 'sha256:2a25dece55cd2f3690d9d4bbec62568be7462ae1db0863ac3fc48991ece918cf'
+modified: '2026-10-03'
+body_hash: 'sha256:d49cba3b9660630d8a35d9b8d52f2ccd5387b06efd0a25dc7dcaa6f07935e6c6'
 related:
-  - '[[2026-06-04-m100-marriage-date-axis-adr]]'
   - '[[2026-06-19-m100-dependent-modelo-applicability-adr]]'
 ---
 
@@ -75,7 +74,7 @@ The 2025 M100 formulas already use `if_then_else`, `greater_than`, `greater_equa
 
 ### F8 — Prior art for the mechanism decision
 
-`2026-06-04-m100-marriage-date-axis` is the closest date-axis precedent, but its ADR is a curation-only alignment record; the real implementation is the `_inject_derived_marriage_facts` path in F2. `2026-06-19-m100-dependent-modelo-applicability-adr` establishes that M100 applicability signals are registry/profile-grounded with a fail-closed default and are registry-authoritative, not schedule-derived — the same discipline applies to a deducción-eligibility gate (fail-closed: absent adoption/convivencia data → deducción not auto-applied). `2026-05-08-renta-cuota-integra-autonomic-scale-adr` establishes the CCAA-scoped parameter + `lookup_bracket_by_ccaa` dispatch the amount/limit parameters reuse.
+No accepted ADR establishing marriage-date derivation was found. The 2026-06-04 marriage-date record is curation-only and provides no decision precedent; the implementation evidence is the `_inject_derived_marriage_facts` path in F2. `2026-06-19-m100-dependent-modelo-applicability-adr` establishes that M100 applicability signals are registry/profile-grounded with a fail-closed default and are registry-authoritative, not schedule-derived — the same discipline applies to a deducción-eligibility gate (fail-closed: absent adoption/convivencia data → deducción not auto-applied). `2026-05-08-renta-cuota-integra-autonomic-scale-adr` establishes the CCAA-scoped parameter + `lookup_bracket_by_ccaa` dispatch the amount/limit parameters reuse.
 
 ### F9 — What is NOT yet verified (bounded honesty)
 

@@ -477,6 +477,8 @@ cache/
 /.codex/config.toml.lock
 /.gitignore.lock
 /.mcp.json.lock
+/.pre-commit-config.yaml
+/.pre-commit-config.yml
 /.vaultspec/.env
 /.vaultspec/.env.*
 # <<< vaultspec-managed <<<

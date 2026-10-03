@@ -46,17 +46,19 @@ from ..filing_chain_reconciliation import (
     FilingReconciliationOutcome,
     FilingReconciliationResult,
 )
-from ..filing_record_import_operation import (
+from ..filing_record_import_contracts import (
     MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
     ModeloFilingRecordImportOperationReport,
     ModeloFilingRecordImportProjection,
     ModeloFilingRecordImportReconciliationProjection,
     ModeloFilingRecordImportRequest,
+)
+from ..filing_record_import_operation import (
     _project_filing_record_import,
     build_modelo_filing_record_import_definition,
     build_modelo_filing_record_import_registration,
 )
-from ..filing_record_list_operation import ModeloFilingRecordListEntryProjection
+from ..filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

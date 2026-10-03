@@ -3,15 +3,16 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bfe2e4a77ddba5ab776c146af82f41e986d876e8109106946e40f49edf5dec40'
+body_hash: 'sha256:a6821b47c17f15da6c890b7c1ee62b314a70de0541f82b926ee0d6eadaa4df71'
 related: []
 ---
-
 # `registry-legal-grounding-windows` audit: Modelo 100 2024 savings scale citation window
 
-## What was checked
+## Scope
+
+### What was checked
 
 A grounding sweep over all 458 numeric registry parameters, classifying each by
 whether its `legal_refs` resolve to a catalogue provision with a `corpus_ref`,
@@ -30,7 +31,9 @@ state "50.000 euros" -- so only its cross-check is weak. Two `renta-2025-ric-*`
 entries are false positives of the digit filter: they pin "tres anos" and
 "cinco anos", the number spelled in words.
 
-## The finding
+## Findings
+
+### The finding
 
 Modelo 100 revision 2024's savings-base scale encodes the correct top marginal
 rate and cites a redaction that states a different one.
@@ -48,7 +51,7 @@ states 14 is `ley-35-2006:art-66-2023`, whose declared window is 2023-01-01 to
 The value is correct. The citation is the defect. Those are separate claims and
 only the second is made here.
 
-## Why no repair was landed
+### Why no repair was landed
 
 Repointing 2024 at the `art-66-2023` / `art-76-2023` redaction was attempted
 across all 41 files of the revision's savings-scale chain, and is refused by
@@ -70,7 +73,7 @@ Neither available citation satisfies both, so no citation change can be correct
 without an adjudication. The change was reverted and the loading state restored
 in `cfc6c30469`.
 
-## Root cause
+### Root cause
 
 Ley 7/2024 entered into force on 2024-12-22, nine days before the IRPF devengo
 of 2024-12-31, but its savings-scale change takes effect from 2025-01-01 -- as
@@ -90,20 +93,7 @@ uses the current redaction:
 | 2024 | 0 | 41 | 0.14 |
 | 2025 | 0 | 45 | 0.15 |
 
-## Remediation, for an owner
-
-The choice is a tax-semantics ruling and is not made here. Two shapes are
-available without fabricating a citation:
-
-- Catalogue the Ley 7/2024 effect-date provision and cite it alongside the
-  redaction, so the chain records why 2024 keeps the earlier scale.
-- Teach the window check to compare against the provision's effect date rather
-  than its in-force date, where the two differ.
-
-Do not resolve it by relaxing either gate: each is load-bearing, and silencing
-one settles the question invisibly.
-
-## Re-verified at HEAD, with the exact figures and a sharper diagnosis
+### Re-verified at HEAD, with the exact figures and a sharper diagnosis
 
 The conflict persists, and the numbers make it precise. Ley 7/2024 raised the top
 state savings tranche **nine days before the IRPF devengo**, and the catalogue
@@ -126,7 +116,7 @@ So the authors treat the increase as applying **from 2025**, which is the correc
 treatment: the amendment is prospective, and filing year 2024's savings scale is
 the one that governed the period.
 
-### The diagnosis is sharper than "two gates conflict"
+#### The diagnosis is sharper than "two gates conflict"
 
 `_check_revision_scoped_legal_windows` requires the cited provision to be in force
 at the **devengo date** — 31 December for IRPF. That rule is right in general and
@@ -140,7 +130,7 @@ out-of-window by ten days, and the provision in window states a different number
 No citation satisfies both gates because the gates encode two different and
 individually reasonable theories of which redaction applies.
 
-### The danger, and why this is worth keeping open rather than tidying
+#### The danger, and why this is worth keeping open rather than tidying
 
 The tempting repair is to repoint 2024 at `art-66`, which is in window. That
 citation states **15**. Nothing would then flag the mismatch, because the evidence
@@ -158,7 +148,7 @@ it should be relaxed deliberately — for a provision that governed the filing
 period rather than merely the devengo instant — and not by moving the citation to
 whichever entry passes.
 
-### Correction: the mismatch is already in the record, not a future risk
+#### Correction: the mismatch is already in the record, not a future risk
 
 The section above says "the tempting repair is to repoint 2024 at `art-66`" and
 warns against it. **It is already pointed there.**
@@ -188,3 +178,18 @@ to 15 — a live over-declaration on the highest tranche.
 
 The value is right. The citation is the defect, and it is the only citation the
 window rule permits. That is the conflict, stated exactly.
+
+## Recommendations
+
+### Remediation, for an owner
+
+The choice is a tax-semantics ruling and is not made here. Two shapes are
+available without fabricating a citation:
+
+- Catalogue the Ley 7/2024 effect-date provision and cite it alongside the
+  redaction, so the chain records why 2024 keeps the earlier scale.
+- Teach the window check to compare against the provision's effect date rather
+  than its in-force date, where the two differ.
+
+Do not resolve it by relaxing either gate: each is load-bearing, and silencing
+one settles the question invisibly.

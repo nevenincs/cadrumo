@@ -228,6 +228,12 @@ class CommandPolicyMetadata:
     live_write: bool
 
 
+def _require_execution_policy(condition: bool, message: str) -> None:
+    """Refuse one capability/policy contradiction with its existing message."""
+    if not condition:
+        raise ValueError(message)
+
+
 @dataclass(frozen=True, slots=True)
 class CommandRegistrationMetadata:
     """One command registration projected without an entrypoint object."""
@@ -290,23 +296,35 @@ class CommandExecutionPolicy:
 
     def __post_init__(self) -> None:
         """Reject policy flags that contradict the declared capabilities."""
-        if self.write_route != CommandWriteRoute.NONE and "local-state" not in self.classification.side_effects:
-            raise ValueError("a command write-route scope requires the local-state side effect")
-        if (
-            self.write_route != CommandWriteRoute.NONE
-            and "profile-custody" not in self.classification.expanded_capabilities
-        ):
-            raise ValueError("a command storage write-route scope requires the profile-custody capability")
-        if self.destructive and "local-state" not in self.classification.side_effects:
-            raise ValueError("a destructive command requires the local-state side effect")
-        if self.handoff and "filing" not in self.classification.expanded_capabilities:
-            raise ValueError("a filing handoff requires the filing capability")
-        if self.handoff and "local-state" not in self.classification.side_effects:
-            raise ValueError("a filing handoff requires the local-state side effect")
-        if self.live_write and "network" not in self.classification.expanded_capabilities:
-            raise ValueError("a live write requires the network capability")
-        if self.live_write and not self.classification.side_effects.intersection({"network", "browser"}):
-            raise ValueError("a live write requires a network or browser side effect")
+        _require_execution_policy(
+            self.write_route == CommandWriteRoute.NONE or "local-state" in self.classification.side_effects,
+            "a command write-route scope requires the local-state side effect",
+        )
+        _require_execution_policy(
+            self.write_route == CommandWriteRoute.NONE
+            or "profile-custody" in self.classification.expanded_capabilities,
+            "a command storage write-route scope requires the profile-custody capability",
+        )
+        _require_execution_policy(
+            not self.destructive or "local-state" in self.classification.side_effects,
+            "a destructive command requires the local-state side effect",
+        )
+        _require_execution_policy(
+            not self.handoff or "filing" in self.classification.expanded_capabilities,
+            "a filing handoff requires the filing capability",
+        )
+        _require_execution_policy(
+            not self.handoff or "local-state" in self.classification.side_effects,
+            "a filing handoff requires the local-state side effect",
+        )
+        _require_execution_policy(
+            not self.live_write or "network" in self.classification.expanded_capabilities,
+            "a live write requires the network capability",
+        )
+        _require_execution_policy(
+            not self.live_write or bool(self.classification.side_effects.intersection({"network", "browser"})),
+            "a live write requires a network or browser side effect",
+        )
 
 
 class RecoveryHandoffContract(BaseModel):
@@ -432,6 +450,30 @@ class SchemaResolutionError(CadrumoError):
         super().__init__("; ".join(f"{item.subject_leaf_key}: {item.reason}" for item in failures))
 
 
+def _parameter_values(parameter: VerbParameter, value: object) -> Sequence[object]:
+    """Preserve repeated list/tuple inputs while treating other values as scalar."""
+    return value if parameter.multiple and is_object_list_or_tuple(value) else (value,)
+
+
+def _option_tokens(parameter: VerbParameter, value: object, values: Sequence[object]) -> tuple[str, ...]:
+    """Encode one option, flag or repeated option without changing token order."""
+    if parameter.is_flag:
+        if value:
+            return (parameter.cli_flag,)
+        return (parameter.off_flag,) if parameter.off_flag else ()
+    if parameter.multiple:
+        return tuple(token for item in values for token in (parameter.cli_flag, str(item)))
+    return parameter.cli_flag, str(value)
+
+
+def _parameter_tokens(parameter: VerbParameter, value: object) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Return positional and option tokens for one supplied parameter."""
+    values = _parameter_values(parameter, value)
+    if parameter.kind is ParameterKind.ARGUMENT:
+        return tuple(str(item) for item in values), ()
+    return (), _option_tokens(parameter, value, values)
+
+
 def cli_argv_for(schema: VerbInputSchema, arguments: Mapping[str, object]) -> list[str]:
     """Encode named schema arguments into the canonical command argv tail."""
     positional: list[str] = []
@@ -439,19 +481,9 @@ def cli_argv_for(schema: VerbInputSchema, arguments: Mapping[str, object]) -> li
     for parameter in schema.parameters:
         if parameter.name not in arguments:
             continue
-        value = arguments[parameter.name]
-        values: Sequence[object] = value if parameter.multiple and is_object_list_or_tuple(value) else (value,)
-        if parameter.kind is ParameterKind.ARGUMENT:
-            positional.extend(str(item) for item in values)
-        elif parameter.is_flag:
-            if value:
-                options.append(parameter.cli_flag)
-            elif parameter.off_flag:
-                options.append(parameter.off_flag)
-        elif parameter.multiple:
-            options.extend(token for item in values for token in (parameter.cli_flag, str(item)))
-        else:
-            options.extend((parameter.cli_flag, str(value)))
+        parameter_positional, parameter_options = _parameter_tokens(parameter, arguments[parameter.name])
+        positional.extend(parameter_positional)
+        options.extend(parameter_options)
     return ["--format", "json", *schema.cli_path, *positional, *options]
 
 

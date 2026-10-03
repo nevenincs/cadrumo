@@ -139,18 +139,6 @@ class BootstrapExemption:
 
 #: Every bootstrap exemption, with its criterion and its checkable citations.
 BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
-    *(
-        BootstrapExemption(
-            verb_path=f"app runtime {action}",
-            criterion=ExemptionCriterion.CONFIGURATION_ONLY,
-            note=(
-                "Runtime management uses native OS-owner authorization and needs no profile custody. "
-                "It must remain reachable before profile login and while profiles are locked. "
-                "Stopping work additionally requires explicit whole-runtime confirmation."
-            ),
-        )
-        for action in ("start", "enable", "disable", "stop")
-    ),
     BootstrapExemption(
         verb_path="config profile create",
         criterion=ExemptionCriterion.FIRST_RUN_DEADLOCK,

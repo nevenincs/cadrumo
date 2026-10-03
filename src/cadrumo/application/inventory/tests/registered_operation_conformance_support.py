@@ -23,7 +23,7 @@ from ....domain.contribuyente.inventory.records import (
 )
 from ....domain.filing_evidence import FilingEvidenceReference
 from ..ports import InventoryServicePortsFactory
-from ..registered_operation import (
+from ..registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,

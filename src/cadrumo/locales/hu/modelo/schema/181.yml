@@ -35,6 +35,10 @@ modelo:
               label: Az ügylet futamideje hónapban
             fecha-operacion:
               label: Az ügylet dátuma
+            iban-codigo-pais:
+              label: Az ügylet IBAN-országkódja
+            iban-digitos-control:
+              label: Az ügylet IBAN-ellenőrző számjegyei
             identificacion-operacion:
               label: A kölcsön, hitel vagy egyéb pénzügyi ügylet azonosítója
             importe-amortizacion-capital:
@@ -55,6 +59,38 @@ modelo:
               label: Az év során kifizetett kamat teljes összege
             importe-total-saldos-pendientes:
               label: A december 31-én fennálló egyenlegek összege
+            inmueble-bloque:
+              label: Az ingatlan épülettömbje
+            inmueble-calificador-numero:
+              label: Az ingatlan házszámának jelzője
+            inmueble-codigo-municipio:
+              label: Az ingatlan településkódja
+            inmueble-codigo-postal:
+              label: Az ingatlan irányítószáma
+            inmueble-codigo-provincia:
+              label: Az ingatlan tartománykódja
+            inmueble-complemento:
+              label: Az ingatlan címének kiegészítése
+            inmueble-escalera:
+              label: Az ingatlan lépcsőháza
+            inmueble-localidad:
+              label: Az ingatlan településrésze
+            inmueble-municipio:
+              label: Az ingatlan települése
+            inmueble-nombre-via:
+              label: Az ingatlan közterületének neve
+            inmueble-numero-casa:
+              label: Az ingatlan házszáma
+            inmueble-planta:
+              label: Az ingatlan emelete
+            inmueble-portal:
+              label: Az ingatlan bejárata
+            inmueble-puerta:
+              label: Az ingatlan ajtaja
+            inmueble-tipo-numeracion:
+              label: Az ingatlan házszámozásának típusa
+            inmueble-tipo-via:
+              label: Az ingatlan közterületének típusa
             intereses-indemnizatorios:
               label: Kártalanítási kamat
             numero-identificativo-anterior:
@@ -93,8 +129,12 @@ modelo:
               label: Az ügylet típusa
             valor-tasacion-inmueble:
               label: A biztosítékul adott ingatlan értékbecslés szerinti értéke
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: Kiegészítő bevallás
             x-chim6r1ecll6asj3d5hmiro:
               label: Az adóbevallás vonatkozási éve
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: Helyettesítő bevallás
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           field:

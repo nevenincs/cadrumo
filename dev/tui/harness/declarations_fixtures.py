@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.declarations.controller import DeclarationsWorkspaceController
 from cadrumo.entrypoints.tui.declarations.external_details import ExternalFilingDetailsScreen
-from cadrumo.entrypoints.tui.declarations.models import ModeloWorkCreateResultV1
+from cadrumo.entrypoints.tui.declarations.models import DeclarationsWorkspaceWiringV1, ModeloWorkCreateResultV1
 from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewScreen
 from cadrumo.entrypoints.tui.declarations.picker import NewDeclarationPicker
 from cadrumo.entrypoints.tui.declarations.tests.portfolio_fixtures import portfolio_projection
@@ -43,12 +43,14 @@ def build_grouped() -> App[None]:
     controller = DeclarationsWorkspaceController(
         TuiScreenContextV1(destination="workbench.declarations"),
         workspace,
-        work_action=ActionReference(action_id=lookup_action("operator.modelo.work.list").action_id),
-        revisions_action=ActionReference(action_id=lookup_action("operator.modelo.work.revisions").action_id),
-        filing_action=ActionReference(action_id=lookup_action("operator.modelo.filing_record.list").action_id),
-        calendar_projection=calendar,
-        creation_targets=targets,
-        work_create_handoff=_refuse_fixture_write,
+        wiring=DeclarationsWorkspaceWiringV1(
+            work_action=ActionReference(action_id=lookup_action("operator.modelo.work.list").action_id),
+            revisions_action=ActionReference(action_id=lookup_action("operator.modelo.work.revisions").action_id),
+            filing_action=ActionReference(action_id=lookup_action("operator.modelo.filing_record.list").action_id),
+            calendar_projection=calendar,
+            creation_targets=targets,
+            work_create_handoff=_refuse_fixture_write,
+        ),
     )
     return ScreenHostApp[None](DeclarationsOverviewScreen(controller))
 

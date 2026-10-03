@@ -32,7 +32,7 @@ from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevi
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ..operations.financial_operand import OperationTransientFinancialOperandRequirement
 from ..operations.registry import OperationPublicContractSetV1, OperationSchemaIdentityV1
@@ -265,6 +265,22 @@ def _calculation_grade_snapshot(
         )
 
 
+def _current_edit_calculation_head(
+    work_unit: WorkUnit, calculation_catalogue: CalculationRevisionCatalogue, current_revision_id: str | None
+) -> CalculationRevision | ModeloEditRefusedV1 | None:
+    """Refuse a missing or foreign current head before selecting authority."""
+    head = None
+    if current_revision_id is not None:
+        head = calculation_catalogue.get(current_revision_id)
+        if head is None or head.work_unit_id != work_unit.work_unit_id:
+            return _refused(
+                ModeloEditRefusalCode.CALCULATION_HEAD_CONFLICT,
+                "refresh the selected work unit and calculation catalogue before admission",
+                "current_calculation_revision_id",
+            )
+    return head
+
+
 def admit_modelo_edit_baseline(
     *,
     work_unit_id: str,
@@ -290,15 +306,9 @@ def admit_modelo_edit_baseline(
     if work_unit.state is WorkUnitState.DESCARTADO:
         return _refused(ModeloEditRefusalCode.ADMISSION_DENIED, "select an active work unit", "work_unit_discarded")
     current_revision_id = work_unit.current_calculation_revision_id
-    head = None
-    if current_revision_id is not None:
-        head = calculation_catalogue.get(current_revision_id)
-        if head is None or head.work_unit_id != work_unit.work_unit_id:
-            return _refused(
-                ModeloEditRefusalCode.CALCULATION_HEAD_CONFLICT,
-                "refresh the selected work unit and calculation catalogue before admission",
-                "current_calculation_revision_id",
-            )
+    head = _current_edit_calculation_head(work_unit, calculation_catalogue, current_revision_id)
+    if isinstance(head, ModeloEditRefusedV1):
+        return head
     snapshot = _calculation_grade_snapshot(work_unit, operation=operation)
     if isinstance(snapshot, ModeloEditRefusedV1):
         return snapshot

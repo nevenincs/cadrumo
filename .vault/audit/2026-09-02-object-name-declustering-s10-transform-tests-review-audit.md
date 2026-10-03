@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:46f5e884b2d614eb28ebb588ed6709557f46fcce162ffd29a3efd00b6e63fe4d'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+related: []
 ---
 
 # `object-name-declustering` audit: `s10 transform tests review`

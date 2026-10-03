@@ -10,11 +10,7 @@ from pydantic import BaseModel
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ...application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
 from ...application.modelo.data_inventory import DataInventoryCasilla, DataInventoryChecklist
-from ...application.modelo.query_read_operation import (
-    MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID,
-    MODELO_BINDINGS_RESOLVE_OPERATION_DEFINITION_ID,
-    MODELO_READINESS_OPERATION_DEFINITION_ID,
-    MODELO_REQUIRES_OPERATION_DEFINITION_ID,
+from ...application.modelo.query_read_contracts import (
     ModeloBindingsListProjection,
     ModeloBindingsListRequest,
     ModeloBindingsResolveProjection,
@@ -24,6 +20,12 @@ from ...application.modelo.query_read_operation import (
     ModeloReadinessProjection,
     ModeloRequiresProjection,
     ModeloRequiresRequest,
+)
+from ...application.modelo.query_read_operation import (
+    MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID,
+    MODELO_BINDINGS_RESOLVE_OPERATION_DEFINITION_ID,
+    MODELO_READINESS_OPERATION_DEFINITION_ID,
+    MODELO_REQUIRES_OPERATION_DEFINITION_ID,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.state_projection import ProjectionModeloBindingRequirement, ProjectionModeloReadiness

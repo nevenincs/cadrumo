@@ -30,22 +30,18 @@ from ..operations.access_resolution import (
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
-from .dependency_read_ports import DependencyReadPortsFactory
+from .dependency_read_ports import DependencyReadPorts, DependencyReadPortsFactory
 from .verification_cross_period import cross_period_expected_member_sets_from_profile
 
 MODELO_DEPENDENCY_OPERATION_DEFINITION_ID = "modelo.work.dependencies"
@@ -84,20 +80,24 @@ class ModeloDependencySnapshot(BaseModel):
             raise ValueError("dependency inventory contains another filing year")
         if self.modelo_filter is not None and any(item.target_modelo != self.modelo_filter for item in self.items):
             raise ValueError("dependency inventory contains another target modelo")
-        clean = self.clean_state
-        if self.period_filter is None:
-            if clean is not None:
-                raise ValueError("unfiltered dependency inventory cannot contain private clean-state facts")
-        elif (
-            self.period_filter.filing_year != self.filing_year
-            or self.modelo_filter is None
-            or clean is None
-            or clean.target_modelo != self.modelo_filter
-            or clean.target_period != self.period_filter
-            or clean.target_filing_year != self.filing_year
-        ):
-            raise ValueError("dependency clean state differs from its target")
+        _validate_dependency_clean_state(self)
         return self
+
+
+def _validate_dependency_clean_state(snapshot: ModeloDependencySnapshot) -> None:
+    clean = snapshot.clean_state
+    if snapshot.period_filter is None:
+        if clean is not None:
+            raise ValueError("unfiltered dependency inventory cannot contain private clean-state facts")
+    elif (
+        snapshot.period_filter.filing_year != snapshot.filing_year
+        or snapshot.modelo_filter is None
+        or clean is None
+        or clean.target_modelo != snapshot.modelo_filter
+        or clean.target_period != snapshot.period_filter
+        or clean.target_filing_year != snapshot.filing_year
+    ):
+        raise ValueError("dependency clean state differs from its target")
 
 
 class ModeloDependencyResult(BaseModel):
@@ -146,6 +146,20 @@ def dependency_access_periods(
     return frozenset({payload.period.to_period(), *(item.period for item in requirements)})
 
 
+def _require_dependency_profile_ports(ports: DependencyReadPorts, profile_id: str) -> None:
+    repositories = ports.repositories
+    if ports.bucket_id != profile_id or any(
+        repository.bucket_id != profile_id
+        for repository in (
+            repositories.work_unit,
+            repositories.calculation,
+            repositories.filing,
+            repositories.verification,
+        )
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
 class ModeloDependencyExecutor:
     """Evaluate canonical clean state without opening a new public authority."""
 
@@ -157,16 +171,7 @@ class ModeloDependencyExecutor:
         profile_id = str(payload.profile_id)
         ports = self._factory(bucket_id=profile_id, operation=operation)
         repositories = ports.repositories
-        if ports.bucket_id != profile_id or any(
-            repository.bucket_id != profile_id
-            for repository in (
-                repositories.work_unit,
-                repositories.calculation,
-                repositories.filing,
-                repositories.verification,
-            )
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        _require_dependency_profile_ports(ports, profile_id)
         inventory = cross_period_dependency_inventory(
             operation,
             filing_year=payload.filing_year,
@@ -226,20 +231,49 @@ class ModeloDependencyExecutor:
 
 def build_modelo_dependency_definition(factory: DependencyReadPortsFactory) -> OperationDefinition:
     """Declare the registered read and its independent frontend projection."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_DEPENDENCY_OPERATION_DEFINITION_ID,
         request_type=ModeloDependencyRequest,
         result_type=ModeloDependencyResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloDependencyRequest,
-            executor_type=ModeloDependencyExecutor,
-            build=lambda: ModeloDependencyExecutor(factory),
-        ),
-        phase_codes=(MODELO_DEPENDENCY_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloDependencyExecutor,
+        build=lambda: ModeloDependencyExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def _resolve_dependency_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /, *, definition: OperationDefinition
+) -> ResolvedOperationAccess:
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=definition.definition_id,
+        payload_type=ModeloDependencyRequest,
+        access_profile_id=context.profile_id,
+    )
+    independent = payload.period is None
+    admitted = context.admitted_request
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=request.definition_id)
+        if (
+            admitted.period_independent != independent
+            or (payload.period is not None and payload.period.to_period() not in admitted.periods)
+            or (independent and admitted.periods)
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        periods = admitted.periods
+    else:
+        if context.authority_operation is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        periods = dependency_access_periods(payload, context.authority_operation)
+    return bind_operation_access_profile(
+        context,
+        LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS
+        if independent
+        else LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        profile_id=context.profile_id,
+        definition_id=request.definition_id,
+        periods=periods,
     )
 
 
@@ -247,37 +281,7 @@ def build_modelo_dependency_registration(definition: OperationDefinition) -> Ope
     """Require every authority-derived source period before private inspection."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != definition.definition_id or not isinstance(payload, ModeloDependencyRequest):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        independent = payload.period is None
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=request.definition_id)
-            if (
-                admitted.period_independent != independent
-                or (payload.period is not None and payload.period.to_period() not in admitted.periods)
-                or (independent and admitted.periods)
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            periods = admitted.periods
-        else:
-            if context.authority_operation is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            periods = dependency_access_periods(payload, context.authority_operation)
-        return bind_operation_access_profile(
-            context,
-            LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS
-            if independent
-            else LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            periods=periods,
-        )
+        return _resolve_dependency_access(request, context, definition=definition)
 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,

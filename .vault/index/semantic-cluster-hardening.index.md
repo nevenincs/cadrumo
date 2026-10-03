@@ -4,13 +4,12 @@ tags:
   - '#index'
   - '#semantic-cluster-hardening'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5f70450a9feecbfe3ad70f4bebf88400346c83ca1c1a0452eddf069207c12d4d'
+body_hash: 'sha256:94998e65194761d098aaa286ff204992b2d682197784b6a88f55a29f3dadd361'
 related:
   - '[[2026-06-01-semantic-cluster-hardening-adr]]'
   - '[[2026-06-01-semantic-cluster-hardening-audit]]'
-  - '[[2026-06-01-semantic-cluster-hardening-plan]]'
   - '[[2026-06-01-semantic-cluster-hardening-research]]'
 ---
 
@@ -27,10 +26,6 @@ Auto-generated index of all documents tagged with `#semantic-cluster-hardening`.
 ### audit
 
 - `2026-06-01-semantic-cluster-hardening-audit` - `semantic-cluster-hardening` audit: `Axis-7 semantic functionality-cluster swarm audit (delta)`
-
-### plan
-
-- `2026-06-01-semantic-cluster-hardening-plan` - `semantic-cluster-hardening` `campaign` plan
 
 ### research
 

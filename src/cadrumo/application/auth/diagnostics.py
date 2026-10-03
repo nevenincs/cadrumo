@@ -27,10 +27,16 @@ from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_bo
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import canonical_json_bytes, prefixed_digest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
-from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from .diagnostics_ports import AuthDiagnosticPersistencePort
 from .errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
@@ -228,6 +234,33 @@ def load_auth_diagnostic(
                 else None
             ),
         },
+    )
+
+
+def auth_diagnostic_view_verdict(diagnostic_id: str) -> PreconditionVerdict:
+    """Point a failed live authentication at the encrypted diagnostic it captured."""
+    condition_id = "auth.login.completed"
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id="auth.diagnostics.captured",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={"diagnostic_available": True},
+            ),
+        ),
+        action=ActionReference(action_id="operator.auth.diagnostics.view"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="diagnostic_id",
+                status=ActionArgumentStatus.RESOLVED,
+                value=diagnostic_id,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="diagnostic_id",
+            ),
+        ),
+        conditionality=ActionConditionality.IMMEDIATE,
     )
 
 
@@ -556,6 +589,7 @@ __all__ = [
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
     "PreparedAuthDiagnosticPhoneStateReport",
+    "auth_diagnostic_view_verdict",
     "list_auth_diagnostics",
     "load_auth_diagnostic",
     "persist_auth_diagnostic_phone_state",

@@ -33,9 +33,9 @@ def diagnostics_native_profile(
             _ACTIVE_PROFILE.reset(token)
 
 
-def invoke_diagnostics_cli(args: list[str]) -> Result:
-    """Run through the active test profile's root admission and native worker."""
-    profile = _ACTIVE_PROFILE.get()
+def invoke_diagnostics_cli(args: list[str], *, profile: NativeCliProfileFixture | None = None) -> Result:
+    """Run through ``profile``, else the active test profile, via root admission and the native worker."""
+    profile = profile or _ACTIVE_PROFILE.get()
     if profile is None:
         return invoke_cached_cli(args)
     if profile.label is None:

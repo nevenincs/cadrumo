@@ -148,7 +148,7 @@ def m280_contextual_sign_byte(
         by_id.get("modelo-280-t2-extincion-plan"),
         source_digests,
     )
-    if key_wire != "2" or raw_amount is None:
+    if key_wire != "2" or raw_amount is None or raw_amount == "":
         return rendered
     if project_export_value(ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN, raw_amount) == "0":
         if rendered != "0":

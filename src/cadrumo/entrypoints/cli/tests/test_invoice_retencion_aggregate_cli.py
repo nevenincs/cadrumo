@@ -30,7 +30,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
-from cadrumo.application.modelo.invoice_withholding_capture_operation import (
+from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts

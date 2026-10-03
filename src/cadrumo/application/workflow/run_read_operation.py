@@ -22,15 +22,11 @@ from ..operations.access_resolution import (
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES, OperationCapabilities
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -254,38 +250,26 @@ def _capabilities() -> OperationCapabilities:
 
 def build_workflow_run_read_definition(factory: WorkflowRunReadPortsFactory) -> OperationDefinition:
     """Declare one exact-run recorded read with a bounded optional period."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,
         request_type=WorkflowRunReadRequest,
         result_type=WorkflowRunReadResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=WorkflowRunReadRequest,
-            executor_type=WorkflowRunReadExecutor,
-            build=lambda: WorkflowRunReadExecutor(factory),
-        ),
-        phase_codes=(WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=WorkflowRunReadExecutor,
+        build=lambda: WorkflowRunReadExecutor(factory),
         capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
 def build_workflow_run_list_definition(factory: WorkflowRunReadPortsFactory) -> OperationDefinition:
     """Declare a complete exact-profile workflow inventory read."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=WORKFLOW_RUN_LIST_OPERATION_DEFINITION_ID,
         request_type=WorkflowRunListRequest,
         result_type=WorkflowRunListResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=WorkflowRunListRequest,
-            executor_type=WorkflowRunListExecutor,
-            build=lambda: WorkflowRunListExecutor(factory),
-        ),
-        phase_codes=(WORKFLOW_RUN_LIST_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=WorkflowRunListExecutor,
+        build=lambda: WorkflowRunListExecutor(factory),
         capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 

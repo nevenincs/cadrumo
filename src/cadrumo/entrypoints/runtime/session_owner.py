@@ -115,19 +115,9 @@ class ProfileWorkerSessionOwner:
 
     @contextmanager
     def _custody(self) -> Generator[ProfileWorkerProcess]:
-        constructing = False
+        constructing, worker = self._select_worker_for_custody()
         candidate: ProfileWorkerProcess | None = None
-        worker: ProfileWorkerProcess | None = None
         try:
-            with self._lifecycle_guard:
-                if self._lost or self._stopping.is_set():
-                    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-                worker = self._worker
-                if worker is None:
-                    if not self._construction_done.is_set():
-                        raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-                    self._construction_done.clear()
-                    constructing = True
             if constructing:
                 candidate = ProfileWorkerProcess(
                     self.identity,
@@ -150,34 +140,63 @@ class ProfileWorkerSessionOwner:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
             yield worker
         except BaseException as error:
-            candidate = (unreturned_profile_worker(error) or candidate) if constructing else None
-            if candidate is not None:
-                with self._lifecycle_guard:
-                    if all(candidate is not retained for retained in self._retiring):
-                        self._retiring.append(candidate)
-                # The constructor has attempted immediate containment. Keep
-                # failed releases and callbacks until settlement outside the
-                # profile guard, even after the exception becomes a wire refusal.
-                self.begin_drain()
-            if constructing and self._stopping.is_set() and candidate is None and worker is None:
-                self._construction_failure = True
-            if candidate is None and isinstance(error, RuntimeRefusalError):
-                with self._lifecycle_guard:
-                    undispatched_timeout = (
-                        error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
-                        and worker is not None
-                        and worker is self._worker
-                        and not worker.stopping
-                    )
-                # The adapter fences every failed dispatched exchange. A wire
-                # queue timeout leaves the exact healthy worker untouched and
-                # must not retire another connection's admitted custody.
-                if not undispatched_timeout:
-                    self.close()
+            candidate = self._retain_failed_candidate(error, constructing, candidate, worker)
+            self._retire_failed_runtime(error, candidate, worker)
             raise
         finally:
             if constructing:
                 self._construction_done.set()
+
+    def _select_worker_for_custody(self) -> tuple[bool, ProfileWorkerProcess | None]:
+        with self._lifecycle_guard:
+            if self._lost or self._stopping.is_set():
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+            worker = self._worker
+            if worker is not None:
+                return False, worker
+            if not self._construction_done.is_set():
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+            self._construction_done.clear()
+            return True, None
+
+    def _retain_failed_candidate(
+        self,
+        error: BaseException,
+        constructing: bool,
+        candidate: ProfileWorkerProcess | None,
+        worker: ProfileWorkerProcess | None,
+    ) -> ProfileWorkerProcess | None:
+        candidate = (unreturned_profile_worker(error) or candidate) if constructing else None
+        if candidate is not None:
+            with self._lifecycle_guard:
+                if all(candidate is not retained for retained in self._retiring):
+                    self._retiring.append(candidate)
+            # The constructor has attempted immediate containment. Keep failed
+            # releases and callbacks owned even after a wire refusal.
+            self.begin_drain()
+        if constructing and self._stopping.is_set() and candidate is None and worker is None:
+            self._construction_failure = True
+        return candidate
+
+    def _retire_failed_runtime(
+        self,
+        error: BaseException,
+        candidate: ProfileWorkerProcess | None,
+        worker: ProfileWorkerProcess | None,
+    ) -> None:
+        if candidate is not None or not isinstance(error, RuntimeRefusalError):
+            return
+        with self._lifecycle_guard:
+            undispatched_timeout = (
+                error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+                and worker is not None
+                and worker is self._worker
+                and not worker.stopping
+            )
+        # A queue timeout leaves the exact healthy worker untouched; every
+        # other failed dispatched exchange fences custody.
+        if not undispatched_timeout:
+            self.close()
 
     @contextmanager
     def prepare_api_admission(self, connection_id: UUID) -> Generator[float]:

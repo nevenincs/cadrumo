@@ -8,7 +8,7 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import ProfileViewCollection
+from cadrumo.adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.overview import build_profile_overview

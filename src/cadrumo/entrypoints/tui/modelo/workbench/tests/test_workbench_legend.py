@@ -16,11 +16,13 @@ from textual.pilot import Pilot
 from textual.widgets import Footer, OptionList, Static
 
 from ......core.config import override_settings
+from ......domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
 from ..legend import LEGEND_LOCALE_KEYS
 from ..screen import ModeloWorkbenchScreen
 from ..vocabulary import WORKBENCH_MARKS
+from .declaration_states import with_deadline
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -95,6 +97,44 @@ async def test_the_first_question_mark_names_exactly_the_symbols_on_screen() -> 
     assert listed["Δ"] == 1, "a box's state is counted once per box"
     assert listed["◷"] is None, "a mark that is not a box's state is named without a count"
     assert listed["▸"] is None
+
+
+@pytest.mark.parametrize(
+    ("coverage", "expected"),
+    (
+        (
+            DeadlineHolidayCoverage.NATIONAL_ONLY,
+            "national holidays only; regional and local holidays not checked",
+        ),
+        (
+            DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+            "holiday calendar unavailable; the original deadline has not been checked",
+        ),
+    ),
+)
+@pytest.mark.asyncio
+async def test_expanded_help_shows_holiday_coverage_when_nominal_and_effective_dates_match(
+    coverage: DeadlineHolidayCoverage,
+    expected: str,
+) -> None:
+    form = with_deadline(synthetic_form(), days_left=10)
+    assert form.deadline is not None
+    assert form.deadline.nominal_closes_on == form.deadline.closes_on
+    form = form.model_copy(update={"deadline": form.deadline.model_copy(update={"holiday_coverage": coverage})})
+
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=_WIDE) as pilot:
+            await _settle(pilot)
+            await pilot.press("question_mark")
+            await _settle(pilot)
+            band = str(screen.query_one("#wb-help", Static).render())
+            expanded = screen.query_one("#wb-help", Static).has_class("-expanded")
+            app.exit(None)
+
+    assert expanded
+    assert expected in band
 
 
 @pytest.mark.asyncio

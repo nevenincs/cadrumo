@@ -40,11 +40,14 @@ from cadrumo.application.user_profile.custody_ports import (
 )
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.operations import (
+    USER_PROFILE_OPERATION_DEFINITIONS,
+    build_user_profile_operation_registrations,
+)
+from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
-    USER_PROFILE_OPERATION_DEFINITIONS,
     ProfileBundleExportOperationRequest,
     ProfileFieldMutationOperationRequest,
     ProfileMutationOperationResult,
@@ -52,7 +55,6 @@ from cadrumo.application.user_profile.operations import (
     ProfileRepeatableRowMutationOperationResult,
     ProfileRepeatableRowValue,
     build_profile_logout_operation_request,
-    build_user_profile_operation_registrations,
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values

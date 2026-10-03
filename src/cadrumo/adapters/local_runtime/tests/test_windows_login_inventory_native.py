@@ -31,15 +31,9 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.login import RuntimeLoginInventory
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
 
-from ..windows_login import (
-    WindowsLoginBinding,
-    _desktop_sessions,
-    _logon,
-    _logon_ids,
-    capture_windows_login,
-    windows_desktop_observation,
-    windows_login_inventory,
-)
+from ..windows_desktop_observation import windows_desktop_observation
+from ..windows_login import WindowsLoginBinding, capture_windows_login, windows_login_inventory
+from ..windows_login_native import read_windows_logon, windows_desktop_sessions, windows_logon_ids
 
 pytestmark = [
     pytest.mark.integration,
@@ -101,7 +95,7 @@ def _current_binding(facts: dict[str, object]) -> WindowsLoginBinding:
         authentication_id = int(statistics["AuthenticationId"])
         session_id = int(win32security.GetTokenInformation(token, win32security.TokenSessionId))
         facts["pre_capture_stage"] = "lsa_metadata"
-        actual_logon = _logon(authentication_id)
+        actual_logon = read_windows_logon(authentication_id)
         facts["pre_capture_logon_kind"] = actual_logon.kind
         facts["pre_capture_lsa_owner_matches_token"] = actual_logon.owner == owner
         facts["pre_capture_lsa_session_matches_token"] = actual_logon.session == session_id
@@ -145,11 +139,11 @@ def _current_binding(facts: dict[str, object]) -> WindowsLoginBinding:
 
 def _inventory_with_bookends(binding: WindowsLoginBinding, facts: dict[str, object]) -> RuntimeLoginInventory:
     started = time.monotonic()
-    luids_before = _logon_ids()
-    desktops_before = _desktop_sessions()
+    luids_before = windows_logon_ids()
+    desktops_before = windows_desktop_sessions()
     inventory = windows_login_inventory(expected_owner=binding.os_owner_id)
-    desktops_after = _desktop_sessions()
-    luids_after = _logon_ids()
+    desktops_after = windows_desktop_sessions()
+    luids_after = windows_logon_ids()
     facts["lsa_count_before"] = len(luids_before)
     facts["lsa_count_after"] = len(luids_after)
     facts["wts_count_before"] = len(desktops_before)
@@ -178,7 +172,7 @@ def _record_metadata_readability(facts: dict[str, object]) -> None:
     import pywintypes
 
     deadline = time.monotonic() + 2.0
-    identifiers = _logon_ids()
+    identifiers = windows_logon_ids()
     read_count = 0
     failure_count = 0
     errors: list[int] = []
@@ -187,7 +181,7 @@ def _record_metadata_readability(facts: dict[str, object]) -> None:
             break
         read_count += 1
         try:
-            _logon(identifier)
+            read_windows_logon(identifier)
         except (pywintypes.error, RuntimeRefusalError, KeyError, TypeError, ValueError, OverflowError) as error:
             failure_count += 1
             number = _native_error_number(error)

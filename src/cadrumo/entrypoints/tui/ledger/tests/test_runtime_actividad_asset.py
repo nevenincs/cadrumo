@@ -11,14 +11,16 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
-from cadrumo.application.actividad_asset.registered_operations import (
+from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
     ActivityAssetAuthorityProvenance,
-    ActivityAssetInspectionRevision,
-    ActivityAssetInspectProjection,
     ActivityAssetInspectRequest,
     ActivityAssetOperationPortsFactory,
+)
+from cadrumo.application.actividad_asset.activity_asset_projections import ActivityAssetInspectProjection
+from cadrumo.application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
+from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
+from cadrumo.application.actividad_asset.registered_operations import (
     build_activity_asset_inspect_definition,
     build_activity_asset_inspect_registration,
 )

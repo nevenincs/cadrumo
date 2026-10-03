@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:433d1e06d6817b1d7a32c77a349a8acc56aabf27e8a2fc75e44d77bffab1a19c'
+body_hash: 'sha256:7ae038b89f704669b6d13d909163aadbdc038bc0896c406ac6d5f2d2f8c3384d'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -13,6 +13,7 @@ related:
   - "[[2026-08-13-profile-session-lifecycle-successor-adr]]"
   - "[[2026-08-13-cli-action-envelope-successor-adr]]"
   - "[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]"
+  - '[[2026-09-26-mcp-purpose-authentication-adr]]'
 ---
 
 # `mcp-purpose-authentication` adr: profile API keys, delegated sessions and CLI/TUI parity | (**status:** `accepted`)
@@ -21,7 +22,7 @@ related:
 
 Enable a local agent to authenticate an exact Cadrumo profile and resume authorized work without repeating the human password journey on every connection. CLI and TUI must each operate the complete API-key, authentication and session-lock lifecycle.
 
-This record owns delegated authority, protected automation unlock, credential/session transitions and interface parity. Local runtime placement and MCP process management belong to 2026-09-26-mcp-purpose-authentication-adr. Evidence belongs to the related Reference and Research.
+This record owns delegated authority, protected automation unlock, credential/session transitions and interface parity. Local runtime placement and execution boundaries belong to 2026-09-26-mcp-purpose-authentication-adr. Runtime management, including health monitoring, service installation, start/stop/status controls and restart supervision, is explicitly excluded from both records and deferred to application bundling, building and provisioning. Evidence belongs to the related Reference and Research.
 
 ## Considerations
 
@@ -180,7 +181,6 @@ Both interfaces independently invoke the same typed application operations and r
 | List/inspect sessions and unattended access | Structured inventory | Session inventory with remaining access | Same identity, parent, expiry and capability facts |
 | Lock/logout current session; revoke a selected session | Explicit scope | Explicit scope | Same invalidation and acknowledgement |
 | Lock profile everywhere; password-authorized resume | Distinct profile-wide operation | Distinct profile-wide control | Same suspension and selected reactivation |
-| Inspect runtime; start/stop; configure background mode | Runtime management commands | Runtime management views/actions | Same lifecycle policy from the runtime ADR |
 
 Key-authenticated CLI and TUI expose only authorized operations. Security administration does not become available because a particular screen can be opened. Human administration can revoke without expanding authority; enrollment, rotation, extension and global unlock require fresh proof. The password-authenticated human TUI may show the owner's data under its existing visibility decision; neither interface may export extra data through an agent session.
 
@@ -191,6 +191,8 @@ Parity acceptance exercises cross-interface transitions, not just inventories: c
 A durable grant answers whether unattended work is authorized; an API key authenticates its client; protected custody supplies decryption; a short session bounds present access. Separating them resolves the autonomous-resume requirement without extending a human login indefinitely. Shared application operations make the CLI/TUI parity requirement enforceable below presentation.
 
 ## Consequences
+
+Scope amendment accepted 2026-10-03 under the operator's instruction: CLI/TUI parity applies to profile authentication, grants, sessions and work, and creates no runtime-management requirement. Remove the former runtime-management controls. Connection failures and authorization/custody state remain truthful application outcomes, without runtime health dashboards or service administration.
 
 Cadrumo gains an optional delegated unlock path and a visible administration surface. It incurs credential-store portability, enrollment atomicity, revocation, generation and crash-recovery obligations. Background access is explicit and independently revocable.
 

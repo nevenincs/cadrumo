@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#profile-lifecycle-cli-cascade-supersession'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:6c3215d1ccab0d21c5710eec927e67dd1ce60246fbfc4da357538779498c0e09'
+modified: '2026-10-03'
+body_hash: 'sha256:a99fb2d6b4c5bb209699ef0ee58f3e3a23b0286e96e5b59376272ae143884339'
 related:
   - '[[2026-06-03-plan-triage-approach-adr]]'
   - '[[2026-06-04-profile-lifecycle-cli-cascade-supersession-research]]'
@@ -148,8 +148,8 @@ unactioned.
   disaster ADR are both inbound references the operator must
   inspect.
 
-## Status
+## Archive authorization
 
-Accepted. Archive of `2026-05-18-profile-lifecycle-cli-plan`
-authorised on landing of this ADR. The 05-16 sibling and its
-ongoing schema-axis follow-ups remain active.
+On 2026-06-03, archive of `2026-05-18-profile-lifecycle-cli-plan` was
+authorised when this ADR was accepted. The 05-16 sibling and its ongoing
+schema-axis follow-ups remain active.

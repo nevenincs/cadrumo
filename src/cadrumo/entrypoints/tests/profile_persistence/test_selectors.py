@@ -665,7 +665,7 @@ def test_current_command_specific_revision_selectors_enforce_state(
 
     # The verify pick no longer gates draft at the selector layer: it returns the
     # current revision in ANY state so an already-verified revision reaches
-    # verify_modelo_revision's idempotent collapse
+    # verify_modelo_revision_with_preconditions's idempotent collapse
     # (aeat-cli-contract) instead of being refused
     # upstream. State policy for verify lives in the application action.
     assert (
@@ -844,7 +844,7 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         )
 
         # The verify resolver no longer gates state: an explicitly-addressed verified
-        # revision is returned (not refused) so verify_modelo_revision can collapse it
+        # revision is returned (not refused) so verify_modelo_revision_with_preconditions can collapse it
         # to its existing granting report (aeat-cli-contract).
         assert (
             resolve_verifiable_modelo_calculation_revision_address(

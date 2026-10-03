@@ -9,7 +9,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
@@ -43,19 +42,18 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..review.filter import LedgerReviewStatus
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
+)
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPorts, LedgerActionPortsFactory
+from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_manual import (
     attach_manual_transaction_evidence,
     detach_manual_transaction_attachments,
@@ -63,7 +61,7 @@ from .actions_manual import (
 )
 from .id_resolution import resolve_transaction_id
 from .models import LedgerRemovalBlocker, ManualLedgerTransactionResult
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_ATTACH_OPERATION_DEFINITION_ID = "ledger.attach"
@@ -225,31 +223,12 @@ class _LedgerAttachmentExecutor:
         context: OperationExecutorContext,
     ) -> str | OperationRefusalEvidence:
         """Resolve exact-profile inputs, call one canonical action, and record its effect."""
-        payload = request.payload
-        bucket_id = str(getattr(payload, "profile_id", ""))
-        subject = profile_operation_subject(bucket_id)
-        if (
-            request.definition_id != self._operation_id
-            or context.identity.definition_id != self._operation_id
-            or request.subject_ref != subject
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != bucket_id
-            or not isinstance(payload, (LedgerAttachRequest, LedgerDetachRequest))
-            or (
-                self._operation_id == LEDGER_ATTACH_OPERATION_DEFINITION_ID
-                and not isinstance(payload, LedgerAttachRequest)
-            )
-            or (
-                self._operation_id == LEDGER_DETACH_OPERATION_DEFINITION_ID
-                and not isinstance(payload, LedgerDetachRequest)
-            )
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        bucket_id, payload = _require_attachment_executor_identity(request, context, self._operation_id)
         await context.events.phase(self._operation_id)
 
         operation: PinnedAuthorityOperation = context.authority_operation
         ports = await asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation)
-        _require_exact_ports(ports, bucket_id=bucket_id, operation=operation)
+        require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
         try:
             catalogue = await asyncio.to_thread(ports.transaction_repository.load)
             transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
@@ -384,18 +363,31 @@ class LedgerDetachExecutor(_LedgerAttachmentExecutor):
         super().__init__(ports_factory, operation_id=LEDGER_DETACH_OPERATION_DEFINITION_ID)
 
 
-def _require_exact_ports(
-    ports: LedgerActionPorts,
-    *,
-    bucket_id: str,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Refuse service ports that escaped the requested profile or registry pin."""
-    if ports.operation is not operation or ports.transaction_repository.bucket_id != bucket_id:
+def _require_attachment_executor_identity(
+    request: OperationRequest[BaseModel],
+    context: OperationExecutorContext,
+    operation_id: LedgerAttachmentOperationId,
+) -> tuple[str, LedgerAttachRequest | LedgerDetachRequest]:
+    """Bind operation, subject, active profile, and request shape before effects."""
+    if request.definition_id != operation_id or context.identity.definition_id != operation_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    for repository in (ports.invoice_repository, ports.work_unit_repository, ports.calculation_repository):
-        if getattr(repository, "bucket_id", None) != bucket_id:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    payload = _require_attachment_payload(request.payload, operation_id)
+    require_operation_profile(request, context, payload.profile_id)
+    return str(payload.profile_id), payload
+
+
+def _require_attachment_payload(
+    payload: BaseModel,
+    operation_id: LedgerAttachmentOperationId,
+) -> LedgerAttachRequest | LedgerDetachRequest:
+    """Keep the request concrete type matched to its registered operation."""
+    if not isinstance(payload, (LedgerAttachRequest, LedgerDetachRequest)):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    if operation_id == LEDGER_ATTACH_OPERATION_DEFINITION_ID and not isinstance(payload, LedgerAttachRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    if operation_id == LEDGER_DETACH_OPERATION_DEFINITION_ID and not isinstance(payload, LedgerDetachRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
 
 
 def _operation_projection(
@@ -448,6 +440,37 @@ def _check_result_size(result: LedgerAttachmentExecutionResult) -> None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
+def _attachment_refusal_receipt_matches(
+    receipt: OperationTerminalReceipt,
+) -> bool:
+    return (
+        receipt.condition is OperationTerminalCondition.REFUSED
+        and receipt.refusal_ref == LEDGER_ATTACHMENT_VALIDATION_REFUSAL_CODE
+        and receipt.refusal_detail_ref is not None
+        and receipt.result_ref is None
+        and receipt.failure_error_code is None
+        and receipt.diagnostic_ref is None
+        and receipt.effect is OperationEffect.NONE
+    )
+
+
+def _attachment_success_receipt_matches(
+    receipt: OperationTerminalReceipt,
+    projected: LedgerAttachmentOperationResult,
+    expected_effect: OperationEffect,
+) -> bool:
+    return (
+        receipt.condition is OperationTerminalCondition.SUCCEEDED
+        and receipt.result_ref is not None
+        and receipt.refusal_ref is None
+        and receipt.refusal_detail_ref is None
+        and receipt.failure_error_code is None
+        and receipt.diagnostic_ref is None
+        and projected.result is not None
+        and receipt.effect is expected_effect
+    )
+
+
 def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release only the result whose profile, definition, and effect match receipt."""
     if type(result) is not LedgerAttachmentExecutionResult:
@@ -459,30 +482,13 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     ):
         raise ValueError("ledger attachment result belongs to another operation or profile")
     if projected.outcome == "validation_error":
-        if (
-            receipt.condition is not OperationTerminalCondition.REFUSED
-            or receipt.refusal_ref != LEDGER_ATTACHMENT_VALIDATION_REFUSAL_CODE
-            or receipt.refusal_detail_ref is None
-            or receipt.result_ref is not None
-            or receipt.failure_error_code is not None
-            or receipt.diagnostic_ref is not None
-            or receipt.effect is not OperationEffect.NONE
-        ):
+        if not _attachment_refusal_receipt_matches(receipt):
             raise ValueError("ledger attachment refusal has an incompatible terminal receipt")
         return projected
     expected_effect = (
         OperationEffect.UPDATED if projected.result and projected.result.bucket_event_ids else OperationEffect.NONE
     )
-    if (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or projected.result is None
-        or receipt.effect is not expected_effect
-    ):
+    if not _attachment_success_receipt_matches(receipt, projected, expected_effect):
         raise ValueError("ledger attachment success has an incompatible terminal receipt")
     return projected
 
@@ -502,17 +508,12 @@ def _build_definition(
     }
     if operation_id == LEDGER_ATTACH_OPERATION_DEFINITION_ID:
         permitted_effects.add(OperationEffect.PARTIAL)
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=operation_id,
         request_type=request_type,
         result_type=LedgerAttachmentExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=executor_type,
-            build=lambda: executor_type(ports_factory),
-        ),
-        phase_codes=(operation_id,),
-        interaction_kinds=frozenset(),
+        executor_type=executor_type,
+        build=lambda: executor_type(ports_factory),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -526,7 +527,6 @@ def _build_definition(
             permitted_effects=frozenset(permitted_effects),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_ATTACHMENT_VALIDATION_REFUSAL_CODE}),
     )
@@ -563,11 +563,7 @@ def _resolve_attachment_access(
     """Require full-profile read access and COMMIT for the canonical mutation."""
     if request.definition_id != operation_id or not isinstance(request.payload, request_type):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=profile_id, periods=frozenset())
 
 
 def resolve_ledger_attach_access(

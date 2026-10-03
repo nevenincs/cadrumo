@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.consent_withdrawal import ConsentedDispatch
-from ....application.ledger.evidence_followup_operation import (
+from ....application.ledger.evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
@@ -36,13 +36,25 @@ from ....application.ledger.evidence_followup_operation import (
     LedgerEvidenceReviewViewExecutionResult,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
-    _project_attachment_queue,
-    _project_attachment_view,
-    _project_consent_list,
-    _project_review_list,
-    _project_review_view,
+)
+from ....application.ledger.evidence_followup_registration import (
     build_ledger_evidence_followup_definitions,
     build_ledger_evidence_followup_registrations,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_attachment_queue_result as _project_attachment_queue,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_attachment_view_result as _project_attachment_view,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_consent_list_result as _project_consent_list,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_review_list_result as _project_review_list,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_review_view_result as _project_review_view,
 )
 from ....application.ledger.extraction_draft_store import ExtractionDraftRepositoryFactory
 from ....application.ledger.invoice_draft_records import InvoiceDraft

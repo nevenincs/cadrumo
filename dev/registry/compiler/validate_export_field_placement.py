@@ -241,10 +241,34 @@ def _binding_reconciliation_failures(
     record: ExportRecordDefinition,
     binding_spans: Mapping[str, tuple[PlacedSpan, ...]],
 ) -> list[str]:
-    if record.binding_record is None:
+    binding_record = record.binding_record
+    if binding_record is None:
         return []
+    return [
+        *_own_binding_reconciliation_failures(
+            prefix=prefix,
+            record=record,
+            binding_record=binding_record,
+            binding_spans=binding_spans,
+        ),
+        *_foreign_binding_reconciliation_failures(
+            prefix=prefix,
+            record=record,
+            binding_record=binding_record,
+            binding_spans=binding_spans,
+        ),
+    ]
+
+
+def _own_binding_reconciliation_failures(
+    *,
+    prefix: str,
+    record: ExportRecordDefinition,
+    binding_record: str,
+    binding_spans: Mapping[str, tuple[PlacedSpan, ...]],
+) -> list[str]:
     failures: list[str] = []
-    own_spans = binding_spans.get(record.binding_record, ())
+    own_spans = binding_spans.get(binding_record, ())
     for span in own_spans:
         inline = _matching_inline_binding_fields(record, span)
         if not inline:
@@ -252,15 +276,26 @@ def _binding_reconciliation_failures(
         if len(inline) != 1 or not _inline_field_matches_selector(inline[0], span):
             failures.append(
                 f"{prefix}: export record {record.id!r} inline binding {span.origin!r} does not match its "
-                f"fixed selector in record {record.binding_record!r} at position {span.offset} "
+                f"fixed selector in record {binding_record!r} at position {span.offset} "
                 f"length {span.length}, type {span.data_type}, decimals {span.decimals}, signed {span.signed}"
             )
+    return failures
+
+
+def _foreign_binding_reconciliation_failures(
+    *,
+    prefix: str,
+    record: ExportRecordDefinition,
+    binding_record: str,
+    binding_spans: Mapping[str, tuple[PlacedSpan, ...]],
+) -> list[str]:
     other_record_by_binding = {
         span.origin: binding_record
-        for binding_record, spans in binding_spans.items()
-        if binding_record != record.binding_record
+        for other_binding_record, spans in binding_spans.items()
+        if other_binding_record != binding_record
         for span in spans
     }
+    failures: list[str] = []
     for field in record.fields:
         if field.kind != CasillaFieldKind.BINDING or field.binding is None:
             continue
@@ -268,7 +303,7 @@ def _binding_reconciliation_failures(
         if other_record is not None:
             failures.append(
                 f"{prefix}: export record {record.id!r} inline binding {field.binding!r} belongs to "
-                f"fixed selector record {other_record!r}, not {record.binding_record!r}"
+                f"fixed selector record {other_record!r}, not {binding_record!r}"
             )
     return failures
 

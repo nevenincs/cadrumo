@@ -22,15 +22,13 @@ from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import resolve_revision_guarded_transaction_repository
@@ -38,7 +36,7 @@ from .actions_split_merge import merge_transactions
 from .id_resolution import resolve_transaction_id
 from .models import MergeTransactionsResult
 from .pinned_transaction_repository import PinnedRevisionedTransactionRepository
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access
 
 LEDGER_MERGE_OPERATION_DEFINITION_ID = "ledger.merge"
 LEDGER_MERGE_PHASE = "ledger.merge"
@@ -227,6 +225,51 @@ def _require_result_bound(projection: LedgerMergeOperationResult) -> None:
         raise TransactionValidationError("ledger merge result exceeds its registered projection bound")
 
 
+def _merge_result_matches_child_cohort(
+    profile_id: UUID,
+    expected_child_ids: tuple[str, ...],
+    result: MergeTransactionsResult,
+) -> bool:
+    """Check bucket, stable child ordering, and transaction identity joins."""
+    return (
+        result.bucket_id == str(profile_id)
+        and result.source_child_ids == tuple(sorted(expected_child_ids))
+        and len(set(expected_child_ids)) == len(expected_child_ids)
+        and result.parent_transaction.transaction_id == result.parent_transaction_id
+        and result.merged_transaction.transaction_id == result.merged_transaction_id
+    )
+
+
+def _parent_merge_lineage_matches(
+    expected_child_ids: tuple[str, ...],
+    result: MergeTransactionsResult,
+) -> bool:
+    """Require the archived parent to retain the exact merge lineage."""
+    lineage = result.parent_transaction.split_lineage
+    return (
+        lineage is not None
+        and lineage.role is SplitRole.PARENT
+        and lineage.split_group_id == result.split_group_id
+        and lineage.sibling_transaction_ids == tuple(sorted(expected_child_ids))
+        and result.parent_transaction.lifecycle_state is TransactionLifecycleState.ARCHIVED
+    )
+
+
+def _merged_transaction_lineage_matches(
+    expected_child_ids: tuple[str, ...],
+    result: MergeTransactionsResult,
+) -> bool:
+    """Require the active merged transaction to retain the exact child lineage."""
+    lineage = result.merged_transaction.split_lineage
+    return (
+        lineage is not None
+        and lineage.role is SplitRole.MERGED
+        and lineage.split_group_id == result.split_group_id
+        and lineage.sibling_transaction_ids == tuple(sorted(expected_child_ids))
+        and result.merged_transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+    )
+
+
 def _operation_result(
     *,
     profile_id: UUID,
@@ -234,25 +277,10 @@ def _operation_result(
     result: MergeTransactionsResult,
 ) -> LedgerMergeOperationResult:
     """Correlate the merged row, parent lineage, child cohort, and event."""
-    expected_sorted_children = tuple(sorted(expected_child_ids))
-    parent_lineage = result.parent_transaction.split_lineage
-    merged_lineage = result.merged_transaction.split_lineage
     if (
-        result.bucket_id != str(profile_id)
-        or result.source_child_ids != expected_sorted_children
-        or len(set(expected_child_ids)) != len(expected_child_ids)
-        or result.parent_transaction.transaction_id != result.parent_transaction_id
-        or result.merged_transaction.transaction_id != result.merged_transaction_id
-        or parent_lineage is None
-        or parent_lineage.role is not SplitRole.PARENT
-        or parent_lineage.split_group_id != result.split_group_id
-        or parent_lineage.sibling_transaction_ids != expected_sorted_children
-        or result.parent_transaction.lifecycle_state is not TransactionLifecycleState.ARCHIVED
-        or merged_lineage is None
-        or merged_lineage.role is not SplitRole.MERGED
-        or merged_lineage.split_group_id != result.split_group_id
-        or merged_lineage.sibling_transaction_ids != expected_sorted_children
-        or result.merged_transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE
+        not _merge_result_matches_child_cohort(profile_id, expected_child_ids, result)
+        or not _parent_merge_lineage_matches(expected_child_ids, result)
+        or not _merged_transaction_lineage_matches(expected_child_ids, result)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     projection = LedgerMergeOperationResult(
@@ -281,19 +309,13 @@ def _project_operation_result(result: BaseModel, receipt: OperationTerminalRecei
 
 def build_ledger_merge_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
     """Declare durable, exact-profile manual merge with a bounded result."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_MERGE_OPERATION_DEFINITION_ID,
         request_type=LedgerMergeRequest,
         result_type=LedgerMergeExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerMergeRequest,
-            executor_type=LedgerMergeExecutor,
-            build=lambda: LedgerMergeExecutor(ports_factory),
-        ),
-        phase_codes=(LEDGER_MERGE_PHASE,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerMergeExecutor,
+        build=lambda: LedgerMergeExecutor(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -307,16 +329,7 @@ def resolve_ledger_merge_access(
         LedgerMergeRequest,
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
-    )
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}},
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_merge_registration(

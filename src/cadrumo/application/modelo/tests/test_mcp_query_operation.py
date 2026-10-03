@@ -22,7 +22,7 @@ from cadrumo.application.modelo.mcp_query_operation import (
     build_modelo_readiness_summary_definition,
     build_modelo_readiness_summary_registration,
 )
-from cadrumo.application.modelo.query_read_operation import ModeloQueryReadPorts, ModeloReadinessOperationRequest
+from cadrumo.application.modelo.query_read_contracts import ModeloQueryReadPorts, ModeloReadinessOperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.state_projection import (
     ModeloProfileRefusalCause,
@@ -31,7 +31,7 @@ from cadrumo.application.state_projection import (
 from cadrumo.core.aggregation import BindingTypedEnumKind
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import (
     BindingDataType,
     BindingValueChannel,
@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("11111111-1111-4111-8111-111111111111")
 
 
-def _unused_ports(*, bucket_id: str) -> ModeloQueryReadPorts:
+def _unused_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloQueryReadPorts:
     raise AssertionError(f"unexpected ports construction for {bucket_id}")
 
 

@@ -21,7 +21,7 @@ from ....application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
-from ....application.modelo.invoice_withholding_capture_operation import (
+from ....application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE,
     MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE,

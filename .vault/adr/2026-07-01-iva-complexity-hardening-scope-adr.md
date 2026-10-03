@@ -8,8 +8,8 @@ related:
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
 superseded_by: '2026-07-07-iva-prorrata-complexity-adr'
-modified: '2026-08-15'
-body_hash: 'sha256:1add8235fa360740e5e2eb68a61ccd062ff4f86d317dcf19554a2922b962d30f'
+modified: '2026-10-03'
+body_hash: 'sha256:1f0f115e18f96fc9b90f851132b5faafc8052f9e7e3ef7abbe72963e66d58ef0'
 ---
 # `iva-complexity-hardening-scope` adr: `Prorrata definitiva annual regularizacion (LIVA arts 105-106): provisional-carry + Q4 regularisation feeding M303 casilla 44 and M390` | (**status:** `superseded`)
 
@@ -199,9 +199,9 @@ blocked on. The register-versus-registry split follows the registry-authority ru
 - Pathway: promoting the source kind to a live mesh binding and adding per-sector
   regularizacion are incremental follow-ons on a schema shaped to accept them.
 
-## Status
+## Original proposal and scope history
 
-`proposed`. Scopes the arts-105-106 regularizacion-anual portion of umbrella child
+proposed. Scopes the arts-105-106 regularizacion-anual portion of umbrella child
 #347. Recommends #346 and #348 CLOSE as largely-done (see the companion research
 verdict table). Depends on the accepted general/especial prorrata substrate
 (`2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr`); its

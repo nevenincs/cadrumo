@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from threading import Event, Lock
 from uuid import UUID
 
-from cadrumo.adapters.local_runtime.framing import MAXIMUM_FRAME_BYTES
+from cadrumo.adapters.local_runtime.runtime_frame_io import MAXIMUM_FRAME_BYTES
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.application.runtime.contracts import (
     RuntimeByteChannel,

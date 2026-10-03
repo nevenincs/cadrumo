@@ -163,29 +163,67 @@ def signed_component_policy_for(
     field = joined_field.parser_field
     entry = joined_field.semantic_entry
     field_id = str(entry.export_field_id)
-    pair_index = next((i for i, pair in enumerate(_PAIRS) if field_id in pair[:2]), None)
+    pair_index = _signed_pair_index(field_id)
     if pair_index is None:
         return None
-    pin = _SOURCE_PINS.get(epoch)
-    if modelo != "190" or pin != (source_ref, source_sha256):
-        raise RegistryValidationError("modelo 190 signed component source identity is unreviewed or stale")
+    _require_signed_component_source(modelo, source_ref, source_sha256, epoch)
     sign_id, _, binding, sign_offset = _PAIRS[pair_index]
     sign_row, magnitude_row, sign_digest, magnitude_digest = _PAIR_EVIDENCE[epoch][pair_index]
     is_sign = field_id == sign_id
+    expected_row, expected_offset, expected_length, expected_digest = _signed_component_expectations(
+        is_sign, sign_row, magnitude_row, sign_offset, sign_digest, magnitude_digest
+    )
+    material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
+    if not _matches_reviewed_signed_component(
+        joined_field, binding, expected_row, expected_offset, expected_length, expected_digest, material
+    ):
+        raise RegistryValidationError("modelo 190 signed component source, geometry or provider no longer matches")
+    return ExportValuePolicy.SIGNED_COMPONENT_SIGN if is_sign else ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE
+
+
+def _signed_pair_index(field_id: str) -> int | None:
+    return next((index for index, pair in enumerate(_PAIRS) if field_id in pair[:2]), None)
+
+
+def _require_signed_component_source(modelo: str, source_ref: str, source_sha256: str, epoch: str) -> None:
+    pin = _SOURCE_PINS.get(epoch)
+    if modelo != "190" or pin != (source_ref, source_sha256):
+        raise RegistryValidationError("modelo 190 signed component source identity is unreviewed or stale")
+
+
+def _signed_component_expectations(
+    is_sign: bool,
+    sign_row: int,
+    magnitude_row: int,
+    sign_offset: int,
+    sign_digest: str,
+    magnitude_digest: str,
+) -> tuple[int, int, int, str]:
     expected_row = sign_row if is_sign else magnitude_row
     expected_offset = sign_offset if is_sign else sign_offset + 1
     expected_length = 1 if is_sign else 13
     expected_digest = sign_digest if is_sign else magnitude_digest
-    material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
-    if (
-        field.sheet != "Tipo 2 - Registro De Perceptor"
-        or field.record_identity != field.sheet
-        or field.source_row != expected_row
-        or field.offset != expected_offset
-        or field.length != expected_length
-        or sha256(material.encode()).hexdigest() != expected_digest
-        or entry.kind is not CasillaFieldKind.BINDING
-        or str(entry.binding) != binding
-    ):
-        raise RegistryValidationError("modelo 190 signed component source, geometry or provider no longer matches")
-    return ExportValuePolicy.SIGNED_COMPONENT_SIGN if is_sign else ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE
+    return expected_row, expected_offset, expected_length, expected_digest
+
+
+def _matches_reviewed_signed_component(
+    joined_field: JoinedRecordDesignField,
+    binding: str,
+    expected_row: int,
+    expected_offset: int,
+    expected_length: int,
+    expected_digest: str,
+    material: str,
+) -> bool:
+    field = joined_field.parser_field
+    entry = joined_field.semantic_entry
+    return (
+        field.sheet == "Tipo 2 - Registro De Perceptor"
+        and field.record_identity == field.sheet
+        and field.source_row == expected_row
+        and field.offset == expected_offset
+        and field.length == expected_length
+        and sha256(material.encode()).hexdigest() == expected_digest
+        and entry.kind is CasillaFieldKind.BINDING
+        and str(entry.binding) == binding
+    )

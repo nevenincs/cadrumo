@@ -3,27 +3,19 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b48f393a385a78310360c361e1861696b4d6bceddf7127453191518333b528ad'
+body_hash: 'sha256:2ad4dc5876e0637fe15523a0f40793054110e9c9b684392b60ab13ab0749e4c6'
 related: []
 ---
 
 # `calculation-correctness-campaign` audit: `An unresolved relation drops its casilla with no diagnostic; the binding path has three`
 
-## Withdrawn
+## Scope
 
-**This audit's central claim was false and is withdrawn in full.** It asserted
-that unresolved relations produce no diagnostic at any layer, in contrast to
-bindings. Relations are in fact covered by two dedicated diagnostic builders, and
-on the dimension this campaign cares about most — watching the over-payment
-direction — the relation path is *better* instrumented than the binding path.
+Recheck the claim that unresolved registry relations receive asymmetric diagnostics and determine whether the claimed code-path defect survives source inspection.
 
-Nothing was changed in production code, registry data or tests at any point. The
-error was confined to this audit.
-
-## What is actually there
-
+## Findings
 `application/calculations/_relation_prefill.py` partitions unresolved relations
 three ways (`_unresolved_relation_ids` → `.formula_fed`, `.orphaned`, `.bound`)
 and emits diagnostics for **all three** into
@@ -72,6 +64,22 @@ annual-summary relations each read a different fact off the **same** absent Mode
 111 return, so the un-grouped form produced ten lines naming one root cause. A true
 orphan, having no source coordinate, stays one diagnostic per relation.
 
+## Recommendations
+Nothing actionable. The staging-path observation is true but uninteresting once the
+resolver-path coverage is known: diagnostics are produced where the relation is
+resolved, which is the correct home for them, not at the staging layer that merely
+threads the ids onward. There is no asymmetry to remediate and no gate to add.
+## Withdrawn
+
+**This audit's central claim was false and is withdrawn in full.** It asserted
+that unresolved relations produce no diagnostic at any layer, in contrast to
+bindings. Relations are in fact covered by two dedicated diagnostic builders, and
+on the dimension this campaign cares about most — watching the over-payment
+direction — the relation path is *better* instrumented than the binding path.
+
+Nothing was changed in production code, registry data or tests at any point. The
+error was confined to this audit.
+
 ## Why the earlier audit missed it
 
 The search that produced the false negative required two terms on the **same
@@ -90,10 +98,3 @@ wrong, and the hedge is not a substitute for having looked.
 The durable lesson: **a line-scoped grep conjunction is a filter bug generator.**
 Grep the terms separately, or grep the file. An absent result from a two-term
 same-line filter is not evidence of absence.
-
-## What survives
-
-Nothing actionable. The staging-path observation is true but uninteresting once the
-resolver-path coverage is known: diagnostics are produced where the relation is
-resolved, which is the correct home for them, not at the staging layer that merely
-threads the ids onward. There is no asymmetry to remediate and no gate to add.

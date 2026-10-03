@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
-from ..application.actividad_asset.registered_operations import ActivityAssetOperationPorts
+from ..application.actividad_asset.activity_asset_contracts import ActivityAssetOperationPorts
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from .adapter_composition import build_pinned_profile_read_ports
 

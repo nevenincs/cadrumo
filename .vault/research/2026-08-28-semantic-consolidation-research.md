@@ -3,15 +3,17 @@ tags:
   - '#research'
   - '#semantic-consolidation'
 date: '2026-08-28'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d8e7cf4a942ce7bd32d17e03200ac2115dc9233776927e6f76bce49f965424d'
+body_hash: 'sha256:145580d5987ebb52cb9d9558889bdf957043f5d0cc1ea8e23aa394ed0a46f724'
 related: []
 ---
 
 # `semantic-consolidation` research: locating duplication by meaning-reference
 
-## Why the existing instruments do not find this
+## Findings
+
+### Why the existing instruments do not find this
 
 Two duplication instruments already ship and neither can see the class of defect this
 campaign targets.
@@ -35,7 +37,7 @@ duplication, meaning the more independently the second copy was written, the wor
 embedding recall gets. Semantic search is excellent at finding a concept you can
 describe; it is close to useless at finding the SECOND implementation of a concept.
 
-## The inversion this campaign rests on
+### The inversion this campaign rests on
 
 Do not scan code asking whether it is duplicated. Enumerate the domain's concepts from
 sources the code cannot paraphrase away, then ask of each: how many independent
@@ -48,7 +50,7 @@ MEANING that survives every rewrite of the code around it. A module's fingerprin
 the set of those meanings it touches, and two modules with the same rare fingerprint
 are implementing the same rule whatever they call it.
 
-## The detectors
+### The detectors
 
 Implemented in `dev/audit/semantic_duplication.py` as one runner, following the
 convention the jscpd runner set: one owner per measurement, no second command anywhere.
@@ -78,7 +80,7 @@ inventory of enums is itself the restated list this runner exists to find.
 - **package_overlap** covers the whole-module-lives-twice case, rolled up from function
   fingerprints rather than from names.
 
-## Measured inventory, first run
+### Measured inventory, first run
 
 Over 1941 production modules in `src/cadrumo`.
 
@@ -117,7 +119,7 @@ precedent for the method: the home-office family grouping restated in four modul
 two independent category-set functions, and the bucket-as-profile afectación lookup
 restated at two sites.
 
-## What the detectors deliberately do not do
+### What the detectors deliberately do not do
 
 Every detector emits CANDIDATES. A shared fingerprint is evidence that two sites mean
 the same thing; it is not proof, and the substitutability rule applies before anything
@@ -134,3 +136,13 @@ appears in twenty-six CLI command-spec modules because each spec declares its ow
 schema state. Those are held back from the first confirmation pass rather than deleted
 from the output, because the cut-off is a heuristic and the runner should not silently
 hide what it saw.
+
+## Sources
+
+- `dev/audit/duplication.py` — the token-sequence duplication runner and its documented limits.
+- `dev/audit/semantic.py` — the layering audit, which asks a different question.
+- `dev/audit/semantic_duplication.py` — the deterministic semantic duplication detector.
+- `src/cadrumo/entrypoints/cli/_ledger_payloads.py` — the CLI payload examples from the measured field-set overlap.
+- `src/cadrumo/application/ledger/models.py` — the paired canonical ledger models.
+- `src/cadrumo/domain/auth/apoderamientos/_catalogue.py:40` — one implementation of the repeated uppercase alphanumeric validator.
+- `src/cadrumo/entrypoints/cli/_config_payloads.py:1160` — the second implementation of that validator.

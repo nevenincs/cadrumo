@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:46d2df9203612cccc9738fbea5ad8107d3f7448552925da9775af4c37dbb61e1'
+body_hash: 'sha256:0b63358b01c4eef67891ca617849fd1bad188e47bb866863b426ef3fd747ff46'
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-ledger]]'
@@ -53,10 +53,8 @@ related:
   - '[[2026-08-24-tui-architecture-s118-observation-read-audit]]'
   - '[[2026-08-24-tui-architecture-s119-observation-review-audit]]'
   - '[[2026-08-24-tui-architecture-s120-projection-services-review-audit]]'
-  - '[[2026-08-24-tui-architecture-s121-current-only-cutover-review-audit]]'
   - '[[2026-08-24-tui-architecture-s121-current-only-purge-audit]]'
   - '[[2026-08-24-tui-architecture-s122-operation-composition-review-audit]]'
-  - '[[2026-08-24-tui-architecture-s122-production-composition-audit]]'
   - '[[2026-08-24-tui-architecture-s28-recovery-review-audit]]'
   - '[[2026-08-24-tui-architecture-s29-censal-executor-review-audit]]'
   - '[[2026-08-24-tui-architecture-s30-operand-review-audit]]'
@@ -93,8 +91,6 @@ related:
   - '[[2026-08-25-tui-architecture-s172-workspace-producers-review-audit]]'
   - '[[2026-08-25-tui-architecture-s40-profile-operation-definitions-review-audit]]'
   - '[[2026-08-25-tui-architecture-s41-google-export-operation-audit]]'
-  - '[[2026-08-25-tui-architecture-s57-launcher-composition-review-audit]]'
-  - '[[2026-08-25-tui-architecture-s58-tests-audit]]'
   - '[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]'
   - '[[2026-08-25-tui-architecture-workspace-v1-contract-reference]]'
   - '[[2026-08-26-tui-architecture-graded-snapshot-assembly-sizing-reference]]'
@@ -104,7 +100,6 @@ related:
   - '[[2026-08-26-tui-architecture-registry-facade-family-census-audit]]'
   - '[[2026-08-26-tui-architecture-s170-alias-selection-remediation-audit]]'
   - '[[2026-08-26-tui-architecture-s170-final-follow-up-review-audit]]'
-  - '[[2026-08-26-tui-architecture-s170-first-match-yield-remediation-audit]]'
   - '[[2026-08-26-tui-architecture-s170-high-findings-remediation-audit]]'
   - '[[2026-08-26-tui-architecture-s170-semantic-selector-consolidation-audit]]'
   - '[[2026-08-26-tui-architecture-s173-authority-remediation-audit]]'
@@ -206,10 +201,8 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-24-tui-architecture-s118-observation-read-audit` - `tui-architecture` audit: `S118 observation read`
 - `2026-08-24-tui-architecture-s119-observation-review-audit` - `tui-architecture` audit: `S119 public observation service review`
 - `2026-08-24-tui-architecture-s120-projection-services-review-audit` - `tui-architecture` audit: `s120 projection services review`
-- `2026-08-24-tui-architecture-s121-current-only-cutover-review-audit` - `tui-architecture` audit: `s121 current only cutover review`
 - `2026-08-24-tui-architecture-s121-current-only-purge-audit` - `tui-architecture` audit: `s121 current only purge`
 - `2026-08-24-tui-architecture-s122-operation-composition-review-audit` - `tui-architecture` audit: `s122 operation composition review`
-- `2026-08-24-tui-architecture-s122-production-composition-audit` - `tui-architecture` audit: `s122 production composition`
 - `2026-08-24-tui-architecture-s28-recovery-review-audit` - `tui-architecture` audit: `S28 recovery review`
 - `2026-08-24-tui-architecture-s29-censal-executor-review-audit` - `tui-architecture` audit: `S29 resumable censal executor review`
 - `2026-08-24-tui-architecture-s30-operand-review-audit` - `tui-architecture` audit: `S30 censal reviewed operand review`
@@ -244,13 +237,10 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-25-tui-architecture-s172-workspace-producers-review-audit` - `tui-architecture` audit: `s172 workspace producers review`
 - `2026-08-25-tui-architecture-s40-profile-operation-definitions-review-audit` - `tui-architecture` audit: S40 profile-operation definitions review
 - `2026-08-25-tui-architecture-s41-google-export-operation-audit` - `tui-architecture` audit: `S41/S44 Google export operation and export facade`
-- `2026-08-25-tui-architecture-s57-launcher-composition-review-audit` - `tui-architecture` audit: `s57 launcher composition review`
-- `2026-08-25-tui-architecture-s58-tests-audit` - `tui-architecture` audit: `Canonical TUI presentation-test relocation review`
 - `2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit` - `tui-architecture` audit: `Workspace owner seam architecture reconciliation`
 - `2026-08-26-tui-architecture-registry-facade-family-census-audit` - `tui-architecture` audit: `registry facade family census`
 - `2026-08-26-tui-architecture-s170-alias-selection-remediation-audit` - `tui-architecture` audit: `S170 alias and selection remediation`
 - `2026-08-26-tui-architecture-s170-final-follow-up-review-audit` - `tui-architecture` audit: `S170 final follow-up review`
-- `2026-08-26-tui-architecture-s170-first-match-yield-remediation-audit` - 2026-08-26-tui-architecture-s170-first-match-yield-remediation-audit
 - `2026-08-26-tui-architecture-s170-high-findings-remediation-audit` - `tui-architecture` audit: `S170 high findings remediation`
 - `2026-08-26-tui-architecture-s170-semantic-selector-consolidation-audit` - `tui-architecture` audit: `S170 semantic selector consolidation`
 - `2026-08-26-tui-architecture-s173-authority-remediation-audit` - `tui-architecture` audit: `S173 registry authority remediation`

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-portability'
 date: '2026-08-20'
-modified: '2026-08-20'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5ec17de64a4f09e86d4ac143c779666d0db4f40bb9a5e536df98a7f25de2bb8a'
+body_hash: 'sha256:6685a71f168d8d6503818d8a5e6a8a493c12cc8acba8ab4d08aeac118bad1e70'
 related: []
 ---
 
@@ -65,8 +65,7 @@ All four locale catalogues carried an operator-facing string advertising a
 right-of-access archive, and a second describing its category disclosure, for a verb the
 tree no longer exposes. Both keys had zero code references. They are removed.
 
-## Remediation
-
+## Recommendations
 Done: the declaration entry and its gate docstring now state the missing capability - the
 data-category disclosure - rather than asserting a legal duty the repository cannot
 ground; the two orphaned locale strings are removed from all four catalogues; the

@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#reachability-burndown'
 date: '2026-09-04'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb778a32a9fd0f68e66c6a4286936a0ecdfa4da5283c0c339469780a205af7f0'
+body_hash: 'sha256:1064b50aeae71c0a6f25c96349e05170426f4f92333e826b54c720034f282c55'
 related:
   - '[[2026-09-04-reachability-burndown-adr]]'
   - '[[2026-09-04-reachability-burndown-ledger]]'
@@ -60,7 +60,6 @@ related:
   - '[[2026-09-08-reachability-burndown-s229-invoice-list-projection-withdrawal-audit]]'
   - '[[2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit]]'
   - '[[2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit]]'
-  - '[[2026-09-08-reachability-burndown-s232-borrador-100-namespace-alias-withdrawal-audit]]'
   - '[[2026-09-09-reachability-burndown-zero-closure-review-audit]]'
 ---
 
@@ -124,7 +123,6 @@ Auto-generated index of all documents tagged with `#reachability-burndown`.
 - `2026-09-08-reachability-burndown-s229-invoice-list-projection-withdrawal-audit` - 2026-09-08-reachability-burndown-s229-invoice-list-projection-withdrawal-audit
 - `2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit` - 2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit
 - `2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit` - 2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit
-- `2026-09-08-reachability-burndown-s232-borrador-100-namespace-alias-withdrawal-audit` - `reachability-burndown` audit: `S232 Borrador 100 namespace alias withdrawal review`
 - `2026-09-09-reachability-burndown-zero-closure-review-audit` - `reachability-burndown` audit: `exact zero closure review`
 
 ### exec

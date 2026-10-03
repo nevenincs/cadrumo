@@ -54,21 +54,20 @@ from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection
 from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ..aggregate_operation import (
+from ..aggregate_contracts import (
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
     MODELO_AGGREGATE_UNSUPPORTED_MODELO_REFUSAL_CODE,
+)
+from ..aggregate_operation import (
     ModeloAggregateExecutor,
-    ModeloAggregateOperationPorts,
-    ModeloAggregateOperationPortsFactory,
-    ModeloAggregateOperationRequest,
-    ModeloAggregateProjection,
-    ModeloAggregateReport,
     build_modelo_aggregate_operation_definition,
     build_modelo_aggregate_operation_registration,
-    project_modelo_aggregate_result,
     resolve_modelo_aggregate_access,
 )
+from ..aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
+from ..aggregate_projection import ModeloAggregateProjection, ModeloAggregateReport, project_modelo_aggregate_result
 from ..aggregate_public import PublicModeloAggregateCommand
+from ..aggregate_request import ModeloAggregateOperationRequest
 from .withholding_window_operation_test_support import WithholdingWindowServiceFixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

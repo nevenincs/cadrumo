@@ -1,0 +1,65 @@
+# Declaration projections, help, dependencies, and edit admission
+
+[Technical overview](../README.md) · [Article index](README.md) · [Snapshot and reading guide](../reading-guide.md)
+
+> This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
+
+**Report:** `STAGE-2-072` · **Topic:** [Modelo work and revision lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-part-1.md)
+
+<!-- preserved:article -->
+## Scope
+
+This implementation chunk contains 21 files under `src/cadrumo/application/modelo` (5,269 lines; 222,275 bytes; 47,409 `o200k_base` proxy tokens). I read every assigned file in bounded sections; no ranges remain unread. This is static inspection only. No application or tests were run; the legal calendar/evidence producers, UI renderers, edit executor, and storage adapters are outside this chunk.
+
+## Product capabilities and data flow
+
+The calculation-summary presentation module decides every visible string from the canonical report and digest inputs. It renders row values without rounding, keeps zero/absent/not-applicable distinct, and refuses if required locale strings are unavailable. Casilla help builds a card from a pinned registry snapshot: formula arithmetic, stored observation operands/results when they match the formula, parameter values effective on a supplied date, source quotations with provenance dates/URLs, legal references, declared constraints, binding origins, dependent boxes, and a shortest route to the declaration result (presentation (`src/cadrumo/application/modelo/calculation_summary_presentation.py`), help assembly (`src/cadrumo/application/modelo/casilla_help.py`), formula rendering (`src/cadrumo/application/modelo/casilla_help_formula.py`), reach graph (`src/cadrumo/application/modelo/casilla_help_reach.py`)). Unknown operations render as an incomplete generic rule, and mismatched or absent observations leave static formula help intact. These are explanatory projections, not a second calculation engine or independent legal validation.
+
+The data-inventory checklist classifies every relevant casilla as required/optional manual input, repeating-row field, ledger/profile/prior-filing/relation/live-observation source, or unbucketed source. It attaches each item’s registry legal and source references and, when a profile bucket is available, flags unresolved profile bindings and names the profile keys to supply (checklist (`src/cadrumo/application/modelo/data_inventory.py`), classification (`src/cadrumo/application/modelo/data_inventory.py`)). “Live observation” means local application data, not an AEAT query.
+
+Declarations workspace and calendar modules are pure projections over preloaded authorities. Workspace rows expose natural filing coordinates, calculation and filing states, sanitized lifecycle facts, timestamps, and an optional settled result; unknown amounts remain `None`. The projection validates bucket, pointer, revision, filing, successor, and lifecycle joins before it describes them (workspace projection (`src/cadrumo/application/modelo/declarations_workspace.py`), catalogue joins (`src/cadrumo/application/modelo/declarations_workspace.py`)). Its portfolio wrapper isolates a bad declaration into an unreadable row while retaining readable neighbors and marking the zone stale; orphaned history also makes the read partial (portfolio (`src/cadrumo/application/modelo/declarations_portfolio.py`)). The separate calendar projection joins schedule, local filing, and AEAT evidence axes with explicit availability/freshness and counts. It validates natural-address uniqueness, legal date/status consistency, source observability, and any recovery action’s operation and exact model/year/period binding. AEAT reference IDs and recovery actions are excluded from the serialized projection (calendar projection (`src/cadrumo/application/modelo/declarations_calendar.py`), calendar join (`src/cadrumo/application/modelo/declarations_calendar.py`), recovery binding (`src/cadrumo/application/modelo/declarations_calendar.py`)). The declarations list combines those local rows with deadlines and coverage advice while keeping an external AEAT completion with no ready local filing as a separate `aeat_unlinked` row (list projection (`src/cadrumo/application/modelo/declarations_list.py`)). New-declaration targets come only from supported authored registry windows (targets (`src/cadrumo/application/modelo/declaration_targets.py`)).
+
+The cross-period dependency operation accepts public filing coordinates, never taxpayer facts. A broad request returns registry-derived dependency declarations; a targeted request can also evaluate whether the selected profile has clean source filings, verification, observations, justificantes, and expected member coverage. Its clean-state payload includes expected, observed, missing, and unexpected member NIFs, so this is sensitive profile data despite the closed projection shape. Repository bucket IDs are checked against the requested profile, and source periods are derived from the pinned registry requirements. The operation requires whole-profile access for an unfiltered inventory and selected-period access for a targeted clean-state request, then releases only a successful no-effect result through the public projection (executor (`src/cadrumo/application/modelo/dependency_operation.py`), period scope and registration (`src/cadrumo/application/modelo/dependency_operation.py`), result projector (`src/cadrumo/application/modelo/dependency_operation.py`), member evidence fields (`src/cadrumo/application/modelo/dependency_projection.py`)).
+
+Two DT12 verification helpers produce warnings from a selected revision’s semantic roles and dated governed-fact declarations. One warns when work income exceeds €20,000 and no work-income reduction is declared; the other warns to confirm the antiquity condition when a positive reduction is present. Missing values use explicit advisory operand semantics, and the finding carries declared legal/source references (income warning (`src/cadrumo/application/modelo/dt12_advisory.py`), antiquity warning (`src/cadrumo/application/modelo/dt12_antiquity_advisory.py`)).
+
+Caller context preserves only operator-owned values, clears, detail rows, filing evidence, Modelo 210 selections, and borrador ID. It deliberately excludes merged source-tier maps, so replay does not convert ledger/profile values into higher-precedence caller overrides. An older revision with no recorded operator layer stays “unknown,” distinct from a new work unit’s known-empty layer (context projection (`src/cadrumo/application/modelo/caller_context.py`), input replay (`src/cadrumo/application/modelo/caller_context.py`)).
+
+Edit admission builds a value-free five-minute compare-and-swap baseline from freshly read work-unit and calculation-head coordinates, the pinned calculation-grade registry revision, current public operation schemas/contracts, and a digest of the entire permitted edit surface. It refuses missing/discarded work, conflicting heads, incompatible revisions, oversized surfaces, and absent operation contracts through typed refusal records. Manual scalar inputs and selected manual/carry bindings are writable; row fields, computed/read-only values, locked bucket-source bindings, unsupported channels, and undecided override policies carry explicit non-writable reasons (surface policy (`src/cadrumo/application/modelo/edit_admission.py`), baseline (`src/cadrumo/application/modelo/edit_admission.py`)). Renewal re-admits the declaration and refuses to rebase staged edits when any pinned coordinate changes; it compares only the edited work unit and its head, so unrelated profile work does not stale the baseline (renewal (`src/cadrumo/application/modelo/edit_admission.py`)). The baseline wire projection mirrors unsupported core schema types as plain fields, then reconstructs and revalidates the domain types (wire projection (`src/cadrumo/application/modelo/edit_baseline_projection.py`)).
+
+## Security and quality assessment
+
+The projections use closed/frozen models, explicit source availability, natural-address and pointer checks, and strict profile/period access for dependency reads. Workspace and calendar outputs omit monetary payloads and hide internal IDs/evidence references; calendar rows do not imply a remote AEAT connection. Dependency clean-state facts are an exception in sensitivity: member NIF lists are deliberately included, making the access resolver and encrypted operation result boundary important. No storage encryption implementation is included here.
+
+Two concrete consistency issues merit follow-up. First, edit renewal’s docstring says it names every changed coordinate, but the result slices `moved[:8]`; when more than eight coordinates move, the refusal omits some names and provides no count here (renewal result (`src/cadrumo/application/modelo/edit_admission.py`)). Second, the data-inventory docstring says `profile_checked` is false when a check could not run, but the bucket-present branch calls the resolver without a catch; an exception propagates instead of returning a checklist with `profile_checked=False`. The field is false only when no bucket is supplied in this implementation (documented contract and branches (`src/cadrumo/application/modelo/data_inventory.py`), profile resolution (`src/cadrumo/application/modelo/data_inventory.py`)).
+
+A further conditional concern is that declaration summaries require one current revision per declaration, while the lower-level workspace projector accepts the complete revision history. This appears consistent only if callers pass current heads to `declaration_summary`; the local code comments say they do, but the caller is outside the summary module (summary assumption (`src/cadrumo/application/modelo/declaration_summary.py`)). No tests are included in this chunk; import-time or Pydantic invariants are code safeguards, not test evidence. The registry help content and DT12 authority facts are not checked against current external law here.
+
+## Dependencies and follow-up
+
+Synthesis should trace the overview calendar/evidence producers, the cross-period clean-state evaluator and operation access resolver, the edit operation that consumes baselines, and the TUI/CLI projections that display unavailable versus stale zones. Confirm the data-inventory exception behavior and the eight-coordinate refusal bound against consumer expectations. For help cards, inspect registry source ingestion and verify that stored observation traces are from the same revision passed to the builder.
+
+## Complete assigned-file coverage
+
+- calculation_summary_presentation.py (`src/cadrumo/application/modelo/calculation_summary_presentation.py`) — lines 1–418, fully read.
+- caller_context.py (`src/cadrumo/application/modelo/caller_context.py`) — lines 1–164, fully read.
+- casilla_help.py (`src/cadrumo/application/modelo/casilla_help.py`) — lines 1–299, fully read.
+- casilla_help_formula.py (`src/cadrumo/application/modelo/casilla_help_formula.py`) — lines 1–490, fully read.
+- casilla_help_reach.py (`src/cadrumo/application/modelo/casilla_help_reach.py`) — lines 1–162, fully read.
+- data_inventory.py (`src/cadrumo/application/modelo/data_inventory.py`) — lines 1–368, fully read.
+- declaration_summary.py (`src/cadrumo/application/modelo/declaration_summary.py`) — lines 1–138, fully read.
+- declaration_targets.py (`src/cadrumo/application/modelo/declaration_targets.py`) — lines 1–46, fully read.
+- declarations_calendar.py (`src/cadrumo/application/modelo/declarations_calendar.py`) — lines 1–553, fully read.
+- declarations_list.py (`src/cadrumo/application/modelo/declarations_list.py`) — lines 1–144, fully read.
+- declarations_portfolio.py (`src/cadrumo/application/modelo/declarations_portfolio.py`) — lines 1–151, fully read.
+- declarations_workspace.py (`src/cadrumo/application/modelo/declarations_workspace.py`) — lines 1–864, fully read.
+- dependency_operation.py (`src/cadrumo/application/modelo/dependency_operation.py`) — lines 1–286, fully read.
+- dependency_projection.py (`src/cadrumo/application/modelo/dependency_projection.py`) — lines 1–216, fully read.
+- dependency_read_ports.py (`src/cadrumo/application/modelo/dependency_read_ports.py`) — lines 1–47, fully read.
+- dt12_advisory.py (`src/cadrumo/application/modelo/dt12_advisory.py`) — lines 1–100, fully read.
+- dt12_antiquity_advisory.py (`src/cadrumo/application/modelo/dt12_antiquity_advisory.py`) — lines 1–98, fully read.
+- edit_admission.py (`src/cadrumo/application/modelo/edit_admission.py`) — lines 1–455, fully read.
+- edit_baseline_projection.py (`src/cadrumo/application/modelo/edit_baseline_projection.py`) — lines 1–96, fully read.
+- edit_contract.py (`src/cadrumo/application/modelo/edit_contract.py`) — lines 1–136, fully read.
+- edit_locale_input.py (`src/cadrumo/application/modelo/edit_locale_input.py`) — lines 1–38, fully read.
+<!-- /preserved:article -->

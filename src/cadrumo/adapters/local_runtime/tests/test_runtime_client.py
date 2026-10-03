@@ -24,8 +24,8 @@ from cadrumo.application.runtime.contracts import (
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 
 from .. import runtime_client
-from ..framing import write_document
 from ..frontend_client import RuntimeFrontendClient
+from ..runtime_frame_io import write_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -109,11 +109,6 @@ def _install(monkeypatch: pytest.MonkeyPatch, root: Path, endpoint: _Endpoint) -
     monkeypatch.setattr(runtime_client, "version", lambda _: "opener-test")
     monkeypatch.setattr(runtime_client, "WindowsRuntimeEndpoint", lambda **_: endpoint)
     monkeypatch.setattr(runtime_client, "PosixRuntimeEndpoint", lambda **_: endpoint)
-
-    def no_startup(**_: object) -> None:
-        raise AssertionError("verified existing owner must not invoke manager startup")
-
-    monkeypatch.setattr(runtime_client, "installed_runtime_manager", no_startup)
 
 
 async def _open(profile_id: UUID) -> RuntimeFrontendClient:

@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-08-15'
-body_hash: 'sha256:7120008bd5c557de917dc7b6edc434297e18a78f2b390d78eff2cbc19eb26801'
+modified: '2026-10-03'
+body_hash: 'sha256:82c4bb51dc8397a818b39fa6aeb4493d4f02a0ba0e2645e3e6d10fb7db3e40c4'
 tier: L2
 related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-adr]]'
   - '[[2026-06-13-first-filer-attestation-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
-  - '[[2026-06-04-m130-casilla-15-override-adr]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-research]]'
 ---
 # `modelo-130-pagos-fraccionados-carry` `casilla 05 cumulative pagos-fraccionados carry (target-relative same-ejercicio expanding span)` plan
@@ -90,9 +89,13 @@ validator treats the empty span as satisfied. Per the ratified mid-year-alta
 boundary, the alta-containing quarter is the first owed quarter and the
 span starts strictly after it, bound to the first-filer-attestation
 activity-start authority (the operator-declared `activity_start_date` axis
-the deadline engine already consumes for pre-alta suppression). Casilla 05
-is carry-only / not operator-overridable in this work; a manual override is
-a future ADR if needed.
+the deadline engine already consumes for pre-alta suppression). Casilla 05 is
+bound and inherits the shared caller-override channel for `previous_filing`:
+caller `--binding` may replace a resolved carry, while caller `--casilla` is a
+fallback only when no resolver value exists. This is current code behavior, not
+a tax-law conclusion; see the carry ADR's 2026-10-03 reconciliation. The
+2026-06-13 carry-only expectation is preserved in that ADR as historical intent,
+but the implementation does not enforce it.
 
 ## Steps
 

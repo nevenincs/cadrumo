@@ -21,15 +21,11 @@ from ..export.tabular import ExportSerializationFormat
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -250,19 +246,13 @@ def resolve_ledger_export_access(
 
 def build_ledger_export_definition(factory: LedgerActionPortsFactory) -> OperationDefinition:
     """Declare the existing human export, including partial and uncertain writes."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_EXPORT_OPERATION_DEFINITION_ID,
         request_type=LedgerExportRequest,
         result_type=LedgerExportExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerExportRequest,
-            executor_type=LedgerExportExecutor,
-            build=lambda: LedgerExportExecutor(factory),
-        ),
-        phase_codes=(LEDGER_EXPORT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerExportExecutor,
+        build=lambda: LedgerExportExecutor(factory),
         capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 

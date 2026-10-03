@@ -21,15 +21,11 @@ from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, DisclosureCategory, DisclosurePermission
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history import assemble_modelo_lifecycle_history
@@ -141,19 +137,13 @@ class ModeloHistoryTimelineExecutor:
 
 def build_modelo_history_timeline_definition(factory: ModeloHistoryPortsFactory) -> OperationDefinition:
     """Declare a metadata-only agent timeline with no domain write capability."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
         request_type=ModeloHistoryTimelineRequest,
         result_type=ModeloHistoryTimelineProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloHistoryTimelineRequest,
-            executor_type=ModeloHistoryTimelineExecutor,
-            build=lambda: ModeloHistoryTimelineExecutor(factory),
-        ),
-        phase_codes=(MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloHistoryTimelineExecutor,
+        build=lambda: ModeloHistoryTimelineExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.MCP}),
     )
 
@@ -164,14 +154,12 @@ def build_modelo_history_timeline_registration(
     """Require exact profile/period authority and metadata disclosure at release."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if (
-            request.definition_id != MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID
-            or type(payload) is not ModeloHistoryTimelineRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if not isinstance(payload, ModeloHistoryTimelineRequest):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        payload = require_access_request_payload(
+            request,
+            definition_id=MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
+            payload_type=ModeloHistoryTimelineRequest,
+            exact_type=True,
+        )
         periods = frozenset[Period]()
         if payload.year is not None and payload.period is not None:
             with suppress(PeriodError):

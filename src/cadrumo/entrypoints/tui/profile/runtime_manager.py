@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....adapters.local_runtime.profile_mutations import (
     ProfileMutationCompletion,
     ProfileMutationRequest,
@@ -17,7 +18,8 @@ from ....application.operations.registry import OperationFrontendProjection
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.completeness import AUTH_PROVIDER_PATH, CLAVE_MOVIL_ROUTE_PATH
-from ....application.user_profile.operations import (
+from ....application.user_profile.overview import ProfileOverview
+from ....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileFieldMutationOperationRequest,
@@ -33,7 +35,6 @@ from ....application.user_profile.operations import (
     ProfileRepeatableRowUpdateOperationRequest,
     ProfileRepeatableRowValue,
 )
-from ....application.user_profile.overview import ProfileOverview
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.external_constants import OutputLanguage

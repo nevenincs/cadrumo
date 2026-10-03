@@ -7,7 +7,10 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.user_profile.operations import ProfilePatchOperationRequest, ProfilePatchValue
+from cadrumo.application.user_profile.profile_operation_contracts import (
+    ProfilePatchOperationRequest,
+    ProfilePatchValue,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

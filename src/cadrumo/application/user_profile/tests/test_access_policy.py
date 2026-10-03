@@ -59,10 +59,10 @@ from cadrumo.application.user_profile.access_projections import (
 )
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.application.user_profile.operations import (
-    PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
+from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.core.period import Period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#export-publication'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:29277a1857dc3c784a113a337c36724241941ac3f65658775ca808244a344807'
+body_hash: 'sha256:88f39d095d59af1dd4256cd50b2fc2c03faebda515db06699c32d11d118f0d1b'
 related:
-  - '[[2026-07-17-export-publication-adr]]'
   - '[[2026-07-17-export-publication-audit]]'
   - '[[2026-07-17-export-publication-ledger]]'
   - '[[2026-07-17-export-publication-plan]]'
@@ -20,10 +19,6 @@ related:
 Auto-generated index of all documents tagged with `#export-publication`.
 
 ## Documents
-
-### adr
-
-- `2026-07-17-export-publication-adr` - `export-publication` adr: `export-publication rescope grounding` | (**status:** `accepted`)
 
 ### audit
 

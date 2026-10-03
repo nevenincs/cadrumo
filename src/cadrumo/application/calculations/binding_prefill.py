@@ -697,6 +697,17 @@ def _pre_activity_scoped_binding_ids(
     )
 
 
+def _gathered_source_matches(
+    item: _GatheredObservation, source_modelo: str, source_filing_year: int, required_periods: set[str]
+) -> bool:
+    """Match the original modelo, year and period coordinate in order."""
+    return (
+        item.observation.modelo == source_modelo
+        and item.observation.filing_year == source_filing_year
+        and item.observation.period in required_periods
+    )
+
+
 def _source_kind_for_binding(
     gathered: tuple[_GatheredObservation, ...],
     *,
@@ -713,11 +724,7 @@ def _source_kind_for_binding(
     required_periods = set(source_periods)
     matched_source_kinds: set[str] = set()
     for item in gathered:
-        if (
-            item.observation.modelo != source_modelo
-            or item.observation.filing_year != source_filing_year
-            or item.observation.period not in required_periods
-        ):
+        if not _gathered_source_matches(item, source_modelo, source_filing_year, required_periods):
             continue
         if source_casilla_ids:
             matched_source_kinds.update(

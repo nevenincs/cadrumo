@@ -19,7 +19,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_crypto import (
     API_KEY_PREFIX,
     CustodyAutomationKeyIssuer,
 )
-from cadrumo.adapters.persistence.storage.custody.automation_store import (
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import (
     CLIENT_NAMESPACE,
     CONTROL_NAMESPACE,
     WRAP_NAMESPACE,

@@ -401,12 +401,26 @@ def main() -> int:
     authority = compiled_bundled_authority()
     findings = screen_authority(authority, bundled_modelo_ids())
     tally: collections.Counter[str] = collections.Counter(item.kind for item in findings)
+    _write_finding_rows(findings)
+    # Keep this import after field rows: a drift-screen failure still leaves the
+    # completed field census visible, as it did before the output helpers.
+    work = _grounding_work_items(findings)
+    _write_work_rows(work)
+    ungrounded_types = {(item.modelo, item.aeat_type) for item in findings if item.kind == "ungrounded"}
+    _write_summary(findings, tally, work, ungrounded_types)
+    return 0
+
+
+def _write_finding_rows(findings: tuple[GroundingFinding, ...]) -> None:
     for item in findings:
         sys.stdout.write(
             f"rule_grounding modelo={item.modelo} revision={item.revision} cell={item.cell} "
             f"aeat_type={item.aeat_type!r} kind={item.kind} "
             f"notes={(','.join(item.notes) or 'none')!r} detail={item.detail!r}\n"
         )
+
+
+def _grounding_work_items(findings: tuple[GroundingFinding, ...]) -> tuple[NoteWorkItem, ...]:
     # The reading load, which is what the authoring task costs: one note read
     # covers every field citing it, so the distinct notes matter and the field
     # count does not.
@@ -418,8 +432,10 @@ def main() -> int:
     from .note_text_drift import screen_corpus as note_drift
 
     drifting = frozenset((item.modelo, item.sheet, item.label) for item in note_drift())
-    work = grounding_worklist(findings, drifting=drifting)
-    ungrounded_types = {(item.modelo, item.aeat_type) for item in findings if item.kind == "ungrounded"}
+    return grounding_worklist(findings, drifting=drifting)
+
+
+def _write_work_rows(work: tuple[NoteWorkItem, ...]) -> None:
     for item in work:
         sys.stdout.write(
             f"rule_grounding_work modelo={item.modelo} design={item.design!r} note={item.note!r} "
@@ -428,6 +444,14 @@ def main() -> int:
             f"types={','.join(item.types)!r} "
             f"grounding_drifts={str(item.grounding_drifts).lower()}\n"
         )
+
+
+def _write_summary(
+    findings: tuple[GroundingFinding, ...],
+    tally: collections.Counter[str],
+    work: tuple[NoteWorkItem, ...],
+    ungrounded_types: set[tuple[str, str]],
+) -> None:
     kinds = " ".join(f"{kind}={tally[kind]}" for kind in KINDS)
     sys.stdout.write(
         f"summary fields={len(findings)} {kinds} distinct_notes_to_read={len(work)} "
@@ -435,7 +459,6 @@ def main() -> int:
         f"fields_on_drifting_wording={sum(len(item.fields) for item in work if item.grounding_drifts)} "
         f"ungrounded_modelo_type_pairs={len(ungrounded_types)}\n"
     )
-    return 0
 
 
 if __name__ == "__main__":

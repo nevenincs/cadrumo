@@ -13,8 +13,9 @@ related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]"
   - "[[2026-09-07-quality-gate-zero-closure-never-emitted-decidability-measurement-audit]]"
   - "[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]"
+  - '[[2026-07-21-ci-discipline-adr]]'
 superseded_by: '2026-09-08-quality-gate-zero-closure-product-boundary-adr'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:5438a90416030c9a7f7b97ca946ec6e1d144f5d724729bd5d4d7afcd9282f082'
 ---

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-edit-contract'
 date: '2026-08-24'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:70069f58dc84a078cd6f11d45317ed52cb91b3a53ac3c33495549f473578c16a'
 related:
@@ -12,7 +12,6 @@ related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
   - '[[2026-08-11-tui-architecture-adr]]'
-  - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-09-30-modelo-editor-workbench-adr]]'
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 ---

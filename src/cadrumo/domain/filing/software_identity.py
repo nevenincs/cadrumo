@@ -9,7 +9,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from cadrumo.domain.calculations.registry.export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
-from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -163,11 +163,7 @@ def development_mock_software_identity(authority: GovernedFactSource | None = No
     validation need governed facts, so the caller must hold an authority
     operation or pass ``authority``.
     """
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise FilingExportValidationError(
-            "the development mock software identity requires an explicit authority operation or scope",
-        )
+    selected = require_governed_fact_authority(authority, subject="development mock software identity")
     return AeatProductSoftwareIdentity(
         program_identifier=resolve_export_literal_fact(DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER_FACT, authority=selected),
         developer_tax_id=resolve_export_literal_fact(DEVELOPMENT_MOCK_DEVELOPER_TAX_ID_FACT, authority=selected),

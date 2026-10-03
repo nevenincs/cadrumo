@@ -12,29 +12,24 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.work_unit import WorkUnit
 from ..operations.access_resolution import (
-    ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_single_period_admission,
+    bind_replayed_or_fresh_single_period_access,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_identity
+from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.public_period import PublicPeriod
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -130,19 +125,13 @@ class ModeloWorkMetadataExecutor:
 
 def build_modelo_metadata_definition(factory: ActiveWorkLifecyclePortsFactory) -> OperationDefinition:
     """Declare one read using the existing operation journal and custody owner."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkMetadataRequest,
         result_type=ModeloWorkMetadataProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloWorkMetadataRequest,
-            executor_type=ModeloWorkMetadataExecutor,
-            build=lambda: ModeloWorkMetadataExecutor(factory),
-        ),
-        phase_codes=(MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloWorkMetadataExecutor,
+        build=lambda: ModeloWorkMetadataExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -153,38 +142,28 @@ def build_modelo_metadata_registration(
     """Bind canonical selection to fresh profile, period and disclosure checks."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != MODELO_WORK_METADATA_OPERATION_DEFINITION_ID or not isinstance(
-            payload, ModeloWorkMetadataRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        require_access_request_profile_identity(
+        payload = require_access_request_profile_payload(
             request,
-            payload_profile_id=payload.profile_id,
+            definition_id=MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
+            payload_type=ModeloWorkMetadataRequest,
             access_profile_id=context.profile_id,
         )
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            periods = require_single_period_admission(
-                admitted, profile_id=context.profile_id, definition_id=request.definition_id
-            )
-        else:
-            if context.authority_operation is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+        def fresh_period(operation: PinnedAuthorityOperation) -> Period:
             try:
-                unit = _read_unit(payload, factory, operation=context.authority_operation)
+                unit = _read_unit(payload, factory, operation=operation)
             except (ModeloWorkSelectorError, ModeloWorkAddressNotFoundError, ModeloWorkPeriodTokenError):
                 # Invalid or ambiguous operator selection is a normal refusal.
                 # Candidate identities remain private; repository/custody faults
                 # still propagate to the worker's fail-closed lifetime boundary.
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from None
-            periods = frozenset({unit.period})
-        return bind_operation_access_profile(
+            return unit.period
+
+        return bind_replayed_or_fresh_single_period_access(
             context,
             LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
             definition_id=request.definition_id,
-            periods=periods,
+            fresh_period=fresh_period,
         )
 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(

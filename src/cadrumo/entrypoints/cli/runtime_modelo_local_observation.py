@@ -13,7 +13,7 @@ from ...application.modelo.filing_record_view_operation import (
     ModeloFilingObservationLayerProjection,
     ModeloFilingObservationLayersProjection,
 )
-from ...application.modelo.local_observation_operation import (
+from ...application.modelo.local_observation_contracts import (
     MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,
     ModeloLocalObservationCasillaValue,
     ModeloLocalObservationMutationProjection,

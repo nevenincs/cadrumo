@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#current-schema-only-purge'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:d62f6b2755109397fe22c0f8d03820a9d126a7cc89b13bfd205de274d99bb293'
-related:
-  - "[[2026-08-10-current-schema-only-purge-plan]]"
+related: []
 ---
 
 # `current-schema-only-purge` audit: `exec record gap closure`

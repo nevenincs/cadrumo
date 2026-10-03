@@ -38,7 +38,8 @@ from ......core.period import Period
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1, declared_destination_ids
-from ..casilla_list import CasillaList, CasillaListEntry
+from ..casilla_list import CasillaList
+from ..casilla_list_models import CasillaListEntry
 from ..screen import ModeloWorkbenchScreen
 from ..sources import (
     SourceGroup,

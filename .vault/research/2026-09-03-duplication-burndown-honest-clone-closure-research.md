@@ -3,14 +3,14 @@ tags:
   - '#research'
   - '#duplication-burndown'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:b87af1e172ab7acc6f6902812516c3daabc1b97a6ac17e6b9ad4399f8476d68e'
 related:
   - "[[2026-07-14-honest-all-green-adr]]"
-  - "[[2026-07-17-duplication-evidence-repair-adr]]"
   - "[[2026-07-17-duplication-evidence-repair-plan]]"
   - "[[2026-09-03-duplication-burndown-plan]]"
+  - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---
 
 # `duplication-burndown` research: `honest clone closure`

@@ -311,38 +311,57 @@ def _acquire_lock_file(path: Path, *, key: str, wait_seconds: float) -> bool:
     """
     deadline = time.monotonic() + wait_seconds
     while True:
-        try:
-            handle = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
-            if is_validated(key):
-                return False
-            if _abandoned(path):
-                _LOGGER.warning("Breaking abandoned validation lock at %s", path)
-                if not _drop_lock(path, reason="verdict_lock_reclaim"):
-                    time.sleep(_LOCK_POLL_SECONDS)
-                continue
-            if time.monotonic() >= deadline:
-                _LOGGER.warning(
-                    "Validating without the lock at %s; a peer held it for over %.0fs",
-                    path,
-                    wait_seconds,
-                )
-                return False
+        result = _try_acquire_lock(path, key=key, deadline=deadline, wait_seconds=wait_seconds)
+        if result is not None:
+            return result
+
+
+def _try_acquire_lock(path: Path, *, key: str, deadline: float, wait_seconds: float) -> bool | None:
+    try:
+        handle = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        return _wait_for_existing_lock(path, key=key, deadline=deadline, wait_seconds=wait_seconds)
+    except PermissionError:
+        return _wait_for_lock_create_permission(deadline)
+    except OSError:
+        return False
+    _stamp_lock_handle(handle)
+    return True
+
+
+def _wait_for_existing_lock(path: Path, *, key: str, deadline: float, wait_seconds: float) -> bool | None:
+    if is_validated(key):
+        return False
+    if _abandoned(path):
+        _LOGGER.warning("Breaking abandoned validation lock at %s", path)
+        if not _drop_lock(path, reason="verdict_lock_reclaim"):
             time.sleep(_LOCK_POLL_SECONDS)
-        except PermissionError:
-            # Windows refuses the create while a peer's read handle or pending
-            # delete is open; both clear on their own, so keep polling.
-            if time.monotonic() >= deadline:
-                return False
-            time.sleep(_LOCK_POLL_SECONDS)
-        except OSError:
-            return False
-        else:
-            try:
-                os.write(handle, str(os.getpid()).encode("ascii"))
-            finally:
-                os.close(handle)
-            return True
+        return None
+    if time.monotonic() >= deadline:
+        _LOGGER.warning(
+            "Validating without the lock at %s; a peer held it for over %.0fs",
+            path,
+            wait_seconds,
+        )
+        return False
+    time.sleep(_LOCK_POLL_SECONDS)
+    return None
+
+
+def _wait_for_lock_create_permission(deadline: float) -> bool | None:
+    # Windows refuses the create while a peer's read handle or pending delete
+    # is open; both clear on their own, so keep polling.
+    if time.monotonic() >= deadline:
+        return False
+    time.sleep(_LOCK_POLL_SECONDS)
+    return None
+
+
+def _stamp_lock_handle(handle: int) -> None:
+    try:
+        os.write(handle, str(os.getpid()).encode("ascii"))
+    finally:
+        os.close(handle)
 
 
 @contextmanager

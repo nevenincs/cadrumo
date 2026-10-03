@@ -25,7 +25,11 @@ from ...core.registry_token import RegistryToken, StrictRegistryToken
 from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import (
+    GovernedFactSource,
+    governed_facts_in_scope,
+    require_governed_fact_authority,
+)
 from ..calculations.registry.iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     resolve_iva_rate_kind_catalogue,
@@ -243,12 +247,7 @@ def invoice_legal_mention_declarations(
 
 
 def _invoice_legal_mention_authority(authority: GovernedFactSource | None) -> GovernedFactSource:
-    selected = authority if authority is not None else governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError(
-            "invoice legal-mention catalogue requires an explicit authority operation or scope"
-        )
-    return selected
+    return require_governed_fact_authority(authority, subject="invoice legal-mention catalogue")
 
 
 def _invoice_legal_mention_values(on_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
@@ -334,11 +333,7 @@ def _iva_rate_slot_registry_values(
     authority: GovernedFactSource | None = None,
 ) -> Mapping[str, str]:
     """Resolve the dated slot membership and declarations from the registry."""
-    if authority is None:
-        authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("IVA rate-slot catalogue requires an explicit authority operation or scope")
-    selected = authority
+    selected = require_governed_fact_authority(authority, subject="IVA rate-slot catalogue")
     resolved = selected.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_IVA_RATE_SLOT_FACT_ID,

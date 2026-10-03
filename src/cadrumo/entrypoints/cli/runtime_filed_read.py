@@ -8,10 +8,7 @@ from uuid import UUID
 import typer
 
 from ...application.live.filed_data import FiledDataListingRow
-from ...application.live.filed_data_capture import (
-    FiledHistoryDiscoveryPair,
-    FiledHistoryDiscoveryReport,
-)
+from ...application.live.filed_history_discovery import FiledHistoryDiscoveryPair, FiledHistoryDiscoveryReport
 from ...application.live.filed_read_operation import (
     FILED_DISCOVER_DEFINITION_ID,
     FILED_LIST_DEFINITION_ID,

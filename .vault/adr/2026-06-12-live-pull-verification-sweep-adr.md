@@ -5,8 +5,8 @@ tags:
 date: '2026-06-12'
 related:
   - "[[2026-06-12-live-pull-verification-sweep-research]]"
-modified: '2026-07-17'
-body_hash: 'sha256:c96a6244a352a691000cf427fd57e37ad3664a934d29dc25975b4bf1688a8f17'
+modified: '2026-10-03'
+body_hash: 'sha256:3fae4349defa081d2f91ae81aad29c8d1ad2f27be2529cba14caf728b97cc6c5'
 ---
 # `live-pull-verification-sweep` adr: `Authenticated pull-only live verification sweep: per-surface acceptance` | (**status:** `accepted`)
 
@@ -17,7 +17,3 @@ After the terminology-search closeout, a broader live-verification gap remained:
 ## Decision
 
 Run an authenticated, pull-only (read-only) live verification sweep that accepts each AEAT-facing live surface independently against a real authenticated session, recording per-surface evidence. The sweep is acceptance-only: it never performs writes and never re-litigates completed implementation.
-
-## Status
-
-Accepted.

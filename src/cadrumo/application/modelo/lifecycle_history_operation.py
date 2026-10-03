@@ -8,7 +8,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import profile_operation_subject
 from ...core.period import Period, PeriodError
 from ...domain.buckets.event import bucket_event_order_key
 from ..bucket_event_projection import BucketEventProjection
@@ -23,15 +22,11 @@ from ..operations.access_resolution import (
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -119,66 +114,65 @@ class ModeloHistoryExecutor:
 
 def build_modelo_history_definition(factory: ModeloHistoryPortsFactory) -> OperationDefinition:
     """Declare a recorded, encrypted, nonmutating modelo history read."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_HISTORY_OPERATION_DEFINITION_ID,
         request_type=ModeloHistoryOperationRequest,
         result_type=ModeloHistoryOperationProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloHistoryOperationRequest,
-            executor_type=ModeloHistoryExecutor,
-            build=lambda: ModeloHistoryExecutor(factory),
-        ),
-        phase_codes=(MODELO_HISTORY_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloHistoryExecutor,
+        build=lambda: ModeloHistoryExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def _validated_history_access_payload(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> ModeloHistoryOperationRequest:
+    return require_access_request_profile_payload(
+        request,
+        definition_id=MODELO_HISTORY_OPERATION_DEFINITION_ID,
+        payload_type=ModeloHistoryOperationRequest,
+        access_profile_id=context.profile_id,
+        exact_type=True,
+    )
+
+
+def _resolve_history_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    payload = _validated_history_access_payload(request, context)
+    admitted = context.admitted_request
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=request.definition_id)
+        periods, independent = admitted.periods, admitted.period_independent
+    else:
+        if context.authority_operation is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        periods, independent = frozenset[Period](), True
+        if payload.year is not None and payload.period is not None:
+            try:
+                periods = frozenset({Period.from_year_and_code(payload.year, payload.period)})
+            except PeriodError:
+                # Censo lifecycle selectors such as ``alta`` are valid
+                # history filters, yet do not identify a filing period.
+                pass
+            else:
+                independent = False
+    return bind_operation_access_profile(
+        context,
+        LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS
+        if independent
+        else LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        profile_id=context.profile_id,
+        definition_id=request.definition_id,
+        periods=periods,
     )
 
 
 def build_modelo_history_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Require exact profile and truthful period scope through every release."""
-
-    def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if (
-            request.definition_id != MODELO_HISTORY_OPERATION_DEFINITION_ID
-            or type(payload) is not ModeloHistoryOperationRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=request.definition_id)
-            periods, independent = admitted.periods, admitted.period_independent
-        else:
-            if context.authority_operation is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            periods, independent = frozenset[Period](), True
-            if payload.year is not None and payload.period is not None:
-                try:
-                    periods = frozenset({Period.from_year_and_code(payload.year, payload.period)})
-                except PeriodError:
-                    # Censo lifecycle selectors such as ``alta`` are valid
-                    # history filters, yet do not identify a filing period.
-                    pass
-                else:
-                    independent = False
-        return bind_operation_access_profile(
-            context,
-            LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS
-            if independent
-            else LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            periods=periods,
-        )
-
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=ModeloHistoryOperationProjection,
-        access_resolver=resolve,
+        access_resolver=_resolve_history_access,
     )

@@ -36,6 +36,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -424,6 +425,34 @@ def _capture_edit_receipt(
     return (receipt_repository.to_secure_object_write(receipt),)
 
 
+def _unresolved_binding_edit_refusal(
+    context: Mapping[str, object], revision: ModeloRevision, code: str
+) -> ModeloEditExecutionNoEffectV1 | None:
+    """Validate the closed missing-binding producer's context against the actual revision."""
+    # Only this closed producer identifies an unresolved bound source.
+    # Its context is validated against the actual revision, never parsed
+    # from the exception's sentence or rendered directly to the filer.
+    casilla = next((item for item in revision.casillas if item.id == context.get("casilla_id")), None)
+    raw = context.get("binding_id")
+    binding_ids = tuple(raw.split(",")) if isinstance(raw, str) else ()
+    declared = {str(binding.id) for binding in revision.bindings}
+    if (
+        casilla is not None
+        and 0 < len(binding_ids) <= 16
+        and len(set(binding_ids)) == len(binding_ids)
+        and set(binding_ids) <= declared
+        and set(binding_ids) <= set(bound_casilla_binding_ids(casilla))
+    ):
+        return _domain_refusal(
+            ModeloEditRefusalCode.VALIDATION_FAILED,
+            address=ModeloEditScalarAddressV1(casilla_id=casilla.id),
+            facts=(code, "calculation_source_unresolved"),
+            evidence=binding_ids,
+            condition="inspect the source required by this failed recalculation before resubmitting",
+        )
+    return None
+
+
 def _pre_effect_refusal(
     error: BaseException, *, revision: ModeloRevision | None = None
 ) -> ModeloEditExecutionNoEffectV1:
@@ -435,27 +464,9 @@ def _pre_effect_refusal(
         and revision is not None
         and error.context is not None
     ):
-        # Only this closed producer identifies an unresolved bound source.
-        # Its context is validated against the actual revision, never parsed
-        # from the exception's sentence or rendered directly to the filer.
-        casilla = next((item for item in revision.casillas if item.id == error.context.get("casilla_id")), None)
-        raw = error.context.get("binding_id")
-        binding_ids = tuple(raw.split(",")) if isinstance(raw, str) else ()
-        declared = {str(binding.id) for binding in revision.bindings}
-        if (
-            casilla is not None
-            and 0 < len(binding_ids) <= 16
-            and len(set(binding_ids)) == len(binding_ids)
-            and set(binding_ids) <= declared
-            and set(binding_ids) <= set(bound_casilla_binding_ids(casilla))
-        ):
-            return _domain_refusal(
-                ModeloEditRefusalCode.VALIDATION_FAILED,
-                address=ModeloEditScalarAddressV1(casilla_id=casilla.id),
-                facts=(code, "calculation_source_unresolved"),
-                evidence=binding_ids,
-                condition="inspect the source required by this failed recalculation before resubmitting",
-            )
+        refusal = _unresolved_binding_edit_refusal(error.context, revision, code)
+        if refusal is not None:
+            return refusal
     if isinstance(error, ModeloClearedCasillaSourceFedError):
         return _domain_refusal(
             ModeloEditRefusalCode.DISALLOWED_INTENT,

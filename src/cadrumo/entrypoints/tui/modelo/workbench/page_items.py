@@ -46,12 +46,14 @@ from .....application.modelo.work_form_models import (
     section_fields,
 )
 from .....core.i18n.render import tr
-from .casilla_list import (
+from .casilla_list_models import (
     AddressKey,
     CasillaListEntry,
     CasillaListHeading,
     CasillaListItem,
     CasillaListNote,
+)
+from .casilla_list_values import (
     shown_rate,
 )
 from .grid import CasillaListRecords, GridRowPlace, GridShape, GridSlot

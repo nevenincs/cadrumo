@@ -21,19 +21,18 @@ from click.testing import Result
 from textual.pilot import Pilot
 from textual.widgets import Button, Checkbox, DataTable, Input, Select, SelectionList, Static
 
-from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
+from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
-from cadrumo.adapters.local_runtime.tests.windows_managed_runtime_fixture import installed_windows_runtime_task
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
-from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     administration_subject,
@@ -41,9 +40,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from cadrumo.application.runtime.access_management import RuntimeAccessManagementRequest
-from cadrumo.application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.management import RuntimeManagerProcessState
-from cadrumo.application.runtime.management_status import RuntimeListenerState
+from cadrumo.application.runtime.contracts import RuntimeByteChannel
 from cadrumo.application.runtime.transport import RuntimeConnectionContext
 from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
@@ -54,10 +51,8 @@ from cadrumo.application.user_profile.automation_enrollment import (
 )
 from cadrumo.application.user_profile.operations import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.conftest import authority_operation
-from cadrumo.core.async_cleanup import AsyncCloseable, await_cancellation_complete, close_async_resources
+from cadrumo.core.async_cleanup import AsyncCloseable, close_async_resources
 from cadrumo.core.config import override_settings
-from cadrumo.core.i18n.render import tr
-from cadrumo.entrypoints.cli.app_runtime_payloads import RuntimeManagerConfigResult, RuntimeStatusResult
 from cadrumo.entrypoints.cli.config import runtime_automation_request
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.cli.tests.runtime_profile_cli_fixture import (
@@ -68,19 +63,11 @@ from cadrumo.entrypoints.cli.tests.runtime_profile_cli_fixture import (
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.runtime.tests.test_profile_connections import LoginObservation
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.launcher import run_runtime_managed_application
 from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
 from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
-from cadrumo.entrypoints.tui.runtime_management import (
-    RuntimeManagementScreen,
-    RuntimeStopConfirmationScreen,
-)
-from cadrumo.entrypoints.tui.runtime_management_cleanup import RuntimeManagementCleanup
 from cadrumo.entrypoints.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
-from cadrumo.entrypoints.tui.secret.automation_requester import (
-    AutomationRequestOutcome,
-    RuntimeAutomationRequesterScreen,
-)
+from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from cadrumo.entrypoints.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 
 __all__ = ["authority_operation"]
 
@@ -721,139 +708,3 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
                     )
                 finally:
                     cli_pool.shutdown(wait=True, cancel_futures=True)
-
-
-@pytest.mark.asyncio
-@pytest.mark.serial
-async def test_installed_cli_and_default_tui_share_windows_runtime_management(tmp_path: Path) -> None:
-    """Actual installed task and native listener; no profile admission or manager mocks."""
-    async with installed_windows_runtime_task(tmp_path) as task:
-        with override_settings(cadrumo_local_storage_root=task.root):
-
-            async def cli(action: str) -> dict[str, Any]:
-                context = copy_context()
-
-                def invoke() -> Result:
-                    return context.run(invoke_cached_cli, ["--format", "json", "app", "runtime", action])
-
-                result = await await_cancellation_complete(
-                    asyncio.to_thread(invoke),
-                    task_name="installed-management-cli-action",
-                )
-                assert result.exit_code == 0, result.output
-                document = json.loads(result.stdout)
-                assert document["command"] == "app.runtime." + action
-                assert document["status"] == "success"
-                assert isinstance(document["result"], dict)
-                return document["result"]
-
-            initial = RuntimeStatusResult.model_validate_json(json.dumps(await cli("status")), strict=True)
-            assert initial.listener is RuntimeListenerState.UNAVAILABLE
-            assert initial.manager is not None and initial.manager.provisioned and initial.manager.binding_matches
-            assert not initial.manager.login_autostart
-            assert initial.manager.process_state is RuntimeManagerProcessState.STOPPED
-            configured = RuntimeManagerConfigResult.model_validate_json(json.dumps(await cli("enable")), strict=True)
-            assert (
-                configured.manager.available and configured.manager.provisioned and configured.manager.binding_matches
-            )
-            assert configured.manager.login_autostart
-            assert configured.manager.process_state is RuntimeManagerProcessState.STOPPED
-            enabled = RuntimeStatusResult.model_validate_json(json.dumps(await cli("status")), strict=True)
-            assert enabled.listener is RuntimeListenerState.UNAVAILABLE
-            assert enabled.manager is not None and enabled.manager.login_autostart
-            assert enabled.manager.process_state is RuntimeManagerProcessState.STOPPED
-
-            task.mark_launch_possible()
-            started = RuntimeStatusResult.model_validate_json(json.dumps(await cli("start")), strict=True)
-            assert started.listener is RuntimeListenerState.READY
-            assert started.manager is not None and started.manager.binding_matches and started.manager.login_autostart
-            process, boot = await task.observe_live_process()
-            process_after: WindowsOwnedProcess | None = None
-            cleanup = RuntimeManagementCleanup()
-            screen = RuntimeManagementScreen(cleanup=cleanup)
-            app = ScreenHostApp(screen)
-
-            async def until(pilot: Pilot[object], condition: Callable[[], bool]) -> None:
-                async with asyncio.timeout(10):
-                    while not condition():
-                        await pilot.pause(0.02)
-
-            async def drive(pilot: Pilot[object]) -> None:
-                nonlocal process_after
-                await until(
-                    pilot,
-                    lambda: (
-                        screen.is_mounted
-                        and not screen._busy
-                        and tr("tui.runtime_management.listener.ready")
-                        in str(screen.query_one("#runtime-management-listener", Static).content)
-                    ),
-                )
-                assert tr("flows.confirm.yes") in str(screen.query_one("#runtime-management-autostart", Static).content)
-                assert tr("flows.confirm.yes") in str(screen.query_one("#runtime-management-binding", Static).content)
-                before = RuntimeStatusResult.model_validate_json(json.dumps(await cli("status")), strict=True)
-                assert before.listener is RuntimeListenerState.READY
-                assert before.manager is not None and before.manager.login_autostart
-
-                screen.query_one("#runtime-management-disable", Button).press()
-                await until(
-                    pilot,
-                    lambda: (
-                        not screen._busy
-                        and tr("flows.confirm.no")
-                        in str(screen.query_one("#runtime-management-autostart", Static).content)
-                        and tr("tui.runtime_management.listener.ready")
-                        in str(screen.query_one("#runtime-management-listener", Static).content)
-                    ),
-                )
-                disabled = RuntimeStatusResult.model_validate_json(json.dumps(await cli("status")), strict=True)
-                assert disabled.listener is RuntimeListenerState.READY
-                assert disabled.manager is not None and disabled.manager.binding_matches
-                assert not disabled.manager.login_autostart
-                process_after, after_boot = await task.observe_live_process()
-                assert process_after.pid == process.pid and after_boot == boot
-                with pytest.raises(RuntimeRefusalError) as alive:
-                    process.wait(timeout=0)
-                assert alive.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
-
-                screen.query_one("#runtime-management-stop", Button).press()
-                await until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
-                confirmation = app.screen
-                assert isinstance(confirmation, RuntimeStopConfirmationScreen)
-                confirmation.query_one("#runtime-stop-confirm", Button).press()
-                await until(
-                    pilot,
-                    lambda: (
-                        not screen._busy
-                        and cleanup.consent is not None
-                        and cleanup.consent.accepted is not None
-                        and cleanup.consent.released
-                    ),
-                )
-                consent = cleanup.consent
-                assert consent is not None and consent.accepted is not None
-                assert consent.accepted.runtime_boot_id == boot
-                assert consent.accepted.scope == "all_profiles_and_work"
-                assert not consent.uncertain
-                assert screen.query_one("#runtime-management-stop", Button).disabled
-                assert tr("tui.runtime_management.stop_accepted") in str(
-                    screen.query_one("#runtime-management-status", Static).content
-                )
-
-                # The accepted ACK is separate from the independent physical
-                # death and exact task/listener facts, all before fixture cleanup.
-                await await_cancellation_complete(
-                    asyncio.to_thread(process.wait, timeout=25), task_name="management-runtime-physical-exit"
-                )
-                stopped = RuntimeStatusResult.model_validate_json(json.dumps(await cli("status")), strict=True)
-                assert stopped.listener is RuntimeListenerState.UNAVAILABLE
-                assert stopped.manager is not None and stopped.manager.provisioned and stopped.manager.binding_matches
-                assert not stopped.manager.login_autostart
-                assert stopped.manager.process_state is RuntimeManagerProcessState.STOPPED
-                assert not task.cleanup.released
-                screen.query_one("#runtime-management-close", Button).press()
-
-            await run_runtime_managed_application(app, cleanup=cleanup, headless=True, auto_pilot=drive)
-            assert process_after is not None
-            assert not cleanup.pending
-            assert cleanup.consent is not None and cleanup.consent.accepted is not None

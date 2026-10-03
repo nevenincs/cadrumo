@@ -30,12 +30,8 @@ from ..diagnostics_operation import (
     DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID,
     DiagnosticsReadExecutionResult,
     DiagnosticsReadExecutor,
-    DiagnosticsReadKind,
-    DiagnosticsReadProjection,
-    DiagnosticsReadRequest,
     DiagnosticsTelemetryFlushExecutionResult,
     DiagnosticsTelemetryFlushExecutor,
-    DiagnosticsTelemetryFlushRequest,
     build_diagnostics_read_definition,
     build_diagnostics_read_registration,
     build_diagnostics_telemetry_flush_definition,
@@ -46,6 +42,11 @@ from ..diagnostics_operation import (
     resolve_diagnostics_telemetry_flush_access,
 )
 from ..diagnostics_operation_ports import DiagnosticsReadPorts, DiagnosticsTelemetryFlushPorts
+from ..diagnostics_read_contracts import (
+    DiagnosticsReadKind,
+    DiagnosticsReadProjection,
+    DiagnosticsReadRequest,
+)
 from ..diagnostics_run_health import (
     build_error_breakdown,
     build_latency_report,
@@ -54,6 +55,10 @@ from ..diagnostics_run_health import (
     list_recent_runs,
 )
 from ..diagnostics_run_health_ports import DiagnosticAuthProbeResult, DiagnosticRunRecord
+from ..diagnostics_telemetry_contracts import (
+    DiagnosticsTelemetryFlushRequest,
+    DiagnosticsTelemetryPreviewSnapshot,
+)
 from ..operations import profile_guard
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -746,7 +751,6 @@ async def test_cancellation_joins_owned_dispatch_before_unknown_settlement(monke
 
 
 def test_flush_projection_refuses_undeclared_payload_metric() -> None:
-    from ..diagnostics_operation import DiagnosticsTelemetryPreviewSnapshot
     from ..diagnostics_telemetry import build_telemetry_flush_preview
 
     preview = build_telemetry_flush_preview(

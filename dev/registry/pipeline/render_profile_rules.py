@@ -168,12 +168,20 @@ def _validate_singleton_date_shape(rule: SingletonNumericRule) -> None:
 
 
 def _validate_singleton_integer_shapes(rule: SingletonNumericRule) -> None:
+    _validate_unsigned_integer_parts(rule)
+    _validate_signed_amount_parts(rule)
+
+
+def _validate_unsigned_integer_parts(rule: SingletonNumericRule) -> None:
     if rule.semantic_kind == "integer" and (rule.integer_digits <= 0 or rule.decimal_digits != 0):
         raise ValueError("integer requires positive integer digits and 0 decimal digits")
     if rule.semantic_kind == "amount_integer_part" and (rule.integer_digits <= 0 or rule.decimal_digits != 0):
         raise ValueError("amount_integer_part requires positive integer digits and 0 decimal digits")
     if rule.semantic_kind == "amount_fractional_digits" and (rule.integer_digits != 0 or rule.decimal_digits <= 0):
         raise ValueError("amount_fractional_digits requires 0 integer digits and positive decimal digits")
+
+
+def _validate_signed_amount_parts(rule: SingletonNumericRule) -> None:
     if rule.semantic_kind == "signed_amount_integer_part" and (
         rule.integer_digits not in {8, 13} or rule.decimal_digits != 0
     ):

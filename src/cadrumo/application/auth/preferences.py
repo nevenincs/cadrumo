@@ -5,12 +5,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
-from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from ...core.auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE, AuthProviderKind, ClaveMovilRoute
 from ...domain.user_profile.values import UserProfileFact
 from ..user_profile.capsule_record import ProfileRecordConflictError
 from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from ..user_profile.profile_record_repository import ProfileRecordRepository
-from ..user_profile.projections import record_to_path_values
+from ..user_profile.projections import record_to_effective_facts, record_to_path_values
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
@@ -32,7 +32,13 @@ def set_profile_auth_preference(
     expected_revision: int | None = None,
     expected_content_digest: str | None = None,
 ) -> tuple[UserProfileRecord, bool]:
-    """Validate and publish method and route in one revision-bound fact command."""
+    """Validate and publish method and route in one revision-bound fact command.
+
+    Choosing Cl@ve Movil without a route records the default route when the
+    profile never held one, so the profile shows the route that will be used.
+    A route the operator chose, or deliberately cleared, is left as it is; a
+    cleared route resolves to the same default at sign-in.
+    """
     repository = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=profile_decode_context)
     current = repository.load(profile_id)
     if (expected_revision is None) != (expected_content_digest is None):
@@ -42,6 +48,12 @@ def set_profile_auth_preference(
     ):
         raise ProfileRecordConflictError("auth edit baseline is stale")
     changes = [UserProfileFact(path="auth.provider", value=provider.value)]
+    if (
+        route is None
+        and provider is AuthProviderKind.CLAVE_MOVIL
+        and "auth.clave_movil_route" not in record_to_effective_facts(current)
+    ):
+        route = DEFAULT_CLAVE_MOVIL_ROUTE
     if route is not None:
         changes.append(UserProfileFact(path="auth.clave_movil_route", value=route.value))
     applied = apply_profile_fact_changes(

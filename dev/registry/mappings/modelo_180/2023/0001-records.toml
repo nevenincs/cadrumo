@@ -448,16 +448,16 @@ ordinal = '4'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-nif'
-kind = 'casilla'
-casilla_id = 'perc.nif'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-nif'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -467,16 +467,16 @@ ordinal = '5'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-nif-representante-legal'
-kind = 'casilla'
-casilla_id = 'perc.nif-representante-legal'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-representative-nif'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -486,16 +486,16 @@ ordinal = '6'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-nombre'
-kind = 'casilla'
-casilla_id = 'perc.nombre'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-name'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -505,16 +505,16 @@ ordinal = '7'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-provincia'
-kind = 'casilla'
-casilla_id = 'perc.provincia'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-recipient-province'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -524,16 +524,16 @@ ordinal = '8'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-modalidad'
-kind = 'casilla'
-casilla_id = 'perc.modalidad'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-modality'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -543,16 +543,16 @@ ordinal = '9'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-base'
-kind = 'casilla'
-casilla_id = 'perc.base'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-base'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -562,16 +562,16 @@ ordinal = '10'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-porcentaje-retencion-integer-part'
-kind = 'casilla'
-casilla_id = 'perc.porcentaje-retencion'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-withholding-percentage'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -581,16 +581,16 @@ ordinal_absent = true
 
 [[entries]]
 export_field_id = 'modelo-180-perc-porcentaje-retencion-fractional-part'
-kind = 'casilla'
-casilla_id = 'perc.porcentaje-retencion'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-withholding-percentage'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -600,16 +600,16 @@ ordinal_absent = true
 
 [[entries]]
 export_field_id = 'modelo-180-perc-retenciones'
-kind = 'casilla'
-casilla_id = 'perc.retenciones'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-retenciones'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -619,16 +619,16 @@ ordinal = '12'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-ejercicio-devengo'
-kind = 'casilla'
-casilla_id = 'perc.ejercicio-devengo'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-accrual-year'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -638,16 +638,16 @@ ordinal = '13'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-situacion-inmueble'
-kind = 'casilla'
-casilla_id = 'perc.situacion-inmueble'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-property-situation'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -657,16 +657,16 @@ ordinal = '14'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-referencia-catastral'
-kind = 'casilla'
-casilla_id = 'perc.referencia-catastral'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-cadastral-reference'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -676,16 +676,16 @@ ordinal = '15'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-tipo-via'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-tipo-via'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-street-type'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -701,16 +701,16 @@ statement = '135-139 TIPO DE VÍA Se consignará el código alfabético de tipo 
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-nombre-via'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-nombre-via'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-street-name'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -726,16 +726,16 @@ statement = '140-189 NOMBRE VÍA PÚBLICA Se consignará el nombre largo de la v
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-tipo-numeracion'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-tipo-numeracion'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-number-type'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -751,16 +751,16 @@ statement = '190-192 TIPO DE NUMERACIÓN Se consignará el tipo de numeración (
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-numero-casa'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-numero-casa'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-house-number'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -776,16 +776,16 @@ statement = '193-197 NÚMERO DE CASA Se consignará el número de casa o punto k
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-calificador-numero'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-calificador-numero'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-number-qualifier'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -801,16 +801,16 @@ statement = '198-200 CALIFICADOR DEL NÚMERO Se consignará el calificador del n
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-bloque'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-bloque'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-block'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -826,16 +826,16 @@ statement = '201-203 BLOQUE Se consignará el bloque (número o letras).'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-portal'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-portal'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-portal'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -851,16 +851,16 @@ statement = '204-206 PORTAL Se consignará el portal (número o letras).'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-escalera'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-escalera'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-staircase'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -876,16 +876,16 @@ statement = '207-209 ESCALERA Se consignará la escalera (número o letras).'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-planta'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-planta'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-floor'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -901,16 +901,16 @@ statement = '210-212 PLANTA O PISO Se consignará la planta o el piso (número o
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-puerta'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-puerta'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-door'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -926,16 +926,16 @@ statement = '213-215 PUERTA Se consignará la puerta (número o letras).'
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-complemento'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-complemento'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-complement'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -951,16 +951,16 @@ statement = '216-255 COMPLEMENTO Datos complementarios del domicilio. Valores: L
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-localidad'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-localidad'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-locality'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -976,16 +976,16 @@ statement = '256-285 LOCALIDAD O POBLACIÓN Se consignará el nombre de la local
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-municipio'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-municipio'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-municipality'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -1001,16 +1001,16 @@ statement = '286-315 MUNICIPIO Se consignará el nombre de municipio Se consigna
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-codigo-municipio'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-codigo-municipio'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-municipality-code'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -1026,16 +1026,16 @@ statement = '316-320 CÓDIGO DE MUNICIPIO Se consignará el CODIGO de municipio 
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-provincia'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-provincia'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-property-province'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'
@@ -1051,16 +1051,16 @@ statement = '321-322 CÓDIGO PROVINCIA Se consignará el código de la provincia
 
 [[entries]]
 export_field_id = 'modelo-180-perc-inmueble-codigo-postal'
-kind = 'casilla'
-casilla_id = 'perc.inmueble-codigo-postal'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-postal-code'
 legal_refs = [
+    'ley-35-2006:art-99',
     'orden-hap-1732-2014:art-2',
     'orden-hfp-1284-2023:art-7',
     'rd-439-2007:art-108',
-    'ley-35-2006:art-101',
     'ley-58-2003:art-93',
 ]
-source_refs = ['aeat-dr-180-2023']
+source_refs = ['aeat-dr-180-2023', 'aeat-modelo-180-procedure']
 
 [entries.anchor]
 sheet = 'Tipo 2 - Registro De Perceptor'

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -16,7 +17,7 @@ from cadrumo.application.modelo.metadata_read_operation import (
     ModeloWorkMetadataProjection,
     ModeloWorkMetadataRequest,
 )
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.work_change_contracts import (
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardPublicResultV2,
     ModeloWorkDiscardRequest,
@@ -209,7 +210,7 @@ def test_metadata_read_uses_canonical_selection_and_persisted_period(
             published_authority=Availability.AVAILABLE,
             authority_operation=operation,
         )
-        no_pin_context = context.model_copy(update={"authority_operation": None})
+        no_pin_context = replace(context, authority_operation=None)
         request = OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=payload)
         access = resolve_operation_access(registry=registry, request=request, context=context)
         assert access.request.periods == frozenset({unit.period})

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#binding-schema'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:100802097363a7ad98db718d011038a6f33961fe31c0f5625c80038c9ec0cb3b'
+body_hash: 'sha256:5c9ea432e93c5348b072506c453a173eccbb7422e1124f16550bab33362c9f87'
 related:
   - "[[2026-09-11-binding-schema-plan]]"
 ---
@@ -14,7 +14,7 @@ related:
 
 ## Scope
 
-Two read-only code reviews of the binding-schema lane, consolidated here as one record. The first covers the binding order-invariance gate and the family-identity authoring tool: `dev/registry/compiler/validate_bindings.py`, `dev/registry/compiler/validate_projection_endpoints.py`, `dev/registry/author_family_identities.py`, `src/cadrumo/domain/calculations/registry/export.py`, `src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py`, and `dev/registry/tests/test_binding_order_invariance.py`. The second covers four batches: the family source-default lift in `dev/registry/lift_family_source_defaults.py`, the modelo 714 identifier rename and record-design reads in `dev/registry/rename_formula_binding_identifiers.py` and `dev/registry/record_design_labels.py`, the predecessor-none root-cause ruling in `dev/registry/analysis/none_root_cause_ruling.py`, and the period-override selector together with its production consumers.
+Two read-only code reviews of the binding-schema lane, consolidated here as one record. The first covers the binding order-invariance gate and the family-identity authoring tool: `dev/registry/compiler/validate_bindings.py`, `dev/registry/compiler/validate_projection_endpoints.py`, `dev/registry/author_family_identities.py`, `src/cadrumo/domain/calculations/registry/export.py`, `src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py`, and `dev/registry/tests/test_binding_order_invariance.py`. The second covers four batches: the family source-default lift, the modelo 714 identifier rename and record-design reads, the predecessor-none root-cause ruling, and the period-override selector together with its production consumers.
 
 ## Method
 
@@ -38,15 +38,15 @@ Two pre-existing breakages were observed and are not attributable to the reviewe
 | F8 | medium | `src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py:43` | open observation |
 | F9 | low | `dev/registry/compiler/validate_bindings.py:31` | fixed |
 | F10 | low | `dev/registry/author_family_identities.py:83` | fixed |
-| HIGH-1 | high | `dev/registry/lift_family_source_defaults.py:727` | fixed |
-| HIGH-2 | high | `dev/registry/analysis/none_root_cause_ruling.py:30` | in progress |
+| HIGH-1 | high | family source-default lift cap rollback | fixed |
+| HIGH-2 | high | predecessor-root ruling table | in progress |
 | HIGH-3 | high | `src/cadrumo/application/filing/runtime.py:718` | in progress |
-| MEDIUM-1 | medium | `dev/registry/rename_formula_binding_identifiers.py:2932` | fixed |
-| MEDIUM-2 | medium | `dev/registry/tests/test_modelo_714_residual_naming.py:143` | fixed |
-| MEDIUM-3 | medium | `dev/registry/lift_family_source_defaults.py:118` | fixed |
-| MEDIUM-4 | medium | `dev/registry/rename_formula_binding_identifiers.py:2508` | fixed |
+| MEDIUM-1 | medium | modelo 714 identifier rename | fixed |
+| MEDIUM-2 | medium | modelo 714 residual naming | fixed |
+| MEDIUM-3 | medium | family source-default lift | fixed |
+| MEDIUM-4 | medium | formula binding identifier rename | fixed |
 | LOW-1 | low | `dev/registry/record_design_labels.py:236` | fixed |
-| LOW-2 | low | `dev/registry/rename_formula_binding_identifiers.py:3220` | fixed |
+| LOW-2 | low | formula binding identifier rename | fixed |
 
 ### order-gate-annotation | high | an added annotation turned the type gate red
 
@@ -132,13 +132,13 @@ Family source-default lift: fix-first at review, ship after remediation. The byt
 
 Predecessor cause: fix-first, remediation in progress. The unknown-code refusal is a real tooth: it drives the real loader over an on-disk tree, asserts the load reds on a bad token, repairs the same tree and asserts it greens. Wrong case, stray spaces, a retired spelling and empty are all refused rather than normalised, and a cause on a named predecessor edge is refused too. The per-root classification table lives in a development module rather than in the registry, acceptable only as the migration scaffolding it declares itself to be, with the stated deletion condition.
 
-Period overrides: fix-first, remediation in progress. The inheritance-time selector reimplementation at `dev/registry/compiler/_loader_internals.py:392` is clean and deliberate, honouring an override entry against the raw table because inheritance runs before typed construction; the duplication is documented and the two copies currently agree. It remains a second copy of a rule and needs a parity test against the typed method.
+Period overrides: fix-first, remediation in progress. The inheritance-time selector reimplementation is clean and deliberate, honouring an override entry against the raw table because inheritance runs before typed construction; the duplication is documented and the two copies currently agree. It remains a second copy of a rule and needs a parity test against the typed method.
 
 ## Source-window citations on modelo 303
 
 The refusal "cites sources outside their applicability window" is raised by `src/cadrumo/domain/calculations/registry/snapshot.py:781` through `SourceReference.applies_across`, which delegates to `source_window_applies_across` in `src/cadrumo/domain/calculations/registry/schema_references.py:595`: one overlap rule in one home, with the deadline-window escape as the only addition. The 303 refusals are six sites on two sources (`boe-orden-hfp-1172-2022-iva-authority`, `boe-orden-hfp-1359-2023-iva-authority`) carried by `m303-regimen-simplificado-fact` projection endpoints authored under the 2023 revision and inherited into 2024-hasta-08-y-2t, 2024-desde-09-y-3t, 2025 and 2026-y-siguientes. Decision: an inherited member carries the refs it states; explicit refs outside the inheriting revision's window are a re-grounding decision for that revision (restate under its own default, or declare an evolution), never a silent carry-forward exemption. The refusals are correct data debt on modelo 303, listed for its owner; no code change.
 
-## Residual risk
+## Recommendations
 
 The two in-progress high findings are the live exposure. Until the ruling derives its root set from the loader, a stale row can drive a cause onto a named predecessor edge, caught only late at the typed boundary, and a frozen count stands in for a semantic gate. Until the year-aware accessors reach the filing runtime and the remaining consumers, the first authored period override will stamp a period the edition does not file onto a filing handoff with nothing failing loudly; the fix must land before that first override is authored.
 

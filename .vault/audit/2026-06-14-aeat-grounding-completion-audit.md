@@ -3,11 +3,10 @@ tags:
   - "#audit"
   - "#aeat-grounding-completion"
 date: '2026-06-14'
-related:
-  - "[[2026-06-14-aeat-grounding-completion-plan]]"
+related: []
 promoted_to:
   - 'rule:legal-grounding-verifies-bundled-authoritative-corpus'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:28476e36d2104a0bda9914ce77777c70e6bb65736486bfafae196dad4a6adadd'
 ---
 

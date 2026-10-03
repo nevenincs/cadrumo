@@ -23,6 +23,8 @@ from cadrumo.adapters.persistence.storage.custody.automation_client_credentials 
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
 from cadrumo.application.diagnostics_operation import (
     DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
+)
+from cadrumo.application.diagnostics_read_contracts import (
     DiagnosticsReadKind,
     DiagnosticsReadProjection,
     DiagnosticsReadRequest,

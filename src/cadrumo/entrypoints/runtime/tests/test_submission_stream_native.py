@@ -15,24 +15,21 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.framing import (
+from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
+from cadrumo.adapters.local_runtime.installation import runtime_installation
+from cadrumo.adapters.local_runtime.runtime_frame_io import (
     MAXIMUM_FRAME_BYTES,
-    VerifiedRuntimeConnection,
     read_document,
     write_document,
     write_secret,
 )
-from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
-    ModeloWorkRenamePublicResultV2,
-    ModeloWorkRenameRequest,
-)
+from cadrumo.application.modelo.operation_definitions import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.work_change_contracts import ModeloWorkRenamePublicResultV2, ModeloWorkRenameRequest
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
@@ -121,6 +118,7 @@ def native_bulk_runtime(tmp_path: Path) -> Iterator[_NativeBulkRuntime]:
                 capture_login=lambda _channel: _LoginObservation(),
                 secret_store=lambda: subject.native,
             )
+            profiles.prepare_registry()
             server = RuntimeTransportServer(
                 endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
             )

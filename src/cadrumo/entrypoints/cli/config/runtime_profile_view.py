@@ -7,7 +7,8 @@ from dataclasses import dataclass
 
 import typer
 
-from ....adapters.local_runtime.frontend_client import ProfileViewCollection, RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.deadline_budget import remaining_budget
 from ....application.user_profile.language_resolver import resolve_profile_output_language_hint

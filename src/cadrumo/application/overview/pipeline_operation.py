@@ -25,15 +25,11 @@ from ..modelo.work_lifecycle import list_work_units
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .pipeline_health import build_pipeline_health_report
@@ -255,19 +251,13 @@ def _reports_for_revision(
 
 def build_overview_pipeline_definition(factory: PipelineReadPortsFactory) -> OperationDefinition:
     """Register the read with honest no-effect and interruption semantics."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=OVERVIEW_PIPELINE_OPERATION_DEFINITION_ID,
         request_type=OverviewPipelineRequest,
         result_type=OverviewPipelineResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=OverviewPipelineRequest,
-            executor_type=OverviewPipelineExecutor,
-            build=lambda: OverviewPipelineExecutor(factory),
-        ),
-        phase_codes=(OVERVIEW_PIPELINE_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=OverviewPipelineExecutor,
+        build=lambda: OverviewPipelineExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 

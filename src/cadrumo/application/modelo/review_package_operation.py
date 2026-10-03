@@ -55,7 +55,7 @@ from ..operations.registry import (
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .export import ModeloExportCommand, export_modelo_revision
+from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .export_ports import ModeloExportPortsFactory
 from .review_package import (
     ReviewPackageActor,
@@ -198,6 +198,22 @@ class ModeloReviewPackageBuildPublicResultV1(BaseModel):
         )
 
 
+def _require_review_package_export_identity(
+    exported: ModeloExportResult,
+    *,
+    profile_id: str,
+    work_unit_id: WorkUnitId,
+    calculation_revision_id: CalculationRevisionId,
+) -> None:
+    """Admit the export receipt before rechecking the captured repository revisions."""
+    if (
+        exported.bucket_id != profile_id
+        or exported.work_unit_id != work_unit_id
+        or exported.calculation_revision_id != calculation_revision_id
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
 class ModeloReviewPackageBuildExecutor:
     """Keep export, revision capture, staging, and package write in one worker."""
 
@@ -262,12 +278,12 @@ class ModeloReviewPackageBuildExecutor:
                             operation=context.authority_operation,
                         ),
                     )
-                    if (
-                        exported.bucket_id != profile_id
-                        or exported.work_unit_id != unit.work_unit_id
-                        or exported.calculation_revision_id != revision.calculation_revision_id
-                    ):
-                        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+                    _require_review_package_export_identity(
+                        exported,
+                        profile_id=profile_id,
+                        work_unit_id=unit.work_unit_id,
+                        calculation_revision_id=revision.calculation_revision_id,
+                    )
                     _fresh_revisions, fresh_revision_token = bundle.calculation.load_revisioned(
                         operation=context.authority_operation
                     )

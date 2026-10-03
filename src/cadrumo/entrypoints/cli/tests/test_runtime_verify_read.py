@@ -13,10 +13,7 @@ import typer
 from pydantic import BaseModel
 
 from ....application.live.verify import VerifySurface
-from ....application.live.verify_read_operation import (
-    VERIFY_LATEST_DEFINITION_ID,
-    VERIFY_LIST_DEFINITION_ID,
-    VERIFY_VIEW_DEFINITION_ID,
+from ....application.live.verify_read_contracts import (
     VerifyLatestPublicResultV1,
     VerifyLatestRequest,
     VerifyListPublicResultV1,
@@ -24,6 +21,11 @@ from ....application.live.verify_read_operation import (
     VerifyObservationPublicV1,
     VerifyObservationSummaryPublicV1,
     VerifyViewRequest,
+)
+from ....application.live.verify_read_operation import (
+    VERIFY_LATEST_DEFINITION_ID,
+    VERIFY_LIST_DEFINITION_ID,
+    VERIFY_VIEW_DEFINITION_ID,
 )
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.identity_check_verdict import IdentityCheckVerdict

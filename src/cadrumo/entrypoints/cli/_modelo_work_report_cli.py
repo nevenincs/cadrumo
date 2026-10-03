@@ -120,8 +120,8 @@ def work_report(
         # installation that cannot write the summary learns so, and how to fix
         # it, before any figure is read.
         require_calculation_summary_pdf_available()
-    from ...application.modelo.operation_definitions import ModeloExportRequest
     from ...application.modelo.selectors import ModeloCalculationRevisionSelector
+    from ...application.modelo.work_export_contracts import ModeloExportRequest
     from ...core.modelo_export_artefact import ModeloExportArtefact
     from ._modelo_cli_support import resolve_default_actor
     from .runtime_modelo_export import run_modelo_export

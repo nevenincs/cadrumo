@@ -11,14 +11,10 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -114,19 +110,13 @@ class ModeloWorkRevisionSnapshotExecutor:
 
 def build_modelo_work_revision_snapshot_definition(factory: VerificationRepositoryBundleFactory) -> OperationDefinition:
     """Declare the full-value read separately from metadata-only selection."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkRevisionSnapshotRequest,
         result_type=ModeloWorkRevisionSnapshotProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloWorkRevisionSnapshotRequest,
-            executor_type=ModeloWorkRevisionSnapshotExecutor,
-            build=lambda: ModeloWorkRevisionSnapshotExecutor(factory),
-        ),
-        phase_codes=(MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloWorkRevisionSnapshotExecutor,
+        build=lambda: ModeloWorkRevisionSnapshotExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 

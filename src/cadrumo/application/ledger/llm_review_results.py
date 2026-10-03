@@ -11,7 +11,9 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationIdentity
-from .classify_operation import LedgerClassifyOperationResult
+from .classify_result_contracts import (
+    LedgerClassifyOperationResult,
+)
 from .id_resolution import resolve_transaction_id
 from .llm_review_contracts import (
     LedgerLlmLongText,

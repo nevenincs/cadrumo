@@ -8,16 +8,18 @@ from typing import Protocol
 import typer
 
 from ...application.live.verify import VerifySurface
-from ...application.live.verify_read_operation import (
-    VERIFY_LATEST_DEFINITION_ID,
-    VERIFY_LIST_DEFINITION_ID,
-    VERIFY_VIEW_DEFINITION_ID,
+from ...application.live.verify_read_contracts import (
     VerifyLatestPublicResultV1,
     VerifyLatestRequest,
     VerifyListPublicResultV1,
     VerifyListRequest,
     VerifyObservationPublicV1,
     VerifyViewRequest,
+)
+from ...application.live.verify_read_operation import (
+    VERIFY_LATEST_DEFINITION_ID,
+    VERIFY_LIST_DEFINITION_ID,
+    VERIFY_VIEW_DEFINITION_ID,
 )
 from ...core.identity_check_verdict import IdentityCheckVerdict
 from .registered_operation_contracts import RegisteredOperationCompletion

@@ -288,22 +288,52 @@ def _field_coverage_components(
     continuidad_id: str,
     field: str,
 ) -> dict[_CoverageNode, int]:
-    occurrences = tuple(
+    occurrences = _field_coverage_occurrences(modelo, continuidad_id)
+    neighbours = _equal_value_coverage_graph(occurrences, field)
+    nodes_by_revision = _coverage_nodes_by_revision(occurrences)
+    _connect_evolution_coverage_edges(modelo, continuidad_id, field, nodes_by_revision, neighbours)
+    return _connected_component_index(neighbours)
+
+
+def _field_coverage_occurrences(
+    modelo: ModeloDefinition, continuidad_id: str
+) -> tuple[tuple[_CoverageNode, CasillaDefinition], ...]:
+    return tuple(
         ((revision.id, casilla.id), casilla)
         for revision in modelo.revisions.values()
         for casilla in revision.casillas
         if casilla.continuidad_id == continuidad_id
     )
+
+
+def _equal_value_coverage_graph(
+    occurrences: tuple[tuple[_CoverageNode, CasillaDefinition], ...], field: str
+) -> dict[_CoverageNode, set[_CoverageNode]]:
     neighbours: dict[_CoverageNode, set[_CoverageNode]] = {node: set() for node, _casilla in occurrences}
     for index, (left_node, left_casilla) in enumerate(occurrences[:-1]):
         left_value = _continuity_field_value(left_casilla, field)
         for right_node, right_casilla in occurrences[index + 1 :]:
             if left_value == _continuity_field_value(right_casilla, field):
                 _connect_coverage_nodes(neighbours, left_node, right_node)
+    return neighbours
 
+
+def _coverage_nodes_by_revision(
+    occurrences: tuple[tuple[_CoverageNode, CasillaDefinition], ...],
+) -> dict[RevisionId, tuple[_CoverageNode, ...]]:
     nodes_by_revision: dict[RevisionId, tuple[_CoverageNode, ...]] = defaultdict(tuple)
     for node, _casilla in occurrences:
         nodes_by_revision[node[0]] = (*nodes_by_revision[node[0]], node)
+    return nodes_by_revision
+
+
+def _connect_evolution_coverage_edges(
+    modelo: ModeloDefinition,
+    continuidad_id: str,
+    field: str,
+    nodes_by_revision: dict[RevisionId, tuple[_CoverageNode, ...]],
+    neighbours: dict[_CoverageNode, set[_CoverageNode]],
+) -> None:
     for revision in modelo.revisions.values():
         for evolution in revision.casilla_continuidad_evolutions:
             if evolution.continuidad_id != continuidad_id or field not in covered_fields(evolution.evolution_kind):
@@ -311,7 +341,6 @@ def _field_coverage_components(
             for left_node in nodes_by_revision[evolution.from_revision]:
                 for right_node in nodes_by_revision[evolution.to_revision]:
                     _connect_coverage_nodes(neighbours, left_node, right_node)
-    return _connected_component_index(neighbours)
 
 
 def _continuity_field_value(casilla: CasillaDefinition, field: str) -> object:

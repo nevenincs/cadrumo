@@ -34,7 +34,7 @@ from ..batch_ingest import (
     batch_item_identity,
     summarise_batch,
 )
-from ..evidence_ingestion_operation import (
+from ..evidence_ingestion_contracts import (
     LedgerEvidenceBatchExecutionResult,
     LedgerEvidenceBatchRequest,
     LedgerEvidenceBatchSnapshot,
@@ -42,6 +42,8 @@ from ..evidence_ingestion_operation import (
     LedgerEvidencePullAllRequest,
     LedgerEvidencePullExecutionResult,
     LedgerEvidencePullRequest,
+)
+from ..evidence_ingestion_operation import (
     build_ledger_evidence_ingestion_definitions,
     build_ledger_evidence_ingestion_registrations,
     project_ledger_evidence_ingestion_result,

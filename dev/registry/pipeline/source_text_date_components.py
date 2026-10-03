@@ -87,9 +87,34 @@ def text_date_component_policy_for(
     if not (modelo in {"165", "280"} and "-fecha-" in field_id and "-component-" in field_id):
         return None
     pin = _PINS.get((modelo, epoch))
+    pin = _require_text_date_source_identity(pin, source_ref, source_sha256)
+    matched = _reviewed_text_date_part(pin, field_id)
+    if matched is None:
+        raise RegistryValidationError("text date component field identity is unreviewed")
+    casilla_id, index, row, offset, digest = matched
+    material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
+    expected_sheet = _expected_text_date_sheet(modelo, field_id)
+    if not _matches_reviewed_text_date_part(
+        joined_field, expected_sheet, row, offset, index, digest, casilla_id, material
+    ):
+        raise RegistryValidationError("text date component source, geometry or casilla differs from reviewed evidence")
+    return _DATE_POLICIES[index]
+
+
+def _require_text_date_source_identity(
+    pin: tuple[str, str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]] | None,
+    source_ref: str,
+    source_sha256: str,
+) -> tuple[str, str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]]:
     if pin is None or (source_ref, source_sha256) != pin[:2]:
         raise RegistryValidationError("text date component source identity is unreviewed or stale")
-    matched = next(
+    return pin
+
+
+def _reviewed_text_date_part(
+    pin: tuple[str, str, tuple[tuple[str, str, tuple[tuple[int, int, str], ...]], ...]], field_id: str
+) -> tuple[str, int, int, int, str] | None:
+    return next(
         (
             (casilla_id, index, row, offset, digest)
             for prefix, casilla_id, parts in pin[2]
@@ -98,24 +123,35 @@ def text_date_component_policy_for(
         ),
         None,
     )
-    if matched is None:
-        raise RegistryValidationError("text date component field identity is unreviewed")
-    casilla_id, index, row, offset, digest = matched
-    material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
-    expected_sheet = (
+
+
+def _expected_text_date_sheet(modelo: str, field_id: str) -> str:
+    return (
         "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
         if modelo == "165" and "-t1-" in field_id
         else "Tipo 2 - Registro De Socios O Partícipes"
         if modelo == "165"
         else "Tipo 2 - Registro De Declarado"
     )
-    if (
-        field.sheet != expected_sheet
-        or field.record_identity != expected_sheet
-        or (field.source_row, field.offset, field.length) != (row, offset, (4, 2, 2)[index])
-        or sha256(material.encode()).hexdigest() != digest
-        or entry.kind is not CasillaFieldKind.CASILLA
-        or str(entry.casilla_id) != casilla_id
-    ):
-        raise RegistryValidationError("text date component source, geometry or casilla differs from reviewed evidence")
-    return _DATE_POLICIES[index]
+
+
+def _matches_reviewed_text_date_part(
+    joined_field: JoinedRecordDesignField,
+    expected_sheet: str,
+    row: int,
+    offset: int,
+    index: int,
+    digest: str,
+    casilla_id: str,
+    material: str,
+) -> bool:
+    field = joined_field.parser_field
+    entry = joined_field.semantic_entry
+    return (
+        field.sheet == expected_sheet
+        and field.record_identity == expected_sheet
+        and (field.source_row, field.offset, field.length) == (row, offset, (4, 2, 2)[index])
+        and sha256(material.encode()).hexdigest() == digest
+        and entry.kind is CasillaFieldKind.CASILLA
+        and str(entry.casilla_id) == casilla_id
+    )

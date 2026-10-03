@@ -189,6 +189,33 @@ def _masked_iban(value: str) -> str:
     return f"{canonical[:4]} {_IBAN_MASK} {canonical[-4:]}"
 
 
+def _format_declared_ratio(
+    value: Decimal | int | str | bool | date,
+    kind: ValuePresentationKind,
+    ratio_unit: ModeloEditRatioUnit | None,
+    language: OutputLanguage,
+) -> str | None:
+    shift = None if ratio_unit is None else _PERCENT_SHIFT.get(ratio_unit)
+    if kind is ValuePresentationKind.RATIO and shift is not None:
+        return _format_percentage(value, shift=shift, language=language)
+    return None
+
+
+def _format_quantity_or_identity(
+    value: Decimal | int | str | bool | date,
+    kind: ValuePresentationKind,
+    language: OutputLanguage,
+    mask_iban: bool,
+) -> str:
+    if kind in {ValuePresentationKind.MONEY, ValuePresentationKind.RATIO, ValuePresentationKind.DECIMAL}:
+        return _format_quantity(value, kind=kind, language=language)
+    if kind is ValuePresentationKind.INTEGER and isinstance(value, (int, Decimal)):
+        return group_decimal_text(_decimal_text(value), language, minus=SCREEN_MINUS_SIGN) or str(value)
+    if kind is ValuePresentationKind.IBAN and isinstance(value, str) and mask_iban:
+        return _masked_iban(value)
+    return str(value)
+
+
 def format_casilla_value(
     value: Decimal | int | str | bool | date,
     *,
@@ -215,18 +242,10 @@ def format_casilla_value(
         return value.strftime(LOCALE_NUMBER_FORMATS[language].date_pattern)
     if kind is ValuePresentationKind.BOOLEAN and isinstance(value, (int, Decimal)) and value in (0, 1):
         return _yes_no(bool(value), language)
-    shift = None if ratio_unit is None else _PERCENT_SHIFT.get(ratio_unit)
-    if kind is ValuePresentationKind.RATIO and shift is not None:
-        percentage = _format_percentage(value, shift=shift, language=language)
-        if percentage is not None:
-            return percentage
-    if kind in {ValuePresentationKind.MONEY, ValuePresentationKind.RATIO, ValuePresentationKind.DECIMAL}:
-        return _format_quantity(value, kind=kind, language=language)
-    if kind is ValuePresentationKind.INTEGER and isinstance(value, (int, Decimal)):
-        return group_decimal_text(_decimal_text(value), language, minus=SCREEN_MINUS_SIGN) or str(value)
-    if kind is ValuePresentationKind.IBAN and isinstance(value, str) and mask_iban:
-        return _masked_iban(value)
-    return str(value)
+    percentage = _format_declared_ratio(value, kind, ratio_unit, language)
+    if percentage is not None:
+        return percentage
+    return _format_quantity_or_identity(value, kind, language, mask_iban)
 
 
 def _format_quantity(value: object, *, kind: ValuePresentationKind, language: OutputLanguage) -> str:

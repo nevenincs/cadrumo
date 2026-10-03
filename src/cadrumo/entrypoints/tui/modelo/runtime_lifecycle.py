@@ -11,9 +11,11 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
-from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.edit_admission import ModeloEditRenewalResultV1, ModeloEditRenewedV1
+from ....application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ....application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
 from ....application.modelo.edit_models import ModeloEditBaselineV1, ModeloEditPreflightResultV1, ModeloEditSubmissionV1
 from ....application.modelo.export_projection import ModeloExportPublicResultV3
@@ -25,7 +27,6 @@ from ....application.modelo.m303_attestation_operation import (
 from ....application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
 )
-from ....application.modelo.operation_definitions import ModeloEditApplySubmissionV1
 from ....application.modelo.workbench_operations import (
     MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
     MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,

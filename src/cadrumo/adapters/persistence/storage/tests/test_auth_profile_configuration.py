@@ -142,3 +142,54 @@ def test_profile_intent_cannot_fall_through_to_another_operational_method(profil
         )
         is AuthProviderKind.CLAVE_PERMANENTE
     )
+
+
+def test_choosing_clave_movil_without_a_route_records_the_app_request(profile_operation) -> None:
+    configure_operator_auth(
+        "clave_movil", operator_scope_ports=build_operator_scope_ports(), operation=profile_operation
+    )
+    values = record_to_path_values(_record(profile_operation))
+    assert values["auth.provider"] == AuthProviderKind.CLAVE_MOVIL.value
+    assert values["auth.clave_movil_route"] == ClaveMovilRoute.APP_REQUEST.value
+
+
+def test_an_explicit_qr_choice_survives_reconfiguring_without_a_route(profile_operation) -> None:
+    configure_operator_auth(
+        "clave_movil",
+        clave_movil_route=ClaveMovilRoute.QR,
+        operator_scope_ports=build_operator_scope_ports(),
+        operation=profile_operation,
+    )
+    chosen = _record(profile_operation)
+    result = configure_operator_auth(
+        "clave_movil", operator_scope_ports=build_operator_scope_ports(), operation=profile_operation
+    )
+    assert not result.changed
+    assert _record(profile_operation).content_digest == chosen.content_digest
+    assert record_to_path_values(chosen)["auth.clave_movil_route"] == ClaveMovilRoute.QR.value
+
+
+def test_other_providers_never_record_a_clave_movil_route(profile_operation) -> None:
+    configure_operator_auth(
+        "clave_permanente", operator_scope_ports=build_operator_scope_ports(), operation=profile_operation
+    )
+    assert "auth.clave_movil_route" not in record_to_path_values(_record(profile_operation))
+
+
+def test_a_deliberately_cleared_route_is_not_repopulated(profile_operation) -> None:
+    configure_operator_auth(
+        "clave_movil",
+        clave_movil_route=ClaveMovilRoute.QR,
+        operator_scope_ports=build_operator_scope_ports(),
+        operation=profile_operation,
+    )
+    apply_manager_profile_field_mutation(
+        profile_id=require_active_bucket_id(),
+        path="auth.clave_movil_route",
+        value="",
+        profile_decode_context=profile_operation.profile_decode_context(),
+    )
+    configure_operator_auth(
+        "clave_movil", operator_scope_ports=build_operator_scope_ports(), operation=profile_operation
+    )
+    assert "auth.clave_movil_route" not in record_to_path_values(_record(profile_operation))

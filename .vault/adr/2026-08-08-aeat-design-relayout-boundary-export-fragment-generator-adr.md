@@ -5,10 +5,9 @@ tags:
 date: '2026-08-08'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
-  - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
 superseded_by: '2026-08-10-aeat-export-fragment-generator-authority-adr'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:b5d5f0bed44800627d3352180d55c2e1ff38f3dd21863c2779949129e7d43699'
 ---

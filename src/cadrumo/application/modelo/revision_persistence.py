@@ -976,6 +976,19 @@ def _new_local_filing_record(
     )
 
 
+def _require_m303_settlement_result_values(
+    target: CalculationRevision, work_unit: WorkUnit, result_ids: tuple[CasillaId, ...] | None
+) -> dict[CasillaId, Decimal]:
+    """Require the declared result casillas after admitting the credit-state operands."""
+    if result_ids is None or any(casilla_id not in target.casilla_values for casilla_id in result_ids):
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "missing", {"modelo": str(work_unit.modelo), "operation": "settlement_snapshot"}
+            )
+        )
+    return {casilla_id: target.casilla_values[casilla_id] for casilla_id in result_ids}
+
+
 def _new_local_m303_settlement_snapshot(
     *,
     target: CalculationRevision,
@@ -988,20 +1001,14 @@ def _new_local_m303_settlement_snapshot(
         return None
     state = prepared_observation.iva_compensation_state
     result_ids = result_disposition_casilla_ids(str(work_unit.modelo))
-    if (
-        state is None
-        or state.prior_pending_amount is None
-        or state.applied_amount is None
-        or result_ids is None
-        or any(casilla_id not in target.casilla_values for casilla_id in result_ids)
-    ):
+    if state is None or state.prior_pending_amount is None or state.applied_amount is None:
         raise M303FilingEvidenceError(
             precondition_failure=m303_filing_evidence_failure(
                 "missing",
                 {"modelo": str(work_unit.modelo), "operation": "settlement_snapshot"},
             ),
         )
-    result_values = {casilla_id: target.casilla_values[casilla_id] for casilla_id in result_ids}
+    result_values = _require_m303_settlement_result_values(target, work_unit, result_ids)
     result_amount = canonical_result_amount(str(work_unit.modelo), result_values)
     if result_amount is None or result_disposition is None:
         raise M303FilingEvidenceError(
@@ -1170,6 +1177,21 @@ def _rectificativa_aggregate_context(
     )
 
 
+def _approved_verification_report_differs(
+    report: VerificationReport, granting_reports: tuple[VerificationReport, ...], target: CalculationRevision
+) -> bool:
+    """Bind the exact granting report to revision, authority and stored verification facts."""
+    return (
+        report.calculation_revision_id != target.calculation_revision_id
+        or report.registry_snapshot_ref != target.registry_snapshot_ref
+        or not report.granted_verificado_completo
+        or len(granting_reports) != 1
+        or granting_reports[0] != report
+        or report.run_at != target.verified_at
+        or report.verified_by != target.verified_by
+    )
+
+
 def require_approved_verification_report(
     *,
     target: CalculationRevision,
@@ -1184,16 +1206,7 @@ def require_approved_verification_report(
         for candidate in catalogue.reports.values()
         if candidate.calculation_revision_id == target.calculation_revision_id and candidate.granted_verificado_completo
     )
-    if (
-        report is None
-        or report.calculation_revision_id != target.calculation_revision_id
-        or report.registry_snapshot_ref != target.registry_snapshot_ref
-        or not report.granted_verificado_completo
-        or len(granting_reports) != 1
-        or granting_reports[0] != report
-        or report.run_at != target.verified_at
-        or report.verified_by != target.verified_by
-    ):
+    if report is None or _approved_verification_report_differs(report, granting_reports, target):
         raise VerificationReportNotFoundError(
             translated_message="application.modelo.errors.verification_report_not_found",
             context={

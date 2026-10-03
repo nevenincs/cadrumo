@@ -27,7 +27,8 @@ from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support im
     prior_303_observation as _prior_303_observation,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
-from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator, recapture_divergence_notices
+from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator
+from cadrumo.application.live.filed_history_discovery import recapture_divergence_notices
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.live_state_composition import compose_filed_observation_persistence_ports
 

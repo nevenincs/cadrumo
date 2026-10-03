@@ -3,10 +3,13 @@ tags:
   - '#research'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c7b448b0e1b088b1035e2d6bf1ae6e1a3cf6d2b920b789c3ef46f7e13bc7ebbe'
-related: []
+body_hash: 'sha256:376db7d4bb326270ac36eab60634f12f99352d0cc6c61012cbba6d32ecaadb67'
+related:
+  - '[[2026-06-14-storage-backend-security-review-adr]]'
+  - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
+  - '[[2026-08-03-canonical-storage-management-adr]]'
 ---
 
 # `canonical-storage-management` research: `storage-location authorities, blast radius, and enrollment surface`
@@ -839,3 +842,18 @@ surface, not a new surface plus bridges to the old one.
 - `src/cadrumo/tests/test_config.py` — the two red relative-path tests
 - `src/cadrumo/tests/test_persisted_format_enrollment.py:143` — the reset-journal parity pin
 - `2026-07-13-data-output-standardization-adr` — the accepted prior decision
+
+## Correction 2026-10-03: storage decision citation
+
+The F8 passage above misclassifies `2026-06-04-storage-encryption-adr` as an
+accepted design authority for encrypted-substrate internals. That record is a
+warning-closeout alignment node; its own body states that it changes no runtime
+behavior and creates no implementation mandate. The storage-security decisions
+this passage intended to identify are recorded in
+`2026-06-14-storage-backend-security-review-adr` and the accepted
+`2026-08-13-secure-storage-hardening-successor-adr` (which supersedes the
+2026-05-22 hardening architecture and 2026-06-30 custody-completeness ADRs).
+The taxonomy and location decision remains owned by the accepted
+`2026-08-03-canonical-storage-management-adr` grounded by this research.
+This correction does not change the finding that those storage-security
+rulings do not conflict with the typed location taxonomy.

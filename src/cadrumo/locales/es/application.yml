@@ -135,10 +135,11 @@ application:
         un proveedor de acceso.
     sessions:
       errors:
-        clave_contraste_missing: La ruta Cl@ve Móvil sin QR necesita el contraste
-          impreso en tu documento. Registra %{nie_field} en el perfil activo si es
-          un NIE, o %{dni_field} si es un DNI, antes de usar cualquier sesión con
-          la AEAT.
+        clave_contraste_missing: Cl@ve Móvil inicia sesión por defecto con una solicitud
+          de aprobación en la app Cl@ve, que necesita el contraste impreso en tu documento.
+          Registra %{nie_field} en el perfil activo si es un NIE, o %{dni_field} si
+          es un DNI. Para escanear un código QR en un navegador visible, ejecuta `aeat
+          config auth configure --provider clave_movil --clave-movil-route qr`.
         clave_identity_malformed: La identidad de Cl@ve no es un NIF, NIE o CIF válido,
           por lo que no se puede confirmar que pertenezca a este perfil.
         clave_identity_missing: La autenticación en directo con Cl@ve exige un DNI/NIE.
@@ -148,9 +149,6 @@ application:
         clave_identity_profile_mismatch: La identidad de Cl@ve Móvil no coincide con
           la identidad fiscal del perfil activo; cambia al perfil que coincida o actualiza
           el perfil antes de la autenticación AEAT en directo.
-        clave_route_missing: La autenticación en vivo con Cl@ve Móvil requiere %{route_field}.
-          Abre Identificación en el gestor del perfil, elige Código QR o Solicitud
-          en la aplicación, guarda y reintenta la sincronización.
         corrupt_session: La sesión de autenticación guardada está dañada y no se puede
           leer. Ejecuta `aeat config auth logout` y después `aeat config auth test`.
         no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
@@ -1894,11 +1892,15 @@ application:
           no se ha comprobado
         national_and_territory: festivos nacionales y de %{territory} comprobados;
           festivos locales sin comprobar
+        national_and_territory_without_name: festivos nacionales y autonómicos aplicables
+          comprobados; festivos locales sin comprobar
         national_only: solo festivos nacionales; festivos autonómicos y locales sin
           comprobar
         not_shifted: el plazo de este modelo no se traslada por días inhábiles
         territory_unverified: solo festivos nacionales; los festivos autonómicos de
           %{territory} de este año no se han comprobado y los locales no se comprueban
+        territory_unverified_without_name: solo festivos nacionales; el calendario
+          autonómico aplicable no está verificado; los festivos locales no se comprueban
       shift:
         business_day: Día hábil
         calendar_unavailable: Calendario no disponible

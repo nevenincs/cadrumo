@@ -143,8 +143,18 @@ modelo:
           összesítője
       revision:
         2013-2022:
+          casilla:
+            x-e1in4opecdknap31cgmmsob3d5mmipbeehng:
+              label: Születési város
+            x-e1in4opecdnm8qb7dsmn0ob9ecmmsob3d5mmipbeehng:
+              label: Születési országkód
           field:
             label: 270-es modelo (HAP/2368/2013 rendelet), 2013-2022. adóévek
         2023-y-siguientes:
+          casilla:
+            x-e1in4opecdknap31cgmmsob3d5mmipbeehng:
+              label: Születési város
+            x-e1in4opecdnm8qb7dsmn0ob9ecmmsob3d5mmipbeehng:
+              label: Születési országkód
           field:
             label: 270-es modelo (HAP/2368/2013 rendelet), 2023-2024. adóévek

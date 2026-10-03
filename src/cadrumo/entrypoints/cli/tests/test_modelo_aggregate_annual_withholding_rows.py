@@ -35,8 +35,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import withholding_work_profile
-from cadrumo.application.modelo.aggregate_operation import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.invoice_withholding_capture_operation import (
+from cadrumo.application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS

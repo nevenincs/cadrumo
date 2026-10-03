@@ -188,14 +188,8 @@ class ModeloLifecycleAdvisories(BaseModel):
         return self
 
 
-def build_modelo_lifecycle_advisories(
-    *,
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    workflow_profile: TaxpayerProfile,
-    operation: PinnedAuthorityOperation,
-) -> ModeloLifecycleAdvisories:
-    """Capture canonical advisory facts before the operation releases authority."""
+def _require_advisory_revision_coordinate(work_unit: WorkUnit, revision: CalculationRevision) -> None:
+    """Require stored work-unit coordinates before resolving current authority."""
     coordinate = revision.registry_snapshot_ref
     if (
         revision.work_unit_id != work_unit.work_unit_id
@@ -205,6 +199,17 @@ def build_modelo_lifecycle_advisories(
         or coordinate.revision_id != work_unit.revision_id
     ):
         raise ValueError("calculation revision does not match the work unit")
+
+
+def build_modelo_lifecycle_advisories(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    operation: PinnedAuthorityOperation,
+) -> ModeloLifecycleAdvisories:
+    """Capture canonical advisory facts before the operation releases authority."""
+    _require_advisory_revision_coordinate(work_unit, revision)
     require_calculation_revision_coordinates_current(revision, operation=operation)
 
     m210_plazo = None

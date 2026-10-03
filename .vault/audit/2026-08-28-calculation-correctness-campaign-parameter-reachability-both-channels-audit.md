@@ -3,16 +3,15 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f34eb28f6cb7d862d29f82896e3af6dd614d935d08eb1dd38b39a3560c3bc81a'
+body_hash: 'sha256:a7d14572383b66a491285600fc4cfd81aca2bda151bfc20850d38f32632d8aa4'
 related: []
 ---
 
 # `calculation-correctness-campaign` audit: parameter reachability, measured across both channels
 
-## The question, finally answerable
-
+## Scope
 Earlier sweeps reported 200 then 130 "unreferenced" registry parameters and both
 counts were disowned as untrustworthy, because production Python also resolves
 parameter ids by f-string construction — `f"renta-{filing_year}-minimo-
@@ -30,8 +29,7 @@ and silently absorbs the whole declared set. Requiring a real literal prefix and
 15+ characters of literal text fixed it. The tell was that zero contradicted two
 independently known-unconsumed parameters.
 
-## 49 of the 59 are declared pre-staged data, not orphans
-
+## Findings
 The repository already owns a better fold for Modelo 100:
 `test_no_orphan_parameters_in_any_revision` in
 `registry/tests/test_modelo_100_drift_detection.py`. It resolves references from
@@ -55,6 +53,15 @@ string and I read reachability into it. The exact ids appear nowhere outside
 their own declarations. The conclusion changes from "reachable" to "pre-staged
 and allow-listed" — same verdict of not-a-defect, reached for the right reason.
 
+## Recommendations
+The Modelo 100 orphan gate is the right shape and is worth generalising to the
+other modelos, together with its allow-list discipline: a parameter may sit
+unconsumed provided it is declared as such and the declaration is the gate future
+work must clear. Extending it would convert the ten above from unnoticed to
+either consumed or explicitly pre-staged.
+
+Probe kept at `tmp/reachability.py`. Its anchoring constraint is load-bearing —
+loosen it and it silently reports zero.
 ## 10 sit outside any orphan gate
 
 The Modelo 100 gate is Modelo 100 only: it loads `_modelo_100()` and reads
@@ -83,14 +90,3 @@ the Modelo 303 simplified-regime difficult-justification forfait, and the RIRPF
 art. 95 reduced 7 % retención for specific collectives (unread ⇒ the general 15 %
 withheld). Four more are already-open findings whose "no formula consumes this"
 property this second, independent method now confirms.
-
-## For an owner
-
-The Modelo 100 orphan gate is the right shape and is worth generalising to the
-other modelos, together with its allow-list discipline: a parameter may sit
-unconsumed provided it is declared as such and the declaration is the gate future
-work must clear. Extending it would convert the ten above from unnoticed to
-either consumed or explicitly pre-staged.
-
-Probe kept at `tmp/reachability.py`. Its anchoring constraint is load-bearing —
-loosen it and it silently reports zero.

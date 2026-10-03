@@ -40,12 +40,7 @@ class NoteLiteralDeclaration(BaseModel):
             statement,
         )
         if self.source_ref == "aeat-dr-341-2016":
-            if (
-                self.source_sha256 == "7bb06cb80b865993fa60fe6ecceae8d28da1126fae5174b56cbe2cf13b534600"
-                and statement == "1. El tipo de declaración para la presentación por lotes puede ser: D (Devolución)"
-                and self.note_ordinal == 1
-                and self.literal == "D"
-            ):
+            if _is_source_pinned_m341_constant(self, statement):
                 return self
             raise ValueError("modelo 341 note no longer states its exact source-pinned D constant")
         if match is None:
@@ -55,6 +50,16 @@ class NoteLiteralDeclaration(BaseModel):
         if not self.evidence.strip():
             raise ValueError("literal note requires nonblank evidence")
         return self
+
+
+def _is_source_pinned_m341_constant(declaration: NoteLiteralDeclaration, statement: str) -> bool:
+    """Check the complete source-pinned declaration before admitting its constant."""
+    return (
+        declaration.source_sha256 == "7bb06cb80b865993fa60fe6ecceae8d28da1126fae5174b56cbe2cf13b534600"
+        and statement == "1. El tipo de declaración para la presentación por lotes puede ser: D (Devolución)"
+        and declaration.note_ordinal == 1
+        and declaration.literal == "D"
+    )
 
 
 _NOTE_LITERALS: dict[str, tuple[NoteLiteralDeclaration, ...]] = {

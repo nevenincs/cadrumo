@@ -11,6 +11,18 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .verification_repository_ports import VerificationRepositoryBundle
 
 
+def _require_filing_unit_coordinate(record: ModeloRecord, unit: WorkUnit, bucket_id: str) -> None:
+    """Require the loaded unit's exact profile and filing coordinate before release."""
+    if (
+        unit.bucket_id != bucket_id
+        or unit.work_unit_id != record.work_unit_id
+        or unit.modelo != record.modelo
+        or unit.filing_year != record.filing_year
+        or unit.period != record.period
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
 def load_profile_filing_record(
     bundle: VerificationRepositoryBundle, *, profile_id: UUID, filing_record_id: str
 ) -> tuple[ModeloRecord, WorkUnit]:
@@ -31,12 +43,5 @@ def load_profile_filing_record(
     unit = bundle.work_unit.load().get(record.work_unit_id)
     if unit is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    if (
-        unit.bucket_id != bucket_id
-        or unit.work_unit_id != record.work_unit_id
-        or unit.modelo != record.modelo
-        or unit.filing_year != record.filing_year
-        or unit.period != record.period
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    _require_filing_unit_coordinate(record, unit, bucket_id)
     return record, unit

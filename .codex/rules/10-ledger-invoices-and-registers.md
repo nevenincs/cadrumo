@@ -1,0 +1,16 @@
+---
+name: 10-ledger-invoices-and-registers
+trigger: always_on
+---
+
+# Ledger, invoices, and registers
+
+Ledger, invoice and register services cover bank/manual ledger entries, classification and readiness, invoice catalogue intake and reciprocal linking, document evidence and reviewed confirmation, LLM proposals, and the local IVA prorrata register. A parser-supported document first becomes lower-confidence evidence/draft; re-extraction and per-finding human review precede canonical invoice creation. Calculation readiness screens classified rows and links, while finalized calculation references block fact changes. These are local financial source capabilities, not official exports or remote filings. [Ledger guards](../../src/cadrumo/application/ledger/actions_common.py#L218) [Invoice intake](../../src/cadrumo/application/invoices/bulk_import.py#L748) [Confirmation](../../src/cadrumo/application/ledger/invoice_confirmation.py#L554).
+
+Enforced controls include exact-profile operation access, revision-guarded ledger/event and invoice/transaction writes, content-derived evidence identity, explicit missing/ambiguous document facts, and canonical consent for off-host extraction: the registered path requires stored evidence, per-call acknowledgement, a minted source-hash proof and a loaded-byte digest check. Model classification remains a proposal; registry rules derive tax amounts and a captured reviewed baseline gates application. The prorrata seed rechecks prior M303 revision and commits against source plus register revisions. [Consent path](../../src/cadrumo/application/ledger/invoice_evidence_extract_operation.py#L152) [Reviewed LLM apply](../../src/cadrumo/application/ledger/llm_review_execution.py#L143) [Prorrata seed](../../src/cadrumo/application/prorrata_register/service.py#L271).
+
+The key cross-layer question is whether a draft tax ID without its own accepted anchor can be promoted by separate role text and later accepted; model output, deterministic grounding and human confirmation must remain distinct. Confirmation's catalogue, attachment, evidence-summary and audit writes are sequential, so crash recovery needs verification. Ratio override and event writes are explicitly non-atomic; importer original-file hashing is separately timed. An IRPF-residency proxy can over-report issuer IVA establishment in non-TAI territories. [Identity seam](../../src/cadrumo/application/ledger/grounded_reading.py#L303) [Confirmation writes](../../src/cadrumo/application/ledger/invoice_confirmation.py#L758) [Ratio ordering](../../src/cadrumo/application/ledger/ratios.py#L550).
+
+## Ledger invariants
+
+Preserve the owning amount/direction contract: where an amount is a magnitude, carry economic direction in its typed field rather than encoding it again in the sign. Keep currency, rounding, period and counterparty explicit. Corrections preserve revision or reversal evidence rather than erase history. Map imported IVA categories to the canonical vocabulary and refuse ambiguity. Derive participation and allocation through the typed relationship owner; do not duplicate percentages or silently normalize inconsistent totals. Verify encrypted evidence round trips and ledger-to-filing parity.

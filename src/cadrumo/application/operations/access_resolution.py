@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -32,6 +32,8 @@ from .registry import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 OPERATION_LIFECYCLE_ACTIONS = frozenset(
@@ -95,6 +97,16 @@ class ResolvedOperationAccess:
 
     request: OperationAccessRequest
     policy: OperationAccessPolicy
+
+
+def with_commit_action(resolved: ResolvedOperationAccess) -> ResolvedOperationAccess:
+    """Return ``resolved`` with the explicit COMMIT door added to its policy, nothing else changed."""
+    # ``dict(model)`` keeps the nested permission models hashable inside their
+    # frozen sets; python-mode serialization would turn them into dictionaries.
+    policy = OperationAccessPolicy.model_validate(
+        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
+    )
+    return replace(resolved, policy=policy)
 
 
 def require_admitted_submission(admitted: OperationAccessRequest, *, profile_id: UUID, definition_id: str) -> None:
@@ -315,6 +327,49 @@ def bind_operation_access_profile(
     )
 
 
+def bind_replayed_or_fresh_single_period_access(
+    context: OperationAccessContext,
+    profile: OperationAccessProfile,
+    *,
+    definition_id: str,
+    fresh_period: Callable[[PinnedAuthorityOperation], Period],
+) -> ResolvedOperationAccess:
+    """Bind the admitted period on replay, or the period read under held authority.
+
+    An action in ``ADMISSION_REPLAY_ACTIONS`` on an admitted submission keeps the
+    one period this profile's submission was admitted for. Any other action needs
+    the host's held authority operation, under which ``fresh_period`` reads the
+    addressed record's period.
+    """
+    admitted = context.admitted_request
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        periods = require_single_period_admission(admitted, profile_id=context.profile_id, definition_id=definition_id)
+    else:
+        if context.authority_operation is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        periods = frozenset({fresh_period(context.authority_operation)})
+    return bind_operation_access_profile(
+        context, profile, profile_id=context.profile_id, definition_id=definition_id, periods=periods
+    )
+
+
+def bind_replayed_period_independent_access(
+    context: OperationAccessContext, profile: OperationAccessProfile, *, definition_id: str
+) -> ResolvedOperationAccess:
+    """Bind period-independent access, replaying the admitted submission's scope on replay actions.
+
+    An action in ``ADMISSION_REPLAY_ACTIONS`` on an admitted submission must replay
+    this profile's period-independent admission of the operation. Fresh work needs
+    no held authority because it binds no period.
+    """
+    admitted = context.admitted_request
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        require_period_independent_admission(admitted, profile_id=context.profile_id, definition_id=definition_id)
+    return bind_operation_access_profile(
+        context, profile, profile_id=context.profile_id, definition_id=definition_id, periods=frozenset()
+    )
+
+
 # Named access profiles. A profile exists only where at least two resolvers
 # declare exactly the same policy, and each resolver names its profile. The
 # name spells every axis:
@@ -358,6 +413,15 @@ COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS = Oper
 )
 LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS = OperationAccessProfile(
     actions=OPERATION_LIFECYCLE_ACTIONS,
+    observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+    result_categories=frozenset({DisclosureCategory.PROFILE_VALUES}),
+    result_schema=OperationResultSchemaPin.REGISTERED,
+    period_scope=OperationPeriodScope.PERIOD_INDEPENDENT,
+    requires_human=False,
+    provider=Availability.NOT_REQUIRED,
+)
+COMMITTING_LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS = OperationAccessProfile(
+    actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
     observed_by=OBSERVATION_DISCLOSING_ACTIONS,
     result_categories=frozenset({DisclosureCategory.PROFILE_VALUES}),
     result_schema=OperationResultSchemaPin.REGISTERED,

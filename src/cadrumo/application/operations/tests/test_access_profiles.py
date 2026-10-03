@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import Any, cast
 from uuid import UUID, uuid4
@@ -15,6 +16,7 @@ from ...user_profile.access_contracts import (
     AccessDenialCode,
     Availability,
     DisclosureCategory,
+    OperationAccessRequest,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import access_resolution as access_module
@@ -27,6 +29,8 @@ from ..access_resolution import (
     OperationPeriodScope,
     OperationResultSchemaPin,
     bind_operation_access_profile,
+    bind_replayed_or_fresh_single_period_access,
+    bind_replayed_period_independent_access,
 )
 from ..registry import OperationFrontendProjection
 
@@ -198,3 +202,120 @@ def test_a_definition_result_profile_discloses_only_the_definition_named_schema(
             periods=frozenset(),
         )
     assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+def _admitted(
+    context: OperationAccessContext, *, definition_id: str = _DEFINITION_ID, periods: frozenset[Period]
+) -> OperationAccessRequest:
+    return OperationAccessRequest(
+        profile_id=_PROFILE,
+        definition_id=definition_id,
+        action=AccessAction.SUBMIT,
+        frontend=context.frontend,
+        periods=periods,
+        period_independent=not periods,
+        destination_id=context.destination_id,
+    )
+
+
+def _period_must_not_be_read(operation: object) -> Period:
+    raise AssertionError("a replay or a refused fresh access must not read the addressed record")
+
+
+def test_a_single_period_replay_keeps_the_admitted_period_without_reading() -> None:
+    context = _context(AccessAction.RESULT, result_schema_id="any.registered.result")
+    context = replace(context, admitted_request=_admitted(context, periods=frozenset({_PERIOD})))
+
+    resolved = bind_replayed_or_fresh_single_period_access(
+        context,
+        LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        definition_id=_DEFINITION_ID,
+        fresh_period=_period_must_not_be_read,
+    )
+
+    assert resolved.request.periods == frozenset({_PERIOD})
+
+
+@pytest.mark.parametrize(
+    ("definition_id", "periods"),
+    [
+        ("test.other", frozenset({_PERIOD})),
+        (_DEFINITION_ID, frozenset()),
+    ],
+)
+def test_a_single_period_replay_refuses_another_admission(definition_id: str, periods: frozenset[Period]) -> None:
+    context = _context(AccessAction.OBSERVE, result_schema_id="any.registered.result")
+    context = replace(context, admitted_request=_admitted(context, definition_id=definition_id, periods=periods))
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        bind_replayed_or_fresh_single_period_access(
+            context,
+            LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+            definition_id=_DEFINITION_ID,
+            fresh_period=_period_must_not_be_read,
+        )
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+def test_fresh_single_period_access_needs_held_authority_before_reading() -> None:
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        bind_replayed_or_fresh_single_period_access(
+            _context(AccessAction.SUBMIT, result_schema_id="any.registered.result"),
+            LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+            definition_id=_DEFINITION_ID,
+            fresh_period=_period_must_not_be_read,
+        )
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+def test_fresh_single_period_access_binds_the_period_read_under_held_authority() -> None:
+    authority = cast(Any, object())
+    read_under: list[object] = []
+    other_period = Period.from_year_and_code(2026, "2T")
+
+    def read_period(operation: object) -> Period:
+        read_under.append(operation)
+        return other_period
+
+    context = replace(
+        _context(AccessAction.SUBMIT, result_schema_id="any.registered.result"), authority_operation=authority
+    )
+    resolved = bind_replayed_or_fresh_single_period_access(
+        context,
+        LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        definition_id=_DEFINITION_ID,
+        fresh_period=read_period,
+    )
+
+    assert read_under == [authority]
+    assert resolved.request.periods == frozenset({other_period})
+
+
+def test_period_independent_replay_requires_a_period_independent_admission() -> None:
+    context = _context(AccessAction.RESULT, result_schema_id="any.registered.result")
+
+    replayed = bind_replayed_period_independent_access(
+        replace(context, admitted_request=_admitted(context, periods=frozenset())),
+        LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        definition_id=_DEFINITION_ID,
+    )
+    assert replayed.request.period_independent and replayed.policy.requires_all_periods
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        bind_replayed_period_independent_access(
+            replace(context, admitted_request=_admitted(context, periods=frozenset({_PERIOD}))),
+            LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+            definition_id=_DEFINITION_ID,
+        )
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+def test_fresh_period_independent_access_needs_no_held_authority() -> None:
+    resolved = bind_replayed_period_independent_access(
+        _context(AccessAction.SUBMIT, result_schema_id="any.registered.result"),
+        LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        definition_id=_DEFINITION_ID,
+    )
+
+    assert resolved.request.period_independent and resolved.request.action is AccessAction.SUBMIT

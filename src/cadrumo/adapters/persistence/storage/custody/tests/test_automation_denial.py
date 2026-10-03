@@ -10,12 +10,9 @@ import pytest
 from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import api_key_verifier
-from cadrumo.adapters.persistence.storage.custody.automation_store import (
-    CONTROL_NAMESPACE,
-    WRAP_NAMESPACE,
-    AutomationControlStore,
-    retire_profile_automation,
-)
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_retirement import retire_profile_automation
+from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,

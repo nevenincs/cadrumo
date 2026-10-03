@@ -20,10 +20,15 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
-from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileLogin, RuntimeSecretReady
-from cadrumo.application.runtime.transport import RuntimeStatusRequest, RuntimeTransportStatus
+from cadrumo.application.runtime.profile_access import (
+    RuntimeAccessRefusal,
+    RuntimeProfileLogin,
+    RuntimeSecretReady,
+    RuntimeSessionRequest,
+)
 
-from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake, read_document, read_secret, write_document
+from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
+from ..runtime_frame_io import read_document, read_secret, write_document
 from ..server import RuntimeTransportServer
 from ..windows import WindowsRuntimeEndpoint
 
@@ -87,11 +92,17 @@ def test_concurrent_status_exchanges_share_only_their_own_native_connection(tmp_
             )
             try:
                 pausing.armed = True
-                first_request = RuntimeStatusRequest(request_id=uuid4())
-                second_request = RuntimeStatusRequest(request_id=uuid4())
-                other_request = RuntimeStatusRequest(request_id=uuid4())
+                first_request = RuntimeSessionRequest(
+                    action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                )
+                second_request = RuntimeSessionRequest(
+                    action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                )
+                other_request = RuntimeSessionRequest(
+                    action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                )
                 with ThreadPoolExecutor(max_workers=3) as callers:
-                    first = callers.submit(shared.status, first_request, deadline=time.monotonic() + 5)
+                    first = callers.submit(shared.session, first_request, deadline=time.monotonic() + 5)
                     assert pausing.sent.wait(3)
                     queued_secret = bytearray(b"synthetic-never-transmitted-credential")
                     with pytest.raises(RuntimeRefusalError) as timed_out:
@@ -112,11 +123,11 @@ def test_concurrent_status_exchanges_share_only_their_own_native_connection(tmp_
 
                     def second_status():
                         second_started.set()
-                        return shared.status(second_request, deadline=time.monotonic() + 5)
+                        return shared.session(second_request, deadline=time.monotonic() + 5)
 
                     second = callers.submit(second_status)
                     assert second_started.wait(2)
-                    other = callers.submit(independent.status, other_request, deadline=time.monotonic() + 5)
+                    other = callers.submit(independent.session, other_request, deadline=time.monotonic() + 5)
                     other_result = other.result(timeout=3)
                     assert other_result.request_id == other_request.request_id
                     assert pausing.writes == 1
@@ -147,7 +158,9 @@ def test_login_secret_exchange_precedes_queued_status_on_same_native_connection(
     login_request = RuntimeProfileLogin(
         request_id=uuid4(), profile_id=uuid4(), method="password", frontend=OperationFrontendProjection.MCP
     )
-    status_request = RuntimeStatusRequest(request_id=uuid4())
+    status_request = RuntimeSessionRequest(
+        action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+    )
 
     def serve() -> None:
         channel = endpoint.accept(timeout=5)
@@ -174,15 +187,15 @@ def test_login_secret_exchange_precedes_queued_status_on_same_native_connection(
                 ),
                 deadline=time.monotonic() + 7,
             )
-            status = read_document(channel, RuntimeStatusRequest, deadline=time.monotonic() + 7)
+            status = read_document(channel, RuntimeSessionRequest, deadline=time.monotonic() + 7)
             assert status.request_id == status_request.request_id
             write_document(
                 channel,
-                RuntimeTransportStatus(
+                RuntimeAccessRefusal(
                     request_id=status.request_id,
                     runtime_boot_id=identity.boot_id,
                     connection_id=connection_id,
-                    accepting_connections=True,
+                    code=RuntimeRefusalCode.UNAVAILABLE,
                 ),
                 deadline=time.monotonic() + 7,
             )
@@ -207,7 +220,7 @@ def test_login_secret_exchange_precedes_queued_status_on_same_native_connection(
                 with ThreadPoolExecutor(max_workers=2) as callers:
                     login = callers.submit(client.login, login_request, secret, deadline=time.monotonic() + 7)
                     assert pausing.sent.wait(3)
-                    status = callers.submit(client.status, status_request, deadline=time.monotonic() + 7)
+                    status = callers.submit(client.session, status_request, deadline=time.monotonic() + 7)
                     assert pausing.writes == 1
                     assert not status.done()
                     pausing.release.set()

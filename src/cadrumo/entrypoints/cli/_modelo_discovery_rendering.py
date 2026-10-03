@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from ...application.modelo.binding_readiness import profile_resolvable_binding_ids
 from ...application.modelo.data_inventory import DataInventoryCasilla, DataInventoryChecklist
-from ...application.modelo.query_read_operation import ModeloBindingRowV1
+from ...application.modelo.query_read_contracts import ModeloBindingRowV1
 from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 from ...application.operator_actions.models import ActionReference
 from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS

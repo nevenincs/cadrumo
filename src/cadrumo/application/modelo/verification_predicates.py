@@ -849,6 +849,19 @@ def evaluate_verification_predicates(
     if not predicates:
         return []
 
+    return _evaluate_selected_predicate_findings(
+        predicates, casilla_values, profile, text_values, blocking_finding_observer
+    )
+
+
+def _evaluate_selected_predicate_findings(
+    predicates: tuple[VerificationPredicateDefinition, ...],
+    casilla_values: Mapping[CasillaId, Decimal],
+    profile: TaxpayerProfile,
+    text_values: Mapping[CasillaId, str],
+    blocking_finding_observer: Callable[[ModeloVerificationFinding, VerificationPredicateDefinition], None] | None,
+) -> list[ModeloVerificationFinding]:
+    """Preserve registry predicate order and notify only after a blocking finding."""
     findings: list[ModeloVerificationFinding] = []
     for predicate in predicates:
         if predicate.finding_kind == "ADVISORY":

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ast-exception-gate-remediation'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:8b20acdd3b83f9436d25a405e9b76f6bf8802c1d46e7794342fae0a520dfb4c0'
-related:
-  - '[[2026-07-08-gate-drift-reconciliation-plan]]'
+related: []
 ---
 
 # `ast-exception-gate-remediation` audit: `closeout review`

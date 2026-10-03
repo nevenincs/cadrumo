@@ -13,10 +13,11 @@ from uuid import UUID
 
 import typer
 
-from ....adapters.local_runtime.frontend_client import ProfileViewCollection, RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 from ....adapters.local_runtime.profile_mutations import ProfileMutationCompletion
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.user_profile.operations import (
+from ....application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaOperationProjection,
     ProfilePlantillaMediaOperationRequest,
     ProfilePlantillaMediaRemove,

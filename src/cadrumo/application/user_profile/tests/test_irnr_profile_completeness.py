@@ -42,14 +42,15 @@ _BASE_VALUES: dict[str, str] = {
 }
 
 
-def test_clave_movil_route_is_conditionally_required_without_affecting_other_providers() -> None:
-    missing_route = conditional_profile_missing_required({"auth.provider": "clave_movil"})
+def test_an_unchosen_clave_movil_route_never_makes_a_profile_incomplete() -> None:
+    """An unchosen route resolves to the app request, so it is never owed."""
+    unchosen_route = conditional_profile_missing_required({"auth.provider": "clave_movil"})
     configured_qr = conditional_profile_missing_required(
         {"auth.provider": "clave_movil", "auth.clave_movil_route": "qr"},
     )
     certificate = conditional_profile_missing_required({"auth.provider": "certificate"})
 
-    assert missing_route == ("auth.clave_movil_route",)
+    assert unchosen_route == ()
     assert configured_qr == ()
     assert certificate == ()
 

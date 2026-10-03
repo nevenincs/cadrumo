@@ -1,33 +1,20 @@
-"""A local-record write waits out a reader, and still refuses a permanent block.
+"""Local-record replacement retries only the real publication boundary.
 
-Windows refuses to replace a file while another process holds it open, and this
-record is the login handover witness: readers are ordinary, because any process
-inspecting the in-flight login opens it. The writer therefore has to outlast a
-reader's handle rather than fail on meeting one -- an exhausted budget here does
-not delay the login, it refuses it.
-
-The budget was eight attempts ten milliseconds apart. Measured against eight
-concurrent readers, roughly one write in ten exhausted that budget and raised;
-at three readers none did, which is why the shortfall was invisible to any test
-that did not apply real pressure.
-
-Both halves are asserted, because a budget can fail in two directions. Too short
-refuses a login that only needed to wait; unbounded would hang forever on a
-denial that never clears -- and Windows reports a reader's handle and a denying
-ACL with the same code, so nothing but the budget separates them.
-
-Driven by holding a real handle for a real interval: no patching, and no
-dependence on how loaded the machine is, because the hold is released on a timer
-well inside the budget rather than raced against it.
+The reader test holds a real Windows handle and releases it after the delegated
+``os.replace`` reports its native refusal. The permanent-block case keeps its
+handle through the bounded retry deadline and checks that the final typed error
+retains the last observed native cause.
 """
 
 from __future__ import annotations
 
 import os
-import threading
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core import atomic_write
 
 from ..errors import ProfileCustodyRecordError
 from ..filesystem import read_optional_profile_custody_local_record, write_profile_custody_local_record
@@ -38,33 +25,116 @@ _LIMIT = 4096
 _FIRST = b'{"phase":"prepared"}'
 _SECOND = b'{"phase":"published"}'
 
-#: Longer than the retired eighty-millisecond budget, far inside the current one.
-_HOLD_SECONDS = 0.3
+
+def _record_native_error(
+    record_property: Callable[[str, object], None],
+    *,
+    phase: str,
+    error: OSError,
+) -> None:
+    record_property("s16.native.phase", phase)
+    record_property("s16.native.type", type(error).__name__)
+    record_property("s16.native.winerror", repr(getattr(error, "winerror", None)))
+    record_property("s16.native.errno", repr(error.errno))
+    record_property("s16.native.filename", repr(error.filename))
+    record_property("s16.native.object_id", hex(id(error)))
 
 
-def test_a_write_outlasts_a_reader_that_releases_its_handle(tmp_path: Path) -> None:
-    """DISCRIMINATING: the write must survive a reader, not fail on one.
-
-    The handle is released on a timer, so the write succeeds if and only if the
-    budget outlasts the hold. Under the retired budget the hold outlives every
-    attempt and the write is refused.
-    """
+def test_a_write_outlasts_a_reader_that_releases_its_handle(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    record_property: Callable[[str, object], None],
+) -> None:
+    """Retry the real replacement refusal, then release the held reader."""
     path = tmp_path / "handover-journal"
     write_profile_custody_local_record(path, _FIRST, publish_once=True)
 
+    if os.name != "nt":
+        with path.open("rb"):
+            write_profile_custody_local_record(path, _SECOND, publish_once=False)
+        assert read_optional_profile_custody_local_record(path, maximum_bytes=_LIMIT) == _SECOND
+        record_property("s16.native.phase", "not-applicable-posix-replace-does-not-block-open-readers")
+        return
+
+    real_open = os.open
+    real_replace = os.replace
+    stage_attempts: list[Path] = []
+    replace_attempts: list[str] = []
+    replace_errors: list[PermissionError] = []
     handle = path.open("rb")
-    release = threading.Timer(_HOLD_SECONDS, handle.close)
-    release.start()
+    reader_released = False
+
+    def observe_open(
+        raw_path: str | bytes | os.PathLike[str],
+        flags: int,
+        mode: int = 0o777,
+        *,
+        dir_fd: int | None = None,
+    ) -> int:
+        candidate = Path(os.fsdecode(raw_path))
+        if (
+            dir_fd is None
+            and flags & os.O_EXCL
+            and candidate.parent == tmp_path
+            and candidate.name.startswith(f"{path.name}.")
+            and candidate.name.endswith(".tmp")
+        ):
+            stage_attempts.append(candidate)
+        if dir_fd is None:
+            return real_open(raw_path, flags, mode)
+        return real_open(raw_path, flags, mode, dir_fd=dir_fd)
+
+    def observe_replace(
+        source: str | bytes | os.PathLike[str],
+        destination: str | bytes | os.PathLike[str],
+    ) -> None:
+        nonlocal reader_released
+        if Path(os.fsdecode(destination)) != path:
+            real_replace(source, destination)
+            return
+        replace_attempts.append("attempted")
+        try:
+            real_replace(source, destination)
+        except PermissionError as exc:
+            replace_errors.append(exc)
+            _record_native_error(record_property, phase="replace-reader-held", error=exc)
+            if not reader_released:
+                handle.close()
+                reader_released = True
+            replace_attempts[-1] = "permission-error-observed"
+            raise
+        replace_attempts[-1] = "published"
+
+    monkeypatch.setattr(atomic_write.os, "open", observe_open)
+    monkeypatch.setattr(atomic_write.os, "replace", observe_replace)
+
     try:
         write_profile_custody_local_record(path, _SECOND, publish_once=False)
     finally:
-        release.cancel()
-        handle.close()
+        if not handle.closed:
+            handle.close()
 
+    assert reader_released, "release must follow an observed native replace refusal"
+    assert replace_errors, "the held reader must cause a real PermissionError"
+    assert len(stage_attempts) == 1, "retries must reuse the one completed staging file"
+    assert replace_attempts == ["permission-error-observed", "published"]
     assert read_optional_profile_custody_local_record(path, maximum_bytes=_LIMIT) == _SECOND
+    residue = [child for child in tmp_path.iterdir() if child != path]
+    assert residue == []
+    record_property("s16.native.origin", "observed delegated Windows os.replace refusal")
+    record_property("s16.stage_attempts", str(len(stage_attempts)))
+    record_property("s16.replace_attempts", str(len(replace_attempts)))
+    record_property("s16.replace_sequence", ",".join(replace_attempts))
+    record_property("s16.reader_released_after_observed_refusal", str(reader_released))
+    record_property("s16.final_target_matches_payload", "true")
+    record_property("s16.stage_residue_count", str(len(residue)))
 
 
-def test_a_permanent_native_write_block_is_still_refused(tmp_path: Path) -> None:
+def test_a_permanent_native_write_block_is_still_refused(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    record_property: Callable[[str, object], None],
+) -> None:
     """ANTI-TAUTOLOGY: every platform refuses a durable write barrier.
 
     Windows holds the destination open, the native permanent blocker that its
@@ -83,11 +153,71 @@ def test_a_permanent_native_write_block_is_still_refused(tmp_path: Path) -> None
         assert path.is_dir()
         return
 
+    real_open = os.open
+    real_replace = os.replace
+    stage_attempts: list[Path] = []
+    replace_attempts: list[str] = []
+    replace_errors: list[PermissionError] = []
+
+    def observe_open(
+        raw_path: str | bytes | os.PathLike[str],
+        flags: int,
+        mode: int = 0o777,
+        *,
+        dir_fd: int | None = None,
+    ) -> int:
+        candidate = Path(os.fsdecode(raw_path))
+        if (
+            dir_fd is None
+            and flags & os.O_EXCL
+            and candidate.parent == tmp_path
+            and candidate.name.startswith(f"{path.name}.")
+            and candidate.name.endswith(".tmp")
+        ):
+            stage_attempts.append(candidate)
+        if dir_fd is None:
+            return real_open(raw_path, flags, mode)
+        return real_open(raw_path, flags, mode, dir_fd=dir_fd)
+
+    def observe_replace(
+        source: str | bytes | os.PathLike[str],
+        destination: str | bytes | os.PathLike[str],
+    ) -> None:
+        if Path(os.fsdecode(destination)) != path:
+            real_replace(source, destination)
+            return
+        replace_attempts.append("attempted")
+        try:
+            real_replace(source, destination)
+        except PermissionError as exc:
+            replace_errors.append(exc)
+            _record_native_error(record_property, phase="replace-permanent-reader", error=exc)
+            replace_attempts[-1] = "permission-error"
+            raise
+        replace_attempts[-1] = "published"
+
+    monkeypatch.setattr(atomic_write.os, "open", observe_open)
+    monkeypatch.setattr(atomic_write.os, "replace", observe_replace)
+
     handle = path.open("rb")
     try:
-        with pytest.raises(ProfileCustodyRecordError, match="cannot be atomically written"):
+        with pytest.raises(ProfileCustodyRecordError, match="cannot be atomically written") as refused:
             write_profile_custody_local_record(path, _SECOND, publish_once=False)
     finally:
         handle.close()
 
+    assert replace_errors, "the permanent reader must cause a real PermissionError"
+    assert len(replace_attempts) > 1, "a permanent denial must exercise the finite retry budget"
+    assert len(stage_attempts) == 1, "bounded retries must reuse one completed staging file"
+    assert refused.value.__cause__ is replace_errors[-1]
     assert read_optional_profile_custody_local_record(path, maximum_bytes=_LIMIT) == _FIRST
+    residue = [child for child in tmp_path.iterdir() if child != path]
+    assert residue == []
+    record_property("s16.native.origin", "observed delegated Windows os.replace refusal")
+    record_property("s16.stage_attempts", str(len(stage_attempts)))
+    record_property("s16.replace_attempts", str(len(replace_attempts)))
+    record_property("s16.typed_cause_object_id", hex(id(refused.value.__cause__)))
+    record_property("s16.last_observed_error_object_id", hex(id(replace_errors[-1])))
+    record_property("s16.typed_cause_is_last_observed_error", str(refused.value.__cause__ is replace_errors[-1]))
+    record_property("s16.target_unchanged", "true")
+    record_property("s16.stage_residue_count", str(len(residue)))

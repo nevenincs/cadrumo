@@ -47,16 +47,7 @@ def _exact_layout_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     except OSError:
         _logger.warning("detect_provider: cannot read file header for sniffing path=%s", path, exc_info=True)
         return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())
-    upper_head = head.upper()
-    if head.startswith(b"%PDF"):
-        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
-    if head.startswith(b"PK"):
-        return (XlsxProvider(), CsvProvider(), OfxProvider(), XlsProvider(), PdfN26Provider())
-    if head.startswith(_OLE2_SIGNATURE):
-        return (XlsProvider(), CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
-    if b"<OFX>" in upper_head or b"<BANKTRANLIST>" in upper_head:
-        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
-    return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())
+    return _header_layout_candidates(head)
 
 
 def detect_provider(path: Path) -> FinancialProvider | None:
@@ -93,3 +84,17 @@ def _ordered_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     parse for a deterministic one.
     """
     return (*_exact_layout_candidates(path), MappedTabularProvider())
+
+
+def _header_layout_candidates(head: bytes) -> tuple[FinancialProvider, ...]:
+    """Retain exact provider precedence for each supported content signature."""
+    upper_head = head.upper()
+    if head.startswith(b"%PDF"):
+        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
+    if head.startswith(b"PK"):
+        return (XlsxProvider(), CsvProvider(), OfxProvider(), XlsProvider(), PdfN26Provider())
+    if head.startswith(_OLE2_SIGNATURE):
+        return (XlsProvider(), CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
+    if b"<OFX>" in upper_head or b"<BANKTRANLIST>" in upper_head:
+        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
+    return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())

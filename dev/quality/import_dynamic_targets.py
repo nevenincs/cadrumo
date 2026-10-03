@@ -33,7 +33,7 @@ def discover_closed_attribute_targets(
     targets: set[str] = set()
     module_record_classes = _module_record_classes(modules)
     if not module_record_classes:
-        return frozenset()
+        return frozenset[str]()
     return _collect_closed_attribute_targets(modules, root_names, known, targets, module_record_classes)
 
 

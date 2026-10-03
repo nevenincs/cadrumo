@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 
-from ..frontend_client import RuntimeFrontendRefusedError, frontend_failure_code
+from ..frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

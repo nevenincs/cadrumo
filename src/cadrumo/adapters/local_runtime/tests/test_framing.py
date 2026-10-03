@@ -24,9 +24,12 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
-from cadrumo.application.runtime.profile_access import RuntimeProfileStatus, RuntimeProfileStatusTransfer
+from cadrumo.application.runtime.profile_access import (
+    RuntimeProfileStatus,
+    RuntimeProfileStatusTransfer,
+    RuntimeSessionRequest,
+)
 from cadrumo.application.runtime.submission_payload import SUBMISSION_PAYLOAD_CHUNK_BYTES, SubmissionPayloadChunk
-from cadrumo.application.runtime.transport import RuntimeStatusRequest
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     Availability,
@@ -40,10 +43,10 @@ from cadrumo.application.user_profile.access_projections import PublicAccessSess
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 
-from ..framing import (
+from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
+from ..frontend_client import RuntimeFrontendClient
+from ..runtime_frame_io import (
     MAXIMUM_FRAME_BYTES,
-    VerifiedRuntimeConnection,
-    accept_runtime_handshake,
     read_document,
     read_profile_status,
     read_session_inventory,
@@ -52,7 +55,6 @@ from ..framing import (
     write_secret,
     write_session_inventory,
 )
-from ..frontend_client import RuntimeFrontendClient
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -121,7 +123,10 @@ def test_close_failure_retries_cleanup_without_reopening_exchanges(frontend_owne
     assert channel.released is False
 
     with pytest.raises(RuntimeRefusalError) as refused:
-        connection.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 5)
+        connection.session(
+            RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 5,
+        )
     assert refused.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
     assert channel.reads == reads_before_close
     assert tuple(channel.writes) == writes_before_close
@@ -299,12 +304,18 @@ async def test_failed_exchange_retains_one_owner_fences_admission_and_retries_on
     connection = _connection(channel)
     channel.direction = "read"
     with pytest.raises(RuntimeRefusalError) as caught:
-        connection.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 5)
+        connection.session(
+            RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 5,
+        )
     assert caught.value is channel.failure
     assert channel.close_calls == 1
     writes = tuple(channel.writes)
     with pytest.raises(RuntimeRefusalError) as closed:
-        connection.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 5)
+        connection.session(
+            RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 5,
+        )
     assert closed.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
     assert tuple(channel.writes) == writes
     assert channel.close_calls == 1
@@ -576,7 +587,12 @@ async def test_frontend_cleanup_adopts_failed_connection_owner_without_duplicate
     primary: BaseException | None = None
     with pytest.raises(RuntimeRefusalError) as caught:
         try:
-            connection.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 5)
+            connection.session(
+                RuntimeSessionRequest(
+                    action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                ),
+                deadline=time.monotonic() + 5,
+            )
         except BaseException as error:
             primary = error
             assert error is channel.failure
@@ -614,7 +630,10 @@ async def test_frontend_cleanup_does_not_adopt_another_connections_failed_owner(
     )
     foreign_channel.direction = "read"
     with pytest.raises(RuntimeRefusalError) as caught:
-        foreign_connection.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 5)
+        foreign_connection.session(
+            RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 5,
+        )
     assert foreign_channel.close_calls == 1
     await close_async_resources(
         client.cleanup_owner(primary_error=caught.value),

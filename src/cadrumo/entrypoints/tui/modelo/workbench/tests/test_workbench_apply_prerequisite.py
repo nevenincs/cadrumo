@@ -24,7 +24,9 @@ from ......core.i18n.render import tr
 from ......core.period import Period
 from ......domain.modelos.verification_report import VerificationCompletenessStatus
 from ....components.host import ScreenHostApp
-from ..casilla_list import CasillaList, CasillaListEntry, row_value_text
+from ..casilla_list import CasillaList
+from ..casilla_list_models import CasillaListEntry
+from ..casilla_list_values import row_value_text
 from ..issue_scale import verdict_text
 from ..issues import WorkbenchIssuesScreen
 from ..ports import WorkbenchApplyPrerequisite

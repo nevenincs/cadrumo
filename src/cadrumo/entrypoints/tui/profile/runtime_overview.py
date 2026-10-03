@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ....adapters.local_runtime.frontend_client import ProfileViewCollection, RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 from ....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
 from ....application.user_profile.view_operation import (
     ProfileViewFieldItem,

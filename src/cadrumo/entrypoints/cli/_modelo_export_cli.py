@@ -6,8 +6,8 @@ import typer
 
 from ...application.modelo.export import ModeloExportResult
 from ...application.modelo.export_projection import ModeloExportPublicResultV3
-from ...application.modelo.operation_definitions import ModeloExportRequest
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
+from ...application.modelo.work_export_contracts import ModeloExportRequest
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity

@@ -22,23 +22,19 @@ from ...domain.transactions.model_validation import classification_for_business_
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..review.filter import LedgerReviewStatus
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPorts, LedgerActionPortsFactory
+from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import display_decimal
 from .actions_manual import ledger_transaction_result_payload, update_manual_transaction_fields
 from .id_resolution import resolve_transaction_id
 from .models import LedgerTransactionResultPayload, ManualLedgerTransactionPatch, ManualLedgerTransactionResult
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_ALLOCATE_OPERATION_DEFINITION_ID = "ledger.allocate"
@@ -105,15 +101,7 @@ class LedgerAllocateExecutor:
         def prepare() -> tuple[LedgerActionPorts, ManualLedgerTransactionPatch]:
             operation: PinnedAuthorityOperation = context.authority_operation
             ports = self._ports_factory(bucket_id=bucket_id, operation=operation)
-            if ports.operation is not operation or ports.transaction_repository.bucket_id != bucket_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            for repository in (
-                ports.invoice_repository,
-                ports.work_unit_repository,
-                ports.calculation_repository,
-            ):
-                if getattr(repository, "bucket_id", None) != bucket_id:
-                    raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
             share = try_parse_canonical_decimal(payload.business_pct, signed=False)
             if share is None:
                 raise TransactionValidationError("business_pct must be canonical decimal text")
@@ -166,19 +154,13 @@ class LedgerAllocateExecutor:
 
 def build_ledger_allocate_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
     """Declare durable, exact-profile allocation with a bounded secure result."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_ALLOCATE_OPERATION_DEFINITION_ID,
         request_type=LedgerAllocateRequest,
         result_type=LedgerAllocateOperationResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerAllocateRequest,
-            executor_type=LedgerAllocateExecutor,
-            build=lambda: LedgerAllocateExecutor(ports_factory),
-        ),
-        phase_codes=(LEDGER_ALLOCATE_PHASE,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerAllocateExecutor,
+        build=lambda: LedgerAllocateExecutor(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -208,16 +190,7 @@ def resolve_ledger_allocate_access(
         request.payload, LedgerAllocateRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
-    )
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_allocate_registration(

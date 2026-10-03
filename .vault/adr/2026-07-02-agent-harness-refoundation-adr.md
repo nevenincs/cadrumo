@@ -1,18 +1,21 @@
 ---
 tags:
-  - '#adr'
-  - '#agent-harness-refoundation'
+  - "#adr"
+  - "#agent-harness-refoundation"
 date: '2026-07-02'
-modified: '2026-09-26'
-body_hash: 'sha256:f9a008fd79445d7d6ce84528fdda96fc1c76c838963cb47810e37a0a02519035'
 related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
   - "[[2026-07-03-claude-ecosystem-packaging-adr]]"
   - "[[2026-07-08-mcp-progressive-discovery-adr]]"
   - "[[2026-07-08-mcp-protocol-hardening-adr]]"
-  - '[[2026-09-26-mcp-purpose-authentication-adr]]'
+  - "[[2026-09-26-mcp-purpose-authentication-adr]]"
+  - '[[2026-07-31-semantic-search-precompile-boundary-adr]]'
+supersedes:
+  - '2026-06-30-agent-harness-adr'
+  - '2026-07-01-agent-harness-adr'
+modified: '2026-10-03'
+body_hash: 'sha256:3efeeaa54efae06ad315b4f11005b86c39626e27d04a1e53bf916afc9f9bf665'
 ---
-
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -20,7 +23,7 @@ related:
 Two earlier harness drafts settled the four-layer shape, MCP end-state, rules,
 personas, and skills under a universe definition that the 2026-07-02 operator
 directive corrected. Their durable decisions are consolidated below; the
-predecessor ADR files are deleted so maintainers have one harness authority.
+predecessor ADRs are retained as superseded history; this ADR is the current harness authority.
 The drafts also left the harness unfinished in two defining ways: no live
 language model had driven the CLI through it, and there was no accepted way to
 measure or operate it.

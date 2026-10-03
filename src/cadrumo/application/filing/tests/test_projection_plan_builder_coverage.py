@@ -1,7 +1,7 @@
 """Every modelo whose layout carries projection fields must have a plan builder.
 
 A projection-kind export field resolves through a preflighted address:
-``_projection_field_value`` (``application/filing/record_field_renderer.py``) looks the
+``projection_field_value`` (``application/filing/record_field_renderer.py``) looks the
 value up by ``(record id, occurrence, projection_ref)`` and raises when the record has no
 render context. Those contexts come from a :class:`FilingProjectionPlan`, and
 ``_projection_plan_for_layout`` (``application/filing/export.py``) builds one only for the
@@ -102,7 +102,7 @@ def test_every_modelo_with_projection_fields_has_a_plan_builder() -> None:
     assert not uncovered, (
         f"{len(uncovered)} modelo(s) ship an export layout with projection-kind fields that no "
         "projection plan builder serves. _projection_plan_for_layout returns an empty plan for "
-        "them, so _projection_field_value raises 'requires a snapshot-owned render context' and "
+        "them, so projection_field_value raises 'requires a snapshot-owned render context' and "
         "the modelo CANNOT EXPORT AT ALL. It fails closed rather than emitting wrong bytes, but "
         "it does not file and until now nothing said so.\n"
         + "\n".join(

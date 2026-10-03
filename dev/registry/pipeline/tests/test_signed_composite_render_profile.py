@@ -20,7 +20,8 @@ from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 
 from ...compiler.loader import load_catalogue_file
-from .. import _export_tree
+from ..export_tree_field_derivation import _normalise_cell
+from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesignField
 from ..record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
 from ..render_profile import render_profile_digest
@@ -165,9 +166,9 @@ def test_reviewed_composite_projects_through_existing_money_codec_and_distinct_p
     profile = _profile()
     _validate(field, profile)
 
-    derived = _export_tree._normalise_cell(  # pyright: ignore[reportPrivateUsage]
+    derived = _normalise_cell(
         _joined_field(field),
-        _export_tree.ExportTreeTransportProfile(
+        ExportTreeTransportProfile(
             modelo="296",
             design_epoch="2024",
             source_ref="aeat-dr-296-2024",
@@ -359,9 +360,9 @@ def test_committed_modelo_296_profile_enrols_the_exact_hash_verified_parser_anch
         eligibility,
         RenderProfileSourceEvidence(design_identity=_identity(), entries=()),
     )
-    rendered = _export_tree._normalise_cell(  # pyright: ignore[reportPrivateUsage]
+    rendered = _normalise_cell(
         _joined_field(field),
-        _export_tree.ExportTreeTransportProfile(
+        ExportTreeTransportProfile(
             modelo="296",
             design_epoch="2024",
             source_ref="aeat-dr-296-2024",
@@ -446,9 +447,9 @@ def test_m180_printed_overlap_renders_signed_limits_losslessly() -> None:
     semantic = load_semantic_map(Path(__file__).parents[2] / "mappings/modelo_180/2023")
     field = next(field for sheet in intermediate.sheets for field in sheet.fields if field.source_row == 109)
     entry = next(entry for entry in semantic.entries if entry.anchor.source_row == 109)
-    derived = _export_tree._normalise_cell(  # pyright: ignore[reportPrivateUsage]
+    derived = _normalise_cell(
         JoinedRecordDesignField(parser_field=field, semantic_entry=entry),
-        _export_tree.ExportTreeTransportProfile(
+        ExportTreeTransportProfile(
             modelo="180",
             design_epoch="2023",
             source_ref="aeat-dr-180-2023",
@@ -494,7 +495,7 @@ def _m347_composite_fields(epoch: str, source_ref: str, filing_year: int) -> tup
     profile, fields, semantic = _m347_design(epoch, source_ref, filing_year)
     by_row = {field.source_row: field for field in fields}
     entries = {entry.anchor.source_row: entry for entry in semantic.entries}
-    transport = _export_tree.ExportTreeTransportProfile(
+    transport = ExportTreeTransportProfile(
         modelo="347",
         design_epoch=epoch,
         source_ref=source_ref,
@@ -510,7 +511,7 @@ def _m347_composite_fields(epoch: str, source_ref: str, filing_year: int) -> tup
         field = by_row[rule.anchor.source_row]
         _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
         joined = JoinedRecordDesignField(parser_field=field, semantic_entry=entries[rule.anchor.source_row])
-        derived.append(_export_tree._normalise_cell(joined, transport, profile, export_record_id="m347-record").field)
+        derived.append(_normalise_cell(joined, transport, profile, export_record_id="m347-record").field)
     return tuple(derived)
 
 

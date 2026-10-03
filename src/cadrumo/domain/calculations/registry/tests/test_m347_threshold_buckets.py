@@ -333,6 +333,31 @@ def test_a_no_floor_bucket_records_the_parties_it_admits_on_a_nonpositive_total(
     assert not declarable.admits_unconditional_nonpositive("E44444441", "B")
 
 
+def test_a_floored_bucket_leaves_out_a_nonpositive_total_and_says_which_it_left_out() -> None:
+    """Rectifications that reach a party's operations net its total to nil; the floor leaves it out, visibly."""
+    with bundled_indexed_authority().operation() as operation:
+        declarable = m347_declarable_party_buckets(
+            {
+                ("B11111112", "B"): Decimal("-1000.00"),
+                ("C22222229", "B"): Decimal("0.00"),
+                ("D33333335", "B"): Decimal("1000.00"),
+                ("E44444441", "B"): Decimal("4000.00"),
+            },
+            effective_date=_FILING_2025,
+            authority=_BucketMappingSource(base=operation, entries=_WELL_FORMED),
+        )
+
+    assert not declarable.admits("B11111112", "B")
+    assert not declarable.admits("C22222229", "B")
+    assert declarable.leaves_out_floored_nonpositive("B11111112", "B")
+    assert declarable.leaves_out_floored_nonpositive("C22222229", "B")
+    assert not declarable.admits("D33333335", "B")
+    assert not declarable.leaves_out_floored_nonpositive("D33333335", "B")
+    assert declarable.admits("E44444441", "B")
+    assert not declarable.leaves_out_floored_nonpositive("E44444441", "B")
+    assert not declarable.admits_unconditional_nonpositive("B11111112", "B")
+
+
 def _replace(key: str, value: str | None) -> tuple[tuple[str, str], ...]:
     kept = tuple(entry for entry in _WELL_FORMED if entry[0] != key)
     return kept if value is None else (*kept, (key, value))

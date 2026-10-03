@@ -182,33 +182,54 @@ class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
 
     def require_consistent(self) -> None:
         """Require exact pair identities and totals independent of calculation-key deduplication."""
-        if self.year_from > self.year_to:
-            raise ValueError("filed bulk accounting has an inverted year range")
-        coordinates: set[tuple[str, int]] = set()
-        for pair in self.pair_outcomes:
-            pair.require_consistent()
-            coordinate = (pair.modelo, pair.year)
-            if coordinate in coordinates:
-                raise ValueError("filed bulk accounting repeats a modelo/year coordinate")
-            coordinates.add(coordinate)
-        expected = tuple(
-            (modelo, year) for modelo in self.modelos for year in range(self.year_to, self.year_from - 1, -1)
-        )
-        if tuple((pair.modelo, pair.year) for pair in self.pair_outcomes) != expected:
-            raise ValueError("filed bulk accounting does not match its complete planned scope and order")
-        if sum(pair.reached_count for pair in self.pair_outcomes) != self.reached_count:
-            raise ValueError("filed bulk reached count disagrees with its pair accounting")
-        if sum(pair.captured_count for pair in self.pair_outcomes) != self.captured_count:
-            raise ValueError("filed bulk captured count disagrees with its pair accounting")
-        if self.captured_count != len(self.observation_paths):
-            raise ValueError("filed bulk captured count disagrees with its persisted observation paths")
-        if self.dry_run and (
-            self.captured_count
-            or self.sync_run_ref is not None
-            or self.calculation_observation_count
-            or self.calculation_observation_keys
-        ):
-            raise ValueError("filed bulk preview cannot report persisted observations or provenance")
+        _require_bulk_year_range(self)
+        _require_bulk_pair_scope(self)
+        _require_bulk_pair_totals(self)
+        _require_bulk_observation_paths(self)
+        _require_bulk_preview_is_unpersisted(self)
+
+
+def _require_bulk_year_range(report: BulkFiledDataCaptureReport) -> None:
+    if report.year_from > report.year_to:
+        raise ValueError("filed bulk accounting has an inverted year range")
+
+
+def _require_bulk_pair_scope(report: BulkFiledDataCaptureReport) -> None:
+    coordinates: set[tuple[str, int]] = set()
+    for pair in report.pair_outcomes:
+        pair.require_consistent()
+        coordinate = (pair.modelo, pair.year)
+        if coordinate in coordinates:
+            raise ValueError("filed bulk accounting repeats a modelo/year coordinate")
+        coordinates.add(coordinate)
+    expected = tuple(
+        (modelo, year) for modelo in report.modelos for year in range(report.year_to, report.year_from - 1, -1)
+    )
+    actual = tuple((pair.modelo, pair.year) for pair in report.pair_outcomes)
+    if actual != expected:
+        raise ValueError("filed bulk accounting does not match its complete planned scope and order")
+
+
+def _require_bulk_pair_totals(report: BulkFiledDataCaptureReport) -> None:
+    if sum(pair.reached_count for pair in report.pair_outcomes) != report.reached_count:
+        raise ValueError("filed bulk reached count disagrees with its pair accounting")
+    if sum(pair.captured_count for pair in report.pair_outcomes) != report.captured_count:
+        raise ValueError("filed bulk captured count disagrees with its pair accounting")
+
+
+def _require_bulk_observation_paths(report: BulkFiledDataCaptureReport) -> None:
+    if report.captured_count != len(report.observation_paths):
+        raise ValueError("filed bulk captured count disagrees with its persisted observation paths")
+
+
+def _require_bulk_preview_is_unpersisted(report: BulkFiledDataCaptureReport) -> None:
+    if report.dry_run and (
+        report.captured_count
+        or report.sync_run_ref is not None
+        or report.calculation_observation_count
+        or report.calculation_observation_keys
+    ):
+        raise ValueError("filed bulk preview cannot report persisted observations or provenance")
 
 
 class ExpedientesBulkCaptureFailureRow(BaseModel):

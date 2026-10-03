@@ -95,12 +95,6 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
         reason="PassphraseScreen.start_attempt invokes rotation on an owned worker thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/runtime_management.py",
-        owner="_read_off_loop",
-        construct="asyncio.run",
-        reason="the runtime-status screen calls this inspector through asyncio.to_thread",
-    ),
-    _DeclaredExclusion(
         path="src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py",
         owner="compose_runtime_modelo_lifecycle_door.admit",
         construct="asyncio.run",

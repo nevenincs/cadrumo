@@ -10,7 +10,7 @@ import pytest
 import typer
 from pydantic import BaseModel
 
-from ....application.ledger import ratios_operation as ratios
+from ....application.ledger import ratios_contracts as ratios
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import runtime_ledger_ratios as bridge

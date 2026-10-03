@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#audits-resolution'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:85c22cbd20a3b2e52ce827fa085f136113f3946174f9d35e4b3f6ab4927a4a85'
+body_hash: 'sha256:2455880d8681a49a1018116d1aeee47a4eb68fd77167c3f5a7a5758edcd0f70f'
 related:
-  - '[[2026-05-15-audits-resolution-exec]]'
-  - '[[2026-05-15-audits-resolution-group-g-exec]]'
   - '[[2026-06-04-audits-resolution-research]]'
 ---
 
@@ -18,11 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#audits-resolution`.
 
 ## Documents
-
-### exec
-
-- `2026-05-15-audits-resolution-exec` - `audits-resolution` Group F closure
-- `2026-05-15-audits-resolution-group-g-exec` - `audits-resolution` Group G closure
 
 ### research
 

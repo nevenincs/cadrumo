@@ -4,13 +4,12 @@ tags:
   - '#index'
   - '#mcp-progressive-discovery'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ad6ae6062b839b7ca0cc0a3bc578b20a5a9b17a47bdd2a6d3e11d1c92b2bd04b'
+body_hash: 'sha256:0b412f9d9af1beff6d0f1ae1c265bc423dcd02c953a579446d18ff2d85960251'
 related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
   - '[[2026-07-08-mcp-progressive-discovery-audit]]'
-  - '[[2026-07-08-mcp-progressive-discovery-plan]]'
   - '[[2026-07-08-mcp-progressive-discovery-research]]'
 ---
 
@@ -27,10 +26,6 @@ Auto-generated index of all documents tagged with `#mcp-progressive-discovery`.
 ### audit
 
 - `2026-07-08-mcp-progressive-discovery-audit` - `mcp-progressive-discovery` audit: `measurement`
-
-### plan
-
-- `2026-07-08-mcp-progressive-discovery-plan` - `mcp-progressive-discovery` plan
 
 ### research
 

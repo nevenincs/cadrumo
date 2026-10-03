@@ -8,13 +8,15 @@ import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.review.read_operation import (
+from ...application.review.read_contracts import (
     REVIEW_QUEUE_OPERATION_DEFINITION_ID,
     REVIEW_VIEW_OPERATION_DEFINITION_ID,
-    ReviewQueueReadProjection,
     ReviewQueueReadRequest,
-    ReviewViewReadProjection,
     ReviewViewReadRequest,
+)
+from ...application.review.read_projections import (
+    ReviewQueueReadProjection,
+    ReviewViewReadProjection,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

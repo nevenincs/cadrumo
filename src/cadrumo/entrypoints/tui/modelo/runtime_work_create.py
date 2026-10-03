@@ -7,9 +7,10 @@ import time
 from collections.abc import Callable
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
-from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
     MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
@@ -24,7 +25,7 @@ from ....application.operations.public_period import PublicPeriod
 from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
 from ....application.operator_actions.models import DeclaredNextAction
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.workbench_generation import WorkbenchGenerationV1
+from ....application.workbench_generation_contracts import WorkbenchGenerationV1
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.operations import (
     OperationEffect,

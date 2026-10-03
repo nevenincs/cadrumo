@@ -30,15 +30,27 @@ class ActivityAssetHistory(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_history(self) -> Self:
+        revisions_by_id = self._index_revisions_and_validate_chains()
+        self._validate_claim_identities()
+        self._validate_claim_references(revisions_by_id)
+        self._validate_claim_replay()
+        return self
+
+    def _index_revisions_and_validate_chains(self) -> dict[str, ActivityAssetRevision]:
         revisions_by_id = {revision.revision_id: revision for revision in self.revisions}
         if len(revisions_by_id) != len(self.revisions):
             raise ValueError("activity asset history contains duplicate revision identities")
         asset_ids = {revision.asset_id for revision in self.revisions}
         for asset_id in asset_ids:
             self._validate_asset_revision_chain(asset_id)
+        return revisions_by_id
+
+    def _validate_claim_identities(self) -> None:
         claim_ids = {claim.claim_id for claim in self.claims}
         if len(claim_ids) != len(self.claims):
             raise ValueError("activity asset history contains duplicate claim identities")
+
+    def _validate_claim_references(self, revisions_by_id: dict[str, ActivityAssetRevision]) -> None:
         for claim in self.claims:
             revision = revisions_by_id.get(claim.asset_revision_id)
             if revision is None:
@@ -47,10 +59,11 @@ class ActivityAssetHistory(BaseModel):
                 raise ValueError("activity asset claim identity does not match its revision")
             if revision.asset_kind is not claim.asset_kind:
                 raise ValueError("activity asset claim kind does not match its revision")
+
+    def _validate_claim_replay(self) -> None:
         replayed_claims: tuple[AmortizationClaim, ...] = ()
         for claim in self.claims:
             replayed_claims = record_claim(replayed_claims, claim).claims
-        return self
 
     def _validate_asset_revision_chain(self, asset_id: str) -> None:
         chain = tuple(revision for revision in self.revisions if revision.asset_id == asset_id)

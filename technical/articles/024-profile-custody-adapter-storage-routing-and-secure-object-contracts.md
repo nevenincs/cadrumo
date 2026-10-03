@@ -1,0 +1,62 @@
+# Profile custody adapter, storage routing, and secure-object contracts
+
+[Technical overview](../README.md) · [Article index](README.md) · [Snapshot and reading guide](../reading-guide.md)
+
+> This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
+
+**Report:** `STAGE-2-024` · **Topic:** [Persistence and secure storage](../topics/persistence-and-secure-storage.md)
+
+<!-- preserved:article -->
+## Scope
+
+This chunk covers 18 persistence files (5,247 lines; 47,190 measured `o200k_base` proxy tokens), including the concrete profile-custody and login-session adapters, storage readiness/routing, secret records, namespace policy declarations, and SQL secure-object integrity/codec helpers. I read all assigned ranges across nine bounded pages. This is static review only: I did not run the application, SQL operations, OS-specific custody code, or tests.
+
+## Profile custody and login persistence
+
+`_PersistenceProfileCustody` composes application ports with capsule publication, local-record CAS, archive import/export, encrypted profile snapshots, carry-forward data, recovery/password wrappers, event history, and secure-object access. Registration calibrates KDF parameters, wraps the supplied DEK in a password envelope, and creates the DEK sentinel. Optional recovery enrollment mints a high-entropy grouped code, wraps the same DEK under its own KDF, and wipes the mutable code buffer if envelope construction fails. Recovery input is normalized before unlock, with malformed values mapped to the same recovery-secret refusal as a wrong code. Capsule reads and writes delegate to the anchored capsule layer; recovery revocation and password replacement pass expected content digests for compare-before-change. Registration and recovery enrollment (`src/cadrumo/adapters/persistence/storage/profile_custody.py`) Recovery proof and refusal (`src/cadrumo/adapters/persistence/storage/profile_custody.py`) Recovery-code generation and mutable storage (`src/cadrumo/adapters/persistence/storage/recovery_key.py`)
+
+The login-session adapter joins the active `BucketSession`, exact bucket comparison, throttle, durable handover journal, and acceleration-receipt operations behind the application login port. The storage composition context binds custody, login-session, workflow-persistence, and language-resolution ports as one host scope, avoiding partial wiring for the CLI, MCP, and test/doc hosts described by the module. The port boundary checks that session and receipt objects originate from the persistence substrate before operating on them. These adapters establish mechanisms; the authentication workflow and its ordering are outside this chunk. Login-session port adapter (`src/cadrumo/adapters/persistence/storage/profile_login_session.py`) Profile persistence composition (`src/cadrumo/adapters/persistence/storage/profile_persistence_composition.py`)
+
+## Runtime access and storage classification
+
+Storage readiness combines the configured database route with the current unlocked session. It reports typed reasons for no session, sealed/expired session, non-profile route, route mismatch, or changed session, while excluding the root path and bucket ID from the diagnostic model’s serialized/repr surface. Repository construction acquires its SQL engine through the active session so session close owns disposal. A target-bucket factory reroutes settings and checks that the session serves that bucket. Explicit database routes fail closed in named-bucket inspection; a separate cold-bootstrap factory permits only the no-pointer/no-explicit-route case. Staged capsule creation has a distinct scoped factory for its pre-publication database, still requiring a secure active session and disposing its engine when the scope exits. Runtime readiness and repository creation (`src/cadrumo/adapters/persistence/storage/runtime.py`) Readiness projection (`src/cadrumo/adapters/persistence/storage/runtime_readiness.py`) Staged repository factory (`src/cadrumo/adapters/persistence/storage/runtime_repository.py`)
+
+The operator-scope adapter translates bucket path and lock operations into application-safe errors and projects only the current bucket/root facts. Separately, the hierarchy registry combines namespace definitions with storage-path definitions. Namespace entries declare owner, sensitivity, current secure-object schema version, logical key grammar, scope, custody disposition, and remote-mirror policy. The distinctions matter: profile/bucket/process scope says whose state it is, while structured/full-only/rebuildable/process-local disposition says how custody workflows treat it. Registry construction rejects duplicate keys/names and inconsistent mirror settings, and custody queries select definitions from the declared disposition map. Most templated object-key grammars remain documentation: validation enforces whitespace/traversal constraints and singleton literals, but does not parse every domain-specific template. `safe_repository_id` is likewise a shape check for SQL identifiers and explicitly does not provide filesystem containment. The `BLOB_STORE_ROOT` versus `STORAGE_ROOT` anchor distinction is called an open question in the source; it should not be treated as a proven separate physical location. Namespace contract and key validation (`src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`) Hierarchy registry (`src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`) Storage namespace assembly (`src/cadrumo/adapters/persistence/storage/namespace_registry.py`) Path-shape-only identifier guard (`src/cadrumo/adapters/persistence/storage/path_safety.py`) Separate policy axes (`src/cadrumo/adapters/persistence/storage/namespace_taxonomy.py`)
+
+## Secret store and encrypted-row integrity
+
+The file-locked `SecretStore` persists SECRET and SESSION records in encrypted blobs, indexed by a master-derived HMAC of each natural key. Its plaintext JSON index contains only lookup digests, blob content digests, classification, and a required schema marker; the natural key, metadata, and value live in the encrypted record. Writes enforce explicit expiry for classes whose retention policy requires it, and `_read_index` checks the exact format version, each mapping key against its entry digest, and the accepted sensitivity-class set. Reads compare index, envelope, and decrypted record classifications and ensure the record’s own key matches the requested key. Put publishes the blob before index ownership and attempts to discard an unreferenced blob if index commit fails; overwrite retires the old blob only after the replacement index is durable. Delete removes the blob before dropping index ownership to avoid silently orphaning sensitive payloads. Secret index gates (`src/cadrumo/adapters/persistence/storage/secret_store/store.py`) Index validation (`src/cadrumo/adapters/persistence/storage/secret_store/store.py`) Put and compensation (`src/cadrumo/adapters/persistence/storage/secret_store/store.py`) Read identity/classification checks (`src/cadrumo/adapters/persistence/storage/secret_store/store.py`) Delete and rotate (`src/cadrumo/adapters/persistence/storage/secret_store/store.py`)
+
+Two scoped follow-ups remain around this lifecycle. `get` reads the index and blob without acquiring the mutation lock, while overwrite can replace the index and remove the old blob after the read begins; determine whether the underlying blob layer or all callers prevent this stale-reference race. Also, write-time expiry presence is enforced, but this adapter’s `get` method does not itself reject an expired record; trace each consumer to confirm where expiration is enforced. These are concurrency/consumer-contract questions from the shown path, not demonstrated unauthorized access. A failure after delete removes the blob but before the index update could likewise leave a dangling entry; the index/blob pair is not one atomic filesystem transaction.
+
+SQL row decoding verifies classification, exact outer schema readability and registry membership, revision-metadata self-consistency, then opens ciphertext with AAD bound to namespace, object key, and schema version. The pre-decrypt revision check only refuses inconsistent metadata; it cannot make that unauthenticated metadata trusted. Single-row reads propagate typed failures; batch enumeration normalizes malformed SQL metadata into explicit sentinel-bearing unreadable outcomes and continues per row. A shared decryptability probe powers namespace counts, quarantine, and per-row reporting, but it treats AEAD failure as its criterion; it is not the full row-codec validation pipeline. Two schema layers (`src/cadrumo/adapters/persistence/storage/schema_lineage.py`) Ordered row decode (`src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py`) Fault-isolated batch result (`src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py`) Decryptability probe and quarantine (`src/cadrumo/adapters/persistence/storage/sql/_secure_object_integrity.py`)
+
+## Assessment and synthesis follow-up
+
+The adapter set has useful separation between declared namespace policy and SQL enforcement, between active-route readiness and staged-database access, and between typed row failure and batch fault isolation. It also retains per-row identity checks, schema gates, and AAD binding instead of relying on ciphertext validity alone. Limits visible here are the intentionally non-parsing object-key templates, the identifier helper’s lack of filesystem containment guarantees, and secret-store index/blob operations that cannot be committed in one transaction. The source contains no assigned tests or runtime evidence, so the SQL migration, cross-platform locks, capsule publication, and service-level expiry behavior remain unverified here.
+
+Synthesis should trace the application login call sequence (especially throttle-before-KDF and acceleration-receipt authorization), the profile-session and capsule transaction owners, and every SECRET/SESSION consumer’s expiry checks. The namespace registry’s custody dispositions should be compared with actual export/import and remote-mirror workflows before inferring what data is carried or transmitted. The row codec’s namespace-schema callback and the SQL repository’s batch/write paths are in other chunks and determine end-to-end revision and upgrade semantics.
+
+## Complete assigned-file coverage
+
+All 18 assigned files were read in full across pages 1–9.
+
+- namespace_registry.py (168 lines) (`src/cadrumo/adapters/persistence/storage/namespace_registry.py`)
+- namespace_taxonomy.py (133 lines) (`src/cadrumo/adapters/persistence/storage/namespace_taxonomy.py`)
+- operator_scope.py (78 lines) (`src/cadrumo/adapters/persistence/storage/operator_scope.py`)
+- path_safety.py (77 lines) (`src/cadrumo/adapters/persistence/storage/path_safety.py`)
+- profile_custody.py (1,063 lines) (`src/cadrumo/adapters/persistence/storage/profile_custody.py`)
+- profile_login_session.py (236 lines) (`src/cadrumo/adapters/persistence/storage/profile_login_session.py`)
+- profile_persistence_composition.py (60 lines) (`src/cadrumo/adapters/persistence/storage/profile_persistence_composition.py`)
+- recovery_key.py (153 lines) (`src/cadrumo/adapters/persistence/storage/recovery_key.py`)
+- runtime.py (245 lines) (`src/cadrumo/adapters/persistence/storage/runtime.py`)
+- runtime_readiness.py (119 lines) (`src/cadrumo/adapters/persistence/storage/runtime_readiness.py`)
+- runtime_repository.py (176 lines) (`src/cadrumo/adapters/persistence/storage/runtime_repository.py`)
+- schema_lineage.py (156 lines) (`src/cadrumo/adapters/persistence/storage/schema_lineage.py`)
+- secret_store/__init__.py (22 lines) (`src/cadrumo/adapters/persistence/storage/secret_store/__init__.py`)
+- secret_store/store.py (676 lines) (`src/cadrumo/adapters/persistence/storage/secret_store/store.py`)
+- secure_object_namespaces.py (1,151 lines) (`src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`)
+- sql/__init__.py (3 lines) (`src/cadrumo/adapters/persistence/storage/sql/__init__.py`)
+- sql/_secure_object_integrity.py (247 lines) (`src/cadrumo/adapters/persistence/storage/sql/_secure_object_integrity.py`)
+- sql/_secure_object_row_codec.py (484 lines) (`src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py`)
+<!-- /preserved:article -->

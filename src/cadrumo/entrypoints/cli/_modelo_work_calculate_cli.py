@@ -12,7 +12,7 @@ from ...application.modelo.action_errors import M303FilingEvidenceError
 from ...application.modelo.calculate_input import Modelo202ModalitySummary
 from ...application.modelo.calculation_request_fields import ModeloCalculationInputFieldsV1
 from ...application.modelo.m303_filing_evidence import m303_filing_evidence_failure
-from ...application.modelo.operation_definitions import (
+from ...application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculatePublicResultV2,

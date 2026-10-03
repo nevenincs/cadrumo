@@ -62,6 +62,7 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.core.errors.hierarchy import NoActiveProfileError
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
 from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports, compose_live_state
 from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
@@ -80,6 +81,7 @@ _REDACTED_URL_ORIGIN = "https://example.test"
 
 def _remote_state_port(
     output_root: Path,
+    operation: PinnedAuthorityOperation,
     *,
     objects: SecureObjectRepository | None = None,
 ) -> IvaRemoteStatePort:
@@ -89,6 +91,7 @@ def _remote_state_port(
         output_root=output_root,
         bucket_id=_BUCKET_ID,
         objects=resolved_objects,
+        operation=operation,
     ).iva_remote_state_port
 
 
@@ -206,7 +209,9 @@ def test_combined_acquisition_marks_partial_filed_history_as_failed(tmp_path: Pa
     }
 
 
-def test_year_chunked_filed_history_reports_aggregate_into_one_command_report(tmp_path: Path) -> None:
+def test_year_chunked_filed_history_reports_aggregate_into_one_command_report(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     report_2024 = IvaCompensationHistoryCaptureReport(
         output_root=str(tmp_path / "filed-history"),
         year_from=2024,
@@ -242,6 +247,7 @@ def test_year_chunked_filed_history_reports_aggregate_into_one_command_report(tm
             output_root=tmp_path / "filed-history",
             year_from=2023,
             year_to=2024,
+            operation=operation,
         )
 
     assert aggregate.year_from == 2023
@@ -527,7 +533,9 @@ def test_live_surface_timeout_can_keep_cancellation_handler_until_loop_shutdown(
     assert isinstance(delegated[0]["exception"], RuntimeError)
 
 
-def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_path: Path) -> None:
+def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         filed_history = IvaCompensationHistoryCaptureReport(
             output_root=str(tmp_path / "filed-history"),
@@ -559,7 +567,7 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
 
         manifest = persist_iva_remote_state_acquisition_report(
             report,
-            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository),
+            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository, operation=operation),
             captured_at=_CAPTURED_AT,
         )
         repository = IvaRemoteStateAcquisitionManifestRepository()
@@ -589,7 +597,9 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
         assert b"remote-state" not in database_bytes
 
 
-def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Path) -> None:
+def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     diagnostic_id = "clave-diagnostic-private-object-key"
     auth_error = ClaveMovilApprovalTimeoutError(
         "operator reported no prompt",
@@ -613,7 +623,7 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
 
         manifest = persist_iva_remote_state_acquisition_report(
             report,
-            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository),
+            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository, operation=operation),
             captured_at=_CAPTURED_AT,
         )
 
@@ -622,7 +632,9 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
     assert diagnostic_id not in manifest.model_dump_json()
 
 
-def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another_id(tmp_path: Path) -> None:
+def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another_id(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """A valid manifest roundtrips, but cannot answer a foreign acquisition id.
 
     The foreign row is written through the actual encrypted secure-object
@@ -642,7 +654,7 @@ def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another
         repository = IvaRemoteStateAcquisitionManifestRepository(objects=profile.repository)
         manifest = persist_iva_remote_state_acquisition_report(
             report,
-            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository),
+            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository, operation=operation),
             captured_at=_CAPTURED_AT,
         )
 
@@ -665,7 +677,9 @@ def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another
     assert refusal.value.expected_identifier == foreign_acquisition_id
 
 
-def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path: Path) -> None:
+def test_acquisition_manifest_redacts_sensitive_surface_failure_context(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     sensitive_nif = f"12345678{runtime_nif_check_letter(12345678)}"
     sensitive_support = "support-number-private-canary"
     sensitive_object_key = "wallet:private-object-key-canary"
@@ -698,7 +712,7 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
         )
         manifest = persist_iva_remote_state_acquisition_report(
             report,
-            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository),
+            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository, operation=operation),
             captured_at=_CAPTURED_AT,
         )
         rendered = f"{report.model_dump_json()} {manifest.model_dump_json()}"
@@ -767,7 +781,9 @@ def test_acquisition_payloads_require_explicit_auth_outcome() -> None:
     assert any(error["loc"] == ("auth",) and error["type"] == "missing" for error in manifest_exc.value.errors())
 
 
-def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp_path: Path) -> None:
+def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_sessionless_storage_root(tmp_path=tmp_path):
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "operator-private-output-root",
@@ -780,14 +796,16 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp
         with pytest.raises(NoActiveProfileError):
             persist_iva_remote_state_acquisition_report(
                 report,
-                ports=_remote_state_port(tmp_path / "remote-state"),
+                ports=_remote_state_port(tmp_path / "remote-state", operation=operation),
                 captured_at=_CAPTURED_AT,
             )
 
 
-def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> None:
+def test_remote_state_capture_refuses_without_active_profile(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(NoActiveProfileError):
-        ports = _remote_state_port(tmp_path / "remote-state")
+        ports = _remote_state_port(tmp_path / "remote-state", operation=operation)
 
         async def run() -> None:
             await capture_iva_remote_state(
@@ -801,9 +819,11 @@ def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> 
         asyncio.run(run())
 
 
-def test_standalone_iva_wallet_capture_refuses_without_active_profile(tmp_path: Path) -> None:
+def test_standalone_iva_wallet_capture_refuses_without_active_profile(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(NoActiveProfileError):
-        ports = _remote_state_port(tmp_path / "remote-state")
+        ports = _remote_state_port(tmp_path / "remote-state", operation=operation)
 
         async def run() -> None:
             await capture_iva_compensation_wallet(ports=ports, target_year=2026, target_period=_TARGET_2T)
@@ -811,9 +831,11 @@ def test_standalone_iva_wallet_capture_refuses_without_active_profile(tmp_path: 
         asyncio.run(run())
 
 
-def test_standalone_iva_history_capture_refuses_without_active_profile(tmp_path: Path) -> None:
+def test_standalone_iva_history_capture_refuses_without_active_profile(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(NoActiveProfileError):
-        ports = _remote_state_port(tmp_path / "history")
+        ports = _remote_state_port(tmp_path / "history", operation=operation)
 
         async def run() -> None:
             await capture_iva_compensation_history(

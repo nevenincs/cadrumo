@@ -9,7 +9,7 @@ from typing import Final, cast, override
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
-from ....application.modelo.declarations_workspace import (
+from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceFilingRefV1,
     DeclarationsWorkspaceLifecycleRefV1,
 )

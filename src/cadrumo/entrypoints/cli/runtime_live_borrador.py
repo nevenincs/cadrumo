@@ -8,13 +8,15 @@ from typing import Literal, Never
 import typer
 from pydantic import ValidationError
 
-from ...application.live.borrador_100_operation import (
-    BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
-    BORRADOR_100_READ_OPERATION_DEFINITION_ID,
+from ...application.live.borrador_100_contracts import (
     Borrador100ImportProjection,
     Borrador100ImportRequest,
     Borrador100ReadProjection,
     Borrador100ReadRequest,
+)
+from ...application.live.borrador_100_operation import (
+    BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
+    BORRADOR_100_READ_OPERATION_DEFINITION_ID,
 )
 from ...application.live.snapshot_base import SnapshotLifecycleState, SnapshotStateFilter
 from ...application.operations.public_period import PublicPeriod

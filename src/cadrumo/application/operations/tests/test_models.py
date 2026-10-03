@@ -18,6 +18,7 @@ from ..models import (
     OperationSnapshot,
     OperationTerminalReceipt,
     new_operation_id,
+    require_succeeded_receipt_references,
     require_terminal_receipt_match,
     terminal_receipt_matches,
 )
@@ -389,6 +390,44 @@ def test_require_terminal_receipt_match_refuses_a_diagnosed_receipt() -> None:
             effect=OperationEffect.UPDATED,
             message="diagnosed result contradicts its terminal receipt",
         )
+
+
+def test_succeeded_receipt_references_accept_a_validated_succeeded_receipt() -> None:
+    assert require_succeeded_receipt_references(_settled_receipt(), message="unused") is None
+
+
+def test_succeeded_receipt_references_refuse_a_validated_refused_receipt() -> None:
+    refused = OperationTerminalReceipt(
+        identity=_identity(),
+        revision=1,
+        condition=OperationTerminalCondition.REFUSED,
+        effect=OperationEffect.NONE,
+        settled_at=_NOW,
+        refusal_ref="REFUSED_CENSO_PULL",
+    )
+
+    with pytest.raises(ValueError, match=r"^censo result names no result$"):
+        require_succeeded_receipt_references(refused, message="censo result names no result")
+
+
+@pytest.mark.parametrize(
+    "update",
+    [
+        {"result_ref": None},
+        {"refusal_ref": "REFUSED_CENSO_PULL"},
+        {"refusal_detail_ref": "sha256:0123456789ab"},
+        {"failure_error_code": "E_CENSO"},
+    ],
+    ids=["no-result", "refusal", "refusal-detail", "failure-code"],
+)
+def test_succeeded_receipt_references_refuse_a_receipt_copied_without_validation(update: dict[str, object]) -> None:
+    copied = _settled_receipt().model_copy(update=update)
+
+    with pytest.raises(ValueError) as raised:
+        require_succeeded_receipt_references(copied, message="censo result contradicts its terminal receipt")
+
+    assert type(raised.value) is ValueError
+    assert str(raised.value) == "censo result contradicts its terminal receipt"
 
 
 def test_operation_identity_is_random_hex64_and_definition_ids_are_closed_by_shape() -> None:

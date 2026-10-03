@@ -555,20 +555,47 @@ def load_semantic_map_for_revision(epoch_directory: Path, revision_id: RevisionI
     Such an epoch consists only of revision-named directories; mixing fragments
     and revision directories would make selection ambiguous and is refused.
     """
+    _require_safe_revision_id(revision_id)
+    _require_semantic_map_epoch_directory(epoch_directory)
+    members = _semantic_map_epoch_members(epoch_directory)
+    fragments, editions = _classify_semantic_map_epoch_members(members)
+    if fragments:
+        return load_semantic_map(epoch_directory)
+    selected = _select_revision_directory(members, editions, epoch_directory, revision_id)
+    return load_semantic_map(selected)
+
+
+def _require_safe_revision_id(revision_id: RevisionId) -> None:
     if not is_registry_id(revision_id) or "/" in revision_id or "\\" in revision_id:
         raise RegistryValidationError(f"semantic-map revision id is not a safe registry identity: {revision_id!r}")
+
+
+def _require_semantic_map_epoch_directory(epoch_directory: Path) -> None:
     if not epoch_directory.is_dir() or is_link_like(epoch_directory):
         raise RegistryValidationError(f"semantic-map epoch path must be a real directory: {epoch_directory}")
+
+
+def _semantic_map_epoch_members(epoch_directory: Path) -> tuple[Path, ...]:
     try:
-        members = tuple(iter_directory(epoch_directory, require_root=True))
+        return tuple(iter_directory(epoch_directory, require_root=True))
     except OSError as exc:
         raise RegistryValidationError(f"cannot inspect semantic-map epoch directory: {epoch_directory}") from exc
+
+
+def _classify_semantic_map_epoch_members(members: tuple[Path, ...]) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
     fragments = tuple(path for path in members if path.suffix.casefold() == ".toml")
     editions = tuple(path for path in members if path.is_dir() and not is_link_like(path))
     if fragments and editions:
         raise RegistryValidationError("semantic-map epoch mixes unscoped fragments with revision directories")
-    if fragments:
-        return load_semantic_map(epoch_directory)
+    return fragments, editions
+
+
+def _select_revision_directory(
+    members: tuple[Path, ...],
+    editions: tuple[Path, ...],
+    epoch_directory: Path,
+    revision_id: RevisionId,
+) -> Path:
     invalid = tuple(path.name for path in members if path not in editions or not is_registry_id(path.name))
     if invalid:
         raise RegistryValidationError(f"semantic-map epoch contains unsupported entries: {invalid!r}")
@@ -577,7 +604,7 @@ def load_semantic_map_for_revision(epoch_directory: Path, revision_id: RevisionI
         raise RegistryValidationError(
             f"semantic-map epoch has no reviewed map for revision {revision_id!r}: {epoch_directory}"
         )
-    return load_semantic_map(selected)
+    return selected
 
 
 def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:

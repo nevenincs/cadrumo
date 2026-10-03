@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-
 from pydantic import BaseModel
 
 from ..ledger.read_access import resolve_ledger_read_access
 from ..modelo.calculation_action_ports import CalculationActionPortsFactory
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
     ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
     OperationResultProjector,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
+)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import operation_requests as _requests
 from . import result_contracts as _result_contracts
@@ -56,10 +55,7 @@ def _shape_access(
     resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
     if not mutation:
         return resolved
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}},
-    )
-    return replace(resolved, policy=policy)
+    return with_commit_action(resolved)
 
 
 def resolve_prorrata_operation_access(
@@ -86,23 +82,17 @@ def _definition(
         raise KeyError(definition_id)
     if shape.request_type is not request_type:
         raise ValueError("prorrata operation request differs from its closed registration schema")
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=_result_contracts.ProrrataOperationExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=_ProrrataOperationExecutor,
-            build=lambda: _ProrrataOperationExecutor(
-                repository_factory,
-                definition_id=definition_id,
-                calculation_action_ports_factory=calculation_action_ports_factory,
-            ),
+        executor_type=_ProrrataOperationExecutor,
+        build=lambda: _ProrrataOperationExecutor(
+            repository_factory,
+            definition_id=definition_id,
+            calculation_action_ports_factory=calculation_action_ports_factory,
         ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=shape.refusal_codes,
     )

@@ -22,7 +22,7 @@ import pytest
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
 
-from .. import linux_gnome_lock, linux_login
+from .. import linux_gnome_lock, linux_login, linux_logind_native
 from ..linux_gnome_lock import (
     GNOME_LOGIN_BUS_NAME,
     GNOME_LOGIN_OBJECT_PATH,
@@ -31,7 +31,8 @@ from ..linux_gnome_lock import (
     read_gnome_lock_state,
     sample_gnome_lock,
 )
-from ..linux_login import LinuxLoginBinding, LinuxSessionObservation
+from ..linux_login import LinuxLoginBinding
+from ..linux_login_models import LinuxSessionObservation
 from ..linux_pidfd import open_linux_pidfd
 
 pytestmark = [pytest.mark.hex_outbound_adapter, pytest.mark.unit]
@@ -208,8 +209,8 @@ def test_bound_login_release_requires_current_observer_and_preserves_custody_ind
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         return observer, GnomeLockState(_EPOCH, 1, False, False, "user")
 
-    monkeypatch.setattr(linux_login, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_login, "_boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
     monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
     result = binding.observe(credential_facilities=Availability.UNAVAILABLE)
     assert result.active and result.locked is failure
@@ -228,8 +229,8 @@ def test_missing_observer_never_reselects_an_enabled_later_producer(monkeypatch:
     def unexpectedly_called(*_args: object) -> None:
         raise AssertionError("A missing capture must remain UNKNOWN")
 
-    monkeypatch.setattr(linux_login, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_login, "_boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
     monkeypatch.setattr(linux_login, "_gnome_observation", unexpectedly_called)
     result = binding.observe(credential_facilities=Availability.AVAILABLE)
     assert result.active and result.locked and result.unattended is LoginEligibility.UNKNOWN
@@ -252,8 +253,8 @@ def test_a_complete_lock_unlock_between_polls_cannot_reactivate_attended_authori
         assert expected == observer
         return observer, GnomeLockState(_EPOCH, 10, False, False, "user", 3)
 
-    monkeypatch.setattr(linux_login, "_NativeLogin", NativeLogin)
-    monkeypatch.setattr(linux_login, "_boot_id", lambda: _BOOT)
+    monkeypatch.setattr(linux_logind_native, "_NativeLogin", NativeLogin)
+    monkeypatch.setattr(linux_logind_native, "_boot_id", lambda: _BOOT)
     monkeypatch.setattr(linux_login, "_gnome_observation", current_observer)
     result = binding.observe(credential_facilities=Availability.UNAVAILABLE)
     assert result.active and result.locked

@@ -9,7 +9,8 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.modelo.m303_attestation_operation import ModeloWorkM303AttestationRequest
 from ....application.operations.public_period import PublicPeriod
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError

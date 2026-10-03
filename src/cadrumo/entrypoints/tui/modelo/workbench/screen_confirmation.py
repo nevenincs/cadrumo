@@ -14,7 +14,8 @@ from .....application.modelo.work_form_models import (
 from .....core.i18n.render import tr
 from ...search import TuiSearchHostV1
 from .bulk_confirm import BulkConfirmScreen
-from .casilla_list import AddressKey, CasillaList
+from .casilla_list import CasillaList
+from .casilla_list_models import AddressKey
 from .navigator import section_of
 from .page_items import page_of
 from .screen_constants import (

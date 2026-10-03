@@ -34,6 +34,7 @@ from ..operations.access_resolution import (
     HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
     RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
     OperationAccessContext,
+    OperationAccessProfile,
     ResolvedOperationAccess,
     bind_operation_access_profile,
     require_declared_frontend_and_action,
@@ -49,14 +50,13 @@ from ..operations.models import (
     OperationTerminalReceipt,
     require_terminal_receipt_match,
 )
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
     ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
 )
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -396,23 +396,37 @@ def resolve_m036_operation_access(
 ) -> ResolvedOperationAccess:
     """Authorize exact purpose/profile and complete reviewed destination disclosure."""
     expected = request.definition_id
-    recording = expected == M036_RECORD_OPERATION_DEFINITION_ID
-    query = expected == M036_QUERY_OPERATION_DEFINITION_ID
+    recording, query = _m036_access_mode(expected)
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=expected,
+        payload_type=M036RecordRequest if recording else M036ReadRequest,
+        access_profile_id=context.profile_id,
+        exact_type=True,
+    )
+    frontends, access_profile = _m036_access_policy(recording=recording, query=query)
+    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
+    require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
+    return bind_operation_access_profile(
+        context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
+    )
+
+
+def _m036_access_mode(expected: str) -> tuple[bool, bool]:
     if expected not in {
         M036_READ_OPERATION_DEFINITION_ID,
         M036_QUERY_OPERATION_DEFINITION_ID,
         M036_RECORD_OPERATION_DEFINITION_ID,
     }:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = request.payload
-    if type(payload) is not (M036RecordRequest if recording else M036ReadRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if not isinstance(payload, (M036ReadRequest, M036RecordRequest)):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return expected == M036_RECORD_OPERATION_DEFINITION_ID, expected == M036_QUERY_OPERATION_DEFINITION_ID
+
+
+def _m036_access_policy(
+    *,
+    recording: bool,
+    query: bool,
+) -> tuple[frozenset[OperationFrontendProjection], OperationAccessProfile]:
     frontends = _RECORD_FRONTENDS if recording else ALL_OPERATION_FRONTENDS if query else _HUMAN_FRONTENDS
     access_profile = (
         HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
@@ -421,11 +435,7 @@ def resolve_m036_operation_access(
         if query
         else HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     )
-    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
-    require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
-    return bind_operation_access_profile(
-        context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
-    )
+    return frontends, access_profile
 
 
 def project_m036_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -458,19 +468,13 @@ def project_m036_operation_result(result: BaseModel, receipt: OperationTerminalR
 def build_m036_operation_definitions(factory: M036OperationPortsFactory) -> tuple[OperationDefinition, ...]:
     """Enroll the complete local recording and separately reviewed read family."""
     reads = tuple(
-        OperationDefinition(
+        build_single_phase_definition(
             definition_id=definition_id,
             request_type=M036ReadRequest,
             result_type=result_type,
-            executor_factory=OperationExecutorFactory(
-                request_type=M036ReadRequest,
-                executor_type=M036ReadExecutor,
-                build=lambda query=query: M036ReadExecutor(factory, query=query),
-            ),
-            phase_codes=(definition_id,),
-            interaction_kinds=frozenset(),
+            executor_type=M036ReadExecutor,
+            build=lambda query=query: M036ReadExecutor(factory, query=query),
             capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
-            reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
             permitted_frontends=frontends,
         )
         for definition_id, result_type, query, frontends in (
@@ -478,19 +482,13 @@ def build_m036_operation_definitions(factory: M036OperationPortsFactory) -> tupl
             (M036_QUERY_OPERATION_DEFINITION_ID, M036QueryExecutionResult, True, ALL_OPERATION_FRONTENDS),
         )
     )
-    recording = OperationDefinition(
+    recording = build_single_phase_definition(
         definition_id=M036_RECORD_OPERATION_DEFINITION_ID,
         request_type=M036RecordRequest,
         result_type=M036RecordExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=M036RecordRequest,
-            executor_type=M036RecordExecutor,
-            build=lambda: M036RecordExecutor(factory),
-        ),
-        phase_codes=(M036_RECORD_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=M036RecordExecutor,
+        build=lambda: M036RecordExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=_RECORD_FRONTENDS,
     )
     return (*reads, recording)

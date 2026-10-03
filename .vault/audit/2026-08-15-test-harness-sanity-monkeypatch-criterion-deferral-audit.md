@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:588f0d6a57ff1d6aba97753ca40265c128360cb42cb5a0e1b868e93ed9462c68'
-related:
-  - "[[2026-08-14-test-harness-sanity-plan]]"
+related: []
 ---
 # `test-harness-sanity` audit: the one monkeypatch the no-monkeypatch gate cannot absorb
 

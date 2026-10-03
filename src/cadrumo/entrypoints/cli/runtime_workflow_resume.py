@@ -7,7 +7,8 @@ from uuid import UUID
 
 import typer
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...application.operations.public_period import PublicPeriod
 from ...application.user_profile.access_contracts import AccessDenialCode
@@ -17,15 +18,17 @@ from ...application.workflow.resume import (
     validate_workflow_resume_target_token,
     workflow_resume_candidate_lines,
 )
-from ...application.workflow.resume_operation import (
-    WORKFLOW_RESUME_AMBIGUITY_CODE,
-    WORKFLOW_RESUME_OPERATION_DEFINITION_ID,
-    WORKFLOW_RESUME_REFUSAL_CODE,
+from ...application.workflow.resume_contracts import (
     WorkflowResumeAmbiguity,
     WorkflowResumeProjection,
     WorkflowResumeRefusal,
     WorkflowResumeRequest,
     WorkflowResumeSuccess,
+)
+from ...application.workflow.resume_operation import (
+    WORKFLOW_RESUME_AMBIGUITY_CODE,
+    WORKFLOW_RESUME_OPERATION_DEFINITION_ID,
+    WORKFLOW_RESUME_REFUSAL_CODE,
 )
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

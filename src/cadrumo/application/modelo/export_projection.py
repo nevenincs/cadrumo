@@ -301,6 +301,19 @@ class ModeloExportCompleteness(StrEnum):
     NOT_ASSESSED = "not_assessed"
 
 
+def _export_receipt_summary_differs(
+    result: ModeloExportPublicResultV3, receipt: ModeloFicheroBoePublicReceipt | ModeloCalculationReportPublicReceipt
+) -> bool:
+    """Compare the canonical receipt's revision, destination, bytes, digest and identity grade."""
+    return (
+        receipt.calculation_revision_id != result.calculation_revision_id
+        or receipt.output_path != result.output_path
+        or receipt.byte_size != result.byte_size
+        or receipt.file_sha256 != result.file_sha256
+        or receipt.software_identity_grade != result.software_identity_grade
+    )
+
+
 class ModeloExportPublicResultV3(BaseModel):
     """Evidence that one export happened and what it could establish, without the exported material.
 
@@ -346,13 +359,7 @@ class ModeloExportPublicResultV3(BaseModel):
         if (self.artefact is not ModeloExportArtefact.FICHERO_BOE) != (self.calculation_report is not None):
             raise ValueError("a calculation-report export result carries exactly its receipt")
         receipt = self.fichero_boe if self.fichero_boe is not None else self.calculation_report
-        if receipt is None or (
-            receipt.calculation_revision_id != self.calculation_revision_id
-            or receipt.output_path != self.output_path
-            or receipt.byte_size != self.byte_size
-            or receipt.file_sha256 != self.file_sha256
-            or receipt.software_identity_grade != self.software_identity_grade
-        ):
+        if receipt is None or _export_receipt_summary_differs(self, receipt):
             raise ValueError("export summary contradicts its canonical receipt")
         return self
 

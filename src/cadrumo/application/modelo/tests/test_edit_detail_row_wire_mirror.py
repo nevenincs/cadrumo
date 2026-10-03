@@ -32,19 +32,21 @@ from ....domain.modelos.row_models import (
 )
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from ...operations.registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
-from ..edit_models import ModeloEditDetailRowIntentKind
-from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
-from ..operation_definitions import (
-    Modelo184MemberRowWireV1,
-    Modelo210AgrupacionRentaRowWireV1,
-    Modelo232VinculadaRowWireV1,
-    Modelo349OperadorRowWireV1,
-    Modelo349RectificacionRowWireV1,
+from ..edit_apply_contracts import (
     ModeloEditApplyDetailRowAddressV1,
     ModeloEditApplyDetailRowIntentV1,
     ModeloEditApplyOperationRequestV1,
     ModeloEditApplySubmissionV1,
 )
+from ..edit_apply_row_contracts import (
+    Modelo184MemberRowWireV1,
+    Modelo210AgrupacionRentaRowWireV1,
+    Modelo232VinculadaRowWireV1,
+    Modelo349OperadorRowWireV1,
+    Modelo349RectificacionRowWireV1,
+)
+from ..edit_models import ModeloEditDetailRowIntentKind
+from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
 
 _M210_EFFECTIVE_DATE = date(2025, 1, 1)
 _SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)

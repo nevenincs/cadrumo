@@ -3,13 +3,15 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-06'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:3bdd56efd45187a776c40e6b663f87cac0eda61170278a74a46fcbd57b5f580a'
+body_hash: 'sha256:3adb552417b4e3faa8ff44d9223c5cf5741180520552a3c5cf42db1f6cabe842'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
 # `ci-lane-deconflation` audit: `what a fresh reader would find missing, vague, or unverified`
+
+## Scope
 
 Written as if I had just inherited this campaign, at the driving agent's request, because the
 governing rule requires the review before completion is declared and bars the driving agent
@@ -19,9 +21,11 @@ from being its author.
 follows from taking the plan seriously as the durable artefact, which is what the closure rule
 makes it.
 
-## F1 — The task list has drifted a long way ahead of the plan
+## Findings
 
-    plan:       13 checked, 14 unchecked
+### F1 — The task list has drifted a long way ahead of the plan
+
+plan:       13 checked, 14 unchecked
     task list:  50 of 53 reported done
 
 The plan is the artefact `plan-closure-requires-exec-records` governs and the one a later
@@ -32,7 +36,7 @@ they disagree by roughly twenty rows.
 Some of the gap is legitimate — several task-list entries are follow-ups born today that were
 never plan rows. But not all of it is, and the specific divergences below are not bookkeeping.
 
-## F2 — Task #26 is closed and its deliverable does not exist
+### F2 — Task #26 is closed and its deliverable does not exist
 
 `P04.S24` asks for a confirmation from the localization cascade owner. Task #26 is marked
 completed. Searched at HEAD: no ADR, audit, commit message or code comment records the
@@ -49,7 +53,7 @@ Note the shape rather than the instance: **rows that deliver a decision or an ag
 structurally harder to close honestly than rows that deliver code**, and this campaign has
 several of them.
 
-## F3 — "Blocked" is doing work it has not earned on #9
+### F3 — "Blocked" is doing work it has not earned on #9
 
 Task #9 is recorded as blocked. It is not blocked; it is unverified.
 
@@ -64,7 +68,7 @@ to confirm the whole module set is green, which takes about ten minutes and whic
 scheduled. "Blocked" and "needs a ten-minute run nobody has started" are different states, and
 only one of them is somebody's turn.
 
-## F4 — `P02.S07` is closeable now and my own refusal is the thing keeping it open
+### F4 — `P02.S07` is closeable now and my own refusal is the thing keeping it open
 
 I refused to check this row earlier because the reshape had not landed. It has since landed
 (#47), and I verified it: the schema is 15896 against an 18000 budget, definitions 11533
@@ -73,7 +77,7 @@ against the ~13300 real allowance. The refusal was correct when made and is now 
 Recorded against myself because it is the same failure mode this review exists to catch — a
 judgement that was right at the time, left standing after its premise changed.
 
-## F5 — #44's number is provisional in a way its subject does not say
+### F5 — #44's number is provisional in a way its subject does not say
 
 Task #44 reads "Dev-tooling lane: 26 down to 6, and the residual is entirely #50". The
 measurement was taken against a working tree carrying **157 modified or staged paths**, most
@@ -86,7 +90,7 @@ right; what is missing is the entitlement to state it without the qualifier.
 
 This is the fifth over-confident declaration the driving agent asked me to assume existed.
 
-## F6 — `P04.S17` is accurate about itself and scopes 15% of its own problem
+### F6 — `P04.S17` is accurate about itself and scopes 15% of its own problem
 
 The row names 204 semantic-dedup exec records that closed Steps with empty Outcome sections.
 Measured: exactly 204 in that feature. The row is precisely right.
@@ -108,7 +112,7 @@ Excluded deliberately from that count: 1776 further records carry no Outcome sec
 which is an older template rather than an unfilled one. Counting them would have inflated the
 finding by more than the finding.
 
-## F7 — Three plan rows have no task-list representation at all
+### F7 — Three plan rows have no task-list representation at all
 
 `P03.S19` (state the filing-period validator's reduced coverage in its own docstring),
 `P04.S16` (re-pin the model-facing description digest once description sources settle), and
@@ -118,30 +122,14 @@ That is the mechanism behind F1 rather than a separate problem: the task list ca
 near-completion precisely because work exists that it does not model. Anyone closing the
 campaign from the task list would close it over three unmentioned rows.
 
-## F8 — `#15` and `P01.S05` now disagree about what the question is
+### F8 — `#15` and `P01.S05` now disagree about what the question is
 
 The task is marked MOOT because a peer's snapshot pushed the branch. The plan row still asks
 whether to push it. Both are true statements about different moments, and the row has not
 been reworded, so the plan asks a question reality already answered — the same drift I
 corrected on `P02.S07`, in a row nobody has revisited.
 
-## Disposition
-
-None of this says the work is bad. The campaign landed a large amount of verified change and
-its records are, on the whole, unusually careful — four self-corrections in one day is a high
-rate of catching one's own errors, not a low one.
-
-What it says is that **the campaign is not structurally complete and should not be declared
-so**: one closed task has no deliverable, one blocked task is not blocked, one refused row is
-now closeable, one reported number is not entitled to its confidence, and three rows are
-invisible to the list being used to judge completion.
-
-The rule's own premise is that a driving agent reports complete while a fraction is
-structurally incomplete. That premise held here, and the fraction is larger than the task
-list suggests — not because anyone overstated deliberately, but because the two records of
-the campaign drifted and only one of them is being read.
-
-## F9 - The rest of the blocked set, checked one at a time
+### F9 - The rest of the blocked set, checked one at a time
 
 The driving agent asked whether "blocked" is honest across #9, #13, #14, #10, #11 and #53.
 Answered per row rather than in aggregate, because the aggregate answer hides the one that
@@ -167,7 +155,7 @@ differs.
   Here the condition is "after the tree lands", and stating it that way makes visible that the
   lock is what gates the CI verdict - which "blocked on a runner" conceals.
 
-## F10 - On whether escalating the lock repeatedly has been proportionate
+### F10 - On whether escalating the lock repeatedly has been proportionate
 
 The driving agent asked this about their own conduct, which deserves a direct answer.
 
@@ -191,7 +179,7 @@ Not a criticism of judgement - the decision to escalate rather than force was co
 time, and forcing would have been the serious error. It is an observation about form: when the
 facts change category, say that the category changed.
 
-## F11 - Correcting F3: my own evidence was a working-tree run reported as a HEAD claim
+### F11 - Correcting F3: my own evidence was a working-tree run reported as a HEAD claim
 
 F3 concluded that #9 is "not blocked, just unverified", on the strength of:
 
@@ -235,7 +223,7 @@ transitively exercises is confirmed clean. That is a much stronger precondition 
 the test file, and it is usually easier to satisfy by running against a clean checkout than by
 enumerating the closure.
 
-## F12 - F11's precondition is currently unsatisfiable, so essentially no local green today is evidence about HEAD
+### F12 - F11's precondition is currently unsatisfiable, so essentially no local green today is evidence about HEAD
 
 F11 states the rule: a local test result is evidence about HEAD only if every file the test
 transitively exercises is confirmed clean. The driving agent measured what that costs in this
@@ -279,7 +267,7 @@ merely delaying the campaign's completion - it is the reason the campaign's comp
 cannot currently be assessed at all. That belongs in the operator's picture as a property of
 the situation rather than as a caveat on individual rows.
 
-## A note on instrument traps, since a third recurrence is the same shape as F11
+### A note on instrument traps, since a third recurrence is the same shape as F11
 
 Three times in this session I invoked `rg -rn` intending "recursive, line numbers". In ripgrep
 `-r` is `--replace`, so the flag cluster silently rewrites every match to the literal `n`. It
@@ -296,7 +284,7 @@ is the finding and the individual instances are not.** The same reasoning that p
 from three working-tree-versus-HEAD mistakes applies to three flag-cluster corruptions, and it
 would be inconsistent to draw the rule for the campaign's errors and not for my own tooling.
 
-## F13 - The per-feature table: the scaffold signature is uniform, so filling is unavailable almost everywhere
+### F13 - The per-feature table: the scaffold signature is uniform, so filling is unavailable almost everywhere
 
 F6 reported ~1321 empty-Outcome records across 15 features and left open whether they were one
 defect or several. Measured per feature, with the signature established on the semantic-dedup
@@ -384,3 +372,21 @@ and must not report ~3100.
 **The one structural remedy, noted rather than proposed:** a gate refusing to check a Step
 whose exec record has an empty Outcome would have prevented every row in this table. That is
 the harness owner's decision.
+
+## Recommendations
+
+### Disposition
+
+None of this says the work is bad. The campaign landed a large amount of verified change and
+its records are, on the whole, unusually careful — four self-corrections in one day is a high
+rate of catching one's own errors, not a low one.
+
+What it says is that **the campaign is not structurally complete and should not be declared
+so**: one closed task has no deliverable, one blocked task is not blocked, one refused row is
+now closeable, one reported number is not entitled to its confidence, and three rows are
+invisible to the list being used to judge completion.
+
+The rule's own premise is that a driving agent reports complete while a fraction is
+structurally incomplete. That premise held here, and the fraction is larger than the task
+list suggests — not because anyone overstated deliberately, but because the two records of
+the campaign drifted and only one of them is being read.

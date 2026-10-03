@@ -42,15 +42,16 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.models import (
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_succeeded_receipt_references,
+    require_terminal_receipt_match,
+)
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -271,35 +272,17 @@ def project_quickfile_result(result: BaseModel, receipt: OperationTerminalReceip
     if not isinstance(result, QuickfileExecutionResult) or type(result) is not QuickfileExecutionResult:
         raise ValueError("invalid quickfile result")
     projection = result.projection
-    _require_quickfile_receipt_match(projection, receipt)
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=QUICKFILE_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=projection.effect,
+        message="quickfile result contradicts its terminal receipt",
+    )
+    require_succeeded_receipt_references(receipt, message="quickfile result contradicts its terminal receipt")
     _require_quickfile_result_size(result)
     return projection
-
-
-def _require_quickfile_receipt_match(projection: QuickfileProjection, receipt: OperationTerminalReceipt) -> None:
-    _require_quickfile_receipt_target(projection, receipt)
-    _require_quickfile_receipt_terminal(projection, receipt)
-
-
-def _require_quickfile_receipt_target(projection: QuickfileProjection, receipt: OperationTerminalReceipt) -> None:
-    if (
-        receipt.identity.definition_id != QUICKFILE_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-    ):
-        raise ValueError("quickfile result contradicts its terminal receipt")
-
-
-def _require_quickfile_receipt_terminal(projection: QuickfileProjection, receipt: OperationTerminalReceipt) -> None:
-    if (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not projection.effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("quickfile result contradicts its terminal receipt")
 
 
 def _require_quickfile_result_size(result: QuickfileExecutionResult) -> None:
@@ -309,15 +292,12 @@ def _require_quickfile_result_size(result: QuickfileExecutionResult) -> None:
 
 def build_quickfile_definition(factory: QuickfileOperationPortsFactory) -> OperationDefinition:
     """Register the existing local human chain with encrypted inputs and full effect settlement."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=QUICKFILE_OPERATION_DEFINITION_ID,
         request_type=QuickfileRequest,
         result_type=QuickfileExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=QuickfileRequest, executor_type=QuickfileExecutor, build=lambda: QuickfileExecutor(factory)
-        ),
-        phase_codes=(QUICKFILE_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=QuickfileExecutor,
+        build=lambda: QuickfileExecutor(factory),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.COOPERATIVE,
@@ -333,7 +313,6 @@ def build_quickfile_definition(factory: QuickfileOperationPortsFactory) -> Opera
             ),
             close_policy=OperationClosePolicy.REQUEST_CANCEL,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 

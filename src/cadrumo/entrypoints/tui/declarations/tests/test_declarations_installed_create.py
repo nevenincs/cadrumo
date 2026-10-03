@@ -34,7 +34,7 @@ from .....adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from .....adapters.local_runtime.workbench_generation import read_workbench_generation
 from .....adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from .....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from .....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....application.operations.registry import OperationFrontendProjection
 from .....application.runtime.contracts import RuntimeClientHello

@@ -8,7 +8,7 @@ import pytest
 from textual.widgets import Button, DataTable, Static
 
 from .....application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
-from .....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from .....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference

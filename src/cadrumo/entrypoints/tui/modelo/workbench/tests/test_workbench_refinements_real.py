@@ -26,7 +26,8 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
-from ..casilla_list import CasillaList, description_text
+from ..casilla_list import CasillaList
+from ..casilla_list_values import description_text
 from ..installed import InstalledModeloWorkbench
 from ..navigator import heading_groups
 from ..screen import ModeloWorkbenchScreen

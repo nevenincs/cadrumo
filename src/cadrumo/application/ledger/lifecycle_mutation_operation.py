@@ -7,19 +7,16 @@ import threading
 from collections.abc import Iterable
 from dataclasses import replace
 from datetime import date
-from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CadrumoError
-from ...core.filing_year import FilingYear
-from ...core.hashing import canonical_json_bytes
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -32,17 +29,14 @@ from ...domain.transactions.models import LedgerDatePartition, Transaction, Tran
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
 )
-from ..review.filter import LedgerReviewStatus
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory
 from .actions_lifecycle import (
@@ -51,29 +45,29 @@ from .actions_lifecycle import (
     restore_manual_transaction,
     stash_manual_transaction,
 )
-from .actions_manual import ledger_transaction_result_payload
 from .id_resolution import resolve_transaction_id
-from .models import LedgerRemovalBlocker, LedgerTransactionResultPayload, ManualLedgerTransactionResult
+from .lifecycle_contracts import (
+    LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
+    LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
+    LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE,
+    LEDGER_RESTORE_OPERATION_DEFINITION_ID,
+    LEDGER_STASH_OPERATION_DEFINITION_ID,
+    LedgerLifecycleExecutionResult,
+    LedgerLifecycleMutationRequest,
+    LedgerLifecycleOperationId,
+    LedgerLifecycleOperationResult,
+    LedgerLifecycleValidationProjection,
+)
+from .lifecycle_projections import (
+    lifecycle_validation_result,
+    project_lifecycle_mutation_from_action,
+    project_lifecycle_operation_result,
+    project_lifecycle_validation_from_error,
+    require_lifecycle_result_size,
+)
+from .models import ManualLedgerTransactionResult
 from .protocols import TransactionCatalogueCoCommitWriterProtocol
-from .read_access import resolve_ledger_read_access
-from .transaction_projection import LedgerTransactionProjection
-
-LEDGER_ARCHIVE_OPERATION_DEFINITION_ID = "ledger.archive"
-LEDGER_STASH_OPERATION_DEFINITION_ID = "ledger.stash"
-LEDGER_RESTORE_OPERATION_DEFINITION_ID = "ledger.restore"
-LEDGER_EXCLUDE_OPERATION_DEFINITION_ID = "ledger.exclude"
-LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE = "REFUSED_LEDGER_LIFECYCLE_VALIDATION"
-LedgerLifecycleOperationId = Literal["ledger.archive", "ledger.stash", "ledger.restore", "ledger.exclude"]
-
-_MAX_RESULT_BYTES = 256 * 1024
-_MAX_VALIDATION_MESSAGE_LENGTH = 2048
-_MAX_RECOVERY_TRANSACTION_IDS = 256
-_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
-_Actor = Annotated[str, Field(min_length=1, max_length=64)]
-_Reason = Annotated[str, Field(max_length=500)]
-_EventIds = Annotated[tuple[Hex64Str, ...], Field(min_length=1, max_length=1)]
-_ValidationMessage = Annotated[str, Field(min_length=1, max_length=_MAX_VALIDATION_MESSAGE_LENGTH)]
-_RecoveryTransactionIds = Annotated[tuple[Hex64Str, ...], Field(max_length=_MAX_RECOVERY_TRANSACTION_IDS)]
+from .read_access import resolve_ledger_commit_access
 
 
 class LedgerLifecycleValidationRefusedError(CadrumoError):
@@ -104,109 +98,6 @@ class LedgerLifecycleValidationRefusedError(CadrumoError):
         if validation.blocking_reference_count is not None:
             context["blocking_reference_count"] = str(validation.blocking_reference_count)
         super().__init__(context=context)
-
-
-class LedgerLifecycleMutationRequest(BaseModel):
-    """Private exact-profile request shared by the four lifecycle operations."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    transaction_id: _TransactionPrefix
-    actor: _Actor | None = None
-    reason: _Reason = ""
-
-
-class LedgerLifecycleBlockerProjection(BaseModel):
-    """The first finalized reference and recovery facts published by its guard."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    work_unit_id: Hex64Str
-    calculation_revision_id: Hex64Str
-    revision_state: str | None = Field(default=None, min_length=1, max_length=64)
-    modelo: str = Field(min_length=1, max_length=16)
-    filing_year: FilingYear
-    period: str = Field(min_length=1, max_length=16)
-
-    @classmethod
-    def from_blocker(cls, blocker: LedgerRemovalBlocker) -> LedgerLifecycleBlockerProjection:
-        """Retain the canonical blocker without widening its recovery facts."""
-        return cls(
-            work_unit_id=blocker.work_unit_id,
-            calculation_revision_id=blocker.calculation_revision_id,
-            revision_state=blocker.revision_state,
-            modelo=blocker.modelo,
-            filing_year=blocker.filing_year,
-            period=blocker.period,
-        )
-
-
-class LedgerLifecycleValidationProjection(BaseModel):
-    """Bounded canonical refusal details, including available safe recovery keys."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    messages: Annotated[tuple[_ValidationMessage, ...], Field(min_length=1, max_length=16)]
-    transaction_id: Hex64Str | None = None
-    transaction_ids: _RecoveryTransactionIds = ()
-    transaction_ids_omitted_count: int = Field(default=0, ge=0)
-    blocking_reference: LedgerLifecycleBlockerProjection | None = None
-    blocking_reference_count: int | None = Field(default=None, ge=1)
-
-    @model_validator(mode="after")
-    def _coherent_blocker_facts(self) -> LedgerLifecycleValidationProjection:
-        if self.blocking_reference is None and self.blocking_reference_count is not None:
-            raise ValueError("lifecycle refusal blocker count requires its canonical blocker")
-        if self.blocking_reference is not None and self.blocking_reference_count is None:
-            raise ValueError("lifecycle refusal blocker requires the canonical reference count")
-        return self
-
-
-class LedgerLifecycleMutationProjection(BaseModel):
-    """Full canonical transaction, review classification, and appended event."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    operation_id: LedgerLifecycleOperationId
-    transaction: LedgerTransactionProjection
-    review_status: LedgerReviewStatus
-    bucket_event_ids: _EventIds
-
-
-class LedgerLifecycleOperationResult(BaseModel):
-    """Success projection or a typed, guaranteed pre-write refusal."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    outcome: Literal["updated", "validation_error"]
-    profile_id: UUID
-    operation_id: LedgerLifecycleOperationId
-    result: LedgerLifecycleMutationProjection | None = None
-    validation: LedgerLifecycleValidationProjection | None = None
-
-    @model_validator(mode="after")
-    def _complete_outcome(self) -> LedgerLifecycleOperationResult:
-        if self.outcome == "updated":
-            if (
-                self.result is None
-                or self.result.profile_id != self.profile_id
-                or self.result.operation_id != self.operation_id
-                or self.validation is not None
-            ):
-                raise ValueError("lifecycle success projection is incomplete or mismatched")
-        elif self.result is not None or self.validation is None:
-            raise ValueError("lifecycle refusal requires only bounded validation evidence")
-        return self
-
-
-class LedgerLifecycleExecutionResult(BaseModel):
-    """Private encrypted operand whose projection is checked against its receipt."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    result: LedgerLifecycleOperationResult
 
 
 class _PreparedLifecycleMutation(BaseModel):
@@ -306,10 +197,10 @@ class _LedgerLifecycleExecutor:
                 catalogue.transactions,
             )
         except (TransactionIdPrefixError, TransactionNotFoundError, TransactionValidationError) as error:
-            refused = _validation_result(
+            refused = lifecycle_validation_result(
                 payload.profile_id,
                 self._operation_id,
-                _validation_projection(error, transaction_id=None),
+                project_lifecycle_validation_from_error(error, transaction_id=None),
             )
             return await _publish_refusal(context, refused)
 
@@ -336,7 +227,7 @@ class _LedgerLifecycleExecutor:
                     if tracked.write_started.is_set():
                         raise
                     await context.events.effect(OperationEffect.NONE)
-                    return _validation_projection(error, transaction_id=prepared.transaction_id)
+                    return project_lifecycle_validation_from_error(error, transaction_id=prepared.transaction_id)
                 await context.events.effect(
                     OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE,
                 )
@@ -351,14 +242,14 @@ class _LedgerLifecycleExecutor:
                 validation=settled,
             )
             detail = LedgerLifecycleExecutionResult(result=refused)
-            _check_result_size(detail)
+            require_lifecycle_result_size(detail)
             detail_ref = await context.operands.put(detail, written_at=now())
             return OperationRefusalEvidence(
                 refusal_code=LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE,
                 detail_ref=detail_ref,
             )
 
-        projection = _operation_projection(payload.profile_id, self._operation_id, settled)
+        projection = project_lifecycle_mutation_from_action(payload.profile_id, self._operation_id, settled)
         result = LedgerLifecycleOperationResult(
             outcome="updated",
             profile_id=payload.profile_id,
@@ -366,7 +257,7 @@ class _LedgerLifecycleExecutor:
             result=projection,
         )
         execution_result = LedgerLifecycleExecutionResult(result=result)
-        _check_result_size(execution_result)
+        require_lifecycle_result_size(execution_result)
         return await context.operands.put(execution_result, written_at=now())
 
     def _apply(
@@ -456,155 +347,18 @@ def _require_exact_ports(
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
-def _operation_projection(
-    profile_id: UUID,
-    operation_id: LedgerLifecycleOperationId,
-    result: ManualLedgerTransactionResult,
-) -> LedgerLifecycleMutationProjection:
-    canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
-    if (
-        canonical.bucket_id != str(profile_id)
-        or result.ref.bucket_id != canonical.bucket_id
-        or result.ref.transaction_id != canonical.transaction_id
-        or result.transaction.transaction_id != canonical.transaction_id
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return LedgerLifecycleMutationProjection(
-        profile_id=profile_id,
-        operation_id=operation_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
-        review_status=canonical.review_status,
-        bucket_event_ids=result.bucket_event_ids,
-    )
-
-
-def _validation_result(
-    profile_id: UUID,
-    operation_id: LedgerLifecycleOperationId,
-    validation: LedgerLifecycleValidationProjection,
-) -> LedgerLifecycleOperationResult:
-    return LedgerLifecycleOperationResult(
-        outcome="validation_error",
-        profile_id=profile_id,
-        operation_id=operation_id,
-        validation=validation,
-    )
-
-
-def _validation_projection(
-    error: Exception,
-    *,
-    transaction_id: str | None,
-) -> LedgerLifecycleValidationProjection:
-    raw_message = str(error).strip()
-    message = raw_message[:_MAX_VALIDATION_MESSAGE_LENGTH] or (
-        "ledger lifecycle values did not satisfy canonical validation"
-    )
-    context = error.context if isinstance(error, CadrumoError) else None
-    transaction_ids: tuple[str, ...] = ()
-    omitted_count = 0
-    raw_transaction_ids = context.get("transaction_ids") if context is not None else None
-    if isinstance(raw_transaction_ids, str):
-        all_transaction_ids = tuple(value for value in raw_transaction_ids.split(",") if value)
-        transaction_ids = all_transaction_ids[:_MAX_RECOVERY_TRANSACTION_IDS]
-        omitted_count = max(0, len(all_transaction_ids) - len(transaction_ids))
-
-    blocker: LedgerLifecycleBlockerProjection | None = None
-    blocker_count: int | None = None
-    if context is not None:
-        required = (
-            "work_unit_id",
-            "calculation_revision_id",
-            "modelo",
-            "filing_year",
-            "period",
-        )
-        if all(key in context for key in required):
-            filing_year = context["filing_year"]
-            count = context.get("blocking_reference_count")
-            if isinstance(filing_year, str) and filing_year.isdigit() and isinstance(count, str) and count.isdigit():
-                # The canonical lifecycle guard publishes blocker locators and count,
-                # but not its revision state. Preserve that value when supplied by
-                # another canonical guard without requiring or inventing it here.
-                blocker = LedgerLifecycleBlockerProjection.model_validate(
-                    {
-                        "work_unit_id": context["work_unit_id"],
-                        "calculation_revision_id": context["calculation_revision_id"],
-                        "modelo": context["modelo"],
-                        "filing_year": int(filing_year),
-                        "period": context["period"],
-                        **(
-                            {"revision_state": context["revision_state"]}
-                            if isinstance(context.get("revision_state"), str)
-                            else {}
-                        ),
-                    },
-                )
-                blocker_count = int(count)
-
-    return LedgerLifecycleValidationProjection(
-        messages=(message,),
-        transaction_id=transaction_id,
-        transaction_ids=transaction_ids,
-        transaction_ids_omitted_count=omitted_count,
-        blocking_reference=blocker,
-        blocking_reference_count=blocker_count,
-    )
-
-
 async def _publish_refusal(
     context: OperationExecutorContext,
     result: LedgerLifecycleOperationResult,
 ) -> OperationRefusalEvidence:
     await context.events.effect(OperationEffect.NONE)
     execution_result = LedgerLifecycleExecutionResult(result=result)
-    _check_result_size(execution_result)
+    require_lifecycle_result_size(execution_result)
     detail_ref = await context.operands.put(execution_result, written_at=now())
     return OperationRefusalEvidence(
         refusal_code=LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE,
         detail_ref=detail_ref,
     )
-
-
-def _check_result_size(result: LedgerLifecycleExecutionResult) -> None:
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _MAX_RESULT_BYTES - 128:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-
-
-def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
-    if type(result) is not LedgerLifecycleExecutionResult:
-        raise ValueError("invalid ledger lifecycle execution result")
-    projected = result.result
-    if (
-        receipt.identity.definition_id != projected.operation_id
-        or receipt.identity.subject_ref != profile_operation_subject(str(projected.profile_id))
-    ):
-        raise ValueError("ledger lifecycle result belongs to another operation or profile")
-    if projected.outcome == "validation_error":
-        if (
-            receipt.condition is not OperationTerminalCondition.REFUSED
-            or receipt.refusal_ref != LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE
-            or receipt.refusal_detail_ref is None
-            or receipt.result_ref is not None
-            or receipt.failure_error_code is not None
-            or receipt.diagnostic_ref is not None
-            or receipt.effect is not OperationEffect.NONE
-        ):
-            raise ValueError("lifecycle refusal has an incompatible terminal receipt")
-        return projected
-    expected_effect = OperationEffect.UPDATED
-    if (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or projected.result is None
-        or receipt.effect is not expected_effect
-    ):
-        raise ValueError("lifecycle success has an incompatible terminal receipt")
-    return projected
 
 
 def _build_definition(
@@ -613,19 +367,13 @@ def _build_definition(
     executor_type: type[_LedgerLifecycleExecutor],
     ports_factory: LedgerActionPortsFactory,
 ) -> OperationDefinition:
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=operation_id,
         request_type=LedgerLifecycleMutationRequest,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerLifecycleMutationRequest,
-            executor_type=executor_type,
-            build=lambda: executor_type(ports_factory),
-        ),
         result_type=LedgerLifecycleExecutionResult,
-        phase_codes=(operation_id,),
-        interaction_kinds=frozenset(),
+        executor_type=executor_type,
+        build=lambda: executor_type(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE}),
     )
@@ -675,11 +423,7 @@ def _resolve_lifecycle_access(
 ) -> ResolvedOperationAccess:
     if request.definition_id != operation_id or not isinstance(request.payload, LedgerLifecycleMutationRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}},
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def resolve_ledger_archive_access(
@@ -718,7 +462,7 @@ def _build_registration(
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerLifecycleOperationResult,
-        result_projector=_project_result,
+        result_projector=project_lifecycle_operation_result,
         access_resolver=access_resolver,
     )
 
@@ -744,20 +488,8 @@ def build_ledger_exclude_registration(definition: OperationDefinition) -> Operat
 
 
 __all__ = [
-    "LEDGER_ARCHIVE_OPERATION_DEFINITION_ID",
-    "LEDGER_EXCLUDE_OPERATION_DEFINITION_ID",
-    "LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE",
-    "LEDGER_RESTORE_OPERATION_DEFINITION_ID",
-    "LEDGER_STASH_OPERATION_DEFINITION_ID",
     "LedgerArchiveExecutor",
     "LedgerExcludeExecutor",
-    "LedgerLifecycleBlockerProjection",
-    "LedgerLifecycleExecutionResult",
-    "LedgerLifecycleMutationProjection",
-    "LedgerLifecycleMutationRequest",
-    "LedgerLifecycleOperationId",
-    "LedgerLifecycleOperationResult",
-    "LedgerLifecycleValidationProjection",
     "LedgerLifecycleValidationRefusedError",
     "LedgerRestoreExecutor",
     "LedgerStashExecutor",

@@ -118,33 +118,43 @@ def _require_exact_files(directory: int, expected: dict[str, bytes]) -> None:
     if sys.platform != "linux":
         raise _refusal()
     _require_private_directory(directory)
+
+    present = _directory_entries(directory)
+    if present != set(_FILES):
+        raise _refusal()
+    for name in _FILES:
+        _require_exact_file(directory, name, expected[name])
+    _require_private_directory(directory)
+
+
+def _directory_entries(directory: int) -> set[str]:
     present: set[str] = set()
     with os.scandir(directory) as entries:
         for entry in entries:
             if entry.name not in _FILES:
                 raise _refusal()
             present.add(entry.name)
-    if present != set(_FILES):
-        raise _refusal()
-    for name in _FILES:
-        descriptor = os.open(name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
-        try:
-            observed = os.fstat(descriptor)
-            if (
-                not stat.S_ISREG(observed.st_mode)
-                or observed.st_uid != os.getuid()
-                or stat.S_IMODE(observed.st_mode) != 0o600
-                or observed.st_nlink != 1
-                or not 0 < observed.st_size <= _MAX_BYTES
-            ):
-                raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
-            with os.fdopen(os.dup(descriptor), "rb") as source:
-                actual = source.read(_MAX_BYTES + 1)
-            if actual != expected[name] or _identity(os.fstat(descriptor)) != _identity(observed):
-                raise _refusal(RuntimeRefusalCode.VERSION_MISMATCH)
-        finally:
-            os.close(descriptor)
-    _require_private_directory(directory)
+    return present
+
+
+def _require_exact_file(directory: int, name: str, expected: bytes) -> None:
+    descriptor = os.open(name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
+    try:
+        observed = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(observed.st_mode)
+            or observed.st_uid != os.getuid()
+            or stat.S_IMODE(observed.st_mode) != 0o600
+            or observed.st_nlink != 1
+            or not 0 < observed.st_size <= _MAX_BYTES
+        ):
+            raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
+        with os.fdopen(os.dup(descriptor), "rb") as source:
+            actual = source.read(_MAX_BYTES + 1)
+        if actual != expected or _identity(os.fstat(descriptor)) != _identity(observed):
+            raise _refusal(RuntimeRefusalCode.VERSION_MISMATCH)
+    finally:
+        os.close(descriptor)
 
 
 def _require_no_staging(parent: int) -> None:

@@ -3,16 +3,17 @@ tags:
   - '#audit'
   - '#honest-all-green'
 date: '2026-08-11'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a292d408c89126c0c6302974d6eb2e201d2bafc35cfec65c72977f6a18ebc2d7'
+body_hash: 'sha256:7cae9629d61dd24451a79729d97691dc618d26f6981039aa8b2222a15a3cd418'
 related:
   - "[[2026-07-14-honest-all-green-adr]]"
 ---
-
 # `honest-all-green` audit: `P06 import-boundary review`
 
 ## Scope
+
+Review the P06 file-capture sync repository boundary and its strict type-check result before treating the import-boundary work as complete.
 
 ## Findings
 

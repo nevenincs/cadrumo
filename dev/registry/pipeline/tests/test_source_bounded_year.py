@@ -24,8 +24,10 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
-from .._export_tree import ExportTreeTransportProfile, _normalise_field, render_complete_export_tree
+from .._export_tree import render_complete_export_tree
 from ..export_fragment_provenance_projection import loader_semantic_digest
+from ..export_tree_field_derivation import _normalise_field
+from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesignField, join_record_design_semantics
 from ..record_design_intermediate import load_record_design_intermediate
 from ..render_profile_eligibility import resolve_render_profile_eligibility

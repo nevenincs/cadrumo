@@ -127,10 +127,12 @@ application:
         bejelentkezési szolgáltatót.
     sessions:
       errors:
-        clave_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz a dokumentumodon
-          szereplő contraste szükséges. NIE esetén rögzítsd az aktív profilon a következőt:
-          %{nie_field}, DNI esetén pedig ezt: %{dni_field}, mielőtt bármilyen AEAT-munkamenetet
-          használnál.'
+        clave_contraste_missing: 'A Cl@ve Móvil alapértelmezés szerint jóváhagyási
+          kérést küld a Cl@ve alkalmazásba, ehhez a dokumentumodon szereplő contraste
+          szükséges. NIE esetén rögzítsd az aktív profilon a következőt: %{nie_field},
+          DNI esetén pedig ezt: %{dni_field}. Ha inkább QR-kódot olvasnál be egy látható
+          böngészőben, futtasd az `aeat config auth configure --provider clave_movil
+          --clave-movil-route qr` parancsot.'
         clave_identity_malformed: A Cl@ve azonosító nem érvényes spanyol NIF, NIE
           vagy CIF, ezért nem igazolható, hogy ehhez a profilhoz tartozik.
         clave_identity_missing: 'A Cl@ve élő hitelesítéshez DNI/NIE szükséges. Rögzítsd
@@ -140,9 +142,6 @@ application:
         clave_identity_profile_mismatch: A Cl@ve Móvil azonossága nem egyezik az aktív
           profil adóazonosítójával; válts az egyező profilra, vagy frissítsd a profil
           adóazonosítóját.
-        clave_route_missing: 'A Cl@ve Móvil élő hitelesítéséhez szükséges: %{route_field}.
-          Nyisd meg a profilkezelő Azonosítás részét, válaszd a QR-kód vagy a Kérés
-          az alkalmazásban lehetőséget, mentsd el, majd próbáld újra a szinkronizálást.'
         corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható.
           Futtasd az `aeat config auth logout`, majd az `aeat config auth test` parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtasd a `aeat config auth test`
@@ -1859,12 +1858,16 @@ application:
           nincs ellenőrizve
         national_and_territory: országos és %{territory} ünnepnapok ellenőrizve; helyi
           ünnepnapok nincsenek ellenőrizve
+        national_and_territory_without_name: országos és az alkalmazandó regionális
+          ünnepnapok ellenőrizve; a helyi ünnepnapok nincsenek ellenőrizve
         national_only: csak országos ünnepnapok; regionális és helyi ünnepnapok nincsenek
           ellenőrizve
         not_shifted: ennél a nyomtatványnál a határidő munkaszüneti nap miatt nem
           tolódik
         territory_unverified: csak országos ünnepnapok; %{territory} idei regionális
           ünnepnapjai nincsenek ellenőrizve, a helyi ünnepnapok sem
+        territory_unverified_without_name: csak országos ünnepnapok; az alkalmazandó
+          regionális naptár nincs ellenőrizve; a helyi ünnepnapok sincsenek ellenőrizve
       shift:
         business_day: Munkanap
         calendar_unavailable: Naptár nem elérhető

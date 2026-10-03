@@ -14,7 +14,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.automation_inventory import read_automation_inventory
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
@@ -134,6 +134,7 @@ def test_installed_automation_list_projects_nonempty_exact_profile_and_denies_ap
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )

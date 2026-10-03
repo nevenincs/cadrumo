@@ -96,7 +96,116 @@ _CONTACT_NAME_ROWS: Final[dict[str, tuple[str, str, int, str, str]]] = {
         "APELLIDOS Y NOMBRE: Se",
         "fabaac0e30eff1ca0b091804bcd640d65c93557652c0d06019cb048acad778cc",
     ),
+    "boe-dr-270-2013-2022": (
+        "97dfc0a9640f2bdd32c97b89702427ba708c858fe173ab31a68d179f247c3b69",
+        "Tipo 1 - Registro De Declarante",
+        429,
+        "APELLIDOS Y NOMBRE: Se consignará el",
+        "99a0e52c425eb7a6f2fb96635d2aac3b5e104af7eb36a449523c0b0bb81e0095",
+    ),
 }
+
+_M270_BIRTH_PLACE_TEXT_ROWS: Final = {
+    "boe-dr-270-2013-2022": (
+        "97dfc0a9640f2bdd32c97b89702427ba708c858fe173ab31a68d179f247c3b69",
+        (
+            (
+                882,
+                461,
+                35,
+                "CIUDAD : 35 posiciones. Se consignará el",
+                "cf187628004340ea605421b53079de1b20c59510d16d8b87e0f7e929c5181861",
+            ),
+            (
+                886,
+                496,
+                2,
+                "CÓDIGO PAÍS: Campo alfabético de 2",
+                "b88832b6dbd87c7d3f61542ed980c13a69b38ea59ac2059b9b29cd7af1cdfe67",
+            ),
+        ),
+    ),
+    "aeat-dr-270-2023": (
+        "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92",
+        (
+            (
+                601,
+                461,
+                35,
+                "CIUDAD : 35 posiciones. Se",
+                "c3731950a1df985a68257d8efc24994f76294b0529c2533ad6d17324358b1a41",
+            ),
+            (
+                605,
+                496,
+                2,
+                "CÓDIGO PAÍS: Campo alfabético de",
+                "9d5158c20e1739dcbed079897c18dad1963f1def43f4e242bb8cb8ca3cc7ae57",
+            ),
+        ),
+    ),
+}
+
+
+def source_m270_birth_place_text_field(
+    field: RecordDesignIntermediateField, *, source_ref: str, source_sha256: str
+) -> bool:
+    """Classify only the two source-stated birth-place components as text."""
+    pin = _M270_BIRTH_PLACE_TEXT_ROWS.get(source_ref)
+    if pin is None:
+        return False
+    expected_sha, rows = pin
+    if source_sha256 != expected_sha:
+        raise RegistryValidationError("M270 birth-place source identity is unreviewed or stale")
+    if field.sheet != "Tipo 2 - Registro De Perceptor":
+        return False
+    row_pin = next((item for item in rows if item[0] == field.source_row), None)
+    if row_pin is None:
+        return False
+    row, offset, length, description, digest = row_pin
+    return _reviewed_source_text_field_matches(
+        field,
+        sheet="Tipo 2 - Registro De Perceptor",
+        row=row,
+        offset=offset,
+        length=length,
+        description=description,
+        digest=digest,
+        error_message="M270 birth-place source text or geometry differs from reviewed evidence",
+    )
+
+
+def _source_m270_birth_place_exclusions(
+    fields: tuple[RecordDesignIntermediateField, ...], source: RecordDesignIntermediateSource
+) -> frozenset[tuple[str, int, int]]:
+    pin = _M270_BIRTH_PLACE_TEXT_ROWS.get(str(source.source_ref))
+    if pin is None:
+        return frozenset[tuple[str, int, int]]()
+    expected_sha, rows = pin
+    if source.source_sha256 != expected_sha:
+        raise RegistryValidationError("M270 birth-place source identity is unreviewed or stale")
+    return _validated_m270_birth_place_exclusions(fields, source, rows)
+
+
+def _validated_m270_birth_place_exclusions(
+    fields: tuple[RecordDesignIntermediateField, ...],
+    source: RecordDesignIntermediateSource,
+    rows: tuple[tuple[int, int, int, str, str], ...],
+) -> frozenset[tuple[str, int, int]]:
+    sheet = "Tipo 2 - Registro De Perceptor"
+    selected_rows = {row[0] for row in rows}
+    selected = tuple(field for field in fields if field.sheet == sheet and field.source_row in selected_rows)
+    if len(selected) != len(rows) or any(
+        not source_m270_birth_place_text_field(
+            field,
+            source_ref=str(source.source_ref),
+            source_sha256=source.source_sha256,
+        )
+        for field in selected
+    ):
+        raise RegistryValidationError("M270 birth-place source rows are missing or ambiguous")
+    return frozenset((sheet, row, offset) for row, offset, _length, _description, _digest in rows)
+
 
 _M181_IBAN_COUNTRY_ROW: Final[tuple[str, str, str, int, str, str]] = (
     "aeat-dr-181-2022",
@@ -119,18 +228,16 @@ def source_iban_country_text_field(
         raise RegistryValidationError("IBAN country source identity is unreviewed or stale")
     if field.sheet != sheet or field.source_row != row:
         return False
-    material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
-    if (
-        field.record_identity != sheet
-        or field.source_cell is not None
-        or field.ordinal is not None
-        or (field.offset, field.length) != (79, 2)
-        or field.normalized_description != description
-        or sha256(material.encode()).hexdigest() != digest
-        or not _has_absent_naturaleza(field)
-    ):
-        raise RegistryValidationError("IBAN country source text or geometry differs from reviewed evidence")
-    return True
+    return _reviewed_source_text_field_matches(
+        field,
+        sheet=sheet,
+        row=row,
+        offset=79,
+        length=2,
+        description=description,
+        digest=digest,
+        error_message="IBAN country source text or geometry differs from reviewed evidence",
+    )
 
 
 def _source_iban_country_exclusion(
@@ -175,17 +282,42 @@ def source_contact_name_field(field: RecordDesignIntermediateField, *, source_re
         raise RegistryValidationError("contact-name source identity is unreviewed or stale")
     if field.sheet != sheet or field.source_row != row:
         return False
+    return _reviewed_source_text_field_matches(
+        field,
+        sheet=sheet,
+        row=row,
+        offset=68,
+        length=40,
+        description=description,
+        digest=digest,
+        error_message="contact-name source text or geometry differs from reviewed evidence",
+    )
+
+
+def _reviewed_source_text_field_matches(
+    field: RecordDesignIntermediateField,
+    *,
+    sheet: str,
+    row: int,
+    offset: int,
+    length: int,
+    description: str,
+    digest: str,
+    error_message: str,
+) -> bool:
+    if field.record_identity != sheet or field.source_cell is not None or field.ordinal is not None:
+        raise RegistryValidationError(error_message)
+    if (field.source_row, field.offset, field.length) != (
+        row,
+        offset,
+        length,
+    ) or field.normalized_description != description:
+        raise RegistryValidationError(error_message)
     material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
-    if (
-        field.record_identity != sheet
-        or field.source_cell is not None
-        or field.ordinal is not None
-        or (field.offset, field.length) != (68, 40)
-        or field.normalized_description != description
-        or sha256(material.encode()).hexdigest() != digest
-        or not _has_absent_naturaleza(field)
-    ):
-        raise RegistryValidationError("contact-name source text or geometry differs from reviewed evidence")
+    if sha256(material.encode()).hexdigest() != digest:
+        raise RegistryValidationError(error_message)
+    if not _has_absent_naturaleza(field):
+        raise RegistryValidationError(error_message)
     return True
 
 
@@ -356,6 +488,59 @@ def _states_no_wire_fact(
     )
 
 
+def _numeric_field_is_render_profile_eligible(
+    field: RecordDesignIntermediateField,
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...],
+    year_constraints: tuple[BoundedYearDeclaration, ...],
+    excluded_absent_naturaleza_rows: frozenset[tuple[str, int, int]],
+) -> bool:
+    return (
+        (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
+        and _states_no_wire_fact(field, applicability_notes=applicability_notes, year_constraints=year_constraints)
+        and not _is_source_reserved_field(field)
+        and (field.sheet, field.source_row, field.offset) not in excluded_absent_naturaleza_rows
+    )
+
+
+def _eligible_numeric_fields(
+    fields: tuple[RecordDesignIntermediateField, ...],
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...],
+    year_constraints: tuple[BoundedYearDeclaration, ...],
+    excluded_absent_naturaleza_rows: frozenset[tuple[str, int, int]],
+) -> tuple[RecordDesignIntermediateField, ...]:
+    return tuple(
+        field
+        for field in fields
+        if _numeric_field_is_render_profile_eligible(
+            field,
+            applicability_notes=applicability_notes,
+            year_constraints=year_constraints,
+            excluded_absent_naturaleza_rows=excluded_absent_naturaleza_rows,
+        )
+    )
+
+
+def _signed_composite_fields(
+    fields: tuple[RecordDesignIntermediateField, ...],
+    anchor_keys: frozenset[tuple[str, int, str | None, str | None, str, int | None]],
+) -> tuple[RecordDesignIntermediateField, ...]:
+    return tuple(
+        field
+        for field in fields
+        if (
+            field.sheet,
+            field.source_row,
+            field.source_cell,
+            field.ordinal,
+            field.record_identity,
+            field.semantic_part_offset,
+        )
+        in anchor_keys
+    )
+
+
 def project_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
     *,
@@ -383,27 +568,13 @@ def project_render_profile_eligibility(
     different question from the renderer.
     """
     fields = tuple(fixed_fields)
-    numeric = tuple(
-        field
-        for field in fields
-        if (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
-        and _states_no_wire_fact(field, applicability_notes=applicability_notes, year_constraints=year_constraints)
-        and not _is_source_reserved_field(field)
-        and (field.sheet, field.source_row, field.offset) not in excluded_absent_naturaleza_rows
+    numeric = _eligible_numeric_fields(
+        fields,
+        applicability_notes=applicability_notes,
+        year_constraints=year_constraints,
+        excluded_absent_naturaleza_rows=excluded_absent_naturaleza_rows,
     )
-    signed_composites = tuple(
-        field
-        for field in fields
-        if (
-            field.sheet,
-            field.source_row,
-            field.source_cell,
-            field.ordinal,
-            field.record_identity,
-            field.semantic_part_offset,
-        )
-        in signed_composite_anchor_keys
-    )
+    signed_composites = _signed_composite_fields(fields, signed_composite_anchor_keys)
     return RenderProfileEligibility(
         all_fields=(*numeric, *signed_composites),
         width_17_fields=tuple(field for field in numeric if field.length == 17),
@@ -448,6 +619,8 @@ def resolve_render_profile_eligibility(
         year_constraints=year_constraints,
         signed_composite_anchor_keys=signed_composite_anchor_keys,
         excluded_absent_naturaleza_rows=(
-            _source_contact_name_exclusions(fields, source) | _source_iban_country_exclusion(fields, source)
+            _source_contact_name_exclusions(fields, source)
+            | _source_iban_country_exclusion(fields, source)
+            | _source_m270_birth_place_exclusions(fields, source)
         ),
     )

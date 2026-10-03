@@ -6,11 +6,8 @@ import time
 from collections.abc import Callable
 from uuid import UUID, uuid4
 
-from ....adapters.local_runtime.frontend_client import (
-    RuntimeFrontendClient,
-    RuntimeFrontendRefusedError,
-    frontend_failure_code,
-)
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
 from ....application.operations.frontend_projection import OperationReviewAvailableInteractionV1
 from ....application.operations.frontend_requests import (
     OperationObservationSuccessV1,

@@ -3,13 +3,15 @@ tags:
   - '#adr'
   - '#docs-build-workflow'
 date: '2026-09-29'
-modified: '2026-09-29'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:6297ef7106e1940d2e0e4869a203d12c14fbe888b3341c1f0a334575426ce8ac'
 related:
   - "[[2026-09-29-docs-build-workflow-audit]]"
   - "[[2026-06-01-docs-cli-buildtime-adr]]"
   - "[[2026-07-13-docs-cli-sequences-adr]]"
+  - '[[2026-09-24-docs-build-performance-adr]]'
+  - '[[2026-07-20-ci-speed-redesign-adr]]'
 ---
 
 # `docs-build-workflow` adr: `Docs build and preview workflow` | (**status:** `accepted`)

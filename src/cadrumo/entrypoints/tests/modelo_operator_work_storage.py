@@ -38,6 +38,7 @@ from ...application.modelo.edit_admission import (
     admit_modelo_edit_baseline,
     renew_modelo_edit_baseline,
 )
+from ...application.modelo.edit_apply_contracts import ModeloEditApplyOperationRequestV1, ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -52,12 +53,10 @@ from ...application.modelo.operation_definitions import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     ModeloEditApplyExecutor,
-    ModeloEditApplyOperationRequestV1,
-    ModeloEditApplySubmissionV1,
     ModeloWorkCalculateExecutor,
-    ModeloWorkCalculateRequest,
 )
 from ...application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from ...application.modelo.work_lifecycle import create_work_unit
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext

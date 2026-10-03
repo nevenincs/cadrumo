@@ -13,7 +13,7 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_repository import (
@@ -131,7 +131,7 @@ def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:
 
 
 def test_verify_emits_passed_event_on_success(repos: Repos) -> None:
-    """verify_modelo_revision emits ``modelo.verification.passed``
+    """verify_modelo_revision_with_preconditions emits ``modelo.verification.passed``
     when the verifier grants verified-complete; the event id matches
     the persisted verification report."""
 
@@ -176,7 +176,7 @@ def test_verify_emits_passed_event_on_success(repos: Repos) -> None:
 
 
 def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
-    """verify_modelo_revision emits ``modelo.verification.refused``
+    """verify_modelo_revision_with_preconditions emits ``modelo.verification.refused``
     when a required casilla is missing; the calculation revision
     stays DRAFT and the refusal lands in the bucket event log."""
 
@@ -207,7 +207,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operatio
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -216,7 +216,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operatio
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert report.granted_verificado_completo is False
 
     catalogue = bv_repo.load()

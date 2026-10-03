@@ -326,7 +326,7 @@ def resolve_impersonated_credentials(
         # CAST-RATIONALE-thirdparty: `google.auth.default` ships py.typed but
         # carries no annotations; `_AdcResolver` states the documented signature.
         adc = cast(_AdcResolver, google.auth.default)
-        if before_handoff is None and acknowledged is None:
+        if _impersonation_handoffs_absent(before_handoff, acknowledged):
             source_credentials, _project_id = adc(scopes=list(config.target_scopes))
         else:
             from .google_configuration_admission import admitted_google_auth_request
@@ -351,7 +351,7 @@ def resolve_impersonated_credentials(
 
     if acknowledged is not None:
         acknowledged("google.adc-discovery")
-    if before_handoff is None and acknowledged is None:
+    if _impersonation_handoffs_absent(before_handoff, acknowledged):
         _ensure_source_credential_is_fresh(source_credentials, target_principal=config.target_principal)
     else:
         _ensure_source_credential_is_fresh(
@@ -373,7 +373,7 @@ def resolve_impersonated_credentials(
     try:
         # CAST-RATIONALE-thirdparty: `Credentials.refresh` is unannotated upstream.
         mintable = cast(_RefreshableCredentials, impersonated)
-        if before_handoff is None and acknowledged is None:
+        if _impersonation_handoffs_absent(before_handoff, acknowledged):
             mintable.refresh(google.auth.transport.requests.Request())
         else:
             from .google_configuration_admission import admitted_google_auth_request
@@ -466,3 +466,10 @@ __all__ = [
     "GoogleImpersonationConfig",
     "resolve_impersonated_credentials",
 ]
+
+
+def _impersonation_handoffs_absent(
+    before_handoff: GoogleConfigurationHandoff | None, acknowledged: GoogleConfigurationAcknowledgement | None
+) -> bool:
+    """Identify the unchanged direct credential path before constructing admitted transport requests."""
+    return before_handoff is None and acknowledged is None

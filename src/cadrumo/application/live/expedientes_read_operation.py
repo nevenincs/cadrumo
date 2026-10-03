@@ -9,36 +9,29 @@ from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, StringConstraints, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
-from ...core.identity.profile import canonical_profile_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...core.time.clock import now
-from ..ledger.read_access import resolve_ledger_read_access
+from ...core.operations import OperationEffect
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES, OperationCapabilities
-from ..operations.models import (
-    CredentialFreeOperationRequest,
-    OperationRequest,
-    OperationTerminalReceipt,
-    require_terminal_receipt_match,
-)
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
-from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .expedientes import ExpedientesService, PersistedExpedientesSnapshot
 from .expedientes_ports import ExpedientesPortsFactory
+from .live_operation_execution import publish_live_read_report, require_exact_profile_worker
+from .live_operation_registration import (
+    build_live_operation_definition,
+    require_live_read_receipt,
+    resolve_whole_profile_read_access,
+)
 
 EXPEDIENTES_LIST_DEFINITION_ID = "live.expedientes.list"
 EXPEDIENTES_SHOW_DEFINITION_ID = "live.expedientes.show"
@@ -177,13 +170,6 @@ class ExpedientesLatestPublicResultV1(BaseModel):
         return self
 
 
-def _exact_bucket(profile_id: UUID, subject_ref: str) -> str:
-    bucket_id = canonical_profile_bucket_id(profile_id)
-    if require_active_bucket_id() != bucket_id or subject_ref != profile_operation_subject(bucket_id):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return bucket_id
-
-
 def _summary(snapshot: PersistedExpedientesSnapshot) -> ExpedientesSnapshotSummaryPublicV1:
     return ExpedientesSnapshotSummaryPublicV1(
         snapshot_id=snapshot.snapshot_id,
@@ -207,7 +193,9 @@ class ExpedientesListExecutor:
     async def execute(
         self, request: OperationRequest[ExpedientesListRequest], context: OperationExecutorContext
     ) -> str:
-        bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
+        bucket_id = require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         if request.definition_id != EXPEDIENTES_LIST_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_profile_operation_identity(request, context, request.payload.profile_id)
@@ -222,10 +210,12 @@ class ExpedientesListExecutor:
             return ExpedientesListOperationReport(bucket_id=bucket_id, rows=tuple(_summary(s) for s in snapshots))
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_LIST_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="expedientes-list-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_LIST_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="expedientes-list-result",
         )
 
 
@@ -238,7 +228,9 @@ class ExpedientesShowExecutor:
     async def execute(
         self, request: OperationRequest[ExpedientesShowRequest], context: OperationExecutorContext
     ) -> str:
-        bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
+        bucket_id = require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         if request.definition_id != EXPEDIENTES_SHOW_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_profile_operation_identity(request, context, request.payload.profile_id)
@@ -252,10 +244,12 @@ class ExpedientesShowExecutor:
             return ExpedientesShowOperationReport(snapshot=snapshot)
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_SHOW_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="expedientes-show-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_SHOW_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="expedientes-show-result",
         )
 
 
@@ -268,7 +262,9 @@ class ExpedientesLatestExecutor:
     async def execute(
         self, request: OperationRequest[ExpedientesLatestRequest], context: OperationExecutorContext
     ) -> str:
-        bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
+        bucket_id = require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         if request.definition_id != EXPEDIENTES_LATEST_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_profile_operation_identity(request, context, request.payload.profile_id)
@@ -283,71 +279,51 @@ class ExpedientesLatestExecutor:
             )
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_LATEST_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="expedientes-latest-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_LATEST_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="expedientes-latest-result",
         )
-
-
-def _capabilities() -> OperationCapabilities:
-    return RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 
 
 def build_expedientes_list_definition(ports_factory: ExpedientesPortsFactory) -> OperationDefinition:
     """Declare an encrypted, profile-bound local snapshot inventory."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=EXPEDIENTES_LIST_DEFINITION_ID,
         request_type=ExpedientesListRequest,
         result_type=ExpedientesListOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=ExpedientesListRequest,
-            executor_type=ExpedientesListExecutor,
-            build=lambda: ExpedientesListExecutor(ports_factory),
-        ),
+        executor_type=ExpedientesListExecutor,
+        build=lambda: ExpedientesListExecutor(ports_factory),
         phase_codes=_LIST_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 
 
 def build_expedientes_show_definition(ports_factory: ExpedientesPortsFactory) -> OperationDefinition:
     """Declare an encrypted, profile-bound declaration detail read."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=EXPEDIENTES_SHOW_DEFINITION_ID,
         request_type=ExpedientesShowRequest,
         result_type=ExpedientesShowOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=ExpedientesShowRequest,
-            executor_type=ExpedientesShowExecutor,
-            build=lambda: ExpedientesShowExecutor(ports_factory),
-        ),
+        executor_type=ExpedientesShowExecutor,
+        build=lambda: ExpedientesShowExecutor(ports_factory),
         phase_codes=_SHOW_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 
 
 def build_expedientes_latest_definition(ports_factory: ExpedientesPortsFactory) -> OperationDefinition:
     """Declare a local newest-snapshot read with an empty state."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=EXPEDIENTES_LATEST_DEFINITION_ID,
         request_type=ExpedientesLatestRequest,
         result_type=ExpedientesLatestOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=ExpedientesLatestRequest,
-            executor_type=ExpedientesLatestExecutor,
-            build=lambda: ExpedientesLatestExecutor(ports_factory),
-        ),
+        executor_type=ExpedientesLatestExecutor,
+        build=lambda: ExpedientesLatestExecutor(ports_factory),
         phase_codes=_LATEST_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 
 
@@ -358,12 +334,10 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     if type(result) is not ExpedientesListOperationReport:
         raise ValueError("invalid expedientes list report")
     report = ExpedientesListOperationReport.model_validate(result, strict=True)
-    require_terminal_receipt_match(
+    require_live_read_receipt(
         receipt,
         definition_id=EXPEDIENTES_LIST_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(report.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.NONE,
+        bucket_id=str(report.bucket_id),
         message=_RECEIPT_CONTRADICTION,
     )
     return ExpedientesListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
@@ -374,12 +348,10 @@ def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
         raise ValueError("invalid expedientes show report")
     report = ExpedientesShowOperationReport.model_validate(result, strict=True)
     snapshot = report.snapshot
-    require_terminal_receipt_match(
+    require_live_read_receipt(
         receipt,
         definition_id=EXPEDIENTES_SHOW_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(snapshot.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.NONE,
+        bucket_id=str(snapshot.bucket_id),
         message=_RECEIPT_CONTRADICTION,
     )
     return ExpedientesShowPublicResultV1(
@@ -415,12 +387,10 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     if type(result) is not ExpedientesLatestOperationReport:
         raise ValueError("invalid expedientes latest report")
     report = ExpedientesLatestOperationReport.model_validate(result, strict=True)
-    require_terminal_receipt_match(
+    require_live_read_receipt(
         receipt,
         definition_id=EXPEDIENTES_LATEST_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(report.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.NONE,
+        bucket_id=str(report.bucket_id),
         message=_RECEIPT_CONTRADICTION,
     )
     snapshot = report.snapshot
@@ -433,39 +403,28 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     )
 
 
-def _resolve_read_access(
-    request: OperationRequest[BaseModel], context: OperationAccessContext, definition_id: str
-) -> ResolvedOperationAccess:
-    expected_type: type[BaseModel]
-    if definition_id == EXPEDIENTES_LIST_DEFINITION_ID:
-        expected_type = ExpedientesListRequest
-    elif definition_id == EXPEDIENTES_SHOW_DEFINITION_ID:
-        expected_type = ExpedientesShowRequest
-    elif definition_id == EXPEDIENTES_LATEST_DEFINITION_ID:
-        expected_type = ExpedientesLatestRequest
-    else:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if request.definition_id != definition_id or not isinstance(request.payload, expected_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-
-
 def resolve_expedientes_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return _resolve_read_access(request, context, EXPEDIENTES_LIST_DEFINITION_ID)
+    return resolve_whole_profile_read_access(
+        request, context, definition_id=EXPEDIENTES_LIST_DEFINITION_ID, payload_type=ExpedientesListRequest
+    )
 
 
 def resolve_expedientes_show_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return _resolve_read_access(request, context, EXPEDIENTES_SHOW_DEFINITION_ID)
+    return resolve_whole_profile_read_access(
+        request, context, definition_id=EXPEDIENTES_SHOW_DEFINITION_ID, payload_type=ExpedientesShowRequest
+    )
 
 
 def resolve_expedientes_latest_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return _resolve_read_access(request, context, EXPEDIENTES_LATEST_DEFINITION_ID)
+    return resolve_whole_profile_read_access(
+        request, context, definition_id=EXPEDIENTES_LATEST_DEFINITION_ID, payload_type=ExpedientesLatestRequest
+    )
 
 
 def build_expedientes_list_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

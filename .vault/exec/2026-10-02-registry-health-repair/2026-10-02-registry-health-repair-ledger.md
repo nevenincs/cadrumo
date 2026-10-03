@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6248adfeb59c4571208e14eaefedf05c1cc7c0bf747fabafaa99ca1c20c49361'
+body_hash: 'sha256:b6a6f4ad5b6f11b08120ef0265a3d766a0f8f9b2bf088b829d3b7ba85110c589'
 related:
   - "[[2026-10-02-registry-health-repair-plan]]"
 ---
@@ -211,6 +211,76 @@ related:
 - `S05` `verify:` `Scoped comparator Ruff formatting ty and whitespace` -> `pass`
 - `S05` `A` `.logs/audit-runs/2026-10-02/registry-health-repair/indexed-comparison-recheck-20261003.json`
 - `S05` `verify:` `retained immutable full indexed comparison: 159 revisions, 3477 temporal coordinates, 3477 capability coordinates, 723 facts, stable tool inputs` -> `pass`
+- `S16` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S16` `verify:` `uv run --no-sync python -m dev.quality.data_files check dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S16` `verify:` `git diff --check -- dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S16` `by:` `Codex`
+- `S20` `M` `dev/registry/compiler/validate_export_layout_coverage.py`
+- `S20` `A` `dev/registry/compiler/tests/test_export_layout_source_coverage.py`
+- `S20` `M` `dev/registry/tests/test_export_layout_join_ratchet.py`
+- `S20` `verify:` `uv run --no-sync pytest --noconftest -o addopts='' -n 0 -q dev/registry/compiler/tests/test_export_layout_source_coverage.py` -> `pass`
+- `S20` `verify:` `scoped ruff check, ruff format --check, ty check and git diff --check for S20` -> `pass`
+- `S20` `by:` `Codex`
+- `S20` `verify:` `uv run --no-sync pytest --noconftest -o addopts='' -n 0 -q dev/registry/tests/test_export_layout_join_ratchet.py` -> `fail`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.data_files check dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S08` `verify:` `git diff --check -- dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S21` `verify:` `inspect_authoring_candidate bundled source integration diagnostic` -> `fail`
+- `S21` `by:` `Codex`
+- `S08` `verify:` `canonical bootstrap supersession guards for6042021-2023 and2024-y-siguientes plus1312026-late and1892024,2025` -> `pass`
+- `S08` `verify:` `normal-host source-only complete130 render after prefix provenance fix` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.data_files check dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S08` `verify:` `git diff --check -- dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/131/manifest.toml`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/revision.toml`
+- `S21` `A` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026-late/revision.toml`
+- `S21` `verify:` `normal-host inspect_authoring_candidate follow-up source-inspection-sol-followup.json` -> `pass`
+- `S21` `verify:` `uv run --no-sync python -m dev.corpus.sync_aeat_record_design_corpus` -> `pass`
+- `S08` `verify:` `normal-host full source renders and canonical supersession guards349 plus190four editions and341supportededition` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.data_files check dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S08` `verify:` `git diff --check -- dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S08` `M` `.logs/audit-runs/2026-10-02/registry-health-repair/bootstrap-345-proposal.json`
+- `S08` `verify:` `Root canonical Modelo345/2025 source render and supersession guard` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.data_files check dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S01` `M` `.logs/audit-runs/2026-10-02/registry-health-repair/minimality-sol-source-followup.json`
+- `S01` `verify:` `Root assess_migration_state over complete discover_modelo_sources inventory` -> `pass`
+- `S09` `M` `.logs/audit-runs/2026-10-03/20261003T065148.810341Z-pytest-42672-2931f0aa/run.json`
+- `S09` `verify:` `uv run --no-sync pytest -o addopts='' -n 0 -q src/cadrumo/application/filing/tests/test_export_xml_dictionary_value_types.py src/cadrumo/application/filing/tests/test_export_xml_dictionary_sign_branches.py` -> `pass`
+- `S08` `verify:` `independent source render and supersession guard for M165 three supported epochs, M270 current, M2802025 and M1812022` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.data_files check dev/registry/pipeline/generated_export_bootstrap_targets.toml` -> `pass`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026-late/revision.toml`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-131-2026-late-law-and-instructions.toml`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-131-2026-late-source.toml`
+- `S21` `verify:` `independent primary BOE and AEAT source review for late131 scope and documentary parameter` -> `pass`
+- `S21` `verify:` `canonical conformance stamp 1312026-late agent_reviewed and scoped data-format/whitespace gates` -> `pass`
+- `S08` `A` `src/cadrumo/_data/registry/aeat/modelos/181/revisions/2022-y-siguientes/export/`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/181/revisions/2022-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S08` `verify:` `canonical publish-target 181 2022-y-siguientes aeat-dr-181-2022 2022 0A exit 0 final live currentness` -> `pass`
+- `S08` `verify:` `post-publication 181 complete delta equivalence minimality no-op` -> `pass`
+- `S08` `verify:` `270 both epochs full source render and supersession guard` -> `pass`
+- `S08` `verify:` `bootstrap data-file formatting` -> `pass`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
+- `S18` `A` `src/cadrumo/application/filing/record_context_validation.py`
+- `S18` `M` `src/cadrumo/application/filing/_record_field_renderer.py`
+- `S18` `A` `src/cadrumo/application/filing/tests/test_m280_negative_imputation_context.py`
+- `S18` `verify:` `actual M280 application renderer and context guard focused 5 tests` -> `pass`
+- `S18` `verify:` `source owner Ruff format and ty focused touched production paths` -> `pass`
+- `S18` `verify:` `independent actual API present zero missing and required absence reproduction exit 0` -> `pass`
+- `S18` `by:` `Codex`
+- `S09` `A` `.logs/audit-runs/2026-10-03/registry-health-repair/s09-current-source-census.json`
+- `S09` `verify:` `canonical typed source census discovered all58modelos all160revisions no load failures` -> `pass`
+- `S09` `verify:` `all selected98recorddesign source binaries and six XML dictionary XSD sets hashmatch catalogue` -> `pass`
+- `S09` `verify:` `native XML undeclared output casilla IDs zero with typed dictionary field binding adjudication` -> `pass`
+- `S15` `M` `dev/registry/pipeline/cli.py`
+- `S15` `verify:` `live126canonical2022 1T publish final currentness and formcheck` -> `pass`
+- `S15` `verify:` `live128canonical2022 1T publish final currentness and formcheck` -> `pass`
+- `S15` `verify:` `live145canonical2022 comunicacion publish final currentness and formcheck` -> `pass`
+- `S15` `by:` `Codex`
+- `S18` `M` `src/cadrumo/application/filing/m280_context_validation.py`
+- `S18` `M` `src/cadrumo/application/filing/tests/test_m280_negative_imputation_context.py`
+- `S18` `verify:` `actual M280 key1 blank zero-fill and key2 blank FilingExportValidationError regression run20261003T125133.058515Z-pytest-65716-4148f328` -> `pass`
+- `S18` `verify:` `source owner scoped Ruff format ty and whitespace gates for blank amount fix` -> `pass`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2025/export/0000-export-layout.toml`
+- `S01` `verify:` `fresh58modelo source fieldminimality stable inventory receipt current-field-minimality.json` -> `fail`
 
 ## Notes
 
@@ -235,3 +305,22 @@ related:
 - `S08` Exact live receipt .logs/audit-runs/2026-10-02/registry-health-repair/309-322-341-345-input-checkpoint.json; no render/named publication acceptance.
 - `S05` Approved form-parity follow-up preserves declared and effective export views independently. Run 20261002T234815.005137Z-pytest-52480-2a3ab4cf:2passed116.84s. One existing synthetic artifact fixture serializer warning concerns string `evidence_tier/kind.` Real131 regression uses canonical compiled fixture and temporary SQLite, no live publication dependency. Root full indexed comparator is still running; no complete stable wholeinventory claim.
 - `S05` This index-only rerun resolves the approved form-composition comparator defect. It does not rerun storage conversion or rewrite the earlier unstable-input verification result; export coverage remains partial.
+- `S16` Only six reviewed stable layout IDs changed. Source-pinned named publication and complete source acceptance remain pending integration.
+- `S20` Focused suite selected20tests and passed exit0. Pure canonical parser/catalogue tests bypass the pre-existing global runtime conftest only because the foreign custody merge remains syntactically unresolved. Full normal-host and final authority acceptance remain open. Source-matched auxiliary prefix coverage proves328bytes only, not full variable body/closer emission. Commits remain unavailable while foreign merge and unrelated index entries coexist.
+- `S20` Four existing join-ratchet tests failed in177.90s. Current integration found introduced variable-sheet precedence false refusal for genuinely emitted uniquely source-joined fixed headers in122/123/126 and131scaffold temporarily incomplete. S20staysopen; owner fixes precedence and adds direct real-source positive coverage. Earlier foreigncustodySyntaxError nowcleared per freshast.parse.
+- `S08` 18 additional source-pinned bootstrap targets installed after the canonical supersession guard accepted actual layout identity and construct references. Three inherited-only candidates remain unenrolled pending the inherited-layout publication contract. This is target enrollment, not named publication or full S08 completion.
+- `S21` Eight remaining findings in131 during active writers; exact diagnostic captured in source-inspection-sol-integration.json. Source closure and filing-family coverage are unresolved until a stable passing rerun.
+- `S08` Six additional bootstrap targets enrolled after exact-source, layout-identity, construct-count and inherited-origin review. All named publications remain pending stable compiler/render/parser inputs; enrollment is not publication.
+- `S21` Fresh full candidate diagnostic returned `publication_valid=True` and zero findings, superseding the earlier active-write131 closure failures. Disjoint interpreting-code/source writers remained active, so this is not stable final acceptance or publication. ProvisionalS22 component-route was retired through `plan_edit` because the actual compiler path validates the current source.
+- `S08` Six further exact-source bootstrap rows enrolled after current-tree review. Named publication remains pending final interpreting-code acceptance; historical341/2005-2015 has no supported frame and was not enrolled.
+- `S08` Forty bootstrap declarations are enrolled; the reviewed new target has two 500-byte records and41derivations. Publication remains pending.
+- `S01` All 58 discovered live modelos are minimal, with zero redundant overrides, unresolved duplication or blocked shapes and stable per-model input receipts. Source writers remain active, so this diagnostic does not replace the final settled whole-run proof.
+- `S09` 37 tests pass against actual native XML dictionary/XSD type and sign contracts. This supports preserving the six Modelo100 native XML revisions outside the fixed-width generator; it does not prove complete taxpayer document readiness or final authority adoption.
+- `S08` 46 bootstrap rows are enrolled; new target publication is pending. Root181 publication refused before cutover because the concurrent grounded 131 selector repair staled its generated form receipts; source owner will regenerate after its changes settle.
+- `S21` Agent review is source/evidence provenance, with no operator signoff or new calculation-consumer claim. New selector/legal-closure repairs and final compaction/publication remain pending.
+- `S08` Final interpreting-code currency, remaining named publications and retained binding-owner final authority generation are pending. Published181 bootstrap authorization retired; both270 rows are enrolled from exact component source proof.
+- `S18` Focused pytest was run directly and has console evidence, not an invented run-directory receipt. Final published-target and authority/runtime adoption remain pending. Generic domain record renderer has no M280 contextual sign rule; actual adapter usage is M145 only, so application path acceptance does not claim all renderer APIs parity.
+- `S09` Structural source adjudication preserves six native XML revisions and50 no-export-layout capability declarations; it does not establish full taxpayer document readiness or final authority adoption. Eight authored input gaps remain explicit for309576714 and externally owned720; national source precision is not invented.
+- `S15` Source-frame contract acceptance is complete; final whole-authority adoption and unchanged existing generated-target currency are separate pending S10 boundaries. No capability promotion or arbitrary newest-source fallback.
+- `S18` LOW review finding repaired in current public split module. Actual focused run1passed5deselected in6.85s. Read run.json exit0 and original log; no rerun of unchanged five-test proof or invented receipt. Runtime acceptance does not claim generic adapter M280 support or live AEAT submission.
+- `S01` Measurement2026-10-03T125119Z has58discovered58assessed stable registry hash3073e417e82cbc8f9294a73228e50cba8abd33f3076881882973fc0803a23973. Fiftyseven minimal;1892025 has five redundant `export_layouts` fields equal to hydrated2024baseline. This newer diagnostic supersedes earlier all58pass measurement. Source normalization remains assigned to sole publication owner, with complete equivalence coverage secondnoop and target currency required; no waiver or live edit by root.

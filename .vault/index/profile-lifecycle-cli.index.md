@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#profile-lifecycle-cli'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:628455b72c95a1c190885445589e7b5a55a008d95aa6cee3e0531ae4aebef79d'
+body_hash: 'sha256:cd3df092af465fc5ac73c73502b6f18bc1cb7e154478f689127ecb663664456b'
 related:
-  - '[[2026-06-04-profile-lifecycle-cli-adr]]'
   - '[[2026-06-04-profile-lifecycle-cli-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#profile-lifecycle-cli`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-profile-lifecycle-cli-adr` - `profile-lifecycle-cli` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

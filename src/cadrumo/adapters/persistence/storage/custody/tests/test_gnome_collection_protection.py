@@ -54,6 +54,8 @@ class _SocketDouble:
         assert address == "/proc/self/fd/99/pkcs11"
 
     def getsockopt(self, level: int, option: int, length: int) -> bytes:
+        if sys.platform != "linux":
+            raise RuntimeError("Linux peer credentials require Linux")
         assert level == socket.SOL_SOCKET and option == socket.SO_PEERCRED and length == 12
         return struct.pack("3i", self.peer_pid, self.peer_uid, 0)
 

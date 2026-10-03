@@ -46,6 +46,12 @@ def project_record_design_for_revision(
     """Retain only pages the source itself assigns to this M369 scheme."""
     if intermediate.source.source_ref != "aeat-dr-369-2021":
         return intermediate
+    _require_exact_m369_source(intermediate)
+    selected = _m369_sheets_for_revision(revision_id)
+    return _project_m369_sheets(intermediate, selected)
+
+
+def _require_exact_m369_source(intermediate: RecordDesignIntermediate) -> None:
     if (
         intermediate.source.source_sha256 != _M369_SOURCE_SHA256
         or intermediate.source.design_epoch != "2021"
@@ -53,9 +59,19 @@ def project_record_design_for_revision(
         or intermediate.variable_envelopes[0].body_content != _M369_BODY_CONTENT
     ):
         raise RegistryValidationError("M369 revision projection differs from the exact reviewed official source")
+
+
+def _m369_sheets_for_revision(revision_id: RevisionId) -> tuple[str, ...]:
     selected = _M369_REVISION_SHEETS.get(str(revision_id))
     if selected is None:
         raise RegistryValidationError(f"M369 source declares no fixed-page range for revision {revision_id!r}")
+    return selected
+
+
+def _project_m369_sheets(
+    intermediate: RecordDesignIntermediate,
+    selected: tuple[str, ...],
+) -> RecordDesignIntermediate:
     actual_sheets = tuple(sheet.record_identity for sheet in intermediate.sheets)
     if actual_sheets == selected:
         return intermediate

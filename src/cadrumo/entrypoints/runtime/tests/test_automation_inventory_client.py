@@ -66,6 +66,7 @@ def test_human_inventory_uses_registered_native_projection_and_exact_profile(tmp
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         launch = RuntimeLaunchDoor(
             endpoint, expected=RuntimeClientHello(product_version="test", storage_identity=endpoint.storage_identity)

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#current-schema-only-purge'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:6282e76f2adbe212621daa14c66304c5b47a281b46644c516365aabf61b77112'
 related:
-  - "[[2026-08-10-current-schema-only-purge-plan]]"
   - "[[2026-08-10-current-schema-only-purge-adr]]"
 ---
 # `current-schema-only-purge` audit: `S42 operator-manual carry boundary`

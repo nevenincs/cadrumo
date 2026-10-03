@@ -12,13 +12,15 @@ from cadrumo.application.modelo.calculation_request_fields import (
     ModeloCalculationInputFieldsV1,
     ModeloCalculationOverride,
 )
+from cadrumo.application.modelo.edit_apply_row_contracts import Modelo349RectificacionRowWireV1
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    Modelo349RectificacionRowWireV1,
-    ModeloWorkCalculateCallerContext,
-    ModeloWorkCalculateRequest,
     build_modelo_work_calculate_definition,
     build_modelo_work_calculate_registration,
+)
+from cadrumo.application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculateCallerContext,
+    ModeloWorkCalculateRequest,
 )
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1

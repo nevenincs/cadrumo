@@ -53,7 +53,7 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_p
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.external_import_actions import import_external_filing_evidence
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -114,7 +114,7 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     with bundled_indexed_authority().operation() as operation:
         kwargs.setdefault("certificate_secret_backend_factory", build_test_certificate_secret_backend_factory())
         kwargs.setdefault("verification_repositories", build_test_verification_repository_bundle())
-        return verify_modelo_revision(calculation_revision_id, operation=operation, **kwargs)
+        return verify_modelo_revision_with_preconditions(calculation_revision_id, operation=operation, **kwargs).report
 
 
 def _import_external_filing_evidence(**kwargs: Any) -> Any:

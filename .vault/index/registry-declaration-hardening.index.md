@@ -4,14 +4,13 @@ tags:
   - '#index'
   - '#registry-declaration-hardening'
 date: '2026-09-01'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:188c5d2e36d5ab633fb9e0a7eb5f404a5df612114b3981d3851e3680533552a5'
+body_hash: 'sha256:8e8773f800d4aee4847a57d4ebdef11775efdd4cdc4044d1627c0bbdac0dfd45'
 related:
   - '[[2026-09-02-registry-declaration-hardening-declaration-kinds-adr]]'
   - '[[2026-09-02-registry-declaration-hardening-identifier-grammar-adr]]'
   - '[[2026-09-02-registry-declaration-hardening-modelo-200-publication-review-audit]]'
-  - '[[2026-09-02-registry-declaration-hardening-plan]]'
   - '[[2026-09-02-registry-declaration-hardening-temporal-identity-adr]]'
   - '[[2026-09-02-registry-declaration-hardening-wire-type-derivation-adr]]'
 ---
@@ -32,7 +31,3 @@ Auto-generated index of all documents tagged with `#registry-declaration-hardeni
 ### audit
 
 - `2026-09-02-registry-declaration-hardening-modelo-200-publication-review-audit` - `registry-declaration-hardening` audit: `modelo 200 publication review`
-
-### plan
-
-- `2026-09-02-registry-declaration-hardening-plan` - `registry-declaration-hardening` plan

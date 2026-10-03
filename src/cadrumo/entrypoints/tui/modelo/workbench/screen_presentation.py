@@ -14,7 +14,8 @@ from .....application.modelo.work_form_models import (
     ModeloWorkForm,
 )
 from .....core.i18n.render import tr
-from .casilla_list import CasillaList, CasillaListEntry, CasillaListNote
+from .casilla_list import CasillaList
+from .casilla_list_models import CasillaListEntry, CasillaListNote
 from .grid import CasillaListRecords
 from .header import (
     DeadlineView,

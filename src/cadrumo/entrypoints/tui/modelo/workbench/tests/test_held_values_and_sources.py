@@ -63,8 +63,12 @@ from ......domain.modelos.verification_report import (
 from ....components.host import ScreenHostApp
 from ..casilla_list import (
     CasillaList,
+)
+from ..casilla_list_models import (
     CasillaListEntry,
     CasillaListNote,
+)
+from ..casilla_list_values import (
     grid_value_text,
     rate_note,
     row_value_text,

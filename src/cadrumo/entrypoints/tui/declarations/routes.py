@@ -14,7 +14,7 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
 )
-from ....application.modelo.declarations_workspace import (
+from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,

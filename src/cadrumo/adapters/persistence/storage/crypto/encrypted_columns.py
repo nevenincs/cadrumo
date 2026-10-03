@@ -22,14 +22,13 @@ Secure-object payloads use row-identity AAD.
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 from typing import override
 
 from sqlalchemy import LargeBinary
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
+from .....core.keyed_digest import keyed_digest_bytes
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
@@ -159,7 +158,7 @@ class HashedLookup(TypeDecorator[bytes]):
         # per-call work. The same HKDF-then-HMAC recipe as the secret store's
         # own (private, single-caller) digest helper, by construction.
         sub_key = get_active_hmac_subkey(_HKDF_CONTEXT_COLUMN_LOOKUP)
-        return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()
+        return keyed_digest_bytes(key=sub_key, message=plaintext.encode("utf-8"))
 
     @override
     def process_bind_param(self, value: str | bytes | None, dialect: Dialect) -> bytes | None:

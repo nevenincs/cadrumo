@@ -3,30 +3,26 @@ tags:
   - '#audit'
   - '#llm-package-split'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:49e93bb3cf97aa374915386a252f2d8ed29ea337c80b375a4cb8362c77c5cbe2'
-related:
-  - "[[2026-08-06-llm-package-split-plan]]"
+body_hash: 'sha256:56efce7c60530b4fc16ab1b6fd8ed0e476c9e32b467b41577d6a3fa5b15d2285'
+related: []
 ---
-
 # `llm-package-split` audit: `Plan-to-code reconciliation: 50 steps landed against a tracker reading zero`
 
 ## Scope
 
-## Findings
-
-## Recommendations
-
-## Context
+### Context
 
 The tracker read `0/83 steps, 0%, next W01.P01.S01` while roughly 50 steps were already landed in code across 20 commits. Anyone orienting from `vaultspec-core status` alone would have concluded the campaign was untouched and started at S01 — straight into a live agent's working files. This audit records the evidence mapping so the boxes can be ticked against something checkable rather than against a claim.
 
-## How the done-set was established
+## Findings
+
+### How the done-set was established
 
 Not from the plan, and not from the code alone. Each step below is carried by a commit whose body cites it by identifier, AND has an artifact confirmed present in the tree at HEAD. Steps cited as partial are excluded and named as such. Steps whose artifacts exist but which no commit body claims are also excluded — an artifact is not evidence that a specific Step's contract was met.
 
-## Step-to-commit mapping
+### Step-to-commit mapping
 
 | Phase | Steps | Carrying commit |
 | --- | --- | --- |
@@ -49,21 +45,21 @@ Not from the plan, and not from the code alone. Each step below is carried by a 
 | W05.P11 | S48, S53, S54 | `dd43e0b8bd`, `04561ef0f6` |
 | W05.P11 | S49 | `04561ef0f6` |
 
-## Deliberately left unticked
+### Deliberately left unticked
 
 **S50 — cited as "in part".** The commit body for `dd43e0b8bd` says "S50 in part", so the step's contract is not discharged. Ticking a partial step is how a campaign reports itself complete while work remains.
 
 **Every step no commit body cites.** S05, S11, S12, S29, S34-S39, S41, S42, S47, S55-S57, S59, S62, S63, S66, S69-S71, S77, S78, S80, S81, S83. Some of these are visibly present in the tree — the `_xml.py` hardening reads as S16-adjacent and the parsers' own docstring describes the S80 refusal contract — but presence is not the same as a claimed, verified discharge, and the difference is exactly what a tracker exists to record honestly.
 
-## Structural findings
+### Structural findings
 
 The plan structure itself is sound: 83 checkbox rows, 83 distinct identifiers, no duplicates, no gaps across S01-S83, five waves, twelve phases, every phase carrying steps, no step under an undeclared phase, and the `L3` tier matching the wave depth. Seven identifiers appear twice in the document, but every second occurrence is a prose cross-reference in the coverage and parallelization sections, not a duplicate row. `vaultspec-core vault check all` reports no finding against this feature.
 
-## One implementation-versus-plan deviation worth recording
+### One implementation-versus-plan deviation worth recording
 
 W03.P06 names `src/cadrumo/application/ledger/_llm_suggestions.py` as the interchange contract's home. It landed as `src/cadrumo/llm/_suggestions.py` — the extension side rather than the core side. W03.P07 is titled "Keep every durable artefact on the core side", so the two read in tension. The Step text is left unedited: the identifier is load-bearing, and whoever made the placement decision owns the rationale. This is flagged, not resolved.
 
-## Loose ends this reconciliation closed
+### Loose ends this reconciliation closed
 
 Three surfaces kept describing things the campaign's W05 deletions had removed, none of which any single gate scans together:
 
@@ -72,6 +68,8 @@ Three surfaces kept describing things the campaign's W05 deletions had removed, 
 
 Two apparent loose ends were checked and cleared rather than "fixed": `SubprocessProvider` is still exported and its tests still collect (`5d96d24034` deleted the probe and the doctor branch, not the enum), and the `cloud_evidence_upload` mention surviving in `_capabilities.py` is a docstring explaining the deletion.
 
-## The process defect underneath
+## Recommendations
+
+### The process defect underneath
 
 Twenty commits landed with zero execution records. The commit bodies are unusually good — they cite step identifiers and explain reasoning — which is the only reason this reconciliation was possible at all. That is fragile: it worked here because one author wrote careful messages, not because anything enforced it. `plan-closure-requires-exec-records` is the gate, and it was not being run.

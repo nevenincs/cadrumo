@@ -1883,20 +1883,6 @@ cli:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> comprobar -> exportar. Solo construye
         y exporta; nunca presenta ante la AEAT'
-    runtime:
-      disable:
-        help: Desactiva el inicio al abrir sesión y conserva el inicio bajo demanda.
-      enable:
-        help: Activa el inicio del servicio al abrir sesión este usuario.
-      help: Consulta y administra el servicio local de esta instalación.
-      start:
-        help: Inicia el servicio instalado y verifica su punto de escucha.
-      status:
-        help: Muestra la disponibilidad del servicio local y el estado de su gestor.
-      stop:
-        acknowledge_help: Confirma que la detención afecta a todos los perfiles y
-          trabajos.
-        help: Detiene el servicio compartido tras confirmar su alcance completo.
   common:
     errors:
       filing_requires_declared_tax_id: 'El perfil activo no declara una identidad
@@ -2008,7 +1994,8 @@ cli:
       reset_requires_yes: El restablecimiento retira la configuración y las credenciales
         guardadas. Vuelve a ejecutar el comando con --yes para confirmar.
       reset_yes_help: Confirmar el restablecimiento destructivo de la autenticación
-      route_help: 'Vía de aprobación de Cl@ve Móvil: qr o app_request. Requiere --provider
+      route_help: 'Vía de aprobación de Cl@ve Móvil: app_request (por defecto, funciona
+        sin navegador visible) o qr (abre un navegador visible). Requiere --provider
         clave_movil.'
       status_help: Mostrar el estado de autenticación configurado
       status_summary_configured: La autenticación está configurada pero aún no hay
@@ -2933,9 +2920,10 @@ cli:
         ej. claude, antigravity, codex).
       session_stale_message: La sesión de AEAT persistida ha superado su plazo de
         inactividad; una lectura en vivo volverá a autenticarse.
-      since_help: Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de
-        ejecución del LLM.
       until_help: Fecha ISO (AAAA-MM-DD) superior inclusiva para los registros de
+        ejecución del LLM.
+    run_records:
+      since_help: Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de
         ejecución del LLM.
     runs:
       header: 'Ejecuciones recientes del LLM:'
@@ -2946,8 +2934,6 @@ cli:
         asistida por LLM para generarla.
       provider_help: Restringe el listado a este proveedor (p. ej. claude, antigravity,
         codex).
-      since_help: Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de
-        ejecución del LLM.
       until_help: Fecha ISO (AAAA-MM-DD) superior inclusiva para los registros de
         ejecución del LLM.
     summary:

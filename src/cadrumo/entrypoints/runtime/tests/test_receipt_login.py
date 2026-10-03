@@ -132,6 +132,7 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                 capture_login=lambda _channel: native_login,
                 secret_store=lambda: enrollment.native,
             )
+            profiles.prepare_registry()
             server = RuntimeTransportServer(
                 endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
             )

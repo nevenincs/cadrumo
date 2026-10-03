@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#registry-row-width-pressure'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:fffbb456f900d4ad4b8f933351f5f06c327653d3f80b57e3f43d890b3606e956'
 tier: L2
 related:
   - '[[2026-06-04-registry-reviewability-pressure-plan]]'
   - '[[2026-06-04-registry-reviewability-pressure-code-review-audit]]'
-  - '[[2026-06-04-registry-row-width-pressure-adr]]'
   - '[[2026-06-04-registry-row-width-pressure-research]]'
 ---
 

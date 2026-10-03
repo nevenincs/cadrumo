@@ -56,7 +56,7 @@ from cadrumo.application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -509,7 +509,7 @@ def test_verify_passes_with_projected_boxes_and_no_under_declaration_advisory(
     BucketEventHistoryRepository(objects=secure_objects)
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -518,7 +518,7 @@ def test_verify_passes_with_projected_boxes_and_no_under_declaration_advisory(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     # The retired Stage-1 under-declaration ADVISORY (devengado art. 88 +
     # rd-1624 art. 71 + orden) must be absent — the boxes are populated.

@@ -12,7 +12,7 @@ import typer
 from pydantic import ValidationError
 
 from ....application.calculations.observations_repository import ObservationSourceKind
-from ....application.modelo.filing_record_list_operation import ModeloFilingRecordListEntryProjection
+from ....application.modelo.filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from ....application.modelo.filing_record_view_operation import (
     MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
     ModeloFilingObservationLayerProjection,

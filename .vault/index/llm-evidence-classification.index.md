@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#llm-evidence-classification'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d9590eaec955c0aaf0524441ddac627e76c12f1dca8548794b8e6be74bed03f8'
+body_hash: 'sha256:85792cc03da7b5e323a1fc0fc4f51240b3049602329e84bc1d986698f68eb926'
 related:
   - '[[2026-06-10-llm-evidence-classification-adr]]'
   - '[[2026-06-10-llm-evidence-classification-audit]]'
-  - '[[2026-06-10-llm-evidence-classification-ledger]]'
-  - '[[2026-06-10-llm-evidence-classification-plan]]'
   - '[[2026-06-10-llm-evidence-classification-research]]'
   - '[[2026-06-11-llm-evidence-classification-audit]]'
   - '[[2026-06-12-llm-evidence-classification-audit]]'
@@ -44,12 +42,10 @@ Auto-generated index of all documents tagged with `#llm-evidence-classification`
 
 ### exec
 
-- `2026-06-10-llm-evidence-classification-ledger` - `llm-evidence-classification` ledger
 - `2026-06-13-llm-evidence-classification-ledger` - `llm-evidence-classification` ledger
 
 ### plan
 
-- `2026-06-10-llm-evidence-classification-plan` - `llm-evidence-classification` `Evidence-aware LLM ledger classification (Stage-3)` plan
 - `2026-06-13-llm-evidence-classification-plan` - `llm-evidence-classification` `Evidence corpus and adversarial hardening` plan
 
 ### research

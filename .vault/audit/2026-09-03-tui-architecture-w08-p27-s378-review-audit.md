@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:379a299f69a3757585746dc0f9dd773ee26a52017eccdf94dc027721512cf0ab'
+body_hash: 'sha256:38f5bf737be8bb88c8c281b88f6aac96faa275746b567bc686c75a969b96ab66'
 related: []
 ---
 # `tui-architecture` audit: `W08.P27.S378 Declarations calendar screen review`
@@ -42,6 +42,6 @@ Agenda predicates remain application-derived: Past, Upcoming, Overdue, Filed, an
 
 The root re-ran the focused calendar suite with 18 passing tests. Independent re-review confirms Ruff and ty pass for the calendar/declarations slice and basedpyright reports zero errors, warnings, and notes for the calendar and focused test surface.
 
-## Recommendation
+## Recommendations
 
 Approve S378. Preserve the all-locale recovery confirmation and failure assertions when extending calendar lifecycle actions.

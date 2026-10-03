@@ -6,9 +6,11 @@ import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 from urllib.parse import urlsplit
 
 import pytest
+from playwright.async_api import Page
 from pydantic import AnyUrl
 
 from ......core.config import Settings
@@ -692,7 +694,7 @@ def test_wallet_auth_gate_caller_uses_the_configured_redirect_contract(
     if is_auth_gate:
         with pytest.raises(SedeNavigationError) as raised:
             _raise_if_wallet_auth_gate(
-                _Page(),
+                cast(Page, _Page()),
                 message="wallet auth gate",
                 expected_url=WALLET_URL,
                 surface="iva_compensation_wallet",
@@ -700,7 +702,7 @@ def test_wallet_auth_gate_caller_uses_the_configured_redirect_contract(
         assert raised.value.failure_mode == SedeFailureMode.AUTH_GATE_DETECTED
     else:
         _raise_if_wallet_auth_gate(
-            _Page(),
+            cast(Page, _Page()),
             message="wallet auth gate",
             expected_url=WALLET_URL,
             surface="iva_compensation_wallet",

@@ -20,7 +20,7 @@ from ...domain.calculations.registry.binding_value_contract import BindingDataTy
 from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operations.public_period import PublicPeriod
 from ..state_projection import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
-from .query_read_operation import ModeloBindingRowV1, ModeloReadinessMissingBindingV1
+from .query_read_contracts import ModeloBindingRowV1, ModeloReadinessMissingBindingV1
 
 MAX_TYPED_BINDING_VALUE_LENGTH = 16_384
 

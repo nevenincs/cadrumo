@@ -3,13 +3,15 @@ tags:
   - '#reference'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:47c70efa7235efcd761358c6cf445e7b1bc70655915936afbcf43c111fbe71d1'
+body_hash: 'sha256:66106f39ab97b6523814e9703ccfc33200a25356a4f49b762092cf46c868ae75'
 related: []
 ---
 
 # `canonical-storage-management` reference: `canonical storage management closure criterion`
+
+## Summary
 
 Defines what "complete" means for the `canonical-storage-management` campaign, so
 the honesty review has a checkable standard rather than a strength-of-momentum

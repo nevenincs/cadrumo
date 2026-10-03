@@ -43,6 +43,7 @@ from ..atomic_write import (
     atomic_write_hardened_text,
     atomic_write_text,
     durable_write_batch,
+    hardened_staged_bytes_publication,
     hardened_staged_publication,
 )
 from ..descriptor_write import write_all
@@ -438,6 +439,127 @@ class TestHardenedTier:
         target = tmp_path / "secret.bin"
         atomic_write_hardened_bytes(target, b"\x00\x01secret\xff")
         assert target.read_bytes() == b"\x00\x01secret\xff"
+
+    def test_staged_bytes_publication_uses_its_original_descriptor_and_defers_replace(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        target = tmp_path / "secret.bin"
+        earlier = b"previous secret"
+        payload = b"replacement\nsecret\x00bytes"
+        target.write_bytes(earlier)
+
+        real_open = os.open
+        real_write = os.write
+        real_write_all = atomic_write.write_all
+        stage_descriptors: list[int] = []
+        written_descriptors: list[int] = []
+        write_calls = 0
+
+        def observe_open(
+            raw_path: str | bytes | os.PathLike[str],
+            flags: int,
+            mode: int = 0o777,
+            *,
+            dir_fd: int | None = None,
+        ) -> int:
+            if dir_fd is None:
+                descriptor = real_open(raw_path, flags, mode)
+            else:
+                descriptor = real_open(raw_path, flags, mode, dir_fd=dir_fd)
+            candidate = Path(os.fsdecode(raw_path))
+            if (
+                flags & os.O_EXCL
+                and candidate.parent == target.parent
+                and candidate.name.startswith(f"{target.name}.")
+                and candidate.name.endswith(".tmp")
+            ):
+                stage_descriptors.append(descriptor)
+            return descriptor
+
+        def short_write(descriptor: int, data: bytes | bytearray | memoryview) -> int:
+            nonlocal write_calls
+            write_calls += 1
+            return real_write(descriptor, data[:3])
+
+        def observe_write_all(descriptor: int, data: bytes) -> None:
+            written_descriptors.append(descriptor)
+            real_write_all(descriptor, data)
+
+        with (
+            scoped_attribute(os, "open", observe_open),
+            scoped_attribute(os, "write", short_write),
+            scoped_attribute(atomic_write, "write_all", observe_write_all),
+            hardened_staged_bytes_publication(target, payload) as staged,
+        ):
+            assert target.read_bytes() == earlier, "staging must not change the published target"
+            assert staged.path.read_bytes() == payload, "short writes must complete through write_all"
+            assert len(stage_descriptors) == 1
+            assert len(written_descriptors) == 1
+            assert stage_descriptors[0] == written_descriptors[0]
+            staged.publish()
+
+        assert write_calls > 1, "the controlled writer must exercise positive short writes"
+        assert target.read_bytes() == payload
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_published_bytes_context_does_not_remove_a_recreated_stage_path(self, tmp_path: Path) -> None:
+        target = tmp_path / "secret.bin"
+        target.write_bytes(b"previous secret")
+        recreated_stage: Path
+
+        with hardened_staged_bytes_publication(target, b"published secret") as staged:
+            recreated_stage = staged.path
+            staged.publish()
+            recreated_stage.write_bytes(b"later file at consumed stage path")
+
+        assert target.read_bytes() == b"published secret"
+        assert recreated_stage.read_bytes() == b"later file at consumed stage path"
+        recreated_stage.unlink()
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_staged_bytes_publication_cleans_up_when_the_descriptor_makes_no_progress(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        target = tmp_path / "secret.bin"
+        earlier = b"previous secret"
+        target.write_bytes(earlier)
+        calls = 0
+
+        def stalled_write(_descriptor: int, _data: bytes | bytearray | memoryview) -> int:
+            nonlocal calls
+            calls += 1
+            return 0
+
+        with (
+            pytest.raises(OSError),
+            scoped_attribute(os, "write", stalled_write),
+            hardened_staged_bytes_publication(target, b"unpublished secret"),
+        ):
+            pytest.fail("a zero-progress descriptor must refuse before publication")
+
+        assert calls == 1
+        assert target.read_bytes() == earlier
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_staged_bytes_publication_discards_completed_bytes_on_an_interrupt(self, tmp_path: Path) -> None:
+        target = tmp_path / "secret.bin"
+        earlier = b"previous secret"
+        target.write_bytes(earlier)
+        sentinel = KeyboardInterrupt("operator stopped publication")
+
+        with (
+            pytest.raises(KeyboardInterrupt) as caught,
+            hardened_staged_bytes_publication(target, b"complete but unpublished secret") as staged,
+        ):
+            assert staged.path.read_bytes() == b"complete but unpublished secret"
+            assert target.read_bytes() == earlier
+            raise sentinel
+
+        assert caught.value is sentinel
+        assert target.read_bytes() == earlier
+        assert _tmp_leftovers(tmp_path) == []
 
     def test_write_all_completes_capacity_limited_real_pipe(self) -> None:
         """A blocking capacity-limited OS pipe receives the complete payload."""

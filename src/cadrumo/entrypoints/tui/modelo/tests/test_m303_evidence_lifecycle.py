@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from .....application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
 )
-from .....application.modelo.operation_definitions import (
+from .....application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculateRequest,
 )

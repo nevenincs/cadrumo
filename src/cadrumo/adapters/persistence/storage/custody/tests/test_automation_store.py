@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_crypto import (
     parse_record,
     seal_automation,
 )
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_records import (
     ProtectedControlAnchor,
     SealedAutomationControl,
@@ -39,11 +40,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_secret_store import
     WindowsAutomationSecretStore,
     native_automation_secret_store,
 )
-from cadrumo.adapters.persistence.storage.custody.automation_store import (
-    CONTROL_NAMESPACE,
-    WRAP_NAMESPACE,
-    AutomationControlStore,
-)
+from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import (
     MemoryNativePort,

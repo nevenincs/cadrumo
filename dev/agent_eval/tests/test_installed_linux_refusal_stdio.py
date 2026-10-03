@@ -23,9 +23,10 @@ from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.posix import PosixRuntimeEndpoint, posix_owner_uid
+from cadrumo.adapters.local_runtime.posix import posix_owner_uid
+from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.linux_secret_service_store import (
     LinuxSecretServiceAutomationSecretStore,
 )

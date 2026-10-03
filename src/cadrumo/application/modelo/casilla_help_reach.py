@@ -149,7 +149,9 @@ def build_casilla_help_reach(
     graph = _dependents(snapshot.revision.formulas)
     feeds = tuple(sorted({box_text(target) for target in graph.get(str(casilla.id), frozenset())}))
     selected = declaration_result_casillas(str(snapshot.modelo.id), snapshot.revision)
-    results: frozenset[str] = frozenset() if selected is None else frozenset(str(item) for item in selected.casilla_ids)
+    results: frozenset[str] = (
+        frozenset[str]() if selected is None else frozenset(str(item) for item in selected.casilla_ids)
+    )
     is_result = str(casilla.id) in results
     reach = (
         None

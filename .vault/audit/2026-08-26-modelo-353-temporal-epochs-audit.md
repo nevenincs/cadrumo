@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ee3fba75d9a6892e7055a7caea5b53900e9853c35a115d05d5b28ca6c194f973'
+body_hash: 'sha256:9844178040ba0751c898eff334b2d0e86ebbc25150fa05b8e5b74b2b384c37e5'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-15-registry-temporal-coverage-acquisition-worklist-research]]"
@@ -13,8 +13,7 @@ related:
 
 # Modelo 353 temporal epochs audit
 
-## Scope and evidence
-
+## Scope
 This audit covers Modelo 353 only. It re-measures the hash-pinned AEAT record
 design sources registered in `legal/iva.toml` and the period-selection surface.
 It does not infer a writer from a record length or reuse a newer semantic map.
@@ -51,6 +50,14 @@ HAC/27/2026. The corrected selector is bounded to 2026 periods 02–12 and uses
 the exact 1700-plus-400 two-body-record geometry. The test witnesses assert
 positive 2021/2025/February-2026 selection and refusal for 2015, 2020,
 January-2026, and 2027.
+
+## Recommendations
+
+Preserve the February-only legal boundary and the explicit unsupported-period
+refusals. First restore executable strict geometry evidence, then regenerate
+the two provenance manifests through the normal generator and re-run the
+canonical focused registry, generated-tree, and lint gates. The M165 and M200
+whole-tree blockers remain separate from these M353-owned failures.
 
 ## Gate evidence
 
@@ -118,14 +125,6 @@ attestation differs from the tree it describes.
 The focused Ruff check fails only on the import block in the generated-tree
 test, with `I001` reporting unsorted imports. Restore canonical import order
 and rerun the focused lint gate alongside the repaired M353 tests.
-
-## Recommendations
-
-Preserve the February-only legal boundary and the explicit unsupported-period
-refusals. First restore executable strict geometry evidence, then regenerate
-the two provenance manifests through the normal generator and re-run the
-canonical focused registry, generated-tree, and lint gates. The M165 and M200
-whole-tree blockers remain separate from these M353-owned failures.
 
 ## Final re-review closure
 

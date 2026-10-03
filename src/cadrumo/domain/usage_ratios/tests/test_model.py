@@ -15,8 +15,12 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    outside_governed_fact_validation,
+    validating_governed_facts,
+)
 
 from ...categories.proportionality import ProportionalityKind
 from ...categories.registry import resolve_category_profiles
@@ -290,3 +294,15 @@ def test_validate_usage_ratio_reference_rejects_business_pct_drift() -> None:
             usage_ratio_id=SpendingCategory.from_registry("telefonia_movil").value,
             business_pct=Decimal("0.50"),
         )
+
+
+def test_validate_usage_ratio_reference_reports_a_missing_scope_as_an_invariant_failure() -> None:
+    """A missing authority scope must not read as "not a spending category"."""
+    profile = UsageRatioProfile()
+    category = SpendingCategory.from_registry("telefonia_movil").value
+
+    with (
+        outside_governed_fact_validation(),
+        pytest.raises(InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"),
+    ):
+        validate_usage_ratio_reference(profile, category_id=category, usage_ratio_id=category)

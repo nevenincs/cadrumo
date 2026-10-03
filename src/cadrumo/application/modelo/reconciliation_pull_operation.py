@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import replace
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -18,7 +17,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_commit_access
 from ..live.justificante import (
     JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
     JustificanteCaptureSnapshotService,
@@ -33,13 +32,15 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
     ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
+)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .reconciliation import (
     ModeloReconciliationBytesCommand,
@@ -205,15 +206,13 @@ def resolve_modelo_reconciliation_pull_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax disclosure and authorization for the commit."""
-    if request.definition_id != MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, ModeloReconciliationPullRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
+        payload_type=ModeloReconciliationPullRequest,
+        access_profile_id=context.profile_id,
     )
-    return replace(resolved, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def build_modelo_reconciliation_pull_registration(

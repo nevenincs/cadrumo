@@ -14,8 +14,8 @@ import pytest
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 
-from .. import windows, windows_login
-from ..framing import RuntimeTransportCleanup
+from .. import windows_channel, windows_login
+from ..runtime_transport_cleanup import RuntimeTransportCleanup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -103,7 +103,7 @@ class _WinTypes(ModuleType):
 
 def _channel(
     monkeypatch: pytest.MonkeyPatch, *, integer_pipe: bool = False
-) -> tuple[windows.WindowsRuntimeChannel, _Handle, _Handle]:
+) -> tuple[windows_channel.WindowsRuntimeChannel, _Handle, _Handle]:
     pipe, peer = _Handle(41), _Handle(51)
     for name, module in (
         ("win32api", _KernelPort(pipe, peer)),
@@ -112,11 +112,11 @@ def _channel(
         ("pywintypes", _WinTypes("pywintypes")),
     ):
         monkeypatch.setitem(sys.modules, name, module)
-    monkeypatch.setattr(windows, "_require_windows", lambda: None)
-    monkeypatch.setattr(windows, "_owner_sid", lambda process: "fixture-owner")
-    monkeypatch.setattr(windows, "_current_owner_sid", lambda: "fixture-owner")
-    monkeypatch.setattr(windows, "_image_path", lambda process: Path("fixture-image"))
-    return windows.WindowsRuntimeChannel(int(pipe) if integer_pipe else pipe, server=True), pipe, peer
+    monkeypatch.setattr(windows_channel, "require_windows", lambda: None)
+    monkeypatch.setattr(windows_channel, "windows_owner_sid", lambda process: "fixture-owner")
+    monkeypatch.setattr(windows_channel, "current_windows_owner_sid", lambda: "fixture-owner")
+    monkeypatch.setattr(windows_channel, "windows_image_path", lambda process: Path("fixture-image"))
+    return windows_channel.WindowsRuntimeChannel(int(pipe) if integer_pipe else pipe, server=True), pipe, peer
 
 
 @pytest.mark.parametrize("integer_pipe", [False, True])
@@ -208,9 +208,9 @@ def test_constructor_refusal_releases_pipe_and_retained_peer(monkeypatch: pytest
     channel.close()
     pipe, peer = _Handle(41), _Handle(51)
     monkeypatch.setitem(sys.modules, "win32api", _KernelPort(pipe, peer))
-    monkeypatch.setattr(windows, "_current_owner_sid", lambda: "different-owner")
+    monkeypatch.setattr(windows_channel, "current_windows_owner_sid", lambda: "different-owner")
     with pytest.raises(RuntimeRefusalError) as caught:
-        windows.WindowsRuntimeChannel(pipe, server=True)
+        windows_channel.WindowsRuntimeChannel(pipe, server=True)
     assert caught.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
     assert pipe.released and peer.released
 
@@ -237,14 +237,14 @@ async def test_unreturned_channel_preserves_admission_error_and_retry_owner(
     def refuse(process: object) -> str:
         raise primary
 
-    monkeypatch.setattr(windows, "_owner_sid", refuse)
+    monkeypatch.setattr(windows_channel, "windows_owner_sid", refuse)
     attempts = 2 if persistent else 1
     if failure in {"pipe", "both"}:
         pipe.failures.extend(OSError("synthetic pipe release failure") for _ in range(attempts))
     if failure in {"peer", "both"}:
         peer.failures.extend(OSError("synthetic peer release failure") for _ in range(attempts))
     with pytest.raises((RuntimeRefusalError, OSError)) as caught:
-        windows.WindowsRuntimeChannel(pipe, server=True)
+        windows_channel.WindowsRuntimeChannel(pipe, server=True)
     if admission == "native":
         assert isinstance(caught.value, RuntimeRefusalError)
         assert caught.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
@@ -257,7 +257,7 @@ async def test_unreturned_channel_preserves_admission_error_and_retry_owner(
     owner = caught.value.__dict__.get("_runtime_transport_cleanup")
     assert isinstance(owner, RuntimeTransportCleanup)
     retained_channel = owner.resource
-    assert isinstance(retained_channel, windows.WindowsRuntimeChannel)
+    assert isinstance(retained_channel, windows_channel.WindowsRuntimeChannel)
     assert pipe.released is (failure == "peer")
     assert peer.released is (failure == "pipe")
     assert pipe.attempts == peer.attempts == 1

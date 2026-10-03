@@ -188,6 +188,7 @@ def test_enrolled_api_key_and_reference_read_only_their_profile_and_cannot_becom
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )

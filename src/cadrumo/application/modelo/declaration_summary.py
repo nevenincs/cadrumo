@@ -27,7 +27,8 @@ from .work_form_result import settlement_result_values
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from .declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+    from ...domain.calculations.registry.schema import RegistrySnapshot
+    from .declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 
 
 class DeclarationSummaryState(StrEnum):
@@ -82,21 +83,34 @@ def declaration_summary(
             str(declaration.modelo), filing_year=declaration.filing_year, period=declaration.period.registry_token
         )
         if head is not None:
-            require_calculation_revision_coordinates_current(head, operation=operation)
-            coordinate = head.registry_snapshot_ref
-            if (str(coordinate.modelo), coordinate.modelo_year, str(coordinate.period), coordinate.revision_id) != (
-                str(declaration.modelo),
-                declaration.filing_year,
-                declaration.period.registry_token,
-                snapshot.revision.id,
-            ):
-                raise ValueError("current calculation and selected declaration coordinates disagree")
+            _require_selected_calculation_coordinate(head, declaration, snapshot, operation)
     except (CadrumoError, ValueError, LookupError) as exc:
         return DeclarationSummary(state=DeclarationSummaryState.UNREADABLE, technical_reason=str(exc))
     if declaration.state is WorkUnitState.DESCARTADO:
         return DeclarationSummary(state=DeclarationSummaryState.DISCARDED)
     if head is None:
         return DeclarationSummary(state=DeclarationSummaryState.DRAFT)
+    blockers, checked = _verification_summary(head, verification)
+    state = _summary_state(declaration, head, blockers, checked)
+    try:
+        result = settlement_result_values(
+            str(declaration.modelo), snapshot.revision, head.casilla_values, declaration.period
+        )
+    except (CadrumoError, ValueError, LookupError) as exc:
+        return DeclarationSummary(state=DeclarationSummaryState.UNREADABLE, technical_reason=str(exc))
+    return DeclarationSummary(
+        state=state,
+        blocking_count=blockers,
+        checked=checked,
+        result=result,
+        is_correction=head.amendment_identity is not None,
+    )
+
+
+def _verification_summary(
+    head: CalculationRevision, verification: VerificationReportCatalogue | None
+) -> tuple[int | None, bool]:
+    """Read the latest verification for this exact calculation revision."""
     reports = (
         []
         if verification is None
@@ -113,6 +127,13 @@ def declaration_summary(
         else sum(finding.severity is ModeloVerificationFindingSeverity.BLOCKING for finding in report.findings)
     )
     checked = head.state in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
+    return blockers, checked
+
+
+def _summary_state(
+    declaration: DeclarationsWorkspaceDeclarationRefV1, head: CalculationRevision, blockers: int | None, checked: bool
+) -> DeclarationSummaryState:
+    """Preserve filing, supersession, blockers and checked-state precedence."""
     if declaration.has_current_filing:
         state = DeclarationSummaryState.RECORDED
     elif head.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
@@ -123,16 +144,22 @@ def declaration_summary(
         state = DeclarationSummaryState.CHECKED
     else:
         state = DeclarationSummaryState.CALCULATED
-    try:
-        result = settlement_result_values(
-            str(declaration.modelo), snapshot.revision, head.casilla_values, declaration.period
-        )
-    except (CadrumoError, ValueError, LookupError) as exc:
-        return DeclarationSummary(state=DeclarationSummaryState.UNREADABLE, technical_reason=str(exc))
-    return DeclarationSummary(
-        state=state,
-        blocking_count=blockers,
-        checked=checked,
-        result=result,
-        is_correction=head.amendment_identity is not None,
-    )
+    return state
+
+
+def _require_selected_calculation_coordinate(
+    head: CalculationRevision,
+    declaration: DeclarationsWorkspaceDeclarationRefV1,
+    snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Validate current authority before comparing the exact declaration coordinate."""
+    require_calculation_revision_coordinates_current(head, operation=operation)
+    coordinate = head.registry_snapshot_ref
+    if (str(coordinate.modelo), coordinate.modelo_year, str(coordinate.period), coordinate.revision_id) != (
+        str(declaration.modelo),
+        declaration.filing_year,
+        declaration.period.registry_token,
+        snapshot.revision.id,
+    ):
+        raise ValueError("current calculation and selected declaration coordinates disagree")

@@ -21,7 +21,7 @@ from .....application.modelo.work_form_models import (
 )
 from .....core.i18n.render import tr
 from ...components.theme import tokenised
-from .casilla_list import AddressKey
+from .casilla_list_models import AddressKey
 from .dialog_width import fit_dialog_height, fit_dialog_width
 from .editor import area_words
 from .keys import describe_bindings

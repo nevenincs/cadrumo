@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:30ddfd468b40627f61c18d9e8b409c2d89d626b27b571e517f9925cbf8a7251b'
+body_hash: 'sha256:5f1fd4c9bea03c369e992b9564bc514076f9745186d856be1e4b61f0445817d8'
 related: []
 ---
 
 # `registry-legal-grounding-windows` audit: `M360's 400/50 refund minimums cite the plazo article and appear nowhere in the cited Orden`
 
-## Finding
+## Scope
 
+Trace the Modelo 360 refund threshold to its governing source and determine whether the current evidence establishes the threshold.
+
+## Findings
 `modelo-360-quarterly-refund-threshold-eur` (400,00 EUR) and
 `modelo-360-annual-refund-threshold-eur` (50,00 EUR) both declare
 `legal_refs = ["orden-eha-789-2010:art-4"]`. That article establishes neither
@@ -24,6 +27,21 @@ This is a **citation** defect, not a claim that the values are wrong. 400 and 50
 are the amounts EU law fixes for this refund; what is missing is a provision in
 the catalogue that says so.
 
+## Recommendations
+1. Bundle LIVA art. 119 from the consolidated BOE text, taking the **last**
+   version rather than the first, and asserting the amending norm's identifier.
+2. Re-point both parameters' `legal_refs` at the provision that states the amount,
+   keeping `orden-eha-789-2010:art-4` only if a plazo reference is independently
+   wanted.
+3. Replace the `required_text` with a phrase that pins the digits, so the
+   cross-check can fail.
+
+Step 3 is worth doing regardless of steps 1 and 2: a `required_text` that cannot
+discriminate is the mechanism by which this went unnoticed.
+
+No production code, registry data or test was changed by this audit. The values
+were not altered — per the standing rule, the oracle follows the fix, and here
+there is no fix to the numbers, only to what vouches for them.
 ## Evidence
 
 The parameter file
@@ -98,20 +116,3 @@ So the correct citation cannot be authored from what is in the tree, and authori
 a corpus excerpt from a secondary source is forbidden precisely because the
 `required_text` gate would then be self-certifying — which is the failure mode
 this parameter already exhibits.
-
-## Remediation — owner's decision, not taken here
-
-1. Bundle LIVA art. 119 from the consolidated BOE text, taking the **last**
-   version rather than the first, and asserting the amending norm's identifier.
-2. Re-point both parameters' `legal_refs` at the provision that states the amount,
-   keeping `orden-eha-789-2010:art-4` only if a plazo reference is independently
-   wanted.
-3. Replace the `required_text` with a phrase that pins the digits, so the
-   cross-check can fail.
-
-Step 3 is worth doing regardless of steps 1 and 2: a `required_text` that cannot
-discriminate is the mechanism by which this went unnoticed.
-
-No production code, registry data or test was changed by this audit. The values
-were not altered — per the standing rule, the oracle follows the fix, and here
-there is no fix to the numbers, only to what vouches for them.

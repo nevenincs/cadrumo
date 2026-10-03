@@ -63,7 +63,7 @@ from ....application.calculations.iva_wallet_reconciliation import reconcile_mod
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.filing_actions import file_modelo_revision
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.auth_provider import AuthProviderKind
@@ -282,7 +282,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     assert saldo > Decimal("0")
 
     with bundled_indexed_authority().operation() as operation:
-        verification = verify_modelo_revision(
+        verification = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -295,7 +295,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
             clock=_VERIFY_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert verification.granted_verificado_completo is True
 
     # The filing path determines the devolución/compensación disposition itself

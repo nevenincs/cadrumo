@@ -133,9 +133,7 @@ _MESH_OWNED_SOURCES = frozenset(
 #: the sibling engine test does -- so the calculation reaches casilla 0513. The
 #: two mínimo bindings are deliberately NOT in this set: caller-supplying either
 #: would decide the very question the probe asks.
-_UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = (
-    "renta-profile-cotizaciones-ss-madre",
-)
+_UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = ("renta-profile-cotizaciones-ss-madre",)
 
 
 def _non_mesh_zero_bindings() -> dict[BindingId, Decimal]:

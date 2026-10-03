@@ -43,7 +43,7 @@ from cadrumo.domain.calculations.registry.m347_threshold import (
 )
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
+from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, invoice_class_rectificativa
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -972,7 +972,7 @@ def test_m347_declares_an_operation_assimilated_to_an_export_and_discloses_the_o
     assert _unsettled_reading_refs(resolution) == ["m347-exclusion:iva-category"]
     advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
     assert "M347-ASIMILADA-2026-001" in advisory.message
-    assert advisory.asserted_legal_refs == ("rd-1065-2007:art-33",)
+    assert advisory.asserted_legal_refs == ("rd-1065-2007:art-33.2.g",)
 
 
 def _withheld_invoice(bucket_id: str, *, kind: InvoiceKind, invoice_number: str) -> Invoice:
@@ -1014,7 +1014,12 @@ def test_m347_excludes_a_received_invoice_whose_withholding_the_filer_declares_a
 def test_m347_declares_an_issued_invoice_withheld_by_the_customer_and_discloses_it(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """The withheld party has no withholding summary of its own, so its side stays declared and disclosed."""
+    """The withheld party has no withholding summary of its own, so its side stays declared and disclosed.
+
+    The advisory must not tell a landlord of business premises that the lease may
+    drop out: art. 34.1.d has the landlord relate it. The invoice records no lease
+    fact, so the advisory names that case and says it cannot tell it apart.
+    """
     withheld = _withheld_invoice(
         secure_profile.bucket_id, kind=InvoiceKind.ISSUED, invoice_number="M347-RETENIDA-EMI-2026-001"
     )
@@ -1024,7 +1029,15 @@ def test_m347_declares_an_issued_invoice_withheld_by_the_customer_and_discloses_
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert _unsettled_reading_refs(resolution) == ["m347-exclusion:withheld-issued-invoice"]
     advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
-    assert advisory.asserted_legal_refs == ("rd-1065-2007:art-33", "rd-439-2007:art-108")
+    assert advisory.asserted_legal_refs == (
+        "rd-1065-2007:art-33.2.i",
+        "rd-1065-2007:art-34.1.d",
+        "rd-439-2007:art-108",
+    )
+    assert "business premises" in advisory.message
+    assert "cannot tell" in advisory.message
+    assert advisory.remedy is not None
+    assert "Keep the business-premises leases declared" in advisory.remedy
 
 
 def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not(
@@ -1759,6 +1772,120 @@ def test_m347_nil_total_in_a_bucket_without_floor_is_declared_and_disclosed(
     advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
     assert "M347-E-NIL-2026-001" in advisory.message
     assert "M347-E-POSITIVE-2026-001" not in advisory.message
+
+
+def _sale(bucket_id: str, *, invoice_number: str, issued_at: date, gross: str) -> Invoice:
+    """An issued domestic sale to one customer whose gross total is ``gross`` (21% IVA included)."""
+    gross_total = Decimal(gross)
+    base_total = (gross_total / Decimal("1.21")).quantize(Decimal("0.01"))
+    return _domestic_invoice(
+        bucket_id=bucket_id,
+        kind=InvoiceKind.ISSUED,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
+        counterparty_tax_id="B12345674",
+        counterparty_name="Cliente Rectificado SL",
+        base_total=base_total,
+        iva_total=gross_total - base_total,
+    )
+
+
+def _rectificativa_of(original_number: str, sale: Invoice) -> Invoice:
+    """``sale`` reissued as the factura rectificativa of ``original_number`` (RD 1619/2012 art. 15)."""
+    return sale.model_copy(
+        update={
+            "invoice_class": invoice_class_rectificativa(),
+            "series": "R",
+            "rectifies_invoice_number": original_number,
+        },
+    )
+
+
+def _declarado_row(resolution, *, clave: str) -> dict[str, object]:
+    rows: dict[int, dict[str, object]] = {}
+    for (binding_id, row_index), value in resolution.row_binding_values.items():
+        rows.setdefault(row_index, {})[str(binding_id).removeprefix("modelo-347-contraparte-row-")] = value
+    return next(row for row in rows.values() if row["clave"] == clave)
+
+
+def test_m347_nets_a_rectificativa_against_the_operation_it_corrects(secure_profile: TestRuntimeProfile) -> None:
+    """RD 1065/2007 art. 34.4: the annual amount is declared "neto de las devoluciones, descuentos y bonificaciones".
+
+    A 5,000 sale in the first quarter and its 1,000 rectificativa in the second
+    leave one declarado record of 4,000 (5,000 in Q1, -1,000 in Q2). Added
+    rather than netted, the same two invoices would declare 6,000.
+    """
+    bucket_id = secure_profile.bucket_id
+    sale = _sale(bucket_id, invoice_number="F-2026-001", issued_at=date(2026, 2, 10), gross="5000.00")
+    correction = _rectificativa_of(
+        "F-2026-001",
+        _sale(bucket_id, invoice_number="R-2026-001", issued_at=date(2026, 5, 10), gross="1000.00"),
+    )
+
+    resolution = _public_resolution((sale, correction), context=_m347_2026_context(bucket_id))
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4000.00")
+    row = _declarado_row(resolution, clave="B")
+    assert (row["importe"], row["importe-q1"], row["importe-q2"]) == (
+        Decimal("4000.00"),
+        Decimal("5000.00"),
+        Decimal("-1000.00"),
+    )
+    assert _unsettled_reading_refs(resolution) == ["m347-rectificativa:netted-as-reduction"]
+    advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
+    assert "R-2026-001" in advisory.message
+    assert "not related in this ejercicio" not in advisory.message
+    assert advisory.asserted_legal_refs == ("rd-1065-2007:art-34.4",)
+
+
+def test_m347_full_rectification_nets_to_nil_and_is_left_out_with_an_advisory(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A sale rectified in full nets to nil: art. 33.1 relates only a party above its floor, so no record."""
+    bucket_id = secure_profile.bucket_id
+    sale = _sale(bucket_id, invoice_number="F-2026-002", issued_at=date(2026, 3, 1), gross="5000.00")
+    correction = _rectificativa_of(
+        "F-2026-002",
+        _sale(bucket_id, invoice_number="R-2026-002", issued_at=date(2026, 9, 1), gross="5000.00"),
+    )
+
+    resolution = _public_resolution((sale, correction), context=_m347_2026_context(bucket_id))
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("0")
+    assert resolution.row_binding_values == {}
+    assert _unsettled_reading_refs(resolution) == [
+        "m347-rectificativa:netted-as-reduction",
+        "m347-threshold-bucket:nonpositive-total-left-out",
+    ]
+    left_out = next(
+        item for item in resolution.diagnostics if item.source_ref == "m347-threshold-bucket:nonpositive-total-left-out"
+    )
+    assert "F-2026-002" in left_out.message
+    assert "R-2026-002" in left_out.message
+    assert left_out.asserted_legal_refs == ("rd-1065-2007:art-33", "rd-1065-2007:art-34.4")
+
+
+def test_m347_rectificativa_of_an_invoice_outside_the_ejercicio_is_named(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A rectificativa of a 2025 sale reduces the 2026 total, and the advisory says its original is not in 2026."""
+    bucket_id = secure_profile.bucket_id
+    earlier_sale = _sale(bucket_id, invoice_number="F-2025-099", issued_at=date(2025, 11, 20), gross="2000.00")
+    sale = _sale(bucket_id, invoice_number="F-2026-003", issued_at=date(2026, 4, 1), gross="6000.00")
+    correction = _rectificativa_of(
+        "F-2025-099",
+        _sale(bucket_id, invoice_number="R-2026-003", issued_at=date(2026, 1, 15), gross="500.00"),
+    )
+
+    resolution = _public_resolution((earlier_sale, sale, correction), context=_m347_2026_context(bucket_id))
+
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("5500.00")
+    advisory = next(
+        item for item in resolution.diagnostics if item.source_ref == "m347-rectificativa:netted-as-reduction"
+    )
+    assert "R-2026-003 rectify an invoice not related in this ejercicio" in advisory.message
 
 
 def _regime_profile_facts(

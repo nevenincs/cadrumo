@@ -6,7 +6,7 @@ import pytest
 from textual.app import App
 from textual.widgets import Button, Input, Select, Static
 
-from .....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
+from .....application.modelo.work_calculation_contracts import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from .....core.i18n.render import tr
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 

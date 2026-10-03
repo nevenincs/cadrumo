@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#current-schema-only-purge'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:713e7440d37612231662ff7ff0dbb2a6e374e11a332bf5dd22b732698f01647e'
 related:
-  - "[[2026-08-10-current-schema-only-purge-plan]]"
   - "[[2026-08-10-current-schema-only-purge-adr]]"
   - "[[2026-08-11-current-schema-only-purge-s42-operator-manual-audit]]"
 ---

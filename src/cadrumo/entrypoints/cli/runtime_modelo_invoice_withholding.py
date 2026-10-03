@@ -12,7 +12,7 @@ from ...application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
 )
 from ...application.aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
-from ...application.modelo.invoice_withholding_capture_operation import (
+from ...application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     ModeloInvoiceWithholdingCaptureProjection,
     ModeloInvoiceWithholdingCaptureRequest,

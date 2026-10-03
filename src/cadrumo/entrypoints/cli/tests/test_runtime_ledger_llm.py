@@ -15,11 +15,8 @@ import pytest
 import typer
 from pydantic import BaseModel
 
-from ....application.ledger.classify_operation import (
-    LEDGER_OPERATOR_IVA_DEFINITION_ID,
+from ....application.ledger.classify_result_contracts import (
     LedgerClassifyOperationResult,
-    LedgerOperatorIvaRequest,
-    LedgerOperatorIvaResult,
 )
 from ....application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
@@ -32,6 +29,11 @@ from ....application.ledger.llm_review_contracts import (
 )
 from ....application.ledger.llm_review_results import LedgerLlmOperationResult
 from ....application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
+from ....application.ledger.operator_iva_contracts import (
+    LEDGER_OPERATOR_IVA_DEFINITION_ID,
+    LedgerOperatorIvaRequest,
+    LedgerOperatorIvaResult,
+)
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
 from ....application.operations.registry import OperationSchemaIdentityV1
 from ....application.review.filter import LedgerReviewStatus

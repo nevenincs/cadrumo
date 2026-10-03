@@ -9,6 +9,8 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
+from ....core.errors.hierarchy import CoreValidationError
+from ....core.modelo import Modelo
 from ....core.time.clock import today_madrid
 from ...iva.schema import IvaCategory
 from .errors import RegistryValidationError
@@ -68,7 +70,7 @@ class IvaCategoryCatalogue:
     operation_types: Mapping[str, str]
     operation_type_categories: Mapping[str, str]
     untdid_categories: Mapping[str, str]
-    exclusions: Mapping[tuple[str, IvaCategory], IvaCategoryExclusion]
+    exclusions: Mapping[tuple[Modelo, IvaCategory], IvaCategoryExclusion]
 
     @property
     def all_categories(self) -> tuple[IvaCategory, ...]:
@@ -137,7 +139,7 @@ class IvaCategoryCatalogue:
         token = self.untdid_categories.get(code)
         return None if not token else self.require(token)
 
-    def exclusion(self, modelo: str, token: object) -> IvaCategoryExclusion | None:
+    def exclusion(self, modelo: Modelo, token: object) -> IvaCategoryExclusion | None:
         """Return how ``modelo`` treats operations of one category, or ``None`` when it declares them."""
         return self.exclusions.get((modelo, self.require(token)))
 
@@ -224,23 +226,37 @@ def _category_operation_types(entries: Mapping[str, str]) -> tuple[dict[str, str
     return operation_types, operation_type_categories, untdid_categories
 
 
+def _exclusion_modelo(key: str, raw_modelo: str) -> Modelo:
+    """Read an exclusion key's modelo segment as the canonical three-digit :class:`Modelo`."""
+    if not raw_modelo:
+        raise RegistryValidationError(f"IVA category exclusion {key!r} names no modelo")
+    try:
+        return Modelo(raw_modelo)
+    except CoreValidationError as exc:
+        raise RegistryValidationError(
+            f"IVA category exclusion {key!r} names {raw_modelo!r}, which is not a canonical modelo code",
+        ) from exc
+
+
 def _category_exclusions(
     entries: Mapping[str, str],
     declared: frozenset[IvaCategory],
-) -> dict[tuple[str, IvaCategory], IvaCategoryExclusion]:
+) -> dict[tuple[Modelo, IvaCategory], IvaCategoryExclusion]:
     """Read ``category_exclusion.<modelo>.<category>`` entries into typed verdicts.
 
-    Refuses an entry that names no modelo, names a category the catalogue does
-    not declare, or carries a verdict outside :class:`IvaCategoryExclusion`.
+    Refuses an entry that names no modelo or one that is not a canonical
+    :class:`Modelo` code, names a category the catalogue does not declare, or
+    carries a verdict outside :class:`IvaCategoryExclusion`.
     """
-    exclusions: dict[tuple[str, IvaCategory], IvaCategoryExclusion] = {}
+    exclusions: dict[tuple[Modelo, IvaCategory], IvaCategoryExclusion] = {}
     for key, value in entries.items():
         if not key.startswith(_EXCLUSION_PREFIX):
             continue
-        modelo, _, raw_token = key.removeprefix(_EXCLUSION_PREFIX).partition(".")
+        raw_modelo, _, raw_token = key.removeprefix(_EXCLUSION_PREFIX).partition(".")
+        modelo = _exclusion_modelo(key, raw_modelo)
         token = IvaCategory(raw_token)
-        if not modelo or token not in declared:
-            raise RegistryValidationError(f"IVA category exclusion {key!r} names no modelo or an undeclared category")
+        if token not in declared:
+            raise RegistryValidationError(f"IVA category exclusion {key!r} names an undeclared category")
         try:
             exclusions[(modelo, token)] = IvaCategoryExclusion(value.strip())
         except ValueError as exc:

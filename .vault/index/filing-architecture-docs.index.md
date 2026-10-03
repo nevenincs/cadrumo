@@ -4,13 +4,12 @@ tags:
   - '#index'
   - '#filing-architecture-docs'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0633d6fd676428280d96c3ea73eaeb9416c5861dcbcf4eecf2fe0668aadcdee8'
+body_hash: 'sha256:3803fd71c9172c00fd1409d4e35d8a177ea59fe7839f1f0e8b1586fa8ddc29f8'
 related:
   - '[[2026-06-08-filing-architecture-docs-adr]]'
   - '[[2026-06-08-filing-architecture-docs-audit]]'
-  - '[[2026-06-08-filing-architecture-docs-plan]]'
   - '[[2026-06-08-filing-architecture-docs-research]]'
 ---
 
@@ -27,10 +26,6 @@ Auto-generated index of all documents tagged with `#filing-architecture-docs`.
 ### audit
 
 - `2026-06-08-filing-architecture-docs-audit` - `filing-architecture-docs` audit: `Filing Architecture Documentation Gaps and Narrative Transitions Audit`
-
-### plan
-
-- `2026-06-08-filing-architecture-docs-plan` - `filing-architecture-docs` `Filing Architecture Documentation` plan
 
 ### research
 

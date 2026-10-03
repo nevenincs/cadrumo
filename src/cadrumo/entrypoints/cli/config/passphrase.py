@@ -11,7 +11,8 @@ from pydantic import SecretStr
 
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....adapters.local_runtime.profile_password_rotation import run_profile_password_rotation
 from ....application.operations.registry import OperationFrontendProjection
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id

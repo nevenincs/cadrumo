@@ -15,7 +15,7 @@ from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_cr
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 
 from ....adapters.local_runtime.automation_requester import AutomationRequesterJourney
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.runtime.deadline_budget import remaining_budget
 from ....application.user_profile.automation_enrollment import (

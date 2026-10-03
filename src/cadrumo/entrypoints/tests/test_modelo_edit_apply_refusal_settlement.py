@@ -20,6 +20,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.edit_apply_contracts import ModeloEditApplyOperationRequestV1, ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloEditScalarAddressV1,
@@ -28,10 +29,6 @@ from ...application.modelo.edit_models import (
     ModeloScalarEditIntentV1,
 )
 from ...application.modelo.edit_services import writable_scalar_entry
-from ...application.modelo.operation_definitions import (
-    ModeloEditApplyOperationRequestV1,
-    ModeloEditApplySubmissionV1,
-)
 from ...core.casilla_id import validated_casilla_id
 from ...core.errors.error_codes import get_registered_error_code_by_code
 from ...core.hashing import content_hash_hex

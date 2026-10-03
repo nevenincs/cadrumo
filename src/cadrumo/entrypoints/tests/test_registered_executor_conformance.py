@@ -59,17 +59,17 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ...application.actividad_asset.operation_dtos import (
-    ActivityAssetRevisionSnapshot,
-    ScheduledAmortizationChargeSnapshot,
-)
-from ...application.actividad_asset.registered_operations import (
+from ...application.actividad_asset.activity_asset_projections import (
     ActivityAssetClaimProjection,
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
     ActivityAssetInspectProjection,
+)
+from ...application.actividad_asset.operation_dtos import (
+    ActivityAssetRevisionSnapshot,
+    ScheduledAmortizationChargeSnapshot,
 )
 from ...application.aggregation.service import aggregate_per_modelo
 from ...application.auth.auth_read_contracts import (
@@ -83,14 +83,14 @@ from ...application.auth.certificate_source_operations import (
     set_operator_certificate_source_secret,
 )
 from ...application.auth.operation_definitions import build_auth_operation_definitions
-from ...application.bienes_inversion.registered_operation import (
+from ...application.bienes_inversion.registered_result_contracts import (
     BienesInversionDeclareProjection,
     BienesInversionListProjection,
     BienInversionRecordProjection,
 )
 from ...application.bucket_event_repository import bucket_event_history_repository
 from ...application.calculations.iva_compensation_history import seed_iva_compensation_period
-from ...application.inventory.registered_operation import (
+from ...application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
     InventoryLedgerProjection,
@@ -143,10 +143,12 @@ from ...application.ledger.bulk_classify_operation import (
     LedgerBulkClassifyRequest,
 )
 from ...application.ledger.check_operation import LedgerCheckProjection, LedgerCheckRequest
-from ...application.ledger.classify_operation import (
-    LedgerClassifyOperationResult,
+from ...application.ledger.classify_requests import (
     LedgerClassifyPatch,
     LedgerClassifyRequest,
+)
+from ...application.ledger.classify_result_contracts import (
+    LedgerClassifyOperationResult,
 )
 from ...application.ledger.counterparty_operation import LedgerCounterpartyRequest, LedgerCounterpartyResult
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
@@ -169,7 +171,7 @@ from ...application.ledger.id_resolution import resolve_lineage_transaction_id
 from ...application.ledger.import_operation import LedgerImportRequest, LedgerImportResultProjection
 from ...application.ledger.invoice_evidence_confirm_operation import LedgerEvidenceConfirmProjection
 from ...application.ledger.ledger_add_contracts import LedgerAddOperationResult, LedgerAddRequest
-from ...application.ledger.lifecycle_mutation_operation import (
+from ...application.ledger.lifecycle_contracts import (
     LedgerLifecycleOperationId,
     LedgerLifecycleOperationResult,
 )
@@ -203,7 +205,7 @@ from ...application.ledger.track_operation import LedgerTrackProjection, LedgerT
 from ...application.ledger.tracking_projection import (
     LedgerParticipationProjection as LedgerParticipationEntryProjection,
 )
-from ...application.ledger.update_operation import (
+from ...application.ledger.update_contracts import (
     LedgerUpdateOperationResult,
     LedgerUpdatePatch,
     LedgerUpdateRequest,
@@ -222,8 +224,9 @@ from ...application.live.notification_ports import NotificationsSnapshot, Notifi
 from ...application.live.notifications import NotificationsService
 from ...application.live.verify import VerifyService, VerifySurface
 from ...application.live.verify_capture_operation import VerifyLiveObservation, build_verify_capture_definition
-from ...application.local_reader_operation import LOCAL_READER_OPERATION_SUBJECT, LocalReaderProvisionAction
-from ...application.modelo.aggregate_operation import ModeloAggregateOperationRequest, ModeloAggregateProjection
+from ...application.local_reader_contracts import LOCAL_READER_OPERATION_SUBJECT, LocalReaderProvisionAction
+from ...application.modelo.aggregate_projection import ModeloAggregateProjection
+from ...application.modelo.aggregate_request import ModeloAggregateOperationRequest
 from ...application.modelo.amendment_action_ports import AmendmentActionPorts, AmendmentActionPortsFactory
 from ...application.modelo.calculation_actions import calculate_modelo_revision
 from ...application.modelo.calculation_report_verification import (
@@ -242,9 +245,10 @@ from ...application.modelo.dependency_operation import (
     ModeloDependencyProjection,
     ModeloDependencyRequest,
 )
+from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.external_import_actions import import_external_filing_evidence
 from ...application.modelo.history_operation import ModeloWorkHistoryProjection, ModeloWorkHistoryRequest
-from ...application.modelo.invoice_withholding_capture_operation import (
+from ...application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     ModeloInvoiceWithholdingCaptureProjection,
     ModeloInvoiceWithholdingCaptureRequest,
@@ -256,7 +260,7 @@ from ...application.modelo.iva_wallet_correction_operation import (
 )
 from ...application.modelo.iva_wallet_override_operation import ModeloIvaWalletOverrideProjection
 from ...application.modelo.iva_wallet_seed_operation import ModeloIvaWalletSeedProjection
-from ...application.modelo.local_observation_operation import ModeloLocalObservationCasillaValue
+from ...application.modelo.local_observation_contracts import ModeloLocalObservationCasillaValue
 from ...application.modelo.m303_attestation_operation import (
     ModeloWorkM303AttestationPublicResultV2,
     ModeloWorkM303AttestationRequest,
@@ -265,12 +269,8 @@ from ...application.modelo.mcp_query_contracts import (
     ModeloBindingsResolveTypedProjection,
     ModeloReadinessSummaryProjection,
 )
-from ...application.modelo.operation_definitions import (
-    ModeloEditApplySubmissionV1,
-    ModeloWorkCalculateRequest,
-    resolve_active_workflow_profile,
-)
-from ...application.modelo.query_read_operation import (
+from ...application.modelo.operation_definitions import resolve_active_workflow_profile
+from ...application.modelo.query_read_contracts import (
     ModeloBindingsListProjection,
     ModeloBindingsResolveProjection,
     ModeloReadinessProjection,
@@ -291,7 +291,7 @@ from ...application.modelo.taxation_comparison_operation import (
     MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,
     ModeloTaxationComparisonRequest,
 )
-from ...application.modelo.verification_actions import verify_modelo_revision
+from ...application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ...application.modelo.wizard_attempt_operation import (
     ModeloWorkWizardAttemptCalculated,
     ModeloWorkWizardAttemptProjection,
@@ -301,6 +301,7 @@ from ...application.modelo.wizard_context_operation import (
     ModeloWorkWizardContextProjection,
     ModeloWorkWizardContextRequest,
 )
+from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from ...application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
     ModeloWorkCreateProjection,
@@ -308,7 +309,7 @@ from ...application.modelo.work_create_operation import (
     ModeloWorkCreateRequest,
 )
 from ...application.modelo.work_inventory_operation import ModeloWorkListProjection, ModeloWorkListRequest
-from ...application.modelo.work_review_operation import ModeloWorkReviewProjection, ModeloWorkReviewRequest
+from ...application.modelo.work_review_contracts import ModeloWorkReviewProjection, ModeloWorkReviewRequest
 from ...application.operations.capabilities import OperationRequestStoragePolicy
 from ...application.operations.composition import (
     OperationComposedServices,
@@ -385,12 +386,12 @@ from ...application.user_profile.section_rows import add_profile_repeatable_sect
 from ...application.user_profile.view_operation import ProfileViewPageKind
 from ...application.workflow.abort import WorkflowAbortReason
 from ...application.workflow.persistence import WorkflowRunRepository, workflow_state_repository
-from ...application.workflow.resume_operation import (
-    WORKFLOW_RESUME_OPERATION_DEFINITION_ID,
+from ...application.workflow.resume_contracts import (
     WorkflowResumeProjection,
     WorkflowResumeRequest,
     WorkflowResumeSuccess,
 )
+from ...application.workflow.resume_operation import WORKFLOW_RESUME_OPERATION_DEFINITION_ID
 from ...application.workflow.run_models import (
     WorkflowObligationFacts,
     WorkflowResult,
@@ -1667,7 +1668,7 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
         binding_values=modelo_operation_test_support.FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
         source_transaction_ids=(transaction_id,),
     )
-    report = verify_modelo_revision(
+    report = verify_modelo_revision_with_preconditions(
         calculation.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_verification_repository_bundle(unit.bucket_id, operation=operation),
@@ -1675,7 +1676,7 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
         workflow_profile=resolve_active_workflow_profile(operation),
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         operation=operation,
-    )
+    ).report
     if report.completeness_status is not VerificationCompletenessStatus.COMPLETE:
         findings = "; ".join(finding.kind.value for finding in report.findings) or "no findings reported"
         raise AssertionError(f"track participation seed did not verify completely: {findings}")
@@ -3558,6 +3559,7 @@ def _runtime(
                 before_irreversible_section=before_irreversible_section,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 censal_fetch_port=build_censal_fetch_port(),
+                provider_preflight=lambda _profile_id, _operation: None,
             ),
             verify_nif_iva_definition=verify_definition(VerifySurface.NIF_IVA),
             verify_tgvi_definition=verify_definition(VerifySurface.TGVI),

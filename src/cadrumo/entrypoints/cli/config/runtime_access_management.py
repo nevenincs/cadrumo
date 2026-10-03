@@ -10,7 +10,8 @@ from pydantic import SecretStr
 
 from ....adapters.local_runtime.automation_decision import AutomationDecision, run_automation_decision
 from ....adapters.local_runtime.automation_inventory import read_automation_inventory
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.models import OperationId
 from ....application.user_profile.access_projections import PublicAccessSession
 from ....application.user_profile.automation_enrollment import (

@@ -35,6 +35,10 @@ modelo:
               label: Durada de l'operació en mesos
             fecha-operacion:
               label: Data de l'operació
+            iban-codigo-pais:
+              label: Codi de país de l'IBAN de l'operació
+            iban-digitos-control:
+              label: Dígits de control de l'IBAN de l'operació
             identificacion-operacion:
               label: Identificació del préstec, crèdit o altra operació financera
             importe-amortizacion-capital:
@@ -56,6 +60,38 @@ modelo:
               label: Import total dels interessos abonats en l'exercici
             importe-total-saldos-pendientes:
               label: Import total dels saldos pendents a 31 de desembre
+            inmueble-bloque:
+              label: Bloc de l'immoble
+            inmueble-calificador-numero:
+              label: Qualificador del número de l'immoble
+            inmueble-codigo-municipio:
+              label: Codi de municipi de l'immoble
+            inmueble-codigo-postal:
+              label: Codi postal de l'immoble
+            inmueble-codigo-provincia:
+              label: Codi de província de l'immoble
+            inmueble-complemento:
+              label: Complement de l'adreça de l'immoble
+            inmueble-escalera:
+              label: Escala de l'immoble
+            inmueble-localidad:
+              label: Localitat o població de l'immoble
+            inmueble-municipio:
+              label: Municipi de l'immoble
+            inmueble-nombre-via:
+              label: Nom de la via pública de l'immoble
+            inmueble-numero-casa:
+              label: Número de casa de l'immoble
+            inmueble-planta:
+              label: Planta o pis de l'immoble
+            inmueble-portal:
+              label: Portal de l'immoble
+            inmueble-puerta:
+              label: Porta de l'immoble
+            inmueble-tipo-numeracion:
+              label: Tipus de numeració de l'immoble
+            inmueble-tipo-via:
+              label: Tipus de via de l'immoble
             intereses-indemnizatorios:
               label: Interessos indemnitzatoris
             numero-identificativo-anterior:
@@ -94,8 +130,12 @@ modelo:
               label: Tipus d'operació
             valor-tasacion-inmueble:
               label: Valor de taxació de l'immoble objecte de garantia
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: Declaració complementària
             x-chim6r1ecll6asj3d5hmiro:
               label: Exercici a què es refereix la declaració
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: Declaració substitutiva
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Tipus de declaració (originària / substitutiva / complementària)
           field:

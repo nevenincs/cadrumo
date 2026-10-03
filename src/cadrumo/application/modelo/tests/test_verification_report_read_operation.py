@@ -43,16 +43,22 @@ from ...user_profile.access_contracts import (
     OperationAccessRequest,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from .. import verification_report_read_operation as operation_module
-from ..verification_report_read_operation import (
+from .. import verification_report_read_capture as capture_module
+from ..verification_report_public_facts import ModeloVerificationReportProjection
+from ..verification_report_read_capture import capture_verification_report_list, capture_verification_report_view
+from ..verification_report_read_contracts import (
     MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID,
     MODELO_VERIFICATION_REPORT_VIEW_OPERATION_DEFINITION_ID,
-    ModeloVerificationReportListProjection,
     ModeloVerificationReportListRequest,
-    ModeloVerificationReportViewProjection,
     ModeloVerificationReportViewRequest,
+)
+from ..verification_report_read_operation import (
     build_modelo_verification_report_read_definitions,
     build_modelo_verification_report_read_registrations,
+)
+from ..verification_report_read_projection import (
+    ModeloVerificationReportListProjection,
+    ModeloVerificationReportViewProjection,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -236,8 +242,8 @@ def test_report_projection_round_trip_preserves_complete_finding_detail() -> Non
         report = _report(revision, ordinal=3, run_at=_NOW)
         _factory, definitions, registrations, _registry = _setup(_bundle((revision,), (), (report,)))
 
-        projection = operation_module.ModeloVerificationReportProjection.from_report(report)
-        restored = operation_module.ModeloVerificationReportProjection.model_validate_json(projection.model_dump_json())
+        projection = ModeloVerificationReportProjection.from_report(report)
+        restored = ModeloVerificationReportProjection.model_validate_json(projection.model_dump_json())
 
     assert restored == projection
     assert restored.verification_report_id == report.verification_report_id
@@ -278,7 +284,7 @@ def test_capture_filters_orders_reports_and_refuses_incomplete_overlimit_results
             profile_id=_PROFILE,
             calculation_revision_id=revision_a.calculation_revision_id,
         )
-        projection = operation_module._capture_list(payload, factory, operation=operation)
+        projection = capture_verification_report_list(payload, factory, operation=operation)
 
         assert projection.profile_id == _PROFILE
         assert projection.calculation_revision_id_filter == revision_a.calculation_revision_id
@@ -287,7 +293,7 @@ def test_capture_filters_orders_reports_and_refuses_incomplete_overlimit_results
             report_a_early.verification_report_id,
             report_a_late.verification_report_id,
         )
-        view = operation_module._capture_view(
+        view = capture_verification_report_view(
             ModeloVerificationReportViewRequest(
                 profile_id=_PROFILE,
                 verification_report_id=report_a_late.verification_report_id,
@@ -300,19 +306,19 @@ def test_capture_filters_orders_reports_and_refuses_incomplete_overlimit_results
         assert view.report.findings[0].legal_refs == report_a_late.findings[0].legal_refs
         assert view.report.findings[0].source_refs == report_a_late.findings[0].source_refs
 
-        monkeypatch.setattr(operation_module, "MAX_MODELO_VERIFICATION_REPORT_LIST_ROWS", 1)
+        monkeypatch.setattr(capture_module, "MAX_MODELO_VERIFICATION_REPORT_LIST_ROWS", 1)
         with pytest.raises(ProfileAccessRefusedError) as oversized:
-            operation_module._capture_list(
+            capture_verification_report_list(
                 ModeloVerificationReportListRequest(profile_id=_PROFILE),
                 factory,
                 operation=operation,
             )
         assert oversized.value.reason is AccessDenialCode.OPERATION_DENIED
 
-        monkeypatch.setattr(operation_module, "MAX_MODELO_VERIFICATION_REPORT_LIST_ROWS", 4_096)
-        monkeypatch.setattr(operation_module, "_RESULT_DOCUMENT_MAX_BYTES", 1)
+        monkeypatch.setattr(capture_module, "MAX_MODELO_VERIFICATION_REPORT_LIST_ROWS", 4_096)
+        monkeypatch.setattr(capture_module, "VERIFICATION_REPORT_RESULT_DOCUMENT_MAX_BYTES", 1)
         with pytest.raises(ProfileAccessRefusedError) as too_large:
-            operation_module._capture_view(
+            capture_verification_report_view(
                 ModeloVerificationReportViewRequest(
                     profile_id=_PROFILE,
                     verification_report_id=report_a_late.verification_report_id,
@@ -452,7 +458,7 @@ def test_view_projection_rejects_mismatched_receipt_and_schema_binds() -> None:
         revision, _unit = _revision_and_unit(operation, "1T")
         report = _report(revision, ordinal=7, run_at=_NOW)
 
-    projection = operation_module.ModeloVerificationReportProjection.from_report(report)
+    projection = ModeloVerificationReportProjection.from_report(report)
     with pytest.raises(ValidationError):
         ModeloVerificationReportViewProjection(
             profile_id=_PROFILE,

@@ -15,7 +15,7 @@ level that holds one.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from itertools import groupby
 from statistics import median
@@ -118,21 +118,7 @@ def search_profile_kdf_grid(
     )
     by_memory = sorted(candidates, key=lambda point: point.memory_mib, reverse=True)
     for _memory, level in groupby(by_memory, key=lambda point: point.memory_mib):
-        columns: dict[int, list[ProfileCustodyKdfParameters]] = {}
-        for point in level:
-            columns.setdefault(point.parallelism, []).append(point)
-        best: ProfileKdfSearchChoice | None = None
-        for parallelism in sorted(columns, reverse=True):
-            column = sorted(columns[parallelism], key=lambda point: point.iterations)
-            if best is not None:
-                # A tie in iterations already loses to the higher parallelism found first.
-                floor_iterations = best.parameters.iterations
-                column = [point for point in column if point.iterations > floor_iterations]
-                if not column or search.over(column[0]):
-                    continue
-            choice = search.column(column)
-            if choice is not None:
-                best = choice
+        best = _search_memory_level(level, search)
         if best is not None:
             return best
     return None
@@ -143,3 +129,25 @@ __all__ = [
     "ProfileKdfSearchChoice",
     "search_profile_kdf_grid",
 ]
+
+
+def _search_memory_level(
+    level: Iterable[ProfileCustodyKdfParameters], search: _Search
+) -> ProfileKdfSearchChoice | None:
+    """Choose the strongest confirmed column without inferring across parallelism."""
+    columns: dict[int, list[ProfileCustodyKdfParameters]] = {}
+    for point in level:
+        columns.setdefault(point.parallelism, []).append(point)
+    best: ProfileKdfSearchChoice | None = None
+    for parallelism in sorted(columns, reverse=True):
+        column = sorted(columns[parallelism], key=lambda point: point.iterations)
+        if best is not None:
+            # A tie in iterations already loses to the higher parallelism found first.
+            floor_iterations = best.parameters.iterations
+            column = [point for point in column if point.iterations > floor_iterations]
+            if not column or search.over(column[0]):
+                continue
+        choice = search.column(column)
+        if choice is not None:
+            best = choice
+    return best

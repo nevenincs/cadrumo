@@ -4,13 +4,12 @@ tags:
   - '#index'
   - '#ledger-operator-hardening'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5009e3b8ed91f4ed1737f04e30c6f0eff5d70fc221a7c39fcc7a6330559cfb0c'
+body_hash: 'sha256:b7cf951e7f3c5ea357f96c615b4cd75dadade8b8a552de0573334c8630d51cef'
 related:
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
   - '[[2026-06-02-ledger-operator-hardening-audit]]'
-  - '[[2026-06-02-ledger-operator-hardening-plan]]'
   - '[[2026-06-04-ledger-operator-hardening-research]]'
 ---
 
@@ -27,10 +26,6 @@ Auto-generated index of all documents tagged with `#ledger-operator-hardening`.
 ### audit
 
 - `2026-06-02-ledger-operator-hardening-audit` - `ledger-operator-hardening` audit: `ledger operator persona testimonials and honesty review`
-
-### plan
-
-- `2026-06-02-ledger-operator-hardening-plan` - `ledger-operator-hardening` `ledger operator-testimonial corpus and persona-driven hardening` plan
 
 ### research
 

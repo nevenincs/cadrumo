@@ -1863,20 +1863,6 @@ cli:
       app_help: 'Futtasd a teljes helyi nyomtatvány-benyújtási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
         és exportál; soha nem nyújt be az AEAT-hoz'
-    runtime:
-      disable:
-        help: A bejelentkezéskori indítás kikapcsolása; a kézi indítás megmarad.
-      enable:
-        help: A futtatókörnyezet indítása a felhasználó bejelentkezésekor.
-      help: A telepített helyi futtatókörnyezet állapotának megtekintése és kezelése.
-      start:
-        help: A telepített futtatókörnyezet indítása és a kapcsolat ellenőrzése.
-      status:
-        help: A helyi szolgáltatás elérhetőségének és kezelője állapotának megjelenítése.
-      stop:
-        acknowledge_help: 'Megerősítés: a leállítás minden profilt és feladatot érint.'
-        help: A megosztott futtatókörnyezet leállítása a teljes hatókör jóváhagyása
-          után.
   common:
     errors:
       filing_requires_declared_tax_id: 'Az aktív profil nem ad meg adóazonosítót,
@@ -1987,7 +1973,8 @@ cli:
       reset_requires_yes: A visszaállítás eltávolítja a tárolt beállításokat és hitelesítő
         adatokat. A megerősítéshez futtasd újra a --yes kapcsolóval.
       reset_yes_help: A destruktív hitelesítési visszaállítás megerősítése
-      route_help: 'Cl@ve Móvil jóváhagyási mód: qr vagy app_request. A --provider
+      route_help: 'Cl@ve Móvil jóváhagyási mód: app_request (alapértelmezett, látható
+        böngésző nélkül is működik) vagy qr (látható böngészőt nyit). A --provider
         clave_movil kapcsoló szükséges.'
       status_help: Beállított hitelesítési állapot megjelenítése.
       status_summary_configured: A hitelesítés be van állítva, de még nincs elérhető
@@ -2894,8 +2881,9 @@ cli:
         antigravity, codex).
       session_stale_message: A tárolt AEAT-munkamenet túllépte az inaktivitási határidőt;
         egy élő olvasás újra hitelesíteni fog.
-      since_help: Az LLM-futásnaplók alsó (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
       until_help: Az LLM-futásnaplók felső (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+    run_records:
+      since_help: Az LLM-futásnaplók alsó (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
     runs:
       header: 'Legutóbbi LLM-futások:'
       help: A helyileg rögzített legutóbbi LLM-futásokat listázd, a legújabbtól a
@@ -2905,7 +2893,6 @@ cli:
         az adatok létrehozásához.
       provider_help: A listát erre a szolgáltatóra szűkíti (pl. claude, antigravity,
         codex).
-      since_help: Az LLM-futásnaplók alsó (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
       until_help: Az LLM-futásnaplók felső (befogadó) ISO dátumhatára (ÉÉÉÉ-HH-NN).
     summary:
       auth_no_session: A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete.

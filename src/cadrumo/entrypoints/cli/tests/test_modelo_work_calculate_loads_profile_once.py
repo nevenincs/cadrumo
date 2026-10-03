@@ -47,8 +47,8 @@ from ....application.aggregation.withholding_recognition import (
 from ....application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
 )
-from ....application.modelo.aggregate_operation import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
-from ....application.modelo.invoice_withholding_capture_operation import (
+from ....application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
+from ....application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
 )
 from ....application.modelo.m303_attestation_operation import MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID

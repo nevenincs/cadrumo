@@ -130,9 +130,9 @@ class OperationCapabilities(BaseModel):
 
 
 # Named capability profiles shared by several registered operations. Every
-# profile here is recorded, leases the definition subject, owns no supervisor
-# resource and lets its frontend detach; its name spells out the remaining
-# axes, so an operation that names a profile still declares its whole policy:
+# profile here is recorded, leases the definition subject and lets its
+# frontend detach; its name spells out the remaining axes, so an operation
+# that names a profile still declares its whole policy:
 #
 # - IDEMPOTENT / NON_IDEMPOTENT: idempotent-submit replay, or none.
 # - REQUEST_BOUND: baseline bound to the request; absent means no baseline.
@@ -141,6 +141,8 @@ class OperationCapabilities(BaseModel):
 # - JOURNALED: credential-free journal request with no sensitive input.
 #   SECURE_INPUT: secure-reference request carrying sensitive input.
 #   SECURE_STORED: secure-reference request without sensitive input.
+# - PROCESS: the supervisor owns a process (an AEAT browser); absent means
+#   the operation owns no supervisor resource.
 # - READ: may only leave no effect (or unknown after owner loss).
 #   UPDATE: may also fully apply, never partially.
 #   PARTIAL_UPDATE: may also leave a partially applied effect.
@@ -324,13 +326,41 @@ RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES =
     permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
     close_policy=OperationClosePolicy.DETACH_ALLOWED,
 )
+RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES = OperationCapabilities(
+    durability=OperationDurability.RECORDED,
+    cancellation=OperationCancellation.UNSUPPORTED,
+    deadline=OperationDeadline.ABSENT,
+    replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+    baseline=OperationBaselinePolicy.NONE,
+    request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+    sensitive_input=OperationSensitiveInputPolicy.NONE,
+    conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+    owned_resources=frozenset({OperationOwnedResource.PROCESS}),
+    permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
+    close_policy=OperationClosePolicy.DETACH_ALLOWED,
+)
+RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES = OperationCapabilities(
+    durability=OperationDurability.RECORDED,
+    cancellation=OperationCancellation.UNSUPPORTED,
+    deadline=OperationDeadline.ABSENT,
+    replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+    baseline=OperationBaselinePolicy.NONE,
+    request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+    sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
+    conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+    owned_resources=frozenset({OperationOwnedResource.PROCESS}),
+    permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
+    close_policy=OperationClosePolicy.DETACH_ALLOWED,
+)
 
 
 __all__ = [
     "RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES",
+    "RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES",
     "RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES",
     "RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES",
     "RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES",
+    "RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES",
     "RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES",
     "RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES",
     "RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES",

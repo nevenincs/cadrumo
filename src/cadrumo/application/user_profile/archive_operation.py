@@ -48,13 +48,12 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
 )
 from .access_contracts import (
     AccessDenialCode,
@@ -518,51 +517,33 @@ def build_profile_archive_operation_definitions(
 ) -> tuple[OperationDefinition, ...]:
     """Register the complete existing human archive family without agent escalation."""
     return (
-        OperationDefinition(
+        build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,
             request_type=ProfileArchiveExportRequest,
             result_type=ProfileArchiveExportExecutionResult,
-            executor_factory=OperationExecutorFactory(
-                request_type=ProfileArchiveExportRequest,
-                executor_type=ProfileArchiveExportExecutor,
-                build=lambda: ProfileArchiveExportExecutor(factory),
-            ),
-            phase_codes=(PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,),
-            interaction_kinds=frozenset(),
+            executor_type=ProfileArchiveExportExecutor,
+            build=lambda: ProfileArchiveExportExecutor(factory),
             capabilities=_capabilities(
                 frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
             ),
-            reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
             permitted_frontends=_FRONTENDS,
         ),
-        OperationDefinition(
+        build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,
             request_type=ProfileArchivePushRequest,
             result_type=ProfileArchivePushExecutionResult,
-            executor_factory=OperationExecutorFactory(
-                request_type=ProfileArchivePushRequest,
-                executor_type=ProfileArchivePushExecutor,
-                build=lambda: ProfileArchivePushExecutor(factory),
-            ),
-            phase_codes=(PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,),
-            interaction_kinds=frozenset(),
+            executor_type=ProfileArchivePushExecutor,
+            build=lambda: ProfileArchivePushExecutor(factory),
             capabilities=_capabilities(frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})),
-            reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
             permitted_frontends=_FRONTENDS,
         ),
-        OperationDefinition(
+        build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,
             request_type=ProfileArchiveReconcileRequest,
             result_type=ProfileArchiveReconcileExecutionResult,
-            executor_factory=OperationExecutorFactory(
-                request_type=ProfileArchiveReconcileRequest,
-                executor_type=ProfileArchiveReconcileExecutor,
-                build=lambda: ProfileArchiveReconcileExecutor(factory),
-            ),
-            phase_codes=(PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,),
-            interaction_kinds=frozenset(),
+            executor_type=ProfileArchiveReconcileExecutor,
+            build=lambda: ProfileArchiveReconcileExecutor(factory),
             capabilities=_capabilities(frozenset(OperationEffect)),
-            reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
             permitted_frontends=_FRONTENDS,
         ),
     )

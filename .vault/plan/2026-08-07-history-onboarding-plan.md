@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#history-onboarding'
 date: '2026-08-07'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_hash: 'sha256:8eb2ab709b10b5c53882a727f8f0c0617be2bffc0733af43ad74f85172d74297'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
   - '[[2026-08-07-declarations-register-pagination-adr]]'
-  - '[[2026-08-07-dehu-notification-legal-effect-reference]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
   - '[[2026-08-07-history-onboarding-reference]]'
 ---

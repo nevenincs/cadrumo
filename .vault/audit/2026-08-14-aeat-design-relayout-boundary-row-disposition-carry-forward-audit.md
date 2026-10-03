@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:c1805cbfc321e802b7fa78fcdf5d7afe133b8d69e650ec4c0387fed73eafe0e3'
 related:
-  - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'

@@ -70,11 +70,6 @@ corpus = "AEAT diseños de registro"
 reason = "Parses the fixed-width export field grammar the record designs declare."
 
 [[parser]]
-module = "dev/registry/compiler/validate_export_layout_coverage.py"
-corpus = "AEAT diseños de registro"
-reason = "Validates that a declared export layout covers every position its diseño states."
-
-[[parser]]
 module = "dev/registry/compiler/validate_layout_authority_content.py"
 corpus = "AEAT diseños de registro"
 reason = "Checks a layout authority's cited content against the design text it claims to mirror."
@@ -105,16 +100,6 @@ corpus = "AEAT sede consulta pages"
 reason = "Reads the read-only consulta listing; the sede's own markup is external prose that changes without notice."
 
 [[parser]]
-module = "dev/registry/pipeline/_export_tree.py"
-corpus = "AEAT diseños de registro"
-reason = """\
-Generator-side grammar over design value clauses ("N enteros y M decimales", \
-quoted code enumerations, trailing Nota references). Feeds the export-tree \
-renderer, whose output is proved against the published tree by \
-``check_generated_export_tree`` before publication -- so what this grammar \
-derives is never trusted on the grammar's word alone."""
-
-[[parser]]
 module = "dev/audit/legal_excerpt_vintage_screen.py"
 corpus = "BOE consolidated legal text"
 reason = "Audit tool screening bundled legal excerpts for vintage drift; reads BOE text to compare, writes nothing."
@@ -140,31 +125,41 @@ corpus = "AEAT casilla label and help text, as the registry stores it"
 reason = """Reads the edition-keyed chains a casilla's own AEAT label and help resolve through, so an inherited row shows the text its edition states. It reads key spellings over that prose; it establishes no value."""
 
 [[parser]]
-module = "dev/locales/modelo_casilla_catalogue.py"
-corpus = "AEAT casilla label and help text, as the registry stores it"
-reason = """Recognises the stock phrasings AEAT repeats across casilla help so a delta edition's inherited text is matched rather than restated per edition. Recognition only: the text it matches stays the registry's."""
-
-[[parser]]
-module = "dev/registry/analysis/casilla_lineage_seed.py"
-corpus = "AEAT diseños de registro (printed box numbers)"
-reason = """Reads the printed box number a design prints beside a casilla -- plain integers and the lettered, bis and dotted shapes -- to dispose of each successor row in a lineage. It proposes lineage seeds for review, never a filing value."""
-
-[[parser]]
 module = "dev/registry/analysis/unresolvable_note_pointers.py"
 corpus = "AEAT diseños de registro (Contenido cells and their notes)"
 reason = """Reads the ``Nota N`` pointer a Contenido cell carries when the rest of a field's meaning sits in a numbered note, and reports the pointers no note answers. A report, not a derivation."""
 
 [[parser]]
-module = "dev/registry/edition_delta_migration.py"
-corpus = "Authored registry edition TOML (casilla sections)"
-reason = """Reads the authored casilla section headers of an edition it is converting from a full copy to a delta. The prose vocabulary is the registry's own authoring spelling, and the conversion preserves declarations rather than deriving them."""
-
-[[parser]]
-module = "dev/registry/pipeline/render_profile.py"
-corpus = "AEAT diseños de registro (Contenido cells and cell references)"
-reason = """Reads the exact official Contenido cell a reviewed render profile may name, and the composite definitions that cell spells out. A profile is a reviewed input: this reads what it points at and infers nothing."""
-
-[[parser]]
 module = "dev/registry/analysis/record_design_enrollment.py"
 corpus = "AEAT diseños de registro (ingest capture titles and authored sources rows)"
 reason = """Reads the AEAT listing title a capture record stored beside an unregistered design, and the ``[sources."..."]`` headers already authored in the tree, to propose the source rows those designs are owed. The title's ejercicio names an identifier only; the candidate leaves applies_from/applies_to and record_design_epoch undeclared because a listing title states no legal window. It prints a candidate and installs nothing."""
+
+[[parser]]
+module = "dev/locales/casilla_text_policy.py"
+corpus = "AEAT casilla label and help text, as the registry stores it"
+reason = "Checks placeholder wording, truncation, token spellings and locale artefacts against the stored casilla text so its wording remains faithful. It establishes no regulatory value."
+
+[[parser]]
+module = "dev/registry/analysis/casilla_lineage_seed_writer.py"
+corpus = "Authored registry casilla TOML"
+reason = "Recognises authored casilla table headers to place reviewed lineage keys. The detector matches the casilla vocabulary; this writer does not derive a value from official prose."
+
+[[parser]]
+module = "dev/registry/compiler/export_layout_required_positions.py"
+corpus = "AEAT diseños de registro (PDF/XLSX)"
+reason = "Reads published validation, description, content and same-sheet note text to classify required and omissible positions. The layout coverage gate independently validates the complete record geometry."
+
+[[parser]]
+module = "dev/registry/edition_delta_fields.py"
+corpus = "Authored registry edition TOML"
+reason = "Recognises authored casilla and constraint section headers and their field names. The detector matches registry authoring vocabulary; this parser preserves declarations and derives no value from external prose."
+
+[[parser]]
+module = "dev/registry/pipeline/export_field_derivation.py"
+corpus = "AEAT diseños de registro (Contenido cells and note references)"
+reason = "Reads the declared scale, constants, enumerations and date patterns for canonical export fields. Source-bound generated-tree and publication verification check the resulting fields against the published design."
+
+[[parser]]
+module = "dev/registry/pipeline/render_profile_authority.py"
+corpus = "AEAT diseños de registro (PDF)"
+reason = "Compares printed signed-composite prose and geometry with an independently reviewed render profile. Text or shape disagreement refuses the profile; the comparison establishes no new rendering policy."

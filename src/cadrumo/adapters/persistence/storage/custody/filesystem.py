@@ -332,23 +332,35 @@ def _write_windows_local_record_once(path: Path, payload: bytes) -> None:
 
 def _replace_windows_local_record(path: Path, payload: bytes) -> None:
     """Atomically replace a Windows local record, waiting out active readers."""
-    from .....core.atomic_write import atomic_write_hardened_bytes
+    from .....core.atomic_write import hardened_staged_bytes_publication
 
     deadline = time.monotonic() + _LOCAL_RECORD_REPLACE_BUDGET_SECONDS
-    while True:
-        try:
-            atomic_write_hardened_bytes(path, payload, mode=0o600)
-        except PermissionError as exc:
-            # Only a Windows handle-contention code is worth waiting out. A
-            # denial raised without one (an ACL refusing the staging create)
-            # never clears, so it is refused at once instead of after the budget.
-            if not is_windows_contention(exc) or time.monotonic() >= deadline:
-                raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
-            time.sleep(_LOCAL_RECORD_REPLACE_POLL_SECONDS)
-        except OSError as exc:
-            raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
-        else:
-            return
+    publication_error: OSError
+    try:
+        with hardened_staged_bytes_publication(path, payload, mode=0o600) as staged:
+            while True:
+                try:
+                    staged.publish()
+                except PermissionError as exc:
+                    # The existing bounded Windows policy retries publication
+                    # denials with an accepted native code. WinError 5 may be
+                    # permanent access denial too; the budget bounds waiting
+                    # but does not classify its underlying cause. Staging,
+                    # descriptor writing and file syncing happen before this
+                    # loop and are refused immediately.
+                    if not is_windows_contention(exc) or time.monotonic() >= deadline:
+                        publication_error = exc
+                        break
+                    time.sleep(_LOCAL_RECORD_REPLACE_POLL_SECONDS)
+                except OSError as exc:
+                    publication_error = exc
+                    break
+                else:
+                    return
+    except OSError as exc:
+        raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
+
+    raise ProfileCustodyRecordError("local custody record cannot be atomically written") from publication_error
 
 
 def compare_and_replace_profile_custody_local_record(

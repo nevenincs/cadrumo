@@ -6,10 +6,11 @@ from uuid import UUID
 
 import typer
 
-from ....adapters.local_runtime.frontend_client import ProfileViewCollection, RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.capabilities import resolve_capability_from_values
-from ....application.user_profile.operations import ProfileFieldMutationOperationRequest
+from ....application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from ....core.capabilities import ServiceCapability
 from ....core.config import load_settings

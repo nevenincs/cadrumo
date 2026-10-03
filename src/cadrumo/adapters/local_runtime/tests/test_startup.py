@@ -12,7 +12,7 @@ import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 
-from ..posix import PosixRuntimeEndpoint
+from ..posix_endpoint import PosixRuntimeEndpoint
 from ..windows import WindowsRuntimeEndpoint
 from .process_support import launch_fixture
 

@@ -153,18 +153,7 @@ def _row_variants(
     of the edition that states it and the slices together cover exactly the
     row's own window.
     """
-    runs: list[tuple[list[ModeloRevision], ParameterDefinition, DatedValue]] = []
-    for revision, parameter, value in statements:
-        if runs and _provenance(runs[-1][1]) == _provenance(parameter):
-            run_revisions = runs[-1][0]
-            if run_revisions[0].review_status is not revision.review_status:
-                raise RegistryValidationError(
-                    f"modelo {modelo_id} parameter {parameter_id!r} revisions contributing one "
-                    "projected fact disagree on review status"
-                )
-            run_revisions.append(revision)
-            continue
-        runs.append(([revision], parameter, value))
+    runs = _row_provenance_runs(modelo_id, parameter_id=parameter_id, statements=statements)
     if len(runs) > 1 and runs[0][2].date_axis is not DateAxis.FILING_PERIOD:
         raise RegistryValidationError(
             f"modelo {modelo_id} parameter {parameter_id!r} restates one {runs[0][2].date_axis} row with "
@@ -180,6 +169,28 @@ def _row_variants(
             variant.model_copy(update={"source_revision_ids": tuple(revision.id for revision in run_revisions)})
         )
     return tuple(variants)
+
+
+def _row_provenance_runs(
+    modelo_id: str,
+    *,
+    parameter_id: str,
+    statements: list[tuple[ModeloRevision, ParameterDefinition, DatedValue]],
+) -> list[tuple[list[ModeloRevision], ParameterDefinition, DatedValue]]:
+    """Group consecutive identical provenance while requiring agreement on review."""
+    runs: list[tuple[list[ModeloRevision], ParameterDefinition, DatedValue]] = []
+    for revision, parameter, value in statements:
+        if runs and _provenance(runs[-1][1]) == _provenance(parameter):
+            run_revisions = runs[-1][0]
+            if run_revisions[0].review_status is not revision.review_status:
+                raise RegistryValidationError(
+                    f"modelo {modelo_id} parameter {parameter_id!r} revisions contributing one "
+                    "projected fact disagree on review status"
+                )
+            run_revisions.append(revision)
+            continue
+        runs.append(([revision], parameter, value))
+    return runs
 
 
 def _provenance(parameter: ParameterDefinition) -> tuple[object, ...]:

@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-30'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e308ba54e671c646018004ec99f42fe920062143196710af23aaa1dea8fc5df7'
+body_hash: 'sha256:51c07ead8dd53cecc869d86fd74824b1082716469e8ff8aedacba290beaaf3b4'
 related: []
 ---
 
 # `semantic-consolidation` audit: two CIF validators, opposite answers
 
-## The finding
+## Scope
 
+Review the CIF leader-selection policy and its live callers, while checking the adjacent NIF/NIE procedure for the same divergence.
+
+## Findings
 `cadrumo.core.identity` validates a CIF check character twice, over the same
 `_cif_check_value` arithmetic, under **opposite acceptance policies** for the
 `ABEH` leader class:
@@ -26,6 +29,14 @@ Both carry an `ALT-CIF-LEADER-RATIONALE-*` comment describing the divergence as
 deliberate, and `_cif_check_value`'s own docstring says the kernel "leaves the
 digit-vs-letter rendering and the per-kind acceptance policy to the caller".
 Neither comment cites a source for which policy is right.
+
+## Recommendations
+1. Ground the leader-class policy against the official norm and bundle the text.
+2. Rule which validator is authoritative in an ADR.
+3. Collapse to one procedure, so the arithmetic and the acceptance policy live
+   together rather than the kernel deferring policy to two callers who disagree.
+4. Pin the ruling with a test per leader class, including the `ABEH` case that
+   is currently unpinned.
 
 ## Why this is a defect and not a design choice
 
@@ -92,15 +103,6 @@ This also blocks an otherwise routine consolidation. ``represented_nif`` carries
 Doing so would move that field from the flow's policy to the opposite one
 without anyone deciding to. The length bound was consolidated instead, and the
 checksum policy left exactly where it is, pending the ruling below.
-
-## Recommendation
-
-1. Ground the leader-class policy against the official norm and bundle the text.
-2. Rule which validator is authoritative in an ADR.
-3. Collapse to one procedure, so the arithmetic and the acceptance policy live
-   together rather than the kernel deferring policy to two callers who disagree.
-4. Pin the ruling with a test per leader class, including the `ABEH` case that
-   is currently unpinned.
 
 ## Secondary finding: the NIF/NIE procedure beside it
 

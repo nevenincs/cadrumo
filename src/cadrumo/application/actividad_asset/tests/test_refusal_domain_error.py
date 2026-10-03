@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.actividad_asset.registered_operations import ActivityAssetRefusal
+from cadrumo.application.actividad_asset.activity_asset_contracts import ActivityAssetRefusal
 from cadrumo.domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
     ActividadAssetError,

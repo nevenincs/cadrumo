@@ -51,6 +51,8 @@ from .errors import (
 from .records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
 
 if TYPE_CHECKING:
+    from google_auth_oauthlib.flow import OAuthCredentials
+
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 # Upper bound (seconds) on how long the loopback consent receiver blocks
@@ -319,17 +321,7 @@ def _run_local_server(
             ),
         ) from exc
 
-    client_config: dict[str, dict[str, object]] = {
-        "installed": {
-            "client_id": client.client_id,
-            "client_secret": client.client_secret,
-            "project_id": client.project_id,
-            "auth_uri": client.auth_uri,
-            "token_uri": client.token_uri,
-            "auth_provider_x509_cert_url": client.auth_provider_x509_cert_url,
-            "redirect_uris": list(client.redirect_uris) or ["http://localhost"],
-        },
-    }
+    client_config = _oauth_loopback_client_config(client)
 
     class AdmittedInstalledAppFlow(InstalledAppFlow):
         def fetch_token(self, **kwargs: object) -> Mapping[str, object]:
@@ -345,7 +337,7 @@ def _run_local_server(
                 acknowledged("oauth.token-exchange")
             return token
 
-    flow_type = InstalledAppFlow if before_handoff is None and acknowledged is None else AdmittedInstalledAppFlow
+    flow_type = InstalledAppFlow if _oauth_handoffs_absent(before_handoff, acknowledged) else AdmittedInstalledAppFlow
     try:
         flow = flow_type.from_client_config(client_config, scopes=list(REQUIRED_SCOPES))
     except ValueError as exc:
@@ -363,7 +355,7 @@ def _run_local_server(
     if before_handoff is not None:
         before_handoff("oauth.browser-consent")
     try:
-        if before_handoff is None and acknowledged is None:
+        if _oauth_handoffs_absent(before_handoff, acknowledged):
             credentials = flow.run_local_server(port=0, timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS)
         else:
             # Browser consent stays human; its state-bearing URL must not be
@@ -394,17 +386,7 @@ def _run_local_server(
     # but the `google-auth` stubs ship a narrower `Credentials` class on which
     # the attribute isn't visible to pyrefly. The dynamic lookup below is the
     # documented public API.
-    token_uri = getattr(credentials, "token_uri", None)
-    return (
-        str(credentials.refresh_token),
-        str(token_uri),
-        _decode_email_from_id_token(
-            credentials, audience=client.client_id, before_handoff=before_handoff, acknowledged=acknowledged
-        )
-        if before_handoff is not None or acknowledged is not None
-        else _decode_email_from_id_token(credentials, audience=client.client_id),
-        tuple(str(scope) for scope in (credentials.scopes or ())),
-    )
+    return _oauth_loopback_records(credentials, client, before_handoff=before_handoff, acknowledged=acknowledged)
 
 
 def _raise_local_server_error(exc: Exception) -> NoReturn:
@@ -569,3 +551,46 @@ __all__ = [
     "require_resolvable_profile_record",
     "run_login_flow",
 ]
+
+
+def _oauth_handoffs_absent(
+    before_handoff: GoogleConfigurationHandoff | None, acknowledged: GoogleConfigurationAcknowledgement | None
+) -> bool:
+    """Identify the unchanged direct credential path before constructing admitted transport requests."""
+    return before_handoff is None and acknowledged is None
+
+
+def _oauth_loopback_client_config(client: OAuthClient) -> dict[str, dict[str, object]]:
+    """Build the unchanged desktop client configuration before consent begins."""
+    return {
+        "installed": {
+            "client_id": client.client_id,
+            "client_secret": client.client_secret,
+            "project_id": client.project_id,
+            "auth_uri": client.auth_uri,
+            "token_uri": client.token_uri,
+            "auth_provider_x509_cert_url": client.auth_provider_x509_cert_url,
+            "redirect_uris": list(client.redirect_uris) or ["http://localhost"],
+        }
+    }
+
+
+def _oauth_loopback_records(
+    credentials: OAuthCredentials,
+    client: OAuthClient,
+    *,
+    before_handoff: GoogleConfigurationHandoff | None,
+    acknowledged: GoogleConfigurationAcknowledgement | None,
+) -> tuple[str, str, str, tuple[str, ...]]:
+    """Verify the admitted identity and retain the refresh and scope facts in evaluation order."""
+    token_uri = getattr(credentials, "token_uri", None)
+    return (
+        str(credentials.refresh_token),
+        str(token_uri),
+        _decode_email_from_id_token(
+            credentials, audience=client.client_id, before_handoff=before_handoff, acknowledged=acknowledged
+        )
+        if before_handoff is not None or acknowledged is not None
+        else _decode_email_from_id_token(credentials, audience=client.client_id),
+        tuple(str(scope) for scope in (credentials.scopes or ())),
+    )

@@ -14,12 +14,13 @@ from cadrumo.domain.calculations.registry.static_inspection import RegistryRevis
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_shared_catalogues
-from .._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
+from .._export_tree import render_complete_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
 from ..bootstrap_targets import generated_export_bootstrap_target
 from ..candidate_staging import stage_generated_export_candidate
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
+from ..export_tree_models import ExportTreeTransportProfile, RenderedExportTree
 from ..generated_tree_inventory import GeneratedExportTree
 from ..joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from ..record_design_intermediate import load_record_design_intermediate

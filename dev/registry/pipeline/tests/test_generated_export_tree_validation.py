@@ -13,7 +13,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryV
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
-from .._export_tree import RenderedExportTree
 from .._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -23,6 +22,7 @@ from ..export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
 )
+from ..export_tree_models import RenderedExportTree
 from ..joined_record_design import JoinedRecordDesign
 from ..semantic_map import SemanticMap
 from ._generated_tree_test_support import (

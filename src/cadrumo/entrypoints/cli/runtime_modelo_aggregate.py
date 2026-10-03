@@ -7,12 +7,12 @@ import typer
 from ...application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
 from ...application.aggregation.service import PerModeloAggregationCommand
 from ...application.aggregation.withholding_filing_cadence import PERIODIC_WITHHOLDING_MODELOS
-from ...application.modelo.aggregate_operation import (
+from ...application.modelo.aggregate_contracts import (
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
     MODELO_AGGREGATE_REFUSAL_CODES,
-    ModeloAggregateOperationRequest,
-    ModeloAggregateProjection,
 )
+from ...application.modelo.aggregate_projection import ModeloAggregateProjection
+from ...application.modelo.aggregate_request import ModeloAggregateOperationRequest
 from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .registered_operation_contracts import RegisteredOperationCompletion

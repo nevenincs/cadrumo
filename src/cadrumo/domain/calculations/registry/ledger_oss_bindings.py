@@ -21,7 +21,7 @@ from ._ledger_binding_resolution import (
 )
 from .errors import RegistryValidationError
 from .eu_member_state_catalogue import require_eu_member_state, require_registry_declared_eu_member_state
-from .governed_fact_scope import governed_facts_in_scope
+from .governed_fact_scope import governed_facts_in_scope, require_governed_fact_authority
 from .ids import BindingId
 from .iva_rate_kind_catalogue import require_iva_rate_kind, require_registry_declared_iva_rate_kind
 from .ledger_binding_selector_support import OSS_IOSS_LEDGER_FACTS, LedgerIvaFact, OssIossLedgerFact
@@ -85,9 +85,7 @@ class OssIossLedgerObservation(BaseModel):
     @model_validator(mode="after")
     def _validate_registry_regime(self) -> Self:
         """Refuse an observation whose regime is absent from facts authority."""
-        authority = governed_facts_in_scope()
-        if authority is None:
-            raise RegistryValidationError("ledger OSS observation validation requires generation-pinned governed facts")
+        authority = require_governed_fact_authority(None, subject="ledger OSS observation validation")
         regime = require_oss_ioss_regime(
             self.regime,
             effective_date=self.transaction_date,
@@ -152,9 +150,7 @@ class LedgerOssProvider(BaseModel):
     @classmethod
     def _validate_registry_transaction_kinds(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
         """Refuse binding transaction kinds absent from the classification fact."""
-        authority = governed_facts_in_scope()
-        if authority is None:
-            raise RegistryValidationError("ledger OSS binding validation requires candidate governed facts")
+        authority = require_governed_fact_authority(None, subject="ledger OSS binding validation")
         return tuple(
             require_transaction_kind(kind, effective_date=today_madrid(), operation=authority) for kind in value
         )

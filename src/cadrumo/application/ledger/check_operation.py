@@ -14,16 +14,12 @@ from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
@@ -158,22 +154,14 @@ class LedgerCheckExecutor:
 
 def build_ledger_check_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
     """Register the real canonical read without mutation capability."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_CHECK_OPERATION_DEFINITION_ID,
         request_type=LedgerCheckRequest,
         result_type=LedgerCheckProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerCheckRequest,
-            executor_type=LedgerCheckExecutor,
-            build=lambda: LedgerCheckExecutor(ports),
-        ),
-        phase_codes=(LEDGER_CHECK_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerCheckExecutor,
+        build=lambda: LedgerCheckExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

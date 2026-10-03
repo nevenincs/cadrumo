@@ -59,6 +59,7 @@ from .....application.auth.session_types import (
     is_exact_active_provider_session,
 )
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
+from .....core.authentication_links import aeat_authentication_url
 from .....core.config import Settings as _Settings
 from .....core.config_support import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError, AuthError
@@ -68,6 +69,7 @@ from .....core.logging import get_logger
 from .....core.time.clock import now
 from .....domain.user_profile.errors import UserProfileError
 from .._playwright import PlaywrightTimeoutError
+from ..browser.desktop import interactive_desktop_available
 from . import session_store as session_store
 from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin
 from ._clave_movil_salvage import _ClaveMovilSessionSalvageMixin
@@ -100,7 +102,7 @@ from .clave_movil_support import (
 from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
-from .errors import AuthProviderCleanupError
+from .errors import AuthConfigurationError, AuthProviderCleanupError
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -829,6 +831,15 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         target = target_url or self._default_target_url()
         target_path = self._target_path_from_url(target)
         selector_url = self._selector_url(target_path)
+        if not self._settings.cadrumo_clave_prefer_non_qr and not interactive_desktop_available():
+            # Publish only the public entry point, never a live challenge URL,
+            # cookies, target query parameters, or a claimed authenticated state.
+            authentication_url = aeat_authentication_url()
+            raise AuthConfigurationError(
+                "QR authentication needs an interactive desktop; open the authentication URL in your browser",
+                translated_message="adapters.auth.clave_movil.errors.desktop_unavailable",
+                context={"reason": "interactive_desktop_unavailable", "authentication_url": authentication_url},
+            )
         attempt_context = self._attempt_context()
 
         session_like = await self._resolve_browser_session(settings=self._fresh_login_settings())

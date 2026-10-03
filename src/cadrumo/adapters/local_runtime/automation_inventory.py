@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
+from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
@@ -29,7 +30,9 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from .frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError, frontend_failure_code
+from .frontend_client import RuntimeFrontendClient
+from .frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
+from .operation_run_error_context import operation_run_error_context
 from .operation_settlement import (
     PinnedConnection,
     read_settled_result_bytes,
@@ -62,14 +65,15 @@ class AutomationInventoryReadError(CadrumoError):
         self.reason = code
         self._terminal_condition = terminal_condition
         self._effect = effect
-        context = {
-            "reason": code,
-            "operation_id": str(operation_id),
-            "effect": effect.value if effect is not None else "unknown",
-        }
-        if terminal_condition is not None:
-            context["terminal_condition"] = terminal_condition.value
-        super().__init__(code, context=context)
+        super().__init__(
+            code,
+            context=operation_run_error_context(
+                code=code,
+                operation_id=operation_id,
+                terminal_condition=terminal_condition,
+                effect=effect,
+            ),
+        )
 
     @property
     def terminal_condition(self) -> OperationTerminalCondition | None:
@@ -110,15 +114,8 @@ def read_automation_inventory(client: RuntimeFrontendClient, *, timeout: float =
     terminal condition/effect is included only when canonical observation
     supplied it; no acknowledgement is treated as a completed read.
     """
-    if client.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
-    deadline = bounded_deadline_after(timeout, subject="automation inventory")
-    pinned = PinnedConnection.of(client)
+    deadline, pinned, contract, subject_ref = _automation_inventory_contract(client, timeout)
     profile_id = pinned.profile_id
-    contract = client.contract(AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID, deadline=deadline)
-    if contract != _contract() or contract.result_schema is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    subject_ref = profile_operation_subject(str(profile_id))
     submitted = submit_operation(
         client,
         pinned,
@@ -148,22 +145,8 @@ def read_automation_inventory(client: RuntimeFrontendClient, *, timeout: float =
             )
         if effect is not OperationEffect.NONE:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        pinned.require_held(client)
-        encoded = read_settled_result_bytes(client, operation_id, state, contract, deadline=deadline)
-        try:
-            result = OperationResultProjectionSuccessV1[AutomationInventoryProjection].model_validate_json(encoded)
-        except ValidationError:
-            result = None
-        if result is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        if (
-            result.result_schema != contract.result_schema
-            or result.definition_contract_digest != contract.definition_contract_digest
-            or not _exact_profile(result.projection, profile_id)
-            or not pinned.holds(client)
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        return AutomationInventoryCompletion(operation_id=operation_id, projection=result.projection)
+        projection = _read_inventory_projection(client, pinned, operation_id, state, contract, deadline)
+        return AutomationInventoryCompletion(operation_id=operation_id, projection=projection)
     except AutomationInventoryReadError:
         raise
     except Exception as error:
@@ -179,3 +162,47 @@ def read_automation_inventory(client: RuntimeFrontendClient, *, timeout: float =
 
 
 __all__ = ["AutomationInventoryCompletion", "AutomationInventoryReadError", "read_automation_inventory"]
+
+
+def _automation_inventory_contract(
+    client: RuntimeFrontendClient, timeout: float
+) -> tuple[float, PinnedConnection, OperationPublicDefinitionContractV1, str]:
+    """Pin the human frontend and exact automation inventory contract before submission."""
+    if client.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
+        raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
+    deadline = bounded_deadline_after(timeout, subject="automation inventory")
+    pinned = PinnedConnection.of(client)
+    profile_id = pinned.profile_id
+    contract = client.contract(AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID, deadline=deadline)
+    if contract != _contract() or contract.result_schema is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    subject_ref = profile_operation_subject(str(profile_id))
+    return deadline, pinned, contract, subject_ref
+
+
+def _read_inventory_projection(
+    client: RuntimeFrontendClient,
+    pinned: PinnedConnection,
+    operation_id: OperationId,
+    state: OperationPublicProjectionV1,
+    contract: OperationPublicDefinitionContractV1,
+    deadline: float,
+) -> AutomationInventoryProjection:
+    """Validate the complete exact-profile inventory under the retained connection."""
+    profile_id = pinned.profile_id
+    pinned.require_held(client)
+    encoded = read_settled_result_bytes(client, operation_id, state, contract, deadline=deadline)
+    try:
+        result = OperationResultProjectionSuccessV1[AutomationInventoryProjection].model_validate_json(encoded)
+    except ValidationError:
+        result = None
+    if result is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    if (
+        result.result_schema != contract.result_schema
+        or result.definition_contract_digest != contract.definition_contract_digest
+        or not _exact_profile(result.projection, profile_id)
+        or not pinned.holds(client)
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return result.projection

@@ -32,14 +32,10 @@ from ..operations.access_resolution import (
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -426,6 +422,17 @@ def _exchange(payload: _Request, ports: ReviewPackageExchangeOperationPorts) -> 
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
+def _failed_exchange_writer_effect(tracker: LedgerCommitAttemptTracker) -> OperationEffect:
+    """Preserve uncertainty ahead of confirmed partial writes when exchange fails."""
+    return (
+        OperationEffect.UNKNOWN
+        if tracker.has_uncertain_write
+        else OperationEffect.PARTIAL
+        if tracker.confirmed_write
+        else OperationEffect.NONE
+    )
+
+
 class ReviewPackageExchangeExecutor:
     """Settle each concrete key/artifact/audit/replay writer before result release."""
 
@@ -458,13 +465,7 @@ class ReviewPackageExchangeExecutor:
                     work, tracker=tracker, context=context, task_name=request.definition_id
                 )
             except BaseException:
-                effect = (
-                    OperationEffect.UNKNOWN
-                    if tracker.has_uncertain_write
-                    else OperationEffect.PARTIAL
-                    if tracker.confirmed_write
-                    else OperationEffect.NONE
-                )
+                effect = _failed_exchange_writer_effect(tracker)
                 await context.events.effect(effect)
                 raise
             if tracker.has_uncertain_write:
@@ -487,13 +488,15 @@ def resolve_review_package_exchange_operation_access(
 ) -> ResolvedOperationAccess:
     """Exact human request/action/destination policy; no delegated signing/export purpose."""
     models = _MODELS.get(request.definition_id)
-    payload = request.payload
-    if models is None or type(payload) is not models[0] or not isinstance(payload, _Request):
+    if models is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=request.definition_id,
+        payload_type=models[0],
+        access_profile_id=context.profile_id,
+        exact_type=True,
+    )
     access_profile = HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=access_profile.actions)
     require_period_independent_replay_or_authority(
@@ -504,13 +507,11 @@ def resolve_review_package_exchange_operation_access(
     )
 
 
-def project_review_package_exchange_operation_result(
-    result: BaseModel, receipt: OperationTerminalReceipt, /
-) -> BaseModel:
-    """Release only the exact family purpose's complete and settled human receipt."""
-    if type(result) is not ReviewPackageExchangeExecutionResult:
-        raise ValueError("invalid review-package exchange result")
-    projection = result.projection
+def _require_exchange_receipt_purpose(
+    projection: ReviewPackageExchangeProjection,
+    receipt: OperationTerminalReceipt,
+) -> None:
+    """Require the exact family purpose and settled writer outcome before disclosure."""
     models = _MODELS.get(receipt.identity.definition_id)
     valid_effects = (
         {OperationEffect.NONE, OperationEffect.UPDATED}
@@ -527,6 +528,16 @@ def project_review_package_exchange_operation_result(
         or receipt.diagnostic_ref is not None
     ):
         raise ValueError("review-package receipt differs from its exact purpose and writer outcome")
+
+
+def project_review_package_exchange_operation_result(
+    result: BaseModel, receipt: OperationTerminalReceipt, /
+) -> BaseModel:
+    """Release only the exact family purpose's complete and settled human receipt."""
+    if type(result) is not ReviewPackageExchangeExecutionResult:
+        raise ValueError("invalid review-package exchange result")
+    projection = result.projection
+    _require_exchange_receipt_purpose(projection, receipt)
     if isinstance(
         projection,
         (
@@ -553,19 +564,13 @@ def build_review_package_exchange_operation_definitions(
     """Enroll the complete six-route family, retaining explicit human authority."""
     capabilities = RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
     return tuple(
-        OperationDefinition(
+        build_single_phase_definition(
             definition_id=identifier,
             request_type=models[0],
             result_type=ReviewPackageExchangeExecutionResult,
-            executor_factory=OperationExecutorFactory(
-                request_type=models[0],
-                executor_type=ReviewPackageExchangeExecutor,
-                build=lambda: ReviewPackageExchangeExecutor(factory),
-            ),
-            phase_codes=(identifier,),
-            interaction_kinds=frozenset(),
+            executor_type=ReviewPackageExchangeExecutor,
+            build=lambda: ReviewPackageExchangeExecutor(factory),
             capabilities=capabilities,
-            reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
             permitted_frontends=_FRONTENDS,
         )
         for identifier, models in sorted(_MODELS.items())

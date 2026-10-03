@@ -396,6 +396,24 @@ def _noncanonical_casilla_reference_details(
     return noncanonical, unknown
 
 
+def _reject_override_row_fields(resolved: _ResolvedRegistryCasillaInputs) -> None:
+    """Refuse scalar overrides of detail-row template fields after key admission."""
+    # An override is one scalar value; a casilla an export record fills once
+    # per detail row has no single value it could replace.
+    records_by_casilla = row_field_template_records_by_casilla(resolved.snapshot.revision)
+    row_fields = sorted(set(resolved.canonical_values).intersection(records_by_casilla))
+    if row_fields:
+        raise AmendmentOverrideCasillaError(
+            translated_message="errors.calc.row_field_template_supplied_as_input",
+            context={
+                "casilla_ids": ",".join(row_fields),
+                "record_ids": ",".join(
+                    sorted({record for casilla in row_fields for record in records_by_casilla[casilla]})
+                ),
+            },
+        )
+
+
 def reject_unknown_override_casillas[CasillaKey](
     *,
     modelo: str,
@@ -474,20 +492,7 @@ def reject_unknown_override_casillas[CasillaKey](
                 "casillas": resolved.unknown_only,
             },
         )
-    # An override is one scalar value; a casilla an export record fills once
-    # per detail row has no single value it could replace.
-    records_by_casilla = row_field_template_records_by_casilla(resolved.snapshot.revision)
-    row_fields = sorted(set(resolved.canonical_values).intersection(records_by_casilla))
-    if row_fields:
-        raise AmendmentOverrideCasillaError(
-            translated_message="errors.calc.row_field_template_supplied_as_input",
-            context={
-                "casilla_ids": ",".join(row_fields),
-                "record_ids": ",".join(
-                    sorted({record for casilla in row_fields for record in records_by_casilla[casilla]})
-                ),
-            },
-        )
+    _reject_override_row_fields(resolved)
     return resolved.canonical_values
 
 

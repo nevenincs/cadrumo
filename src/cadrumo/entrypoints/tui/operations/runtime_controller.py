@@ -10,7 +10,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, JsonValue, RootModel, TypeAdapter, ValidationError
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.error_detail import OperationErrorDetailV1, operation_error_detail_schema
 from ....application.operations.event_replay import OperationEventCursor
 from ....application.operations.frontend_contracts import (

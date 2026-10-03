@@ -7,6 +7,7 @@ from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
+from pydantic import BaseModel
 
 from ....core.operations import profile_operation_subject
 from ...user_profile.access_contracts import AccessDenialCode
@@ -173,3 +174,112 @@ def test_explicit_work_unit_subject_passes_while_another_target_refuses(monkeypa
             request, cast(OperationExecutorContext, context), _PROFILE_ID, expected_subject_ref="work-unit:other"
         )
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+class _WorkUnitPayload(CredentialFreeOperationRequest):
+    """Operand that names its profile and addressed work unit."""
+
+    profile_id: UUID
+    work_unit_id: str
+
+
+def _access_request(
+    payload: BaseModel, *, definition_id: str = _DEFINITION_ID, subject_ref: str | None = None
+) -> OperationRequest[BaseModel]:
+    return OperationRequest[BaseModel](
+        definition_id=definition_id,
+        subject_ref=subject_ref or profile_operation_subject(str(_PROFILE_ID)),
+        payload=payload,
+    )
+
+
+def test_profile_access_payload_returns_the_exact_typed_payload() -> None:
+    payload = _ProfilePayload(profile_id=_PROFILE_ID)
+
+    admitted = profile_guard.require_access_request_profile_payload(
+        _access_request(payload),
+        definition_id=_DEFINITION_ID,
+        payload_type=_ProfilePayload,
+        access_profile_id=_PROFILE_ID,
+    )
+
+    assert admitted is payload
+
+
+@pytest.mark.parametrize(
+    ("definition_id", "payload"),
+    [
+        ("profile.guard.other", _ProfilePayload(profile_id=_OTHER_PROFILE_ID)),
+        (_DEFINITION_ID, _WorkUnitPayload(profile_id=_OTHER_PROFILE_ID, work_unit_id="a" * 12)),
+    ],
+)
+def test_profile_access_payload_refuses_another_operation_before_its_profile(
+    definition_id: str, payload: BaseModel
+) -> None:
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        profile_guard.require_access_request_profile_payload(
+            _access_request(payload, definition_id=definition_id),
+            definition_id=_DEFINITION_ID,
+            payload_type=_ProfilePayload,
+            access_profile_id=_PROFILE_ID,
+        )
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("access_profile_id", "subject_ref"),
+    [
+        (_OTHER_PROFILE_ID, None),
+        (_PROFILE_ID, profile_operation_subject(str(_OTHER_PROFILE_ID))),
+    ],
+)
+def test_profile_access_payload_refuses_a_foreign_profile_or_subject(
+    access_profile_id: UUID, subject_ref: str | None
+) -> None:
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        profile_guard.require_access_request_profile_payload(
+            _access_request(_ProfilePayload(profile_id=_PROFILE_ID), subject_ref=subject_ref),
+            definition_id=_DEFINITION_ID,
+            payload_type=_ProfilePayload,
+            access_profile_id=access_profile_id,
+        )
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_work_unit_access_payload_requires_the_work_unit_subject() -> None:
+    payload = _WorkUnitPayload(profile_id=_PROFILE_ID, work_unit_id="b" * 12)
+
+    admitted = profile_guard.require_access_request_work_unit_payload(
+        _access_request(payload, subject_ref=payload.work_unit_id),
+        definition_id=_DEFINITION_ID,
+        payload_type=_WorkUnitPayload,
+        access_profile_id=_PROFILE_ID,
+    )
+
+    assert admitted is payload
+    for request, access_profile_id in (
+        (_access_request(payload), _PROFILE_ID),
+        (_access_request(payload, subject_ref=payload.work_unit_id), _OTHER_PROFILE_ID),
+    ):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            profile_guard.require_access_request_work_unit_payload(
+                request,
+                definition_id=_DEFINITION_ID,
+                payload_type=_WorkUnitPayload,
+                access_profile_id=access_profile_id,
+            )
+        assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_work_unit_access_payload_refuses_another_payload_type_first() -> None:
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        profile_guard.require_access_request_work_unit_payload(
+            _access_request(_ProfilePayload(profile_id=_OTHER_PROFILE_ID), subject_ref="c" * 12),
+            definition_id=_DEFINITION_ID,
+            payload_type=_WorkUnitPayload,
+            access_profile_id=_PROFILE_ID,
+        )
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE

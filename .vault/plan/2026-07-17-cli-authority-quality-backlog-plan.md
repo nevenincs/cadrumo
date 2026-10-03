@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-authority-quality-backlog'
 date: '2026-07-17'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_hash: 'sha256:33818ec26715c363e982213e5c2b53c85b0324df5cca2827701c4702e0a878bb'
 tier: L2
 related:
@@ -14,7 +14,6 @@ related:
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-code-review-audit]]'
-  - '[[2026-07-17-cli-authority-quality-backlog-adr]]'
 ---
 
 # `cli-authority-quality-backlog` plan

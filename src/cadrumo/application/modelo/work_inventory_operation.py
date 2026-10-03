@@ -8,27 +8,20 @@ from uuid import UUID
 from pydantic import BaseModel, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import profile_operation_subject
 from ...domain.modelos.work_unit import WorkUnitState
 from ..operations.access_resolution import (
-    ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_period_independent_admission,
+    bind_replayed_period_independent_access,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -106,19 +99,13 @@ class ModeloWorkListExecutor:
 
 def build_modelo_work_list_definition(factory: ActiveWorkLifecyclePortsFactory) -> OperationDefinition:
     """Declare one credential-free request with an encrypted result."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_WORK_LIST_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkListRequest,
         result_type=ModeloWorkListProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloWorkListRequest,
-            executor_type=ModeloWorkListExecutor,
-            build=lambda: ModeloWorkListExecutor(factory),
-        ),
-        phase_codes=(MODELO_WORK_LIST_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloWorkListExecutor,
+        build=lambda: ModeloWorkListExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -127,24 +114,14 @@ def build_modelo_work_list_registration(definition: OperationDefinition) -> Oper
     """Require unrestricted whole-profile consent for work discovery."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != definition.definition_id or not isinstance(payload, ModeloWorkListRequest):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            require_period_independent_admission(
-                admitted, profile_id=context.profile_id, definition_id=request.definition_id
-            )
-        return bind_operation_access_profile(
-            context,
-            LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            periods=frozenset(),
+        require_access_request_profile_payload(
+            request,
+            definition_id=definition.definition_id,
+            payload_type=ModeloWorkListRequest,
+            access_profile_id=context.profile_id,
+        )
+        return bind_replayed_period_independent_access(
+            context, LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS, definition_id=request.definition_id
         )
 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(

@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#ledger-evidence-atomicity'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:58ca10a1f9f76df463ba4fad9208a2221535c5b7cef779768778ed1d5389bbb6'
+body_hash: 'sha256:3beb542f3487fa97269fa254d5561feec796a31eb6b916d5682d47832b8a8003'
 related:
-  - '[[2026-07-17-ledger-evidence-atomicity-adr]]'
   - '[[2026-07-17-ledger-evidence-atomicity-audit]]'
   - '[[2026-07-17-ledger-evidence-atomicity-ledger]]'
   - '[[2026-07-17-ledger-evidence-atomicity-plan]]'
@@ -20,10 +19,6 @@ related:
 Auto-generated index of all documents tagged with `#ledger-evidence-atomicity`.
 
 ## Documents
-
-### adr
-
-- `2026-07-17-ledger-evidence-atomicity-adr` - `ledger-evidence-atomicity` adr: `ledger-evidence-atomicity rescope grounding` | (**status:** `accepted`)
 
 ### audit
 

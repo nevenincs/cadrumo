@@ -22,11 +22,12 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
-from cadrumo.application.runtime.management_status import RuntimeListenerState
 
-from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake, read_document
-from ..management_status import probe_runtime_listener
-from ..posix import PosixRuntimeChannel, PosixRuntimeEndpoint, posix_storage_identity
+from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
+from ..posix import posix_storage_identity
+from ..posix_channel import PosixRuntimeChannel
+from ..posix_endpoint import PosixRuntimeEndpoint
+from ..runtime_frame_io import read_document
 
 pytestmark = [
     pytest.mark.integration,
@@ -210,8 +211,6 @@ def test_passive_endpoint_does_not_create_missing_namespace(tmp_path: Path, name
     endpoint = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
     try:
         assert not namespace.exists()
-        expected = RuntimeClientHello(product_version="test", storage_identity=endpoint.storage_identity)
-        assert probe_runtime_listener(endpoint, expected=expected, timeout=0.1) is RuntimeListenerState.UNAVAILABLE
         with pytest.raises(RuntimeRefusalError) as caught:
             endpoint.connect(timeout=0.1)
         assert caught.value.reason is RuntimeRefusalCode.ENDPOINT_NOT_READY

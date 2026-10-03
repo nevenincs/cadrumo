@@ -499,13 +499,13 @@ __all__ = ["build_overview_read_ports"]
 
 
 def _calendar_other_profiles(
-    bucket_id: str, pointers: Mapping[str, ProfileBucketPointer]
+    active_bucket_id: str, pointers: Mapping[str, ProfileBucketPointer]
 ) -> tuple[OverviewLockedProfileSnapshot, ...]:
     """List every other public profile pointer in the established label order."""
     other = tuple(
         OverviewLockedProfileSnapshot(profile_id=pointer.bucket_id, label=pointer.label)
         for bucket_id, pointer in sorted(pointers.items(), key=lambda pair: pair[1].label)
-        if bucket_id != bucket_id
+        if bucket_id != active_bucket_id
     )
     return other
 

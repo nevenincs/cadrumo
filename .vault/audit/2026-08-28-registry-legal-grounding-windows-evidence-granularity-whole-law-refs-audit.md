@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:309d3bbfe90566814257d42a9ebf3f59e260f393d438e0bc07b6d81f6989221b'
+body_hash: 'sha256:a2f3f6768d77190be6c21e6043d3a596fc58c18279da4c6768d6857ecc7a676e'
 related: []
 ---
 
 # `registry-legal-grounding-windows` audit: `A third of legal citations resolve to a whole consolidated law, so required_text proves little`
 
-## Finding
+## Scope
 
+Review how whole-law legal references behave when their required text supports a worked example, and assess the resulting value-level evidence.
+
+## Findings
 226 of the 702 legal-catalogue entries carrying a `corpus_ref` resolve to a
 **whole consolidated law**, the largest being Ley 35/2006 at 1,9 MB, cited by 84
 entries. For those, the `required_text` evidence check is satisfied by a phrase
@@ -20,6 +23,26 @@ appearing anywhere in the document. Every one of them writes an article anchor �
 `#a66` — and the anchor cannot narrow the search.
 
 This is not an oversight, and the codebase says so.
+
+## Recommendations
+Three shapes, in increasing cost:
+
+1. **Surface the tier.** Nothing today tells a reader of a parameter whether its
+   citation resolves to 1,9 MB or to one article. Exposing `corpus_tier` alongside
+   the citation would let a reviewer weight the evidence correctly, and costs no
+   new verification.
+2. **Prefer excerpts for value-bearing citations.** Where a parameter encodes a
+   figure, cite a provision excerpt rather than the consolidated instrument. The
+   excerpt convention and its validator already exist; `art-66-2023` shows the
+   shape.
+3. **Build the anchored reader.** The comment names exactly what is missing. This
+   is the general fix and the expensive one, and it would also make the numeric
+   sweeps meaningful on the 226.
+
+Option 2 is the one that would have caught the Modelo 100 case, and it needs no new
+machinery.
+
+No production code, registry data or test was changed by this audit.
 
 ## The mechanism, in the code's own words
 
@@ -74,27 +97,6 @@ parameter.
 The under-watched direction is that a *weak* check reports the same green as a
 strong one. A reviewer auditing a parameter sees `required_text` satisfied and has
 no signal that satisfaction was cheap.
-
-## Remediation — owner's decision, not taken here
-
-Three shapes, in increasing cost:
-
-1. **Surface the tier.** Nothing today tells a reader of a parameter whether its
-   citation resolves to 1,9 MB or to one article. Exposing `corpus_tier` alongside
-   the citation would let a reviewer weight the evidence correctly, and costs no
-   new verification.
-2. **Prefer excerpts for value-bearing citations.** Where a parameter encodes a
-   figure, cite a provision excerpt rather than the consolidated instrument. The
-   excerpt convention and its validator already exist; `art-66-2023` shows the
-   shape.
-3. **Build the anchored reader.** The comment names exactly what is missing. This
-   is the general fix and the expensive one, and it would also make the numeric
-   sweeps meaningful on the 226.
-
-Option 2 is the one that would have caught the Modelo 100 case, and it needs no new
-machinery.
-
-No production code, registry data or test was changed by this audit.
 
 ## A partial mitigation for readers: anchor on the citation's own `required_text`
 

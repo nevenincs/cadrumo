@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....adapters.local_runtime.profile_mutations import (
     ProfileMutationCompletion,
     ProfileMutationRequest,
@@ -19,7 +19,8 @@ from ....domain.user_profile.values import ProfileSetupState
 from ..errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ....adapters.local_runtime.frontend_client import ProfileViewCollection, RuntimeFrontendClient
+    from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 
 
 _MUTATION_TIMEOUT_SECONDS = 120.0

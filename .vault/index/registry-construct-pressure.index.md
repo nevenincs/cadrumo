@@ -4,16 +4,15 @@ tags:
   - '#index'
   - '#registry-construct-pressure'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:930b40b9fe5140277ab4ab088e4592131f8a2ec8037224a17cb6a2e25687e9b5'
+body_hash: 'sha256:aca84e4fc37b4757036b56cb846d611676d8f68fc9dead17792f542389952ce8'
 related:
   - '[[2026-06-03-registry-construct-pressure-audit]]'
   - '[[2026-06-03-registry-construct-pressure-code-review-audit]]'
   - '[[2026-06-03-registry-construct-pressure-headroom-audit]]'
   - '[[2026-06-03-registry-construct-pressure-ledger]]'
   - '[[2026-06-03-registry-construct-pressure-plan]]'
-  - '[[2026-06-04-registry-construct-pressure-adr]]'
   - '[[2026-06-04-registry-construct-pressure-research]]'
 ---
 
@@ -22,10 +21,6 @@ related:
 Auto-generated index of all documents tagged with `#registry-construct-pressure`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-registry-construct-pressure-adr` - `registry-construct-pressure` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### audit
 

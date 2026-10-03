@@ -29,7 +29,7 @@ from ....adapters.persistence.storage.runtime_repository import secure_object_re
 from ....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.calculation_actions import calculate_modelo_revision
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.config import Settings
@@ -526,7 +526,7 @@ def calculate_and_verify_modelo_303_revision(
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -536,7 +536,7 @@ def calculate_and_verify_modelo_303_revision(
             clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     verified = calc_repo.load().revisions[revision.calculation_revision_id]
     return taxpayer_nif, bucket_id, report, verified, work_repo, calc_repo, event_repo
 

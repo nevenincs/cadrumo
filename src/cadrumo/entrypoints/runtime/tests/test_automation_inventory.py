@@ -198,6 +198,7 @@ def test_password_human_sees_nonsecret_inventory_and_api_key_cannot_submit_or_re
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: enrollment.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
@@ -357,6 +358,7 @@ def test_pristine_inventory_is_empty_and_missing_optional_store_does_not_block_p
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: enrollment.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)

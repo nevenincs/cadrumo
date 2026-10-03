@@ -68,7 +68,8 @@ from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from ...components.theme import tokenised
 from . import editor_explanations as _editor_explanations
-from .casilla_list import CasillaListEntry, description_text, stated_value_text, value_text
+from .casilla_list_models import CasillaListEntry
+from .casilla_list_values import description_text, stated_value_text, value_text
 from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind, WorkbenchParsed, WorkbenchParseOutcome, WorkbenchRefused
 from .sources import OpenSourceSurface, surface_target

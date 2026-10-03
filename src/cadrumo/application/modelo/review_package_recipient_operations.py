@@ -45,13 +45,12 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
     OperationResultProjector,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
@@ -519,17 +518,12 @@ def _definition(
         if mutation
         else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
     )
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=executor_type,
-            build=build,
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
+        executor_type=executor_type,
+        build=build,
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -543,7 +537,6 @@ def _definition(
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -600,21 +593,20 @@ def _resolve_access(
     /,
     *,
     definition_id: str,
-    request_type: type[BaseModel],
+    request_type: type[ReviewPackageRecipientAddRequest]
+    | type[ReviewPackageRecipientListRequest]
+    | type[ReviewPackageRecipientRemoveRequest],
     mutation: bool,
 ) -> ResolvedOperationAccess:
-    payload = request.payload
-    if (
-        request.definition_id != definition_id
-        or type(payload) is not request_type
-        or context.contract.definition_id != definition_id
-    ):
+    if context.contract.definition_id != definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = getattr(payload, "profile_id", None)
-    if not isinstance(profile_id, UUID) or profile_id != context.profile_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if request.subject_ref != profile_operation_subject(str(profile_id)):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    profile_id = require_access_request_profile_payload(
+        request,
+        definition_id=definition_id,
+        payload_type=request_type,
+        access_profile_id=context.profile_id,
+        exact_type=True,
+    ).profile_id
     actions = {
         AccessAction.SUBMIT,
         AccessAction.START,

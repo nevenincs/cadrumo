@@ -23,3 +23,44 @@ additional_source_refs = ["aeat-modelo-347-procedure"]
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
 required_text = ["operaciones con terceras personas"]
+
+# Type 2 declarado marks for the operations RD 1065/2007 art. 34.1 relates
+# "separadamente de otras operaciones" (2025 design): the criterio de caja
+# operations at position 281 (letter j) and those where the declarant is the
+# sujeto pasivo destinatario at position 282 (letter k). Each is part of the
+# contraparte_clave record key, so a mark always describes every operation of
+# its record.
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-criterio-caja"
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "cash_accounting_mark", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-34.1.j",
+    "ley-37-1992:art-163-terdecies",
+]
+additional_source_refs = ["aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-inversion-sujeto-pasivo"
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "reverse_charge_mark", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-34.1.k",
+    "ley-37-1992:art-84",
+]
+additional_source_refs = ["aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]

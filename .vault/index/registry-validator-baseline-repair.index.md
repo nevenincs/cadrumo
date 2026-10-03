@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#registry-validator-baseline-repair'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f65c61cec6bdf8e7c984500dc8a5a33cc151dffba2c75e59c4a679ffd2ebdbb1'
+body_hash: 'sha256:2c8e1b9563efb233f3067683a50103765bb96a7cb233f3c6e92bd13f31a0dbfc'
 related:
-  - '[[2026-06-04-registry-validator-baseline-repair-adr]]'
   - '[[2026-06-04-registry-validator-baseline-repair-code-review-audit]]'
   - '[[2026-06-04-registry-validator-baseline-repair-ledger]]'
   - '[[2026-06-04-registry-validator-baseline-repair-plan]]'
@@ -21,10 +20,6 @@ related:
 Auto-generated index of all documents tagged with `#registry-validator-baseline-repair`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-registry-validator-baseline-repair-adr` - `registry-validator-baseline-repair` adr: `phase two authority alignment` | (**status:** `accepted`)
 
 ### audit
 

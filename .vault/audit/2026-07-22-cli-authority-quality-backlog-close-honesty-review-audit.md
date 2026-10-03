@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-authority-quality-backlog'
 date: '2026-07-22'
-modified: '2026-07-22'
+modified: '2026-10-03'
 body_hash: 'sha256:076b600de5979497ace810595b312172622962da6365e2a5dda1db5e9f1de8ec'
 related:
   - "[[2026-07-17-cli-authority-quality-backlog-plan]]"
-  - "[[2026-07-17-cli-authority-quality-backlog-adr]]"
   - "[[2026-07-17-cli-authority-verb-conformance-audit]]"
 ---
 

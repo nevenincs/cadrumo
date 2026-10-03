@@ -165,6 +165,7 @@ def test_login_witness_loss_drains_real_worker_without_revoking_grants(tmp_path:
             login_inventory=lambda: current,
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         clients = []
         native_handles: list[int] = []

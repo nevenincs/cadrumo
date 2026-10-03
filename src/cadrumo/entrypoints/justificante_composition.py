@@ -23,20 +23,18 @@ from ..adapters.outbound.aeat.verify.contract import (
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ..adapters.persistence.profile.justificante import JustificanteRepository
+from ..adapters.persistence.profile.justificante_capture_snapshots import justificante_capture_snapshot_repository
 from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ..adapters.persistence.storage.envelope.contract import Envelope
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ..adapters.persistence.storage.secure_object_namespaces import LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
 from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.auth.session_types import AeatSession
-from ..application.live.errors import LiveApplicationInputError
 from ..application.live.filed_data_ports import FiledEffectGuard
 from ..application.live.justificante import (
     JustificanteCaptureSnapshot,
-    JustificanteCaptureSnapshotNotFoundError,
     JustificanteCaptureSnapshotRepository,
     JustificanteCaptureSnapshotService,
     justificante_capture_snapshot_object_key,
@@ -63,23 +61,7 @@ class _SnapshotPersistence:
     def __init__(self, *, bucket_id: str) -> None:
         self._bucket_id = bucket_id
         self._objects = secure_object_repository_for_bucket(bucket_id)
-        self._delegate = SecureSnapshotRepository(
-            bucket_id=bucket_id,
-            payload_model=JustificanteCaptureSnapshot,
-            namespace_definition=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
-            object_key=justificante_capture_snapshot_object_key,
-            not_found_factory=lambda snapshot_id: JustificanteCaptureSnapshotNotFoundError(
-                translated_message="application.live.justificante.errors.snapshot_not_found",
-                context={"snapshot_id": snapshot_id},
-            ),
-            ambiguous_prefix_factory=lambda snapshot_id, full_ids: JustificanteCaptureSnapshotNotFoundError(
-                translated_message="application.live.justificante.errors.snapshot_prefix_ambiguous",
-                context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
-            ),
-            domain_label="justificante capture",
-            input_error_cls=LiveApplicationInputError,
-            objects=self._objects,
-        )
+        self._delegate = justificante_capture_snapshot_repository(bucket_id, objects=self._objects)
 
     @property
     def bucket_id(self) -> str:

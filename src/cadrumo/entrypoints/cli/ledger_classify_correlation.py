@@ -6,12 +6,16 @@ from decimal import Decimal
 from uuid import UUID
 
 from ...application.ledger.actions_common import display_decimal
-from ...application.ledger.classify_operation import (
-    LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
+from ...application.ledger.classify_requests import (
     LedgerClassifyM210Options,
-    LedgerClassifyOperationResult,
     LedgerClassifyPatch,
     LedgerClassifyPatchField,
+)
+from ...application.ledger.classify_result_contracts import (
+    LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
+    LedgerClassifyOperationResult,
+)
+from ...application.ledger.operator_iva_contracts import (
     LedgerOperatorIvaResult,
 )
 from ...application.ledger.transaction_projection import LedgerTransactionProjection

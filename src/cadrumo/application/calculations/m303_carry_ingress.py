@@ -14,6 +14,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -73,6 +74,52 @@ def m303_declaration_type_header_key(*, filing_year: int, period: str, operation
     return _required_registry_value(entries, "disposition.header_key")
 
 
+def _require_carry_mapping_coordinate(resolved: object, effective_date: date) -> ResolvedMappingFact:
+    """Require the exact carry fact, date axis and effective date before reading entries."""
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("M303 carry declarations must resolve as a mapping fact")
+    if (
+        str(resolved.fact_id) != "modelo-303-carry-disposition-verification-mapping"
+        or resolved.date_axis is not DateAxis.FILING_PERIOD
+        or resolved.effective_date != effective_date
+    ):
+        raise ValueError("M303 carry fact resolution does not match the selected query coordinate")
+    return resolved
+
+
+def _validated_carry_mapping_entries(
+    resolved: ResolvedMappingFact, normalized_modelo: str, revision: ModeloRevision
+) -> dict[str, str]:
+    """Retain duplicate, completeness, scope and disposition-policy validation order."""
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("M303 carry declaration entries must be string-to-string")
+        if entry.key in entries:
+            raise ValueError(f"duplicate M303 carry declaration key {entry.key!r}")
+        entries[entry.key] = entry.value
+    for key in (
+        "modelo",
+        "revision",
+        "disposition.header_key",
+        "disposition.admissible",
+        "sign.negative",
+        "sign.positive",
+        "sign.zero",
+        "casilla.posterior",
+        "casilla.generated",
+        "casilla.available",
+        "casilla.result",
+    ):
+        _required_registry_value(entries, key)
+    if _required_registry_value(entries, "modelo") != normalized_modelo:
+        raise ValueError("M303 carry mapping does not match the selected modelo")
+    if _required_registry_value(entries, "revision") != str(revision.id):
+        raise ValueError("M303 carry mapping does not match the selected modelo revision")
+    _validate_disposition_code_mapping(entries)
+    return entries
+
+
 def _selected_registry_mapping(
     *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation
 ) -> dict[str, str]:
@@ -107,41 +154,8 @@ def _selected_registry_mapping(
                 effective_date=effective_date,
             ),
         )
-        if not isinstance(resolved, ResolvedMappingFact):
-            raise TypeError("M303 carry declarations must resolve as a mapping fact")
-        if (
-            str(resolved.fact_id) != "modelo-303-carry-disposition-verification-mapping"
-            or resolved.date_axis is not DateAxis.FILING_PERIOD
-            or resolved.effective_date != effective_date
-        ):
-            raise ValueError("M303 carry fact resolution does not match the selected query coordinate")
-        entries: dict[str, str] = {}
-        for entry in resolved.payload.entries:
-            if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-                raise TypeError("M303 carry declaration entries must be string-to-string")
-            if entry.key in entries:
-                raise ValueError(f"duplicate M303 carry declaration key {entry.key!r}")
-            entries[entry.key] = entry.value
-        for key in (
-            "modelo",
-            "revision",
-            "disposition.header_key",
-            "disposition.admissible",
-            "sign.negative",
-            "sign.positive",
-            "sign.zero",
-            "casilla.posterior",
-            "casilla.generated",
-            "casilla.available",
-            "casilla.result",
-        ):
-            _required_registry_value(entries, key)
-        if _required_registry_value(entries, "modelo") != normalized_modelo:
-            raise ValueError("M303 carry mapping does not match the selected modelo")
-        if _required_registry_value(entries, "revision") != str(revision.id):
-            raise ValueError("M303 carry mapping does not match the selected modelo revision")
-        _validate_disposition_code_mapping(entries)
-        return entries
+        resolved = _require_carry_mapping_coordinate(resolved, effective_date)
+        return _validated_carry_mapping_entries(resolved, normalized_modelo, revision)
     except (AuthorityComponentCodecError, AttributeError, TypeError, ValueError) as exc:
         raise M303CarryIngressError(
             translated_message=_translated_error("registry_resolution_unavailable"),
@@ -168,6 +182,15 @@ def _mapping_tokens(entries: Mapping[str, str], key: str) -> frozenset[str]:
     return tokens
 
 
+def _require_disposition_semantic(code: str, key: str, value: object) -> str:
+    """Require an uppercase ASCII code and a present semantic string."""
+    if len(code) != 1 or not code.isascii() or not code.isalpha() or not code.isupper():
+        raise ValueError(f"M303 carry disposition code key {key!r} is invalid")
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"M303 carry disposition code {code!r} has no semantic name")
+    return value
+
+
 def _validate_disposition_code_mapping(entries: Mapping[str, str]) -> None:
     """Require an explicit registry code-to-semantic projection for M303."""
     admissible = _mapping_tokens(entries, "disposition.admissible")
@@ -179,11 +202,7 @@ def _validate_disposition_code_mapping(entries: Mapping[str, str]) -> None:
         if not isinstance(key, str) or not key.startswith(prefix):
             continue
         code = key.removeprefix(prefix)
-        if len(code) != 1 or not code.isascii() or not code.isalpha() or not code.isupper():
-            raise ValueError(f"M303 carry disposition code key {key!r} is invalid")
-        if not isinstance(value, str) or not value.strip():
-            raise ValueError(f"M303 carry disposition code {code!r} has no semantic name")
-        code_to_semantic[code] = value
+        code_to_semantic[code] = _require_disposition_semantic(code, key, value)
     if not code_to_semantic:
         raise ValueError("M303 carry mapping has no explicit disposition code mapping")
     mapped_semantics = frozenset(code_to_semantic.values())
@@ -335,6 +354,45 @@ def validate_normalized_m303_carry_observation_envelope(
     return envelope
 
 
+def _require_local_filing_disposition(
+    envelope: ObservationEnvelopePayload,
+    supplied: ResultDispositionProjection | None,
+    header_projection: ResultDispositionProjection | None,
+    registry_mapping: Mapping[str, str],
+) -> ResultDispositionProjection:
+    """Require local provenance and agreement with any supplied header."""
+    if supplied is None:
+        raise M303CarryIngressError(
+            translated_message=_translated_error("local_filing_disposition_required"),
+            context={"source_kind": envelope.source_kind},
+        )
+    if supplied.provenance_kind != "app_filing":
+        raise M303CarryIngressError(
+            translated_message=_translated_error("local_filing_provenance_required"),
+            context={"provenance_kind": supplied.provenance_kind},
+        )
+    if header_projection is not None and _disposition_token(
+        supplied.disposition,
+        entries=registry_mapping,
+    ) != _disposition_token(header_projection.disposition, entries=registry_mapping):
+        raise M303CarryIngressError(
+            translated_message=_translated_error("local_disposition_header_disagreement"),
+            context={
+                "typed_disposition": supplied.disposition,
+                "header_disposition": header_projection.disposition,
+            },
+            precondition_verdict=calculation_no_recovery_verdict(
+                CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
+                facts={
+                    "source_kind": str(envelope.source_kind),
+                    "typed_disposition": str(supplied.disposition),
+                    "header_disposition": str(header_projection.disposition),
+                },
+            ),
+        )
+    return supplied
+
+
 def _resolve_result_disposition(
     envelope: ObservationEnvelopePayload,
     registry_mapping: Mapping[str, str],
@@ -385,36 +443,7 @@ def _resolve_result_disposition(
         return header_projection
 
     if envelope.source_kind is ObservationSourceKind.APP_FILING:
-        if supplied is None:
-            raise M303CarryIngressError(
-                translated_message=_translated_error("local_filing_disposition_required"),
-                context={"source_kind": envelope.source_kind},
-            )
-        if supplied.provenance_kind != "app_filing":
-            raise M303CarryIngressError(
-                translated_message=_translated_error("local_filing_provenance_required"),
-                context={"provenance_kind": supplied.provenance_kind},
-            )
-        if header_projection is not None and _disposition_token(
-            supplied.disposition,
-            entries=registry_mapping,
-        ) != _disposition_token(header_projection.disposition, entries=registry_mapping):
-            raise M303CarryIngressError(
-                translated_message=_translated_error("local_disposition_header_disagreement"),
-                context={
-                    "typed_disposition": supplied.disposition,
-                    "header_disposition": header_projection.disposition,
-                },
-                precondition_verdict=calculation_no_recovery_verdict(
-                    CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
-                    facts={
-                        "source_kind": str(envelope.source_kind),
-                        "typed_disposition": str(supplied.disposition),
-                        "header_disposition": str(header_projection.disposition),
-                    },
-                ),
-            )
-        return supplied
+        return _require_local_filing_disposition(envelope, supplied, header_projection, registry_mapping)
 
     raise M303CarryIngressError(
         translated_message=_translated_error("unsupported_provenance"),

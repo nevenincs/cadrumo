@@ -248,6 +248,48 @@ def require_terminal_receipt_match(
         raise ValueError(message)
 
 
+def require_terminal_receipt_match_any_effect(
+    receipt: OperationTerminalReceipt,
+    *,
+    definition_id: str,
+    subject_ref: str,
+    condition: OperationTerminalCondition,
+    effects: frozenset[OperationEffect],
+    message: str,
+) -> None:
+    """Raise ``ValueError(message)`` unless ``receipt`` matches with one of ``effects``.
+
+    For an outcome whose published effect is not unique, such as a capture that
+    stored nothing new yet refreshed the provider session.
+    """
+    if receipt.effect not in effects:
+        raise ValueError(message)
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=definition_id,
+        subject_ref=subject_ref,
+        condition=condition,
+        effect=receipt.effect,
+        message=message,
+    )
+
+
+def require_succeeded_receipt_references(receipt: OperationTerminalReceipt, *, message: str) -> None:
+    """Raise ``ValueError(message)`` unless ``receipt`` carries exactly a succeeded result's references.
+
+    A succeeded receipt names its result and no refusal, refusal detail or
+    failure code. Receipt validation already enforces this; checking it again
+    keeps a receipt copied without validation from releasing a result.
+    """
+    if (
+        receipt.result_ref is None
+        or receipt.refusal_ref is not None
+        or receipt.refusal_detail_ref is not None
+        or receipt.failure_error_code is not None
+    ):
+        raise ValueError(message)
+
+
 def validate_terminal_reference_meaning(
     *,
     condition: OperationTerminalCondition,
@@ -377,6 +419,8 @@ __all__ = [
     "OperationSnapshot",
     "OperationTerminalReceipt",
     "new_operation_id",
+    "require_succeeded_receipt_references",
     "require_terminal_receipt_match",
+    "require_terminal_receipt_match_any_effect",
     "terminal_receipt_matches",
 ]

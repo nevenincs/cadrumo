@@ -27,6 +27,8 @@ from cadrumo.application.operations.models import (
 from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
 from cadrumo.application.operator_actions.models import ActionReference
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import (
     CensalFieldIntent,
@@ -99,6 +101,7 @@ def _test_censal_operation_definition() -> OperationDefinition:
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=build_censal_fetch_port(),
+        provider_preflight=lambda _profile_id, _operation: None,
     )
 
 
@@ -249,6 +252,56 @@ def test_reviewed_preserve_of_equal_effective_value_does_not_record_a_divergence
         )
 
 
+def test_censal_operation_worker_preflight_refuses_before_any_remote_read(tmp_path: Path) -> None:
+    """The composed provider preflight runs for the exact profile before acquisition."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    acquisition = _LocalHttpCensalAcquisition()
+    preflight_profile_ids: list[str] = []
+
+    def provider_preflight(profile_id, _operation) -> None:
+        preflight_profile_ids.append(str(profile_id))
+        raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
+
+    with _subject(tmp_path) as (profile_id, objects, session):
+        before = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
+        history_before = ProfileRecordStore(session=session).history()
+        owner = _supervisor(
+            root=tmp_path / "operations",
+            objects=objects,
+            executor=CensalOperationExecutor(
+                certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                browser_session_factory=default_browser_session_factory,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                censal_fetch_port=build_censal_fetch_port(),
+                provider_preflight=provider_preflight,
+                acquire=acquisition,
+            ),
+            owner="1" * 64,
+            token="2" * 64,
+        )
+
+        async def run():
+            operation_id = await owner.submit(_request(profile_id, frozenset(_PATHS)), operation_id="3" * 64)
+            return await _start(owner, operation_id)
+
+        settled = asyncio.run(run())
+
+        assert preflight_profile_ids == [profile_id]
+        assert acquisition.calls == 0
+        assert settled.lifecycle is OperationLifecycle.TERMINAL
+        assert settled.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        assert settled.effect is OperationEffect.NONE
+        assert (
+            ProfileRecordRepository.for_current_session(
+                profile_id, profile_decode_context=_profile_decode_context_for_test
+            ).load(profile_id)
+            == before
+        )
+        assert ProfileRecordStore(session=session).history() == history_before
+
+
 async def _settle_when_stopped(supervisor, operation_id: str, receipt: OperationTerminalReceipt):
     """Return the terminal the resumed continuation settled, checked against the expected receipt.
 
@@ -283,6 +336,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             censal_fetch_port=build_censal_fetch_port(),
+            provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquisition,
         )
         owner = _supervisor(
@@ -384,6 +438,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=build_censal_fetch_port(),
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquisition,
                 ),
                 owner="6" * 64,
@@ -451,6 +506,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=build_censal_fetch_port(),
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquisition,
                     apply=competing_commit,
                 ),
@@ -487,6 +543,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             censal_fetch_port=build_censal_fetch_port(),
+            provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquisition,
         )
         owner = _supervisor(
@@ -581,6 +638,7 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
                 browser_session_factory=default_browser_session_factory,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 censal_fetch_port=build_censal_fetch_port(),
+                provider_preflight=lambda _profile_id, _operation: None,
                 acquire=acquisition,
                 before_irreversible_section=boundary,
             ),

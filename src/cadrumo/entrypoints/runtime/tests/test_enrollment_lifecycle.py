@@ -38,7 +38,7 @@ from cadrumo.application.user_profile.automation_lifecycle_service import (
 )
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo.entrypoints.runtime.enrollment_connections import RuntimeEnrollmentOffer
+from cadrumo.entrypoints.runtime.enrollment_offer import RuntimeEnrollmentOffer
 from cadrumo.entrypoints.runtime.profile_host import ProfileConnection, RuntimeProfileHost
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

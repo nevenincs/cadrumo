@@ -347,6 +347,45 @@ def _modelo_is_registered(modelo: str, *, operation: PinnedAuthorityOperation) -
     return modelo in operation.modelo_ids()
 
 
+def _require_registered_modelo(
+    modelo: str,
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse unknown and recognized-but-unmodeled modelo identifiers."""
+    if _modelo_is_registered(modelo, operation=operation):
+        return
+
+    unmodeled_description = _UNMODELED_MODELO_DESCRIPTIONS.get(modelo)
+    if unmodeled_description is not None:
+        # A recognized AEAT obligation the registry does not model: it is a
+        # real obligation, not an operator typo, so distinguish it from an
+        # unknown identifier. The coverage reconciliation advises it as
+        # ``registry_unmodeled``; explain says the same in prose.
+        raise OverviewExplainError(
+            translated_message="errors.fail.overview_explain",
+            context={
+                "modelo": str(modelo),
+                "unmodeled_description": unmodeled_description,
+                "coverage": "registry_unmodeled",
+                "recognized_aeat_obligation": True,
+                "registry_models_it": False,
+            },
+        )
+    # Refuse operator typos before calling the domain applicability
+    # model: the domain schema validates known ModeloId shape and
+    # must not leak a Pydantic error through the overview boundary.
+    raise OverviewExplainError(
+        translated_message="errors.fail.overview_explain",
+        context={
+            "modelo": str(modelo),
+            "filing_year": str(filing_year),
+            "modelo_registered": False,
+        },
+    )
+
+
 def _applicability_inputs_for_year(
     profile: TaxpayerProfile,
     year: int,
@@ -431,34 +470,7 @@ def build_overview_explain(
     reference_today = today or today_madrid()
     resolved_year = year or reference_today.year
 
-    if not _modelo_is_registered(modelo_id, operation=operation):
-        unmodeled_description = _UNMODELED_MODELO_DESCRIPTIONS.get(modelo_id)
-        if unmodeled_description is not None:
-            # A recognized AEAT obligation the registry does not model: it is a
-            # real obligation, not an operator typo, so distinguish it from an
-            # unknown identifier. The coverage reconciliation advises it as
-            # ``registry_unmodeled``; explain says the same in prose.
-            raise OverviewExplainError(
-                translated_message="errors.fail.overview_explain",
-                context={
-                    "modelo": str(modelo_id),
-                    "unmodeled_description": unmodeled_description,
-                    "coverage": "registry_unmodeled",
-                    "recognized_aeat_obligation": True,
-                    "registry_models_it": False,
-                },
-            )
-        # Refuse operator typos before calling the domain applicability
-        # model: the domain schema validates known ModeloId shape and
-        # must not leak a Pydantic error through the overview boundary.
-        raise OverviewExplainError(
-            translated_message="errors.fail.overview_explain",
-            context={
-                "modelo": str(modelo_id),
-                "filing_year": str(resolved_year),
-                "modelo_registered": False,
-            },
-        )
+    _require_registered_modelo(modelo_id, filing_year=resolved_year, operation=operation)
 
     year_profile, ledger_payer_facts = _applicability_inputs_for_year(profile, resolved_year, applicability_evidence)
     applicability = derive_modelo_applicability(

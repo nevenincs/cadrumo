@@ -19,7 +19,7 @@ from cadrumo.application.runtime.contracts import (
 )
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 
-from ..framing import RuntimeTransportCleanup, close_runtime_transport_after_failure
+from ..runtime_transport_cleanup import RuntimeTransportCleanup, close_runtime_transport_after_failure
 from ..server import RuntimeTransportServer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

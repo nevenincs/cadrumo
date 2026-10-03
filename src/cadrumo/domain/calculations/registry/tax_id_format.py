@@ -15,7 +15,7 @@ from ....core.time.clock import today_madrid
 from .facts.payloads import GovernedFactFamily, MappingFactPayload
 from .facts.resolution import MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from .facts.schema import GovernedFactCatalogue
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 TAX_ID_FORMAT_FACT_ID: Final = "spanish-tax-identifier-format"
@@ -147,9 +147,7 @@ def tax_id_format_value(
     authority: GovernedFactSource | None = None,
 ) -> str:
     """Resolve one declaration through the established runtime authority."""
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise ValueError("Spanish tax-ID format requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="Spanish tax-ID format")
     resolved = tax_id_format(selected_authority, effective_date=effective_date or today_madrid())
     values = {
         "tax_id.width": str(resolved.width),
@@ -177,9 +175,7 @@ def runtime_tax_id_format(
     authority: GovernedFactSource | None = None,
 ) -> SpanishTaxIdFormat:
     """Resolve the format from the established authority operation or scope."""
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise ValueError("Spanish tax-ID format requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="Spanish tax-ID format")
     return tax_id_format(selected_authority, effective_date=effective_date or today_madrid())
 
 

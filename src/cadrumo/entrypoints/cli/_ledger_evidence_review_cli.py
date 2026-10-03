@@ -20,7 +20,7 @@ from typing import Final
 import typer
 
 from ...application.ledger.confirmation_gate import FindingResolution
-from ...application.ledger.evidence_followup_operation import (
+from ...application.ledger.evidence_followup_contracts import (
     CountryVocabularyAdvisoryProjection,
     LedgerEvidenceReviewViewProjection,
     PartyAttributionAdvisoryProjection,

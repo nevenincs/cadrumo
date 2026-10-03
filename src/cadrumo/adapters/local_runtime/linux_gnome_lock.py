@@ -106,29 +106,36 @@ def read_gnome_lock_state(bus: GnomeObservationBus, owner: bytes) -> GnomeLockSt
         version = bus.read_integer(reply, b"u")
         epoch_text = bus.read_string(reply, b"s", maximum=36).decode("ascii")
         sequence = bus.read_integer(reply, b"u")
-        lock_generation = bus.read_integer(reply, b"u")
-        locked = bus.read_integer(reply, b"b")
-        active = bus.read_integer(reply, b"b")
-        mode = bus.read_string(reply, b"s", maximum=32).decode("ascii")
-        bus.require_end(reply)
+    lock_generation = bus.read_integer(reply, b"u")
+    locked = bus.read_integer(reply, b"b")
+    active = bus.read_integer(reply, b"b")
+    mode = bus.read_string(reply, b"s", maximum=32).decode("ascii")
+    bus.require_end(reply)
     epoch = UUID(epoch_text)
-    if (
-        type(version) is not int
-        or version != 1
-        or str(epoch) != epoch_text
-        or epoch.int == 0
-        or type(sequence) is not int
-        or not 0 < sequence <= 0xFFFFFFFF
-        or type(lock_generation) is not int
-        or not 0 <= lock_generation <= 0xFFFFFFFF
-        or type(locked) is not int
-        or locked not in (0, 1)
-        or type(active) is not int
-        or active not in (0, 1)
-        or mode not in ("user", "unlock-dialog")
-    ):
+    if not _valid_lock_version(version, epoch, epoch_text):
+        raise _unavailable()
+    if not _valid_lock_counters(sequence, lock_generation):
+        raise _unavailable()
+    if not _valid_lock_bits(locked, active) or mode not in ("user", "unlock-dialog"):
         raise _unavailable()
     return GnomeLockState(epoch, sequence, bool(locked), bool(active), mode, lock_generation)
+
+
+def _valid_lock_version(version: int, epoch: UUID, epoch_text: str) -> bool:
+    return type(version) is int and version == 1 and str(epoch) == epoch_text and epoch.int != 0
+
+
+def _valid_lock_counters(sequence: int, generation: int) -> bool:
+    return (
+        type(sequence) is int
+        and 0 < sequence <= 0xFFFFFFFF
+        and type(generation) is int
+        and 0 <= generation <= 0xFFFFFFFF
+    )
+
+
+def _valid_lock_bits(locked: int, active: int) -> bool:
+    return type(locked) is int and locked in (0, 1) and type(active) is int and active in (0, 1)
 
 
 def _owner(bus: GnomeObservationBus, name: bytes) -> bytes:
@@ -223,13 +230,7 @@ def _shell_pidfd(pid: int, uid: int) -> Generator[int]:
         executable = (process / "exe").resolve(strict=True)
         if executable not in (Path("/usr/bin/gnome-shell"), Path("/usr/libexec/gnome-shell")):
             raise _unavailable()
-        observed = executable.stat()
-        for parent in executable.parents:
-            ancestor = parent.lstat()
-            if not stat.S_ISDIR(ancestor.st_mode) or ancestor.st_uid != 0 or ancestor.st_mode & 0o022:
-                raise _unavailable()
-        if not stat.S_ISREG(observed.st_mode) or observed.st_uid != 0 or observed.st_mode & 0o022:
-            raise _unavailable()
+        observed = _require_protected_gnome_shell(executable)
         _alive(pidfd)
         yield pidfd
         _alive(pidfd)
@@ -241,23 +242,46 @@ def _shell_pidfd(pid: int, uid: int) -> Generator[int]:
         os.close(pidfd)
 
 
+def _require_protected_gnome_shell(executable: Path) -> os.stat_result:
+    observed = executable.stat()
+    for parent in executable.parents:
+        ancestor = parent.lstat()
+        if not stat.S_ISDIR(ancestor.st_mode) or ancestor.st_uid != 0 or ancestor.st_mode & 0o022:
+            raise _unavailable()
+    if not stat.S_ISREG(observed.st_mode) or observed.st_uid != 0 or observed.st_mode & 0o022:
+        raise _unavailable()
+    return observed
+
+
 def gnome_user_bus_path(uid: int) -> Path:
     """Select only the native owner-only user runtime directory and bus socket."""
     if sys.platform != "linux" or uid != os.getuid():
         raise _unavailable()
     for path in (Path("/run"), Path("/run/user")):
-        observed = path.lstat()
-        if not stat.S_ISDIR(observed.st_mode) or observed.st_uid != 0 or observed.st_mode & 0o022:
-            raise _unavailable()
+        _require_root_runtime_directory(path)
     directory = Path("/run/user") / str(uid)
-    observed = directory.lstat()
+    _require_user_runtime_directory(directory, uid)
+    path = directory / "bus"
+    _require_user_bus_socket(path, uid)
+    return path
+
+
+def _require_root_runtime_directory(path: Path) -> None:
+    observed = path.lstat()
+    if not stat.S_ISDIR(observed.st_mode) or observed.st_uid != 0 or observed.st_mode & 0o022:
+        raise _unavailable()
+
+
+def _require_user_runtime_directory(path: Path, uid: int) -> None:
+    observed = path.lstat()
     if not stat.S_ISDIR(observed.st_mode) or observed.st_uid != uid or stat.S_IMODE(observed.st_mode) != 0o700:
         raise _unavailable()
-    path = directory / "bus"
+
+
+def _require_user_bus_socket(path: Path, uid: int) -> None:
     observed = path.lstat()
     if not stat.S_ISSOCK(observed.st_mode) or observed.st_uid != uid:
         raise _unavailable()
-    return path
 
 
 def require_gnome_login_producer(uid: int) -> None:
@@ -270,39 +294,60 @@ def require_gnome_login_producer(uid: int) -> None:
     if not home.is_absolute() or ".." in home.parts:
         raise _unavailable()
     components = (*home.parts[1:], ".local", "share", "gnome-shell", "extensions", GNOME_LOGIN_EXTENSION_UUID)
+    directory = _open_producer_directory(components, uid)
+    try:
+        _require_producer_files(directory, uid)
+    finally:
+        os.close(directory)
+
+
+def _open_producer_directory(components: tuple[str, ...], uid: int) -> int:
     directory = os.open("/", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
     try:
         for index, component in enumerate(components):
             child = os.open(component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
             os.close(directory)
             directory = child
-            observed = os.fstat(directory)
-            if observed.st_uid not in (0, uid) or observed.st_mode & 0o022:
-                raise _unavailable()
-            if index == len(components) - 1 and (observed.st_uid != uid or stat.S_IMODE(observed.st_mode) != 0o700):
-                raise _unavailable()
-        for name in ("extension.js", "metadata.json"):
-            descriptor = os.open(name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
-            try:
-                observed = os.fstat(descriptor)
-                if (
-                    not stat.S_ISREG(observed.st_mode)
-                    or observed.st_uid != uid
-                    or observed.st_nlink != 1
-                    or stat.S_IMODE(observed.st_mode) != 0o600
-                    or not 0 < observed.st_size <= 65536
-                ):
-                    raise _unavailable()
-                with os.fdopen(os.dup(descriptor), "rb") as source:
-                    actual = source.read(65537)
-                reference = files("cadrumo").joinpath("_data/local_runtime/gnome_login", name).read_bytes()
-                after = os.fstat(descriptor)
-                if actual != reference or _file_identity(after) != _file_identity(observed):
-                    raise _unavailable()
-            finally:
-                os.close(descriptor)
-    finally:
+            _require_producer_directory(directory, uid, final=index == len(components) - 1)
+        return directory
+    except BaseException:
         os.close(directory)
+        raise
+
+
+def _require_producer_directory(directory: int, uid: int, *, final: bool) -> None:
+    observed = os.fstat(directory)
+    if observed.st_uid not in (0, uid) or observed.st_mode & 0o022:
+        raise _unavailable()
+    if final and (observed.st_uid != uid or stat.S_IMODE(observed.st_mode) != 0o700):
+        raise _unavailable()
+
+
+def _require_producer_files(directory: int, uid: int) -> None:
+    for name in ("extension.js", "metadata.json"):
+        _require_producer_file(directory, name, uid)
+
+
+def _require_producer_file(directory: int, name: str, uid: int) -> None:
+    descriptor = os.open(name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
+    try:
+        observed = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(observed.st_mode)
+            or observed.st_uid != uid
+            or observed.st_nlink != 1
+            or stat.S_IMODE(observed.st_mode) != 0o600
+            or not 0 < observed.st_size <= 65536
+        ):
+            raise _unavailable()
+        with os.fdopen(os.dup(descriptor), "rb") as source:
+            actual = source.read(65537)
+        reference = files("cadrumo").joinpath("_data/local_runtime/gnome_login", name).read_bytes()
+        after = os.fstat(descriptor)
+        if actual != reference or _file_identity(after) != _file_identity(observed):
+            raise _unavailable()
+    finally:
+        os.close(descriptor)
 
 
 def _file_identity(observed: os.stat_result) -> tuple[int, ...]:

@@ -198,6 +198,37 @@ def test_fresh_login_browser_mode_matches_the_authentication_flow(
     assert provider._attempt_context()["headless"] is expected_headless
 
 
+@pytest.mark.parametrize("headless", [True, False])
+def test_an_unchosen_route_uses_the_app_request_and_keeps_the_headless_setting(
+    tmp_path: Path,
+    headless: bool,
+) -> None:
+    """Without an explicit QR choice the provider never forces a visible browser."""
+    configured = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
+        update={"cadrumo_browser_headless": headless},
+    )
+    provider = ClaveMovilAuthProvider(configured)
+
+    context = provider._attempt_context()
+
+    assert context["auth_mode"] == "non_qr"
+    assert context["prefer_non_qr"] is True
+    assert provider._fresh_login_settings().cadrumo_browser_headless is headless
+
+
+def test_an_explicit_qr_route_forces_a_visible_browser(tmp_path: Path) -> None:
+    """The QR code has to be seen, so a headless setting is overridden for it."""
+    configured = _settings_for(
+        tmp_path,
+        CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z",
+        CADRUMO_CLAVE_PREFER_NON_QR="false",
+    ).model_copy(update={"cadrumo_browser_headless": True})
+    provider = ClaveMovilAuthProvider(configured)
+
+    assert provider._attempt_context()["auth_mode"] == "qr"
+    assert provider._fresh_login_settings().cadrumo_browser_headless is False
+
+
 @pytest.mark.parametrize(
     ("identity", "configured", "available", "severity"),
     [(None, False, False, "info"), ("12345678Z", True, True, ""), ("BAD", True, False, "warning")],

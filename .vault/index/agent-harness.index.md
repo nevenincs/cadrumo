@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#agent-harness'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3708553a66565391c56c13d1ece5d27651565f2f772048f1f8b5aaf2564ca3c2'
+body_hash: 'sha256:e85880072c05525e7c51c9e3ec2b4a38992d47c3eba41892f646006f68d5d683'
 related:
   - '[[2026-06-30-agent-harness-W01-P01-summary]]'
   - '[[2026-06-30-agent-harness-W01-P02-summary]]'
@@ -42,8 +42,8 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 
 ### adr
 
-- `2026-06-30-agent-harness-adr` - `agent-harness` adr: `AEAT CLI agent-harness framework` | (**status:** `accepted`)
-- `2026-07-01-agent-harness-adr` - `agent-harness` adr: `harness content: rules, personas, skills` | (**status:** `accepted`)
+- `2026-06-30-agent-harness-adr` - `agent-harness` adr: `AEAT CLI agent-harness framework` | (**status:** `superseded`)
+- `2026-07-01-agent-harness-adr` - `agent-harness` adr: `harness content: rules, personas, skills` | (**status:** `superseded`)
 
 ### audit
 

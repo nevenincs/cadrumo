@@ -148,8 +148,18 @@ modelo:
           loterías
       revision:
         2013-2022:
+          casilla:
+            x-e1in4opecdknap31cgmmsob3d5mmipbeehng:
+              label: Ciudad de nacimiento
+            x-e1in4opecdnm8qb7dsmn0ob9ecmmsob3d5mmipbeehng:
+              label: Código del país de nacimiento
           field:
             label: Modelo 270 (orden-hap-2368-2013), ejercicios 2013 a 2022
         2023-y-siguientes:
+          casilla:
+            x-e1in4opecdknap31cgmmsob3d5mmipbeehng:
+              label: Ciudad de nacimiento
+            x-e1in4opecdnm8qb7dsmn0ob9ecmmsob3d5mmipbeehng:
+              label: Código del país de nacimiento
           field:
             label: Modelo 270 (orden-hap-2368-2013), ejercicios 2023 a 2024

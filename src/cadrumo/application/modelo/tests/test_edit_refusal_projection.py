@@ -11,6 +11,11 @@ from typing import Any, cast
 
 import pytest
 
+from cadrumo.application.modelo.edit_apply_contracts import (
+    ModeloEditApplyOperationRequestV1,
+    ModeloEditApplySubmissionV1,
+)
+
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
@@ -147,9 +152,7 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
     request = OperationRequest(
         definition_id=operation_definitions.MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
         subject_ref=baseline.work_unit_id,
-        payload=operation_definitions.ModeloEditApplyOperationRequestV1(
-            submission=operation_definitions.ModeloEditApplySubmissionV1.from_submission(submission)
-        ),
+        payload=ModeloEditApplyOperationRequestV1(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
     )
     refusal = _pre_effect_refusal(_error(casilla_id="1388", binding_id=_BINDING), revision=_revision())
     monkeypatch.setattr(operation_definitions, "apply_modelo_edit", lambda *args, **kwargs: refusal)

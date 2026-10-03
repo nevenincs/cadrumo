@@ -1,0 +1,378 @@
+[[revisions.2022.export_layouts]]
+id = 'modelo-190-fichero-boe'
+
+[[revisions.2022.export_layouts.records]]
+id = 'modelo-190-declarante'
+record_type = 'declarante'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '1'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '190'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-year'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-nif'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'presenter.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-apellidos-razon-social'
+offset = 18
+length = 40
+kind = 'header'
+producer_key = 'taxpayer.full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-tipo-soporte'
+offset = 58
+length = 1
+kind = 'literal'
+literal = 'T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-persona-contacto-telefono'
+offset = 59
+length = 9
+kind = 'casilla'
+casilla_id = 'decl.persona-contacto-telefono'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-persona-contacto-nombre'
+offset = 68
+length = 40
+kind = 'casilla'
+casilla_id = 'decl.persona-contacto-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-numero-identificativo'
+offset = 108
+length = 13
+kind = 'casilla'
+casilla_id = 'decl.numero-identificativo'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-complementaria'
+offset = 121
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-sustitutiva'
+offset = 122
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.sustitutiva'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-numero-identificativo-anterior'
+offset = 123
+length = 13
+kind = 'casilla'
+casilla_id = 'decl.numero-identificativo-anterior'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-total-percepciones'
+offset = 136
+length = 9
+kind = 'casilla'
+casilla_id = 'decl.total-percepciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-percepciones-total'
+offset = 145
+length = 16
+kind = 'casilla'
+casilla_id = 'decl.percepciones-total'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-retenciones-total-integer-part'
+offset = 161
+length = 13
+kind = 'casilla'
+casilla_id = 'decl.retenciones-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-retenciones-total-fractional-digits'
+offset = 174
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.retenciones-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-correo-electronico'
+offset = 176
+length = 50
+kind = 'casilla'
+casilla_id = 'decl.correo-electronico'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-blancos-226'
+offset = 226
+length = 262
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-190-decl-sello-electronico'
+offset = 488
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2020']
+
+[revisions.2022.export_layouts.records.row_field_casilla_ids]

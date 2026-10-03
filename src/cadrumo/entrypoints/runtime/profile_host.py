@@ -38,7 +38,11 @@ from ...application.runtime.worker_authorization import (
     WorkerAutomationInventoryRequest,
     WorkerResponseScopeRequest,
 )
-from ...application.runtime.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
+from ...application.runtime.worker_enrollment import (
+    WorkerApprovalPublication,
+    WorkerApprovalPublicationPhase,
+    WorkerApprovalRequest,
+)
 from ...application.user_profile.access_contracts import (
     AccessAction,
     AccessAllowed,
@@ -284,10 +288,21 @@ class RuntimeProfileHost:
     ) -> EnrollmentTransition | None:
         """Publish on the existing fence thread, retaining exact invocation identity."""
         binding = command.binding
+        self._require_approval_publication_authority(authority, binding, command.phase)
+        # Reentrant only on the native thread already holding the same guard.
+        with self.authorize(authority):
+            return self._apply_approval_publication(binding, command)
+
+    def _require_approval_publication_authority(
+        self,
+        authority: WorkerAuthorizationRequest,
+        binding: RuntimeApprovalBinding,
+        phase: WorkerApprovalPublicationPhase,
+    ) -> None:
         self._require_approval_binding(binding)
         expected = (
             AUTOMATION_DECLINE_OPERATION_DEFINITION_ID
-            if command.phase == "decline"
+            if phase == "decline"
             else AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
         )
         if (
@@ -299,17 +314,19 @@ class RuntimeProfileHost:
             or not authority.policy.requires_human
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        # Reentrant only on the native thread already holding the same guard.
-        with self.authorize(authority):
-            if command.phase == "decline":
-                return self._approval_service(binding).decline(
-                    binding.enrollment_request_id, review_digest=binding.review_digest
-                )
-            if command.phase == "commit_review":
-                return self.approvals.commit_review(binding)
-            if command.phase == "publish_candidate":
-                return self.approvals.publish_candidate(binding)
-            return self.approvals.activate(binding)
+
+    def _apply_approval_publication(
+        self, binding: RuntimeApprovalBinding, command: WorkerApprovalPublication
+    ) -> EnrollmentTransition | None:
+        if command.phase == "decline":
+            return self._approval_service(binding).decline(
+                binding.enrollment_request_id, review_digest=binding.review_digest
+            )
+        if command.phase == "commit_review":
+            return self.approvals.commit_review(binding)
+        if command.phase == "publish_candidate":
+            return self.approvals.publish_candidate(binding)
+        return self.approvals.activate(binding)
 
     @contextmanager
     def authorize(self, request: WorkerAuthorityRequest) -> Generator[AccessAllowed | OperationResponseScopeAllowed]:

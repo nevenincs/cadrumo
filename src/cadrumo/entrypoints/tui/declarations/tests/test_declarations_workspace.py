@@ -22,7 +22,8 @@ from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_
 
 from .....application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
 from .....application.modelo.declaration_targets import DeclarationTarget, declaration_targets
-from .....application.modelo.declarations_workspace import (
+from .....application.modelo.declarations_workspace import project_declarations_workspace
+from .....application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
@@ -30,7 +31,6 @@ from .....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
-    project_declarations_workspace,
 )
 from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
 from .....application.operator_actions.catalogue import lookup_action

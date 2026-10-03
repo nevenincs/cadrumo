@@ -49,12 +49,12 @@ from ....domain.modelos.verification_report import ModeloVerificationFinding, Mo
 from .._m210_convenio_facts import resolve_m210_convenio_override
 from .._m210_rate import resolve_m210_rate
 from ..action_errors import ModeloApplicabilityFilterError
-from ..verification_actions import m210_unresolved_outcome_findings
 from ..verification_predicates import (
     _evaluate_applicability_filter,
     evaluate_predicate_expression,
     evaluate_verification_predicates,
 )
+from ..verification_report_facts import m210_unresolved_outcome_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

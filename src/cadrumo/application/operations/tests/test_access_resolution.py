@@ -33,6 +33,7 @@ from ..access_resolution import (
     require_period_independent_replay_or_authority,
     require_same_origin_admission,
     require_single_period_admission,
+    with_commit_action,
 )
 from ..frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..registry import OperationFrontendProjection
@@ -357,3 +358,25 @@ def test_an_undeclared_frontend_is_refused_before_an_undeclared_action() -> None
     with pytest.raises(ProfileAccessRefusedError) as action_refused:
         require_declared_frontend_and_action(context, frontends=cli, actions=frozenset({AccessAction.OBSERVE}))
     assert action_refused.value.reason is AccessDenialCode.OPERATION_DENIED
+
+
+def test_commit_door_is_added_to_the_policy_and_nothing_else_changes() -> None:
+    resolved = bind_operation_access(
+        _context(AccessAction.SUBMIT),
+        profile_id=_PROFILE,
+        definition_id="test.access",
+        actions=OPERATION_LIFECYCLE_ACTIONS,
+        disclosures=frozenset(),
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=True,
+        requires_human=False,
+        provider=Availability.NOT_REQUIRED,
+    )
+
+    committing = with_commit_action(resolved)
+
+    assert AccessAction.COMMIT not in resolved.policy.actions
+    assert committing.policy.actions == COMMITTING_OPERATION_LIFECYCLE_ACTIONS
+    assert committing.request == resolved.request
+    assert committing.policy.model_dump(exclude={"actions"}) == resolved.policy.model_dump(exclude={"actions"})

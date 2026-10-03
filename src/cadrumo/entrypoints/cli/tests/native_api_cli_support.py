@@ -22,18 +22,16 @@ from pydantic import SecretBytes
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.linux_worker_process import LinuxProcessScope
-from cadrumo.adapters.local_runtime.posix import PosixRuntimeEndpoint
+from cadrumo.adapters.local_runtime.login_policy import compose_runtime_login_policy
+from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
 from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
-from cadrumo.adapters.persistence.storage.custody.automation_store import (
-    CONTROL_NAMESPACE,
-    WRAP_NAMESPACE,
-    AutomationControlStore,
-    retire_profile_automation,
-)
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_retirement import retire_profile_automation
+from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
@@ -44,9 +42,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
-    Availability,
-    LoginEligibility,
-    OsLoginContext,
     ProfileAccessBinding,
 )
 from cadrumo.application.user_profile.automation_custody_port import (
@@ -56,6 +51,7 @@ from cadrumo.application.user_profile.automation_custody_port import (
     NativeSecretBackend,
 )
 from cadrumo.core.async_cleanup import await_cancellation_complete
+from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 
 from .cli_runner import invoke_cached_cli
@@ -63,23 +59,6 @@ from .runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
     observe_native_runtime_failures,
 )
-
-
-class _ApiLoginObservation:
-    """Synthetic OS-login observation for the real local worker transport."""
-
-    login_id = "cli-native-api-test-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        """Return an active test-owned login tied to the current OS owner."""
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            locked=False,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -336,12 +315,17 @@ def native_api_cli_session[Prepared](
             close_active_bucket_session()
 
             stop, boot = Event(), uuid4()
+            with override_settings(cadrumo_dev_runtime_session_override="1"):
+                login_policy = compose_runtime_login_policy(
+                    os_owner_id=owner_id(), runtime_boot_id=boot, stop=stop, native_inventory=None
+                )
             profiles = RuntimeProfileConnections(
                 storage_root=root,
                 storage_identity=endpoint.storage_identity,
                 runtime_boot_id=boot,
                 stop=stop,
-                capture_login=lambda _channel: _ApiLoginObservation(),
+                capture_login=login_policy.capture,
+                login_inventory=login_policy.inventory,
                 secret_store=lambda: selected_native,
             )
             runtime_owner.stop = stop

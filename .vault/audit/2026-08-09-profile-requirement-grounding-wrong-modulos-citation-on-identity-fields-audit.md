@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#profile-requirement-grounding'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a50f8c3f944f21fc7a10bc7d53257e366f613b2502c7bea750ce24a0ee79ea1c'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
-  - "[[2026-08-08-profile-requirement-grounding-plan]]"
   - "[[2026-08-09-profile-requirement-grounding-registry-schema-legal-refs-drift-reference]]"
 ---
 

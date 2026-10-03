@@ -41,6 +41,11 @@ irpf_expediente_detail_year_suffix = "RVlt"
 notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
 iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
 censal_datos = "/wlpl/BUGC-JDIT/MdcAcceso"
+censal_actividades_entry = "/wlpl/TOAE-JDIT/EnlaceConsultaActividadesLocales"
+censal_actividades = "/wlpl/TOAE-JDIT/ConsultaActividadesLocalesRelActividades"
+censal_locales = "/wlpl/TOAE-JDIT/SvAlLocalesSesionQuery"
+censal_situacion_tributaria = "/es13/s/buncbuncst00"
+censal_obligaciones = "/wlpl/BUGC-JDIT/ConsultaObligaciones"
 notifications_detail = "/wlpl/GNNO-JDIT/DetalleSede"
 
 [aeat.clave_permanente]
@@ -83,7 +88,7 @@ nie_soporte_input_selector = "#SOPORTE"
 nie_soporte_visible_selector = "#SOPORTE:visible"
 continue_button_selector = "#botonContinuar"
 continue_button_visible_selector = "#botonContinuar:visible"
-verification_code_selector = "#spanCodigoVerificacion"
+verification_code_selector = "#spanCodigoVerificacion, div.codigoVerificacion.fuenteTamanyo3em"
 wait_text_markers = [
   "codigo de verificacion",
   "código de verificación",
@@ -222,12 +227,13 @@ renta_web_open_browser_action_patterns = [
   "scrape-summary-field:*",
   "close-browser-context",
 ]
-# The censal reader drives exactly one control: the access selector's
-# authorize button, which dispatches the authenticated session to whichever
-# numbered host AEAT assigns. That is an authentication dispatch, not a
-# censal control; the reader touches nothing on the consulta page itself.
+# Census controls are consultation handoffs, constrained again by exact routes.
 censal_browser_action_patterns = [
   "clave-movil-authorize",
+  "censal-consult-actividades",
+  "censal-consult-situacion-tributaria",
+  "censal-consult-obligaciones",
+  "censal-consult-locales",
 ]
 # Landing-path fragments that mark a censal MODIFICATION surface. The censal
 # consulta page renders "Cambio de Domicilio Fiscal" / "Cambio de Domicilio de

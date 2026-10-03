@@ -5,10 +5,8 @@ from __future__ import annotations
 import time
 from uuid import uuid4
 
-from ....adapters.local_runtime.frontend_client import (
-    RuntimeFrontendClient,
-    frontend_failure_code,
-)
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import frontend_failure_code
 from ....adapters.outbound.google.errors import GoogleAuthNonInteractiveError
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.operation_access import (

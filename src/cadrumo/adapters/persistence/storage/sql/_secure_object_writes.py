@@ -252,45 +252,53 @@ class SecureObjectWriteOperations:
         def commit() -> None:
             self._check_session_freshness()
             with session_scope(self._engine, serializable=bool(assertions)) as session:
-                for assertion in assertions:
-                    row = session.execute(
-                        select(SecureObjectRow.revision_id).where(
-                            SecureObjectRow.namespace == assertion.namespace,
-                            SecureObjectRow.object_key == secure_object_key_digest(assertion.object_key),
-                        ),
-                    ).one_or_none()
-                    current_revision = row[0] if row is not None else None
-                    matches = (
-                        row is None
-                        if assertion.expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID
-                        else row is not None and current_revision == assertion.expected_revision_id
-                    )
-                    if not matches:
-                        raise self._revision_conflict(
-                            namespace=assertion.namespace,
-                            expected_revision_id=assertion.expected_revision_id,
-                            current_revision_id=current_revision,
-                        )
+                self._assert_batch_revisions(session, assertions)
                 self._write_pending_in_session(session, pending)
-                for removal in deletions:
-                    statement = delete(SecureObjectRow).where(
-                        SecureObjectRow.namespace == removal.namespace,
-                        SecureObjectRow.object_key == removal.hashed_object_key,
-                    )
-                    if removal.expected_revision_id is not None:
-                        statement = statement.where(SecureObjectRow.revision_id == removal.expected_revision_id)
-                    result = cast(CursorResult[Any], session.execute(statement))
-                    if removal.expected_revision_id is not None and result.rowcount != 1:
-                        raise self._revision_conflict(
-                            namespace=removal.namespace,
-                            expected_revision_id=removal.expected_revision_id,
-                            current_revision_id=None,
-                        )
+                self._delete_batch_rows(session, deletions)
 
         if writes or deletions:
             self._commit_prepared_mutation(commit)
         else:
             commit()
+
+    def _assert_batch_revisions(self, session: Session, assertions: tuple[SecureObjectRevisionAssertion, ...]) -> None:
+        """Check all source assertions inside the original serializable transaction before mutations."""
+        for assertion in assertions:
+            row = session.execute(
+                select(SecureObjectRow.revision_id).where(
+                    SecureObjectRow.namespace == assertion.namespace,
+                    SecureObjectRow.object_key == secure_object_key_digest(assertion.object_key),
+                ),
+            ).one_or_none()
+            current_revision = row[0] if row is not None else None
+            matches = (
+                row is None
+                if assertion.expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID
+                else row is not None and current_revision == assertion.expected_revision_id
+            )
+            if not matches:
+                raise self._revision_conflict(
+                    namespace=assertion.namespace,
+                    expected_revision_id=assertion.expected_revision_id,
+                    current_revision_id=current_revision,
+                )
+
+    def _delete_batch_rows(self, session: Session, deletions: tuple[SecureObjectDeletion, ...]) -> None:
+        """Apply every digest-addressed CAS deletion in the same pending-write transaction."""
+        for removal in deletions:
+            statement = delete(SecureObjectRow).where(
+                SecureObjectRow.namespace == removal.namespace,
+                SecureObjectRow.object_key == removal.hashed_object_key,
+            )
+            if removal.expected_revision_id is not None:
+                statement = statement.where(SecureObjectRow.revision_id == removal.expected_revision_id)
+            result = cast(CursorResult[Any], session.execute(statement))
+            if removal.expected_revision_id is not None and result.rowcount != 1:
+                raise self._revision_conflict(
+                    namespace=removal.namespace,
+                    expected_revision_id=removal.expected_revision_id,
+                    current_revision_id=None,
+                )
 
     def save_with_raw_key(
         self,

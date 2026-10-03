@@ -19,7 +19,7 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_p
 from ....application.auth.operator_scope_ports import OperatorScopePorts
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.data_inventory import DataInventoryChecklist, data_inventory_checklist
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -104,7 +104,7 @@ def _verify_modelo_revision(
 ) -> VerificationReport:
     """Run verification through the real encrypted application composition."""
     with bundled_indexed_authority().operation() as operation:
-        return verify_modelo_revision(
+        return verify_modelo_revision_with_preconditions(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -113,7 +113,7 @@ def _verify_modelo_revision(
             clock=clock,
             operator_scope_ports=operator_scope_ports,
             operation=operation,
-        )
+        ).report
 
 
 def _data_inventory_checklist(

@@ -25,7 +25,7 @@ from ......application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ......application.modelo.value_presentation import format_casilla_value
-from ......application.modelo.verification_actions import verify_modelo_revision
+from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ......application.modelo.work_form_models import ModeloFormRepeatingBlock
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
@@ -48,7 +48,8 @@ from .....tests.profile_persistence.verification_repository_support import (
 from ....components.host import ScreenHostApp
 from ....components.theme import install_cadrumo_themes
 from ....tests.modelo_workbench_session import application_workbench
-from ..casilla_list import CasillaList, CasillaListEntry
+from ..casilla_list import CasillaList
+from ..casilla_list_models import CasillaListEntry
 from ..grid import CasillaListRecords
 from ..installed import InstalledModeloWorkbench
 from ..issue_projection import issue_lines
@@ -274,7 +275,7 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
         unit.work_unit_id, ports=m349_work.ports, clock=SEEDED_AT
     )
     assert not result.revision.detail_rows and "detail_rows" in result.revision.model_fields_set
-    report = verify_modelo_revision(
+    report = verify_modelo_revision_with_preconditions(
         result.revision.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
@@ -286,7 +287,7 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
         operator_scope_ports=build_inward_operator_scope_ports_for_active_route(),
         operation=m349_work.operation,
         clock=SEEDED_AT,
-    )
+    ).report
     column = "op.codigo-pais"
     key = ("casilla", column)
     assert any(finding.casilla_id == column for finding in report.findings)

@@ -18,8 +18,9 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import revisio
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
-from ....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID, ModeloExportRequest
+from ....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from ....application.modelo.tests.registry_revision import active_registry_revision_id
+from ....application.modelo.work_export_contracts import ModeloExportRequest
 from ....application.operations.frontend_requests import OperationObservationRequestV1, OperationObservationSuccessV1
 from ....application.operations.models import OperationRequest
 from ....application.workflow.persistence import workflow_state_repository

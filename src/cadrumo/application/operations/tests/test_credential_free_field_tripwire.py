@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...modelo.operation_definitions import ModeloWorkAmendRequest
+from ...modelo.work_amend_contracts import ModeloWorkAmendRequest
 from ..models import CredentialFreeOperationRequest
 from ..registry_schema_validation import validate_credential_free_schema
 

@@ -27,15 +27,10 @@ from ...user_profile.access_contracts import (
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..verify import VerifyObservation, VerifySurface
-from ..verify_read_operation import (
-    VERIFY_LATEST_DEFINITION_ID,
-    VERIFY_LIST_DEFINITION_ID,
-    VERIFY_VIEW_DEFINITION_ID,
-    VerifyLatestExecutor,
+from ..verify_read_contracts import (
     VerifyLatestOperationReport,
     VerifyLatestPublicResultV1,
     VerifyLatestRequest,
-    VerifyListExecutor,
     VerifyListOperationReport,
     VerifyListPublicResultV1,
     VerifyListRequest,
@@ -43,6 +38,13 @@ from ..verify_read_operation import (
     VerifyObservationSummaryPublicV1,
     VerifyViewOperationReport,
     VerifyViewRequest,
+)
+from ..verify_read_operation import (
+    VERIFY_LATEST_DEFINITION_ID,
+    VERIFY_LIST_DEFINITION_ID,
+    VERIFY_VIEW_DEFINITION_ID,
+    VerifyLatestExecutor,
+    VerifyListExecutor,
     build_verify_latest_definition,
     build_verify_latest_registration,
     build_verify_list_definition,

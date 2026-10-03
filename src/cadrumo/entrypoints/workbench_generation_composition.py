@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 
 from ..application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
-    SecureProfileWorkbenchGenerationReadDoorV1,
-    WorkbenchGenerationV1,
 )
+from ..application.workbench_generation_contracts import WorkbenchGenerationV1
+from ..application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 
 if TYPE_CHECKING:
     from ..application.modelo.workspace_models import (
@@ -44,8 +44,8 @@ def compose_secure_workbench_generation_provider(
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.user_profile.profile_record_repository import ProfileRecordRepository
     from ..core.time.clock import now
-    from .calendar_evidence_composition import compose_calendar_aeat_reader
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+    from .calendar_evidence_composition import compose_calendar_aeat_reader
     from .ledger_action_composition import compose_ledger_action_ports
 
     account_session_reader()
@@ -229,6 +229,7 @@ def resolve_modelo_workspace_graded_snapshot(
 ) -> ModeloWorkspaceResultV1:
     """Read one exact work unit at graded admission or retain its refusal."""
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.modelo.work_addressing import ModeloExactWorkUnitTarget
     from ..application.modelo.workspace import resolve_graded_snapshot_result
     from ..application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
@@ -237,7 +238,6 @@ def resolve_modelo_workspace_graded_snapshot(
         build_diagnostics_ports,
         build_state_projection_read_ports,
     )
-    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
     objects = secure_object_repository_for_bucket(unit.bucket_id)

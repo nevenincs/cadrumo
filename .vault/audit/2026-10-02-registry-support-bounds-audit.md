@@ -3,30 +3,11 @@ tags:
   - '#audit'
   - '#registry-support-bounds'
 date: '2026-10-02'
-modified: '2026-10-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:513eb7799931cc1c9323c655bf70fe8b833fc235aa535e0442d69cd6c536c388'
+body_hash: 'sha256:2e475b696b3f1949186869dd1ac5e206b15c6615932bf4daa4fb0a5fbd818519'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-support-bounds with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `registry-support-bounds` audit: `Registry editions outside the supported filing years`
 

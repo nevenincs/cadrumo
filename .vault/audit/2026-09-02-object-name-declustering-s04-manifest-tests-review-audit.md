@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:afad1e0ce165d0003d82a3f0ea1d4ae31b70a01d65ecc8c1600c9a189534e036'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+related: []
 ---
 
 # `object-name-declustering` audit: `s04 manifest tests review`

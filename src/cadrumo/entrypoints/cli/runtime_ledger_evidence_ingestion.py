@@ -8,7 +8,7 @@ import typer
 from pydantic import ValidationError
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.ledger.evidence_ingestion_operation import (
+from ...application.ledger.evidence_ingestion_contracts import (
     LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,

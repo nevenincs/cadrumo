@@ -13,11 +13,13 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import AccessAction, Availability, DisclosureCategory
 from cadrumo.application.user_profile.operations import (
-    PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
     USER_PROFILE_OPERATION_DEFINITIONS,
+    build_user_profile_operation_registrations,
+)
+from cadrumo.application.user_profile.profile_operation_contracts import (
+    PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
     ProfilePlantillaMediaOperationRequest,
     ProfilePlantillaMediaSet,
-    build_user_profile_operation_registrations,
 )
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState

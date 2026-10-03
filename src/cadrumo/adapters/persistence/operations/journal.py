@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from collections.abc import Iterable
 from pathlib import Path
 from typing import override
 
@@ -162,53 +163,62 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
                 paths = scan_directory(self.root, pattern="*.json", require_root=True)
             except OSError as exc:
                 raise RepositoryError("cannot scan operation journal inventory") from exc
-            operation_ids: list[OperationId] = []
-            for path in paths:
-                # This shared storage category also contains the login owner's
-                # exact handover witness. Its defining owner validates it; it
-                # is not a canonical operation invocation or recovery target.
-                if path == self._profile_handover_path:
-                    continue
-                if path.name.endswith(".lease.json"):
-                    scope_ref = path.name.removesuffix(".lease.json")
-                    try:
-                        expected_lease_name = self._lease_storage.path_for(scope_ref).name
-                    except RepositoryError as exc:
-                        raise RepositoryError("invalid operation journal inventory filename") from exc
-                    if path.name != expected_lease_name:
-                        raise RepositoryError("invalid operation journal inventory filename")
-                    continue
-                try:
-                    expected_name = self.path_for(path.stem).name
-                except RepositoryError as exc:
-                    raise RepositoryError("invalid operation journal inventory filename") from exc
-                if path.name != expected_name:
-                    raise RepositoryError("invalid operation journal inventory filename")
-                operation_ids.append(path.stem)
+            operation_ids = self._inventory_operation_ids(paths)
             selected = tuple(
                 operation_id for operation_id in operation_ids if request.after is None or operation_id > request.after
             )
             page_ids = selected[: request.limit]
             entries: list[OperationRecoveryInventoryEntry] = []
             for operation_id in page_ids:
-                try:
-                    record = super().load(operation_id)
-                except RepositoryError:
-                    if not self._validate_existing_root() or self.is_absent(operation_id):
-                        raise RepositoryError("operation journal inventory changed during read") from None
-                    disposition = OperationRecoveryInventoryDisposition.REFUSED
-                else:
-                    disposition = (
-                        OperationRecoveryInventoryDisposition.TERMINAL
-                        if record.snapshot.lifecycle is OperationLifecycle.TERMINAL
-                        else OperationRecoveryInventoryDisposition.NONTERMINAL
-                    )
-                entries.append(OperationRecoveryInventoryEntry(operation_id=operation_id, disposition=disposition))
+                entries.append(self._recovery_inventory_entry(operation_id))
             return OperationRecoveryInventoryPage(
                 entries=tuple(entries),
                 next_cursor=page_ids[-1] if page_ids else request.after,
                 has_more=len(selected) > request.limit,
             )
+
+    def _inventory_operation_ids(self, paths: Iterable[Path]) -> list[OperationId]:
+        """Validate inventory names while excluding canonical lease and handover rows."""
+        operation_ids: list[OperationId] = []
+        for path in paths:
+            # This shared storage category also contains the login owner's
+            # exact handover witness. Its defining owner validates it; it
+            # is not a canonical operation invocation or recovery target.
+            if path == self._profile_handover_path:
+                continue
+            if path.name.endswith(".lease.json"):
+                scope_ref = path.name.removesuffix(".lease.json")
+                try:
+                    expected_lease_name = self._lease_storage.path_for(scope_ref).name
+                except RepositoryError as exc:
+                    raise RepositoryError("invalid operation journal inventory filename") from exc
+                if path.name != expected_lease_name:
+                    raise RepositoryError("invalid operation journal inventory filename")
+                continue
+            try:
+                expected_name = self.path_for(path.stem).name
+            except RepositoryError as exc:
+                raise RepositoryError("invalid operation journal inventory filename") from exc
+            if path.name != expected_name:
+                raise RepositoryError("invalid operation journal inventory filename")
+            operation_ids.append(path.stem)
+        return operation_ids
+
+    def _recovery_inventory_entry(self, operation_id: OperationId) -> OperationRecoveryInventoryEntry:
+        """Classify one present journal row while refusing an inventory race."""
+        try:
+            record = super().load(operation_id)
+        except RepositoryError:
+            if not self._validate_existing_root() or self.is_absent(operation_id):
+                raise RepositoryError("operation journal inventory changed during read") from None
+            disposition = OperationRecoveryInventoryDisposition.REFUSED
+        else:
+            disposition = (
+                OperationRecoveryInventoryDisposition.TERMINAL
+                if record.snapshot.lifecycle is OperationLifecycle.TERMINAL
+                else OperationRecoveryInventoryDisposition.NONTERMINAL
+            )
+        return OperationRecoveryInventoryEntry(operation_id=operation_id, disposition=disposition)
 
     def _resolve_idempotency_unlocked(self, claim: OperationIdempotencyClaim) -> str | None:
         """Find one exact claim while the canonical journal lock is already held."""

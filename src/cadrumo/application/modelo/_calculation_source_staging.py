@@ -461,6 +461,35 @@ def add_terminal_origin_diagnostics(
     return source_resolution.model_copy(update={"diagnostics": source_resolution.diagnostics + diagnostics})
 
 
+def _present_source_gap_diagnostics(
+    missing: tuple[tuple[BindingId, CasillaId, BindingSourceKind], ...],
+    source_resolution: CalculationSourceResolution,
+    not_missing: set[BindingId],
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Add only unresolved source gaps not already represented by a boxed diagnostic."""
+    reported_with_box = {
+        diagnostic.binding_id
+        for diagnostic in source_resolution.diagnostics
+        if diagnostic.reason == "unresolved_binding" and diagnostic.casilla_id is not None
+    }
+    diagnostics = tuple(
+        CalculationSourceDiagnostic(
+            reason="unresolved_binding",
+            source_kind=str(source),
+            binding_id=binding_id,
+            casilla_id=casilla_id,
+            message=(
+                f"binding {binding_id!r} (casilla {casilla_id!r}) declares present source "
+                f"{source!r} whose resolver produced no value; the bound casilla would otherwise "
+                "default to a silent zero. Supply the source records before filing."
+            ),
+        )
+        for binding_id, casilla_id, source in missing
+        if binding_id not in not_missing and binding_id not in reported_with_box
+    )
+    return diagnostics
+
+
 def add_expected_missing_binding_diagnostics(
     revision: ModeloRevision,
     source_resolution: CalculationSourceResolution,
@@ -498,26 +527,7 @@ def add_expected_missing_binding_diagnostics(
         *source_resolution.inapplicable_binding_ids,
         *(binding_id for binding_id, _row_index in source_resolution.row_binding_values),
     }
-    reported_with_box = {
-        diagnostic.binding_id
-        for diagnostic in source_resolution.diagnostics
-        if diagnostic.reason == "unresolved_binding" and diagnostic.casilla_id is not None
-    }
-    diagnostics = tuple(
-        CalculationSourceDiagnostic(
-            reason="unresolved_binding",
-            source_kind=str(source),
-            binding_id=binding_id,
-            casilla_id=casilla_id,
-            message=(
-                f"binding {binding_id!r} (casilla {casilla_id!r}) declares present source "
-                f"{source!r} whose resolver produced no value; the bound casilla would otherwise "
-                "default to a silent zero. Supply the source records before filing."
-            ),
-        )
-        for binding_id, casilla_id, source in missing
-        if binding_id not in not_missing and binding_id not in reported_with_box
-    )
+    diagnostics = _present_source_gap_diagnostics(missing, source_resolution, not_missing)
     boxed = {diagnostic.binding_id for diagnostic in diagnostics}
     kept = tuple(
         diagnostic

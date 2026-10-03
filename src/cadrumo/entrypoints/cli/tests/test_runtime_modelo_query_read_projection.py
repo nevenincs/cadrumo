@@ -14,7 +14,7 @@ from typer.main import get_command
 
 from cadrumo.application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
 from cadrumo.application.modelo.data_inventory import DataInventoryCasilla, DataInventoryChecklist
-from cadrumo.application.modelo.query_read_operation import (
+from cadrumo.application.modelo.query_read_contracts import (
     ModeloBindingsListProjection,
     ModeloBindingsListRequest,
     ModeloBindingsResolveProjection,
@@ -24,6 +24,8 @@ from cadrumo.application.modelo.query_read_operation import (
     ModeloReadinessProjection,
     ModeloRequiresProjection,
     ModeloRequiresRequest,
+)
+from cadrumo.application.modelo.query_read_operation import (
     build_modelo_bindings_list_definition,
     build_modelo_bindings_list_registration,
     build_modelo_bindings_resolve_definition,
@@ -45,6 +47,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.cli import runtime_modelo_query_read as bridge
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 from cadrumo.entrypoints.cli.registered_operation_contracts import RegisteredOperationCompletion
@@ -74,7 +77,7 @@ def test_public_query_schemas_compile_as_closed_registered_contracts() -> None:
         definitions.append(definition)
         registrations.append(registration)
 
-    def unavailable_read_ports(*, bucket_id: str) -> ModeloQueryReadPorts:
+    def unavailable_read_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloQueryReadPorts:
         raise AssertionError(f"read ports must not be opened by schema enrollment for {bucket_id}")
 
     readiness = build_modelo_readiness_definition(unavailable_read_ports)

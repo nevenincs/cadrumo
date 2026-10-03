@@ -25,11 +25,11 @@ from ..operations.capabilities import (
 )
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..user_profile.access_contracts import (
@@ -68,9 +68,6 @@ _IDS = (
 )
 
 
-_READ_FRONTENDS = frozenset(OperationFrontendProjection)
-
-
 _WRITE_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 
 
@@ -98,7 +95,7 @@ def _require_apoderado_access_request(
 
 
 def _require_apoderado_access_action(context: OperationAccessContext, *, mutating: bool) -> frozenset[AccessAction]:
-    frontends = _WRITE_FRONTENDS if mutating else _READ_FRONTENDS
+    frontends = _WRITE_FRONTENDS if mutating else ALL_OPERATION_FRONTENDS
     actions = _WRITE_ACTIONS if mutating else _READ_ACTIONS
     if context.frontend not in frontends:
         raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
@@ -197,17 +194,12 @@ def build_apoderado_operation_definitions(factory: ApoderadoOperationPortsFactor
             APODERADO_CLEAR_OPERATION_DEFINITION_ID,
         }
         definitions.append(
-            OperationDefinition(
+            build_single_phase_definition(
                 definition_id=operation_id,
                 request_type=request_type,
                 result_type=ApoderadoExecutionResult,
-                executor_factory=OperationExecutorFactory(
-                    request_type=request_type,
-                    executor_type=ApoderadoOperationExecutor,
-                    build=lambda: ApoderadoOperationExecutor(factory),
-                ),
-                phase_codes=(operation_id,),
-                interaction_kinds=frozenset(),
+                executor_type=ApoderadoOperationExecutor,
+                build=lambda: ApoderadoOperationExecutor(factory),
                 capabilities=OperationCapabilities(
                     durability=OperationDurability.RECORDED,
                     cancellation=OperationCancellation.UNSUPPORTED,
@@ -225,22 +217,17 @@ def build_apoderado_operation_definitions(factory: ApoderadoOperationPortsFactor
                     else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
                     close_policy=OperationClosePolicy.DETACH_ALLOWED,
                 ),
-                reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-                permitted_frontends=_WRITE_FRONTENDS if mutating else _READ_FRONTENDS,
-                ephemeral_secret=(
-                    OperationEphemeralSecretDeclaration(
-                        secret_kind=APODERADO_REPRESENTED_NIF_SECRET_KIND, lifetime=timedelta(minutes=5)
-                    )
-                    if operation_id == APODERADO_CONFIGURE_OPERATION_DEFINITION_ID
-                    else None
-                ),
-                refusal_detail_codes=(
-                    frozenset({"REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE"})
-                    if operation_id == APODERADO_CHECK_OPERATION_DEFINITION_ID
-                    else frozenset({"REFUSED_APODERADO_INVALID_REPRESENTED_NIF", "REFUSED_APODERADO_UNKNOWN_SCOPE"})
-                    if operation_id == APODERADO_CONFIGURE_OPERATION_DEFINITION_ID
-                    else frozenset()
-                ),
+                permitted_frontends=_WRITE_FRONTENDS if mutating else ALL_OPERATION_FRONTENDS,
+                ephemeral_secret=OperationEphemeralSecretDeclaration(
+                    secret_kind=APODERADO_REPRESENTED_NIF_SECRET_KIND, lifetime=timedelta(minutes=5)
+                )
+                if operation_id == APODERADO_CONFIGURE_OPERATION_DEFINITION_ID
+                else None,
+                refusal_detail_codes=frozenset({"REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE"})
+                if operation_id == APODERADO_CHECK_OPERATION_DEFINITION_ID
+                else frozenset({"REFUSED_APODERADO_INVALID_REPRESENTED_NIF", "REFUSED_APODERADO_UNKNOWN_SCOPE"})
+                if operation_id == APODERADO_CONFIGURE_OPERATION_DEFINITION_ID
+                else frozenset(),
             )
         )
     return tuple(sorted(definitions, key=lambda definition: definition.definition_id))

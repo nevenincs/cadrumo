@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "d915d42702e97e35328f5568f215795ac40ed05f6777757be75cb870712c014d"
+source_state_digest = "4972084536cd57f5dd687844db406b1df92c1d6d4479c5f9cf91a9ade9e66b8c"
 placements = [
     { casilla_id = "clave-identificacion", kind = "on_form" },
     { casilla_id = "clave-mercado", kind = "on_form" },
@@ -28,7 +28,7 @@ placements = [
     { casilla_id = "numero-justificante", kind = "on_form" },
     { casilla_id = "numero-total-declarados", kind = "on_form" },
     { casilla_id = "numero-valores", kind = "on_form" },
-    { casilla_id = "persona-relacion", kind = "on_form" },
+    { casilla_id = "persona-relacion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "porcentaje-participacion", kind = "on_form" },
     { casilla_id = "representante-legal-nif", kind = "on_form" },
     { casilla_id = "tipo-soporte", kind = "on_form" },
@@ -47,12 +47,11 @@ heading_key = "modelo.schema.189.form.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "declarante-razon-social" },
     { kind = "field", id = "field-2", casilla_id = "tipo-soporte" },
-    { kind = "field", id = "field-3", casilla_id = "persona-relacion" },
-    { kind = "field", id = "field-4", casilla_id = "numero-justificante" },
-    { kind = "field", id = "field-5", casilla_id = "declaracion-complementaria-sustitutiva" },
-    { kind = "field", id = "field-6", casilla_id = "numero-identificativo-anterior" },
-    { kind = "field", id = "field-7", casilla_id = "numero-total-declarados" },
-    { kind = "field", id = "field-8", casilla_id = "valoracion-total" },
+    { kind = "field", id = "field-3", casilla_id = "numero-justificante" },
+    { kind = "field", id = "field-4", casilla_id = "declaracion-complementaria-sustitutiva" },
+    { kind = "field", id = "field-5", casilla_id = "numero-identificativo-anterior" },
+    { kind = "field", id = "field-6", casilla_id = "numero-total-declarados" },
+    { kind = "field", id = "field-7", casilla_id = "valoracion-total" },
 ]
 
 [[revisions.2022.form_layouts.pages]]

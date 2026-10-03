@@ -65,14 +65,14 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarSourceObservationV1,
     project_declarations_calendar,
 )
-from ....application.modelo.declarations_workspace import (
+from ....application.modelo.declarations_workspace import project_declarations_workspace
+from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
-    project_declarations_workspace,
 )
 from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
@@ -250,6 +250,7 @@ def _operation_contracts() -> OperationPublicContractSetV1:
         browser_session_factory=unopened_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=unopened_censal_fetch,
+        provider_preflight=lambda _profile_id, _operation: None,
     ).model_copy(update={"action_reference": ActionReference(action_id="operator.profile.edit")})
     contract = build_censal_operation_registration(definition).contract
     return OperationPublicContractSetV1.build((contract,))

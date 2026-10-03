@@ -7,7 +7,6 @@ from uuid import UUID
 
 import typer
 
-from ...application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from ...application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
 from ...application.modelo.quickfile_operation_contracts import (
     QuickfileCalculationInputs,
@@ -15,6 +14,7 @@ from ...application.modelo.quickfile_operation_contracts import (
     QuickfileStageSnapshot,
 )
 from ...application.modelo.quickfile_operation_projections import QuickfileProjection
+from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from ...application.operations.public_period import PublicPeriod
 from ...core.errors.error_codes import get_registered_error_code_by_code
 from ...core.external_constants import OutputLanguage

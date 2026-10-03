@@ -121,6 +121,7 @@ def test_installed_cli_rename_and_discard_use_exact_worker_snapshot(tmp_path: Pa
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )

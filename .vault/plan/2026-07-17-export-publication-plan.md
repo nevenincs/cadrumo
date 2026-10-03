@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#export-publication'
 date: '2026-07-17'
-modified: '2026-07-25'
+modified: '2026-10-03'
 body_hash: 'sha256:a4c7047ce396eb2e67189e66dac0a776627052b8d44ea3235c9c411736e2fbcd'
 tier: L1
 related:
@@ -14,7 +14,6 @@ related:
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-17-export-publication-audit]]'
-  - '[[2026-07-17-export-publication-adr]]'
 ---
 
 # `export-publication` plan

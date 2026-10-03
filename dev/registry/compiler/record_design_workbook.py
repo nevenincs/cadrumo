@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
@@ -236,6 +236,28 @@ def _consume_total_row(
         (text := optional_text(candidate)) is not None and text.casefold() == "variable"
         for candidate in values[label_index + 1 :]
     )
+    _record_total_row(
+        sheet_name,
+        parsed_rows,
+        row_number,
+        values,
+        label_index=label_index,
+        row_total=row_total,
+        has_variable_total=has_variable_total,
+    )
+    return True
+
+
+def _record_total_row(
+    sheet_name: str,
+    parsed_rows: _WorkbookSheetRows,
+    row_number: int,
+    values: tuple[object, ...],
+    *,
+    label_index: int,
+    row_total: int | None,
+    has_variable_total: bool,
+) -> None:
     if has_variable_total:
         parsed_rows.variable_total_marker_rows.append(row_number)
     if row_total is not None and has_variable_total:
@@ -264,7 +286,6 @@ def _consume_total_row(
                 length=None,
             ),
         )
-    return True
 
 
 def _consume_field_row(
@@ -554,16 +575,35 @@ def solve_declared_desglose_holes(
             return [] if remaining == 0 else None
         if remaining == 0:
             return None
-        for candidate in by_offset.get(position, ()):
-            stop = position + candidate.length
-            if stop > end or any(byte in covered for byte in range(position, stop)):
-                continue
-            tail = walk(stop, remaining - 1)
-            if tail is not None:
-                return [candidate, *tail]
-        return None
+        return _try_desglose_candidates(
+            position,
+            remaining,
+            end=end,
+            covered=covered,
+            by_offset=by_offset,
+            walk=walk,
+        )
 
     return walk(parent.offset, wanted)
+
+
+def _try_desglose_candidates(
+    position: int,
+    remaining: int,
+    *,
+    end: int,
+    covered: set[int],
+    by_offset: Mapping[int, list[PdfRow]],
+    walk: Callable[[int, int], list[PdfRow] | None],
+) -> list[PdfRow] | None:
+    for candidate in by_offset.get(position, ()):
+        stop = position + candidate.length
+        if stop > end or any(byte in covered for byte in range(position, stop)):
+            continue
+        tail = walk(stop, remaining - 1)
+        if tail is not None:
+            return [candidate, *tail]
+    return None
 
 
 def tiles_exactly(parent: RecordDesignField, run: list[RecordDesignField]) -> bool:

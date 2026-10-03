@@ -309,3 +309,30 @@ def test_wallet_shares_the_generic_modal_footer_fallback() -> None:
     assert "modal-footer" in page.attempted_selectors[-1], (
         f"expected the fallback selector to be tried last, got {page.attempted_selectors}"
     )
+
+
+# CAPTURED — the structure of AEAT's live DialogoRepresentacion alert modal on 2026-10-03
+# (classes, inline style and button labels only): shown through an inline `display: block`
+# with no "show" class, offering "Ir a Mis Alertas" before "Continuar".
+_HTML_SHOWN_BY_STYLE = f"""
+<html><body>
+  <div id="{_MODAL_SELECTOR.lstrip("#")}" class="modal fade max-z-index d-print-none" style="display: block;">
+    <button type="button" class="close cursor-pointer d-flex y" data-dismiss="modal"></button>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-primary py-2">Ir a Mis Alertas</button>
+      <button type="button" class="btn btn-outline-primary py-2">{_BUTTON_TEXT.capitalize()}</button>
+    </div>
+  </div>
+</body></html>
+"""
+
+
+def test_auth_dismisses_the_modal_aeat_shows_by_inline_style() -> None:
+    """AEAT's real modal carries no "show" class; it must still be dismissed through "Continuar"."""
+    page = _ScriptedPage(_HTML_SHOWN_BY_STYLE, click_matches=lambda selector: _BUTTON_TEXT.capitalize() in selector)
+
+    _run(lambda: _run_auth(page))
+
+    assert page.attempted_selectors, "auth path left AEAT's style-shown modal covering the own-name submit"
+    assert all(".show" not in selector for selector in page.attempted_selectors)
+    assert all("Mis Alertas" not in selector for selector in page.attempted_selectors)

@@ -11,29 +11,31 @@ import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.actividad_asset.operation_dtos import (
-    ActivityAssetRevisionSnapshot,
-    ScheduledAmortizationChargeSnapshot,
-)
-from ...application.actividad_asset.registered_operations import (
+from ...application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
-    ActivityAssetClaimProjection,
     ActivityAssetClaimRequest,
-    ActivityAssetCorrectProjection,
     ActivityAssetCorrectRequest,
-    ActivityAssetCreateProjection,
     ActivityAssetCreateRequest,
-    ActivityAssetFilingHandoffProjection,
     ActivityAssetFilingHandoffRequest,
-    ActivityAssetForecastProjection,
     ActivityAssetForecastRequest,
-    ActivityAssetInspectProjection,
     ActivityAssetInspectRequest,
+)
+from ...application.actividad_asset.activity_asset_projections import (
+    ActivityAssetClaimProjection,
+    ActivityAssetCorrectProjection,
+    ActivityAssetCreateProjection,
+    ActivityAssetFilingHandoffProjection,
+    ActivityAssetForecastProjection,
+    ActivityAssetInspectProjection,
+)
+from ...application.actividad_asset.operation_dtos import (
+    ActivityAssetRevisionSnapshot,
+    ScheduledAmortizationChargeSnapshot,
 )
 from ...application.operations.public_scalar import PublicDecimal
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

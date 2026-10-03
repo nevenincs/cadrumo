@@ -25,11 +25,7 @@ import pytest
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import NoticeSeverity
 from ....core.register_scoping_signal import RegisterScopingSignal
-from ..filed_data_capture import (
-    FiledHistoryOnboardingRun,
-    FiledHistoryPairOutcome,
-    expected_but_not_found_notice,
-)
+from ..filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome, expected_but_not_found_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#integration-fixture-drift'
 date: '2026-07-10'
-modified: '2026-07-13'
+modified: '2026-10-03'
 body_hash: 'sha256:b81f2c7e48140def4a2fdbb35862ff9756c98767ecfe414f73afa32647e33820'
 related:
   - "[[2026-07-10-integration-fixture-drift-research]]"
-  - "[[2026-07-08-integration-fixture-drift-plan]]"
   - "[[2026-07-08-integration-fixture-drift-audit]]"
 ---
 # integration-fixture-drift adr: retrospective fixture recovery closeout | (**status:** `accepted`)

@@ -17,7 +17,8 @@ import pytest
 from click.testing import Result
 from pydantic import JsonValue
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from .....adapters.outbound.google.records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
 from .....adapters.outbound.google.session_store import (
     load_client,

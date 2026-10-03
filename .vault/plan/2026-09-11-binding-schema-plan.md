@@ -8,14 +8,16 @@ related:
   - '[[2026-09-11-binding-schema-adr]]'
   - '[[2026-09-11-binding-schema-provider-enrollment-design-research]]'
   - '[[2026-10-01-vault-health-reconciliation-preexisting-errors-audit]]'
-modified: '2026-10-01'
+modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:f502af3fa5a079be60ac9122592c8b161679c02c0cbd2db0ad3b0ff25c4122f2'
+body_hash: 'sha256:9214b949e1245390c250d73a4b7a00a6882a50b21a966dec813564bde6346fdf'
 ---
 
 # `binding-schema` plan
 
 ## Description
+
+Define a closed typed binding schema and registration authority, absorb relation semantics into the provider model, narrow resolution and projections to provider variants, then migrate the authored corpus and remove displaced exemptions and claims.
 
 ## Steps
 
@@ -73,4 +75,8 @@ Rewrite the authored corpus to the new shape with a CLI-owned converter, retire 
 
 ## Parallelization
 
+P01 establishes the provider unions and registration source used by relation absorption and resolver narrowing. P02 precedes P03 because typed provider members are needed for narrowing and projections. P04 applies the completed schema to authored data and generated exports; the plan records no parallel assignments.
+
 ## Verification
+
+Acceptance requires provider registration to govern selector, validator and route lookup; relation and temporal rules to reject malformed or mixed shapes; runtime consumers and projections to use typed provider variants; and the authored corpus and generated export trees to pass the compiler and coverage gates. P04.S32 remains open until the 232, 353 and 390 exports are regenerated after the first green compile and tree currency and coverage are verified.

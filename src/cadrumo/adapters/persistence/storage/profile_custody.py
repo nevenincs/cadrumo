@@ -80,7 +80,7 @@ from .bucket.output_language_hint import (
 from .bucket.sealed_archive_reader import read_sealed_archive
 from .bucket.sealed_archive_writer import write_sealed_archive
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
-from .custody.automation_store import retire_profile_automation
+from .custody.automation_retirement import retire_profile_automation
 from .custody.capsule import (
     ProfileCustodyRecoveryMaterial,
     install_committed_profile_custody_recovery_envelope,

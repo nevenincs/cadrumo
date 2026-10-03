@@ -15,14 +15,10 @@ from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .read_ports import OverviewReadPortsFactory
@@ -85,19 +81,13 @@ class OverviewReadExecutor:
 def build_overview_read_definition(kind: _OverviewReadKind, factory: OverviewReadPortsFactory) -> OperationDefinition:
     """Build one installed overview leaf over the shared exact-profile seam."""
     definition_id = _OVERVIEW_READ_DEFINITION_IDS[kind]
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=_OverviewReadRequest,
         result_type=_OverviewReadResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=_OverviewReadRequest,
-            executor_type=OverviewReadExecutor,
-            build=lambda: OverviewReadExecutor(factory, definition_id),
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
+        executor_type=OverviewReadExecutor,
+        build=lambda: OverviewReadExecutor(factory, definition_id),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 

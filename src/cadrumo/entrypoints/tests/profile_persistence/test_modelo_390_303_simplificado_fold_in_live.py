@@ -46,7 +46,7 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -700,7 +700,7 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
         )
 
         with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="current calculation pointer"):
-            verify_modelo_revision(
+            verify_modelo_revision_with_preconditions(
                 target.calculation_revision_id,
                 actor="operator",
                 workflow_profile=workflow_profile(),
@@ -740,7 +740,7 @@ def test_m390_refuses_a_non_presentado_source_calculation_revision(
         calculations.save(upsert_calculation_revision(calculations.load(), non_presentado))
 
         with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="PRESENTADO"):
-            verify_modelo_revision(
+            verify_modelo_revision_with_preconditions(
                 target.calculation_revision_id,
                 actor="operator",
                 workflow_profile=workflow_profile(),
@@ -811,7 +811,7 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
         )
 
         with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="VIGENTE filing record"):
-            verify_modelo_revision(
+            verify_modelo_revision_with_preconditions(
                 target.calculation_revision_id,
                 actor="operator",
                 workflow_profile=workflow_profile(),
@@ -868,7 +868,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         _indexed_authority_for_test().operation() as operation,
         pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
     ):
-        verify_modelo_revision(
+        verify_modelo_revision_with_preconditions(
             target.calculation_revision_id,
             actor="operator",
             workflow_profile=workflow_profile(),

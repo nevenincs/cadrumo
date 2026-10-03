@@ -25,19 +25,16 @@ from ...domain.iva.schema import IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    OperationAccessPolicy,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .confirmation_gate import FindingResolution
@@ -61,7 +58,7 @@ from .invoice_evidence_operation import (
 from .invoice_evidence_operation_dtos import (
     InvoiceConfirmationProjectionV1,
 )
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access
 
 LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID = "ledger.evidence.confirm"
 
@@ -251,19 +248,13 @@ def build_ledger_evidence_confirm_definition(
     ports_factory: InvoiceEvidenceOperationPortsFactory,
 ) -> OperationDefinition:
     """Register one reviewed invoice confirmation with canonical audit writes."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceConfirmRequest,
         result_type=LedgerEvidenceConfirmExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerEvidenceConfirmRequest,
-            executor_type=LedgerEvidenceConfirmExecutor,
-            build=lambda: LedgerEvidenceConfirmExecutor(ports_factory),
-        ),
-        phase_codes=(LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerEvidenceConfirmExecutor,
+        build=lambda: LedgerEvidenceConfirmExecutor(ports_factory),
         capabilities=invoice_evidence_operation_capabilities(mutates=True),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -291,11 +282,7 @@ def _resolve_confirm_access(
         or type(request.payload) is not LedgerEvidenceConfirmRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_evidence_confirm_registration(

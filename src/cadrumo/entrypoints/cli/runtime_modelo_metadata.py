@@ -7,21 +7,22 @@ from uuid import UUID
 
 import typer
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...adapters.local_runtime.modelo_metadata import (
     ModeloMetadataRunError,
     read_modelo_work_metadata,
     run_modelo_metadata_mutation,
 )
 from ...application.modelo.metadata_read_operation import ModeloWorkMetadataRequest
-from ...application.modelo.operation_definitions import (
+from ...application.modelo.work_addressing import ModeloWorkAddressNotFoundError
+from ...application.modelo.work_change_contracts import (
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardPublicResultV2,
     ModeloWorkDiscardRequest,
     ModeloWorkRenamePublicResultV2,
     ModeloWorkRenameRequest,
 )
-from ...application.modelo.work_addressing import ModeloWorkAddressNotFoundError
 from ...application.operations.public_period import PublicPeriod
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import remaining_budget

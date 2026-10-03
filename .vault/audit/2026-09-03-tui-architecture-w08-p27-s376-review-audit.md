@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c98010346b82991a0b6f7e5e2f114878bd2ed7d4a97fad3d6cefc21a3e50a0f'
+body_hash: 'sha256:42cba5aa391b2e199120e80246f7582ef54beaa45f48ba04fac68c4a9b1fe74d'
 related:
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
@@ -36,6 +36,6 @@ Modelo screens use generic typed application access and `Screen` result types ra
 
 Ruff passed over the complete Modelo TUI package. ty passed over the complete Modelo TUI package. Direct source inspection found six read-workspace quit handlers and six `dismiss(None)` implementations, no production `self.app.exit`, and no concrete installed-App narrowing. The deadline-limited focused compositor run produced passing cases and no failure before it was stopped at the review coordinator's request; the exact generic-root, callback, focus-restoration, standalone-wrapper, and editor-unsaved assertions were also reviewed directly in their live tests.
 
-## Recommendation
+## Recommendations
 
 CLOSE. W08.P27.S376 is safe to mark complete. No high or medium issue remains.

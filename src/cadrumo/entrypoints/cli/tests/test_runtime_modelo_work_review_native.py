@@ -14,7 +14,7 @@ from click.testing import Result
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
 from ....application.modelo.work_review import build_modelo_work_review
-from ....application.modelo.work_review_operation import MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID
+from ....application.modelo.work_review_contracts import MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID
 from ....application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ....application.user_profile.access_contracts import (
     AccessAction,

@@ -53,7 +53,7 @@ from .....application.modelo.work_form_models import (
 )
 from .....core.i18n.render import tr
 from ...components.cell_text import ellipsize
-from .casilla_list import AddressKey
+from .casilla_list_models import AddressKey
 from .page_items import WorkbenchPage
 from .vocabulary import (
     CHECK_MARK,

@@ -12,24 +12,18 @@ from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import profile_operation_subject
 from ..operations.access_resolution import (
-    ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_single_period_admission,
+    bind_replayed_or_fresh_single_period_access,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_identity
+from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -115,19 +109,13 @@ class ModeloWorkFilingRecordExecutor:
 
 def build_modelo_work_filing_record_definition(factory: VerificationRepositoryBundleFactory) -> OperationDefinition:
     """Declare an encrypted-result, credential-free exact filing read."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_WORK_FILING_RECORD_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkFilingRecordRequest,
         result_type=ModeloWorkFilingRecordProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloWorkFilingRecordRequest,
-            executor_type=ModeloWorkFilingRecordExecutor,
-            build=lambda: ModeloWorkFilingRecordExecutor(factory),
-        ),
-        phase_codes=(MODELO_WORK_FILING_RECORD_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloWorkFilingRecordExecutor,
+        build=lambda: ModeloWorkFilingRecordExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -138,32 +126,19 @@ def build_modelo_work_filing_record_registration(
     """Resolve current period at admission and retain its scope for history."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != MODELO_WORK_FILING_RECORD_OPERATION_DEFINITION_ID or not isinstance(
-            payload, ModeloWorkFilingRecordRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        require_access_request_profile_identity(
+        payload = require_access_request_profile_payload(
             request,
-            payload_profile_id=payload.profile_id,
+            definition_id=MODELO_WORK_FILING_RECORD_OPERATION_DEFINITION_ID,
+            payload_type=ModeloWorkFilingRecordRequest,
             access_profile_id=context.profile_id,
         )
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            periods = require_single_period_admission(
-                admitted, profile_id=context.profile_id, definition_id=request.definition_id
-            )
-        else:
-            if context.authority_operation is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            projection = _capture(payload, factory(str(payload.profile_id), operation=context.authority_operation))
-            periods = frozenset({projection.unit.period.to_period()})
-        return bind_operation_access_profile(
+        return bind_replayed_or_fresh_single_period_access(
             context,
             LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
             definition_id=request.definition_id,
-            periods=periods,
+            fresh_period=lambda operation: _capture(
+                payload, factory(str(payload.profile_id), operation=operation)
+            ).unit.period.to_period(),
         )
 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(

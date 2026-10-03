@@ -197,21 +197,11 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
     listing_host = urlsplit(_LISTING_URL).hostname
     if listing_host is None:
         raise RegistryValidationError(f"invalid declarations listing URL: {_LISTING_URL!r}")
-    filed_read_ids = tuple(
-        decision.id
-        for decision in snapshot.revision.live_cross_references
-        if decision.id.endswith("-filed-declarations-read")
-    )
-    if len(filed_read_ids) != 1:
-        decision_ids = ", ".join(sorted(str(reference_id) for reference_id in filed_read_ids)) or "none"
-        raise RegistryValidationError(
-            f"expected exactly one authenticated declarations read surface for modelo "
-            f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}",
-        )
-    decision = snapshot.live_cross_references.get(filed_read_ids[0])
+    filed_read_id = _filed_declarations_read_surface_id(snapshot)
+    decision = snapshot.live_cross_references.get(filed_read_id)
     if decision is None:
         raise RegistryValidationError(
-            f"declarations read surface {filed_read_ids[0]!r} is not present in the selected registry snapshot",
+            f"declarations read surface {filed_read_id!r} is not present in the selected registry snapshot",
         )
     if decision.surface != "authenticated_read_surface" or listing_host.lower() not in {
         host.lower() for host in decision.allowed_hosts
@@ -878,3 +868,19 @@ def _with_derived_303_compensation_available_observation(
         confidence=1.0,
     )
     return observation.model_copy(update={"casillas": (*observation.casillas, derived)})
+
+
+def _filed_declarations_read_surface_id(snapshot: RegistrySnapshot) -> str:
+    """Require one enrolled declarations-read surface before resolving its host policy."""
+    filed_read_ids = tuple(
+        decision.id
+        for decision in snapshot.revision.live_cross_references
+        if decision.id.endswith("-filed-declarations-read")
+    )
+    if len(filed_read_ids) != 1:
+        decision_ids = ", ".join(sorted(str(reference_id) for reference_id in filed_read_ids)) or "none"
+        raise RegistryValidationError(
+            f"expected exactly one authenticated declarations read surface for modelo "
+            f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}",
+        )
+    return filed_read_ids[0]

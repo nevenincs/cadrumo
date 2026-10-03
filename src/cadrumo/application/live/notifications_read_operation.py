@@ -10,45 +10,31 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, NonNegativeInt, StringConstraints, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.aeat_certificado import AeatCertificadoId
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
-from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
-from ...core.time.clock import now
-from ..ledger.read_access import resolve_ledger_read_access
+from ...core.operations import OperationEffect
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .live_operation_execution import (
+    publish_live_read_report,
+    require_exact_profile_worker,
+    require_live_executor_identity,
+)
+from .live_operation_registration import (
+    build_live_operation_definition,
+    require_live_read_receipt,
+    resolve_whole_profile_read_access,
+)
 from .notification_ports import NotificationsPorts, NotificationTypeValue
 from .notifications import NotificationsService, PersistedNotificationsSnapshot
 
@@ -212,14 +198,6 @@ class NotificationsLatestPublicResultV1(BaseModel):
 NotificationsPortsFactory = Callable[[], NotificationsPorts]
 
 
-def _require_exact_profile(profile_id: UUID, subject_ref: str) -> str:
-    """Refuse a request outside the exact profile worker currently active."""
-    canonical_id = canonical_profile_bucket_id(profile_id)
-    if require_active_bucket_id() != canonical_id or subject_ref != profile_operation_subject(canonical_id):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return canonical_id
-
-
 def _require_snapshot_bucket(snapshot: PersistedNotificationsSnapshot, bucket_id: str) -> None:
     """Fail closed if a persisted row is inconsistent with its exact query bucket."""
     if str(snapshot.bucket_id) != bucket_id:
@@ -245,13 +223,10 @@ class NotificationsListExecutor:
         self, request: OperationRequest[NotificationsListRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        bucket_id = _require_exact_profile(payload.profile_id, request.subject_ref)
-        if (
-            request.definition_id != NOTIFICATIONS_LIST_DEFINITION_ID
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        bucket_id = require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
+        require_live_executor_identity(request, context, definition_id=NOTIFICATIONS_LIST_DEFINITION_ID)
         await context.events.phase(_LIST_PHASES[0])
 
         def read() -> NotificationsListOperationReport:
@@ -265,10 +240,12 @@ class NotificationsListExecutor:
             )
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_LIST_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="notifications-list-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_LIST_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="notifications-list-result",
         )
 
 
@@ -282,13 +259,10 @@ class NotificationsShowExecutor:
         self, request: OperationRequest[NotificationsShowRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        bucket_id = _require_exact_profile(payload.profile_id, request.subject_ref)
-        if (
-            request.definition_id != NOTIFICATIONS_SHOW_DEFINITION_ID
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        bucket_id = require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
+        require_live_executor_identity(request, context, definition_id=NOTIFICATIONS_SHOW_DEFINITION_ID)
         await context.events.phase(_SHOW_PHASES[0])
 
         def read() -> NotificationsShowOperationReport:
@@ -299,10 +273,12 @@ class NotificationsShowExecutor:
             return NotificationsShowOperationReport(snapshot=snapshot)
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_SHOW_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="notifications-show-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_SHOW_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="notifications-show-result",
         )
 
 
@@ -316,13 +292,10 @@ class NotificationsLatestExecutor:
         self, request: OperationRequest[NotificationsLatestRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        bucket_id = _require_exact_profile(payload.profile_id, request.subject_ref)
-        if (
-            request.definition_id != NOTIFICATIONS_LATEST_DEFINITION_ID
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        bucket_id = require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
+        require_live_executor_identity(request, context, definition_id=NOTIFICATIONS_LATEST_DEFINITION_ID)
         await context.events.phase(_LATEST_PHASES[0])
 
         def read() -> NotificationsLatestOperationReport:
@@ -333,99 +306,68 @@ class NotificationsLatestExecutor:
             return NotificationsLatestOperationReport(bucket_id=bucket_id, snapshot=_summary(snapshot))
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_LATEST_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="notifications-latest-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_LATEST_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="notifications-latest-result",
         )
-
-
-def _capabilities() -> OperationCapabilities:
-    """Describe a durable local read with no provider or owned resource."""
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-        sensitive_input=OperationSensitiveInputPolicy.NONE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
 
 
 def build_notifications_list_definition(ports_factory: NotificationsPortsFactory) -> OperationDefinition:
     """Declare an exact-profile local notifications snapshot inventory."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=NOTIFICATIONS_LIST_DEFINITION_ID,
         request_type=NotificationsListRequest,
         result_type=NotificationsListOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=NotificationsListRequest,
-            executor_type=NotificationsListExecutor,
-            build=lambda: NotificationsListExecutor(ports_factory),
-        ),
+        executor_type=NotificationsListExecutor,
+        build=lambda: NotificationsListExecutor(ports_factory),
         phase_codes=_LIST_PHASES,
-        interaction_kinds=frozenset(),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         action_reference=ActionReference(
             action_id=OPERATOR_ACTION_CATALOGUE.lookup("operator.live.notifications.list").action_id
-        ),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
         ),
     )
 
 
 def build_notifications_show_definition(ports_factory: NotificationsPortsFactory) -> OperationDefinition:
     """Declare an exact-profile local notifications snapshot detail view."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=NOTIFICATIONS_SHOW_DEFINITION_ID,
         request_type=NotificationsShowRequest,
         result_type=NotificationsShowOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=NotificationsShowRequest,
-            executor_type=NotificationsShowExecutor,
-            build=lambda: NotificationsShowExecutor(ports_factory),
-        ),
+        executor_type=NotificationsShowExecutor,
+        build=lambda: NotificationsShowExecutor(ports_factory),
         phase_codes=_SHOW_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 
 
 def build_notifications_latest_definition(ports_factory: NotificationsPortsFactory) -> OperationDefinition:
     """Declare an exact-profile local latest-snapshot lookup."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=NOTIFICATIONS_LATEST_DEFINITION_ID,
         request_type=NotificationsLatestRequest,
         result_type=NotificationsLatestOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=NotificationsLatestRequest,
-            executor_type=NotificationsLatestExecutor,
-            build=lambda: NotificationsLatestExecutor(ports_factory),
-        ),
+        executor_type=NotificationsLatestExecutor,
+        build=lambda: NotificationsLatestExecutor(ports_factory),
         phase_codes=_LATEST_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
+
+
+_RECEIPT_CONTRADICTION = "notification read result contradicts its terminal receipt"
 
 
 def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     report = NotificationsListOperationReport.model_validate(result, strict=True)
-    _validate_receipt(receipt, definition_id=NOTIFICATIONS_LIST_DEFINITION_ID, profile_id=UUID(report.bucket_id))
+    require_live_read_receipt(
+        receipt,
+        definition_id=NOTIFICATIONS_LIST_DEFINITION_ID,
+        bucket_id=str(UUID(report.bucket_id)),
+        message=_RECEIPT_CONTRADICTION,
+    )
     return NotificationsListPublicResultV1(
         bucket_id=report.bucket_id,
         count=report.count,
@@ -443,7 +385,12 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
 def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     report = NotificationsShowOperationReport.model_validate(result, strict=True)
     snapshot = report.snapshot
-    _validate_receipt(receipt, definition_id=NOTIFICATIONS_SHOW_DEFINITION_ID, profile_id=UUID(snapshot.bucket_id))
+    require_live_read_receipt(
+        receipt,
+        definition_id=NOTIFICATIONS_SHOW_DEFINITION_ID,
+        bucket_id=str(UUID(snapshot.bucket_id)),
+        message=_RECEIPT_CONTRADICTION,
+    )
     return NotificationsShowPublicResultV1(
         bucket_id=snapshot.bucket_id,
         snapshot_id=snapshot.snapshot_id,
@@ -473,7 +420,12 @@ def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
 
 def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     report = NotificationsLatestOperationReport.model_validate(result, strict=True)
-    _validate_receipt(receipt, definition_id=NOTIFICATIONS_LATEST_DEFINITION_ID, profile_id=UUID(report.bucket_id))
+    require_live_read_receipt(
+        receipt,
+        definition_id=NOTIFICATIONS_LATEST_DEFINITION_ID,
+        bucket_id=str(UUID(report.bucket_id)),
+        message=_RECEIPT_CONTRADICTION,
+    )
     snapshot = report.snapshot
     return NotificationsLatestPublicResultV1(
         bucket_id=report.bucket_id,
@@ -484,70 +436,40 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     )
 
 
-def _validate_receipt(receipt: OperationTerminalReceipt, *, definition_id: str, profile_id: UUID) -> None:
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(str(profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-    ):
-        raise ValueError("notification read result contradicts its terminal receipt")
-
-
-def _resolve_read_access(
-    request: OperationRequest[BaseModel], context: OperationAccessContext, definition_id: str
-) -> ResolvedOperationAccess:
-    expected_type: type[BaseModel]
-    if definition_id == NOTIFICATIONS_LIST_DEFINITION_ID:
-        expected_type = NotificationsListRequest
-    elif definition_id == NOTIFICATIONS_SHOW_DEFINITION_ID:
-        expected_type = NotificationsShowRequest
-    elif definition_id == NOTIFICATIONS_LATEST_DEFINITION_ID:
-        expected_type = NotificationsLatestRequest
-    else:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if request.definition_id != definition_id or not isinstance(request.payload, expected_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-
-
 def resolve_notifications_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-profile disclosure for list summaries."""
-    return _resolve_read_access(request, context, NOTIFICATIONS_LIST_DEFINITION_ID)
+    return resolve_whole_profile_read_access(
+        request, context, definition_id=NOTIFICATIONS_LIST_DEFINITION_ID, payload_type=NotificationsListRequest
+    )
 
 
 def resolve_notifications_show_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-profile access to full notification rows."""
-    return _resolve_read_access(request, context, NOTIFICATIONS_SHOW_DEFINITION_ID)
+    return resolve_whole_profile_read_access(
+        request, context, definition_id=NOTIFICATIONS_SHOW_DEFINITION_ID, payload_type=NotificationsShowRequest
+    )
 
 
 def resolve_notifications_latest_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-profile disclosure for latest snapshot facts."""
-    return _resolve_read_access(request, context, NOTIFICATIONS_LATEST_DEFINITION_ID)
+    return resolve_whole_profile_read_access(
+        request, context, definition_id=NOTIFICATIONS_LATEST_DEFINITION_ID, payload_type=NotificationsLatestRequest
+    )
 
 
 def build_notifications_list_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind list request and safe summary schemas to whole-profile access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=NotificationsListRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=NotificationsListPublicResultV1,
-        ),
+        public_result_type=NotificationsListPublicResultV1,
         result_projector=_project_list,
         access_resolver=resolve_notifications_list_access,
     )
@@ -557,16 +479,9 @@ def build_notifications_show_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind full-row detail to an exact-profile disclosure decision."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=NotificationsShowRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=NotificationsShowPublicResultV1,
-        ),
+        public_result_type=NotificationsShowPublicResultV1,
         result_projector=_project_show,
         access_resolver=resolve_notifications_show_access,
     )
@@ -576,16 +491,9 @@ def build_notifications_latest_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind latest summary and explicit empty state to whole-profile access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=NotificationsLatestRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=NotificationsLatestPublicResultV1,
-        ),
+        public_result_type=NotificationsLatestPublicResultV1,
         result_projector=_project_latest,
         access_resolver=resolve_notifications_latest_access,
     )

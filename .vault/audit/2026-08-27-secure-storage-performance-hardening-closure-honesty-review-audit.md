@@ -3,21 +3,24 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ff916ae8401fd0a01dd70f391bcb86ec3d7e14936d465390e3a1a0583e0efb9'
+body_hash: 'sha256:1718c76aae614e03ec7c3b3597c342952b1940d6e63430d5f8bb1a90b2d3f3d2'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-27-secure-storage-performance-hardening-measured-outcomes-reference]]"
   - "[[2026-08-27-secure-storage-performance-hardening-w02-demand-loading-residue-audit]]"
 ---
-
 # `secure-storage-performance-hardening` audit: closure honesty review
+
+## Scope
 
 Read as if inheriting this campaign cold: what does the plan CLAIM, and what is
 actually true of the tree?
 
-## The finding that shaped everything else
+## Findings
+
+### The finding that shaped everything else
 
 Six W02 Steps were marked complete while their outcomes did not hold. The
 `W03.P08.S32` cold-process contract was the first gate to run a whole command
@@ -29,7 +32,7 @@ recorded-but-not-implemented wearing the same checkbox. It is the reason every
 closure below states its exclusion, and the reason S47's criteria were
 re-verified here rather than inherited from W02.P03a's marks.
 
-## Verified directly, not inherited
+### Verified directly, not inherited
 
 | S47 criterion | Result |
 | --- | --- |
@@ -39,7 +42,7 @@ re-verified here rather than inherited from W02.P03a's marks.
 | Every live node classified (performance class) | **365 of 365** |
 | Every live node classified (side effects) | **365 of 365** |
 
-## What each closure EXCLUDES
+### What each closure EXCLUDES
 
 A campaign may not narrow its own completion criterion silently. Each Step
 closed here is narrower than its wording, and this is the list.
@@ -65,7 +68,7 @@ closed here is narrower than its wording, and this is the list.
   contention. Replaced by a deterministic per-class module-cost budget. EXCLUDES
   any claim about wall-clock latency.
 
-## What this campaign did NOT do
+### What this campaign did NOT do
 
 - **S43 (full-suite green) is not achievable by this campaign alone.** The tree
   is red from concurrent peer work: 158 failures in `application/modelo`
@@ -81,7 +84,7 @@ closed here is narrower than its wording, and this is the list.
   member meaning "writes a derived cache", so nine leaves sit in a gap that a
   documented predicate excuses rather than a declaration describes.
 
-## Judgement
+### Judgement
 
 The campaign's own goal -- make command loading proportional to the selected
 path, and make profile listing a pure read -- is met and gated. The residues
@@ -91,3 +94,7 @@ applying, and none is silent.
 The honest reading of this plan at closure is: **the properties it set out to
 establish are established and defended by gates; the tree around them is not
 clean, and the campaign says so rather than implying otherwise.**
+
+## Recommendations
+
+Keep the closure claim limited to proportional command loading and pure profile listing; carry the enumerated Step exclusions as separate open work.

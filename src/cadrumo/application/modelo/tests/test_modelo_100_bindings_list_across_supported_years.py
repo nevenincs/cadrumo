@@ -19,7 +19,8 @@ from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_snapshot,
 )
-from ..query_read_operation import ModeloBindingsListRequest, _read_bindings_list
+from ..query_read_contracts import ModeloBindingsListRequest
+from ..query_read_operation import _read_bindings_list
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -28,7 +28,7 @@ from ......core.external_constants import OutputLanguage
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
-from ..casilla_list import CasillaListEntry
+from ..casilla_list_models import CasillaListEntry
 from ..editor import CasillaEditorPanel
 from ..installed import InstalledModeloWorkbench
 from ..page_items import page_items

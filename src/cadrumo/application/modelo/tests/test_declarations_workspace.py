@@ -34,7 +34,8 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ..action_errors import WorkUnitRevisionDivergenceError
-from ..declarations_workspace import (
+from ..declarations_workspace import project_declarations_workspace
+from ..declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
@@ -42,7 +43,6 @@ from ..declarations_workspace import (
     DeclarationsWorkspaceSource,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
-    project_declarations_workspace,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -534,8 +534,11 @@ def test_filing_pointer_record_and_revision_matrix_refuses_every_contradiction(
         )
 
 
-def test_defining_module_has_no_io_adapter_entrypoint_or_network_import() -> None:
-    path = Path(__file__).parents[1] / "declarations_workspace.py"
+@pytest.mark.parametrize(
+    "module", ("declarations_workspace", "declarations_workspace_contracts", "declarations_workspace_joins")
+)
+def test_defining_module_has_no_io_adapter_entrypoint_or_network_import(module: str) -> None:
+    path = Path(__file__).parents[1] / f"{module}.py"
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     imports = {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names} | {
         node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)

@@ -136,9 +136,7 @@ def gnome_collection_id(collection: str) -> bytes:
             result.append(int(hexadecimal, 16))
             index += 3
     _require(bool(result) and 0 not in result)
-    roundtrip = "".join(
-        chr(value) if chr(value).isascii() and chr(value).isalnum() else f"_{value:02x}" for value in result
-    )
+    roundtrip = _collection_path_spelling(result)
     _require(roundtrip == encoded)
     return bytes(result)
 
@@ -198,7 +196,7 @@ def _control_directory(control: object) -> tuple[Path, int]:
     for parent in reversed(path.parents):
         info = parent.lstat()
         _require(
-            stat.S_ISDIR(info.st_mode) and info.st_uid in (0, uid) and not info.st_mode & 0o022,
+            _parent_directory_suitable(info, uid),
             AutomationCustodyCode.UNAVAILABLE,
         )
     info = path.lstat()
@@ -223,7 +221,12 @@ def _control_directory(control: object) -> tuple[Path, int]:
 class _MetadataRpc:
     """Closed read-only V1 subset; each frame shares the existing deadline."""
 
+    deadline: float
+    sock: _MetadataSocketProtocol
+
     def __init__(self, directory_fd: int, *, provider_pid: int, deadline: float) -> None:
+        if sys.platform != "linux":
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         self.deadline = deadline
         self.sock: _MetadataSocketProtocol = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
@@ -409,10 +412,7 @@ def require_protected_gnome_collection(bus: GnomeCollectionBusProtocol, collecti
                 )
             )
         )
-        _require(values[_TOKEN] == b"\x01" and values[_TRANSIENT] == b"\0", AutomationCustodyCode.UNAVAILABLE)
-        _require(
-            not locked and values[_LOCKED] == b"\0" and values[_TRUSTED] == b"\x01", AutomationCustodyCode.NEEDS_USER
-        )
+        _require_metadata_suitability(values, locked)
     except AutomationCustodyError as error:
         if error.reason is AutomationCustodyCode.UNSUPPORTED:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
@@ -421,3 +421,20 @@ def require_protected_gnome_collection(bus: GnomeCollectionBusProtocol, collecti
         raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
     except Exception:
         raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
+
+
+def _collection_path_spelling(result: bytearray) -> str:
+    roundtrip = "".join(
+        chr(value) if chr(value).isascii() and chr(value).isalnum() else f"_{value:02x}" for value in result
+    )
+    return roundtrip
+
+
+def _parent_directory_suitable(info: os.stat_result, uid: int) -> bool:
+    return stat.S_ISDIR(info.st_mode) and info.st_uid in (0, uid) and not info.st_mode & 0o022
+
+
+def _require_metadata_suitability(values: dict[int, bytes], locked: bool) -> None:
+    """Require the observed persistent unlocked protected collection before item access."""
+    _require(values[_TOKEN] == b"\x01" and values[_TRANSIENT] == b"\0", AutomationCustodyCode.UNAVAILABLE)
+    _require(not locked and values[_LOCKED] == b"\0" and values[_TRUSTED] == b"\x01", AutomationCustodyCode.NEEDS_USER)

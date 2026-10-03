@@ -11,34 +11,34 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+    require_declared_frontend_and_action,
+)
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_terminal_receipt_match,
+)
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from .access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
+from .access_contracts import AccessAction, AccessDenialCode, Availability, DisclosureCategory
 from .access_errors import ProfileAccessRefusedError
 from .recovery_custody import profile_recovery_status
 
 RECOVERY_STATUS_OPERATION_DEFINITION_ID = "user-profile.recovery.status"
 _ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT})
-_FRONTENDS = frozenset(OperationFrontendProjection)
 
 
 class RecoveryStatusRequest(CredentialFreeOperationRequest):
@@ -89,31 +89,24 @@ def resolve_recovery_status_access(
 ) -> ResolvedOperationAccess:
     """Require explicit operation and disclosure permission for the exact profile."""
     payload = _validated_recovery_request(request, context)
-    _require_recovery_access(context)
-    disclosure = _recovery_disclosure(context)
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=payload.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=_ACTIONS,
-            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-            periods=frozenset(),
-            allow_period_independent=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-            requires_human=False,
-        ),
+    require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=_ACTIONS)
+    disclosures = operation_disclosures(
+        context,
+        observed_by=frozenset({AccessAction.OBSERVE}),
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES}),
+        result_schema_id=RECOVERY_STATUS_OPERATION_DEFINITION_ID + ".result",
+    )
+    return bind_operation_access(
+        context,
+        profile_id=payload.profile_id,
+        definition_id=request.definition_id,
+        actions=_ACTIONS,
+        disclosures=disclosures,
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=False,
+        requires_human=False,
+        provider=Availability.NOT_REQUIRED,
     )
 
 
@@ -134,79 +127,32 @@ def _validated_recovery_request(
     return payload
 
 
-def _require_recovery_access(context: OperationAccessContext) -> None:
-    if context.frontend not in _FRONTENDS:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    if context.action not in _ACTIONS:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-
-
-def _recovery_disclosure(context: OperationAccessContext) -> DisclosurePermission | None:
-    disclosure = None
-    if context.action is AccessAction.OBSERVE:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None or schema.schema_id != RECOVERY_STATUS_OPERATION_DEFINITION_ID + ".result":
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
-    return disclosure
-
-
 def project_recovery_status_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> RecoveryStatusProjection:
     """Validate the typed result against a successful read-only terminal receipt."""
-    if (
-        type(result) is not RecoveryStatusResult
-        or not _receipt_matches_recovery_result(result, receipt)
-        or not _receipt_is_read_only_success(receipt)
-    ):
-        raise ValueError("recovery status contradicts its terminal receipt")
+    message = "recovery status contradicts its terminal receipt"
+    if type(result) is not RecoveryStatusResult:
+        raise ValueError(message)
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=RECOVERY_STATUS_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(result.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=message,
+    )
     return RecoveryStatusProjection.model_validate_json(result.model_dump_json(), strict=True)
-
-
-def _receipt_matches_recovery_result(result: RecoveryStatusResult, receipt: OperationTerminalReceipt) -> bool:
-    return (
-        receipt.identity.definition_id == RECOVERY_STATUS_OPERATION_DEFINITION_ID
-        and receipt.identity.subject_ref == profile_operation_subject(str(result.profile_id))
-    )
-
-
-def _receipt_is_read_only_success(receipt: OperationTerminalReceipt) -> bool:
-    return (
-        receipt.condition is OperationTerminalCondition.SUCCEEDED
-        and receipt.effect is OperationEffect.NONE
-        and receipt.result_ref is not None
-        and receipt.refusal_ref is None
-        and receipt.refusal_detail_ref is None
-        and receipt.failure_error_code is None
-        and receipt.diagnostic_ref is None
-    )
 
 
 def build_recovery_status_definition() -> OperationDefinition:
     """Compose the canonical recovery-status read executor."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=RECOVERY_STATUS_OPERATION_DEFINITION_ID,
         request_type=RecoveryStatusRequest,
         result_type=RecoveryStatusResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=RecoveryStatusRequest,
-            executor_type=RecoveryStatusExecutor,
-            build=RecoveryStatusExecutor,
-        ),
-        phase_codes=(RECOVERY_STATUS_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=RecoveryStatusExecutor,
+        build=RecoveryStatusExecutor,
         capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=_FRONTENDS,
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

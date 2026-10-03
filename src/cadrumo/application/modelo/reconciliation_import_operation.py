@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Literal
@@ -23,7 +22,7 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.modelos.codes import ModeloCode
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
 from ..operations.models import (
@@ -34,13 +33,15 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
     ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
+)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .reconciliation import (
     ModeloReconciliationCommand,
@@ -225,6 +226,27 @@ def _project_reconciliation_import(
     return projection
 
 
+def _reconciliation_import_work_selector(payload: ModeloReconciliationImportRequest) -> ModeloWorkSelectorRequest:
+    """Preserve the full and abbreviated operator addresses and optional period scope."""
+    work_unit_lookup = payload.work_unit_id.lower() if payload.work_unit_id is not None else None
+    typed_period = (
+        Period.from_year_and_code(payload.filing_year, payload.period.strip())
+        if payload.period is not None and payload.filing_year is not None
+        else None
+    )
+    return ModeloWorkSelectorRequest(
+        work_unit_id=(work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 64 else None),
+        operator_work_unit_id=(
+            work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 12 else None
+        ),
+        modelo=ModeloCode(payload.modelo) if payload.modelo is not None else None,
+        filing_year=payload.filing_year,
+        period=typed_period,
+        revision_id=payload.revision_id,
+        bucket_id=payload.bucket_id,
+    )
+
+
 class ModeloReconciliationImportExecutor:
     """Prepare a local comparison, then atomically persist its record and event."""
 
@@ -246,25 +268,7 @@ class ModeloReconciliationImportExecutor:
             if require_active_bucket_id() != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             catalogue = work_unit_catalogue_repository(bucket_id=profile_id).load()
-            work_unit_lookup = payload.work_unit_id.lower() if payload.work_unit_id is not None else None
-            typed_period = (
-                Period.from_year_and_code(payload.filing_year, payload.period.strip())
-                if payload.period is not None and payload.filing_year is not None
-                else None
-            )
-            selector = ModeloWorkSelectorRequest(
-                work_unit_id=(
-                    work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 64 else None
-                ),
-                operator_work_unit_id=(
-                    work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 12 else None
-                ),
-                modelo=ModeloCode(payload.modelo) if payload.modelo is not None else None,
-                filing_year=payload.filing_year,
-                period=typed_period,
-                revision_id=payload.revision_id,
-                bucket_id=payload.bucket_id,
-            )
+            selector = _reconciliation_import_work_selector(payload)
             resolution = select_modelo_work_resolution(
                 selector,
                 catalogue=catalogue,
@@ -345,21 +349,13 @@ def resolve_modelo_reconciliation_import_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax disclosure and authorize the local commit."""
-    if request.definition_id != MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        ModeloReconciliationImportRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
+    payload = require_access_request_profile_payload(
         request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
+        payload_type=ModeloReconciliationImportRequest,
+        access_profile_id=context.profile_id,
     )
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def build_modelo_reconciliation_import_registration(

@@ -18,7 +18,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
-from .._export_tree import RenderedExportTree
 from .._form_layout_companion import prepare_generated_form_layout_companion
 from .._tree_publication import publish_validated_generated_export_tree
 from .._tree_validation import (
@@ -32,6 +31,7 @@ from ..export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
 )
+from ..export_tree_models import RenderedExportTree
 from ..joined_record_design import JoinedRecordDesign
 from ..render_check import RevisionRenderInputs
 from ..render_profile_evidence import RenderProfileSourceEvidence
@@ -168,6 +168,9 @@ def _supersession_publication_inputs(
     if extra_manual_layout:
         unreviewed_layout = dict(manual_layout)
         unreviewed_layout["id"] = "unreviewed-layout-fixture"
+        # Keep the second declaration loadable so the supersession guard,
+        # rather than an unrelated duplicate-casilla check, proves it is not retired.
+        unreviewed_layout["records"] = []
         declarations.append(unreviewed_layout)
     manual_root = target_revision_root / "export_layouts"
     manual_root.mkdir()

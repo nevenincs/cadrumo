@@ -59,6 +59,7 @@ def test_inspect_then_respond_uses_one_original_censal_capability(tmp_path: Path
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             censal_fetch_port=fetch_censal_datos,
+            provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquire,
         )
         registry = OperationRegistry(

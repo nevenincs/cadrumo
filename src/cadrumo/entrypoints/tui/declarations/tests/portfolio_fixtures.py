@@ -17,7 +17,7 @@ from cadrumo.application.modelo.declarations_calendar import (
     DeclarationsCalendarSource,
     DeclarationsCalendarSourceStateV1,
 )
-from cadrumo.application.modelo.declarations_workspace import (
+from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionV1,

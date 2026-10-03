@@ -10,12 +10,12 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..conformance.manager import reset_conformance_cache
-from ._export_tree import RenderedExportTree
 from ._tree_validation import (
     ValidatedGeneratedExportTree,
     validate_generated_export_tree,
 )
 from .export_fragment_provenance import ExportFragmentProvenanceManifest
+from .export_tree_models import RenderedExportTree
 from .joined_record_design import JoinedRecordDesign
 from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile

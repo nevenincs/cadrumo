@@ -75,7 +75,7 @@ from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -730,7 +730,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
     assert Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]) == stored["1T"]["deducible"]
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_ports(
@@ -748,7 +748,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
             clock=_FILE_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
@@ -876,7 +876,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
         }
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_ports(
@@ -894,7 +894,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
                 clock=_IRENE_FILE_AT,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         assert report.granted_verificado_completo is True, report.findings
 
         with bundled_indexed_authority().operation() as operation:
@@ -937,7 +937,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
     assert Decimal(annual.casilla_values[_M390_RESULTADO]) == _IRENE_ANNUAL_EXPECTED["resultado"]
 
     with bundled_indexed_authority().operation() as operation:
-        annual_report = verify_modelo_revision(
+        annual_report = verify_modelo_revision_with_preconditions(
             annual.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_ports(
@@ -955,7 +955,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
             clock=_IRENE_FILE_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert annual_report.granted_verificado_completo is True, annual_report.findings
     assert _non_official_local_chain_advisory_periods(annual_report) == set(_QUARTER_ORDER), annual_report.findings
 

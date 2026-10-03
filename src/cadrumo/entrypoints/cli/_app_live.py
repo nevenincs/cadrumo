@@ -23,7 +23,7 @@ import typer
 from ...application.live.capture_mode import LiveCaptureMode
 from ...application.live.errors import LiveIvaAcquisitionFailureMode
 from ...application.live.filed_data import FiledDataListingRow
-from ...application.live.filed_data_capture import (
+from ...application.live.filed_history_discovery import (
     FiledHistoryDiscoveryReport,
     FiledHistoryOnboardingRun,
     expected_but_not_found_notice,

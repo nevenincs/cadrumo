@@ -15,7 +15,8 @@ from textual.await_complete import AwaitComplete
 from textual.pilot import Pilot
 from textual.widgets import Button, Input, Select
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from .....application.operations.registry import OperationFrontendProjection
 from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .....application.runtime.profile_access import RuntimeProfileStatus
@@ -31,13 +32,13 @@ from .....application.user_profile.login_session import ProfileReceiptRefusedErr
 from .....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from .....core.profile_session import ProfileSessionRefusalReason
 from ...components.status import PinnedStatusBar
-from ..runtime_login import (
+from ..runtime_login import RuntimeLoginScreen
+from ..runtime_login_contracts import (
     RuntimeClientOpener,
     RuntimeCredentialClientOpener,
     RuntimeLoginAcceptor,
     RuntimeLoginHandoff,
     RuntimeLoginMethod,
-    RuntimeLoginScreen,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

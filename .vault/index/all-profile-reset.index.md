@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#all-profile-reset'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5619c2716eaa4951052a6064fd1ed50167b7fd4bb715570a3a1fa1a4c56ecc29'
+body_hash: 'sha256:1f9bc810e28006af32a2ad3e8d341f79cc7f876da24115ac292befc7fd95c437'
 related:
-  - '[[2026-07-17-all-profile-reset-adr]]'
   - '[[2026-07-17-all-profile-reset-audit]]'
   - '[[2026-07-17-all-profile-reset-ledger]]'
   - '[[2026-07-17-all-profile-reset-plan]]'
@@ -20,10 +19,6 @@ related:
 Auto-generated index of all documents tagged with `#all-profile-reset`.
 
 ## Documents
-
-### adr
-
-- `2026-07-17-all-profile-reset-adr` - `all-profile-reset` adr: `all-profile-reset rescope grounding` | (**status:** `accepted`)
 
 ### audit
 

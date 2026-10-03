@@ -23,13 +23,9 @@ from ...core.time.utc import validate_utc_aware
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -217,6 +213,18 @@ def _require_terminal_success(
     profile_id: UUID,
 ) -> None:
     """Bind a public read result to a complete successful operation receipt."""
+    _require_read_receipt(receipt, definition_id=definition_id, profile_id=profile_id)
+    if getattr(result, "profile_id", None) != profile_id:
+        raise ValueError("evidence read result belongs to another profile")
+
+
+def _require_read_receipt(
+    receipt: OperationTerminalReceipt,
+    *,
+    definition_id: str,
+    profile_id: UUID,
+) -> None:
+    """Require the terminal receipt identity and effect for a successful read."""
     if (
         receipt.identity.definition_id != definition_id
         or receipt.identity.subject_ref != profile_operation_subject(str(profile_id))
@@ -229,8 +237,6 @@ def _require_terminal_success(
         or receipt.effect is not OperationEffect.NONE
     ):
         raise ValueError("evidence read result has an incompatible terminal receipt")
-    if getattr(result, "profile_id", None) != profile_id:
-        raise ValueError("evidence read result belongs to another profile")
 
 
 def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -416,19 +422,13 @@ def _build_definition(
     executor_type: type[LedgerEvidenceListExecutor] | type[LedgerEvidenceViewExecutor],
     ports_factory: LedgerEvidencePortsFactory,
 ) -> OperationDefinition:
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=executor_type,
-            build=lambda: executor_type(ports_factory),
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
+        executor_type=executor_type,
+        build=lambda: executor_type(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 

@@ -7,14 +7,16 @@ tier: L3
 related:
   - '[[2026-08-26-cli-root-verb-homes-adr]]'
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:24a27b9e78cf4e98b2294658766c387e09c3cdcc07ecb9e9ce96019c069a4433'
+body_hash: 'sha256:a65a0d879f560824dcdf2e761d007c56da3b6b96b9bc3c9416e21a084d992a63'
 ---
 
 # `cli-root-verb-homes` plan
 
 ## Description
+
+Conform the CLI tree to the approved root-placement and verb grammar: declare transport loci, move command families to their governing homes, retire duplicate surfaces, and enforce placement, spelling and verb checks with bite-proved gates. The governing decision is recorded in the related ADR.
 
 ## Steps
 
@@ -180,4 +182,8 @@ Verify every surface the conformance gates do not scan, and run the full suite s
 
 ## Parallelization
 
+The plan sequences its five waves. W05 builds its spelling gate on the W01 transport-locus declarations; W04 retirements depend on their named preconditions. No within-wave parallel assignments are recorded.
+
 ## Verification
+
+The acceptance checks are the bite proofs and live-tree sweeps in the final wave: planted defects must be rejected by the placement and spelling gates, the verb-grammar gate must reject retired tokens, and W05.P14.S67 verifies D1 through D7 against the current tree. S68 through S70 reconcile the close-review findings. The plan closes when every Step is closed and its final review passes.

@@ -78,6 +78,19 @@ if TYPE_CHECKING:
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"
 
 
+def _require_formula_legal_refs(
+    snapshot: RegistrySnapshot, legal_refs: tuple[LegalRefId, ...], formula_id: str
+) -> tuple[LegalRefId, ...]:
+    """Reject formula legal references absent from the selected authority."""
+    missing = tuple(ref for ref in legal_refs if ref not in snapshot.legal)
+    if missing:
+        raise RegistryValidationError(
+            f"Madrid nacimiento/adopción advisory formula {formula_id!r} has legal refs absent from the selected "
+            f"authority: {missing!r}",
+        )
+    return tuple(legal_refs)
+
+
 def _advisory_legal_refs(snapshot: RegistrySnapshot, casilla_id: CasillaId) -> tuple[LegalRefId, ...]:
     """Project the advisory's grounding from the selected registry formula.
 
@@ -97,13 +110,7 @@ def _advisory_legal_refs(snapshot: RegistrySnapshot, casilla_id: CasillaId) -> t
         raise RegistryValidationError(
             f"Madrid nacimiento/adopción advisory formula {casilla.formula!r} has no legal provenance",
         )
-    missing = tuple(ref for ref in formula.legal_refs if ref not in snapshot.legal)
-    if missing:
-        raise RegistryValidationError(
-            f"Madrid nacimiento/adopción advisory formula {formula.id!r} has legal refs absent from the selected "
-            f"authority: {missing!r}",
-        )
-    return tuple(formula.legal_refs)
+    return _require_formula_legal_refs(snapshot, formula.legal_refs, formula.id)
 
 
 def madrid_nacimiento_adopcion_eligibility_advisory_finding(

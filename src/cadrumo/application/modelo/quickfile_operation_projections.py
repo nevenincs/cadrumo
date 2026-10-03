@@ -226,9 +226,7 @@ def _stage_facts_and_message(
         return _calculation_stage_projection(result)
     if outcome.stage is QuickfileStage.VERIFY:
         return _verification_stage_projection(result)
-    if outcome.stage is QuickfileStage.EXPORT:
-        return _export_stage_projection(result)
-    return QuickfileStageFacts(), ""
+    return _export_stage_projection(result)
 
 
 def _readiness_stage_projection(

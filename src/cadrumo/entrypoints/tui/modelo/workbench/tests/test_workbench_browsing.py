@@ -24,7 +24,8 @@ from ......application.modelo.work_form_models import (
 )
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
-from ..casilla_list import CasillaList, CasillaListEntry
+from ..casilla_list import CasillaList
+from ..casilla_list_models import CasillaListEntry
 from ..navigator import looks_like_identifier, presented_form, section_title
 from ..screen import ModeloWorkbenchScreen
 from ..search import SearchEntry, WorkbenchSearchPanel, search

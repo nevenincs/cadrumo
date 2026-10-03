@@ -27,7 +27,7 @@ from ...application.user_profile.automation_enrollment import (
 from ...core.errors.hierarchy import CadrumoError
 from ..persistence.storage.custody.automation_client_credentials import ClientCredentialMetadata
 from .enrollment_client import NativeEnrollmentClient
-from .frontend_client import RuntimeFrontendRefusedError
+from .frontend_client_contracts import RuntimeFrontendRefusedError
 
 
 class AutomationReconcile(Protocol):

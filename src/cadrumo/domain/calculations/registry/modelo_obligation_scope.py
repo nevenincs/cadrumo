@@ -18,7 +18,7 @@ from ....core.errors.hierarchy import CoreValidationError
 from ....core.modelo import Modelo
 from ....core.time.clock import today_madrid
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 __all__ = [
@@ -95,9 +95,7 @@ def resolve_modelo_obligation_scope(
     current published artifact instead of introducing a second process-lifetime
     cache in a value-type module.
     """
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise CoreValidationError("Modelo obligation scope requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="Modelo obligation scope")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-obligation-scope-mapping",

@@ -15,10 +15,10 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.transport import RuntimeStatusRequest
+from cadrumo.application.runtime.profile_access import RuntimeSessionRequest
 
 from ..framing import VerifiedRuntimeConnection
-from ..posix import PosixRuntimeEndpoint
+from ..posix_endpoint import PosixRuntimeEndpoint
 from ..server import RuntimeTransportServer
 from ..windows import WindowsRuntimeEndpoint
 
@@ -58,20 +58,25 @@ def test_connection_identity_and_disconnect_are_independent(server) -> None:
     host, endpoint = server
     first, second = connect(endpoint), connect(endpoint)
     try:
-        request = RuntimeStatusRequest(request_id=uuid4())
-        a = first.status(request, deadline=time.monotonic() + 2)
-        b = second.status(request, deadline=time.monotonic() + 2)
+        request = RuntimeSessionRequest(
+            action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+        )
+        a = first.session(request, deadline=time.monotonic() + 2)
+        b = second.session(request, deadline=time.monotonic() + 2)
         assert a.connection_id != b.connection_id
         assert a.runtime_boot_id == b.runtime_boot_id == host.identity.boot_id
         first.close()
-        again = second.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 2)
-        assert again.connection_id == b.connection_id and again.accepting_connections
+        again = second.session(
+            RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 2,
+        )
+        assert again.connection_id == b.connection_id
         assert set(again.model_dump()) == {
             "kind",
             "request_id",
             "runtime_boot_id",
             "connection_id",
-            "accepting_connections",
+            "code",
         }
     finally:
         first.close()
@@ -86,7 +91,12 @@ def test_wrong_cohort_ends_only_the_refused_connection(server) -> None:
     accepted = connect(endpoint)
     try:
         assert (
-            accepted.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 2).runtime_boot_id
+            accepted.session(
+                RuntimeSessionRequest(
+                    action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                ),
+                deadline=time.monotonic() + 2,
+            ).runtime_boot_id
             == host.identity.boot_id
         )
     finally:
@@ -97,9 +107,15 @@ def test_idle_connection_survives_frame_deadline_and_stop_does_not_wait_for_inpu
     host, endpoint = server
     client = connect(endpoint)
     try:
-        original = client.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 2)
+        original = client.session(
+            RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 2,
+        )
         time.sleep(5.2)
-        current = client.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 2)
+        current = client.session(
+            RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 2,
+        )
         assert current.connection_id == original.connection_id
         stopped = time.monotonic()
         host.stop.set()

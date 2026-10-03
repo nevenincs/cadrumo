@@ -15,10 +15,9 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
+from ..query_read_contracts import ModeloBindingsListRequest, ModeloReadinessOperationRequest
 from ..query_read_operation import (
     MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID,
-    ModeloBindingsListRequest,
-    ModeloReadinessOperationRequest,
     _requested_scope,
     require_modelo_query_worker_identity,
 )

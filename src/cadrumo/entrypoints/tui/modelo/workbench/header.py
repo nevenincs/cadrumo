@@ -56,7 +56,8 @@ from .....application.modelo.work_form_models import (
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...components.cell_text import ellipsize
-from .casilla_list import CasillaListEntry, value_text
+from .casilla_list_models import CasillaListEntry
+from .casilla_list_values import value_text
 from .issue_projection import issue_lines
 from .issue_scale import IssueLevel, levels_marked
 from .navigator import to_do_counts

@@ -12,7 +12,7 @@ from ...application.operations.frontend_requests import (
 from ...application.operations.registry import OperationPublicDefinitionContractV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import bounded_deadline_after, remaining_budget
-from ...application.workbench_generation import WorkbenchGenerationV1
+from ...application.workbench_generation_contracts import WorkbenchGenerationV1
 from ...application.workbench_generation_operation import (
     WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
     WorkbenchGenerationOperationRequest,
@@ -29,7 +29,8 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from .frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from .frontend_client import RuntimeFrontendClient
+from .frontend_client_contracts import RuntimeFrontendRefusedError
 from .operation_settlement import (
     PinnedConnection,
     read_settled_result_bytes,
@@ -82,17 +83,28 @@ def read_workbench_generation(
     if projection.effect is not OperationEffect.NONE:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     encoded = read_settled_result_bytes(client, operation_id, projection, contract, deadline=deadline)
+    generation = _restore_verified_generation(encoded, contract, client, pinned)
+    remaining_budget(deadline)
+    return generation
+
+
+def _restore_verified_generation(
+    encoded: bytes,
+    contract: OperationPublicDefinitionContractV1,
+    client: RuntimeFrontendClient,
+    pinned: PinnedConnection,
+) -> WorkbenchGenerationV1:
+    """Restore typed meaning only after the complete result retains its exact identity."""
     try:
         result = OperationResultProjectionSuccessV1[WorkbenchGenerationOperationProjection].model_validate_json(encoded)
         if (
             result.result_schema != contract.result_schema
             or result.definition_contract_digest != contract.definition_contract_digest
-            or result.projection.profile_id != profile_id
+            or result.projection.profile_id != pinned.profile_id
             or client.session_id != pinned.session_id
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         generation = restore_workbench_generation(result.projection)
     except (ValidationError, ValueError, TypeError):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
-    remaining_budget(deadline)
     return generation

@@ -12,7 +12,8 @@ import sys
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...adapters.local_runtime.runtime_client import open_installed_runtime_client
 from ...adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from ...adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
@@ -31,12 +32,11 @@ from ...core.i18n.render import output_language
 from ..adapter_composition import profile_adapter_composition
 from ..operation_composition import build_production_operation_registry
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from .launcher import run_precomposed_runtime_root_session, run_runtime_managed_application
+from .launcher import run_precomposed_runtime_root_session
 from .runtime_admission import runtime_login_session
-from .runtime_management_cleanup import RuntimeManagementCleanup
 from .runtime_workbench import RuntimeWorkbenchRoot
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
-from .secret.runtime_login import RuntimeLoginMethod
+from .secret.runtime_login_contracts import RuntimeLoginMethod
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -147,14 +147,12 @@ async def _run_runtime_session(
                     fresh_credential_client=fresh_credential_client,
                 )
 
-            cleanup = RuntimeManagementCleanup()
             app = RuntimeRestrictedSessionApp(
                 handoff.client,
                 profile_label=handoff.profile_label,
                 requester_factory=requester_for_api,
-                runtime_management_cleanup=cleanup,
             )
-            return await run_runtime_managed_application(app, cleanup=cleanup, headless=headless, auto_pilot=auto_pilot)
+            return await app.run_async(headless=headless, auto_pilot=auto_pilot)
 
         async def open_recovery_client() -> RuntimeFrontendClient:
             return await _open_client(handoff.profile_id)

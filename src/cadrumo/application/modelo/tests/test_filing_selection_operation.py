@@ -301,6 +301,7 @@ def test_filing_and_amendment_access_refuse_identity_before_pin_or_shape(kind: s
         _definition, registration, registry = _build(bundle)
         request = _request(record)
     else:
+
         def factory(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
             assert profile_id == str(_PROFILE)
             assert isinstance(operation, PinnedAuthorityOperation)

@@ -16,7 +16,6 @@ from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENA
 from ..compiler.loader import load_modelo_directory
 from ..conformance.manager import reset_conformance_cache
 from ..form_layout.serialization import FORM_LAYOUT_DIRECTORY, FORM_LAYOUT_FRAGMENT
-from ._export_tree import RenderedExportTree
 from ._tree_validation import (
     ValidatedGeneratedExportTree,
 )
@@ -29,6 +28,7 @@ from .bootstrap_supersession import (
 from .export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
 )
+from .export_tree_models import RenderedExportTree
 from .joined_record_design import JoinedRecordDesign
 from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile
@@ -452,9 +452,10 @@ def _install_generated_form_companion(
     if not candidate_form_root.is_dir():
         return
     candidate_fragments = tuple(scan_directory(candidate_form_root, pattern="*.toml", recursive=True))
-    if len(candidate_fragments) != 1 or candidate_fragments[0].name not in (
-        FORM_LAYOUT_FRAGMENT,
-        "0001-complete-edition.toml",
+    if (
+        len(candidate_fragments) != 1
+        or candidate_fragments[0].parent != candidate_form_root
+        or candidate_fragments[0].name not in (FORM_LAYOUT_FRAGMENT, "0001-complete-edition.toml")
     ):
         raise RegistryValidationError("generated form companion candidate has unknown fragment ownership")
     if source_revision.form_layouts[0].review.state is FormLayoutReviewState.REVIEWED:
@@ -462,7 +463,12 @@ def _install_generated_form_companion(
     source_form_root = staged_revision_root / FORM_LAYOUT_DIRECTORY
     if source_form_root.exists():
         _remove_staged_section_directory(source_form_root)
-    shutil.copytree(candidate_form_root, source_form_root)
+    source_form_root.mkdir()
+    # Isolated validation materialises an inherited edition under the generic
+    # complete-edition filename. The live child remains a keyed delta, and the
+    # owning form generator writes its local artifact under FORM_LAYOUT_FRAGMENT.
+    # Keep the validated bytes while restoring that stable generated filename.
+    shutil.copyfile(candidate_fragments[0], source_form_root / FORM_LAYOUT_FRAGMENT)
 
 
 def _remove_staged_section_directory(path: Path) -> None:

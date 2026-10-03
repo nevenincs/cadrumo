@@ -28,7 +28,7 @@ from ...application.modelo.calculate_input import (
 from ...application.modelo.calculation_action_ports import CalculationActionPorts
 from ...application.modelo.calculation_actions import get_calculation_revision
 from ...application.modelo.calculation_request_fields import ModeloCalculationOverride
-from ...application.modelo.operation_definitions import ModeloDetailRowWireV1
+from ...application.modelo.edit_apply_row_contracts import ModeloDetailRowWireV1
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,

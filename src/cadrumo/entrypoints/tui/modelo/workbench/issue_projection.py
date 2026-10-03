@@ -32,7 +32,7 @@ from .....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
 )
-from .casilla_list import AddressKey
+from .casilla_list_models import AddressKey
 from .editor import open_area_target
 from .navigator import presented_form
 from .page_items import workbench_pages

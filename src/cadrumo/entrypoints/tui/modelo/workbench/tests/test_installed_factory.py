@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from ......application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from ......application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ......application.modelo.workbench_read import ModeloWorkbenchFormReadV1
 from ......core.casilla_id import CasillaId
 from ......core.external_constants import OutputLanguage

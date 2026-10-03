@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:127a8d561d8ca007b44d3aec66a9808723dc497d58a1dd4a3ccd51920a87eea8'
+body_hash: 'sha256:bce4daa447e8be4ecc120ba489a1b16d91b87d7974270d65878cd21cfea1a992'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -25,7 +25,7 @@ related:
 
 Make MCP the agent entrypoint for Cadrumo's application operations and published tax authority, with enforceable profile binding, concurrent clients and durable work independent of a conversation.
 
-This record owns purpose, runtime/process topology and execution boundaries. API keys, custody, session state and CLI/TUI authentication parity have their single home in 2026-09-26-mcp-purpose-authentication-profile-access-adr. The existing simplistic MCP is replaced without compatibility shims.
+This record owns purpose, runtime/process topology and execution boundaries. Runtime management is explicitly outside its scope and outside the runtime itself: installation, provisioning, health monitoring, administration controls, autostart and restart supervision belong to a later application bundling, building and provisioning design. API keys, custody, session state and CLI/TUI authentication parity have their single home in 2026-09-26-mcp-purpose-authentication-profile-access-adr. The existing simplistic MCP is replaced without compatibility shims.
 
 ## Considerations
 
@@ -83,11 +83,11 @@ The runtime is application hosting and local resource management, not a second s
 
 No MCP tool exposes arbitrary shell execution, SQL, raw secure references, DEKs or unregistered executor calls. Recovery-action identity remains with the existing action catalogue; operation-definition identity remains with the operation registry.
 
-### Deployment and startup
+### Runtime ownership and connection
 
 One runtime instance owns each OS user and canonical Cadrumo storage root. OS login-session provenance is distinct from application-session identity; multiple login contexts may belong to the same runtime owner. Multiple profiles may be served, with independent bindings and no implicit cross-profile authority. Separate OS users run separate instances and credential stores.
 
-An MCP host starts a small local stdio adapter. The adapter locates or starts the installed runtime through one idempotent launch door. CLI/TUI use the same owner-controlled startup. The runtime starts without profiles unlocked. The API-key ADR governs subsequent credential proof and storage access.
+An MCP host starts a small local stdio adapter. The adapter and CLI/TUI connect to the same owner-controlled runtime through the verified local endpoint. Runtime launch policy belongs to the separate application bundling, building and provisioning design. The runtime starts without profiles unlocked. The API-key ADR governs subsequent credential proof and storage access.
 
 Local IPC uses private named pipes on Windows and local-domain sockets on macOS/Linux. Endpoint ACLs, owner verification, peer authentication and endpoint-substitution protection must be proven. Runtime identity and application credentials are both checked; a PID file, process name or listening endpoint is insufficient.
 
@@ -103,7 +103,7 @@ Windows pipes require an explicit owner-only DACL, local-only rejection of netwo
 
 Frames are length-bounded, strict and versioned. Reject unknown fields/types, duplicate JSON keys, oversized frames and unsupported versions before dispatch. Use explicit byte transport, never pickle/object deserialization. Authentication and one-shot secret frames have separate non-recording handling; they cannot be copied into requests, logs, errors or protocol tracing. OS peer validation completes before any password or API secret is transmitted. The local owner boundary permits password login when the optional OS secret store is unavailable; adding a permanent runtime key as a password-login prerequisite is prohibited.
 
-Windows background startup uses a per-user Task Scheduler logon task with the interactive token, with no stored Windows password or highest-privilege elevation. macOS uses a user LaunchAgent. Linux uses a user systemd service when that capability and the user credential session are available, with no lingering or pre-login promise. Interactive launches on systems without the supported background manager expose background mode as unavailable. All three bind the installed absolute executable and canonical storage root, restrict inherited environment/handles, and retain the established worker-containment requirement. User enable/disable and installed lifecycle tests own readiness; merely writing service metadata does not establish it.
+The runtime binds its canonical storage root and current installed cohort, restricts inherited environment and handles, and retains the established worker-containment requirement. Application bundling, building and provisioning will separately decide installation and launch policy on each platform. No runtime-owned OS registration or service administration is part of this contract.
 
 ### Human, agent and swarm contexts
 
@@ -115,21 +115,19 @@ Profile execution is isolated. A worker never changes process-global active-prof
 
 Concurrent reads use the underlying store's supported semantics. Writes compose existing transactions, conflict scopes, expected revisions and provider-acquisition locks. Human operations participate in the same coordination. Stale writers get explicit conflicts, and retries use canonical operation/idempotency identity.
 
-### Management surfaces and process containment
+### Process containment and custody lifetime
 
-The runtime provides typed start, stop, status, health, background-mode configuration and session/work inspection. CLI and TUI implement equivalent management actions as required by the access ADR. Output distinguishes running, ready, degraded, draining and unavailable, together with supported platform capabilities and non-secret corrective actions.
+Profile-session and admitted-work inspection remain application capabilities. Runtime health monitoring, start/stop/status administration endpoints and CLI/TUI controls, background-mode configuration, service installation and restart supervision are excluded. Their implementation is deferred to application bundling, building and provisioning. Connection handshake and typed connection failures establish whether a caller can safely use the runtime; they do not create a health-management surface.
 
-Interactive mode can stop when there are no clients or admitted work. Unattended mode is explicit and uses the OS user-session supervisor. Installation, enable/disable and startup behavior remain per-user on Windows, macOS and Linux. Manager availability, login autostart and unattended authorization are separate capabilities. Explicit launch may use an already provisioned supported manager while autostart is disabled; it must not silently enable autostart, lingering, elevation or unattended authority. A surviving user manager is not authorization.
+Unattended authorization remains an explicit profile-access grant decision. A running process never establishes that authority. Profile-wide lock/pause and revocation remain security actions governed by the access ADR.
 
-Stopping the runtime affects all of its connected profiles and jobs; its preview and acknowledgement identify that scope. Profile-wide lock/pause is a different security action. A token-authenticated session cannot acquire global service-administration authority merely by invoking a management endpoint.
-
-The adapter ends when its MCP client disconnects and releases only its own leases. It must not stop a shared runtime. Background mode does not require a chat or LLM to stay alive.
+The adapter ends when its MCP client disconnects and releases only its own leases. It must not stop a shared runtime. Admitted work is independent of any one conversation while the runtime runs.
 
 The runtime owns worker, browser, KDF and other child resources through the existing operation resource scopes. Windows uses owned Job Objects with controlled inheritance, kill-on-close and explicit breakaway policy. POSIX uses owned process groups together with supervisor/watchdog containment that handles runtime death; a process group alone is not a parent-death guarantee. Do not rely on a taskkill or immediate-child fallback as proof of descendant containment. Refuse operation classes when their required containment cannot be established. Containment acceptance covers launch/registration races, independent descendant groups, guardian failure, inheritance and actual browsers. Interim refusal does not complete Windows, macOS or Linux platform acceptance; all three remain required.
 
 Last eligible OS logout fences private admission and effects, causes bounded shutdown and releases custody without permanently revoking independent grants or imposing profile-global suspension. Suspend/shutdown preparation is bounded best effort, backed by crash-safe persistence and reconciliation. Shutdown stops admission, requests declared settlement, waits to a bound, records unresolved ownership/effects, terminates and reaps owned descendants, closes storage/authority leases and releases key material best-effort. Revalidate authority before resumed private output or effects, and reconcile possibly committed work before retrying; timeout or process loss never implies rollback. A thread timeout cannot claim execution stopped. SIGKILL/process loss may skip cleanup, so restart recovery cannot depend on graceful callbacks.
 
-Upgrade drains and replaces a coherent installed cohort. It invalidates live access leases, preserves supported durable state and refuses unknown private formats. Current-only schema changes follow the existing no-legacy regime, including zero affected nonterminal operations before breaking operation-contract cutover. They do not silently translate unknown grants or jobs. Restart backoff, bounded resource usage and redacted diagnostics make failures observable.
+Runtime loss invalidates live access leases; a replacement preserves supported durable state and refuses unknown private formats. Current-only schema changes follow the existing no-legacy regime, including zero affected nonterminal operations before breaking operation-contract cutover. They do not silently translate unknown grants or jobs. Bounded resource usage and redacted diagnostics remain runtime obligations. Upgrade orchestration and restart policy belong to the deferred application bundling, building and provisioning design.
 
 ### Durable work and authorization
 
@@ -165,7 +163,7 @@ Delete the displaced identity-flag admission, password-file bootstrap, retained-
 
 ### Acceptance boundary
 
-The implementation plan must prove installed CLI/TUI/MCP flows using synthetic encrypted profiles: independent sessions, A/B isolation during hot-profile switches, autonomous reconnect after human timeout, revocation before commit/output, crash/restart, child containment and service lifecycle on Windows/macOS/Linux.
+The implementation plan must prove CLI/TUI/MCP flows against a running runtime using synthetic encrypted profiles: independent sessions, A/B isolation during hot-profile switches, autonomous reconnect after human timeout, revocation before commit/output, recovery after process loss and child containment on Windows/macOS/Linux. Runtime management and provisioning are excluded from this feature's acceptance boundary.
 
 Use the existing real operation, storage and authority boundaries. Prove idempotent retries, honest uncertain effects and pinned publication changes; keep unsupported executor/provider/filing capability refusals. Passing a mocked host or one OS does not establish the deployment matrix.
 
@@ -183,6 +181,8 @@ A local owner lets all entrypoints enforce the same live profile and grant state
 
 ## Consequences
 
-This is a replacement MCP and an application/runtime integration, with per-user service packaging, authenticated IPC, isolated custody, concurrency and recovery costs. CLI/TUI execution must participate in that authority.
+This is a replacement MCP and an application/runtime integration, with authenticated IPC, isolated custody, concurrency and recovery costs. CLI/TUI execution must participate in that authority. Runtime management will be designed with application bundling, building and provisioning.
+
+Scope amendment accepted 2026-10-03 under the operator's explicit instruction to remove runtime management while preserving the runtime. The earlier service-installation and health-management approach was incorrect and is withdrawn. Remove its implementation, controls, tests and documentation; do not retain unreachable management branches. The runtime's transport, authentication, custody, safe shutdown and worker-containment obligations remain accepted.
 
 It is not a security sandbox for arbitrary code already running as the same OS account. It does not validate domain edges by exposing them. Accepted 2026-09-26 on the operator's instruction to continue the presented plan after the documentation handoff. The plan separately records authorization for runtime implementation; acceptance does not claim implementation or platform readiness.

@@ -30,7 +30,7 @@ from .edit_admission import admit_modelo_edit_baseline
 from .edit_models import ModeloEditAdmissionResultV1
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
 from .m303_exonerado_390_applicability_attestation import modelo_390_question_asked
-from .verification_actions import granting_verification_report
+from .verification_report_facts import granting_verification_report
 from .work_form_service import ModeloWorkFormLoadV1, load_modelo_work_form, modelo_form_snapshot
 
 if TYPE_CHECKING:

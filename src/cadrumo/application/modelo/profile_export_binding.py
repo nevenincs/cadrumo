@@ -33,7 +33,7 @@ from ...domain.calculations.registry.binding_value_contract import BindingValueC
 from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
-from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ...domain.calculations.registry.schema import BindingDefinition, CasillaDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -87,6 +87,25 @@ class ProfileTextCasillaInputs:
     gaps: tuple[ProfileTextCasillaGap, ...]
 
 
+def _profile_text_casilla_bindings(
+    casilla: CasillaDefinition,
+    bindings: Mapping[BindingId, BindingDefinition],
+    fact_index: Mapping[str, UserProfileFactValue],
+) -> tuple[BindingDefinition, ...]:
+    return tuple(
+        binding
+        for binding_id in bound_casilla_binding_ids(casilla)
+        if (binding := bindings.get(binding_id)) is not None
+        and isinstance(binding.provider, ProfileProvider)
+        and binding.value.channel is BindingValueChannel.TEXT
+        and _profile_export_binding_applies(binding, fact_index)
+    )
+
+
+def _first_profile_text_value(declared: tuple[UserProfileFactValue, ...]) -> str | None:
+    return next((text for fact in declared if (text := _profile_text_spelling(fact)) is not None), None)
+
+
 def resolve_profile_text_casilla_inputs(
     revision: ModeloRevision,
     fact_index: Mapping[str, UserProfileFactValue],
@@ -126,18 +145,11 @@ def resolve_profile_text_casilla_inputs(
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND or casilla.id not in text_casilla_ids:
             continue
-        profile_bindings = tuple(
-            binding
-            for binding_id in bound_casilla_binding_ids(casilla)
-            if (binding := bindings.get(binding_id)) is not None
-            and isinstance(binding.provider, ProfileProvider)
-            and binding.value.channel is BindingValueChannel.TEXT
-            and _profile_export_binding_applies(binding, fact_index)
-        )
+        profile_bindings = _profile_text_casilla_bindings(casilla, bindings, fact_index)
         if not profile_bindings:
             continue
         declared = tuple(_profile_export_value(binding, fact_index) for binding in profile_bindings)
-        value = next((text for fact in declared if (text := _profile_text_spelling(fact)) is not None), None)
+        value = _first_profile_text_value(declared)
         if value is not None:
             values[casilla.id] = value
         elif casilla.required and all(_profile_fact_is_blank(fact) for fact in declared):
@@ -532,6 +544,25 @@ def _taxpayer_identity_facts(
     )
 
 
+def _profile_export_values_from_facts(
+    bindings: Sequence[BindingDefinition], fact_index: Mapping[str, UserProfileFactValue]
+) -> dict[str, UserProfileFactValue]:
+    values: dict[str, UserProfileFactValue] = {}
+    for binding in bindings:
+        provider = binding.provider
+        if not isinstance(provider, ProfileProvider):
+            continue
+        field_id = provider.dictionary_field
+        if field_id is None or provider.repeating:
+            continue
+        if not _profile_export_binding_applies(binding, fact_index):
+            continue
+        value = _profile_export_value(binding, fact_index)
+        if value is not None:
+            values[str(field_id)] = value
+    return values
+
+
 def _resolve_profile_export_values(
     bindings: Sequence[BindingDefinition],
     *,
@@ -560,17 +591,4 @@ def _resolve_profile_export_values(
     resolved_schema = operation.profile_schema() if schema is None else schema
     fact_index = profile_fact_index(record, resolved_schema)
 
-    values: dict[str, UserProfileFactValue] = {}
-    for binding in bindings:
-        provider = binding.provider
-        if not isinstance(provider, ProfileProvider):
-            continue
-        field_id = provider.dictionary_field
-        if field_id is None or provider.repeating:
-            continue
-        if not _profile_export_binding_applies(binding, fact_index):
-            continue
-        value = _profile_export_value(binding, fact_index)
-        if value is not None:
-            values[str(field_id)] = value
-    return values
+    return _profile_export_values_from_facts(bindings, fact_index)

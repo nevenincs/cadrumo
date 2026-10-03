@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-15'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4535119574003bb2884677e98c8ce81cfe2250349b4d17e0971e0b438561d02e'
+body_hash: 'sha256:f53c56b0ba4eb9db1dd0651ca3f53f56eab5d608ba5d8bd9af24dc33b6dbb538'
 related:
   - "[[2026-09-15-registry-authority-artifact-boundary-lane3-integration-review-audit]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
@@ -29,11 +29,11 @@ Affected command: `m145_create` (`src/cadrumo/entrypoints/cli/_modelo_m145_cli.p
 
 ### f-dana-projection-window | high | DANA cuota reduction resolves outside its legal window
 
-Fact `rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada` (valid 2024-11-13 to 2024-12-31, no support boundary) is projected beyond `valid_to` by `src/cadrumo/domain/calculations/registry/facts/resolution.py:390-396`, resolving 0.25 for 2025-12-31 and 2026-12-31 in compiled and published generations; `_dana_reduction_is_available` (`src/cadrumo/domain/iva/m303_regimen_simplificado.py:122-143`) returns True for 2025+. Expected: RDL 7/2024 art. 11.2 applies only in 2024. Filing consequence: simplified-regime year-end calculations demand DANA evidence outside the window and, if supplied, apply a 25% cuota devengada reduction outside the law (under-declaration). Smallest repair: determined by the governing projection contract (shared rule respecting authored `valid_to`, or a grounded support boundary with consumer refusal meanwhile). Disposition: in progress.
+Fact `rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada` (valid 2024-11-13 to 2024-12-31, no support boundary) is projected beyond `valid_to` by `src/cadrumo/domain/calculations/registry/facts/resolution.py:390-396`, resolving 0.25 for 2025-12-31 and 2026-12-31 in compiled and published generations; `_dana_reduction_is_available` (`src/cadrumo/application/calculations/m303_regimen_simplificado.py`) returns True for 2025+. Expected: RDL 7/2024 art. 11.2 applies only in 2024. Filing consequence: simplified-regime year-end calculations demand DANA evidence outside the window and, if supplied, apply a 25% cuota devengada reduction outside the law (under-declaration). Smallest repair: determined by the governing projection contract (shared rule respecting authored `valid_to`, or a grounded support boundary with consumer refusal meanwhile). Disposition: in progress.
 
 ### f-carry-mapping-revision | high | Modelo 303 carry ingress refuses 2026 because the mapping fact names revision 2025
 
-`src/cadrumo/domain/.../m303_carry_ingress.py:140` raises `registry.registry_resolution_unavailable`: for 303/2026 the selected revision is `2026-y-siguientes` while fact `modelo-303-carry-disposition-verification-mapping` declares revision `2025` (303/2025/4T is consistent). Observed in `test_filed_observation_capture_promotes_previous_303_into_recurrence_history` and about 36 related ingress refusals. Filing consequence: prior-period carry cannot be ingested for 2026. Smallest repair: to be determined between authored mapping data and resolving the mapping through the temporal projection contract. Disposition: in progress.
+`src/cadrumo/application/calculations/m303_carry_ingress.py` raises `registry.registry_resolution_unavailable`: for 303/2026 the selected revision is `2026-y-siguientes` while fact `modelo-303-carry-disposition-verification-mapping` declares revision `2025` (303/2025/4T is consistent). Observed in `test_filed_observation_capture_promotes_previous_303_into_recurrence_history` and about 36 related ingress refusals. Filing consequence: prior-period carry cannot be ingested for 2026. Smallest repair: to be determined between authored mapping data and resolving the mapping through the temporal projection contract. Disposition: in progress.
 
 ### f-test-support-empty-facts | high | Test support validated snapshots against an empty governed-fact catalogue
 
@@ -64,3 +64,10 @@ Real-recipe planted-defect tests in `dev/tests/test_import_quality_gate.py` fail
 `cadrumo.core.tests.test_irnr` moved to `src/cadrumo/domain/calculations/registry/tests/test_irnr_registry_tokens.py`; four core-is-innermost entries remain and count as blocking retirement candidates because `_valid_retirement` in `dev/quality/import_health.py` requires composition-integrity evidence with no producer. Entries are not removed by policy override. Disposition: pending harness repair and owning evidence path.
 
 ## Recommendations
+
+- For f-303-settlement-period, select the covering revision for the calculated period and derive the terminal settlement period from its declared periods; ground any monthly terminal-period rule before using it.
+- For f-145-communication-period, use the requested declared token or identify a typed non-periodic mechanism; otherwise keep the design blocker explicit.
+- For f-dana-projection-window, honor the fact value window or a grounded support boundary, and keep consumers refusing unsupported years until then.
+- For f-carry-mapping-revision, reconcile the authored mapping with temporal projection so 2026 ingress resolves against the selected revision.
+- Replace the invented spending-category fixture with a declared category and repair import-load probe path ordering so the planted-defect test can see its harness support.
+- Complete the dev-cache retirement after reader confirmation, resolve the open prorrata binding and ledger-rollup findings with their owners, and remove moved-test ratchet entries only after the owning composition evidence is repaired.

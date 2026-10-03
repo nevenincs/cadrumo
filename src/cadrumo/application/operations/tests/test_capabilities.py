@@ -125,7 +125,8 @@ def test_resumable_contained_operation_declares_exact_resources_and_policies() -
 _PROFILE_NAMES = tuple(name for name in capabilities_module.__all__ if name.endswith("_CAPABILITIES"))
 _PROFILE_NAME_GRAMMAR = re.compile(
     r"RECORDED_(?P<cooperative>COOPERATIVE_)?(?P<replay>NON_IDEMPOTENT|IDEMPOTENT)_(?P<bound>REQUEST_BOUND_)?"
-    r"(?P<custody>JOURNALED|SECURE_INPUT|SECURE_STORED)_(?P<effects>READ|UPDATE|PARTIAL_UPDATE|REQUIRED_UPDATE)_CAPABILITIES"
+    r"(?P<custody>JOURNALED|SECURE_INPUT|SECURE_STORED)_(?P<process>PROCESS_)?"
+    r"(?P<effects>READ|UPDATE|PARTIAL_UPDATE|REQUIRED_UPDATE)_CAPABILITIES"
 )
 
 
@@ -162,7 +163,7 @@ def _capabilities_named_by(profile_name: str) -> OperationCapabilities:
         request_storage=custody[0],
         sensitive_input=custody[1],
         conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
+        owned_resources=frozenset({OperationOwnedResource.PROCESS}) if parsed["process"] else frozenset(),
         permitted_effects=effects,
         close_policy=OperationClosePolicy.DETACH_ALLOWED,
     )
@@ -191,5 +192,7 @@ def test_profile_name_check_rejects_a_mislabelled_or_unspelled_profile() -> None
     assert journaled_read != _capabilities_named_by("RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES")
     assert journaled_read != _capabilities_named_by("RECORDED_NON_IDEMPOTENT_JOURNALED_READ_CAPABILITIES")
     assert journaled_read != _capabilities_named_by("RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES")
+    journaled_process_update = capabilities_module.RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES
+    assert journaled_process_update != _capabilities_named_by("RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES")
     with pytest.raises(ValueError, match="does not spell"):
         _capabilities_named_by("RECORDED_DEFAULT_CAPABILITIES")

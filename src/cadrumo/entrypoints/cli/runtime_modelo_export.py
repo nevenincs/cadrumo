@@ -10,7 +10,8 @@ from ...application.modelo.export_projection import (
     ModeloExportPublicResultV3,
     ModeloFicheroBoePublicReceipt,
 )
-from ...application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID, ModeloExportRequest
+from ...application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
+from ...application.modelo.work_export_contracts import ModeloExportRequest
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from .registered_operation_contracts import RegisteredOperationCompletion

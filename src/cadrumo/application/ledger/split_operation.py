@@ -21,18 +21,17 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.enums import BusinessClassification, SplitRole
 from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.models import Transaction
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import display_decimal, resolve_revision_guarded_transaction_repository
@@ -40,7 +39,7 @@ from .actions_split_merge import split_transaction
 from .id_resolution import resolve_transaction_id
 from .models import SplitChildCommand, SplitTransactionResult
 from .pinned_transaction_repository import PinnedRevisionedTransactionRepository
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access
 
 LEDGER_SPLIT_OPERATION_DEFINITION_ID = "ledger.split.manual"
 LEDGER_SPLIT_PHASE = "ledger.split.manual"
@@ -266,6 +265,82 @@ def _require_result_bound(projection: LedgerSplitOperationResult) -> None:
         raise TransactionValidationError("ledger split result exceeds its registered projection bound")
 
 
+def _require_split_action_identity(
+    *,
+    profile_id: UUID,
+    expected_parent_id: str,
+    expected_child_count: int,
+    result: SplitTransactionResult,
+    child_ids: tuple[str, ...],
+    child_transactions: tuple[Transaction, ...],
+) -> None:
+    parent = result.parent_transaction
+    if (
+        result.bucket_id != str(profile_id)
+        or result.parent_transaction_id != expected_parent_id
+        or parent.transaction_id != expected_parent_id
+        or len(child_ids) != expected_child_count
+        or len(child_transactions) != expected_child_count
+        or tuple(child.transaction_id for child in child_transactions) != child_ids
+        or len(set(child_ids)) != len(child_ids)
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
+def _require_parent_split_lineage(
+    parent: Transaction,
+    *,
+    split_group_id: str,
+    child_ids: tuple[str, ...],
+) -> None:
+    lineage = parent.split_lineage
+    if (
+        lineage is None
+        or lineage.role is not SplitRole.PARENT
+        or lineage.split_group_id != split_group_id
+        or lineage.sibling_transaction_ids != tuple(sorted(child_ids))
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
+def _require_child_split_action(
+    child: Transaction,
+    command: SplitChildCommand,
+    *,
+    child_id: str,
+    parent: Transaction,
+) -> None:
+    if (
+        child.transaction_id != child_id
+        or child.raw.amount != command.amount
+        or child.raw.description != command.description
+        or child.direction is not parent.direction
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
+def _require_child_split_lineage(
+    child: Transaction,
+    *,
+    child_id: str,
+    child_ids: tuple[str, ...],
+    expected_parent_id: str,
+    split_group_id: str,
+) -> None:
+    lineage = child.split_lineage
+    expected_siblings = (
+        expected_parent_id,
+        *(other for other in child_ids if other != child_id),
+    )
+    if (
+        lineage is None
+        or lineage.role is not SplitRole.CHILD
+        or lineage.split_group_id != split_group_id
+        or lineage.sibling_transaction_ids != tuple(sorted(expected_siblings))
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
 def _operation_result(
     *,
     profile_id: UUID,
@@ -277,37 +352,29 @@ def _operation_result(
     parent = result.parent_transaction
     child_ids = tuple(result.child_transaction_ids)
     child_transactions = tuple(result.child_transactions)
-    if (
-        result.bucket_id != str(profile_id)
-        or result.parent_transaction_id != expected_parent_id
-        or parent.transaction_id != expected_parent_id
-        or len(child_ids) != len(expected_children)
-        or len(child_transactions) != len(expected_children)
-        or tuple(child.transaction_id for child in child_transactions) != child_ids
-        or len(set(child_ids)) != len(child_ids)
-        or parent.split_lineage is None
-        or parent.split_lineage.role is not SplitRole.PARENT
-        or parent.split_lineage.split_group_id != result.split_group_id
-        or parent.split_lineage.sibling_transaction_ids != tuple(sorted(child_ids))
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    _require_split_action_identity(
+        profile_id=profile_id,
+        expected_parent_id=expected_parent_id,
+        expected_child_count=len(expected_children),
+        result=result,
+        child_ids=child_ids,
+        child_transactions=child_transactions,
+    )
+    _require_parent_split_lineage(parent, split_group_id=result.split_group_id, child_ids=child_ids)
     for child, command, child_id in zip(child_transactions, expected_children, child_ids, strict=True):
-        lineage = child.split_lineage
-        expected_siblings = (
-            expected_parent_id,
-            *(other for other in child_ids if other != child_id),
+        _require_child_split_action(
+            child,
+            command,
+            child_id=child_id,
+            parent=parent,
         )
-        if (
-            child.transaction_id != child_id
-            or child.raw.amount != command.amount
-            or child.raw.description != command.description
-            or child.direction is not parent.direction
-            or lineage is None
-            or lineage.role is not SplitRole.CHILD
-            or lineage.split_group_id != result.split_group_id
-            or lineage.sibling_transaction_ids != tuple(sorted(expected_siblings))
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        _require_child_split_lineage(
+            child,
+            child_id=child_id,
+            child_ids=child_ids,
+            expected_parent_id=expected_parent_id,
+            split_group_id=result.split_group_id,
+        )
     projection = LedgerSplitOperationResult(
         profile_id=profile_id,
         parent_transaction_id=result.parent_transaction_id,
@@ -334,19 +401,13 @@ def _project_operation_result(result: BaseModel, receipt: OperationTerminalRecei
 
 def build_ledger_split_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
     """Declare the secure exact-profile manual split mutation."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_SPLIT_OPERATION_DEFINITION_ID,
         request_type=LedgerSplitRequest,
         result_type=LedgerSplitExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerSplitRequest,
-            executor_type=LedgerSplitExecutor,
-            build=lambda: LedgerSplitExecutor(ports_factory),
-        ),
-        phase_codes=(LEDGER_SPLIT_PHASE,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerSplitExecutor,
+        build=lambda: LedgerSplitExecutor(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -360,16 +421,7 @@ def resolve_ledger_split_access(
         LedgerSplitRequest,
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
-    )
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}},
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_split_registration(

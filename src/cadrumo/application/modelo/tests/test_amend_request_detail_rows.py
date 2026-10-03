@@ -34,11 +34,7 @@ from pydantic import ValidationError
 from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....domain.modelos.row_models import Modelo232VinculadaRow
 from .._calculation_modelo_adjustments import detail_row_declaration_modelos
-from ..operation_definitions import (
-    ModeloWorkAmendBaseline,
-    ModeloWorkAmendOverride,
-    ModeloWorkAmendRequest,
-)
+from ..work_amend_contracts import ModeloWorkAmendBaseline, ModeloWorkAmendOverride, ModeloWorkAmendRequest
 from .test_edit_detail_row_wire_mirror import _PAIRS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

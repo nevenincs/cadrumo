@@ -14,10 +14,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.local_runtime import linux_worker_process
-from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.linux_worker_process import LinuxProcessScope
 from cadrumo.adapters.local_runtime.manager_commands import ManagerCommandResult, NativeManagerCommand
 from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
+from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import lease, worker_profiles
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.core.async_cleanup import close_async_resources

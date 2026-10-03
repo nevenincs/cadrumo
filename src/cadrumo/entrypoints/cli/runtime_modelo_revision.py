@@ -6,7 +6,7 @@ from uuid import UUID
 
 import typer
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.modelo.revision_inventory_operation import (
     MODELO_WORK_REVISIONS_OPERATION_DEFINITION_ID,
     ModeloWorkRevisionsProjection,

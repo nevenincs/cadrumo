@@ -27,7 +27,7 @@ from ..declarations_calendar import (
     DeclarationsCalendarSourceStateV1,
 )
 from ..declarations_list import DeclarationListGroup, declaration_list_rows
-from ..declarations_workspace import (
+from ..declarations_workspace_contracts import (
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionV1,

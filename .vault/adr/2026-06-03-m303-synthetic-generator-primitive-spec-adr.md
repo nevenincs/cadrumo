@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m303-synthetic-generator-primitive-spec'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:f4bc695195a1cef9895d984e50d482bae42c5a4191ea7b302c990688ba1f8381'
+modified: '2026-10-03'
+body_hash: 'sha256:999e6bb58f47025eb0415cb7fbdce37d5fec3f507c91ee2ec0669af043992703'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
@@ -313,9 +313,8 @@ regeneration (15 PDFs).
 - The fichero-BOE golden SHA contract (separate ADR
   `2026-06-03-fichero-boe-golden-sha-contract-shape-adr`).
 
-## Status
+## Original implementation handoff
 
-Accepted. The coder picking up #157 implements per this spec in one
 atomic commit; the cross-modelo discipline ADR remains the durable
 pattern.
 

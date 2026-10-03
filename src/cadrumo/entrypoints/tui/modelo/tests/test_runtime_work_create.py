@@ -14,7 +14,7 @@ import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
-from cadrumo.application.modelo.declarations_workspace import (
+from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionV1,
 )
@@ -46,7 +46,10 @@ from cadrumo.application.operations.registry import OperationFrontendProjection,
 from cadrumo.application.overview.calendar_models import OverviewPeriodState
 from cadrumo.application.overview.next_actions import declare_next_action
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.workbench_generation import WorkbenchGenerationProjectionResultV1, WorkbenchGenerationV1
+from cadrumo.application.workbench_generation_contracts import (
+    WorkbenchGenerationProjectionResultV1,
+    WorkbenchGenerationV1,
+)
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,

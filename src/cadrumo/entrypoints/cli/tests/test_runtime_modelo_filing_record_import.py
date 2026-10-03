@@ -17,13 +17,13 @@ from ....application.modelo.filing_chain_reconciliation import (
     FilingReconciliationOutcome,
     FilingReconciliationResult,
 )
-from ....application.modelo.filing_record_import_operation import (
+from ....application.modelo.filing_record_import_contracts import (
     MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
     ModeloFilingRecordImportProjection,
     ModeloFilingRecordImportReconciliationProjection,
     ModeloFilingRecordImportRequest,
 )
-from ....application.modelo.filing_record_list_operation import ModeloFilingRecordListEntryProjection
+from ....application.modelo.filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

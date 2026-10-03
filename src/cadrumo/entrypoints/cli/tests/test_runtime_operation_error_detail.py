@@ -24,10 +24,12 @@ from cadrumo.application.cli_exception_preconditions import (
 )
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    ModeloWorkCalculatePublicResultV2,
-    ModeloWorkCalculateRequest,
     build_modelo_work_calculate_definition,
     build_modelo_work_calculate_registration,
+)
+from cadrumo.application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculateRequest,
 )
 from cadrumo.application.operations.error_detail import (
     OperationErrorContextEntryV1,

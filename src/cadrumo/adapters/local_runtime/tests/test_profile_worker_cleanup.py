@@ -45,10 +45,11 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 
-from .. import profile_worker
-from ..framing import read_document, read_secret, write_document
+from .. import profile_worker, profile_worker_human_admission, profile_worker_lifetime, profile_worker_transport
 from ..profile_worker import ProfileWorkerProcess
-from ..windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
+from ..runtime_frame_io import read_document, read_secret, write_document
+from ..windows import WindowsRuntimeEndpoint
+from ..windows_channel import WindowsRuntimeChannel
 from ..windows_process import WindowsOwnedProcess, WindowsProcessScope
 from ..worker_authorization import WorkerAuthorizationServer
 from ..worker_lease_transfer import read_worker_lease
@@ -372,7 +373,8 @@ def test_protocol_cleanup_retry_gets_fresh_bound_after_original_request_deadline
         clock.instant += 6
 
     fixture.channels[0].before_read = finish_request_budget
-    monkeypatch.setattr(profile_worker, "time", SimpleNamespace(monotonic=lambda: clock.instant))
+    for owner in (profile_worker, profile_worker_lifetime, profile_worker_transport, profile_worker_human_admission):
+        monkeypatch.setattr(owner, "time", SimpleNamespace(monotonic=lambda: clock.instant))
     with pytest.raises(OSError) as caught:
         worker._exchange(
             ProfileWorkerRequest(ProfileWorkerControlRequest(action="status", request_id=uuid4())),
@@ -513,7 +515,8 @@ def test_api_prepare_and_install_reuse_original_deadline_and_wipe_material(
     material = bytearray(b"s" * 32)
     original_deadline = time.monotonic() + 30
     clock = SimpleNamespace(instant=time.monotonic())
-    monkeypatch.setattr(profile_worker, "time", SimpleNamespace(monotonic=lambda: clock.instant))
+    for owner in (profile_worker, profile_worker_lifetime, profile_worker_transport, profile_worker_human_admission):
+        monkeypatch.setattr(owner, "time", SimpleNamespace(monotonic=lambda: clock.instant))
     outbound_deadlines: list[float] = []
     actions: list[str] = []
     replying = False

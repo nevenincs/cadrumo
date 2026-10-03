@@ -2913,6 +2913,7 @@ tui:
     sessions_empty: No hi ha sessions actuals.
     sessions_locked: 'Sessions blocades: {session_ids}'
     title: Accés al perfil
+    unknown: Desconegut
     view_automation: Mostra l'automatització
   runtime_login:
     cancel: Cancel·la
@@ -2936,50 +2937,6 @@ tui:
     refused: S'ha rebutjat l'inici de sessió.
     submit: Inicia la sessió
     title: Inicia la sessió en un perfil
-  runtime_management:
-    availability:
-      available: Disponible
-      refused: Rebutjat
-      unavailable: No disponible
-      unknown: Desconegut
-      unsupported: No compatible
-    busy: S'està comprovant l'estat del servei local…
-    disable: A demanda
-    enable: Inicia en obrir sessió
-    kind:
-      linux_user_service: Servei d'usuari de Linux
-      macos_agent: Agent d'inici de macOS
-      windows_task: Tasca programada de Windows
-    labels:
-      binding_matches: Vinculat a aquesta instal·lació
-      listener: Punt d'escolta
-      login_autostart: S'inicia en obrir sessió
-      manager_availability: Disponibilitat del gestor
-      manager_kind: Tipus de gestor
-      process_state: Estat del procés
-      provisioned: Configurat
-    listener:
-      draining: En aturada
-      ready: A punt
-      refused: Rebutjat
-      unavailable: No disponible
-      unknown: Desconegut
-    not_reported: No informat
-    open: Administrar el servei
-    open_help: Consulta, inicia o configura el servei local.
-    process:
-      running: En execució
-      starting: S'està iniciant
-      stopped: Aturat
-      unknown: Desconegut
-    refused: No s'ha pogut confirmar l'estat del servei.
-    start: Inicia
-    stop: Atura
-    stop_accepted: Aturada acceptada; el servei s'està finalitzant.
-    stop_cancel: Mantén-lo en marxa
-    stop_confirm: Atura tots els perfils i treballs
-    stop_scope: Vols aturar el servei compartit per a tots els perfils i treballs?
-    title: Administració del servei local
   search:
     action:
       classify_ledger: Classifica els registres

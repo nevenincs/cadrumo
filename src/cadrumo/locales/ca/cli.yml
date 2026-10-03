@@ -1871,19 +1871,6 @@ cli:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> comprovar -> exportar. Només construeix
         i exporta; mai presenta a l''AEAT'
-    runtime:
-      disable:
-        help: Desactiva l'inici en obrir la sessió i manté l'inici a demanda.
-      enable:
-        help: Activa l'inici del servei en obrir la sessió d'aquest usuari.
-      help: Consulta i administra el servei local d'aquesta instal·lació.
-      start:
-        help: Inicia el servei instal·lat i verifica'n el punt d'escolta.
-      status:
-        help: Mostra la disponibilitat del servei local i l'estat del seu gestor.
-      stop:
-        acknowledge_help: Confirma que l'aturada afecta tots els perfils i treballs.
-        help: Atura el servei compartit després de confirmar-ne tot l'abast.
   common:
     errors:
       filing_requires_declared_tax_id: 'El perfil actiu no declara una identitat fiscal,
@@ -1993,7 +1980,8 @@ cli:
       reset_requires_yes: El restabliment retira la configuració i les credencials
         desades. Torna a executar l'ordre amb --yes per confirmar.
       reset_yes_help: Confirmar el restabliment destructiu de l'autenticació
-      route_help: 'Via d''aprovació de Cl@ve Móvil: qr o app_request. Requereix --provider
+      route_help: 'Via d''aprovació de Cl@ve Móvil: app_request (per defecte, funciona
+        sense navegador visible) o qr (obre un navegador visible). Requereix --provider
         clave_movil.'
       status_help: Mostrar l'estat d'autenticació configurat
       status_summary_configured: L'autenticació està configurada però encara no hi
@@ -2911,9 +2899,10 @@ cli:
         ex. claude, antigravity, codex).
       session_stale_message: La sessió d'AEAT persistida ha superat el seu termini
         d'inactivitat; una lectura en viu tornarà a autenticar-se.
-      since_help: Data ISO (AAAA-MM-DD) inferior inclusiva per als registres d'execució
-        de l'LLM.
       until_help: Data ISO (AAAA-MM-DD) superior inclusiva per als registres d'execució
+        de l'LLM.
+    run_records:
+      since_help: Data ISO (AAAA-MM-DD) inferior inclusiva per als registres d'execució
         de l'LLM.
     runs:
       header: 'Execucions recents de l''LLM:'
@@ -2924,8 +2913,6 @@ cli:
         assistida per LLM per generar-la.
       provider_help: Restringeix el llistat a aquest proveïdor (p. ex. claude, antigravity,
         codex).
-      since_help: Data ISO (AAAA-MM-DD) inferior inclusiva per als registres d'execució
-        de l'LLM.
       until_help: Data ISO (AAAA-MM-DD) superior inclusiva per als registres d'execució
         de l'LLM.
     summary:

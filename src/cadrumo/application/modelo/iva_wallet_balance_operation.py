@@ -14,43 +14,32 @@ from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva_compensation.balance import CompensationExpiryYear, IvaWalletBalanceReport
-from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.iva_wallet_balance import query_iva_wallet_balance
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_succeeded_receipt_references,
+    require_terminal_receipt_match,
 )
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .iva_wallet_mutation import bind_iva_wallet_profile_ports
 from .iva_wallet_seed_ports import ModeloIvaWalletSeedPortsFactory
 
 MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID = "modelo.iva-wallet.balance"
@@ -122,6 +111,14 @@ class ModeloIvaWalletBalanceOperationReport(BaseModel):
     local_read_completed: Literal[True]
 
 
+_RECEIPT_CONTRADICTION = "IVA wallet balance result contradicts its terminal receipt"
+
+
+def _require_balance_projection_size(projection: ModeloIvaWalletBalanceProjection) -> None:
+    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _MAX_RESULT_BYTES:
+        raise ValueError("IVA wallet balance result exceeds its projection limit")
+
+
 def project_modelo_iva_wallet_balance_result(
     result: BaseModel,
     receipt: OperationTerminalReceipt,
@@ -132,34 +129,17 @@ def project_modelo_iva_wallet_balance_result(
         raise ValueError("invalid IVA wallet balance operation result")
     report = ModeloIvaWalletBalanceOperationReport.model_validate(result.model_dump(mode="python"), strict=True)
     projection = report.projection
-    if (
-        receipt.identity.definition_id != MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("IVA wallet balance result contradicts its terminal receipt")
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _MAX_RESULT_BYTES:
-        raise ValueError("IVA wallet balance result exceeds its projection limit")
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
+    require_succeeded_receipt_references(receipt, message=_RECEIPT_CONTRADICTION)
+    _require_balance_projection_size(projection)
     return projection
-
-
-def _profile_history_repository(
-    factory: ModeloIvaWalletSeedPortsFactory,
-    *,
-    profile_id: str,
-    operation: PinnedAuthorityOperation,
-) -> IvaCompensationHistoryRepositoryProtocol:
-    """Build the existing wallet port bundle for the requested profile only."""
-    ports = factory(bucket_id=profile_id, operation=operation)
-    if ports.work_unit_repository.bucket_id != profile_id or ports.calculation_repository.bucket_id != profile_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return ports.iva_compensation_history_repository
 
 
 class ModeloIvaWalletBalanceExecutor:
@@ -180,9 +160,9 @@ class ModeloIvaWalletBalanceExecutor:
         if request.definition_id != MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
-        repository = _profile_history_repository(
+        repository = bind_iva_wallet_profile_ports(
             self._factory, profile_id=profile_id, operation=context.authority_operation
-        )
+        ).iva_compensation_history_repository
 
         async def capture() -> str:
             await context.events.phase(_READ_PHASE)
@@ -231,19 +211,7 @@ def build_modelo_iva_wallet_balance_definition(
         ),
         phase_codes=(_READ_PHASE,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
@@ -255,15 +223,12 @@ def resolve_modelo_iva_wallet_balance_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require exact-profile access to the complete history through one year."""
-    if request.definition_id != MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, ModeloIvaWalletBalanceRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = request.payload
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
+        payload_type=ModeloIvaWalletBalanceRequest,
+        access_profile_id=context.profile_id,
+    )
     return resolve_ledger_read_access(
         request,
         context,
@@ -276,18 +241,9 @@ def build_modelo_iva_wallet_balance_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the closed request/result and exact-profile all-history access resolver."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloIvaWalletBalanceRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloIvaWalletBalanceProjection,
-        ),
+        public_result_type=ModeloIvaWalletBalanceProjection,
         result_projector=project_modelo_iva_wallet_balance_result,
         access_resolver=resolve_modelo_iva_wallet_balance_access,
     )

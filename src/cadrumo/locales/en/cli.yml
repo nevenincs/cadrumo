@@ -1753,19 +1753,6 @@ cli:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> check -> export. Build and export only; never submits
         to AEAT'
-    runtime:
-      disable:
-        help: Disable login startup while keeping on-demand launch available.
-      enable:
-        help: Enable runtime startup when this user signs in.
-      help: Inspect and manage this installation's local runtime.
-      start:
-        help: Start the installed runtime and verify its listener.
-      status:
-        help: Show listener readiness and local runtime manager status.
-      stop:
-        acknowledge_help: Acknowledge that stopping affects all profiles and work.
-        help: Stop the shared runtime after confirming its full scope.
   common:
     errors:
       filing_requires_declared_tax_id: 'The active profile does not declare a tax
@@ -1870,8 +1857,8 @@ cli:
       reset_requires_yes: Authentication reset removes stored configuration and credentials.
         Re-run with --yes to confirm.
       reset_yes_help: Confirm the destructive authentication reset
-      route_help: 'Cl@ve Móvil approval route: qr or app_request. Requires --provider
-        clave_movil.'
+      route_help: 'Cl@ve Móvil approval route: app_request (the default, works headless)
+        or qr (opens a visible browser). Requires --provider clave_movil.'
       status_help: Show configured authentication state
       status_summary_configured: Authentication is configured but no live session
         is available yet.
@@ -2708,8 +2695,9 @@ cli:
         claude, antigravity, codex).
       session_stale_message: The persisted AEAT session has passed its idle deadline;
         a live read will re-authenticate.
-      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
       until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    run_records:
+      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
     runs:
       header: 'Recent LLM runs:'
       help: List recent local LLM run-timing records, most-recent-first.
@@ -2718,7 +2706,6 @@ cli:
         to populate it.
       provider_help: Restrict the listing to this provider label (e.g. claude, antigravity,
         codex).
-      since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
       until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
     summary:
       auth_no_session: Authentication provider %{provider} has no ready session

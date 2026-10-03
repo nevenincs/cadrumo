@@ -432,28 +432,46 @@ class RecordDesign369RelativeClosing(RegistryModel):
     @model_validator(mode="after")
     def _require_exact_source_composition(self) -> Self:
         parts = self.parts
-        if tuple(part.offset for part in parts) != (1, 4, 7, 8, 12, 14):
-            raise ValueError("Modelo 369 relative closing positions do not tile 18 bytes")
-        if tuple(part.length for part in parts) != (3, 3, 1, 4, 2, 5):
-            raise ValueError("Modelo 369 relative closing lengths do not tile 18 bytes")
-        if tuple(part.type_code.strip().casefold() for part in parts) != ("an",) * 6:
-            raise ValueError("Modelo 369 relative closing requires six alphanumeric parts")
-        if tuple(part.row for part in parts) != tuple(range(parts[0].row, parts[0].row + 6)):
-            raise ValueError("Modelo 369 relative closing source rows are not consecutive")
-        if tuple(part.ordinal for part in parts) != tuple(range(parts[0].ordinal, parts[0].ordinal + 6)):
-            raise ValueError("Modelo 369 relative closing ordinals are not consecutive")
-        if tuple((part.content or "").strip() for part in (parts[0], parts[1], parts[2], parts[5])) != (
-            'Constante "</T"',
-            'Constante "369"',
-            'Constante "0"',
-            '"0000>"',
-        ):
-            raise ValueError("Modelo 369 relative closing literals do not match their source")
-        if parts[3].content is not None or "Ejercicio de devengo" not in parts[3].description:
-            raise ValueError("Modelo 369 relative closing year is not the source devengo slot")
-        if "Periodo" not in parts[4].description:
-            raise ValueError("Modelo 369 relative closing period is not the source period slot")
+        _require_369_relative_closing_geometry(parts)
+        _require_369_relative_closing_source_semantics(parts)
         return self
+
+
+def _require_369_relative_closing_geometry(parts: tuple[RecordDesignRelativeSuffixMarker, ...]) -> None:
+    _require_369_relative_closing_positions(parts)
+    _require_369_relative_closing_source_order(parts)
+
+
+def _require_369_relative_closing_positions(parts: tuple[RecordDesignRelativeSuffixMarker, ...]) -> None:
+    if tuple(part.offset for part in parts) != (1, 4, 7, 8, 12, 14):
+        raise ValueError("Modelo 369 relative closing positions do not tile 18 bytes")
+    if tuple(part.length for part in parts) != (3, 3, 1, 4, 2, 5):
+        raise ValueError("Modelo 369 relative closing lengths do not tile 18 bytes")
+
+
+def _require_369_relative_closing_source_order(parts: tuple[RecordDesignRelativeSuffixMarker, ...]) -> None:
+    if tuple(part.type_code.strip().casefold() for part in parts) != ("an",) * 6:
+        raise ValueError("Modelo 369 relative closing requires six alphanumeric parts")
+    if tuple(part.row for part in parts) != tuple(range(parts[0].row, parts[0].row + 6)):
+        raise ValueError("Modelo 369 relative closing source rows are not consecutive")
+    if tuple(part.ordinal for part in parts) != tuple(range(parts[0].ordinal, parts[0].ordinal + 6)):
+        raise ValueError("Modelo 369 relative closing ordinals are not consecutive")
+
+
+def _require_369_relative_closing_source_semantics(
+    parts: tuple[RecordDesignRelativeSuffixMarker, ...],
+) -> None:
+    if tuple((part.content or "").strip() for part in (parts[0], parts[1], parts[2], parts[5])) != (
+        'Constante "</T"',
+        'Constante "369"',
+        'Constante "0"',
+        '"0000>"',
+    ):
+        raise ValueError("Modelo 369 relative closing literals do not match their source")
+    if parts[3].content is not None or "Ejercicio de devengo" not in parts[3].description:
+        raise ValueError("Modelo 369 relative closing year is not the source devengo slot")
+    if "Periodo" not in parts[4].description:
+        raise ValueError("Modelo 369 relative closing period is not the source period slot")
 
 
 class RecordDesignVariableTotalMarker(RegistryModel):

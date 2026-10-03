@@ -283,8 +283,14 @@ async def test_clave_movil_public_verify_drives_real_own_name_representation_gat
 @pytest.mark.asyncio
 async def test_authenticated_representation_landing_records_phone_acceptance_without_operator_report(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A real browser transition after Cl@ve is the phone-state authority."""
+    from cadrumo.adapters.outbound.aeat.auth import clave_movil
+
+    # The real HTTP/browser fixture renders QR pages headlessly in CI; desktop
+    # refusal is exercised separately at the presentation boundary.
+    monkeypatch.setattr(clave_movil, "interactive_desktop_available", lambda: True)
     bucket_id = "1f6b0000-0000-4000-8000-00000000a040"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-relation-and-export-integrity'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e508c3a3275b7f4099d668d37594d3fdac63f540fd11670a2d20f8e69665dab4'
+body_hash: 'sha256:23090040bd87177445dcf540dc6422914156c9e8d94a642814f241dcf8594da4'
 related:
   - "[[2026-08-28-calculation-correctness-campaign-m303-prorrata-percentage-dormancy-audit]]"
 ---
@@ -13,20 +13,12 @@ related:
 # `registry-relation-and-export-integrity` audit: `No computed casilla is a silent dead end; export_refs is not the export signal`
 
 ## Scope
-
-## Findings
-
-## Recommendations
-
-## The question
-
 A computed casilla that reaches neither a formula nor the export record is a dead
 end. If it carries a liability figure that should print on the return, the amount
 never reaches AEAT -- an under-declaration. The M303 prorrata percentage recorded
 alongside this is one such case, and it prompted the general sweep.
 
-## The result
-
+## Findings
 Every computed casilla in the registry that no formula consumes is accounted for:
 
 | disposition | count |
@@ -38,6 +30,16 @@ Every computed casilla in the registry that no formula consumes is accounted for
 | **unaccounted** | **0** |
 
 There is no silent dead end.
+
+## Recommendations
+`_validate_export_exemption.py` requires a manifest casilla that would be caught by
+the fichero-BOE completeness gate to declare either `internal_only` or an
+`export_exemption_reason`, and refuses `feeds_addressed_casilla` when no chain
+actually reaches an addressed box. Its message enumerates the ways a casilla-keyed
+scan can be fooled, including the one this sweep fell into.
+
+The axis is therefore not merely clean but *already guarded*, and no new gate is
+warranted. Recording the measurement and the trap is the whole value here.
 
 ## The trap, which is the part worth keeping
 
@@ -59,17 +61,6 @@ of the supposed dead ends are addressed by a record and the residue falls to zer
 
 Anyone sweeping export coverage from casilla fields alone will reproduce the same
 237-row false positive.
-
-## The existing validator already adjudicates this
-
-`_validate_export_exemption.py` requires a manifest casilla that would be caught by
-the fichero-BOE completeness gate to declare either `internal_only` or an
-`export_exemption_reason`, and refuses `feeds_addressed_casilla` when no chain
-actually reaches an addressed box. Its message enumerates the ways a casilla-keyed
-scan can be fooled, including the one this sweep fell into.
-
-The axis is therefore not merely clean but *already guarded*, and no new gate is
-warranted. Recording the measurement and the trap is the whole value here.
 
 ## Consistency with the prorrata finding
 

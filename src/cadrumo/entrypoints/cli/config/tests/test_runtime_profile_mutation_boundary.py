@@ -7,9 +7,10 @@ from uuid import uuid4
 
 import pytest
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from .....adapters.local_runtime.profile_mutations import ProfileMutationCompletion, ProfileMutationRunError
-from .....application.user_profile.operations import (
+from .....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationRequest,
     ProfileMutationOperationProjection,
 )

@@ -40,7 +40,8 @@ from cadrumo.application.user_profile.login_interaction import ProfileLoginChoic
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
 from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginMethod, RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 
 pytestmark = [
     pytest.mark.integration,
@@ -98,6 +99,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )

@@ -30,8 +30,7 @@ from .enrollment_access import (
     RuntimeEnrollmentRequest,
 )
 from .operation_access import RuntimeOperationReply, RuntimeOperationRequest
-from .owner_control import RuntimeStopAccepted, RuntimeStopConfirm, RuntimeStopPreview, RuntimeStopPreviewRequest
-from .transport import RuntimeConnectionContext, RuntimeStatusRequest, RuntimeTransportStatus
+from .transport import RuntimeConnectionContext
 
 if TYPE_CHECKING:
     from .profile_worker import ProfileWorkerDrained
@@ -81,10 +80,7 @@ class RuntimeSessionRequest(BaseModel):
 class RuntimeRequest(
     RootModel[
         Annotated[
-            RuntimeStatusRequest
-            | RuntimeStopPreviewRequest
-            | RuntimeStopConfirm
-            | RuntimeProfileLogin
+            RuntimeProfileLogin
             | RuntimeSessionRequest
             | RuntimeOperationRequest
             | RuntimeEnrollmentRequest
@@ -131,7 +127,16 @@ def status_admits_session(
     Only API-key sessions carry an automation grant; a human session has none,
     so callers holding an API-key lease ask for the grant to be active too.
     """
-    admitted = (
+    admitted = _session_is_live_for_profile(status, profile_id=profile_id, session_id=session_id, at=at)
+    if not admitted or not requires_automation_grant:
+        return admitted
+    return _automation_grant_is_live(status, at=at)
+
+
+def _session_is_live_for_profile(
+    status: ProfileAccessStatus, *, profile_id: UUID, session_id: UUID, at: datetime
+) -> bool:
+    return (
         status.connected
         and status.credential_authenticated
         and status.profile_bound
@@ -141,8 +146,9 @@ def status_admits_session(
         and status.session_expires_at > at
         and status.denial is None
     )
-    if not admitted or not requires_automation_grant:
-        return admitted
+
+
+def _automation_grant_is_live(status: ProfileAccessStatus, *, at: datetime) -> bool:
     return (
         status.grant_valid
         and status.grant_state is AuthorityState.ACTIVE
@@ -188,10 +194,7 @@ class RuntimeAccessRefusal(BaseModel):
 class RuntimeReply(
     RootModel[
         Annotated[
-            RuntimeTransportStatus
-            | RuntimeStopPreview
-            | RuntimeStopAccepted
-            | RuntimeSecretReady
+            RuntimeSecretReady
             | RuntimeProfileStatus
             | RuntimeProfileStatusTransfer
             | RuntimeSessionInventoryTransfer

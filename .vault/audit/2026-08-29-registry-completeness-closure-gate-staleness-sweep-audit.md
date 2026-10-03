@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-29'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:390cd7dd15ef094ecf529fba5e13e31b33484a02bdb9dfb1279cb265c1cd49d4'
+body_hash: 'sha256:7f807e43c6ca62378494c14f1ae0622ad0a93de40bba2fd5c70c6954e709945a'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -23,6 +23,18 @@ The registry itself is healthy. The conformance report renders 48 rows, every on
 `registry_validated=true`, so the bundled authority loads and validates at HEAD.
 None of the 53 failures was a registry-data defect. They fall into three classes,
 and the classes matter more than the count.
+
+## Scope
+
+Compare current registry gate results with their recorded subjects after moves, withdrawals, and follow-up corrections.
+
+## Findings
+
+The sweep found stale subjects alongside genuine open work; the gate still had eight failures at the measured checkpoint, while several previously reported holes were either resolved or based on incorrect assumptions.
+
+## Recommendations
+
+Update only moved or withdrawn gate subjects, retain genuine red items, and rerun the closure checks against a stable measured tree.
 
 ## Class 1 -- a change landed without sweeping its dependents
 

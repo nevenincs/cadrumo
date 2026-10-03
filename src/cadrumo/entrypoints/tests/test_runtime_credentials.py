@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
@@ -112,6 +112,7 @@ def test_installed_reference_reauthenticates_only_current_exact_native_credentia
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint,
             product_version=version("cadrumo"),

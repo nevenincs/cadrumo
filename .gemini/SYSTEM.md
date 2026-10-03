@@ -2,8 +2,9 @@
 
 ## Vaultspec Skills
 
-- **aeat-authority-registry-authoring**: Author and enroll a new AEAT modelo or revision in the union/delta registry, discover the latest official release and filing frame, validate minimal live declarations, and publish the requested authority or export targets. Use for registry release authoring, not private taxpayer filing or harness development.
-- **aeat-continuidad-grounding**: Ground or review cross-revision casilla continuity using canonical typed registry data and official AEAT/BOE evidence. Use when assigning a continuidad_id, authoring evolution records, resolving an ambiguous chain, or preparing a continuity worklist.
+- **cadrumo-continuidad-grounding**: Ground or review cross-revision casilla continuity using canonical typed registry data and official AEAT/BOE evidence. Use when assigning a continuidad_id, authoring evolution records, resolving an ambiguous chain, or preparing a continuity worklist.
+- **cadrumo-registry-authoring**: Author and enroll a new AEAT modelo or revision in the union/delta registry, discover the latest official release and filing frame, validate minimal live declarations, and publish the requested authority or export targets. Use for registry release authoring, not private taxpayer filing or harness development.
+- **cadrumo-start**: You must use this skill whenever you are implementing a new feature or orienting yourself in a new session.
 - **vaultspec-adr**: Record a costly decision, place it within accepted decision coverage, and reconcile affected ADR wording.
 - **vaultspec-code-research**: Ground a decision or plan in how real code does it. Use when an ADR or plan needs a blueprint from this or another codebase.
 - **vaultspec-code-review**: Review completed planned work for safety, intent, and quality using applicable verification evidence. Use at the system's review cadence.

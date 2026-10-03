@@ -6,14 +6,16 @@ date: '2026-08-28'
 tier: L2
 related:
   - '[[2026-08-28-test-reconciliation-sweep-adr]]'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:31e4add5dc48b6b96c2dc408b92bd839d30a647007f0fd2aa884da78dda66a72'
+body_hash: 'sha256:4d6a3e89fb86f5b35bb54ac5c8a8759c7d75970b20b94640d169e4ab74ffb937'
 ---
 
 # `test-reconciliation-sweep` plan
 
 ## Description
+
+Restore truthful coverage after the campaign renames by repairing stale gates and ungoverned writers without weakening assertions, then retire abandoned ledger-package relocation debris and make the public-module gate derive its population from the package.
 
 ## Steps
 
@@ -41,4 +43,8 @@ Make the public-module gate complete by construction and repoint every facade im
 
 ## Parallelization
 
+P01 repairs the gates and writer coverage affected by the renames. P02 follows to complete the ledger public-module gate and repoint imports flagged by it; no parallel assignments are recorded.
+
 ## Verification
+
+The reconciliation is complete when each affected gate describes and covers the live surface without weakening its assertion, all selected writers are governed, and the ledger public-module gate derives its module set and imports from defining modules. Every Step in both phases is closed in this plan.

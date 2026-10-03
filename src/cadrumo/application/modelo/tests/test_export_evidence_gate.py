@@ -29,9 +29,9 @@ from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
 from ..export import ModeloExportEvidenceMissingError, _raise_if_ledger_export_evidence_missing
-from ..verification_actions import (
-    _iva_compensation_annual_source_evidence_finding,
-    _iva_selected_scope_evidence_finding,
+from ..verification_iva_evidence import (
+    iva_compensation_annual_source_evidence_finding,
+    iva_selected_scope_evidence_finding,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -153,7 +153,7 @@ def test_export_refuses_a_revision_with_unresolved_selected_scope_iva_evidence(
 
     reopened = CalculationRevision.model_validate_json(revision.model_dump_json())
     assert reopened.source_issues == revision.source_issues
-    finding = _iva_selected_scope_evidence_finding(revision)
+    finding = iva_selected_scope_evidence_finding(revision)
     assert finding is not None
     assert finding.severity.value == "blocking"
     assert finding.message_facts["source_ref_ids"] == f"transaction:{_TX_ID}"
@@ -173,7 +173,7 @@ def test_export_allows_a_revision_with_an_unrouted_non_iva_source_issue(*, opera
     )
 
     _raise_if_ledger_export_evidence_missing(revision)
-    assert _iva_selected_scope_evidence_finding(revision) is None
+    assert iva_selected_scope_evidence_finding(revision) is None
 
 
 def test_export_refuses_m390_when_required_annual_partition_evidence_is_unresolved(
@@ -197,7 +197,7 @@ def test_export_refuses_m390_when_required_annual_partition_evidence_is_unresolv
     with pytest.raises(ModeloExportEvidenceMissingError):
         _raise_if_ledger_export_evidence_missing(revision)
 
-    finding = _iva_compensation_annual_source_evidence_finding(revision)
+    finding = iva_compensation_annual_source_evidence_finding(revision)
     assert finding is not None
     assert finding.severity.value == "blocking"
     assert finding.message_locale_key == "application.modelo.findings.iva_compensation_annual_source_evidence_failure"

@@ -3,21 +3,16 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-27'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:42dc18294055aeef51c7d3555ab72ab48efebf01cdd7285a2f56cc2e56ee12b9'
+body_hash: 'sha256:2fc04bd68260d8fde8449d289e75dcdbe05e49a395e5863629fb4054a44ad8e5'
 related: []
 ---
-
 # `calculation-correctness-campaign` audit: `the restrictive-default class swept across the calculation path`
 
 ## Scope
 
-## Findings
-
-## Recommendations
-
-## What was swept, and why
+### What was swept, and why
 
 `no-silent-under-declaration` names the tell for the direction nothing here
 watches: "a RESTRICTIVE PROVISION USED AS A DEFAULT". A relief that falls back
@@ -32,7 +27,9 @@ a scratch script under the agent's temporary job directory, outside the reposito
 
 Result: 10 relief-side, 9 liability-side. Every relief-side site was read.
 
-## Verdict: the class is clean
+## Findings
+
+### Verdict: the class is clean
 
 None of the ten is a restrictive default. They fall into three honest shapes:
 
@@ -46,7 +43,7 @@ None of the ten is a restrictive default. They fall into three honest shapes:
   not lost, it simply was not in that slice.
 - **Explicit determination required.** See below.
 
-## The reference pattern, worth copying
+### The reference pattern, worth copying
 
 The DANA 2024 reduction is how this is meant to look. It refuses to guess:
 
@@ -60,7 +57,7 @@ The DANA 2024 reduction is how this is meant to look. It refuses to guess:
 Zero appears only after someone explicitly determined the taxpayer ineligible.
 That is a decision on the record, not a default.
 
-## What this does NOT cover
+### What this does NOT cover
 
 The sweep finds fallbacks that are WRITTEN. It cannot find a relief that was
 never modelled, or one modelled with no way to reach it -- for that class see
@@ -68,7 +65,9 @@ the tabaco rung, where a rate and boxes exist but no `IvaCategory` can route to
 them. Nor does it reach a restrictive default expressed as something other than
 a literal zero.
 
-## Status
+## Recommendations
+
+### Status
 
 Closed for the literal-zero-fallback signature. Re-run the probe after any
 change that adds a relief.

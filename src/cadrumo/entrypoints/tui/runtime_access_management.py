@@ -197,7 +197,7 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
         self._resume_uncertain_code = code
         if self._active():
             self.query_one("#runtime-access-status", Static).update(
-                f"{tr('tui.runtime_access.resume')}: {tr('tui.runtime_management.availability.unknown')} ({code})"
+                f"{tr('tui.runtime_access.resume')}: {tr('tui.runtime_access.unknown')} ({code})"
             )
 
     def _resume_fenced(self) -> bool:

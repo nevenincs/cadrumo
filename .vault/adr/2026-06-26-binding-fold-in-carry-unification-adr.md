@@ -3,22 +3,33 @@ tags:
   - '#adr'
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
-modified: '2026-08-15'
-body_hash: 'sha256:ac40338561575ff28d9364a6973686e4119b3c5d29c8b3cc68530dcd2541beba'
+modified: '2026-10-03'
+body_hash: 'sha256:dde2bba9cdd1756a248ee4fa7213fa8eed4705d885b57124e72f1ad962e76abf'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-06-10-period-revision-resolution-adr]]"
   - '[[2026-07-10-binding-fold-in-carry-unification-research]]'
+  - '[[2026-06-26-bindings-architecture-unification-adr]]'
+  - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
+  - '[[2026-06-21-m303-carry-reconciliation-adr]]'
+  - '[[2026-06-21-m390-iva-carry-boxes-adr]]'
 ---
 
 # `binding-fold-in-carry-unification` adr: `fold-in and carry unification: one cross-filing fold-in implementation and one compensacion-carry authority` | (**status:** `accepted`)
 
-> PROPOSED — design-ahead for coordinator review, authored while phase-2.1 code is
-> gated. NOT self-accepted, NOT a code-execution request; EXECUTION sequences after
-> phases 2.1 and 2.2. Phase 2.3 of the bindings-architecture-unification sweep; the
-> canonical direction is the phase + foundational ADRs (no apex).
+> Accepted independent phase 2.3 decision; its plan is complete. The phase label
+> records campaign sequence. Relation folds use a separate `RelationAggregationOp`,
+> as amended below; the rejected central apex is linked only as provenance.
+>
+> Historical proposal banner (2026-06-26; retained for chronology): “PROPOSED —
+> design-ahead for coordinator review, authored while phase-2.1 code is gated. NOT
+> self-accepted, NOT a code-execution request; EXECUTION sequences after phases 2.1
+> and 2.2. Phase 2.3 of the bindings-architecture-unification sweep; the canonical
+> direction is the phase + foundational ADRs (no apex).” That described the
+> pre-execution state.
 
 ## Problem Statement
 
@@ -185,11 +196,9 @@ the live calc value layer that has historically harboured under-declaration defe
 behaviour-preservation must be proven against the full-calc/continuity/oracle suites,
 not asserted. The M303 carve-out and the collision gate must survive the dedup. The
 carry reconciliation intersects in-flight proposed ADRs (#6/#28-adjacent) and must
-preserve their landed results. Execution depends on phases 2.1 + 2.2 and is sequenced
-behind them; this ADR is design-ahead and proposed — no completed change, no acceptance
-ahead of coordinator review.
+preserve their landed results. Execution depended on phases 2.1 + 2.2 and was sequenced behind them. Historical proposal status (2026-06-26): this ADR was design-ahead and proposed, with no completed change or acceptance ahead of coordinator review. Curation update (2026-10-03): the accepted phase ADR and completed plan now govern; that proposal-time sentence is retained as chronology.
 
-Out of scope: the naming homonyms and CLI verb fork (phase 2.4).
+Out of scope of this accepted phase: naming homonyms and CLI verb work are governed by the separate accepted phase 2.4 `binding-vocabulary-cli-cohesion` ADR.
 
 ## Codification candidates
 

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#m200-export-nif-misbinding'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:3fdd19e1a879513dfb09c1c79c7d08cc2367100f753f5ede5ab8e90c41e4c610'
+body_hash: 'sha256:61bf92834af01161f15b81a77f0b260c867f87e2f73436fa8371bc22602e0459'
 related:
   - "[[2026-08-07-m200-export-nif-misbinding-reference]]"
 ---
@@ -61,8 +61,6 @@ delay ships another wrong official filing.
   slot-semantic mismatch, or the same class on a different `draft_attribute`,
   `casilla_id`, or `binding` field, on M200 or any other modelo) — that
   remains genuinely unswept.
-
-## Considerations
 
 ## Considered options
 
@@ -215,8 +213,6 @@ width-sweep's actual boundary (isolated to one field, for one draft
 attribute) rather than a broader "M200-only" claim keeps the ADR's own
 completeness claim honest, consistent with how this codebase treats every
 other completeness claim.
-
-## Rationale
 
 ## Consequences
 

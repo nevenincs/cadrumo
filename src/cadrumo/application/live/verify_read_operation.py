@@ -4,41 +4,39 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import datetime
-from typing import Annotated, Self
-from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
-from ...core.identity.bucket import BucketId
-from ...core.identity.digest import ContentDigest
-from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.identity_check_verdict import IdentityCheckVerdictValue
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...core.time.clock import now
-from ...core.time.utc import validate_utc_aware
+from ...core.operations import OperationEffect
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES, OperationCapabilities
-from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
+from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
-from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .verify import VerifyObservation, VerifyObservationNotFoundError, VerifyService, VerifySurface
+from .live_operation_execution import publish_live_read_report, require_exact_profile_worker
+from .live_operation_registration import build_live_operation_definition, require_live_read_receipt
+from .verify import VerifyObservation, VerifyObservationNotFoundError, VerifyService
 from .verify_ports import VerifyObservationPersistencePort
+from .verify_read_contracts import (
+    VerifyLatestOperationReport,
+    VerifyLatestPublicResultV1,
+    VerifyLatestRequest,
+    VerifyListOperationReport,
+    VerifyListPublicResultV1,
+    VerifyListRequest,
+    VerifyObservationPublicV1,
+    VerifyObservationSummaryPublicV1,
+    VerifyViewOperationReport,
+    VerifyViewRequest,
+)
 
 VERIFY_LIST_DEFINITION_ID = "live.verify.list"
 VERIFY_VIEW_DEFINITION_ID = "live.verify.view"
@@ -48,173 +46,7 @@ _VIEW_PHASES = ("verify-view.read", "verify-view.result")
 _LATEST_PHASES = ("verify-latest.read", "verify-latest.result")
 _MAX_VERIFY_LIST_ROWS = 10_000
 _RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
-_OBSERVATION_ID_PREFIX = Annotated[
-    str,
-    StringConstraints(min_length=1, max_length=64, pattern=r"^[0-9a-f]+$"),
-]
-_NIF = Annotated[str, Field(min_length=1, max_length=32)]
-
-
-class VerifyListRequest(BaseModel):
-    """Filter one exact profile's local verify history."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    surface: VerifySurface | None = None
-    nif: _NIF | None = None
-
-
-class VerifyViewRequest(BaseModel):
-    """Resolve one local verify observation by full digest or unambiguous prefix."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    observation_id: _OBSERVATION_ID_PREFIX
-
-
-class VerifyLatestRequest(BaseModel):
-    """Read the latest stored observation for an exact surface and NIF."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    surface: VerifySurface
-    nif: _NIF
-
-
-class VerifyObservationSummaryPublicV1(BaseModel):
-    """Allowlisted fields already present in the existing verify list row."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    observation_id: ContentDigest
-    surface: VerifySurface
-    nif: _NIF
-    verdict: IdentityCheckVerdictValue
-    expected: IdentityCheckVerdictValue | None
-    matched_expectation: bool | None
-    checked_at: datetime
-
-    @field_validator("checked_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _checked_at_is_utc(cls, value: datetime) -> datetime:
-        return validate_utc_aware(value)
-
-    @model_validator(mode="after")
-    def _expectation_matches_verdict(self) -> Self:
-        if self.expected is None and self.matched_expectation is not None:
-            raise ValueError("verify observation without an expectation carries a match result")
-        if self.expected is not None and self.matched_expectation is not (self.expected == self.verdict):
-            raise ValueError("verify observation expectation result disagrees with its verdict")
-        return self
-
-
-class VerifyListOperationReport(BaseModel):
-    """Private, profile-scoped list operand with only existing list summary fields."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    bucket_id: BucketId
-    rows: tuple[VerifyObservationSummaryPublicV1, ...]
-
-
-class VerifyViewOperationReport(BaseModel):
-    """Selected encrypted observation retained inside operation custody."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    observation: VerifyObservation
-
-
-class VerifyLatestOperationReport(BaseModel):
-    """Private latest row and its lookup coordinates, including an empty state."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    bucket_id: BucketId
-    surface: VerifySurface
-    nif: _NIF
-    observation: VerifyObservation | None
-
-    @model_validator(mode="after")
-    def _observation_matches_query(self) -> Self:
-        if self.observation is not None and (
-            self.observation.bucket_id != self.bucket_id
-            or self.observation.surface is not self.surface
-            or self.observation.nif != self.nif
-        ):
-            raise ValueError("latest verify observation differs from its bucket or lookup coordinates")
-        return self
-
-
-class VerifyObservationPublicV1(VerifyObservationSummaryPublicV1):
-    """Detail row with the existing verify view's exact bucket field."""
-
-    bucket_id: BucketId
-
-
-class VerifyListPublicResultV1(BaseModel):
-    """Closed local verify inventory for an authorized whole-profile read."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    bucket_id: BucketId
-    count: NonNegativeInt
-    rows: tuple[VerifyObservationSummaryPublicV1, ...]
-
-    @model_validator(mode="after")
-    def _count_matches_rows(self) -> Self:
-        if self.count != len(self.rows):
-            raise ValueError("verify observation count disagrees with its rows")
-        return self
-
-
-class VerifyLatestPublicResultV1(BaseModel):
-    """Latest observation fields or the existing all-empty observation state."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    bucket_id: BucketId
-    observation_id: ContentDigest | None
-    surface: VerifySurface
-    nif: _NIF
-    verdict: IdentityCheckVerdictValue | None = None
-    expected: IdentityCheckVerdictValue | None = None
-    matched_expectation: bool | None = None
-    checked_at: datetime | None = None
-
-    @field_validator("checked_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _checked_at_is_utc(cls, value: datetime | None) -> datetime | None:
-        return validate_utc_aware(value) if value is not None else None
-
-    @model_validator(mode="after")
-    def _optional_fields_agree(self) -> Self:
-        row_fields = (self.verdict, self.expected, self.matched_expectation, self.checked_at)
-        if self.observation_id is None and any(value is not None for value in row_fields):
-            raise ValueError("empty latest verify result carries observation fields")
-        if self.observation_id is not None and (self.verdict is None or self.checked_at is None):
-            raise ValueError("latest verify result lacks observation fields")
-        if self.expected is None and self.matched_expectation is not None:
-            raise ValueError("latest verify result without an expectation carries a match result")
-        if self.expected is not None and self.matched_expectation is not (self.expected == self.verdict):
-            raise ValueError("latest verify expectation result disagrees with its verdict")
-        return self
-
-
 VerifyObservationPersistenceFactory = Callable[[str], VerifyObservationPersistencePort]
-
-
-def _exact_bucket(profile_id: UUID, subject_ref: str) -> str:
-    """Refuse a request outside the exact profile worker currently active."""
-    bucket_id = canonical_profile_bucket_id(profile_id)
-    if require_active_bucket_id() != bucket_id or subject_ref != profile_operation_subject(bucket_id):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return bucket_id
 
 
 def _require_bucket(observation: VerifyObservation, bucket_id: str) -> None:
@@ -247,7 +79,9 @@ class VerifyListExecutor:
         self._persistence_factory = persistence_factory
 
     async def execute(self, request: OperationRequest[VerifyListRequest], context: OperationExecutorContext) -> str:
-        bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
+        bucket_id = require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         if request.definition_id != VERIFY_LIST_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_profile_operation_identity(request, context, request.payload.profile_id)
@@ -275,10 +109,8 @@ class VerifyListExecutor:
             return VerifyListOperationReport(bucket_id=bucket_id, rows=rows)
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_LIST_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="verify-list-result"
+        return await publish_live_read_report(
+            context, report, result_phase=_LIST_PHASES[1], effect=OperationEffect.NONE, task_name="verify-list-result"
         )
 
 
@@ -289,7 +121,9 @@ class VerifyViewExecutor:
         self._persistence_factory = persistence_factory
 
     async def execute(self, request: OperationRequest[VerifyViewRequest], context: OperationExecutorContext) -> str:
-        bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
+        bucket_id = require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         if request.definition_id != VERIFY_VIEW_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_profile_operation_identity(request, context, request.payload.profile_id)
@@ -311,10 +145,8 @@ class VerifyViewExecutor:
             return VerifyViewOperationReport(observation=observation)
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_VIEW_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="verify-view-result"
+        return await publish_live_read_report(
+            context, report, result_phase=_VIEW_PHASES[1], effect=OperationEffect.NONE, task_name="verify-view-result"
         )
 
 
@@ -325,7 +157,9 @@ class VerifyLatestExecutor:
         self._persistence_factory = persistence_factory
 
     async def execute(self, request: OperationRequest[VerifyLatestRequest], context: OperationExecutorContext) -> str:
-        bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
+        bucket_id = require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         if request.definition_id != VERIFY_LATEST_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_profile_operation_identity(request, context, request.payload.profile_id)
@@ -351,71 +185,51 @@ class VerifyLatestExecutor:
             return report
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_LATEST_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="verify-latest-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_LATEST_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="verify-latest-result",
         )
-
-
-def _capabilities() -> OperationCapabilities:
-    return RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 
 
 def build_verify_list_definition(persistence_factory: VerifyObservationPersistenceFactory) -> OperationDefinition:
     """Declare encrypted exact-profile verify history with bounded output."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=VERIFY_LIST_DEFINITION_ID,
         request_type=VerifyListRequest,
         result_type=VerifyListOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=VerifyListRequest,
-            executor_type=VerifyListExecutor,
-            build=lambda: VerifyListExecutor(persistence_factory),
-        ),
+        executor_type=VerifyListExecutor,
+        build=lambda: VerifyListExecutor(persistence_factory),
         phase_codes=_LIST_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
     )
 
 
 def build_verify_view_definition(persistence_factory: VerifyObservationPersistenceFactory) -> OperationDefinition:
     """Declare exact-profile detail lookup without releasing raw evidence locator."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=VERIFY_VIEW_DEFINITION_ID,
         request_type=VerifyViewRequest,
         result_type=VerifyViewOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=VerifyViewRequest,
-            executor_type=VerifyViewExecutor,
-            build=lambda: VerifyViewExecutor(persistence_factory),
-        ),
+        executor_type=VerifyViewExecutor,
+        build=lambda: VerifyViewExecutor(persistence_factory),
         phase_codes=_VIEW_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
     )
 
 
 def build_verify_latest_definition(persistence_factory: VerifyObservationPersistenceFactory) -> OperationDefinition:
     """Declare exact-profile latest verify observation with a stable empty state."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=VERIFY_LATEST_DEFINITION_ID,
         request_type=VerifyLatestRequest,
         result_type=VerifyLatestOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=VerifyLatestRequest,
-            executor_type=VerifyLatestExecutor,
-            build=lambda: VerifyLatestExecutor(persistence_factory),
-        ),
+        executor_type=VerifyLatestExecutor,
+        build=lambda: VerifyLatestExecutor(persistence_factory),
         phase_codes=_LATEST_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
     )
 
 
@@ -426,12 +240,10 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     if type(result) is not VerifyListOperationReport:
         raise ValueError("invalid verify list report")
     report = VerifyListOperationReport.model_validate(result, strict=True)
-    require_terminal_receipt_match(
+    require_live_read_receipt(
         receipt,
         definition_id=VERIFY_LIST_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(report.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.NONE,
+        bucket_id=str(report.bucket_id),
         message=_RECEIPT_CONTRADICTION,
     )
     projection = VerifyListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
@@ -446,12 +258,10 @@ def _project_view(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
         raise ValueError("invalid verify view report")
     report = VerifyViewOperationReport.model_validate(result, strict=True)
     observation = report.observation
-    require_terminal_receipt_match(
+    require_live_read_receipt(
         receipt,
         definition_id=VERIFY_VIEW_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(observation.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.NONE,
+        bucket_id=str(observation.bucket_id),
         message=_RECEIPT_CONTRADICTION,
     )
     projection = VerifyObservationPublicV1(**_summary(observation).model_dump(), bucket_id=observation.bucket_id)
@@ -487,12 +297,10 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     if type(result) is not VerifyLatestOperationReport:
         raise ValueError("invalid verify latest report")
     report = VerifyLatestOperationReport.model_validate(result, strict=True)
-    require_terminal_receipt_match(
+    require_live_read_receipt(
         receipt,
         definition_id=VERIFY_LATEST_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(report.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.NONE,
+        bucket_id=str(report.bucket_id),
         message=_RECEIPT_CONTRADICTION,
     )
     projection = _project_latest_report(report)
@@ -574,14 +382,7 @@ __all__ = [
     "VERIFY_LATEST_DEFINITION_ID",
     "VERIFY_LIST_DEFINITION_ID",
     "VERIFY_VIEW_DEFINITION_ID",
-    "VerifyLatestPublicResultV1",
-    "VerifyLatestRequest",
-    "VerifyListPublicResultV1",
-    "VerifyListRequest",
     "VerifyObservationPersistenceFactory",
-    "VerifyObservationPublicV1",
-    "VerifyObservationSummaryPublicV1",
-    "VerifyViewRequest",
     "build_verify_latest_definition",
     "build_verify_latest_registration",
     "build_verify_list_definition",

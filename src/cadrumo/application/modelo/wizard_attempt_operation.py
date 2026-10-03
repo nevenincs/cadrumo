@@ -26,14 +26,10 @@ from ..operations.access_resolution import (
 )
 from ..operations.capabilities import RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -42,12 +38,11 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPortsFactory
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .operation_definitions import (
-    ModeloWorkCalculatePublicResultV2,
-    ModeloWorkCalculateRequest,
     calculate_prepared_modelo_work,
     calculation_public_result,
     prepare_modelo_work_calculation,
 )
+from .work_calculation_contracts import ModeloWorkCalculatePublicResultV2, ModeloWorkCalculateRequest
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .work_missing_input import ModeloWorkMissingInputError
@@ -224,22 +219,16 @@ def build_modelo_work_wizard_attempt_definition(
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
 ) -> OperationDefinition:
     """Record one secure calculation attempt with a typed interactive result."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkWizardAttemptRequest,
         result_type=ModeloWorkWizardAttemptProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloWorkWizardAttemptRequest,
-            executor_type=ModeloWorkWizardAttemptExecutor,
-            build=lambda: ModeloWorkWizardAttemptExecutor(
-                calculation_action_ports_factory=calculation_action_ports_factory,
-                attachment_store_factory=attachment_store_factory,
-            ),
+        executor_type=ModeloWorkWizardAttemptExecutor,
+        build=lambda: ModeloWorkWizardAttemptExecutor(
+            calculation_action_ports_factory=calculation_action_ports_factory,
+            attachment_store_factory=attachment_store_factory,
         ),
-        phase_codes=(MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
         capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 

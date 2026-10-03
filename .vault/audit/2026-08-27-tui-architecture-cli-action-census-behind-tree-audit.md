@@ -3,21 +3,20 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:50bf11038c62b203990298bc21556b5d29848a42aaf08b395bfca7376abbd111'
+body_hash: 'sha256:8cf05760bfa0a952ba61a992bec7775c225db5450fc38491ba98e5b1db1ac358'
 related: []
 ---
-
 # `tui-architecture` audit: `the cli action census lost its modelo rows, so the s24 gate compares nothing`
 
 ## Scope
 
+Check whether the CLI action-disposition census and its S24 partition gate still enumerate current application/modelo actions.
+
 ## Findings
 
-## Recommendations
-
-## Finding
+### Finding
 
 `dev/quality/cli_action_census_dispositions.toml` carries 195 rows and NOT ONE
 of them is under `src/cadrumo/application/modelo/`. The modelo rows were there
@@ -28,7 +27,7 @@ The code they described is not. All 24 modules named by
 with their symbols. So the ledger lost rows describing live code rather than
 recording a campaign that finished.
 
-## What that costs
+### What that costs
 
 `test_modelo_ledger_has_complete_s24_and_reserved_partition` filters the ledger
 by the modelo prefix and compares the result against three declared partitions
@@ -38,7 +37,7 @@ The gate is not enforcing a partition; it is reporting that its corpus is
 empty, and it would report exactly the same thing if the campaign had been
 abandoned.
 
-## It is not an isolated slip
+### It is not an isolated slip
 
 `dev/tests/test_cli_action_census_dispositions.py`
 ::`test_current_tree_ledger_exactly_matches_the_mechanical_live_census` is red
@@ -48,7 +47,9 @@ committed ledger does not adjudicate, among them
 `actions_import.py::import_ledger_transactions` and several
 `actions_lifecycle.py` verbs. The ledger is behind the tree in both directions.
 
-## Not remediated here
+## Recommendations
+
+### Not remediated here
 
 Each row in this file is an ADJUDICATION -- a decision recorded against one
 action. Regenerating the file to make the gates green would manufacture
@@ -57,6 +58,6 @@ is needed is the owner reconciling the census against the tree and re-recording
 the modelo dispositions, or retiring the S24 partitions if that campaign is
 genuinely over.
 
-## Status
+### Status
 
 Open. Both gates are red and honest about it; neither should be silenced.

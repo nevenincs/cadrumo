@@ -37,17 +37,19 @@ from ...application.runtime.worker_authorization import (
 )
 from ...application.runtime.worker_enrollment import (
     WorkerApprovalPhaseResult,
+    WorkerApprovalPublication,
     WorkerApprovalPublished,
     WorkerApprovalReady,
     WorkerApprovalRequest,
 )
-from ...application.user_profile.access_contracts import AccessDenialCode, OperationResponseScopeAllowed
+from ...application.user_profile.access_contracts import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
 from ...application.user_profile.automation_enrollment import AutomationInventory
 from ...core.hashing import canonical_json_bytes
 from ...core.time.clock import now
-from .framing import MAXIMUM_FRAME_BYTES, accept_runtime_handshake, read_document, read_secret, write_document
+from .framing import accept_runtime_handshake
+from .runtime_frame_io import MAXIMUM_FRAME_BYTES, read_document, read_secret, write_document
 from .worker_transport import WorkerChannel, worker_endpoint
 
 
@@ -131,89 +133,26 @@ class WorkerAuthorizationServer:
     def _connection(self, channel: WorkerChannel) -> None:
         request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest | WorkerApprovalRequest | None = None
         try:
-            if (
-                channel.peer.process_id != self._pid
-                or channel.peer.os_owner_id != self.identity.binding.os_owner_id
-                or not self._owns_process(self._pid)
-            ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-            accept_runtime_handshake(
-                channel,
-                identity=RuntimeServerHello(
-                    product_version=version("cadrumo"),
-                    storage_identity=self._endpoint.storage_identity,
-                    boot_id=self.identity.runtime_boot_id,
-                ),
-                deadline=time.monotonic() + 5,
-            )
+            self._verify_worker_channel(channel)
             request = read_document(channel, WorkerAuthorityEnvelope, deadline=time.monotonic() + 5).root
-            if self._owner is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            if request.request.profile_id != self.identity.binding.profile_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            owner = self._request_owner(request)
             if isinstance(request, WorkerApprovalRequest):
                 try:
                     self._approval_phase(channel, request)
                 except BaseException:
                     # A lost phase reply must not strand proof until expiry.
                     # Retirement is peer-bound cleanup and needs no live lease.
-                    self._owner.approval_phase(request.model_copy(update={"phase": "close"}), None)
+                    owner.approval_phase(request.model_copy(update={"phase": "close"}), None)
                     raise
                 return
             permit_id = uuid4()
             guard = (
-                self._owner.automation_inventory(request)
+                owner.automation_inventory(request)
                 if isinstance(request, WorkerAutomationInventoryRequest)
-                else self._owner.authorize(request)
+                else owner.authorize(request)
             )
             with guard as allowed:
-                # No inventory payload can be advertised through an ordinary
-                # permit, and no scope-only response can become an effect permit.
-                if isinstance(request, WorkerAutomationInventoryRequest):
-                    if not isinstance(allowed, WorkerAutomationInventoryAllowed):
-                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                elif isinstance(allowed, WorkerAutomationInventoryAllowed) or (
-                    isinstance(request, WorkerResponseScopeRequest)
-                    != isinstance(allowed, OperationResponseScopeAllowed)
-                ):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                # A queued callback may acquire the profile guard only after
-                # shutdown began. It must not publish a new permit then.
-                if self._stop.is_set():
-                    raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-                instant = self._wall_clock()
-                expires = min(allowed.expires_at, instant + timedelta(seconds=AUTHORITY_SECTION_MAXIMUM_SECONDS))
-                remaining = (expires - instant).total_seconds()
-                if remaining <= 0:
-                    raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
-                deadline = time.monotonic() + remaining
-                if isinstance(request, WorkerAutomationInventoryRequest):
-                    if not isinstance(allowed, WorkerAutomationInventoryAllowed):
-                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                    _require_inventory_ipc_budget(allowed.inventory)
-                    permit = WorkerAutomationInventoryPermit(
-                        request_id=request.request_id,
-                        runtime_boot_id=self.identity.runtime_boot_id,
-                        permit_id=permit_id,
-                        expires_at=expires,
-                        inventory=allowed.inventory,
-                    )
-                    if len(canonical_json_bytes(permit.model_dump(mode="json"))) > MAXIMUM_FRAME_BYTES:
-                        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-                elif isinstance(request, WorkerResponseScopeRequest):
-                    permit = WorkerResponseScopePermit(
-                        request_id=request.request_id,
-                        runtime_boot_id=self.identity.runtime_boot_id,
-                        permit_id=permit_id,
-                        expires_at=expires,
-                    )
-                else:
-                    permit = WorkerAuthorizationPermit(
-                        request_id=request.request_id,
-                        runtime_boot_id=self.identity.runtime_boot_id,
-                        permit_id=permit_id,
-                        expires_at=expires,
-                    )
+                permit, deadline = self._held_permit(request, allowed, permit_id)
                 try:
                     write_document(
                         channel,
@@ -311,26 +250,7 @@ class WorkerAuthorizationServer:
             if command_seen or not isinstance(request, WorkerAuthorizationRequest) or self._owner is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             command_seen = True
-            # The owner validates exact operation/profile/session coordinates
-            # and performs canonical publication on this same lock-owning thread.
-            try:
-                transition = self._owner.approval_publication(request, instruction)
-            except (AutomationCustodyError, ProfileAccessRefusedError) as error:
-                reply = RuntimeAccessRefusal(
-                    request_id=request.request_id,
-                    runtime_boot_id=self.identity.runtime_boot_id,
-                    connection_id=request.connection_id,
-                    code=error.reason,
-                )
-            else:
-                reply = WorkerApprovalPublished(
-                    request_id=request.request_id,
-                    permit_id=permit_id,
-                    command_id=instruction.command_id,
-                    runtime_boot_id=self.identity.runtime_boot_id,
-                    receipt=transition.receipt if transition is not None else None,
-                    published=transition.published if transition is not None else False,
-                )
+            reply = self._publication_result(self._owner, request, instruction, permit_id)
             write_document(channel, reply, deadline=deadline)
 
     def require_healthy(self) -> None:
@@ -347,3 +267,124 @@ class WorkerAuthorizationServer:
         self._thread.join(timeout=timeout)
         if self._thread.is_alive() or self._failed.is_set():
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+    def _request_owner(
+        self, request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest | WorkerApprovalRequest
+    ) -> WorkerAuthorizationOwner:
+        """Require configured authority for the exact worker profile before dispatch."""
+        if self._owner is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        if request.request.profile_id != self.identity.binding.profile_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        return self._owner
+
+    def _verify_worker_channel(self, channel: WorkerChannel) -> None:
+        """Authenticate the retained worker process before accepting any request."""
+        if (
+            channel.peer.process_id != self._pid
+            or channel.peer.os_owner_id != self.identity.binding.os_owner_id
+            or not self._owns_process(self._pid)
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        accept_runtime_handshake(
+            channel,
+            identity=RuntimeServerHello(
+                product_version=version("cadrumo"),
+                storage_identity=self._endpoint.storage_identity,
+                boot_id=self.identity.runtime_boot_id,
+            ),
+            deadline=time.monotonic() + 5,
+        )
+
+    def _held_permit(
+        self,
+        request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
+        allowed: AccessAllowed | OperationResponseScopeAllowed | WorkerAutomationInventoryAllowed,
+        permit_id: UUID,
+    ) -> tuple[WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit, float]:
+        """Build a live exact-family permit while the owning profile guard is held."""
+        _require_allowed_request_family(request, allowed)
+        # A queued callback may acquire the profile guard only after
+        # shutdown began. It must not publish a new permit then.
+        if self._stop.is_set():
+            raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+        instant = self._wall_clock()
+        expires = min(allowed.expires_at, instant + timedelta(seconds=AUTHORITY_SECTION_MAXIMUM_SECONDS))
+        remaining = (expires - instant).total_seconds()
+        if remaining <= 0:
+            raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
+        deadline = time.monotonic() + remaining
+        if isinstance(request, WorkerAutomationInventoryRequest):
+            if not isinstance(allowed, WorkerAutomationInventoryAllowed):
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            _require_inventory_ipc_budget(allowed.inventory)
+            permit = WorkerAutomationInventoryPermit(
+                request_id=request.request_id,
+                runtime_boot_id=self.identity.runtime_boot_id,
+                permit_id=permit_id,
+                expires_at=expires,
+                inventory=allowed.inventory,
+            )
+            if len(canonical_json_bytes(permit.model_dump(mode="json"))) > MAXIMUM_FRAME_BYTES:
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        elif isinstance(request, WorkerResponseScopeRequest):
+            permit = WorkerResponseScopePermit(
+                request_id=request.request_id,
+                runtime_boot_id=self.identity.runtime_boot_id,
+                permit_id=permit_id,
+                expires_at=expires,
+            )
+        else:
+            permit = WorkerAuthorizationPermit(
+                request_id=request.request_id,
+                runtime_boot_id=self.identity.runtime_boot_id,
+                permit_id=permit_id,
+                expires_at=expires,
+            )
+        return permit, deadline
+
+    def _publication_result(
+        self,
+        owner: WorkerAuthorizationOwner,
+        request: WorkerAuthorizationRequest,
+        instruction: WorkerApprovalPublication,
+        permit_id: UUID,
+    ) -> RuntimeAccessRefusal | WorkerApprovalPublished:
+        """Publish on the lock-owning thread and preserve exact custody refusals."""
+        # The owner validates exact operation/profile/session coordinates
+        # and performs canonical publication on this same lock-owning thread.
+        try:
+            transition = owner.approval_publication(request, instruction)
+        except (AutomationCustodyError, ProfileAccessRefusedError) as error:
+            reply = RuntimeAccessRefusal(
+                request_id=request.request_id,
+                runtime_boot_id=self.identity.runtime_boot_id,
+                connection_id=request.connection_id,
+                code=error.reason,
+            )
+        else:
+            reply = WorkerApprovalPublished(
+                request_id=request.request_id,
+                permit_id=permit_id,
+                command_id=instruction.command_id,
+                runtime_boot_id=self.identity.runtime_boot_id,
+                receipt=transition.receipt if transition is not None else None,
+                published=transition.published if transition is not None else False,
+            )
+        return reply
+
+
+def _require_allowed_request_family(
+    request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
+    allowed: AccessAllowed | OperationResponseScopeAllowed | WorkerAutomationInventoryAllowed,
+) -> None:
+    """Refuse inventory or scope capabilities returned for a different request family."""
+    # No inventory payload can be advertised through an ordinary
+    # permit, and no scope-only response can become an effect permit.
+    if isinstance(request, WorkerAutomationInventoryRequest):
+        if not isinstance(allowed, WorkerAutomationInventoryAllowed):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    elif isinstance(allowed, WorkerAutomationInventoryAllowed) or (
+        isinstance(request, WorkerResponseScopeRequest) != isinstance(allowed, OperationResponseScopeAllowed)
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

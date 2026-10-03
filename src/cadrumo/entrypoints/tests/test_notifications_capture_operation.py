@@ -256,7 +256,7 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
             events.append(f"provider-preflight:{profile_id}:{operation is authority}")
 
         executor = build_notifications_capture_definition(
-            composition_factory=lambda: cast(Any, composition),
+            composition_factory=lambda *, operation: cast(Any, composition),
             browser_resources_factory=lambda: cast(Any, resources),
             provider_preflight=provider_preflight,
         ).executor_factory.build()
@@ -280,7 +280,7 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
 
         registration = build_notifications_capture_registration(
             build_notifications_capture_definition(
-                composition_factory=lambda: cast(Any, composition),
+                composition_factory=lambda *, operation: cast(Any, composition),
                 browser_resources_factory=lambda: cast(Any, resources),
                 provider_preflight=lambda _profile_id, _operation: None,
             )
@@ -360,7 +360,7 @@ def test_supervisor_settles_capture_with_fresh_commit_and_dedup_receipts(
             return resource
 
         definition = build_notifications_capture_definition(
-            composition_factory=lambda: cast(Any, composition),
+            composition_factory=lambda *, operation: cast(Any, composition),
             browser_resources_factory=resources_factory,
             provider_preflight=provider_preflight,
         )
@@ -448,7 +448,7 @@ def test_supervisor_settles_capture_with_fresh_commit_and_dedup_receipts(
 
 def test_capture_access_is_whole_profile_and_requires_commit() -> None:
     definition = build_notifications_capture_definition(
-        composition_factory=lambda: cast(Any, object()),
+        composition_factory=lambda *, operation: cast(Any, object()),
         browser_resources_factory=lambda: cast(Any, object()),
         provider_preflight=lambda _profile_id, _operation: None,
     )

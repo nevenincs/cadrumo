@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:faa7041835d665c5f22460392910fb788e5b357e9f4362e0a01bbf6119a7d592'
+body_hash: 'sha256:f335c87c801461b879bfd2091466198744d50491a43f05af089c5079330abf74'
 related:
   - "[[2026-08-28-registry-legal-grounding-windows-orden-kind-temporal-carveout-population-audit]]"
 ---
@@ -13,13 +13,6 @@ related:
 # `registry-legal-grounding-windows` audit: `The modelo-level legal-ref exemption lets a 2024 redaction ground 2020 parameters`
 
 ## Scope
-
-## Findings
-
-## Recommendations
-
-## A finer question than the gate asks
-
 `_check_revision_scoped_legal_windows` validates a **revision's** devengo. But
 parameter *values* carry their own dated windows, and a multi-year parameter can
 hold a value whose window sits outside the window of the provision grounding it.
@@ -28,6 +21,38 @@ Nothing tests that.
 Checking every dated value against its citations' `effective_from` /
 `effective_to`: of **316** dated values, **39** have no cited provision covering
 their own window — 36 in modelo 100, 2 in 360, 1 in 136.
+
+## Findings
+The 39 temporally uncovered values are now fully accounted for. 36 are the M100
+`art-23` rows above; the other three sit outside modelo 100 and outside the
+modelo-level exemption, which makes them the more useful evidence.
+
+**Modelo 360, two rows.** `modelo-360-quarterly-refund-threshold-eur` (400 €) and
+`modelo-360-annual-refund-threshold-eur` (50 €), windowed from 2010-01-01 and
+citing `orden-eha-789-2010:art-4`, effective 2010-04-01. The three-month gap is
+the flag, but the catalogue's own notes give the real problem:
+
+> Articulo 4 de la Orden EHA/789/2010: **plazo de presentacion** del formulario
+> 360 … concluye el 30 de septiembre siguiente al ano natural
+
+Its `required_text` is likewise all deadline language — "Plazo de presentación del
+formulario 360", "30 de septiembre", "año natural". The article states no
+threshold at all, which is exactly the open M360 finding. It is worth recording
+that a **temporal** probe re-derived it: that finding has now been reached three
+independent ways — numerically (neither 400 nor 50 appears in the cited text),
+structurally (LIVA art. 119 is not bundled), and now temporally.
+
+**Modelo 136, one row.** `irpf.lottery_prize_special_levy_rate` = 20 %, windowed
+from 2013-01-01, citing `ley-35-2006:da-33` effective 2020-01-01. Here the value
+is sound: the entry's `required_text` pins "tipo del 20 por ciento" and the
+40.000 € exemption, and its notes describe it as the *current consolidated* DA 33.
+Only one `da-33` entry exists — no earlier redaction is catalogued — so a value
+window opening in 2013 simply reaches back past the only redaction on file. The
+revision is `2026`, so nothing before 2020 is reachable and the excess is inert.
+
+## Recommendations
+
+Do not add a temporal gate until the model-level legal-reference policy and its effect on parameter values are decided.
 
 ## What the M100 rows are
 
@@ -137,35 +162,6 @@ This time the guard was read before anything was concluded. The rule that preven
 the repeat — grep the tests for the casilla id before calling a registry state a
 defect — did its job on a row reached from an entirely different direction, which
 is the strongest evidence available that it is worth keeping.
-
-## The remaining three: list closed
-
-The 39 temporally uncovered values are now fully accounted for. 36 are the M100
-`art-23` rows above; the other three sit outside modelo 100 and outside the
-modelo-level exemption, which makes them the more useful evidence.
-
-**Modelo 360, two rows.** `modelo-360-quarterly-refund-threshold-eur` (400 €) and
-`modelo-360-annual-refund-threshold-eur` (50 €), windowed from 2010-01-01 and
-citing `orden-eha-789-2010:art-4`, effective 2010-04-01. The three-month gap is
-the flag, but the catalogue's own notes give the real problem:
-
-> Articulo 4 de la Orden EHA/789/2010: **plazo de presentacion** del formulario
-> 360 … concluye el 30 de septiembre siguiente al ano natural
-
-Its `required_text` is likewise all deadline language — "Plazo de presentación del
-formulario 360", "30 de septiembre", "año natural". The article states no
-threshold at all, which is exactly the open M360 finding. It is worth recording
-that a **temporal** probe re-derived it: that finding has now been reached three
-independent ways — numerically (neither 400 nor 50 appears in the cited text),
-structurally (LIVA art. 119 is not bundled), and now temporally.
-
-**Modelo 136, one row.** `irpf.lottery_prize_special_levy_rate` = 20 %, windowed
-from 2013-01-01, citing `ley-35-2006:da-33` effective 2020-01-01. Here the value
-is sound: the entry's `required_text` pins "tipo del 20 por ciento" and the
-40.000 € exemption, and its notes describe it as the *current consolidated* DA 33.
-Only one `da-33` entry exists — no earlier redaction is catalogued — so a value
-window opening in 2013 simply reaches back past the only redaction on file. The
-revision is `2026`, so nothing before 2020 is reachable and the excess is inert.
 
 ## What the three add
 

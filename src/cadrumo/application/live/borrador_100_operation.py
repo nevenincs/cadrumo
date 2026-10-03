@@ -9,20 +9,11 @@ the existing multi-save lifecycle is not an atomic transaction.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
-from decimal import Decimal
-from pathlib import Path
-from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, TypeAdapter, model_validator
+from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.casilla_id import CasillaId
-from ...core.filing_year import FilingYear
-from ...core.identity.digest import ContentDigest
-from ...core.identity.hex_ids import SnapshotId
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -33,13 +24,13 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...core.time.clock import now
-from ...domain.calculations.registry.ids import BindingId
 from ..ledger.commit_fence import LedgerCommitAttemptTracker, run_with_ledger_commit_fence
 from ..operations.access_resolution import (
     HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
     HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
     RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
     OperationAccessContext,
+    OperationAccessProfile,
     ResolvedOperationAccess,
     bind_operation_access_profile,
     require_declared_frontend_and_action,
@@ -53,271 +44,41 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.public_period import PublicPeriod
-from ..operations.public_scalar import PublicDecimal, PublicNamedScalar, project_facts
+from ..operations.public_scalar import PublicDecimal, project_facts
 from ..operations.registry import (
     ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .borrador_100 import (
-    Borrador100Snapshot,
-    Borrador100SnapshotRepository,
-    Borrador100SnapshotService,
-    BorradorSourceUrl,
+from .borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository, Borrador100SnapshotService
+from .borrador_100_contracts import (
+    Borrador100ImportExecutionResult,
+    Borrador100ImportProjection,
+    Borrador100ImportRequest,
+    Borrador100QueryDetail,
+    Borrador100QueryExecutionResult,
+    Borrador100QueryProjection,
+    Borrador100ReadExecutionResult,
+    Borrador100ReadProjection,
+    Borrador100ReadRequest,
+    Borrador100SnapshotDetail,
+    summarize_borrador_100,
+    summarize_borrador_100_for_human,
 )
 from .borrador_100_import import prepare_borrador_100_import
-from .borrador_100_operation_ports import (
-    Borrador100ArtefactKind,
-    Borrador100OperationPorts,
-    Borrador100OperationPortsFactory,
-)
-from .snapshot_base import SnapshotLifecycleState, SnapshotStateFilter
+from .borrador_100_operation_ports import Borrador100OperationPorts, Borrador100OperationPortsFactory
 
 BORRADOR_100_READ_OPERATION_DEFINITION_ID = "live.borrador.100.read"
 BORRADOR_100_QUERY_OPERATION_DEFINITION_ID = "live.borrador.100.query"
 BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID = "live.borrador.100.import"
-type Borrador100ReadKind = Literal["list", "view", "latest"]
 _HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 _IMPORT_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
-_BINDING_ID: TypeAdapter[BindingId] = TypeAdapter(BindingId)
-
-
-class Borrador100ReadRequest(CredentialFreeOperationRequest):
-    """Canonical list, unique-prefix view and latest-year selectors."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    kind: Borrador100ReadKind
-    state: SnapshotStateFilter = SnapshotStateFilter.ACTIVE
-    snapshot_id: Annotated[str, Field(min_length=1)] | None = None
-    filing_year: FilingYear | None = None
-
-    @model_validator(mode="after")
-    def _selector(self) -> Self:
-        if (self.snapshot_id is not None) != (self.kind == "view"):
-            raise ValueError("snapshot id belongs only to a view request")
-        if (self.filing_year is not None) != (self.kind == "latest"):
-            raise ValueError("filing year belongs only to a latest request")
-        if self.kind != "list" and self.state is not SnapshotStateFilter.ACTIVE:
-            raise ValueError("state filter belongs only to list requests")
-        return self
-
-
-class Borrador100ImportRequest(BaseModel):
-    """Protected local source reference; the worker captures its bytes once."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    source_path: Path
-    filing_year: FilingYear
-    period: PublicPeriod
-
-    @model_validator(mode="after")
-    def _coordinate(self) -> Self:
-        if self.period.filing_year != self.filing_year:
-            raise ValueError("borrador import period differs from filing year")
-        return self
-
-
-class Borrador100QuerySummary(BaseModel):
-    """Reviewed metadata without source URLs or printed evidence strings."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    snapshot_id: SnapshotId
-    filing_year: FilingYear
-    period: PublicPeriod
-    captured_at: datetime
-    binding_count: Annotated[int, Field(ge=0)]
-    state: SnapshotLifecycleState
-
-    @model_validator(mode="after")
-    def _coordinate(self) -> Self:
-        if self.period.filing_year != self.filing_year:
-            raise ValueError("borrador summary period differs from filing year")
-        if self.captured_at.tzinfo is None or self.captured_at.utcoffset() is None:
-            raise ValueError("borrador capture time requires an explicit timezone")
-        return self
-
-
-class Borrador100SnapshotSummary(Borrador100QuerySummary):
-    """Complete existing human summary, including capture provenance."""
-
-    source_url: BorradorSourceUrl
-
-
-def _validate_bindings(values: tuple[PublicNamedScalar, ...], *, count: int) -> None:
-    keys = tuple(row.key for row in values)
-    if keys != tuple(sorted(set(keys))) or len(values) != count:
-        raise ValueError("borrador bindings must be sorted, unique and complete")
-    for row in values:
-        _BINDING_ID.validate_python(row.key, strict=True)
-        if not isinstance(row.value, (str, PublicDecimal)):
-            raise ValueError("borrador bindings preserve only decimal or text values")
-
-
-def _binding_map(values: tuple[PublicNamedScalar, ...]) -> dict[str, Decimal | str]:
-    result: dict[str, Decimal | str] = {}
-    for row in values:
-        if isinstance(row.value, PublicDecimal):
-            result[row.key] = Decimal(row.value.decimal)
-        elif isinstance(row.value, str):
-            result[row.key] = row.value
-        else:
-            raise ValueError("invalid borrador binding scalar")
-    return result
-
-
-class Borrador100SnapshotDetail(Borrador100SnapshotSummary):
-    """Existing full human view with lossless immutable binding entries."""
-
-    binding_values: tuple[PublicNamedScalar, ...]
-
-    @model_validator(mode="after")
-    def _bindings(self) -> Self:
-        _validate_bindings(self.binding_values, count=self.binding_count)
-        return self
-
-    def binding_map(self) -> dict[str, Decimal | str]:
-        """Restore canonical scalar values for existing human presenters."""
-        return _binding_map(self.binding_values)
-
-
-class Borrador100QueryDetail(Borrador100QuerySummary):
-    """Authorized binding facts without raw source provenance."""
-
-    binding_values: tuple[PublicNamedScalar, ...]
-
-    @model_validator(mode="after")
-    def _bindings(self) -> Self:
-        _validate_bindings(self.binding_values, count=self.binding_count)
-        return self
-
-    def binding_map(self) -> dict[str, Decimal | str]:
-        """Restore the canonical tax/profile binding values."""
-        return _binding_map(self.binding_values)
-
-
-def _validate_read_shape(
-    kind: Borrador100ReadKind,
-    rows: tuple[Borrador100QuerySummary, ...],
-    snapshot: Borrador100QuerySummary | None,
-    filing_year: int | None,
-) -> None:
-    if kind == "list":
-        if snapshot is not None or filing_year is not None:
-            raise ValueError("list result has incompatible snapshot selectors")
-    elif rows or (kind == "view" and (snapshot is None or filing_year is not None)):
-        raise ValueError("view/latest result has incompatible rows or selectors")
-    elif kind == "latest" and (
-        filing_year is None
-        or (
-            snapshot is not None
-            and (snapshot.filing_year != filing_year or snapshot.state is not SnapshotLifecycleState.ACTIVE)
-        )
-    ):
-        raise ValueError("latest result differs from its active-year selector")
-
-
-class Borrador100ReadProjection(BaseModel):
-    """Full human read contract; absent latest snapshot is explicitly retained."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    kind: Borrador100ReadKind
-    rows: tuple[Borrador100SnapshotSummary, ...] = ()
-    snapshot: Borrador100SnapshotDetail | None = None
-    filing_year: FilingYear | None = None
-
-    @model_validator(mode="after")
-    def _shape(self) -> Self:
-        _validate_read_shape(self.kind, self.rows, self.snapshot, self.filing_year)
-        return self
-
-
-class Borrador100QueryProjection(BaseModel):
-    """MCP-safe result schema with no provenance/document prose fields."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    kind: Borrador100ReadKind
-    rows: tuple[Borrador100QuerySummary, ...] = ()
-    snapshot: Borrador100QueryDetail | None = None
-    filing_year: FilingYear | None = None
-
-    @model_validator(mode="after")
-    def _shape(self) -> Self:
-        _validate_read_shape(self.kind, self.rows, self.snapshot, self.filing_year)
-        return self
-
-
-class Borrador100ImportProjection(BaseModel):
-    """Complete human import facts and canonical parser warnings."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    snapshot: Borrador100SnapshotSummary
-    extraction_profile_id: str
-    extraction_coverage: PublicDecimal
-    artefact_kind: Borrador100ArtefactKind
-    source_pdf_sha256: ContentDigest
-    blank_casillas: tuple[CasillaId, ...]
-    warnings: tuple[str, ...]
-
-    @model_validator(mode="after")
-    def _source_receipt(self) -> Self:
-        if self.snapshot.source_url != "file-import:sha256:" + self.source_pdf_sha256:
-            raise ValueError("borrador capture differs from its source digest")
-        if self.blank_casillas != tuple(sorted(set(self.blank_casillas))):
-            raise ValueError("blank casillas must be sorted and unique")
-        if not Decimal("0") <= Decimal(self.extraction_coverage.decimal) <= Decimal("1"):
-            raise ValueError("borrador coverage must be a unit fraction")
-        return self
-
-
-class Borrador100ReadExecutionResult(BaseModel):
-    """Encrypted full human read retention."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    projection: Borrador100ReadProjection
-
-
-class Borrador100QueryExecutionResult(BaseModel):
-    """Encrypted query retention already excludes source evidence."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    projection: Borrador100QueryProjection
-
-
-class Borrador100ImportExecutionResult(BaseModel):
-    """Encrypted import summary and authorized human-only warnings."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    projection: Borrador100ImportProjection
-
-
-def _summary(snapshot: Borrador100Snapshot) -> Borrador100QuerySummary:
-    return Borrador100QuerySummary(
-        snapshot_id=snapshot.snapshot_id,
-        filing_year=snapshot.filing_year,
-        period=PublicPeriod.from_period(snapshot.period),
-        captured_at=snapshot.captured_at,
-        binding_count=len(snapshot.binding_values),
-        state=snapshot.state,
-    )
-
-
-def _human_summary(snapshot: Borrador100Snapshot) -> Borrador100SnapshotSummary:
-    return Borrador100SnapshotSummary(**_summary(snapshot).model_dump(), source_url=snapshot.source_url)
 
 
 def _compose[T: BaseModel](
@@ -389,14 +150,15 @@ class Borrador100ReadExecutor:
                     None
                     if selected is None
                     else Borrador100QueryDetail(
-                        **_summary(selected).model_dump(), binding_values=project_facts(selected.binding_values)
+                        **summarize_borrador_100(selected).model_dump(),
+                        binding_values=project_facts(selected.binding_values),
                     )
                 )
                 return Borrador100QueryExecutionResult(
                     projection=Borrador100QueryProjection(
                         profile_id=payload.profile_id,
                         kind=payload.kind,
-                        rows=tuple(_summary(row) for row in snapshots) if payload.kind == "list" else (),
+                        rows=tuple(summarize_borrador_100(row) for row in snapshots) if payload.kind == "list" else (),
                         snapshot=detail,
                         filing_year=payload.filing_year,
                     )
@@ -405,14 +167,17 @@ class Borrador100ReadExecutor:
                 None
                 if selected is None
                 else Borrador100SnapshotDetail(
-                    **_human_summary(selected).model_dump(), binding_values=project_facts(selected.binding_values)
+                    **summarize_borrador_100_for_human(selected).model_dump(),
+                    binding_values=project_facts(selected.binding_values),
                 )
             )
             return Borrador100ReadExecutionResult(
                 projection=Borrador100ReadProjection(
                     profile_id=payload.profile_id,
                     kind=payload.kind,
-                    rows=tuple(_human_summary(row) for row in snapshots) if payload.kind == "list" else (),
+                    rows=tuple(summarize_borrador_100_for_human(row) for row in snapshots)
+                    if payload.kind == "list"
+                    else (),
                     snapshot=human_detail,
                     filing_year=payload.filing_year,
                 )
@@ -511,7 +276,7 @@ class Borrador100ImportExecutor:
             await context.events.effect(effect)
             projection = Borrador100ImportProjection(
                 profile_id=payload.profile_id,
-                snapshot=_human_summary(captured),
+                snapshot=summarize_borrador_100_for_human(captured),
                 extraction_profile_id=prepared.extraction_profile_id,
                 extraction_coverage=PublicDecimal(decimal=str(prepared.extraction_coverage)),
                 artefact_kind=prepared.artefact_kind,
@@ -524,36 +289,60 @@ class Borrador100ImportExecutor:
         return await await_cancellation_complete(settle(), task_name="borrador-100-import-settlement")
 
 
-def resolve_borrador_100_access(
-    request: OperationRequest[BaseModel], context: OperationAccessContext, /
-) -> ResolvedOperationAccess:
-    """Keep purposes, destinations and complete all-period disclosures distinct."""
-    expected = request.definition_id
-    importing = expected == BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID
-    query = expected == BORRADOR_100_QUERY_OPERATION_DEFINITION_ID
-    if expected not in {
-        BORRADOR_100_READ_OPERATION_DEFINITION_ID,
-        BORRADOR_100_QUERY_OPERATION_DEFINITION_ID,
-        BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
-    }:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+def _borrador_access_policy(
+    definition_id: str,
+) -> tuple[bool, frozenset[OperationFrontendProjection], OperationAccessProfile]:
+    if definition_id == BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID:
+        return (
+            True,
+            _IMPORT_FRONTENDS,
+            HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
+        )
+    if definition_id == BORRADOR_100_QUERY_OPERATION_DEFINITION_ID:
+        return (
+            False,
+            ALL_OPERATION_FRONTENDS,
+            RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
+        )
+    if definition_id == BORRADOR_100_READ_OPERATION_DEFINITION_ID:
+        return (
+            False,
+            _HUMAN_FRONTENDS,
+            HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
+        )
+    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+
+def _require_borrador_payload(
+    request: OperationRequest[BaseModel], *, importing: bool
+) -> Borrador100ReadRequest | Borrador100ImportRequest:
     payload = request.payload
     if type(payload) is not (Borrador100ImportRequest if importing else Borrador100ReadRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if not isinstance(payload, (Borrador100ReadRequest, Borrador100ImportRequest)):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    return payload
+
+
+def _require_borrador_subject(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    payload: Borrador100ReadRequest | Borrador100ImportRequest,
+) -> None:
     if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
         str(payload.profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    frontends = _IMPORT_FRONTENDS if importing else ALL_OPERATION_FRONTENDS if query else _HUMAN_FRONTENDS
-    access_profile = (
-        HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-        if importing
-        else RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-        if query
-        else HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-    )
+
+
+def resolve_borrador_100_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Keep purposes, destinations and complete all-period disclosures distinct."""
+    expected = request.definition_id
+    importing, frontends, access_profile = _borrador_access_policy(expected)
+    payload = _require_borrador_payload(request, importing=importing)
+    _require_borrador_subject(request, context, payload)
     require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
     require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
     return bind_operation_access_profile(
@@ -617,19 +406,13 @@ def build_borrador_100_operation_definitions(
 ) -> tuple[OperationDefinition, ...]:
     """Declare full human reads, safe agent queries and human local PDF import."""
     reads = tuple(
-        OperationDefinition(
+        build_single_phase_definition(
             definition_id=definition_id,
             request_type=Borrador100ReadRequest,
             result_type=result_type,
-            executor_factory=OperationExecutorFactory(
-                request_type=Borrador100ReadRequest,
-                executor_type=Borrador100ReadExecutor,
-                build=lambda query=query: Borrador100ReadExecutor(factory, query=query),
-            ),
-            phase_codes=(definition_id,),
-            interaction_kinds=frozenset(),
+            executor_type=Borrador100ReadExecutor,
+            build=lambda query=query: Borrador100ReadExecutor(factory, query=query),
             capabilities=_capabilities(importing=False),
-            reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
             permitted_frontends=frontends,
         )
         for definition_id, result_type, query, frontends in (
@@ -642,19 +425,13 @@ def build_borrador_100_operation_definitions(
             ),
         )
     )
-    importing = OperationDefinition(
+    importing = build_single_phase_definition(
         definition_id=BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
         request_type=Borrador100ImportRequest,
         result_type=Borrador100ImportExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=Borrador100ImportRequest,
-            executor_type=Borrador100ImportExecutor,
-            build=lambda: Borrador100ImportExecutor(factory),
-        ),
-        phase_codes=(BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=Borrador100ImportExecutor,
+        build=lambda: Borrador100ImportExecutor(factory),
         capabilities=_capabilities(importing=True),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=_IMPORT_FRONTENDS,
     )
     return (*reads, importing)

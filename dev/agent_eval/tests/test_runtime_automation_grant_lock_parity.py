@@ -24,7 +24,8 @@ from textual.widgets import Button, Checkbox, Input, Select, SelectionList, Stat
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.adapters.local_runtime.automation_decision import run_automation_decision
 from cadrumo.adapters.local_runtime.automation_inventory import read_automation_inventory
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
@@ -33,7 +34,7 @@ from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRu
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
-from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     administration_subject,
@@ -91,11 +92,10 @@ from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.launcher import main
 from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
 from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
-from cadrumo.entrypoints.tui.secret.automation_requester import (
-    AutomationRequestOutcome,
-    RuntimeAutomationRequesterScreen,
-)
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginMethod, RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from cadrumo.entrypoints.tui.secret.automation_requester_contracts import AutomationRequestOutcome
+from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 
 __all__ = ["authority_operation"]
 

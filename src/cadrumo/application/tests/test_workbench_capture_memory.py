@@ -28,9 +28,9 @@ from ..overview.home import HomeAccountSession, HomeSessionPosture
 from ..workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchMemoSlot
 from ..workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
-    SecureProfileWorkbenchGenerationReadDoorV1,
-    WorkbenchGenerationV1,
 )
+from ..workbench_generation_contracts import WorkbenchGenerationV1
+from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

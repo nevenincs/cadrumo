@@ -27,31 +27,25 @@ from ..calculations.observations_repository import (
     ObservationSourceKind,
 )
 from ..operations.access_resolution import (
-    ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_single_period_admission,
+    bind_replayed_or_fresh_single_period_access,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_identity
+from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .filing_record_list_operation import ModeloFilingRecordListEntryProjection
+from .filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from .filing_record_ownership import load_profile_filing_record
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
 
@@ -293,19 +287,13 @@ def build_modelo_filing_record_view_definition(
     factory: VerificationRepositoryBundleFactory,
 ) -> OperationDefinition:
     """Declare a credential-free, recorded, nonmutating filing view."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
         request_type=ModeloFilingRecordViewRequest,
         result_type=ModeloFilingRecordViewProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloFilingRecordViewRequest,
-            executor_type=ModeloFilingRecordViewExecutor,
-            build=lambda: ModeloFilingRecordViewExecutor(factory),
-        ),
-        phase_codes=(MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloFilingRecordViewExecutor,
+        build=lambda: ModeloFilingRecordViewExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -317,38 +305,17 @@ def build_modelo_filing_record_view_registration(
     """Bind observation and result disclosure to the admitted receipt period."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID or not isinstance(
-            payload, ModeloFilingRecordViewRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        require_access_request_profile_identity(
+        payload = require_access_request_profile_payload(
             request,
-            payload_profile_id=payload.profile_id,
+            definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
+            payload_type=ModeloFilingRecordViewRequest,
             access_profile_id=context.profile_id,
         )
-
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            periods = require_single_period_admission(
-                admitted, profile_id=context.profile_id, definition_id=request.definition_id
-            )
-        else:
-            if context.authority_operation is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            period = _resolve_period(
-                payload,
-                factory,
-                operation=context.authority_operation,
-            ).to_period()
-            periods = frozenset({period})
-
-        return bind_operation_access_profile(
+        return bind_replayed_or_fresh_single_period_access(
             context,
             LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
             definition_id=request.definition_id,
-            periods=periods,
+            fresh_period=lambda operation: _resolve_period(payload, factory, operation=operation).to_period(),
         )
 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(

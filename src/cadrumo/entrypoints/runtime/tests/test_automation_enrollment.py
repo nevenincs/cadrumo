@@ -21,8 +21,9 @@ from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
-from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE, AutomationControlStore
+from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
@@ -277,6 +278,7 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: server_native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         with ThreadPoolExecutor(max_workers=3) as pool:
             running = pool.submit(server.serve)
@@ -493,6 +495,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: server_native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         with ThreadPoolExecutor(max_workers=3) as pool:
             running = pool.submit(server.serve)

@@ -8,7 +8,9 @@ from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect
 from ...domain.transactions.models import Transaction
 from .actions_manual import ledger_transaction_result_payload
-from .classify_operation import LedgerClassifyOperationResult
+from .classify_result_contracts import (
+    LedgerClassifyOperationResult,
+)
 from .llm_classification_ports import LLMSplitApplyResult, LLMSuggestionRejectionResult
 from .llm_review_contracts import bound_ledger_llm_projection
 from .llm_review_operand import LedgerLlmReviewedOperand

@@ -9,7 +9,7 @@ from threading import Timer
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 
-from ..posix import PosixRuntimeEndpoint
+from ..posix_endpoint import PosixRuntimeEndpoint
 from ..windows import WindowsRuntimeEndpoint
 
 

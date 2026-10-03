@@ -17,7 +17,11 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.user_profile.values import UserProfileFact
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+)
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
@@ -28,18 +32,9 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from .access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
+from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
-from .censal_access import (
-    profile_censal_access_disclosure,
-    require_admitted_profile_censal_request,
-)
+from .censal_access import bind_whole_profile_censal_access
 from .cotejo_apply import apply_cotejo
 
 if TYPE_CHECKING:
@@ -229,42 +224,8 @@ def resolve_censal_file_import_operation_access(
 ) -> ResolvedOperationAccess:
     """Resolve one whole-profile import with an explicit local COMMIT action."""
     _validated_censal_import_request(request, context)
-    require_admitted_profile_censal_request(request, context)
-    disclosure = profile_censal_access_disclosure(context)
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.COMMIT,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                }
-            ),
-            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-            periods=frozenset(),
-            allow_period_independent=True,
-            requires_all_periods=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+    return bind_whole_profile_censal_access(
+        request, context, actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS, provider=Availability.NOT_REQUIRED
     )
 
 

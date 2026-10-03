@@ -11,7 +11,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....application.ledger.evidence_followup_operation import (
+from ....application.ledger.evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LedgerEvidenceAttachmentViewRequest,
 )

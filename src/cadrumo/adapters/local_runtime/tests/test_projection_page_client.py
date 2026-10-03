@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from functools import lru_cache
 from threading import Condition
 from types import SimpleNamespace
-from typing import cast
+from typing import NoReturn, cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -26,6 +26,7 @@ from ....application.operations.persistence.replay import OperationReplayStatus
 from ....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicContractSetV1,
+    OperationPublicDefinitionContractV1,
     OperationRegistry,
     OperationSchemaIdentityV1,
 )
@@ -44,11 +45,18 @@ from ....application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
-from ....application.user_profile.view_operation import PROFILE_VIEW_OPERATION_DEFINITION_ID, ProfileViewPageKind
+from ....application.user_profile.view_operation import (
+    PROFILE_VIEW_OPERATION_DEFINITION_ID,
+    ProfileViewOperationRequest,
+    ProfileViewPageKind,
+)
 from ....core.hashing import canonical_json_bytes, sha256_hex
 from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake, read_document, write_document
-from ..frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
+from ..frontend_client import RuntimeFrontendClient
+from ..frontend_client_contracts import RuntimeFrontendRefusedError
+from ..frontend_profile_view_client import RuntimeProfileViewFrontend
+from ..runtime_frame_io import read_document, write_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -419,7 +427,7 @@ def test_profile_view_terminal_refusal_exposes_registered_refusal_code_without_r
     started: list[object] = []
     observed: list[object] = []
 
-    def contract_lookup(definition_id: str, *, deadline: float) -> object:
+    def contract_lookup(definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
         del deadline
         assert definition_id == PROFILE_VIEW_OPERATION_DEFINITION_ID
         return contract
@@ -438,23 +446,36 @@ def test_profile_view_terminal_refusal_exposes_registered_refusal_code_without_r
         observed.append(operation_id)
         return observation
 
-    def result(*_args: object, **_kwargs: object) -> object:
-        raise AssertionError("a refused terminal projection must not request its result")
+    class RefusedProfileViewClient(RuntimeProfileViewFrontend):
+        """Exercise the real collection capability with refused operation replies."""
 
-    client = cast(
-        RuntimeFrontendClient,
-        SimpleNamespace(
-            profile_id=profile_id,
-            contract=contract_lookup,
-            submit=submit,
-            start=start,
-            observe=observe,
-            result=result,
-        ),
-    )
+        def __init__(self) -> None:
+            self._profile_id = profile_id
+
+        @override
+        def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
+            return contract_lookup(definition_id, deadline=deadline)
+
+        @override
+        def submit(self, payload: ProfileViewOperationRequest, *, deadline: float) -> str:
+            return submit(payload, deadline=deadline)
+
+        @override
+        def start(self, operation_id: str, *, deadline: float) -> None:
+            start(operation_id, deadline=deadline)
+
+        @override
+        def observe(self, operation_id: str, *, deadline: float) -> OperationObservationSuccessV1:
+            return observe(operation_id, deadline=deadline)
+
+        @override
+        def result(self, *_args: object, **_kwargs: object) -> NoReturn:
+            raise AssertionError("a refused terminal projection must not request its result")
+
+    client = RefusedProfileViewClient()
 
     with pytest.raises(RuntimeFrontendRefusedError) as raised:
-        RuntimeFrontendClient.read_profile_view(client, (ProfileViewPageKind.FACTS,))
+        client.read_profile_view((ProfileViewPageKind.FACTS,))
 
     assert raised.value.reason == refusal_code
     assert len(submitted) == len(started) == len(observed) == 1

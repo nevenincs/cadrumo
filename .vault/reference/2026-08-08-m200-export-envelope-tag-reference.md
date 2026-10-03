@@ -3,13 +3,17 @@ tags:
   - '#reference'
   - '#m200-export-envelope-tag'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:467955c141eafc53e2e8fc5288c19310c0a98c8505bc8381cb7eb6c0e92fd472'
+body_hash: 'sha256:99bea277d989307e25b9e5a35641df01ec1b8df0716606f1c955481dbae7efa8'
 related: []
 ---
 
 # `m200-export-envelope-tag` reference: `M200 fichero-BOE envelope tag reconstruction grounding`
+
+## Summary
+
+This reference reconciles AEAT's M200 file-envelope specification with the current export registry, identifying the missing open and closing tags and AUX markers.
 
 ## What AEAT's own spec says (decisive, previously unread)
 

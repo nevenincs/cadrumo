@@ -18,10 +18,12 @@ import pytest
 from pydantic import BaseModel
 
 from ....adapters.local_runtime.installation import runtime_installation
+from ....adapters.local_runtime.login_policy import compose_runtime_login_policy
 from ....adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from ....adapters.local_runtime.server import RuntimeTransportServer
 from ....adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
-from ....adapters.local_runtime.windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
+from ....adapters.local_runtime.windows import WindowsRuntimeEndpoint
+from ....adapters.local_runtime.windows_channel import WindowsRuntimeChannel
 from ....adapters.local_runtime.worker_authorization import WorkerAuthorizationServer
 from ....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -37,10 +39,9 @@ from ....application.runtime.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAutomationInventoryRequest,
 )
-from ....application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.automation_custody_port import AutomationCustodyError
-from ....core.config import load_settings
+from ....core.config import load_settings, override_settings
 from ...runtime.profile_connections import RuntimeProfileConnections
 
 __all__ = [
@@ -293,7 +294,8 @@ def observe_native_runtime_failures(
             raise
 
     try:
-        ProfileWorkerProcess._exchange = observe_worker_exchange
+        exchange_patch = pytest.MonkeyPatch()
+        exchange_patch.setattr(ProfileWorkerProcess, "_exchange", observe_worker_exchange)
         cast(Any, server._failed).set = observe_failed_set
         cast(Any, profiles).operation = observe_profile_operation
         cast(Any, WorkerAuthorizationServer)._held_body = observe_held_body
@@ -304,7 +306,7 @@ def observe_native_runtime_failures(
         cast(Any, WorkerAuthorizationServer)._held_body = original_held_body
         cast(Any, profiles).operation = original_operation
         cast(Any, server._failed).set = original_failed_set
-        ProfileWorkerProcess._exchange = original_exchange
+        exchange_patch.undo()
 
 
 @contextmanager
@@ -313,27 +315,13 @@ def _runtime_profile_state(tmp_path: Path) -> Generator[None]:
         yield
 
 
-class _NativeLogin:
-    login_id = "cli-descendant-test-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            locked=False,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
-
-
 @contextmanager
 def native_cli_profile_server(
     storage_root: Path,
     *,
     failure_observer: Callable[[RuntimeFailureObservation], None] | None = None,
 ) -> Iterator[None]:
-    """Serve a real verified worker against a synthetic OS/native store port."""
+    """Serve a real worker with explicit development session admission and a synthetic native store."""
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
     endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
@@ -344,12 +332,17 @@ def native_cli_profile_server(
         runtime_installation(
             storage_root=storage_root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
         )
+        with override_settings(cadrumo_dev_runtime_session_override="1"):
+            login_policy = compose_runtime_login_policy(
+                os_owner_id=owner_id(), runtime_boot_id=boot, stop=stop, native_inventory=None
+            )
         profiles = RuntimeProfileConnections(
             storage_root=storage_root,
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _NativeLogin(),
+            capture_login=login_policy.capture,
+            login_inventory=login_policy.inventory,
             secret_store=lambda: native,
         )
         profiles.prepare_registry()

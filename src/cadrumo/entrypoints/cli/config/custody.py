@@ -161,7 +161,7 @@ def _login_through_the_prompt(
     """
     from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 
-    from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+    from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
     from ....application.operations.registry import OperationFrontendProjection
     from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
     from ....application.user_profile.login_session import (
@@ -342,7 +342,7 @@ __all__ = ["config_login", "config_logout"]
 
 def _require_current_profile_login(client: RuntimeFrontendClient) -> None:
     """Require the exact connected authenticated runtime session before selecting its pointer."""
-    from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+    from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
     from ....application.user_profile.access_contracts import AccessDenialCode
 
     current = client.status().status

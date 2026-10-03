@@ -46,6 +46,7 @@ def _registry() -> OperationRegistry:
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=build_operator_scope_ports(),
         censal_fetch_port=fetch_censal_datos,
+        provider_preflight=lambda _profile_id, _operation: None,
     )
     return OperationRegistry(
         definitions=(definition,),
@@ -90,9 +91,9 @@ def test_registered_censal_review_resolves_exact_profile_and_policy_axes() -> No
         assert resolved.policy.allow_period_independent and resolved.policy.periods == frozenset()
         assert resolved.policy.published_authority is context.published_authority
         assert resolved.policy.backend is Availability.AVAILABLE
-        assert resolved.policy.provider is (
-            Availability.NEEDS_USER if action is AccessAction.START else Availability.NOT_REQUIRED
-        )
+        # Provider readiness is the bound worker's preflight; a START policy
+        # demanding it is refused ``provider_required`` before the worker runs.
+        assert resolved.policy.provider is Availability.NOT_REQUIRED
         assert resolved.policy.transaction_authority_required is False
         if action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
             expected_projection = OPERATION_OBSERVATION_PROJECTION_ID

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:feb293a7080f93d61812e2ff16671a5e04f9c054cae01aa8c80b93abe55eb599'
+body_hash: 'sha256:de0e2ee00a100acb11bdc60c1874ad36634cb046d59de1102ce9990c629bee84'
 related:
   - "[[2026-08-06-llm-package-split-research]]"
   - "[[2026-08-06-llm-package-split-enforcement-and-disposition-audit]]"
@@ -972,7 +972,7 @@ section states that D5 removed the consent exception so it "no longer exists in 
 which was true of D5 alone and stopped being true when D8a landed. Amending only this
 record would have left the corpus self-contradictory in the opposite direction.
 
-## Status note
+## Acceptance-readiness update
 
 This record stays `proposed`. The quantitative precondition an honesty review placed on
 moving it off `proposed` — a full trace of every figure against the stamped key — **is now

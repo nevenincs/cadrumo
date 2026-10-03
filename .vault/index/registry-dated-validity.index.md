@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-dated-validity'
 date: '2026-08-30'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c44d0c2ac50be01451eba00e85f72c1785f966af5ca56958030b15a70200a39f'
+body_hash: 'sha256:af7a9d220a98e767a6973949f5416abfd4d8c30e76e1835ae2110f8b882fe286'
 related:
   - '[[2026-08-27-registry-dated-validity-adr]]'
   - '[[2026-08-27-registry-dated-validity-audit]]'
@@ -15,7 +15,6 @@ related:
   - '[[2026-08-27-registry-dated-validity-plan]]'
   - '[[2026-08-27-registry-dated-validity-research]]'
   - '[[2026-09-04-registry-dated-validity-event-date-keyed-parameters-adr]]'
-  - '[[2026-09-04-registry-dated-validity-plan]]'
   - '[[2026-09-04-registry-dated-validity-registry-read-placement-adr]]'
   - '[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]'
 ---
@@ -45,7 +44,6 @@ Auto-generated index of all documents tagged with `#registry-dated-validity`.
 ### plan
 
 - `2026-08-27-registry-dated-validity-plan` - `registry-dated-validity` plan
-- `2026-09-04-registry-dated-validity-plan` - `registry-dated-validity` plan
 
 ### research
 

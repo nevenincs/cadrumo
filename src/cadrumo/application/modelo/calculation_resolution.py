@@ -306,6 +306,24 @@ def _bound_text_casilla_inputs(
     return projected
 
 
+def _binding_replay_overrides(
+    resolved_bindings: Mapping[BindingId, Decimal],
+    resolved_enum_bindings: Mapping[BindingId, str],
+    resolved_date_bindings: Mapping[BindingId, date],
+    resolved_boolean_bindings: Mapping[BindingId, bool] | None,
+) -> dict[BindingId, str]:
+    """Serialize admitted decimal, enum, date and boolean channels before relation de-duplication."""
+    binding_overrides = dict(
+        sorted(
+            [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
+            + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
+            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
+            + [(k.strip(), PERSISTED_BOOLEAN_BINDING_TOKENS[v]) for k, v in (resolved_boolean_bindings or {}).items()],
+        ),
+    )
+    return binding_overrides
+
+
 def build_calculation_replay_payloads(
     *,
     resolved_inputs: Mapping[CasillaId, Decimal],
@@ -333,13 +351,8 @@ def build_calculation_replay_payloads(
     is dropped; a relation entry that disagrees is kept, and the revision's
     channel-uniqueness invariant refuses it rather than choosing a winner.
     """
-    binding_overrides = dict(
-        sorted(
-            [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
-            + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
-            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
-            + [(k.strip(), PERSISTED_BOOLEAN_BINDING_TOKENS[v]) for k, v in (resolved_boolean_bindings or {}).items()],
-        ),
+    binding_overrides = _binding_replay_overrides(
+        resolved_bindings, resolved_enum_bindings, resolved_date_bindings, resolved_boolean_bindings
     )
     relation_overrides = {
         relation_id: value

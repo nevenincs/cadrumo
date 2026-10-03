@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from contextlib import AbstractContextManager
-from dataclasses import replace
 from datetime import date
 from pathlib import Path
 from typing import Protocol
@@ -27,7 +26,6 @@ from ...core.operations import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
-    OperationInteractionKind,
     profile_operation_subject,
 )
 from ...core.register_scoping_signal import RegisterScopingSignal
@@ -37,7 +35,6 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
-from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -49,27 +46,17 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationEventEmitter, OperationExecutorContext, retain_failed_operation_resources
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
 from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .filed_data_capture import (
-    FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
-    FILED_HISTORY_DECLARATION_REFUSAL_CODE,
-    FILED_HISTORY_DISCOVERY_REFUSAL_CODE,
-    FILED_HISTORY_IVA_WALLET_REFUSAL_CODE,
-    FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE,
-    FILED_HISTORY_PAIR_PROGRESS_UNIT,
-    FILED_HISTORY_PAIR_REFUSAL_CODE,
+from .filed_data_ports import FiledDataCapturePort, FiledEffectGuard
+from .filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
+from .filed_history_events import (
     FILED_HISTORY_PHASE_DECLARATION_CAPTURE,
     FILED_HISTORY_PHASE_DISCOVERY,
     FILED_HISTORY_PHASE_FINALIZATION,
@@ -79,15 +66,12 @@ from .filed_data_capture import (
     FILED_HISTORY_PHASE_PERSISTENCE,
     FILED_HISTORY_PHASE_PROVENANCE,
     FILED_HISTORY_PHASE_REGISTER_ACCESS,
-    FILED_HISTORY_STAGE_REFUSAL_CODE,
     FiledHistoryEventSink,
-    FiledHistoryOnboardingRun,
-    FiledHistoryPairOutcome,
-    pull_filed_history,
 )
-from .filed_data_ports import FiledDataCapturePort, FiledEffectGuard
+from .filed_history_pull import pull_filed_history
 from .filed_observation_ports import FiledObservationPersistencePorts
 from .iva_remote_state_ports import IvaRemoteStatePort
+from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
 from .notification_ports import NotificationsPorts
 from .session import LiveSessionWriteReceipt, SessionWriteReporter
 
@@ -594,17 +578,13 @@ def build_filed_history_operation_definition(
             provider_preflight=provider_preflight,
         )
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=FILED_HISTORY_OPERATION_DEFINITION_ID,
         request_type=FiledHistoryOperationRequest,
         result_type=FiledHistoryOnboardingRun,
-        executor_factory=OperationExecutorFactory(
-            request_type=FiledHistoryOperationRequest,
-            executor_type=FiledHistoryOperationExecutor,
-            build=build,
-        ),
+        executor_type=FiledHistoryOperationExecutor,
+        build=build,
         phase_codes=_FILED_HISTORY_PHASES,
-        interaction_kinds=frozenset[OperationInteractionKind](),
         action_reference=ActionReference(
             action_id=OPERATOR_ACTION_CATALOGUE.lookup("operator.live.filed.pull_all").action_id
         ),
@@ -628,10 +608,6 @@ def build_filed_history_operation_definition(
             ),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
-        ),
     )
 
 
@@ -643,15 +619,12 @@ def resolve_filed_history_access(
     Provider readiness is checked by the bound worker before browser I/O; the
     runtime's access policy cannot infer it from an agent request.
     """
-    if request.definition_id != FILED_HISTORY_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, FiledHistoryOperationRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
+    return resolve_whole_profile_capture_access(
+        request,
+        context,
+        definition_id=FILED_HISTORY_OPERATION_DEFINITION_ID,
+        payload_type=FiledHistoryOperationRequest,
     )
-    return replace(resolved, policy=policy)
 
 
 def build_filed_history_operation_registration(
@@ -663,47 +636,21 @@ def build_filed_history_operation_registration(
     distinct projection resolved through the registered result projector --
     never the private :class:`FiledHistoryOnboardingRun` itself.
     """
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id="live.filed-history.pull.request",
-            schema_version=1,
-            model_type=definition.request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id="live.filed-history.pull.result",
-            schema_version=1,
-            model_type=FiledHistoryPublicResultV1,
-        ),
+        public_result_type=FiledHistoryPublicResultV1,
         result_projector=_project_filed_history_result,
         access_resolver=resolve_filed_history_access,
     )
 
 
 __all__ = [
-    "FILED_HISTORY_DECLARATION_PROGRESS_UNIT",
-    "FILED_HISTORY_DECLARATION_REFUSAL_CODE",
-    "FILED_HISTORY_DISCOVERY_REFUSAL_CODE",
-    "FILED_HISTORY_IVA_WALLET_REFUSAL_CODE",
-    "FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE",
     "FILED_HISTORY_OPERATION_DEFINITION_ID",
-    "FILED_HISTORY_PAIR_PROGRESS_UNIT",
-    "FILED_HISTORY_PAIR_REFUSAL_CODE",
     "FILED_HISTORY_PHASE_CLEANUP",
-    "FILED_HISTORY_PHASE_DECLARATION_CAPTURE",
-    "FILED_HISTORY_PHASE_DISCOVERY",
     "FILED_HISTORY_PHASE_EXECUTION",
-    "FILED_HISTORY_PHASE_FINALIZATION",
-    "FILED_HISTORY_PHASE_IVA_WALLET",
-    "FILED_HISTORY_PHASE_NOTIFICATIONS",
-    "FILED_HISTORY_PHASE_PAIR_WALK",
-    "FILED_HISTORY_PHASE_PERSISTENCE",
     "FILED_HISTORY_PHASE_PREFLIGHT",
-    "FILED_HISTORY_PHASE_PROVENANCE",
-    "FILED_HISTORY_PHASE_REGISTER_ACCESS",
     "FILED_HISTORY_PHASE_RESULT",
     "FILED_HISTORY_PHASE_SETTLEMENT",
-    "FILED_HISTORY_STAGE_REFUSAL_CODE",
     "FiledHistoryComposition",
     "FiledHistoryCompositionFactory",
     "FiledHistoryEvidenceNoticeV1",

@@ -3,9 +3,8 @@ tags:
   - '#adr'
   - '#modelo-200-base-determination'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:5e80d5530481d6b7afeaf4dc880f1a2b27c983609c2c6524d692fed8ad9d0bbb'
-related: []
+modified: '2026-10-03'
+body_hash: 'sha256:413c04470340c2aca329c8b1a05213fe0a6e09d1ecbb483081fe40260b867336'
 related:
   - '[[2026-06-04-modelo-200-base-determination-research]]'
 ---
@@ -14,7 +13,7 @@ related:
 
 ## Problem Statement
 
-Round-30 CLI persona testimonials surfaced, and a coordinator reproduction confirmed,
+At authoring, Round-30 CLI persona testimonials surfaced, and a coordinator reproduction confirmed,
 a legal-soundness hole in the Impuesto sobre Sociedades (Modelo 200) calculation: the
 verify gate grants `verified_complete` on a draft that under-declares. Concrete repro
 (SL company, ejercicio 2024): supply only the resultado contable
@@ -24,14 +23,14 @@ to `0`. `work verify` then returns `completeness_status = complete`,
 `granted_verificado_completo = true`, `finding_count = 0` — i.e. a €140,000-profit
 company is allowed to verify (and a human to then file) a €0-tax return.
 
-The root cause is that the base imponible casilla `DP200014:00552` is declared
+At that time, the root cause was that the base imponible casilla `DP200014:00552` is declared
 `input_kind = "manual"`, `required = false`, with no formula deriving it from the
-resultado contable. The Modelo 200 revision declares only five formulas; the IS
+resultado contable. At authoring, the Modelo 200 revision declared only five formulas; the IS
 base-determination chain (resultado contable ± correcciones al resultado contable −
 compensación de bases imponibles negativas − reserva de capitalización → base
-imponible) is not modeled. Once the base is entered, the downstream chain is correct
+imponible) was not modeled. When a base was entered, the downstream chain was correct
 (`01330 = 00552 + 01033 − 01034`; `00562 = 01330 × 00558 / 100`, tipo grounded), but
-the base itself never derives, so a filer who supplies the accounting result expecting
+the base itself did not derive, so a filer who supplies the accounting result expecting
 the base to follow gets a silent zero.
 
 This ADR is the result of the round-30 testimonial audit plus the round-29/30 legal
@@ -56,7 +55,7 @@ commit `5531c8560`); this ADR addresses what the now-working gate must actually 
 - **The verify gate now enforces** (post `5531c8560`) and supports per-modelo
   `verification_predicates` (DSL ops `cap_le_when_positive`, `implies_nonzero`; finding
   kinds `BLOCKING_RULE`, advisory) declared in `verification_expectations` TOMLs.
-- **No clean guard exists.** Making `00552` `required = true` false-positives on
+- **No precise blocking guard existed at authoring.** Making `00552` `required = true` false-positives on
   loss/zero-base companies (which declare via `00027`, «base imponible negativa o
   cero») and would red existing M200 flows; a `BLOCKING_RULE` `implies_nonzero` from
   resultado contable to base false-positives on legitimate zero-base cases (negative
@@ -155,6 +154,27 @@ I→III).
   would compute a *wrong* base — worse than an honest zero — so Phase 2 must be complete
   per-correccion before `00552` flips to computed.
 
+## Implementation status reconciliation (2026-10-03)
+
+The original two-phase plan has landed in the Modelo 200 2024 revision. The registry
+formulas derive `DP200014:00550` from accounting result and stored correction subtotals
+(`src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/formulas/0001-declarations.toml:15-27`),
+then derive `DP200014:00552` as the non-negative base after reserva and applied BIN
+(`.../formulas/0001-declarations.toml:36-60`). The same file derives `DP200014:01330`
+from the computed base at lines 69-81. The casilla classification and calculation
+chain are covered by
+`src/cadrumo/domain/calculations/registry/tests/test_modelo_200_base_determination.py`,
+which asserts both bases are computed and checks the positive-result and published
+cuota cases. The revision's verification expectation also reconciles `00550` and
+`00552` when present.
+
+The advisory predicate introduced in Phase 1 remains non-blocking. With the base now
+computed, a positive accounting result and zero computed base can reflect declared
+reductions, so it still asks the operator to confirm that outcome rather than treating
+zero as an undetermined manual field. Its registry comment still describes the check
+as interim "until the base imponible is derived directly"; that comment is documentation
+drift, not a change to the accepted base formula. This dated status note records the
+implemented decision and does not alter its legal grounding or infer new authority.
 ## Codification candidates
 
 - **Rule slug:** `no-silent-under-declaration`.

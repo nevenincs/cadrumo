@@ -9,7 +9,7 @@ cuota-diferencial formula). But the landing commit claimed "verified end-to-end:
 calculates -> verifies" while coverage stopped at that resolver unit. This module
 closes that gap with the REAL operator pipeline:
 ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` (draft build)
-followed by ``verify_modelo_revision`` (verify), with the first-year flag derived
+followed by ``verify_modelo_revision_with_preconditions`` (verify), with the first-year flag derived
 the production way - from the persisted profile, NOT passed in by the test.
 
 Setup that triggers the live first-year flag
@@ -64,7 +64,7 @@ from ....application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
@@ -238,7 +238,7 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
         # 2) Verify runs end-to-end over the draft - the closure of the overstated
         # "verified end-to-end" claim. We assert the verify gate produces a report for
         # this revision with no crash (grant/block verdict is not the subject here).
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -246,7 +246,7 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
             workflow_profile=TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime("GENERAL")),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
-        )
+        ).report
         assert report.calculation_revision_id == result.revision.calculation_revision_id, (
             "IS-3: verify must run end-to-end over the first-year M200 draft and return a report for the same "
             f"revision; got {report.calculation_revision_id!r} != {result.revision.calculation_revision_id!r}"

@@ -54,7 +54,8 @@ from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.theme import resolve_theme_name
 from cadrumo.entrypoints.tui.declarations.controller import DeclarationsWorkspaceScreen
 from cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm import BulkConfirmScreen
-from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList, CasillaListEntry
+from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList
+from cadrumo.entrypoints.tui.modelo.workbench.casilla_list_models import CasillaListEntry
 from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorPanel, CasillaEditorScreen
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, workbench_progress

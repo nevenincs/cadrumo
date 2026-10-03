@@ -7,7 +7,7 @@ revision_id = "2013-2022"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "501ab091f738d58eade5ae66489507c39216095d751965968dcc11a710dd6077"
+source_state_digest = "47b558be2dab02f579e34309eb23e7f1532dfe689f5704a3d1c220d38cda0a20"
 placements = [
     { casilla_id = "decl.complementaria", kind = "on_form", box_number = "121" },
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
@@ -22,7 +22,9 @@ placements = [
     { casilla_id = "decl.total-perceptores", kind = "on_form" },
     { casilla_id = "decl.total-retenciones", kind = "on_form" },
     { casilla_id = "perc.base-retencion", kind = "on_form" },
+    { casilla_id = "perc.ciudad-nacimiento", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "perc.clave-personalidad", kind = "on_form", box_number = "117" },
+    { casilla_id = "perc.codigo-pais-nacimiento", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "perc.fecha-nacimiento", kind = "on_form" },
     { casilla_id = "perc.fecha-pago", kind = "on_form" },
     { casilla_id = "perc.fecha-sorteo", kind = "on_form" },

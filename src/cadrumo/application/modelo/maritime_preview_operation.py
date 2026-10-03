@@ -17,7 +17,7 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import FormulaId, LegalRefId, SourceRefId
@@ -31,14 +31,10 @@ from ..operations.access_resolution import (
 )
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -176,16 +172,13 @@ def _projection(profile_id: UUID, preview: ModeloMaritimeExemptionPreview) -> Mo
 
 
 def _request(request: OperationRequest[BaseModel], *, profile_id: UUID) -> ModeloMaritimePreviewRequest:
-    payload = request.payload
-    if (
-        request.definition_id != MODELO_MARITIME_PREVIEW_OPERATION_DEFINITION_ID
-        or type(payload) is not ModeloMaritimePreviewRequest
-        or not isinstance(payload, ModeloMaritimePreviewRequest)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != profile_id or request.subject_ref != profile_operation_subject(str(profile_id)):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return payload
+    return require_access_request_profile_payload(
+        request,
+        definition_id=MODELO_MARITIME_PREVIEW_OPERATION_DEFINITION_ID,
+        payload_type=ModeloMaritimePreviewRequest,
+        access_profile_id=profile_id,
+        exact_type=True,
+    )
 
 
 class ModeloMaritimePreviewExecutor:
@@ -237,19 +230,13 @@ class ModeloMaritimePreviewExecutor:
 
 def build_modelo_maritime_preview_definition(factory: ModeloMaritimePreviewPortsFactory) -> OperationDefinition:
     """Enroll the existing private CLI calculation without additional frontends."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_MARITIME_PREVIEW_OPERATION_DEFINITION_ID,
         request_type=ModeloMaritimePreviewRequest,
         result_type=ModeloMaritimePreviewProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloMaritimePreviewRequest,
-            executor_type=ModeloMaritimePreviewExecutor,
-            build=lambda: ModeloMaritimePreviewExecutor(factory),
-        ),
-        phase_codes=(MODELO_MARITIME_PREVIEW_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloMaritimePreviewExecutor,
+        build=lambda: ModeloMaritimePreviewExecutor(factory),
         capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 

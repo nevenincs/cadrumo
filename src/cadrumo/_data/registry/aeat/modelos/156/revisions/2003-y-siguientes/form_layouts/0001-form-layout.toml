@@ -7,7 +7,7 @@ revision_id = "2003-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "bdad25d02c1611cce11dd797989fd3292ef3914c5f931c8147a1546900ba20c6"
+source_state_digest = "a5c25ebb5585e9815e9f54bdfbdddc6188f5a8534c0df4e638b8139ec0069ab3"
 placements = [
     { casilla_id = "afiliado-nif", kind = "on_form" },
     { casilla_id = "afiliado-nombre", kind = "on_form" },
@@ -31,7 +31,7 @@ placements = [
     { casilla_id = "numero-identificativo-anterior", kind = "on_form" },
     { casilla_id = "numero-justificante", kind = "on_form" },
     { casilla_id = "numero-total-afiliados", kind = "on_form" },
-    { casilla_id = "persona-relacion", kind = "on_form" },
+    { casilla_id = "persona-relacion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
 
 [[revisions.2003-y-siguientes.form_layouts.pages]]
@@ -44,11 +44,10 @@ id = "general"
 heading_key = "modelo.schema.156.form.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "declarante-razon-social" },
-    { kind = "field", id = "field-2", casilla_id = "persona-relacion" },
-    { kind = "field", id = "field-3", casilla_id = "numero-justificante" },
-    { kind = "field", id = "field-4", casilla_id = "declaracion-complementaria-sustitutiva" },
-    { kind = "field", id = "field-5", casilla_id = "numero-identificativo-anterior" },
-    { kind = "field", id = "field-6", casilla_id = "numero-total-afiliados" },
+    { kind = "field", id = "field-2", casilla_id = "numero-justificante" },
+    { kind = "field", id = "field-3", casilla_id = "declaracion-complementaria-sustitutiva" },
+    { kind = "field", id = "field-4", casilla_id = "numero-identificativo-anterior" },
+    { kind = "field", id = "field-5", casilla_id = "numero-total-afiliados" },
 ]
 
 [[revisions.2003-y-siguientes.form_layouts.pages]]

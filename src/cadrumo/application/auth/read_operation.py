@@ -24,8 +24,9 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_UPDATE_C
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.registry import (
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -58,9 +59,6 @@ from .diagnostics_ports import AuthDiagnosticPersistencePort
 from .operator import inspect_operator_auth, test_operator_auth
 from .operator_probe_ports import OperatorProbePorts
 from .operator_scope_ports import OperatorScopePorts
-
-_FRONTENDS = frozenset(OperationFrontendProjection)
-
 
 _ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT})
 
@@ -153,14 +151,14 @@ def resolve_auth_read_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Limit all phases and result disclosure to the exact human profile."""
-    payload = request.payload
-    if type(payload) is not AuthReadRequest or request.definition_id != AUTH_READ_OPERATION_DEFINITION_ID:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=_ACTIONS)
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=AUTH_READ_OPERATION_DEFINITION_ID,
+        payload_type=AuthReadRequest,
+        access_profile_id=context.profile_id,
+        exact_type=True,
+    )
+    require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=_ACTIONS)
     disclosures = operation_disclosures(
         context,
         observed_by=frozenset({AccessAction.OBSERVE}),
@@ -236,7 +234,7 @@ def build_auth_read_definition(ports_factory: Callable[[UUID], AuthReadPorts]) -
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=_FRONTENDS,
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

@@ -11,15 +11,11 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
@@ -101,22 +97,14 @@ def build_ledger_participation_definition(
     ports: LedgerActionPortsFactory, participation: TransactionParticipationIndexRepositoryFactory
 ) -> OperationDefinition:
     """Declare one local read without COMMIT or external-provider capability."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID,
         request_type=LedgerParticipationRequest,
         result_type=LedgerParticipationProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerParticipationRequest,
-            executor_type=LedgerParticipationExecutor,
-            build=lambda: LedgerParticipationExecutor(ports, participation),
-        ),
-        phase_codes=(LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerParticipationExecutor,
+        build=lambda: LedgerParticipationExecutor(ports, participation),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

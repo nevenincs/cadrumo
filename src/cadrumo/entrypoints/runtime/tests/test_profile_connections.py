@@ -78,7 +78,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
 from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.operations import (
+from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileFieldMutationOperationRequest,
     ProfileMutationOperationProjection,
 )
@@ -173,6 +173,7 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
             capture_login=lambda _channel: native_login,
             secret_store=lambda: enrollment.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         clients: list[VerifiedRuntimeConnection] = []
         with ThreadPoolExecutor(max_workers=1) as pool:

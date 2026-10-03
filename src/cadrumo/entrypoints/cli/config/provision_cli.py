@@ -71,7 +71,7 @@ from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
     from ....application.local_reader import LocalReaderRoleStatus, RoleModelTarget
-    from ....application.local_reader_operation import (
+    from ....application.local_reader_contracts import (
         LocalReaderModelOutcome,
         LocalReaderProvisionOutcome,
         LocalReaderProvisionRequest,
@@ -221,7 +221,7 @@ def _provision(request: OperationRequest[LocalReaderProvisionRequest]) -> LocalR
     """Run one provisioning request with the host's process and fitness adapters."""
     from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
     from ....adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
-    from ....application.local_reader_operation import provision_local_reader
+    from ....application.local_reader_provisioning import provision_local_reader
 
     return asyncio.run(
         provision_local_reader(
@@ -239,7 +239,7 @@ def _roles(item: LocalReaderModelOutcome) -> list[str]:
 
 def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
     """Load every resolved model and emit the envelope, exiting 2 unless all are loaded."""
-    from ....application.local_reader_operation import (
+    from ....application.local_reader_contracts import (
         build_local_reader_load_request,
     )
 
@@ -264,7 +264,7 @@ def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRo
 
 def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
     """Run the one-shot setup and emit its per-step envelope, exiting 2 when a step stopped it."""
-    from ....application.local_reader_operation import (
+    from ....application.local_reader_contracts import (
         build_local_reader_setup_request,
     )
 
@@ -587,7 +587,7 @@ def _fitness_condition_lines(rows: tuple[LocalReaderRoleStatus, ...]) -> tuple[s
 
 def _emit_provision_install(ctx: typer.Context, *, confirm: bool) -> None:
     """Install the runtime when consented and emit the envelope, exiting 2 unless installed."""
-    from ....application.local_reader_operation import (
+    from ....application.local_reader_contracts import (
         build_local_reader_install_request,
     )
 
@@ -629,7 +629,7 @@ def _emit_provision_start(ctx: typer.Context) -> None:
 
 def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
     """Remove the resolved model and emit the envelope, exiting 2 unless every removal was confirmed."""
-    from ....application.local_reader_operation import (
+    from ....application.local_reader_contracts import (
         build_local_reader_remove_request,
     )
 

@@ -91,17 +91,21 @@ def _selected_registry_reconciliation_context(
     return snapshot, expectations
 
 
-def _expectations_are_counterparts(
-    left: VerificationExpectationDefinition,
-    right: VerificationExpectationDefinition,
+def _expectations_have_reciprocal_shape(
+    left: VerificationExpectationDefinition, right: VerificationExpectationDefinition
 ) -> bool:
-    """Recognise one reciprocal cross-model contract without naming its facts."""
+    """Require both cross-model operands and exclude other expectation shapes."""
     if not left.reconcile_when_present_casilla_ids or not right.reconcile_when_present_casilla_ids:
         return False
     if left.computed_casilla_ids or right.computed_casilla_ids:
         return False
-    if left.reconciliation_total_casilla_ids or right.reconciliation_total_casilla_ids:
-        return False
+    return not (left.reconciliation_total_casilla_ids or right.reconciliation_total_casilla_ids)
+
+
+def _expectation_comparison_policy_matches(
+    left: VerificationExpectationDefinition, right: VerificationExpectationDefinition
+) -> bool:
+    """Compare numeric policy, causes and legal provenance in their original order."""
     if Decimal(left.tolerance) != Decimal(right.tolerance):
         return False
     if str(left.rounding) != str(right.rounding):
@@ -112,7 +116,17 @@ def _expectations_are_counterparts(
         sorted(str(cause) for cause in right.discrepancy_causes)
     ):
         return False
-    if frozenset(str(ref) for ref in left.legal_refs) != frozenset(str(ref) for ref in right.legal_refs):
+    return frozenset(str(ref) for ref in left.legal_refs) == frozenset(str(ref) for ref in right.legal_refs)
+
+
+def _expectations_are_counterparts(
+    left: VerificationExpectationDefinition,
+    right: VerificationExpectationDefinition,
+) -> bool:
+    """Recognise one reciprocal cross-model contract without naming its facts."""
+    if not _expectations_have_reciprocal_shape(left, right):
+        return False
+    if not _expectation_comparison_policy_matches(left, right):
         return False
     # Reciprocal source references are the registry's cross-surface identity;
     # requiring an intersection prevents pairing unrelated expectations that

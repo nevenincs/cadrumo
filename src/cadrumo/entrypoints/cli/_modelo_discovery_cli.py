@@ -9,7 +9,7 @@ from uuid import UUID
 
 import typer
 
-from ...application.modelo.query_read_operation import (
+from ...application.modelo.query_read_contracts import (
     ModeloBindingOverride,
     ModeloBindingRowV1,
     ModeloBindingsListRequest,

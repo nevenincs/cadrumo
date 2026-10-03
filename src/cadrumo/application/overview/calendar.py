@@ -925,8 +925,12 @@ def holiday_coverage_statement(coverage: _DeadlineHolidayCoverage, territory: _C
     national-only or unverified date as final.
     """
     if coverage is _DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY:
+        if territory is None:
+            return _tr("application.overview.calendar.holiday_coverage.national_and_territory_without_name")
         return _tr("application.overview.calendar.holiday_coverage.national_and_territory", territory=str(territory))
     if coverage is _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED:
+        if territory is None:
+            return _tr("application.overview.calendar.holiday_coverage.territory_unverified_without_name")
         return _tr("application.overview.calendar.holiday_coverage.territory_unverified", territory=str(territory))
     if coverage is _DeadlineHolidayCoverage.NATIONAL_ONLY:
         return _tr("application.overview.calendar.holiday_coverage.national_only")

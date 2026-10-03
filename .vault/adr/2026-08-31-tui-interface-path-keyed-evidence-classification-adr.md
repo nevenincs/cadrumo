@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:abafc87e373552a314c67bed3bb7d1defa17fcf876bbd3bbdec0cb6e7db311b4'
+body_hash: 'sha256:a5eff79fd10b6e293391c09dfde525838c5471f070f84727621715b0589954f1'
 related:
   - "[[2026-08-11-tui-interface-plan]]"
   - "[[2026-08-31-tui-interface-command-path-population-measurements-reference]]"
@@ -65,6 +65,13 @@ compares. Snapshots get the opposite guarantee: never hand-edited, expected to
 diverge, and asserted stale. The single shared mechanism is not a path scheme
 but the requirement that every generated evidence artefact be enrolled with
 something that notices it rotting.
+
+## Constraints
+
+- Keep current-tree inventories keyed by paths, because the path set is the fact they measure and their detector re-derives it from the tree.
+- Keep the benchmark manifest as an immutable, content-addressed past measurement; its staleness is expected and asserted.
+- The shared gate checks that every generated evidence artefact has an observing test, not that every detector is equally strong. Retain the snapshot's reasoned exclusion.
+- A retired artefact must leave the tree and its enrolment together, or the gate should continue to fail.
 
 ## Implementation
 

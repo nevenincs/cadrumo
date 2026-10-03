@@ -30,6 +30,8 @@ from .election import (
     WORKFORCE_CONDITIONED_METHODS,
     AmortizationMethod,
     DigitOrder,
+    ElectionReference,
+    EvidenceReference,
     LowValueElection,
     require_euro_cents,
     require_free_depreciation_facts,
@@ -177,8 +179,8 @@ class ScheduledAmortizationCharge(BaseModel):
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     method: AmortizationMethod = AmortizationMethod.LINEAR
-    free_depreciation_election_reference: str | None = Field(default=None, min_length=1, max_length=256)
-    free_depreciation_new_material_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
+    free_depreciation_election_reference: ElectionReference | None = None
+    free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: Decimal | None = None
     free_depreciation_annual_cap: Decimal | None = None
 

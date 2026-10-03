@@ -12,7 +12,7 @@ from typing import Literal, TypedDict
 
 import typer
 
-from ...application.live.borrador_100_operation import Borrador100SnapshotSummary
+from ...application.live.borrador_100_contracts import Borrador100SnapshotSummary
 from ...application.live.snapshot_base import SnapshotLifecycleState, SnapshotLifecycleStateValue, SnapshotStateFilter
 from ...application.operations.public_period import PublicPeriod
 from ...core.i18n.render import tr

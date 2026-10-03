@@ -11,14 +11,14 @@ from ...application.flows.errors import FlowError
 from ...application.flows.line_frontend import LineFlowFrontend
 from ...application.modelo.action_errors import modelo_work_wizard_retry_exhausted_precondition
 from ...application.modelo.calculation_request_fields import ModeloCalculationInputFieldsV1, ModeloCalculationOverride
-from ...application.modelo.operation_definitions import (
-    ModeloWorkCalculateCallerContext,
-    ModeloWorkCalculatePublicResultV2,
-    ModeloWorkCalculateRequest,
-)
 from ...application.modelo.wizard_attempt_operation import (
     ModeloWorkWizardAttemptCalculated,
     ModeloWorkWizardAttemptRequest,
+)
+from ...application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculateCallerContext,
+    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculateRequest,
 )
 from ...application.modelo.work_wizard import (
     ModeloWorkWizardRun,

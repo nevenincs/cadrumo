@@ -20,7 +20,7 @@ from ..aeat_sync.workspace import (
     AeatSyncWorkspaceProjectionV1,
 )
 from ..ledger.workspace import LedgerWorkspaceProjectionV1
-from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
+from ..modelo.declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceProjectionV1
 from ..review.filter import LedgerReviewStatus
 from .workbench import (

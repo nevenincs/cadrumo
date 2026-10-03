@@ -26,6 +26,7 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
@@ -41,7 +42,6 @@ from ...application.modelo.edit_refusal_projection import (
     ModeloEditCalculationPrerequisiteV1,
     ModeloEditRefusalProjectionStore,
 )
-from ...application.modelo.operation_definitions import ModeloEditApplySubmissionV1
 from ...application.modelo.workbench_operations import (
     MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
     MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,

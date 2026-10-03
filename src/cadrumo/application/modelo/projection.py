@@ -586,6 +586,25 @@ def _profile_projection_bindings(
     )
 
 
+def _apply_zero_maritime_projection_default(
+    declared_binding_ids: set[BindingId],
+    merged_bindings: dict[BindingId, Decimal],
+    merged_boolean_bindings: dict[BindingId, bool],
+) -> None:
+    """Supply the path only when both statutory maritime income channels are zero."""
+    maritime_path = _binding_id("renta-maritime-path-rebeca", surface="project modelo 100 maritime path")
+    maritime_gross = _binding_id("renta-maritime-gross-navigation-income", surface="project modelo 100 maritime gross")
+    maritime_salary = _binding_id("renta-maritime-annual-salary", surface="project modelo 100 maritime salary")
+    if (
+        maritime_path in declared_binding_ids
+        and maritime_path not in merged_boolean_bindings
+        and merged_bindings.get(maritime_gross) == Decimal("0")
+        and merged_bindings.get(maritime_salary) == Decimal("0")
+    ):
+        # Either statutory path yields zero when there is no maritime income.
+        merged_boolean_bindings[maritime_path] = False
+
+
 def project_modelo_100_from_m130(
     *,
     year: int,
@@ -653,17 +672,7 @@ def project_modelo_100_from_m130(
     merged_enum_bindings = {**verb_baseline_enum_bindings, **profile_enum_bindings, **extra_enum_bindings}
     merged_date_bindings = dict(profile_date_bindings)
     merged_boolean_bindings = {**verb_baseline_boolean_bindings, **profile_boolean_bindings}
-    maritime_path = _binding_id("renta-maritime-path-rebeca", surface="project modelo 100 maritime path")
-    maritime_gross = _binding_id("renta-maritime-gross-navigation-income", surface="project modelo 100 maritime gross")
-    maritime_salary = _binding_id("renta-maritime-annual-salary", surface="project modelo 100 maritime salary")
-    if (
-        maritime_path in declared_binding_ids
-        and maritime_path not in merged_boolean_bindings
-        and merged_bindings.get(maritime_gross) == Decimal("0")
-        and merged_bindings.get(maritime_salary) == Decimal("0")
-    ):
-        # Either statutory path yields zero when there is no maritime income.
-        merged_boolean_bindings[maritime_path] = False
+    _apply_zero_maritime_projection_default(declared_binding_ids, merged_bindings, merged_boolean_bindings)
 
     try:
         engine_result = calculate_registry_snapshot(

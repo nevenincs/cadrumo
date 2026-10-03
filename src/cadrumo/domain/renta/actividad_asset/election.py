@@ -14,7 +14,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
+from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -22,6 +22,12 @@ from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
+
+ElectionReference = Annotated[str, Field(min_length=1, max_length=256)]
+"""Operator reference to an election or approval act an asset relies on."""
+
+EvidenceReference = Annotated[str, Field(min_length=1, max_length=512)]
+"""Operator reference to documentary evidence supporting an election."""
 
 
 class DirectEstimationRegime(StrEnum):
@@ -147,7 +153,7 @@ class ApprovedAmortizationPlan(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    approval_reference: str = Field(min_length=1, max_length=256)
+    approval_reference: ElectionReference
     approval_kind: PlanApprovalKind
     submitted_on: date
     resolved_on: date
@@ -180,7 +186,7 @@ class DefiniteUsefulLife(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     ends_on: date
-    evidence_reference: str = Field(min_length=1, max_length=512)
+    evidence_reference: EvidenceReference
 
 
 class SmallEnterpriseEvidence(BaseModel):
@@ -188,7 +194,7 @@ class SmallEnterpriseEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    evidence_reference: str = Field(min_length=1, max_length=512)
+    evidence_reference: EvidenceReference
     made_available_on: date
     prior_period_net_turnover: Decimal
 
@@ -203,8 +209,8 @@ class LowValueElection(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    election_reference: str = Field(min_length=1, max_length=256)
-    new_material_evidence_reference: str = Field(min_length=1, max_length=512)
+    election_reference: ElectionReference
+    new_material_evidence_reference: EvidenceReference
     unit_acquisition_value: Decimal
 
     @field_validator("unit_acquisition_value")
@@ -218,8 +224,8 @@ class ChargingInfrastructureEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    technical_documentation_reference: str = Field(min_length=1, max_length=512)
-    installation_certificate_reference: str = Field(min_length=1, max_length=512)
+    technical_documentation_reference: EvidenceReference
+    installation_certificate_reference: EvidenceReference
 
 
 class RenewableInstallationPurpose(StrEnum):
@@ -275,7 +281,7 @@ class RenewableSelfConsumptionEvidence(BaseModel):
 
     purpose: RenewableInstallationPurpose
     documentation_kind: RenewableDocumentationKind
-    documentation_reference: str = Field(min_length=1, max_length=512)
+    documentation_reference: EvidenceReference
     made_available_on: date
     replaces_fossil_installation: bool
     required_by_building_code: bool
@@ -310,7 +316,7 @@ class ActivityAssetAmortizationElection(BaseModel):
     useful_life: DefiniteUsefulLife | None = None
     small_enterprise: SmallEnterpriseEvidence | None = None
     low_value: LowValueElection | None = None
-    research_development_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
+    research_development_evidence_reference: EvidenceReference | None = None
     charging_infrastructure: ChargingInfrastructureEvidence | None = None
     renewable_self_consumption: RenewableSelfConsumptionEvidence | None = None
 
@@ -430,6 +436,8 @@ __all__ = [
     "DefiniteUsefulLife",
     "DigitOrder",
     "DirectEstimationRegime",
+    "ElectionReference",
+    "EvidenceReference",
     "LowValueElection",
     "PlanAnnualAmount",
     "PlanApprovalKind",

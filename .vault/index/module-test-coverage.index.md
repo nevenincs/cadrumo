@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#module-test-coverage'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1788330471bf789d9dc0542b4f1326168173393491495914f132b5be10c6bc5d'
+body_hash: 'sha256:90412b73a83ad575dcd9d774288e58d6744cb52f5371ffc90ce5fe4e08aa904b'
 related:
-  - '[[2026-06-01-module-test-coverage-plan]]'
-  - '[[2026-06-04-module-test-coverage-adr]]'
   - '[[2026-06-04-module-test-coverage-research]]'
 ---
 
@@ -18,14 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#module-test-coverage`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-module-test-coverage-adr` - `module-test-coverage` adr: `warning closeout authority alignment` | (**status:** `accepted`)
-
-### plan
-
-- `2026-06-01-module-test-coverage-plan` - `module-test-coverage` plan
 
 ### research
 

@@ -2913,6 +2913,7 @@ tui:
     sessions_empty: No hay sesiones actuales.
     sessions_locked: 'Sesiones bloqueadas: {session_ids}'
     title: Acceso al perfil
+    unknown: Desconocido
     view_automation: Ver automatización
   runtime_login:
     cancel: Cancelar
@@ -2936,50 +2937,6 @@ tui:
     refused: Se ha rechazado el inicio de sesión.
     submit: Iniciar sesión
     title: Iniciar sesión en un perfil
-  runtime_management:
-    availability:
-      available: Disponible
-      refused: Rechazado
-      unavailable: No disponible
-      unknown: Desconocido
-      unsupported: No compatible
-    busy: Comprobando el estado del servicio local…
-    disable: Bajo demanda
-    enable: Iniciar al abrir sesión
-    kind:
-      linux_user_service: Servicio de usuario de Linux
-      macos_agent: Agente de inicio de macOS
-      windows_task: Tarea programada de Windows
-    labels:
-      binding_matches: Vinculado a esta instalación
-      listener: Punto de escucha
-      login_autostart: Se inicia al abrir sesión
-      manager_availability: Disponibilidad del gestor
-      manager_kind: Tipo de gestor
-      process_state: Estado del proceso
-      provisioned: Configurado
-    listener:
-      draining: Finalizando
-      ready: Listo
-      refused: Rechazado
-      unavailable: No disponible
-      unknown: Desconocido
-    not_reported: Sin datos
-    open: Administrar servicio
-    open_help: Consulta, inicia o configura el servicio local.
-    process:
-      running: En ejecución
-      starting: Iniciando
-      stopped: Detenido
-      unknown: Desconocido
-    refused: No se ha podido confirmar el estado del servicio.
-    start: Iniciar
-    stop: Detener
-    stop_accepted: Detención aceptada; el servicio está finalizando.
-    stop_cancel: Mantener en ejecución
-    stop_confirm: Detener todos los perfiles y trabajos
-    stop_scope: ¿Detener el servicio compartido para todos los perfiles y trabajos?
-    title: Administración del servicio local
   search:
     action:
       classify_ledger: Clasificar registros

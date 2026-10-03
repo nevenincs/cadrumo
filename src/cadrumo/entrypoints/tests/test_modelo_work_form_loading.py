@@ -38,7 +38,6 @@ from ...application.modelo.edit_models import (
 from ...application.modelo.operation_definitions import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
     ModeloWorkVerifyExecutor,
-    ModeloWorkVerifyRequest,
     resolve_active_workflow_profile,
 )
 from ...application.modelo.source_policy import SourceFamily
@@ -55,6 +54,7 @@ from ...application.modelo.work_form_models import (
 )
 from ...application.modelo.work_form_service import ModeloWorkFormLoadV1, load_modelo_work_form, modelo_form_snapshot
 from ...application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
+from ...application.modelo.work_verification_contracts import ModeloWorkVerifyRequest
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...core.casilla_id import validated_casilla_id

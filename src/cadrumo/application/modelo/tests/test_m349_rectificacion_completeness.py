@@ -29,11 +29,8 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._calculation_helpers import build_typed_observations
 from .._calculation_modelo_adjustments import drop_row_field_template_outputs
-from ..verification_actions import (
-    M349_IMPORTE_RECTIFICACIONES_CASILLA,
-    M349_NUMERO_RECTIFICACIONES_CASILLA,
-    _detail_row_template_casilla_is_satisfied,
-)
+from ..verification_finding_contracts import M349_IMPORTE_RECTIFICACIONES_CASILLA, M349_NUMERO_RECTIFICACIONES_CASILLA
+from ..verification_required_fields import detail_row_template_casilla_is_satisfied
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -127,7 +124,7 @@ def test_stated_zero_totals_answer_the_rectificacion_casilla() -> None:
     target = _revision_without_rows(snapshot, work_unit, omitted=())
     assert all(target.casilla_values[total] == Decimal("0") for total in _TOTALS)
 
-    assert _detail_row_template_casilla_is_satisfied(
+    assert detail_row_template_casilla_is_satisfied(
         work_unit=work_unit,
         target=target,
         casilla=_rectificacion_casilla(snapshot),
@@ -141,7 +138,7 @@ def test_an_unstated_total_leaves_the_rectificacion_casilla_demanded(omitted: tu
     target = _revision_without_rows(snapshot, work_unit, omitted=omitted)
     assert all(total not in target.casilla_values for total in omitted)
 
-    assert not _detail_row_template_casilla_is_satisfied(
+    assert not detail_row_template_casilla_is_satisfied(
         work_unit=work_unit,
         target=target,
         casilla=_rectificacion_casilla(snapshot),

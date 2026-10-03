@@ -31,7 +31,8 @@ from cadrumo.application.runtime.profile_access import RuntimeRequest, RuntimeSe
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.application.user_profile.automation_lifecycle_service import AutomationResumeReceipt
 
-from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake, read_document, read_secret, write_document
+from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
+from ..runtime_frame_io import read_document, read_secret, write_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

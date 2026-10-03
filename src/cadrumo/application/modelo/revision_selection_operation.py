@@ -12,32 +12,28 @@ from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import profile_operation_subject
+from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin
+from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecord
+from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..operations.access_resolution import (
-    ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_single_period_admission,
+    bind_replayed_or_fresh_single_period_access,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_identity
+from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -99,6 +95,16 @@ class ModeloWorkRevisionProjection(BaseModel):
         return self
 
 
+def _selects_exact_calculation(payload: ModeloWorkRevisionRequest) -> bool:
+    return (
+        payload.work_unit_id is None
+        and payload.modelo is None
+        and payload.year is None
+        and payload.period is None
+        and payload.revision is None
+    )
+
+
 def _unit(
     payload: ModeloWorkRevisionRequest, bundle: VerificationRepositoryBundle, *, operation: PinnedAuthorityOperation
 ) -> WorkUnit:
@@ -107,14 +113,7 @@ def _unit(
     if bundle.work_unit.bucket_id != profile_id or bundle.calculation.bucket_id != profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     catalogue = bundle.work_unit.load()
-    if (
-        payload.calculation_revision_id is not None
-        and payload.work_unit_id is None
-        and payload.modelo is None
-        and payload.year is None
-        and payload.period is None
-        and payload.revision is None
-    ):
+    if payload.calculation_revision_id is not None and _selects_exact_calculation(payload):
         revision = bundle.calculation.load(operation=operation).get(payload.calculation_revision_id)
         if revision is None:
             # The established verify/file positional-id route also accepts an
@@ -141,6 +140,32 @@ def _unit(
     return unit
 
 
+def _external_record_coordinates_match(
+    record: ModeloRecord, revision: CalculationRevision, unit: WorkUnit, profile_id: UUID
+) -> bool:
+    return (
+        record.bucket_id == str(profile_id)
+        and record.work_unit_id == unit.work_unit_id
+        and record.calculation_revision_id == revision.calculation_revision_id
+        and record.modelo == unit.modelo
+        and record.filing_year == unit.filing_year
+        and record.period == unit.period
+    )
+
+
+def _confirmed_external_revision_record(
+    record: ModeloRecord, revision: CalculationRevision, unit: WorkUnit, profile_id: UUID
+) -> bool:
+    return (
+        _external_record_coordinates_match(record, revision, unit, profile_id)
+        and record.origin is FilingOrigin.AEAT
+        and record.confirmation is AeatConfirmationState.CONFIRMADA
+        and record.external_evidence is not None
+        and record.filed_at == revision.filed_at
+        and record.filed_by == revision.filed_by
+    )
+
+
 def _filed_external_without_report(
     revision: CalculationRevision,
     unit: WorkUnit,
@@ -162,19 +187,42 @@ def _filed_external_without_report(
     matching = tuple(
         record
         for record in bundle.filing.load().values()
-        if record.bucket_id == str(profile_id)
-        and record.work_unit_id == unit.work_unit_id
-        and record.calculation_revision_id == revision.calculation_revision_id
-        and record.modelo == unit.modelo
-        and record.filing_year == unit.filing_year
-        and record.period == unit.period
-        and record.origin is FilingOrigin.AEAT
-        and record.confirmation is AeatConfirmationState.CONFIRMADA
-        and record.external_evidence is not None
-        and record.filed_at == revision.filed_at
-        and record.filed_by == revision.filed_by
+        if _confirmed_external_revision_record(record, revision, unit, profile_id)
     )
     return len(matching) == 1
+
+
+def _filed_amendment_without_grant(revision: CalculationRevision, granting: tuple[VerificationReport, ...]) -> bool:
+    return (
+        revision.amendment_identity is not None
+        and revision.state in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+        and revision.verified_at is not None
+        and not granting
+    )
+
+
+def _require_selected_revision_grant_evidence(
+    revision: CalculationRevision,
+    unit: WorkUnit,
+    bundle: VerificationRepositoryBundle,
+    profile_id: UUID,
+    granting: tuple[VerificationReport, ...],
+) -> None:
+    # The amendment transaction verifies and files its own new revision without
+    # creating a standalone VerificationReport. Its recorded amendment identity
+    # and filed state distinguish that path from a broken ordinary verification.
+    filed_amendment_without_report = _filed_amendment_without_grant(revision, granting)
+    filed_external_without_report = (
+        not granting
+        and not filed_amendment_without_report
+        and _filed_external_without_report(revision, unit, bundle, profile_id=profile_id)
+    )
+    if len(granting) > 1 or (
+        (revision.verified_at is not None) != bool(granting)
+        and not filed_amendment_without_report
+        and not filed_external_without_report
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
 def _capture(
@@ -211,26 +259,7 @@ def _capture(
         bundle.verification.load(operation=operation.authority_operation), operation=operation.authority_operation
     ).for_calculation_revision(revision.calculation_revision_id)
     granting = tuple(report for report in reports if report.granted_verificado_completo)
-    # The amendment transaction verifies and files its own new revision without
-    # creating a standalone VerificationReport. Its recorded amendment identity
-    # and filed state distinguish that path from a broken ordinary verification.
-    filed_amendment_without_report = (
-        revision.amendment_identity is not None
-        and revision.state in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
-        and revision.verified_at is not None
-        and not granting
-    )
-    filed_external_without_report = (
-        not granting
-        and not filed_amendment_without_report
-        and _filed_external_without_report(revision, unit, bundle, profile_id=payload.profile_id)
-    )
-    if len(granting) > 1 or (
-        (revision.verified_at is not None) != bool(granting)
-        and not filed_amendment_without_report
-        and not filed_external_without_report
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    _require_selected_revision_grant_evidence(revision, unit, bundle, payload.profile_id, granting)
     return ModeloWorkRevisionProjection(
         profile_id=payload.profile_id,
         unit=ModeloWorkMetadataSnapshot.from_work_unit(unit),
@@ -273,19 +302,13 @@ class ModeloWorkRevisionExecutor:
 
 def build_modelo_work_revision_definition(factory: VerificationRepositoryBundleFactory) -> OperationDefinition:
     """Declare one credential-free, encrypted-result revision read."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkRevisionRequest,
         result_type=ModeloWorkRevisionProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloWorkRevisionRequest,
-            executor_type=ModeloWorkRevisionExecutor,
-            build=lambda: ModeloWorkRevisionExecutor(factory),
-        ),
-        phase_codes=(MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloWorkRevisionExecutor,
+        build=lambda: ModeloWorkRevisionExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -296,30 +319,16 @@ def build_modelo_work_revision_registration(
     """Resolve fresh period scope and retain admitted scope for history."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != MODELO_WORK_REVISION_OPERATION_DEFINITION_ID or not isinstance(
-            payload, ModeloWorkRevisionRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        require_access_request_profile_identity(
+        payload = require_access_request_profile_payload(
             request,
-            payload_profile_id=payload.profile_id,
+            definition_id=MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+            payload_type=ModeloWorkRevisionRequest,
             access_profile_id=context.profile_id,
         )
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            periods = require_single_period_admission(
-                admitted, profile_id=context.profile_id, definition_id=request.definition_id
-            )
-        else:
-            if context.authority_operation is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+        def fresh_period(operation: PinnedAuthorityOperation) -> Period:
             try:
-                unit = _unit(
-                    payload,
-                    factory(str(payload.profile_id), operation=context.authority_operation),
-                    operation=context.authority_operation,
-                )
+                unit = _unit(payload, factory(str(payload.profile_id), operation=operation), operation=operation)
             except (
                 ModeloWorkSelectorError,
                 ModeloWorkAddressNotFoundError,
@@ -327,13 +336,13 @@ def build_modelo_work_revision_registration(
                 ModeloCalculationRevisionSelectorError,
             ):
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from None
-            periods = frozenset({unit.period})
-        return bind_operation_access_profile(
+            return unit.period
+
+        return bind_replayed_or_fresh_single_period_access(
             context,
             LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
             definition_id=request.definition_id,
-            periods=periods,
+            fresh_period=fresh_period,
         )
 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(

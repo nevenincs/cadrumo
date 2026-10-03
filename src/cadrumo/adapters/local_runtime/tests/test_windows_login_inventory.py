@@ -15,7 +15,7 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRef
 from cadrumo.application.runtime.login import RuntimeLoginInventory
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
 
-from .. import windows_login
+from .. import windows_desktop_observation, windows_login, windows_login_native
 from ..windows_desktop_logon import WindowsDesktopLogon
 from ..windows_login import WindowsLoginBinding, capture_windows_login, windows_login_inventory
 
@@ -69,8 +69,11 @@ class _Native:
         self.after_current_witness: WindowsDesktopLogon | None = None
         self.current_witness_reads = 0
         self.tokens_closed: list[int] = []
+        self.peer_owner = _OWNER
+        self.peer_authentication = 101
+        self.peer_session = 1
         self.lookup_error = False
-        self.allocations: dict[int, windows_login._SessionInformation] = {}
+        self.allocations: dict[int, windows_desktop_observation.WindowsSessionInformation] = {}
         self.freed: list[int] = []
         self.now = 0.0
         self.elapsed_on_query = False
@@ -117,7 +120,7 @@ class _Native:
         self.query_reads += 1
         if self.query_error:
             return 0
-        information = windows_login._SessionInformation()
+        information = windows_desktop_observation.WindowsSessionInformation()
         information.level = 1
         information.data.session_id = session
         information.data.state = self.state
@@ -158,7 +161,11 @@ def native(monkeypatch: pytest.MonkeyPatch) -> _Native:
         SidTypeUser=1,
         OpenProcessToken=lambda handle, access: 77,
         GetTokenInformation=lambda token, information: (
-            (_Sid(_OWNER), 0) if information == 1 else {"AuthenticationId": 101} if information == 2 else 1
+            (_Sid(port.peer_owner), 0)
+            if information == 1
+            else {"AuthenticationId": port.peer_authentication}
+            if information == 2
+            else port.peer_session
         ),
         TokenUser=1,
         TokenStatistics=2,
@@ -172,13 +179,14 @@ def native(monkeypatch: pytest.MonkeyPatch) -> _Native:
     wts.__dict__.update(WTSEnumerateSessions=port.enumerate_wts, WTS_CURRENT_SERVER_HANDLE=0)
     for module in (security, errors, wts, api):
         monkeypatch.setitem(sys.modules, module.__name__, module)
-    monkeypatch.setattr(
-        windows_login, "sys", SimpleNamespace(platform="win32", getwindowsversion=lambda: SimpleNamespace(major=10))
-    )
+    for owner in (windows_login, windows_login_native, windows_desktop_observation):
+        monkeypatch.setattr(
+            owner, "sys", SimpleNamespace(platform="win32", getwindowsversion=lambda: SimpleNamespace(major=10))
+        )
     monkeypatch.setattr(windows_login, "current_windows_desktop_logon", port.current_desktop_logon)
     monkeypatch.setattr(windows_login, "time", SimpleNamespace(monotonic=lambda: port.now))
     monkeypatch.setattr(
-        windows_login,
+        windows_desktop_observation,
         "ctypes",
         SimpleNamespace(
             WinDLL=lambda *_args, **_kwargs: SimpleNamespace(
@@ -374,14 +382,34 @@ def test_new_wts_generation_is_captured_but_old_peer_is_refused(native: _Native)
     assert not native.allocations and len(native.freed) == native.query_reads
 
 
-def test_old_peer_is_refused_when_same_owner_reuses_the_desktop(native: _Native) -> None:
+@pytest.mark.parametrize("session,kind", [(0, 4), (0, 5), (2, 10)])
+def test_same_account_client_from_another_session_uses_runtime_desktop(
+    native: _Native, session: int, kind: int
+) -> None:
+    native.peer_authentication = 202
+    native.peer_session = session
+    native.rows[202] = {**native.row(202), "Session": session, "LogonType": kind}
+    binding = capture_windows_login(55, expected_owner=_OWNER)
+    assert binding == WindowsLoginBinding(_OWNER, 101, 1, _TICKS)
+    assert binding.observe(credential_facilities=Availability.AVAILABLE).active
+    assert native.tokens_closed == [77]
+
+
+def test_another_account_cannot_borrow_runtime_desktop(native: _Native) -> None:
+    native.peer_owner = _OTHER
+    native.rows[101] = {**native.row(101), "Sid": _Sid(_OTHER)}
+    with pytest.raises(RuntimeRefusalError) as caught:
+        capture_windows_login(55, expected_owner=_OWNER)
+    assert caught.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
+    assert native.tokens_closed == [77]
+
+
+def test_same_account_peer_uses_current_desktop_but_old_binding_expires(native: _Native) -> None:
     original = WindowsLoginBinding(_OWNER, 101, 1, _TICKS)
     native.ids = (101, 202)
     native.rows[202] = native.row(202)
     native.current_witness = WindowsDesktopLogon(_OWNER, 202, 1, _LOGON_SID)
-    with pytest.raises(RuntimeRefusalError) as caught:
-        capture_windows_login(55, expected_owner=_OWNER)
-    assert caught.value.reason is RuntimeRefusalCode.UNAVAILABLE
+    assert capture_windows_login(55, expected_owner=_OWNER) == WindowsLoginBinding(_OWNER, 202, 1, _TICKS)
     observed = original.observe(credential_facilities=Availability.AVAILABLE)
     inventory = windows_login_inventory(expected_owner=_OWNER)
     assert not observed.active and observed.locked

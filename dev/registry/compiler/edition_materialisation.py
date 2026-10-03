@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
@@ -139,11 +140,21 @@ def _inline_lineage_claims(modelo_directory: Path, revision_id: str, table: dict
         claims[attestation.identity] = row.model_dump(
             include={"continuidad_origin", "continuidad_evidence"}, mode="json", exclude_none=True
         )
+    return _project_inline_lineage_table(modelo_directory, revision_id, table, claims)
+
+
+def _project_inline_lineage_table(
+    modelo_directory: Path,
+    revision_id: str,
+    table: dict[str, object],
+    claims: Mapping[str, dict[str, object]],
+) -> dict[str, object]:
     rows = table.get("casillas", ())
     if not isinstance(rows, tuple | list):
         raise RegistryLoadError(f"{modelo_directory}: edition {revision_id!r} casillas must be an array")
-    projected_rows = []
-    for raw_row in rows:
+    source_rows = cast(tuple[object, ...] | list[object], rows)
+    projected_rows: list[dict[str, object]] = []
+    for raw_row in source_rows:
         row = as_toml_table(raw_row)
         if row is None:
             raise RegistryLoadError(f"{modelo_directory}: edition {revision_id!r} casilla must be a table")

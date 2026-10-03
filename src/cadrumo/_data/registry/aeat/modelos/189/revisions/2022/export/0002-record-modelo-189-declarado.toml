@@ -1,0 +1,448 @@
+[[revisions.2022.export_layouts]]
+id = 'modelo-189-fichero-2022'
+
+[[revisions.2022.export_layouts.records]]
+id = 'modelo-189-declarado'
+record_type = 'declarado'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '189'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-ejercicio'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-nif-declarante'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-nif-declarado'
+offset = 18
+length = 9
+kind = 'casilla'
+casilla_id = 'declarado-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-nif-representante-legal'
+offset = 27
+length = 9
+kind = 'casilla'
+casilla_id = 'representante-legal-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-nombre-declarado'
+offset = 36
+length = 40
+kind = 'casilla'
+casilla_id = 'declarado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-codigo-provincia'
+offset = 76
+length = 2
+kind = 'casilla'
+casilla_id = 'codigo-provincia'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-codigo-pais'
+offset = 78
+length = 2
+kind = 'casilla'
+casilla_id = 'codigo-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-clave-mercado'
+offset = 80
+length = 1
+kind = 'casilla'
+casilla_id = 'clave-mercado'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-clave-valor'
+offset = 81
+length = 1
+kind = 'casilla'
+casilla_id = 'clave-valor'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+value_policy = 'mistyped-alphanumeric-text'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-clave-identificacion'
+offset = 82
+length = 1
+kind = 'casilla'
+casilla_id = 'clave-identificacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+]
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-identificacion-valores'
+offset = 83
+length = 12
+kind = 'casilla'
+casilla_id = 'identificacion-valores'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-clave-representacion'
+offset = 95
+length = 1
+kind = 'casilla'
+casilla_id = 'clave-representacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-blancos-96'
+offset = 96
+length = 12
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-valoracion'
+offset = 108
+length = 16
+kind = 'casilla'
+casilla_id = 'valoracion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-porcentaje-participacion-integer-part'
+offset = 124
+length = 3
+kind = 'casilla'
+casilla_id = 'porcentaje-participacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-porcentaje-participacion-fractional-digits'
+offset = 127
+length = 2
+kind = 'casilla'
+casilla_id = 'porcentaje-participacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-clave-titularidad'
+offset = 129
+length = 1
+kind = 'casilla'
+casilla_id = 'clave-titularidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-numero-valores-integer-part'
+offset = 130
+length = 10
+kind = 'casilla'
+casilla_id = 'numero-valores'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-1351-2021:art-sexto',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-numero-valores-fractional-digits'
+offset = 140
+length = 6
+kind = 'casilla'
+casilla_id = 'numero-valores'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-1351-2021:art-sexto',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-nominal-unitario-integer-part'
+offset = 146
+length = 14
+kind = 'casilla'
+casilla_id = 'nominal-unitario-valores'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-115-2022:df-primera',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-nominal-unitario-fractional-digits'
+offset = 160
+length = 4
+kind = 'casilla'
+casilla_id = 'nominal-unitario-valores'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-115-2022:df-primera',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-189-t2-blancos-164'
+offset = 164
+length = 337
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-115-2022:df-primera',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[revisions.2022.export_layouts.records.row_field_casilla_ids]

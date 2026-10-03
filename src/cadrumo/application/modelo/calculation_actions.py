@@ -37,7 +37,7 @@ See Also:
     :func:`~application.modelo.revision_persistence.persist_calculation_revision`:
         Stores the content-addressed ``BORRADOR`` revision and emits the bucket
         event.
-    :func:`~application.modelo.verification_actions.verify_modelo_revision`:
+    :func:`~application.modelo.verification_actions.verify_modelo_revision_with_preconditions`:
         Lifecycle gate that promotes a calculated revision after verification.
 """
 
@@ -475,7 +475,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
        ``modelo.calculation.created``.
 
     The revision starts in ``BORRADOR`` state; callers must run
-    :func:`~application.modelo.verification_actions.verify_modelo_revision` and
+    :func:`~application.modelo.verification_actions.verify_modelo_revision_with_preconditions` and
     :func:`~application.modelo.filing_actions.file_modelo_revision`
     explicitly to advance through the lifecycle.
 
@@ -1710,6 +1710,15 @@ _BINDING_SOURCE_KEYED_REASONS: Final[frozenset[str]] = frozenset(
 """Reasons whose later gates select them by binding source, so an issue without one would never be read."""
 
 
+def _durable_invoice_source_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
+    """Keep explicit literal narrowing for absent invoice-source facts."""
+    if diagnostic.reason == "source_domain_not_ready":
+        return "source_domain_not_ready"
+    if diagnostic.reason == "invoice_reverse_charge_cuota_not_derivable":
+        return "invoice_reverse_charge_cuota_not_derivable"
+    return None
+
+
 def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     """Narrow a diagnostic reason to the durable subset, or ``None``.
 
@@ -1737,11 +1746,7 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
         return "terminal_origin_mismatch"
     if diagnostic.reason == "unhandled_binding_source":
         return "unhandled_binding_source"
-    if diagnostic.reason == "source_domain_not_ready":
-        return "source_domain_not_ready"
-    if diagnostic.reason == "invoice_reverse_charge_cuota_not_derivable":
-        return "invoice_reverse_charge_cuota_not_derivable"
-    return None
+    return _durable_invoice_source_reason(diagnostic)
 
 
 def _unrouted_source_issues(

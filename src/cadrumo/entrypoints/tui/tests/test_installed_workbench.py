@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.local_runtime.framing import RuntimeTransportCleanup
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ....tests.audited_process import run_audited_process

@@ -14,7 +14,7 @@ from ....application.modelo.action_errors import WorkUnitMutationRefusedError
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.declaration_summary import DeclarationSummaryState
 from ....application.modelo.declarations_portfolio import project_declarations_portfolio
-from ....application.modelo.declarations_workspace import (
+from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,

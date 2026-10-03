@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#calculation-chain-integrity'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d4e96570ed8d137532904aa764505a962bf91df989aa08e3daa04de4f8b92d2'
+body_hash: 'sha256:d2836fb925ef5a1fc73401a5278545037e938cc581e2a84df446c6abaf6d5961'
 related:
   - '[[2026-08-07-calculation-chain-integrity-activity-type-placement-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-adr]]'
@@ -17,7 +17,6 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-ledger]]'
   - '[[2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research]]'
   - '[[2026-08-07-calculation-chain-integrity-plan]]'
-  - '[[2026-08-07-calculation-chain-integrity-research]]'
 ---
 
 # `calculation-chain-integrity` feature index
@@ -49,4 +48,3 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 ### research
 
 - `2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research` - `calculation-chain-integrity` research: scoping the Modelo 390 annual under-modelling
-- `2026-08-07-calculation-chain-integrity-research` - `calculation-chain-integrity` research: `Silent-zero and silent-overclaim defects measured across the ledger-calculation-declaration chain`

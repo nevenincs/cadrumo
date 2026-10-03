@@ -39,7 +39,8 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.text_fold import fold_for_matching
 from ...components.theme import tokenised
-from .casilla_list import AddressKey, CasillaListEntry, description_text, stated_value_text
+from .casilla_list_models import AddressKey, CasillaListEntry
+from .casilla_list_values import description_text, stated_value_text
 from .navigator import readable_text
 from .page_items import StagedDisplay, WorkbenchPage, page_items
 from .vocabulary import origin_text

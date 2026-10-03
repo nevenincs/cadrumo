@@ -59,11 +59,12 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from ._export_tree import render_complete_export_tree
+from .export_tree_models import ExportTreeTransportProfile
 from .export_tree_serialization import SERIALIZER_CONVENTION
 from .joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from .record_design_intermediate import load_record_design_intermediate
@@ -275,24 +276,21 @@ def _select_record_design_source(
     filing_year: int,
     period: str | None,
 ) -> tuple[SourceRefId, str]:
-    if period is not None and is_administrative_period_token(period):
-        selector = selected.period_selector
-        if not selector.includes_year(filing_year) or not any(
-            selector_period_matches_request(token, period) for token in selector.periods_for_year(filing_year)
-        ):
-            raise ValueError(
-                f"{modelo}/{revision} administrative period {period!r} is not declared for filing_year={filing_year}"
-            )
+    _validate_requested_administrative_period(
+        selected, modelo=modelo, revision=revision, filing_year=filing_year, period=period
+    )
     design_refs = _record_design_refs(selected, sources)
     if not design_refs:
         raise ValueError(f"{modelo}/{revision} cites no record-design source to render from")
     if source_ref is not None and all(str(ref) != source_ref for ref in design_refs):
         raise ValueError(f"{modelo}/{revision} does not declare record-design source {source_ref!r}")
-    applicable = tuple(
-        ref
-        for ref in design_refs
-        if (source_ref is None or str(ref) == source_ref)
-        and _source_covers_render_frame(sources[ref], selected=selected, filing_year=filing_year, period=period)
+    applicable = _applicable_record_design_refs(
+        design_refs,
+        sources,
+        selected=selected,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        period=period,
     )
     if len(applicable) != 1:
         raise ValueError(
@@ -307,14 +305,62 @@ def _select_record_design_source(
     return selected_source_ref, epoch
 
 
+def _validate_requested_administrative_period(
+    selected: ModeloRevision,
+    *,
+    modelo: str,
+    revision: str,
+    filing_year: int,
+    period: str | None,
+) -> None:
+    if period is None or not is_administrative_period_token(period):
+        return
+    selector = selected.period_selector
+    if not selector.includes_year(filing_year) or not any(
+        selector_period_matches_request(token, period) for token in selector.periods_for_year(filing_year)
+    ):
+        raise ValueError(
+            f"{modelo}/{revision} administrative period {period!r} is not declared for filing_year={filing_year}"
+        )
+
+
+def _applicable_record_design_refs(
+    design_refs: tuple[SourceRefId, ...],
+    sources: Mapping[SourceRefId, SourceReference],
+    *,
+    selected: ModeloRevision,
+    source_ref: str | None,
+    filing_year: int,
+    period: str | None,
+) -> tuple[SourceRefId, ...]:
+    return tuple(
+        ref
+        for ref in design_refs
+        if (source_ref is None or str(ref) == source_ref)
+        and _source_covers_render_frame(sources[ref], selected=selected, filing_year=filing_year, period=period)
+    )
+
+
 def _source_covers_render_frame(
     source: SourceReference, *, selected: ModeloRevision, filing_year: int, period: str | None
 ) -> bool:
-    if source.applies_from is None:
+    applies_from = source.applies_from
+    if applies_from is None:
         return False
+    interval = _render_frame_interval(selected=selected, filing_year=filing_year, period=period)
+    if interval is None:
+        return False
+    if not _source_covers_interval(applies_from, source.applies_to, interval):
+        return False
+    return _source_period_selector_covers(source.period_selector, filing_year=filing_year, period=period)
+
+
+def _render_frame_interval(
+    *, selected: ModeloRevision, filing_year: int, period: str | None
+) -> tuple[date, date] | None:
     if period is None:
-        interval = (date(filing_year, 1, 1), date(filing_year, 12, 31))
-    elif is_administrative_period_token(period):
+        return date(filing_year, 1, 1), date(filing_year, 12, 31)
+    if is_administrative_period_token(period):
         # An administrative coordinate has no filing-period dates. Its real
         # span is the selected revision's effective portion of this year.
         interval = (
@@ -322,22 +368,31 @@ def _source_covers_render_frame(
             min(date(filing_year, 12, 31), selected.valid_to or date(filing_year, 12, 31)),
         )
         if interval[0] > interval[1]:
-            return False
-    else:
-        try:
-            requested = Period.from_year_and_code(filing_year, period)
-        except PeriodError:
-            return False
-        interval = (
-            (requested.start_date, requested.end_date)
-            if requested.has_date_span()
-            else (date(filing_year, 1, 1), date(filing_year, 12, 31))
-        )
+            return None
+        return interval
+    try:
+        requested = Period.from_year_and_code(filing_year, period)
+    except PeriodError:
+        return None
+    return (
+        (requested.start_date, requested.end_date)
+        if requested.has_date_span()
+        else (date(filing_year, 1, 1), date(filing_year, 12, 31))
+    )
+
+
+def _source_covers_interval(applies_from: date, applies_to: date | None, interval: tuple[date, date]) -> bool:
     # SourceReference.applies_across means *overlap*. Rendering one filing
     # frame requires the selected design to cover the entire requested span.
-    if source.applies_from > interval[0] or (source.applies_to is not None and source.applies_to < interval[1]):
-        return False
-    selector = source.period_selector
+    return not (applies_from > interval[0] or (applies_to is not None and applies_to < interval[1]))
+
+
+def _source_period_selector_covers(
+    selector: PeriodSelector | None,
+    *,
+    filing_year: int,
+    period: str | None,
+) -> bool:
     if selector is None:
         return True
     if not selector.includes_year(filing_year):
@@ -381,33 +436,94 @@ def _render_transport(
     bootstrap_transport: GeneratedExportBootstrapTransport | None,
 ) -> tuple[str, Literal["crlf", "lf", "none"]]:
     if bootstrap_transport is not None:
-        expected_layout_id = f"generated-modelo-{modelo}-{revision}-fichero"
-        superseded = bootstrap_transport.supersedes_layout_id
-        if superseded is not None and not any(str(layout.id) == superseded for layout in selected.export_layouts):
-            raise ValueError(f"{modelo}/{revision} bootstrap superseded layout {superseded!r} is not declared")
-        if bootstrap_transport.layout_id != expected_layout_id and (
-            superseded is None or bootstrap_transport.layout_id != superseded
-        ):
-            raise ValueError(
-                f"{modelo}/{revision} bootstrap layout id must be {expected_layout_id!r} "
-                "or its exact declared superseded layout, "
-                f"got {bootstrap_transport.layout_id!r}",
-            )
-        if bootstrap_transport.source_ref != str(selected_source_ref):
-            raise ValueError(
-                f"{modelo}/{revision} bootstrap source must be {str(selected_source_ref)!r}, "
-                f"got {bootstrap_transport.source_ref!r}",
-            )
-        if bootstrap_transport.source_sha256 != sources[selected_source_ref].sha256:
-            raise ValueError(
-                f"{modelo}/{revision} bootstrap source digest does not match selected source {selected_source_ref!r}"
-            )
-        return bootstrap_transport.layout_id, bootstrap_transport.line_ending
+        return _bootstrap_render_transport(
+            selected,
+            sources,
+            modelo=modelo,
+            revision=revision,
+            selected_source_ref=selected_source_ref,
+            bootstrap_transport=bootstrap_transport,
+        )
 
     if not selected.export_layouts:
         raise ValueError(f"{modelo}/{revision} declares no export layout to render")
     layout = selected.export_layouts[0]
     return str(layout.id), layout.records[0].line_ending.value
+
+
+def _bootstrap_render_transport(
+    selected: ModeloRevision,
+    sources: Mapping[SourceRefId, SourceReference],
+    *,
+    modelo: str,
+    revision: str,
+    selected_source_ref: SourceRefId,
+    bootstrap_transport: GeneratedExportBootstrapTransport,
+) -> tuple[str, Literal["crlf", "lf", "none"]]:
+    expected_layout_id = f"generated-modelo-{modelo}-{revision}-fichero"
+    superseded = bootstrap_transport.supersedes_layout_id
+    _validate_bootstrap_superseded_layout(selected, modelo=modelo, revision=revision, superseded=superseded)
+    _validate_bootstrap_layout_id(
+        bootstrap_transport.layout_id,
+        expected_layout_id=expected_layout_id,
+        superseded=superseded,
+        modelo=modelo,
+        revision=revision,
+    )
+    _validate_bootstrap_source(
+        bootstrap_transport,
+        sources,
+        selected_source_ref=selected_source_ref,
+        modelo=modelo,
+        revision=revision,
+    )
+    return bootstrap_transport.layout_id, bootstrap_transport.line_ending
+
+
+def _validate_bootstrap_superseded_layout(
+    selected: ModeloRevision,
+    *,
+    modelo: str,
+    revision: str,
+    superseded: str | None,
+) -> None:
+    if superseded is not None and not any(str(layout.id) == superseded for layout in selected.export_layouts):
+        raise ValueError(f"{modelo}/{revision} bootstrap superseded layout {superseded!r} is not declared")
+
+
+def _validate_bootstrap_layout_id(
+    layout_id: str,
+    *,
+    expected_layout_id: str,
+    superseded: str | None,
+    modelo: str,
+    revision: str,
+) -> None:
+    if layout_id != expected_layout_id and (superseded is None or layout_id != superseded):
+        raise ValueError(
+            f"{modelo}/{revision} bootstrap layout id must be {expected_layout_id!r} "
+            "or its exact declared superseded layout, "
+            f"got {layout_id!r}",
+        )
+
+
+def _validate_bootstrap_source(
+    bootstrap_transport: GeneratedExportBootstrapTransport,
+    sources: Mapping[SourceRefId, SourceReference],
+    *,
+    selected_source_ref: SourceRefId,
+    modelo: str,
+    revision: str,
+) -> None:
+    if bootstrap_transport.source_ref != str(selected_source_ref):
+        raise ValueError(
+            f"{modelo}/{revision} bootstrap source must be {str(selected_source_ref)!r}, "
+            f"got {bootstrap_transport.source_ref!r}",
+        )
+    if bootstrap_transport.source_sha256 != sources[selected_source_ref].sha256:
+        raise ValueError(
+            f"{modelo}/{revision} bootstrap source digest does not match selected source {selected_source_ref!r}"
+        )
 
 
 def revision_render_inputs(

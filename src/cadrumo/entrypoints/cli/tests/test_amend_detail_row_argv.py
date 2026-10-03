@@ -28,7 +28,7 @@ import pytest
 import typer
 import yaml
 
-from ....application.modelo.operation_definitions import Modelo232VinculadaRowWireV1
+from ....application.modelo.edit_apply_row_contracts import Modelo232VinculadaRowWireV1
 from .._command_parameter_contracts import OptionSpec
 from .._modelo import _resolve_amendment_detail_rows
 from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS

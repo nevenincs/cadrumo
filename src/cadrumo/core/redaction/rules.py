@@ -419,6 +419,12 @@ def carries_redaction_placeholder(value: object) -> bool:
 
 
 def _host_only(value: str) -> str:
+    from ..authentication_links import aeat_authentication_url
+
+    # This exact bundled entry point contains no identity or session material.
+    # Any added parameter, fragment, or different path still gets redacted.
+    if value == aeat_authentication_url():
+        return value
     parsed = urlparse(value)
     if not parsed.hostname:
         return "https://[redacted]"

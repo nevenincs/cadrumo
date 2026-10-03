@@ -7,7 +7,7 @@ resumes or creates the work unit
 (:func:`application.modelo.work_addressing.ensure_modelo_work_unit_for_active_target`),
 calculates a draft revision
 (:func:`application.modelo.calculate_input.calculate_modelo_work_revision`), verifies it
-(:func:`application.modelo.verification_actions.verify_modelo_revision`), and exports the
+(:func:`application.modelo.verification_actions.verify_modelo_revision_with_preconditions`), and exports the
 verified revision to a local fichero-BOE artefact
 (:func:`application.modelo.export.export_modelo_revision`).
 
@@ -29,7 +29,7 @@ directly.
 See Also:
     :func:`application.modelo.calculate_input.calculate_modelo_work_revision`:
         The calculate stage this orchestrator drives.
-    :func:`application.modelo.verification_actions.verify_modelo_revision`:
+    :func:`application.modelo.verification_actions.verify_modelo_revision_with_preconditions`:
         The verify stage; a non-granted report halts the chain.
     :func:`application.modelo.export.export_modelo_revision`:
         The terminal local export stage.
@@ -68,7 +68,7 @@ from .calculate_input import WorkCalculateInputBundle, calculate_modelo_work_rev
 from .calculation_action_ports import CalculationActionPorts
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .export_ports import ModeloExportPorts
-from .verification_actions import verify_modelo_revision
+from .verification_actions import verify_modelo_revision_with_preconditions
 from .verification_repository_ports import VerificationRepositoryBundle
 from .work_addressing import (
     ensure_modelo_work_unit_for_active_target,
@@ -502,7 +502,7 @@ def _run_verify_stage(
     command = context.command
     _before_stage(context, QuickfileStage.VERIFY)
     try:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             calculation_revision.calculation_revision_id,
             certificate_secret_backend_factory=context.certificate_secret_backend_factory,
             operator_scope_ports=context.operator_scope_ports,
@@ -510,7 +510,7 @@ def _run_verify_stage(
             actor=command.actor,
             workflow_profile=context.workflow_profile,
             operation=context.operation,
-        )
+        ).report
     except ProfileAccessRefusedError:
         raise
     except CadrumoError as exc:

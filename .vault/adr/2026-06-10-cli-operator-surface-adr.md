@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-08-15'
-body_hash: 'sha256:2383ebb293fce5972fbc3c7c6f4f3c03fac6795efa0f73ce4683f1e2d2040f71'
+modified: '2026-10-03'
+body_hash: 'sha256:934efda0265d08c0eea29bc7870b2bd0238925508a6a8c81211d0f04fa38f3f4'
 related:
   - '[[2026-06-10-cli-operator-surface-research]]'
   - '[[2026-06-10-cli-operator-surface-audit]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
+  - '[[2026-08-13-profile-session-lifecycle-successor-adr]]'
 ---
 
 # `cli-operator-surface` adr: `operator surface verb, lifecycle, and honesty decisions` | (**status:** `accepted`)
@@ -101,6 +102,34 @@ honesty pass):
   `config.bucket.history`) the json-schema conformance gate enforces. Renaming it
   would break consumers for no operator-visible benefit. A stable machine token is
   not a shadow verb; it carries no operator-facing spelling.
+
+## Amendment 2026-10-03: canonical profile login/logout grammar
+
+This amendment supersedes only D1's operator-facing verb ruling. The original
+2026-06-10 D1 text later in this record is retained as decision chronology; its
+`config switch` spelling is historical and is not the current CLI contract.
+
+On 2026-07-24, `2026-07-24-profile-login-session-adr` changed D1's verb ruling
+to `aeat config login [NAME]` and `aeat config logout`, with `switch` deleted.
+That record was superseded by accepted `2026-08-13-profile-session-lifecycle-successor-adr`,
+which remains the active profile-session lifecycle authority. The successor
+does not restate command grammar, so this amendment records the current
+code-confirmed CLI surface:
+
+- `aeat config login [NAME]` authenticates the selected profile when NAME is
+  omitted, or selects and authenticates NAME.
+- `aeat config logout` clears the selected profile from the current CLI context.
+- `aeat config switch NAME` and `aeat config profile switch NAME` are not
+  registered commands; there is no `switch` alias.
+
+The command specs register `config login` with an optional name and `config
+logout` in `src/cadrumo/entrypoints/cli/config/_custody_command_specs.py:148-185`;
+the handlers implement these operations in `src/cadrumo/entrypoints/cli/config/custody.py:237-338`.
+The live `aeat config --help`, `aeat config profile --help`, `aeat config login --help`,
+and `aeat config logout --help` surfaces were checked on 2026-10-03.
+
+Profile session ownership and lifecycle transitions remain governed by the
+active `2026-08-13-profile-session-lifecycle-successor-adr` decision.
 
 ## Considerations
 

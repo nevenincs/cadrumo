@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-08-27-registry-dated-validity-adr]]'
   - '[[2026-08-27-registry-dated-validity-research]]'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:cb40262526a9540be784c289a021fbed9816d2141fd9da2ed0aa2bd10f5bb3c3'
+body_hash: 'sha256:b0fe1f3421fea277f3ef747aabeef23fb274f4611fb1dcb21bec455b1378890c'
 ---
 
 <!-- RETIRED: S01 -->
@@ -17,6 +17,8 @@ body_hash: 'sha256:cb40262526a9540be784c289a021fbed9816d2141fd9da2ed0aa2bd10f5bb
 # `registry-dated-validity` plan
 
 ## Description
+
+Replace year-named registry corpora with undated records whose filing coverage is derived from closed validity windows and whose citations are checked against the cited provisions. Preserve the existing exact-year refusals and leave unsupported category coverage as a grounded gap rather than mirroring data.
 
 ## Steps
 

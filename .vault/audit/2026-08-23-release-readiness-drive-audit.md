@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#release-readiness-drive'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:fcd57c79467c9b7a9a46b6141cf95b6ab0a9642f949f476142794004f2eefddc'
+body_hash: 'sha256:43dc6cd9b0a500176901fad584d2a0fcee4526300470ab191c1ca9e73e3bd826'
 related: []
 ---
 
@@ -17,6 +17,14 @@ Driving `dev.release.readiness` to all-PASS. Final measured state: 4 PASS
 (project-names-canonical, version-surfaces-agree at 0.2.2, changelog-ready,
 no-open-release-blockers), 2 BLOCK, 1 WARN. Both BLOCKs are one missing
 artefact, `var/release-cohort`.
+
+## Findings
+
+The readiness gate now runs, but the final drive remains blocked by unsatisfiable platform wheel floors, declared distribution channels without an evidence path, and emitters missing their required cohort.
+
+## Recommendations
+
+Keep release blocked until platform wheel minima and each claimed channel have reproducible artifacts and the required cohort reaches every emitter.
 
 ## Delivered
 

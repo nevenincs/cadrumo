@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:334403aa709d7d09c648f24400800d0e2f8cd43bb60f99740aad8decf690bca6'
+body_hash: 'sha256:3c4a662def43d18a1d41b4d608dd54a32367dff75f01d59e6559d8a29be31b95'
 related:
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
@@ -43,6 +43,6 @@ All screens preserve a single page scroll owner at eighty columns, avoid horizon
 
 Combined focused smoke: all 74 Ledger package tests passed with all markers enabled. Ruff lint and format checks passed over the complete Ledger package; ty passed; basedpyright reported zero errors, warnings, and notes. A direct prohibited-dependency/I-O scan returned no adapter, CLI, filesystem, network-client, or `open` use.
 
-## Recommendation
+## Recommendations
 
 CLOSE. W08.P27.S375 is safe to mark complete and proceed to the wider workbench phases. No high or medium issue remains.

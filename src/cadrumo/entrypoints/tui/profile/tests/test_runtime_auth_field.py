@@ -6,16 +6,17 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from .....adapters.local_runtime.profile_mutations import ProfileMutationCompletion, ProfileMutationRequest
 from .....application.auth.operation_definitions import AuthConfigureOperationRequest
 from .....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from .....application.operations.registry import OperationFrontendProjection
-from .....application.user_profile.operations import (
+from .....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
+from .....application.user_profile.profile_operation_contracts import (
     ProfileFieldMutationOperationRequest,
     ProfileMutationOperationProjection,
 )
-from .....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
 from .....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from .....core.external_constants import OutputLanguage
 from .....core.operations import OperationEffect

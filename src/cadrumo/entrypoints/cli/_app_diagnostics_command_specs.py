@@ -81,9 +81,14 @@ def _leaf(
     )
 
 
-def _range(prefix: str, *, limit: bool = False) -> tuple[OptionSpec, ...]:
+def _range(
+    prefix: str,
+    *,
+    limit: bool = False,
+    since_prefix: str | None = None,
+) -> tuple[OptionSpec, ...]:
     values = (
-        _option("since", ("--since",), TEXT_VALUE, f"cli.diagnostics.{prefix}.since_help"),
+        _option("since", ("--since",), TEXT_VALUE, f"cli.diagnostics.{since_prefix or prefix}.since_help"),
         _option("until", ("--until",), TEXT_VALUE, f"cli.diagnostics.{prefix}.until_help"),
         _option("provider", ("--provider",), TEXT_VALUE, f"cli.diagnostics.{prefix}.provider_help"),
     )
@@ -126,7 +131,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "diagnostics_run_health",
         "RunHealthResult",
         _READ,
-        _range("run_health"),
+        _range("run_health", since_prefix="run_records"),
     ),
     _leaf(
         "app_diagnostics_runs",
@@ -137,7 +142,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "diagnostics_runs",
         "RunsListResult",
         _READ,
-        _range("runs", limit=True),
+        _range("runs", limit=True, since_prefix="run_records"),
     ),
     _leaf(
         "app_diagnostics_latency",

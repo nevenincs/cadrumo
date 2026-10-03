@@ -18,7 +18,8 @@ from types import MappingProxyType
 from typing import Final
 
 from .....application.modelo.work_form_models import ModeloFormField, ModeloFormOrigin, address_key, section_fields
-from .casilla_list import AddressKey, CasillaListEntry, CasillaListHeading, description_text
+from .casilla_list_models import AddressKey, CasillaListEntry, CasillaListHeading
+from .casilla_list_values import description_text
 from .navigator import readable_text
 from .page_items import StagedDisplay, WorkbenchFilter, WorkbenchPage, page_items
 

@@ -10,13 +10,13 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
-from ....application.modelo.filing_record_list_operation import (
-    MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID,
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....application.modelo.filing_record_list_contracts import (
     ModeloFilingRecordListEntryProjection,
     ModeloFilingRecordListProjection,
     ModeloFilingRecordListRequest,
 )
+from ....application.modelo.filing_record_list_operation import MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period

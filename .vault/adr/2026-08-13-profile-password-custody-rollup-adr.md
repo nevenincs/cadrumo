@@ -5,7 +5,6 @@ tags:
 date: '2026-08-13'
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
-  - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
   - '[[2026-08-13-cli-action-envelope-successor-adr]]'
   - '[[2026-09-23-profile-password-custody-kdf-calibration-reachability-research]]'
@@ -16,7 +15,7 @@ related:
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-09-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a76fcb6ed83ff552f5887f2ff70a8a9492fc6fb5d167253224cf940034a3c009'
 ---

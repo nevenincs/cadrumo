@@ -81,6 +81,9 @@ _InvoiceRowField = Literal[
     "declarado_tax_id",
     "residence_country_code",
     "community_vat_number",
+    "provincia_code",
+    "cash_accounting_mark",
+    "reverse_charge_mark",
 ]
 
 # Canonical invoice-shaped binding source kinds, imported from
@@ -140,6 +143,24 @@ class InvoiceObservation(BaseModel):
     rectified_period: str | None = Field(default=None, max_length=8)
     rectified_base_previous: Decimal | None = None
     party_legal_name: str | None = Field(default=None, max_length=200)
+    cash_accounting_operation: bool = False
+    """The operation falls under the régimen especial del criterio de caja (LIVA arts. 163 decies ff.).
+
+    Modelo 347 relates such operations "separadamente de otras operaciones"
+    (RD 1065/2007 art. 34.1.j), so it is part of the declarado record key.
+    """
+    reverse_charge_recipient: bool = False
+    """The declarant is the destinatario who is sujeto pasivo of the operation (LIVA art. 84.Uno.2º).
+
+    Modelo 347 relates such operations separately (RD 1065/2007 art. 34.1.k).
+    """
+    annual_computation_basis: bool = False
+    """The operation is reported on an annual basis, so its quarterly amounts carry no content.
+
+    RD 1065/2007 art. 33.1: criterio de caja filers, propiedad horizontal
+    entities, and the destinatarios of criterio de caja operations for those
+    operations "suministrarán ... sobre una base de cómputo anual".
+    """
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())

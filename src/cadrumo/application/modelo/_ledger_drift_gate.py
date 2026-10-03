@@ -57,6 +57,36 @@ LEDGER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
 )
 
 
+type _BlockingFindingObserver = Callable[
+    [ModeloVerificationFinding, bool, tuple[str, ...], tuple[str, ...], tuple[str, ...]], None
+]
+
+
+def _observe_drift_finding(
+    observer: _BlockingFindingObserver | None,
+    finding: ModeloVerificationFinding,
+    anchored: bool,
+    changed: tuple[str, ...],
+    removed: tuple[str, ...],
+    added: tuple[str, ...],
+) -> None:
+    """Publish the original identifier-only evidence when an observer is bound."""
+    if observer is not None:
+        observer(finding, anchored, changed, removed, added)
+
+
+def _draft_ledger_baseline(target: CalculationRevision) -> set[str]:
+    """Retain draft source identities and identified ledger-source issues."""
+    baseline = set(target.source_transaction_ids)
+    for issue in target.source_issues:
+        if issue.binding_source not in LEDGER_BINDING_SOURCE_KINDS:
+            continue
+        identity = ledger_transaction_ref_identity(issue.source_ref)
+        if identity is not None:
+            baseline.add(identity)
+    return baseline
+
+
 def ledger_drift_findings(
     *,
     target: CalculationRevision,
@@ -64,11 +94,7 @@ def ledger_drift_findings(
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     current_membership: LedgerSourceMembership,
     source_refs: tuple[str, ...] = (),
-    blocking_finding_observer: Callable[
-        [ModeloVerificationFinding, bool, tuple[str, ...], tuple[str, ...], tuple[str, ...]],
-        None,
-    ]
-    | None = None,
+    blocking_finding_observer: _BlockingFindingObserver | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Refuse a draft whose contributing ledger rows moved since it was calculated.
 
@@ -96,13 +122,7 @@ def ledger_drift_findings(
     """
     if target.state is not CalculationRevisionState.BORRADOR:
         return []
-    baseline = set(target.source_transaction_ids)
-    for issue in target.source_issues:
-        if issue.binding_source not in LEDGER_BINDING_SOURCE_KINDS:
-            continue
-        identity = ledger_transaction_ref_identity(issue.source_ref)
-        if identity is not None:
-            baseline.add(identity)
+    baseline = _draft_ledger_baseline(target)
     added = tuple(sorted(set(current_membership.observed_transaction_ids) - baseline))
     tx_repo = transaction_repository
     anchor = target.ledger_filing_snapshot
@@ -115,8 +135,7 @@ def ledger_drift_findings(
             anchored=anchor is not None,
             membership_available=False,
         )
-        if blocking_finding_observer is not None:
-            blocking_finding_observer(finding, anchor is not None, (), (), ())
+        _observe_drift_finding(blocking_finding_observer, finding, anchor is not None, (), (), ())
         return [finding]
     if anchor is None:
         if not target.source_transaction_ids and not added:
@@ -129,8 +148,7 @@ def ledger_drift_findings(
             anchored=False,
             added=len(added),
         )
-        if blocking_finding_observer is not None:
-            blocking_finding_observer(finding, False, (), (), added)
+        _observe_drift_finding(blocking_finding_observer, finding, False, (), (), added)
         return [finding]
     verdict = evaluate_ledger_filing_staleness(anchor, tx_repo.load())
     if not verdict.is_stale and not added:
@@ -143,8 +161,9 @@ def ledger_drift_findings(
         anchored=True,
         added=len(added),
     )
-    if blocking_finding_observer is not None:
-        blocking_finding_observer(finding, True, tuple(verdict.changed), tuple(verdict.removed), added)
+    _observe_drift_finding(
+        blocking_finding_observer, finding, True, tuple(verdict.changed), tuple(verdict.removed), added
+    )
     return [finding]
 
 

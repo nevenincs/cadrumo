@@ -21,7 +21,6 @@ from ...core.operations import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
-    profile_operation_subject,
 )
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -41,14 +40,10 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -248,17 +243,12 @@ def build_modelo_calculation_report_verify_definition(
     source_reader: Callable[[Path], bytes] = Path.read_bytes,
 ) -> OperationDefinition:
     """Declare a local-only verification with secure request and result custody."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID,
         request_type=ModeloCalculationReportVerificationRequest,
         result_type=ModeloCalculationReportVerificationProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloCalculationReportVerificationRequest,
-            executor_type=ModeloCalculationReportVerificationExecutor,
-            build=lambda: ModeloCalculationReportVerificationExecutor(factory, source_reader=source_reader),
-        ),
-        phase_codes=(MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloCalculationReportVerificationExecutor,
+        build=lambda: ModeloCalculationReportVerificationExecutor(factory, source_reader=source_reader),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -272,7 +262,6 @@ def build_modelo_calculation_report_verify_definition(
             permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -283,15 +272,12 @@ def build_modelo_calculation_report_verify_registration(
     """Require whole-profile read authority without reading the requested file."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != definition.definition_id or not isinstance(
-            payload, ModeloCalculationReportVerificationRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_access_request_profile_payload(
+            request,
+            definition_id=definition.definition_id,
+            payload_type=ModeloCalculationReportVerificationRequest,
+            access_profile_id=context.profile_id,
+        )
         if context.authority_operation is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         return bind_operation_access_profile(

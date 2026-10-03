@@ -136,9 +136,11 @@ application:
         un proveïdor d'accés.
     sessions:
       errors:
-        clave_contraste_missing: La ruta Cl@ve Móvil sense QR necessita el contrast
-          imprès al teu document. Registra %{nie_field} al perfil actiu si és un NIE,
-          o %{dni_field} si és un DNI, abans d'utilitzar cap sessió amb l'AEAT.
+        clave_contraste_missing: Cl@ve Móvil inicia la sessió per defecte amb una
+          sol·licitud d'aprovació a l'app Cl@ve, que necessita el contrast imprès
+          al teu document. Registra %{nie_field} al perfil actiu si és un NIE, o %{dni_field}
+          si és un DNI. Per escanejar un codi QR en un navegador visible, executa
+          `aeat config auth configure --provider clave_movil --clave-movil-route qr`.
         clave_identity_malformed: La identitat de Cl@ve no és un NIF, NIE o CIF vàlid,
           per la qual cosa no es pot confirmar que pertanyi a aquest perfil.
         clave_identity_missing: L'autenticació en directe amb Cl@ve exigeix un DNI/NIE.
@@ -148,9 +150,6 @@ application:
         clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
-        clave_route_missing: L'autenticació en directe amb Cl@ve Mòbil requereix %{route_field}.
-          Obre Identificació al gestor del perfil, tria Codi QR o Sol·licitud a l'aplicació,
-          desa-ho i torna a provar la sincronització.
         corrupt_session: La sessió d'autenticació desada està malmesa i no es pot
           llegir. Executa `aeat config auth logout` i després `aeat config auth test`.
         no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
@@ -1891,11 +1890,15 @@ application:
           no s'ha comprovat
         national_and_territory: festius nacionals i de %{territory} comprovats; festius
           locals sense comprovar
+        national_and_territory_without_name: festius nacionals i autonòmics aplicables
+          comprovats; festius locals sense comprovar
         national_only: només festius nacionals; festius autonòmics i locals sense
           comprovar
         not_shifted: el termini d'aquest model no es trasllada per dies inhàbils
         territory_unverified: només festius nacionals; els festius autonòmics de %{territory}
           d'aquest any no s'han comprovat i els locals no es comproven
+        territory_unverified_without_name: només festius nacionals; el calendari autonòmic
+          aplicable no està verificat; els festius locals no es comproven
       shift:
         business_day: Dia hàbil
         calendar_unavailable: Calendari no disponible

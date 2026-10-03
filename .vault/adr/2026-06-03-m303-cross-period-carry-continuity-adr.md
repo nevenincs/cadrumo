@@ -3,13 +3,15 @@ tags:
   - '#adr'
   - '#m303-cross-period-carry-continuity'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:3ee6386696ce90cbbebb073be223f18e6bf146d3f2f098169f6bd56a1cc8fd0e'
+modified: '2026-10-03'
+body_hash: 'sha256:a3a1b87246ce764f6b08ca555ca1124425c251dfbf872069e7efd6318f90dca0'
 related:
   - "[[2026-06-03-m303-cross-period-carry-continuity-research]]"
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
+  - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
+  - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 ---
 
 # `m303-cross-period-carry-continuity` adr: M303 cross-period carry continuity diagnostic gate + anti-regression contract | (**status:** `accepted`)
@@ -259,10 +261,18 @@ Pitfalls:
   which surfaced a saldo-magnitude regression that the in-period
   47/47 green could not catch.
 
-## Status
+## Relationship to carry authority
 
-Accepted and in force. The cross-period carry-continuity contract this ADR defines
-aligns to the canonical compensación-carry direction in the PHASE ADRs (not a central
-apex doc): the foundational `live-iva-compensation-wallet-adr` is the carry anchor, and
-the future phase-2.3 (fold-in/carry) ADR unifies the carry mechanism. This ADR's
-gate/test contract stands.
+This accepted diagnostic gate and anti-regression contract remain in force. D3 in the
+accepted `2026-06-10-calculation-aggregation-taxonomy-adr` assigns ownership of the
+M303 compensation binding to the IVA wallet decision. The accepted phase 2.3
+`2026-06-26-binding-fold-in-carry-unification-adr` now governs fold-in and
+compensation-carry implementation unification. Its relation-aggregation surface is
+represented in current code by `RelationAggregationOp` in
+`src/cadrumo/core/aggregation.py` and `RegistryFoldRequirement.aggregation_op` in
+`src/cadrumo/domain/calculations/registry/relations.py`.
+
+The former “future phase-2.3” wording was accurate when this ADR was recorded on
+2026-06-03. This curation update records phase 2.3's accepted status and the code
+evidence above as of 2026-10-03; it does not replace this ADR's cross-period
+diagnostic gate or test contract.

@@ -3,15 +3,17 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9d891022b8b56d7b7a10d6a5455516d41ae7f7cfcacffb4855a93f5c15989f8a'
+body_hash: 'sha256:1cd261585712b40e63ead5570c2d49b4b9c3381b14546fb36575dfb2780c7fb3'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
 # `ci-lane-deconflation` audit: `the reserialisation finding is disproved and its cause misattributed`
 
-## What was claimed
+## Scope
+
+### What was claimed
 
 That `vaultspec-core vault plan step check` reserialises a plan and strips template comment
 blocks — 93 lines on this campaign's plan — while its `--dry-run` previews only the checkbox
@@ -21,7 +23,9 @@ diff they have not seen.
 I reported that. Two people subsequently observed the same 93-line strip and reached the same
 attribution independently, which made it look corroborated. It is wrong.
 
-## What the reproduction found
+## Findings
+
+### What the reproduction found
 
 Built an isolated vault outside the repository, copied in this campaign's plan **as first
 committed** (222 lines, 7 comment blocks including the LINK RULES and FRONTMATTER RULES
@@ -41,7 +45,7 @@ anything. On a freshly scaffolded plan the same asymmetry appeared in the same d
 **The claim is disproved in the direction opposite to how it was filed.** `step check`'s
 preview is faithful, and if anything it is pessimistic.
 
-## What actually stripped the file
+### What actually stripped the file
 
 `vaultspec-core vault check all --fix`, run against the same isolated copy:
 
@@ -55,7 +59,7 @@ preview is faithful, and if anything it is pessimistic.
 that `vault check all --fix` "reconciles frontmatter, **strips leftover template
 annotations**, and applies markdown hygiene fixes". It did precisely what it advertises.
 
-## Why the misattribution happened, which is the durable part
+### Why the misattribution happened, which is the durable part
 
 I ran `step check`, then ran `git diff` on the plan, and read the resulting diff as the effect
 of my own last command. It was not. A peer's tree-wide `--fix` run had already stripped the
@@ -74,7 +78,9 @@ Two people agreeing did not help, and is the second instance today of that speci
 Both of us ran the same wrong instrument against the same contaminated tree, so the agreement
 measured the shared method rather than the fact — corroboration, not confirmation.
 
-## Disposition
+## Recommendations
+
+### Disposition
 
 **No upstream report is warranted and none should be filed.** The verb behaves correctly, its
 preview is faithful, and the strip belongs to a different verb whose documentation describes
@@ -86,7 +92,7 @@ lines from a plan whose author did not invoke it, and touching every other docum
 in the same pass. That is a scope property of a documented verb, not a bug in it, and the
 existing operating guidance to scope checks to one's own documents already covers it.
 
-## What would have caught this earlier
+### What would have caught this earlier
 
 A before-snapshot. One `cp` immediately before the mutation converts "the tree differs" into
 "my command did this", and it is the only thing that distinguishes them in a worktree that

@@ -25,7 +25,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
 from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.operations import (
+from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileFieldMutationOperationRequest,
     ProfileMutationOperationProjection,
 )
@@ -92,6 +92,7 @@ def test_tui_mutation_runner_projects_success_and_preserves_stale_conflict(tmp_p
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         launch = RuntimeLaunchDoor(
             endpoint,

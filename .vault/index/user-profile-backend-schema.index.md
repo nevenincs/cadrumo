@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#user-profile-backend-schema'
 date: '2026-08-16'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3f47298325472f556b4aa4d054a1ef0240fa310d939955311f5de3b2ab7ed814'
+body_hash: 'sha256:4f0eb64053493aba17fb7f4c842ce230547991624bbc57a6ce8d79a992950491'
 related:
-  - '[[2026-05-07-user-profile-backend-schema-exec]]'
   - '[[2026-06-04-user-profile-backend-schema-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#user-profile-backend-schema`.
 
 ## Documents
-
-### exec
-
-- `2026-05-07-user-profile-backend-schema-exec` - `user-profile-backend-schema` `Wave 1 Schema Foundation Step` `Wave 1 Schema Foundation Step`
 
 ### research
 

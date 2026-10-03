@@ -59,14 +59,9 @@ def google_configuration_refusal_error(
 ) -> CadrumoError:
     """Rehydrate the original declared human failure and attach actual receipt coordinates."""
     refusal = GoogleConfigurationRefusalProjection.model_validate(refusal.model_dump(mode="python"), strict=True)
-    if (
-        terminal_condition is not OperationTerminalCondition.REFUSED
-        or refusal_code != GOOGLE_CONFIGURATION_REFUSAL_CODE
-    ):
+    if not _google_refusal_receipt_is_closed(terminal_condition, refusal_code):
         raise ValueError("Google refusal requires its authoritative refusal receipt")
-    error_type = next(
-        (item for item in GOOGLE_CONFIGURATION_ERROR_TYPES if item.code.code == refusal.provider_code), None
-    )
+    error_type = _google_refusal_constructor(refusal)
     if error_type is None:
         raise ValueError("Google refusal code has no canonical presentation constructor")
     context = refusal.facts.presentation_context()
@@ -99,3 +94,18 @@ def google_configuration_refusal_error(
 
 
 __all__ = ["GOOGLE_CONFIGURATION_ERROR_TYPES", "google_configuration_refusal_error"]
+
+
+def _google_refusal_receipt_is_closed(terminal_condition: OperationTerminalCondition, refusal_code: str) -> bool:
+    """Require the authoritative refused terminal receipt before reconstructing a human error."""
+    return not (
+        terminal_condition is not OperationTerminalCondition.REFUSED
+        or refusal_code != GOOGLE_CONFIGURATION_REFUSAL_CODE
+    )
+
+
+def _google_refusal_constructor(
+    refusal: GoogleConfigurationRefusalProjection,
+) -> type[GoogleAuthError | OutboundStorageError | GoogleConfigurationExportDisabledError] | None:
+    """Select the declared owning constructor for the exact provider code."""
+    return next((item for item in GOOGLE_CONFIGURATION_ERROR_TYPES if item.code.code == refusal.provider_code), None)

@@ -15,7 +15,7 @@ from pydantic import SecretBytes
 
 from cadrumo.adapters.local_runtime.server import RuntimeListener, RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner
-from cadrumo.adapters.persistence.storage.custody.automation_store import CONTROL_NAMESPACE, WRAP_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.runtime.contracts import (
     RuntimeByteChannel,

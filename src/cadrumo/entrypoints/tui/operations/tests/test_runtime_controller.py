@@ -14,7 +14,8 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
@@ -158,6 +159,7 @@ def test_native_tui_controller_keeps_start_and_review_authority_with_original_se
             capture_login=lambda _channel: _NativeLogin(owner_id()),
             secret_store=lambda: enrollment.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         clients: list[RuntimeFrontendClient] = []
         with ThreadPoolExecutor(max_workers=1) as pool:

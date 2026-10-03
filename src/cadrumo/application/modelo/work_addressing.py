@@ -1463,7 +1463,7 @@ def resolve_verifiable_modelo_calculation_revision_address(
 
     Returns the resolved revision in ANY lifecycle state; no draft gate is
     applied here. Verification-state policy is owned by
-    :func:`~cadrumo.application.modelo.verification_actions.verify_modelo_revision` under
+    :func:`~cadrumo.application.modelo.verification_actions.verify_modelo_revision_with_preconditions` under
     ``aeat-cli-contract``: a revision already out of
     ``BORRADOR`` that carries a granting :class:`VerificationReport` collapses to
     that existing report as an idempotent no-op, and the hard refusal is reserved

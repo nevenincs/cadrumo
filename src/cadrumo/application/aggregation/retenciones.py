@@ -41,7 +41,7 @@ from ...core.period import Period
 from ...core.spanish_postcode import SpanishPostcode, SpanishProvinceCode
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
@@ -348,9 +348,7 @@ def _resolved_withholding_scheme_fact(
     enclosing operation is used, exactly as the retención rate facts resolve.
     With neither there is no authority to answer and the resolution refuses.
     """
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise ValueError("withholding-scheme resolution requires a generation-pinned governed-fact source")
+    authority = require_governed_fact_authority(authority, subject="withholding-scheme resolution")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m111-m115-m123-withholding-scheme-catalogue",

@@ -167,10 +167,25 @@ class CliUnexpectedBoundaryError(CadrumoError):
         # An unexpected exception is a code or environment fault, not a storage
         # repair instruction. The error envelope records an explicit
         # no-recovery outcome at emission time.
+        # Name the fault without its message: messages can quote URLs or identifiers,
+        # while the exception type and the raising product frame cannot.
         super().__init__(
             translated_message="errors.internal.internal_cli_unexpected_boundary",
+            context={"exception_type": type(error).__name__, "raised_at": _raising_product_frame(error)},
         )
         self.original_exception: Exception = error
+
+
+def _raising_product_frame(error: BaseException) -> str:
+    """Return ``module:function:line`` of the innermost Cadrumo frame that raised ``error``."""
+    located = "unknown"
+    trace = error.__traceback__
+    while trace is not None:
+        module = trace.tb_frame.f_globals.get("__name__", "")
+        if isinstance(module, str) and module.startswith("cadrumo."):
+            located = f"{module}:{trace.tb_frame.f_code.co_name}:{trace.tb_lineno}"
+        trace = trace.tb_next
+    return located
 
 
 class CliStoredDataValidationBoundaryError(CadrumoError):

@@ -11,7 +11,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.profile_mutations import ProfileMutationRunError, run_profile_mutation
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
@@ -26,7 +27,7 @@ from cadrumo.application.runtime.contracts import RuntimeClientHello
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.operations import (
+from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePatchOperationProjection,
     ProfilePatchOperationRequest,
     ProfilePatchValue,
@@ -125,6 +126,7 @@ def test_native_patch_is_atomic_noop_and_exact_profile_bound(tmp_path: Path) -> 
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         launch = RuntimeLaunchDoor(
             endpoint,

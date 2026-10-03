@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-interface'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e62ac303b43979859f371abe1859f650289b7cd228b55acfe011697e7d73eed'
+body_hash: 'sha256:ed620153e1a974bd75c83e1d35fd2672cf13a48057809dcd48ba19cd96daac3f'
 related:
   - "[[2026-08-11-tui-interface-plan]]"
 ---
@@ -14,7 +14,11 @@ related:
 
 ## Scope
 
+Review the TUI interface plan's receipt rows against current plan status and the action-denominator contract.
+
 ## Findings
+
+Three plan rows remain open. Two receipt rows are retired as superseded; the action-denominator row is live and its current gate passes.
 
 ## Recommendations
 

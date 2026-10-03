@@ -10,6 +10,45 @@ from pydantic import AnyHttpUrl, BaseModel, Field
 from ...core.models import STRICT_FROZEN_CONFIG
 
 
+class CensalCell(BaseModel):
+    """Rendered evidence; a blank selection is not a negative answer."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    role: Literal["label", "casilla", "value"]
+    text: str | None
+    column: str | None = None
+
+
+class CensalRow(BaseModel):
+    """A labelled record, preserving unfamiliar and blank cells."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    label: str | None = None
+    columns: tuple[str, ...] = ()
+    cells: tuple[CensalCell, ...]
+
+
+class CensalSection(BaseModel):
+    """A named group whose field and column labels survive reordering."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    title: str = Field(min_length=1)
+    rows: tuple[CensalRow, ...]
+
+
+class CensalConsultation(BaseModel):
+    """One consultation's evidence, without interpreting eligibility or liability."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal["actividades", "locales", "situacion_tributaria", "obligaciones"]
+    source_url: AnyHttpUrl
+    sections: tuple[CensalSection, ...] = Field(min_length=1)
+
+
 class CensalObservationIdentity(BaseModel):
     """Exact identity group observed on the censal consulta surface."""
 
@@ -65,6 +104,7 @@ class CensalObservation(BaseModel):
     captured_at: datetime
     source_url: AnyHttpUrl
     mode: Literal["read"] = "read"
+    consultations: tuple[CensalConsultation, ...] = ()
 
 
 __all__ = ["CensalObservation", "CensalObservationAddress", "CensalObservationIdentity"]

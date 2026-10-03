@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#binding-schema'
 date: '2026-09-13'
-modified: '2026-09-13'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d8c7866dfe197c4fcbc2980a2dd345f39bb01cc85a5333259232081dd6ecaa2'
+body_hash: 'sha256:4bdf98a1141bdda2bfd8ef2fbf4c1a13e4a64cebc231b709cfcf752bbea60ad7'
 related:
   - "[[2026-09-12-binding-schema-tooling-review-audit]]"
   - "[[2026-09-11-binding-schema-plan]]"
@@ -22,11 +22,13 @@ cross-revision coexistence semantics, and two new export-placement gates. Covers
 registry binding sources and compiler validators under
 `src/cadrumo/domain/calculations/registry/` and the corpus tooling under `dev/registry/`.
 
-## Incident and repair
+## Findings
+
+### Incident and repair
 
 A writer enrolled bindings for keyed inheritance in
 `src/cadrumo/domain/calculations/registry/keyed_families.py`, republished the authority
-artifact, and then ran `dev/registry/strip_restated_bindings.py` corpus-wide after
+artifact, and then ran the corpus-wide strip tool after
 modifying it. The modification replaced the tool's delete branch with a retain-preamble
 write, so fragments that should have been unlinked were instead left on disk as 237 blank
 and 31 comment-only files. Every registry load failed against those remnants.
@@ -55,17 +57,17 @@ same reason modelo 714 `2022-2025`'s four `m714-m100-*` members remain inherited
 | Path | Change | Tests |
 | --- | --- | --- |
 | `src/cadrumo/domain/calculations/registry/keyed_families.py` | Bindings enrolled for keyed inheritance | Registry load and resolution suites |
-| `dev/registry/strip_restated_bindings.py` | Delete branch restored; carried-grounding guard so a member strips only when its materialised `source_refs` are what the successor default supplies or its constructs cover | `test_strip_restated_bindings.py` (three teeth) |
+| binding strip tool | Delete branch restored; carried-grounding guard so a member strips only when its materialised `source_refs` are what the successor default supplies or its constructs cover | `test_strip_restated_bindings.py` (three teeth) |
 | `dev/registry/run_exclusions.py` | Edge and exclusion options; `FROZEN_MODELOS` (100, 200) | Owning exclusion tests |
 | `dev/registry/corpus_write.py` | Byte-level write with read-back verification | Owning corpus-write tests |
 | `src/cadrumo/domain/calculations/registry/binding_provider_registration.py` | Silent skip fixed: `row_set` now agrees on the effective aggregation op | Binding provider registration tests |
-| `src/cadrumo/domain/calculations/registry/validate_formulas.py` | Silent skip fixed: unknown `date_binding` operand refused | Formula validation tests |
+| registry formula validator | Silent skip fixed: unknown `date_binding` operand refused | Formula validation tests |
 | `dev/registry/bindings.py` | Two run limitations declared | Corpus run tests |
 | `src/cadrumo/domain/calculations/registry/inventory_bindings.py` | Inventory validator teeth restored via `selector_against_model` | Inventory binding tests |
-| `src/cadrumo/domain/calculations/registry/corpus_catalogue.py` | Blanket catch narrowed | Compiler validation tests |
-| `src/cadrumo/domain/calculations/registry/legal_grounding.py` | Blanket catch narrowed | Compiler validation tests |
-| `src/cadrumo/domain/calculations/registry/loader_cache.py` | Blanket catch narrowed | Compiler validation tests |
-| `src/cadrumo/domain/calculations/registry/validate_evidence.py` | Two blanket catches narrowed | Compiler validation tests |
+| registry corpus catalogue | Blanket catch narrowed | Compiler validation tests |
+| registry legal-grounding validator | Blanket catch narrowed | Compiler validation tests |
+| registry loader cache | Blanket catch narrowed | Compiler validation tests |
+| registry evidence validator | Two blanket catches narrowed | Compiler validation tests |
 | `src/cadrumo/domain/calculations/registry/revision_order.py` | `revisions_coexist` and `revision_windows_intersect` added: coexistence requires windows to intersect and selectors to overlap | Revision order and cross-revision suites |
 | `dev/registry/compiler/validate_export_field_placement.py` | New gate: overlap refusal, gap and late-start advisories | Gate teeth plus corpus run |
 | `dev/registry/compiler/validate_below_floor_export_refs.py` | New gate: a `below_floor` disposition downgrades a revision's unknown-binding export refusals to one advisory | Gate teeth plus corpus run |
@@ -97,7 +99,7 @@ Below-floor export refs on modelo 232 `2016-2017`: 140 refusals to 0. Corpus com
 refusal lines fell 3,498 to 3,358. The two retired 303 `2025` projection-endpoint
 evolutions took that modelo from 6 findings to 0.
 
-## Open items
+## Recommendations
 
 The thirteen `restated_families` declarations remain unauthored pending the 52-edge
 inheritance re-proof; the identity tuple under consideration is

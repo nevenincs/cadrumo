@@ -10,14 +10,14 @@ from textual.widgets import DataTable, Static
 
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
-from .....application.modelo.declarations_workspace import (
+from .....application.modelo.declarations_workspace import project_declarations_workspace
+from .....application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
-    project_declarations_workspace,
 )
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference

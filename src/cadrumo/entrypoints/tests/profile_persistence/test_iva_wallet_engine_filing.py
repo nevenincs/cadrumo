@@ -24,7 +24,7 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -125,7 +125,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             operation=operation,
         )
         with bundled_indexed_authority().operation() as operation:
-            verification_report = verify_modelo_revision(
+            verification_report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -138,7 +138,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 clock=datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         assert verification_report.granted_verificado_completo is True
 
         with bundled_indexed_authority().operation() as operation:
@@ -254,7 +254,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     operation=operation,
                 )
             with bundled_indexed_authority().operation() as operation:
-                verification = verify_modelo_revision(
+                verification = verify_modelo_revision_with_preconditions(
                     revision.calculation_revision_id,
                     certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                     verification_repositories=build_test_verification_repository_bundle(),
@@ -267,7 +267,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     clock=verification_times[index],
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     operation=operation,
-                )
+                ).report
             assert verification.granted_verificado_completo is True
             with bundled_indexed_authority().operation() as operation:
                 filing = file_modelo_revision(
@@ -395,7 +395,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert generated_carry > Decimal("0")
 
         with bundled_indexed_authority().operation() as operation:
-            verification = verify_modelo_revision(
+            verification = verify_modelo_revision_with_preconditions(
                 revision_1t.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -408,7 +408,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 clock=datetime(2026, 4, 15, 9, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         assert verification.granted_verificado_completo is True
 
         with bundled_indexed_authority().operation() as operation:

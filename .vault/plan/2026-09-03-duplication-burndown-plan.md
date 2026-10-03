@@ -6,10 +6,10 @@ date: '2026-09-03'
 tier: L3
 related:
   - '[[2026-07-14-honest-all-green-adr]]'
-  - '[[2026-07-17-duplication-evidence-repair-adr]]'
   - '[[2026-07-17-duplication-evidence-repair-plan]]'
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
-modified: '2026-09-06'
+  - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
+modified: '2026-10-03'
 body_schema: body-v2
 body_hash: 'sha256:dea593424f0b7499950f7404c1b2cd34e7c11e6dfc629d2f9e1e241513df6b79'
 ---

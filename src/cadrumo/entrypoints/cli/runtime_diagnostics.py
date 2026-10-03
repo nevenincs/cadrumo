@@ -12,8 +12,12 @@ from pydantic import ValidationError
 from ...application.diagnostics_operation import (
     DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
     DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID,
+)
+from ...application.diagnostics_read_contracts import (
     DiagnosticsReadProjection,
     DiagnosticsReadRequest,
+)
+from ...application.diagnostics_telemetry_contracts import (
     DiagnosticsTelemetryFlushProjection,
     DiagnosticsTelemetryFlushRequest,
 )

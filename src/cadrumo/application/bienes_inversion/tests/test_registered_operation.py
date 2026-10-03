@@ -11,19 +11,19 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
-import cadrumo.application.bienes_inversion.registered_operation as registered_operation_module
+import cadrumo.application.bienes_inversion.registered_executor as registered_executor_module
 from cadrumo.application.bienes_inversion.declare_command import (
     BienInversionDeclarationCommand,
     build_bien_inversion_record,
 )
-from cadrumo.application.bienes_inversion.registered_operation import (
+from cadrumo.application.bienes_inversion.registered_contracts import (
     BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     BIENES_INVERSION_DUPLICATE_REFUSAL_CODE,
     BIENES_INVERSION_VALIDATION_REFUSAL_CODE,
-    BienesInversionDeclareRequest,
-    BienesInversionOperationExecutionResult,
-    BienesInversionOperationExecutor,
 )
+from cadrumo.application.bienes_inversion.registered_execution_result import BienesInversionOperationExecutionResult
+from cadrumo.application.bienes_inversion.registered_executor import BienesInversionOperationExecutor
+from cadrumo.application.bienes_inversion.registered_requests import BienesInversionDeclareRequest
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.public_scalar import PublicDecimal
@@ -302,7 +302,7 @@ def test_validation_error_after_repository_write_remains_unknown(
         raise construction_error
 
     monkeypatch.setattr(
-        registered_operation_module,
+        registered_executor_module,
         "BienesInversionOperationExecutionResult",
         fail_result_construction,
     )

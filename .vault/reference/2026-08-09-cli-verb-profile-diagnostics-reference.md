@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#cli-verb-profile-diagnostics'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:f95ab616e98ad458daff46c02825e1e18adad8731bc96d18533889c1e5614c33'
-related:
-  - "[[2026-08-08-profile-requirement-grounding-plan]]"
+related: []
 ---
 
 # `cli-verb-profile-diagnostics` reference: `CLI verb profile-refusal message inventory`

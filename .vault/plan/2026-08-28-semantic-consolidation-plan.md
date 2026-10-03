@@ -8,14 +8,16 @@ related:
   - '[[2026-08-28-semantic-consolidation-research]]'
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
   - '[[2026-10-01-vault-health-reconciliation-preexisting-errors-audit]]'
-modified: '2026-10-01'
+modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:ec94ce869f5eff0aafab64c4bad5140b657d12f91e8b310f1123cb84180d07df'
+body_hash: 'sha256:6c5326526a609feed839f96668c99c06a1718d193439ef668f596b5cf0bf7c7a'
 ---
 
 # `semantic-consolidation` plan
 
 ## Description
+
+Consolidate only measured semantic duplication: retire redundant lazy re-export resolvers, reconcile CLI payload constraints against canonical models, adjudicate candidate shared shapes, and centralize confirmed filing-year and constrained-scalar bounds.
 
 ## Steps
 
@@ -233,4 +235,8 @@ An AST census of every pydantic Field constraint in production code found the sa
 
 ## Parallelization
 
+P01 was explicitly placed first because later phases depend on the imports exposed by the lazy resolvers. P02 requires the payload-authority ruling before reconciliation; later phases retain their own semantic preconditions, including substitutability checks before enum-subset consolidation. The plan records no concurrent assignments.
+
 ## Verification
+
+A candidate is consolidated only when its consumers share the same semantic contract and the owning gate proves the canonical shape. The namespace, payload, shared-configuration, duplicate-function, enum-subset, filing-year and scalar-shape phases must each preserve distinct concepts and reject reintroduced restatements; non-equivalent groups documented by their phase rulings remain separate.

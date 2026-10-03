@@ -22,11 +22,9 @@ from ...operations.registry import OperationFrontendProjection, OperationRegistr
 from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..abort import WorkflowAbortReason
+from ..obligation_snapshot import WorkflowObligationSnapshot
 from ..resume import WorkflowResumeRefusalReason
-from ..resume_operation import (
-    WORKFLOW_RESUME_AMBIGUITY_CODE,
-    WORKFLOW_RESUME_OPERATION_DEFINITION_ID,
-    WORKFLOW_RESUME_REFUSAL_CODE,
+from ..resume_contracts import (
     WorkflowResumeAddress,
     WorkflowResumeAmbiguity,
     WorkflowResumeCandidateSnapshot,
@@ -35,12 +33,16 @@ from ..resume_operation import (
     WorkflowResumeRequest,
     WorkflowResumeResult,
     WorkflowResumeSuccess,
+)
+from ..resume_operation import (
+    WORKFLOW_RESUME_AMBIGUITY_CODE,
+    WORKFLOW_RESUME_OPERATION_DEFINITION_ID,
+    WORKFLOW_RESUME_REFUSAL_CODE,
     build_workflow_resume_definition,
     build_workflow_resume_registration,
     project_workflow_resume_result,
 )
 from ..run_models import WorkflowObligationFacts, WorkflowStage
-from ..run_projection import WorkflowObligationSnapshot
 from ..run_read_ports import WorkflowRunReadPortsFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

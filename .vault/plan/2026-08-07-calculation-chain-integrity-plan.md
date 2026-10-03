@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#calculation-chain-integrity'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_hash: 'sha256:b59827324657a15b1c0d83310b504a7ae19e651ba5ec640efe5539bd1ef936f3'
 tier: L3
 related:
@@ -11,7 +11,6 @@ related:
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
-  - '[[2026-08-07-calculation-chain-integrity-research]]'
 ---
 
 # `calculation-chain-integrity` plan

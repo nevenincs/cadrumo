@@ -63,7 +63,7 @@ from ...application.modelo.amendment_context_operation import (
     ModeloWorkAmendmentContextRequest,
 )
 from ...application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
-from ...application.modelo.operation_definitions import (
+from ...application.modelo.work_amend_contracts import (
     ModeloWorkAmendBaseline,
     ModeloWorkAmendOverride,
     ModeloWorkAmendRequest,

@@ -8,7 +8,8 @@ from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....adapters.outbound.google.errors import GoogleAuthNonInteractiveError
 from ....adapters.outbound.google.oauth_flow import require_interactive_terminal
 from ....application.operations.frontend_projection import (

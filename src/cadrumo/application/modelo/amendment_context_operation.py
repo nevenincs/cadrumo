@@ -21,24 +21,18 @@ from ...domain.modelos.calculation_revision_amendment import (
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
 from ..operations.access_resolution import (
-    ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_single_period_admission,
+    bind_replayed_or_fresh_single_period_access,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_identity
+from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -79,20 +73,7 @@ class ModeloWorkAmendmentContextProjection(BaseModel):
     @model_validator(mode="after")
     def _bound_result(self) -> Self:
         profile_id = str(self.profile_id)
-        if (
-            self.record.bucket_id != profile_id
-            or self.unit.bucket_id != profile_id
-            or self.calculation.bucket_id != profile_id
-            or self.record.work_unit_id != self.unit.work_unit_id
-            or self.calculation.work_unit_id != self.unit.work_unit_id
-            or self.record.calculation_revision_id != self.calculation.calculation_revision_id
-            or self.record.modelo != self.unit.modelo
-            or self.calculation.modelo != self.unit.modelo
-            or self.record.filing_year != self.unit.filing_year
-            or self.calculation.filing_year != self.unit.filing_year
-            or self.record.period != self.unit.period
-            or self.calculation.period != self.unit.period
-        ):
+        if _amendment_context_identity_differs(self, profile_id) or _amendment_context_coordinates_differ(self):
             raise ValueError("amendment context filing, work unit, and calculation do not match")
         row_ids = tuple(row.casilla_id for row in self.casilla_rows)
         if len(set(row_ids)) != len(row_ids):
@@ -102,6 +83,30 @@ class ModeloWorkAmendmentContextProjection(BaseModel):
         ):
             raise ValueError("amendment context has invalid permitted kinds")
         return self
+
+
+def _amendment_context_identity_differs(projection: ModeloWorkAmendmentContextProjection, profile_id: str) -> bool:
+    """Compare profile, work-unit and revision identities in their original order."""
+    return (
+        projection.record.bucket_id != profile_id
+        or projection.unit.bucket_id != profile_id
+        or projection.calculation.bucket_id != profile_id
+        or projection.record.work_unit_id != projection.unit.work_unit_id
+        or projection.calculation.work_unit_id != projection.unit.work_unit_id
+        or projection.record.calculation_revision_id != projection.calculation.calculation_revision_id
+    )
+
+
+def _amendment_context_coordinates_differ(projection: ModeloWorkAmendmentContextProjection) -> bool:
+    """Compare modelo, year and period after the stored identities agree."""
+    return (
+        projection.record.modelo != projection.unit.modelo
+        or projection.calculation.modelo != projection.unit.modelo
+        or projection.record.filing_year != projection.unit.filing_year
+        or projection.calculation.filing_year != projection.unit.filing_year
+        or projection.record.period != projection.unit.period
+        or projection.calculation.period != projection.unit.period
+    )
 
 
 def _filing_unit(
@@ -187,19 +192,13 @@ class ModeloWorkAmendmentContextExecutor:
 
 def build_modelo_work_amendment_context_definition(factory: VerificationRepositoryBundleFactory) -> OperationDefinition:
     """Declare one credential-free read with an encrypted public result."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkAmendmentContextRequest,
         result_type=ModeloWorkAmendmentContextProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloWorkAmendmentContextRequest,
-            executor_type=ModeloWorkAmendmentContextExecutor,
-            build=lambda: ModeloWorkAmendmentContextExecutor(factory),
-        ),
-        phase_codes=(MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloWorkAmendmentContextExecutor,
+        build=lambda: ModeloWorkAmendmentContextExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -210,34 +209,19 @@ def build_modelo_work_amendment_context_registration(
     """Resolve period from the stored filing; retain admitted scope for history."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID or not isinstance(
-            payload, ModeloWorkAmendmentContextRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        require_access_request_profile_identity(
+        payload = require_access_request_profile_payload(
             request,
-            payload_profile_id=payload.profile_id,
+            definition_id=MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID,
+            payload_type=ModeloWorkAmendmentContextRequest,
             access_profile_id=context.profile_id,
         )
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            periods = require_single_period_admission(
-                admitted, profile_id=context.profile_id, definition_id=request.definition_id
-            )
-        else:
-            if context.authority_operation is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            _record, unit = _filing_unit(
-                payload, factory(str(payload.profile_id), operation=context.authority_operation)
-            )
-            periods = frozenset({unit.period})
-        return bind_operation_access_profile(
+        return bind_replayed_or_fresh_single_period_access(
             context,
             LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
             definition_id=request.definition_id,
-            periods=periods,
+            fresh_period=lambda operation: (
+                _filing_unit(payload, factory(str(payload.profile_id), operation=operation))[1].period
+            ),
         )
 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(

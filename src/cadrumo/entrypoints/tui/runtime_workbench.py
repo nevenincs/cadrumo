@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 
 from textual.screen import Screen
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...adapters.local_runtime.workbench_generation import read_workbench_generation
 from ...application.modelo.declaration_summary import DeclarationSummaryState
 from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1, DeclarationsCalendarProjectionV1
-from ...application.modelo.declarations_workspace import (
+from ...application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionV1,
 )
@@ -50,7 +50,7 @@ if TYPE_CHECKING:
     from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
     from ...application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
     from ...application.user_profile.overview import ProfileOverview
-    from ...application.workbench_generation import WorkbenchGenerationV1
+    from ...application.workbench_generation_contracts import WorkbenchGenerationV1
     from .navigation import TuiDestinationCatalogueV1
     from .profile.overview import ProfileManagerScreen
     from .runtime_access_management import RecoveryClientOpener
@@ -71,6 +71,92 @@ class _Capture:
 
     generation: WorkbenchGenerationV1
     profile: ProfileOverview
+
+
+class _DeclarationDestination:
+    """Keep declaration and calendar factories on their latest capture."""
+
+    def __init__(self, root: RuntimeWorkbenchRoot, generation: WorkbenchGenerationV1) -> None:
+        self._root = root
+        self._current = generation
+        self._lock = Lock()
+
+    def refresh(self) -> WorkbenchGenerationV1:
+        captured = self._root._read().generation
+        self._root._require_binding()
+        with self._lock:
+            self._current = captured
+        return captured
+
+    def latest(self) -> tuple[DeclarationsWorkspaceProjectionV1, DeclarationsCalendarProjectionV1 | None]:
+        self._root._require_binding()
+        with self._lock:
+            captured = self._current
+        declarations = captured.declarations.projection
+        if (
+            captured.declarations_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
+            or declarations is None
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        return declarations, captured.declarations_calendar.projection
+
+    def lifecycle_door(
+        self,
+        declaration: DeclarationsWorkspaceDeclarationRefV1,
+        read: ModeloWorkbenchFormReadV1 | None,
+    ) -> ModeloWorkspaceLifecycleDoor:
+        return compose_runtime_modelo_lifecycle_door(
+            self._root._client,
+            declaration,
+            calculation_revision_id=None if read is None else read.calculation_revision_id,
+            verification_report_id=None if read is None else read.verification_report_id,
+            asks_modelo_390=read is not None and read.asks_modelo_390,
+            refresh_after_success=self.refresh,
+        )
+
+    def workspace_factory(self, declaration: DeclarationsWorkspaceDeclarationRefV1, /) -> Screen[None]:
+        declarations, _ = self.latest()
+        return compose_installed_modelo_workbench_factory(
+            declarations=declarations.declarations,
+            source=lambda selected: RuntimeModeloWorkbenchSource(self._root._client, selected),
+            door=self.lifecycle_door,
+        )(declaration)
+
+    def calendar_declaration(
+        self, entry: DeclarationsCalendarEntryRefV1
+    ) -> DeclarationsWorkspaceDeclarationRefV1 | None:
+        declarations, _ = self.latest()
+        matches = tuple(
+            ref
+            for ref in declarations.declarations
+            if (str(ref.modelo), ref.filing_year, ref.period.registry_token) == entry.semantic_key()
+            and (ref.summary is None or ref.summary.state is not DeclarationSummaryState.UNREADABLE)
+        )
+        return matches[0] if len(matches) == 1 else None
+
+    def calendar_factory(self, entry: DeclarationsCalendarEntryRefV1, /) -> Screen[None] | None:
+        declaration = self.calendar_declaration(entry)
+        return None if declaration is None else self.workspace_factory(declaration)
+
+    def factory(self, context: TuiScreenContextV1) -> Screen[None]:
+        declarations, calendar = self.latest()
+        create_work = compose_runtime_work_create_handoff(self._root._client, refresh_after_success=self.refresh)
+        return declarations_screen_factory(
+            declarations,
+            DeclarationsWorkspaceWiringV1(
+                work_action=_action("operator.modelo.work.list"),
+                revisions_action=_action("operator.modelo.work.revisions"),
+                filing_action=_action("operator.modelo.filing_record.list"),
+                modelo_workspace_factory=self.workspace_factory,
+                calendar_projection=calendar,
+                calendar_entry_handoff=self.calendar_factory,
+                calendar_entry_can_open=lambda entry: self.calendar_declaration(entry) is not None,
+                calendar_recovery_handoff=compose_runtime_calendar_create_handoff(create_work),
+                work_create_handoff=create_work,
+                creation_targets=declarations.creation_targets,
+                refresh_data=self.latest,
+            ),
+        )(context)
 
 
 class RuntimeWorkbenchRoot:
@@ -134,7 +220,7 @@ class RuntimeWorkbenchRoot:
     def _destinations(
         self, generation: WorkbenchGenerationV1, profile_factory: TuiScreenFactoryV1
     ) -> TuiDestinationCatalogueV1:
-        admissions = {
+        admissions: dict[str, WorkbenchDestinationAdmission] = {
             "workbench.home": _available("workbench.home"),
             "workbench.profile": _available("workbench.profile"),
             "workbench.ledger": generation.ledger_admission,
@@ -147,137 +233,72 @@ class RuntimeWorkbenchRoot:
             ),
         }
 
+        factories = self._base_factories(generation, profile_factory)
+        ledger = self._ledger_factory(generation)
+        if ledger is not None:
+            factories["workbench.ledger"] = ledger
+        if generation.declarations_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
+            factories["workbench.declarations"] = _DeclarationDestination(self, generation).factory
+        aeat_sync = self._aeat_sync_factory(generation)
+        if aeat_sync is not None:
+            factories["workbench.aeat_sync"] = aeat_sync
+        return build_destination_catalogue(admissions=admissions, factories=factories)
+
+    @staticmethod
+    def _base_factories(
+        generation: WorkbenchGenerationV1, profile_factory: TuiScreenFactoryV1
+    ) -> dict[str, TuiScreenFactoryV1]:
         def home(context: TuiScreenContextV1) -> Screen[None]:
             if context.destination != "workbench.home" or generation.home.projection is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
             return HomeScreen(generation.home.projection)
 
-        factories: dict[str, TuiScreenFactoryV1] = {"workbench.home": home, "workbench.profile": profile_factory}
-        if generation.ledger_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
-            if generation.ledger.projection is None:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            factories["workbench.ledger"] = ledger_screen_factory(
-                generation.ledger.projection,
-                review_action=_action("operator.ledger.review"),
-                evidence_action=_action("operator.ledger.evidence.review.list"),
-                activity_asset_actions=actividad_asset_tui_actions(client=self._client, profile_label=self._label),
-                invoice_add_door=compose_runtime_invoice_add_door(
-                    client=self._client,
-                    profile_label=self._label,
-                ),
-                evidence_door=RuntimeEvidenceTuiDoorV1(self._client, profile_label=self._label),
-            )
-        if generation.declarations_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
-            current = [generation]
-            generation_lock = Lock()
+        return {"workbench.home": home, "workbench.profile": profile_factory}
 
-            def refresh_declarations() -> WorkbenchGenerationV1:
-                captured = self._read().generation
-                self._require_binding()
-                with generation_lock:
-                    current[0] = captured
-                return captured
+    def _ledger_factory(self, generation: WorkbenchGenerationV1) -> TuiScreenFactoryV1 | None:
+        if generation.ledger_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:
+            return None
+        if generation.ledger.projection is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        return ledger_screen_factory(
+            generation.ledger.projection,
+            review_action=_action("operator.ledger.review"),
+            evidence_action=_action("operator.ledger.evidence.review.list"),
+            activity_asset_actions=actividad_asset_tui_actions(client=self._client, profile_label=self._label),
+            invoice_add_door=compose_runtime_invoice_add_door(
+                client=self._client,
+                profile_label=self._label,
+            ),
+            evidence_door=RuntimeEvidenceTuiDoorV1(self._client, profile_label=self._label),
+        )
 
-            def latest_declarations() -> tuple[
-                DeclarationsWorkspaceProjectionV1, DeclarationsCalendarProjectionV1 | None
-            ]:
-                self._require_binding()
-                with generation_lock:
-                    captured = current[0]
-                declarations = captured.declarations.projection
-                if (
-                    captured.declarations_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
-                    or declarations is None
-                ):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-                return declarations, captured.declarations_calendar.projection
+    def _aeat_sync_factory(self, generation: WorkbenchGenerationV1) -> TuiScreenFactoryV1 | None:
+        if generation.aeat_sync_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:
+            return None
+        if generation.aeat_sync.projection is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        operation_handoff, operation_contracts = compose_runtime_aeat_sync_handoff(
+            self._client,
+            output_root=load_settings().cadrumo_filed_declarations_dir,
+        )
 
-            def lifecycle_door(
-                declaration: DeclarationsWorkspaceDeclarationRefV1, read: ModeloWorkbenchFormReadV1 | None
-            ) -> ModeloWorkspaceLifecycleDoor:
-                return compose_runtime_modelo_lifecycle_door(
-                    self._client,
-                    declaration,
-                    calculation_revision_id=None if read is None else read.calculation_revision_id,
-                    verification_report_id=None if read is None else read.verification_report_id,
-                    asks_modelo_390=read is not None and read.asks_modelo_390,
-                    refresh_after_success=refresh_declarations,
-                )
+        def refresh_aeat_sync() -> AeatSyncWorkspaceProjectionV1:
+            captured = self._read().generation
+            self._require_binding()
+            projection = captured.aeat_sync.projection
+            if (
+                captured.aeat_sync_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
+                or projection is None
+            ):
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            return projection
 
-            def modelo_workspace_factory(declaration: DeclarationsWorkspaceDeclarationRefV1, /) -> Screen[None]:
-                # Admit each selected declaration against the latest captured generation.
-                declarations, _ = latest_declarations()
-                return compose_installed_modelo_workbench_factory(
-                    declarations=declarations.declarations,
-                    source=lambda selected: RuntimeModeloWorkbenchSource(self._client, selected),
-                    door=lifecycle_door,
-                )(declaration)
-
-            def calendar_declaration(
-                entry: DeclarationsCalendarEntryRefV1,
-            ) -> DeclarationsWorkspaceDeclarationRefV1 | None:
-                declarations, _ = latest_declarations()
-                matches = tuple(
-                    ref
-                    for ref in declarations.declarations
-                    if (str(ref.modelo), ref.filing_year, ref.period.registry_token) == entry.semantic_key()
-                    and (ref.summary is None or ref.summary.state is not DeclarationSummaryState.UNREADABLE)
-                )
-                return matches[0] if len(matches) == 1 else None
-
-            def calendar_open(entry: DeclarationsCalendarEntryRefV1, /) -> Screen[None] | None:
-                declaration = calendar_declaration(entry)
-                return None if declaration is None else modelo_workspace_factory(declaration)
-
-            def declarations_factory(context: TuiScreenContextV1) -> Screen[None]:
-                declarations, calendar = latest_declarations()
-                create_work = compose_runtime_work_create_handoff(
-                    self._client, refresh_after_success=refresh_declarations
-                )
-                return declarations_screen_factory(
-                    declarations,
-                    DeclarationsWorkspaceWiringV1(
-                        work_action=_action("operator.modelo.work.list"),
-                        revisions_action=_action("operator.modelo.work.revisions"),
-                        filing_action=_action("operator.modelo.filing_record.list"),
-                        modelo_workspace_factory=modelo_workspace_factory,
-                        calendar_projection=calendar,
-                        calendar_entry_handoff=calendar_open,
-                        calendar_entry_can_open=lambda entry: calendar_declaration(entry) is not None,
-                        calendar_recovery_handoff=compose_runtime_calendar_create_handoff(create_work),
-                        work_create_handoff=create_work,
-                        creation_targets=declarations.creation_targets,
-                        refresh_data=latest_declarations,
-                    ),
-                )(context)
-
-            factories["workbench.declarations"] = declarations_factory
-        if generation.aeat_sync_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
-            if generation.aeat_sync.projection is None:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            operation_handoff, operation_contracts = compose_runtime_aeat_sync_handoff(
-                self._client,
-                output_root=load_settings().cadrumo_filed_declarations_dir,
-            )
-
-            def refresh_aeat_sync() -> AeatSyncWorkspaceProjectionV1:
-                captured = self._read().generation
-                self._require_binding()
-                projection = captured.aeat_sync.projection
-                if (
-                    captured.aeat_sync_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
-                    or projection is None
-                ):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-                return projection
-
-            factories["workbench.aeat_sync"] = aeat_sync_screen_factory(
-                generation.aeat_sync.projection,
-                operation_handoff=operation_handoff,
-                refresh_snapshot=refresh_aeat_sync,
-                operation_contracts=operation_contracts,
-            )
-        return build_destination_catalogue(admissions=admissions, factories=factories)
+        return aeat_sync_screen_factory(
+            generation.aeat_sync.projection,
+            operation_handoff=operation_handoff,
+            refresh_snapshot=refresh_aeat_sync,
+            operation_contracts=operation_contracts,
+        )
 
     def _presentation(self, capture: _Capture) -> RootPresentationV1:
         generation = capture.generation

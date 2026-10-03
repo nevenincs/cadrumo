@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m303-carry-reconciliation'
 date: '2026-06-21'
-modified: '2026-08-09'
-body_hash: 'sha256:3da8f7946dca1914b7ce9d859387c9fc521017f83bc8bda4b026e92e7cf32d73'
+modified: '2026-10-03'
+body_hash: 'sha256:7092e555e53447229d2a8613b4a59e98beb6a432de788593609d4a2b0bf0169d'
 related:
   - "[[2026-06-21-redeme-company-refund-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
@@ -118,7 +118,7 @@ art. 30 / Ley 37/1992 art. 116 (a refunded credit is returned, not carried).
   drives the fichero `D` and the disposition that drives the cross-period carry MUST
   be the one determined fact, never computed twice and never allowed to disagree.
 
-## Status
+## Original proposal and carry relationship
 
 `proposed`. The carry mechanism this ADR decides is a child of the canonical
 compensación-carry direction set by the PHASE ADRs (not a central apex doc): the

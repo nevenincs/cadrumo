@@ -97,6 +97,7 @@ __all__ = [
     "atomic_write_hardened_text",
     "atomic_write_text",
     "durable_write_batch",
+    "hardened_staged_bytes_publication",
     "hardened_staged_publication",
 ]
 
@@ -308,6 +309,36 @@ def durable_write_batch() -> Generator[DurableWriteBatch]:
         batch.commit()
 
 
+@contextmanager
+def _hardened_staged_bytes(
+    path: Path,
+    data: bytes,
+    *,
+    mode: int,
+    sync_file: bool,
+) -> Generator[StagedPublication]:
+    """Stage ``data`` through its exclusive descriptor and clean it if unpublished."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    staging_path = _hardened_staging_path(path)
+    staged = StagedPublication(staging_path=staging_path, target_path=path)
+    descriptor = os.open(staging_path, _hardened_staging_flags(), mode)
+    try:
+        try:
+            write_all(descriptor, data)
+            if sync_file:
+                os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    except BaseException:
+        staging_path.unlink(missing_ok=True)
+        raise
+    try:
+        yield staged
+    finally:
+        if not staged.published:
+            staging_path.unlink(missing_ok=True)
+
+
 def atomic_write_hardened_bytes(
     path: Path,
     data: bytes,
@@ -345,30 +376,17 @@ def atomic_write_hardened_bytes(
             The original exception propagates unwrapped; the tempfile is
             cleaned up first.
     """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = _hardened_staging_path(path)
-    flags = _hardened_staging_flags()
-    created = False
     try:
-        fd = os.open(tmp_path, flags, mode)
-        created = True
-        try:
-            write_all(fd, data)
+        with _hardened_staged_bytes(path, data, mode=mode, sync_file=batch is None) as staged:
             if batch is None:
-                os.fsync(fd)
-        finally:
-            os.close(fd)
-        if batch is None:
-            _replace_and_fsync(tmp_path, path)
-        else:
-            # Batched: still atomic (O_EXCL staging + os.replace), but the two
-            # syncs are deferred to the one commit. Atomicity and durability
-            # are separate properties — a reader never sees a half-written
-            # file either way; what the batch trades is only how soon the
-            # bytes are guaranteed to survive a power loss.
-            os.replace(tmp_path, path)
-            batch.note(path)
-        created = False
+                staged.publish()
+            else:
+                # Batched: still atomic (O_EXCL staging + os.replace), but the two
+                # syncs are deferred to the one commit. Atomicity and durability
+                # are separate properties — a reader never sees a half-written
+                # file either way; what the batch trades is only how soon the
+                # bytes are guaranteed to survive a power loss.
+                staged._publish_in_batch(batch)
         # Deliberately NO per-file ACL call here. ``mode`` covers POSIX; on
         # Windows the target's ACL comes from its parent directory, hardened
         # ONCE at creation with inheritance flags (see
@@ -384,9 +402,6 @@ def atomic_write_hardened_bytes(
             type(exc).__name__,
         )
         raise
-    finally:
-        if created:
-            tmp_path.unlink(missing_ok=True)
 
 
 def atomic_write_hardened_text(
@@ -413,10 +428,13 @@ def atomic_write_hardened_text(
 class StagedPublication:
     """A reserved hardened staging file awaiting an explicit publication.
 
-    Yielded by :func:`hardened_staged_publication`. The caller writes the
-    payload at :attr:`path` by whatever means its producer requires, then calls
-    :meth:`publish` to move those bytes atomically onto the target. Leaving the
-    context without publishing discards the staged file, so an interrupt, a
+    Yielded by :func:`hardened_staged_publication` or
+    :func:`hardened_staged_bytes_publication`. The caller writes the payload at
+    :attr:`path` when using the path-oriented helper, then calls :meth:`publish`
+    to move those bytes atomically onto the target. The bytes-oriented helper
+    has already written and synced its payload through the exclusive
+    descriptor. Leaving the context without publishing discards the staged file,
+    so an interrupt, a
     refusal raised between the write and the publication, or an early return
     can never leave the payload stranded next to the target under a name the
     caller never told anyone about.
@@ -470,15 +488,79 @@ class StagedPublication:
                 once; a second call would replace the target with a path the
                 first call already consumed.
         """
-        if self._published:
-            raise InternalInvariantError("staged publication has already been published")
         if replace_existing:
-            _replace_and_fsync(self._staging_path, self._target_path)
+            self._publish_replace(batch=None)
         else:
+            if self._published:
+                raise InternalInvariantError("staged publication has already been published")
             os.link(self._staging_path, self._target_path)
             self._staging_path.unlink()
             fsync_parent_dir(self._target_path)
+            self._published = True
+
+    def _publish_in_batch(self, batch: DurableWriteBatch) -> None:
+        """Replace the destination and defer its parent sync to ``batch``."""
+        self._publish_replace(batch=batch)
+
+    def _publish_replace(self, *, batch: DurableWriteBatch | None) -> None:
+        if self._published:
+            raise InternalInvariantError("staged publication has already been published")
+        if batch is None:
+            _replace_and_fsync(self._staging_path, self._target_path)
+        else:
+            os.replace(self._staging_path, self._target_path)
+            batch.note(self._target_path)
         self._published = True
+
+
+@contextmanager
+def hardened_staged_bytes_publication(
+    target_path: Path,
+    data: bytes,
+    *,
+    mode: int = _HARDENED_DEFAULT_MODE,
+) -> Generator[StagedPublication]:
+    """Write hardened ``data`` once, then let the caller choose when to publish it.
+
+    The staged bytes are written with :func:`write_all` through the original
+    collision-hardened ``O_EXCL`` descriptor and fsynced before the context is
+    entered. The yielded :class:`StagedPublication` can retry publication
+    without reopening or rewriting the stage. If the context exits without a
+    successful publication, the staged bytes are removed, including on a
+    :class:`BaseException`.
+
+    Use this when a complete byte payload is available but the caller must own
+    the publication boundary, for example to apply a bounded platform-specific
+    retry policy. Use :func:`hardened_staged_publication` when the caller must
+    produce or inspect the file itself.
+
+    Args:
+        target_path: Destination the staged bytes are published onto. Its
+            parent directory is created if absent; the target itself is not
+            touched until :meth:`StagedPublication.publish` runs.
+        data: Full file contents to stage through the exclusive descriptor.
+        mode: POSIX file mode for the staged file (and, transitively, the
+            published target). Defaults to ``0o600``.
+
+    Yields:
+        A :class:`StagedPublication` containing the fully written and synced
+        bytes.
+
+    Raises:
+        OSError: When parent creation, staging, writing, syncing, or publication
+            fails. The original exception propagates unwrapped; an unpublished
+            stage is removed before it reaches the caller.
+    """
+    try:
+        with _hardened_staged_bytes(target_path, data, mode=mode, sync_file=True) as staged:
+            yield staged
+    except BaseException as exc:
+        _log.error(
+            "atomic_write: deferred-bytes publication failed target=%s error_type=%s",
+            target_path,
+            type(exc).__name__,
+        )
+        raise
 
 
 @contextmanager

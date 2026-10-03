@@ -79,7 +79,13 @@ def _require_apoderado_request(
     }
     operation_id = request.definition_id
     payload = request.payload
-    if operation_id not in request_types or type(payload) is not request_types[operation_id]:
+    if (
+        not isinstance(
+            payload, (ApoderadoStatusRequest, ApoderadoConfigureRequest, ApoderadoClearRequest, ApoderadoCheckRequest)
+        )
+        or operation_id not in request_types
+        or type(payload) is not request_types[operation_id]
+    ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return cast(ApoderadoOperationId, operation_id), payload
 

@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import SecretBytes
 
-from ...adapters.local_runtime.framing import read_secret, write_document, write_session_inventory
+from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document, write_session_inventory
 from ...adapters.persistence.storage.profile_custody import build_profile_custody_port
 from ...application.runtime.access_management import (
     RuntimeAccessManagementRequest,

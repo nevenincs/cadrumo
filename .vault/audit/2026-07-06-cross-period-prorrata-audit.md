@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cross-period-prorrata'
 date: '2026-07-06'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_hash: 'sha256:b77619adf617b380555ee35c5abf5c53ae701950e47d0521a1ee685594d38d2e'
-related:
-  - "[[2026-07-06-cross-period-prorrata-plan]]"
+related: []
 ---
 
 # `cross-period-prorrata` audit: `S10-S18 seed/override review`

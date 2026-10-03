@@ -578,11 +578,7 @@ def _iva_wallet_decision_covers_cross_period_dependency(
         return False
     if getattr(decision, "selected_amount", None) is None:
         return False
-    selected_authority = str(getattr(decision, "selected_authority", ""))
-    source_kinds = {str(getattr(source, "source_kind", "")) for source in getattr(decision, "authority_sources", ())}
-    return selected_authority in {"aeat_wallet", "taxpayer_override"} and bool(
-        source_kinds & {"aeat_wallet", "taxpayer_override"}
-    )
+    return _wallet_decision_has_supported_authority(decision)
 
 
 def require_cross_period_clean_state(
@@ -696,3 +692,12 @@ __all__ = [
     "require_cross_period_clean_state",
     "zero_value_previous_filing_binding_ids",
 ]
+
+
+def _wallet_decision_has_supported_authority(decision: object) -> bool:
+    """Require both selected and source authority for an admitted carry decision."""
+    selected_authority = str(getattr(decision, "selected_authority", ""))
+    source_kinds = {str(getattr(source, "source_kind", "")) for source in getattr(decision, "authority_sources", ())}
+    return selected_authority in {"aeat_wallet", "taxpayer_override"} and bool(
+        source_kinds & {"aeat_wallet", "taxpayer_override"}
+    )

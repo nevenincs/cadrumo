@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 
 from ...application.modelo.export import modelo_export_readiness_refusal
-from ...application.modelo.query_read_operation import ModeloReadinessOperationRequest
+from ...application.modelo.query_read_contracts import ModeloReadinessOperationRequest
 from ...application.operations.public_period import PublicPeriod
 from ...application.state_projection import ProjectionModeloReadiness
 from ...core.external_constants import OutputLanguage

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tree-suite-red-at-head'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:6e96a53c30d0b98627561a9029474f4cc5085e7276ac02917ae82c23dc22ca76'
-related:
-  - "[[2026-08-13-registry-suite-red-at-head-audit]]"
+related: []
 ---
 
 # `tree-suite-red-at-head` audit: `Tree-wide unit suite red at HEAD: attribution and root-cause clustering`

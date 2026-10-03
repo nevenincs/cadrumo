@@ -20,7 +20,7 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import AccessAction
-from cadrumo.application.user_profile.operations import ProfileFieldMutationOperationRequest
+from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.core.operations import OperationEffect, OperationLifecycle
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 

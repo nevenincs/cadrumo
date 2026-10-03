@@ -12,7 +12,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
@@ -49,7 +50,7 @@ from cadrumo.application.user_profile.bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportTransport,
 )
-from cadrumo.application.user_profile.operations import (
+from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     ProfileBundleExportOperationProjection,
     ProfileBundleExportOperationRequest,
@@ -101,6 +102,7 @@ def test_original_tui_export_secret_is_one_use_and_server_refuses_mcp_before_byt
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         launch = RuntimeLaunchDoor(
             endpoint,

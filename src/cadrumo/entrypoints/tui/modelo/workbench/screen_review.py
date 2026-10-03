@@ -18,7 +18,7 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
-from .casilla_list import AddressKey
+from .casilla_list_models import AddressKey
 from .ports import ModeloWorkbenchActionsV1, WorkbenchPreflight
 from .review import EditReviewScreen, ReviewDecision, ReviewNote, UnattributedBoxes
 from .session import Rebase

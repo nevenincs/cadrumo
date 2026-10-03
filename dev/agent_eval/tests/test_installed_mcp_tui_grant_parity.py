@@ -32,9 +32,9 @@ from cadrumo.adapters.local_runtime.automation_requester import (
     AutomationRequesterJourney,
 )
 from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
-from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
+from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import (
     ClientCredentialMetadata,

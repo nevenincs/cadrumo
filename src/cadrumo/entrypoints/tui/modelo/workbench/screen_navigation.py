@@ -8,7 +8,8 @@ from textual.actions import SkipAction
 from textual.widgets import OptionList
 
 from .....core.i18n.render import tr
-from .casilla_list import CasillaList, CasillaListEntry, Density
+from .casilla_list import CasillaList
+from .casilla_list_models import CasillaListEntry, Density
 from .navigator import checked_boxes, page_counts
 from .page_items import page_items
 from .screen_constants import (

@@ -338,7 +338,7 @@ def test_wire_authority_profiles_have_one_unambiguous_class_home() -> None:
 
     assert class_homes == {
         "RenderProfile": ["render_profile_model.py"],
-        "ExportTreeTransportProfile": ["_export_tree.py"],
+        "ExportTreeTransportProfile": ["export_tree_models.py"],
     }
 
 

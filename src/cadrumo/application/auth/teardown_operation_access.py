@@ -14,7 +14,7 @@ from ..operations.access_resolution import (
     require_declared_frontend_and_action,
 )
 from ..operations.models import OperationRequest
-from ..operations.registry import OperationFrontendProjection
+from ..operations.registry import ALL_OPERATION_FRONTENDS
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -29,9 +29,6 @@ from .operation_definitions import (
 )
 
 _DEFINITIONS = frozenset({AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID})
-_FRONTENDS = frozenset(
-    {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-)
 
 
 def resolve_auth_teardown_access(
@@ -42,7 +39,9 @@ def resolve_auth_teardown_access(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if request.subject_ref != profile_operation_subject(str(context.profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=SINGLE_RUN_COMMITTING_ACTIONS)
+    require_declared_frontend_and_action(
+        context, frontends=ALL_OPERATION_FRONTENDS, actions=SINGLE_RUN_COMMITTING_ACTIONS
+    )
     disclosures = operation_disclosures(
         context,
         observed_by=frozenset({AccessAction.OBSERVE}),

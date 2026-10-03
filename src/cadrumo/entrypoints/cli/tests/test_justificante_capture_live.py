@@ -18,6 +18,7 @@ from contextlib import asynccontextmanager
 import pytest
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.profile.tests.profile_registration import live_clave_movil_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
@@ -41,7 +42,9 @@ from ....tests.live_gate import requires_live_enabled
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
-pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("live_clave_movil_profile")]
+
+__all__ = ["live_clave_movil_profile"]
 
 # A quarterly modelo exercises the period-disambiguation path that the
 # annual modelos cannot. The year is the prior calendar year, whose

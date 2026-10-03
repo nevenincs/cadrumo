@@ -114,7 +114,7 @@ def test_declarado_record_is_wired_for_row_indexed_binding_rendering(revision_id
     record = _declarado_record(_revision(revision_id))
 
     assert record.repeat == "binding_rows"
-    assert record.row_field_casilla_ids["party_tax_id"] == "contraparte.nif"
+    assert record.row_field_casilla_ids["declarado_tax_id"] == "contraparte.nif"
     assert record.row_field_casilla_ids["importe_q1"] == "contraparte.importe-Q1"
 
 
@@ -416,7 +416,7 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
     record = _declarado_record(_revision(revision_id))
 
     bound_casilla_ids = {
-        record.row_field_casilla_ids["party_tax_id"],
+        record.row_field_casilla_ids["declarado_tax_id"],
         record.row_field_casilla_ids["party_legal_name"],
         record.row_field_casilla_ids["clave"],
         record.row_field_casilla_ids["importe_total"],
@@ -424,7 +424,7 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
         record.row_field_casilla_ids["importe_q2"],
         record.row_field_casilla_ids["importe_q3"],
         record.row_field_casilla_ids["importe_q4"],
-        record.row_field_casilla_ids["country_code"],
+        record.row_field_casilla_ids["residence_country_code"],
     }
     conditional_casillas: set[CasillaId] = {
         field.casilla_id
@@ -444,9 +444,13 @@ def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_i
     """`país-código` per row, not one value stamped across every occurrence.
 
     `país-código` is a real per-row binding sourced from each observation's
-    own `country_code`. Asserts the VALUES, not merely the row count -- a
-    record stamping one counterparty's country onto every row would still
-    pass a count-only assertion.
+    own `country_code`. Both designs fill it only "en el caso de no residentes
+    sin establecimiento permanente", with "el Código del país de residencia del
+    declarado", so a resident's row leaves it blank and each non-resident's row
+    carries its own country. Asserts the VALUES per counterparty, not merely the
+    row count -- a record stamping one counterparty's country onto every row
+    would still pass a count-only assertion, and two non-residents of different
+    countries make that stamping visible.
     """
     revision = _revision(revision_id)
     observations = (
@@ -469,14 +473,32 @@ def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_i
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             country_code="US",
         ),
+        _observation(
+            invoice_id="inv-mx",
+            party_tax_id="D33333336",
+            party_legal_name="Importadora Mexicana SA",
+            transaction_date=date(2025, 9, 15),
+            total="4100.00",
+            operation_clave="B",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+            country_code="MX",
+        ),
     )
 
     resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
     pais_binding_id = next(bid for (bid, _row) in resolved if bid.endswith("-pais-codigo"))
-    countries_by_row = {row: resolved[(pais_binding_id, row)] for (bid, row) in resolved if bid == pais_binding_id}
+    name_binding_id = next(bid for (bid, _row) in resolved if bid.endswith("-nombre"))
+    countries_by_name = {
+        resolved[(name_binding_id, row)]: resolved[(pais_binding_id, row)]
+        for (bid, row) in resolved
+        if bid == pais_binding_id
+    }
 
-    assert set(countries_by_row.values()) == {"ES", "US"}
-    assert len(countries_by_row) == 2, "each counterparty must resolve its OWN pais-codigo row"
+    assert countries_by_name == {
+        "Contraparte Uno SL": "",
+        "Acme Imports Inc": "US",
+        "Importadora Mexicana SA": "MX",
+    }, "each counterparty must resolve its OWN pais-codigo row"
 
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)

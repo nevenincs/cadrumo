@@ -4,12 +4,11 @@ tags:
   - '#index'
   - '#registry-reviewability-pressure'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5c82af1bc2c9dd64e2c101aa5d50072dec96fc742dd1c1e762c1e624df1dbf7d'
+body_hash: 'sha256:c17800e01dbacbcbf09887cb36ed494adffb3dd9d6349abd30271a1f97808f45'
 related:
   - '[[2026-06-04-registry-reviewability-pressure-P03-summary]]'
-  - '[[2026-06-04-registry-reviewability-pressure-adr]]'
   - '[[2026-06-04-registry-reviewability-pressure-audit]]'
   - '[[2026-06-04-registry-reviewability-pressure-code-review-audit]]'
   - '[[2026-06-04-registry-reviewability-pressure-ledger]]'
@@ -23,10 +22,6 @@ related:
 Auto-generated index of all documents tagged with `#registry-reviewability-pressure`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-registry-reviewability-pressure-adr` - `registry-reviewability-pressure` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### audit
 

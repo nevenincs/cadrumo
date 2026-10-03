@@ -95,6 +95,7 @@ def _contract() -> OperationPublicDefinitionContractV1:
         browser_session_factory=unused_port,
         operator_scope_ports=unused_port,
         censal_fetch_port=unused_port,
+        provider_preflight=lambda _profile_id, _operation: None,
     )
     return build_censal_operation_registration(definition).contract
 

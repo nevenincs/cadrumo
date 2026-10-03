@@ -24,8 +24,9 @@ from ...auth.operator_scope_ports import OperatorScopePorts
 from ...auth.protocols import BrowserSessionFactoryPort
 from ...operations.owner import OperationEventEmitter
 from ...storage.sync_runs.records import SyncRunRecordRepositoryProtocol
-from ..filed_data_capture import FiledHistoryEventSink, FiledHistoryOnboardingRun
 from ..filed_data_ports import FiledDataCapturePort, FiledEffectGuard
+from ..filed_history_discovery import FiledHistoryOnboardingRun
+from ..filed_history_events import FiledHistoryEventSink
 from ..filed_history_operation import (
     FiledHistoryOperationRequest,
     FiledHistoryPull,

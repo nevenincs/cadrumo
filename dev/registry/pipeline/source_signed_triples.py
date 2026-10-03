@@ -103,43 +103,79 @@ def signed_triple_policy_for(
     joined_field: JoinedRecordDesignField, *, modelo: str, epoch: str, source_ref: str, source_sha256: str
 ) -> ExportValuePolicy | None:
     """Recognise a child only under its exact PDF bytes, endpoint and geometry."""
-    field = joined_field.parser_field
     entry = joined_field.semantic_entry
     field_id = str(entry.export_field_id)
-    if not field_id.startswith(
-        ("modelo-165-t1-importe-fondos-propios-", "modelo-280-t2-rendimientos-negativos-imputables-")
-    ):
+    if not _is_signed_triple_field(field_id):
         return None
+
+    casilla_id, members = _reviewed_signed_triple_members(
+        modelo, epoch, source_ref=source_ref, source_sha256=source_sha256
+    )
+    member_index, member = _reviewed_member(members, field_id)
+    if not _matches_reviewed_signed_triple(joined_field, modelo, casilla_id, member):
+        raise RegistryValidationError("signed triple source part, geometry or casilla differs from reviewed evidence")
+    return _signed_component_policy(modelo, member_index)
+
+
+def _is_signed_triple_field(field_id: str) -> bool:
+    """Identify only the two source families with a reviewed signed triple."""
+    return field_id.startswith(
+        ("modelo-165-t1-importe-fondos-propios-", "modelo-280-t2-rendimientos-negativos-imputables-")
+    )
+
+
+def _reviewed_signed_triple_members(
+    modelo: str, epoch: str, *, source_ref: str, source_sha256: str
+) -> tuple[str, tuple[tuple[str, int, int, int, str], ...]]:
+    """Require the exact reviewed source identity and return its casilla members."""
     pin = _PINS.get((modelo, epoch))
     if pin is None or (source_ref, source_sha256) != pin[:2]:
         raise RegistryValidationError("signed triple source identity is unreviewed or stale")
-    expected_source, expected_sha, casilla_id, members = pin
-    del expected_source, expected_sha
-    member_index = next((index for index, member in enumerate(members) if field_id == member[0]), None)
-    if member_index is None:
-        raise RegistryValidationError("signed triple source field identity is unreviewed")
-    _, row, offset, length, digest = members[member_index]
+    return pin[2], pin[3]
+
+
+def _reviewed_member(
+    members: tuple[tuple[str, int, int, int, str], ...], field_id: str
+) -> tuple[int, tuple[str, int, int, int, str]]:
+    """Select a field only when its id is one of the three pinned members."""
+    for index, member in enumerate(members):
+        if field_id == member[0]:
+            return index, member
+    raise RegistryValidationError("signed triple source field identity is unreviewed")
+
+
+def _matches_reviewed_signed_triple(
+    joined_field: JoinedRecordDesignField,
+    modelo: str,
+    casilla_id: str,
+    member: tuple[str, int, int, int, str],
+) -> bool:
+    """Compare the parser evidence, physical source geometry, and casilla pin."""
+    field = joined_field.parser_field
+    entry = joined_field.semantic_entry
+    _, row, offset, length, digest = member
     material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
     expected_sheet = (
         "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
         if modelo == "165"
         else "Tipo 2 - Registro De Declarado"
     )
-    if (
+    return not (
         field.sheet != expected_sheet
         or field.record_identity != expected_sheet
         or (field.source_row, field.offset, field.length) != (row, offset, length)
         or sha256(material.encode()).hexdigest() != digest
         or entry.kind is not CasillaFieldKind.CASILLA
         or str(entry.casilla_id) != casilla_id
-    ):
-        raise RegistryValidationError("signed triple source part, geometry or casilla differs from reviewed evidence")
+    )
+
+
+def _signed_component_policy(modelo: str, member_index: int) -> ExportValuePolicy:
+    """Map the pinned member position to its fixed signed-component policy."""
     if member_index == 0:
         return (
             ExportValuePolicy.SIGNED_COMPONENT_SIGN if modelo == "165" else ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN
         )
-    return (
-        ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART
-        if member_index == 1
-        else ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS
-    )
+    if member_index == 1:
+        return ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART
+    return ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS

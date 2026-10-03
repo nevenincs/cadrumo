@@ -27,6 +27,7 @@ from ....application.ledger.protocols import (
     RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
 )
 from ....application.ledger.rule_repository import LedgerClassificationRuleRepositoryProtocol
+from ....application.operations import profile_guard
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ....application.operations.owner import OperationExecutorContext
@@ -36,7 +37,7 @@ from ....application.operations.registry import (
     OperationRegistry,
 )
 from ....application.operations.registry_schema_validation import strict_model_json_schema
-from ....application.user_profile.access_contracts import AccessAction, Availability
+from ....application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
@@ -59,6 +60,7 @@ from ..rule_operation import (
     LEDGER_RULE_ADD_OPERATION_DEFINITION_ID,
     LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
     LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
+    LedgerRuleApplyExecutor,
     _TrackedRuleRepository,
     build_ledger_rule_add_definition,
     build_ledger_rule_add_registration,
@@ -74,6 +76,93 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _NOW = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+
+
+def _executor_context(
+    *,
+    definition_id: str = LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
+) -> tuple[OperationExecutorContext, PinnedAuthorityOperation, list[str], list[OperationEffect], list[BaseModel]]:
+    operation = cast(PinnedAuthorityOperation, object())
+    phases: list[str] = []
+    effects: list[OperationEffect] = []
+    operands: list[BaseModel] = []
+
+    async def phase(value: str) -> None:
+        phases.append(value)
+
+    async def effect(value: OperationEffect) -> None:
+        effects.append(value)
+
+    async def put(operand: BaseModel, *, written_at: datetime) -> str:
+        assert written_at.tzinfo is not None
+        operands.append(operand)
+        return "rule-apply-result"
+
+    context = cast(
+        OperationExecutorContext,
+        SimpleNamespace(
+            identity=OperationIdentity(
+                operation_id="c" * 64,
+                definition_id=definition_id,
+                subject_ref=profile_operation_subject(str(_PROFILE)),
+            ),
+            authority_operation=operation,
+            events=SimpleNamespace(phase=phase, effect=effect),
+            operands=SimpleNamespace(put=put),
+        ),
+    )
+    return context, operation, phases, effects, operands
+
+
+class _EmptyTransactionRepository:
+    def __init__(self, *, bucket_id: str) -> None:
+        self.bucket_id = bucket_id
+        self.load_calls = 0
+
+    def load(self) -> TransactionCatalogue:
+        self.load_calls += 1
+        return TransactionCatalogue()
+
+
+class _EmptyRuleRepository:
+    def __init__(self) -> None:
+        self.list_calls = 0
+
+    def save(self, payload: LedgerClassificationRule) -> None:
+        raise AssertionError(f"dry-run must not save a rule: {payload.rule_id}")
+
+    def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
+        self.list_calls += 1
+        return ()
+
+
+def _executor_ports(
+    *,
+    bucket_id: str,
+    operation: object,
+    transaction_repository: _EmptyTransactionRepository,
+) -> LedgerActionPorts:
+    return cast(
+        LedgerActionPorts,
+        SimpleNamespace(
+            operation=operation,
+            transaction_repository=transaction_repository,
+            invoice_repository=SimpleNamespace(bucket_id=bucket_id),
+            work_unit_repository=SimpleNamespace(bucket_id=bucket_id),
+            calculation_repository=SimpleNamespace(bucket_id=bucket_id),
+        ),
+    )
+
+
+def _apply_request(
+    *,
+    definition_id: str = LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
+) -> OperationRequest[LedgerRuleApplyRequest]:
+    return OperationRequest[LedgerRuleApplyRequest](
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=LedgerRuleApplyRequest(profile_id=_PROFILE, dry_run=True),
+    )
 
 
 def _rule(*, pattern: str = "^office", priority: int = 12, created_at: datetime = _NOW) -> LedgerClassificationRule:
@@ -498,3 +587,112 @@ def test_rule_add_save_uses_the_same_precise_writer_fence() -> None:
     assert fence.active is False
     assert tracker.confirmed_write is True
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+
+
+def test_rule_apply_dry_run_uses_the_real_empty_plan_and_matching_pinned_ports(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context, operation, phases, effects, operands = _executor_context()
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    transaction_repository = _EmptyTransactionRepository(bucket_id=str(_PROFILE))
+    rule_repository = _EmptyRuleRepository()
+    ports_calls: list[tuple[str, PinnedAuthorityOperation]] = []
+    repository_calls: list[str] = []
+
+    def ports_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
+        ports_calls.append((bucket_id, operation))
+        return _executor_ports(
+            bucket_id=bucket_id,
+            operation=operation,
+            transaction_repository=transaction_repository,
+        )
+
+    def repository_factory(*, bucket_id: str) -> LedgerClassificationRuleRepositoryProtocol:
+        repository_calls.append(bucket_id)
+        return rule_repository
+
+    result = asyncio.run(LedgerRuleApplyExecutor(ports_factory, repository_factory).execute(_apply_request(), context))
+
+    assert result == "rule-apply-result"
+    assert phases == [LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID]
+    assert effects == [OperationEffect.NONE]
+    assert ports_calls == [(str(_PROFILE), operation)]
+    assert repository_calls == [str(_PROFILE)]
+    assert transaction_repository.load_calls == 1
+    assert rule_repository.list_calls == 1
+    assert len(operands) == 1
+    assert isinstance(operands[0], LedgerRuleApplyExecutionResult)
+    assert operands[0].projection.outcome == "dry_run"
+    assert operands[0].projection.dry_run is True
+    assert operands[0].projection.would_match == ()
+    assert operands[0].projection.count == 0
+
+
+def test_rule_apply_refuses_matching_wrong_definition_before_phase_or_composition(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wrong_definition = LEDGER_RULE_LIST_OPERATION_DEFINITION_ID
+    context, _operation, phases, effects, operands = _executor_context(definition_id=wrong_definition)
+    request = _apply_request(definition_id=wrong_definition)
+    factory_calls: list[str] = []
+
+    def active_bucket_must_not_be_read() -> str:
+        raise AssertionError("expected-definition refusal must precede the shared profile guard")
+
+    def unexpected_ports_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
+        _ = operation
+        factory_calls.append(bucket_id)
+        raise AssertionError("expected-definition refusal must precede port composition")
+
+    def unexpected_repository_factory(*, bucket_id: str) -> LedgerClassificationRuleRepositoryProtocol:
+        factory_calls.append(bucket_id)
+        raise AssertionError("expected-definition refusal must precede repository composition")
+
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", active_bucket_must_not_be_read)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(
+            LedgerRuleApplyExecutor(unexpected_ports_factory, unexpected_repository_factory).execute(request, context)
+        )
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert phases == []
+    assert factory_calls == []
+    assert effects == []
+    assert operands == []
+
+
+def test_rule_apply_refuses_mismatched_port_pin_before_planning_or_effects(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context, operation, phases, effects, operands = _executor_context()
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    transaction_repository = _EmptyTransactionRepository(bucket_id=str(_PROFILE))
+    rule_repository = _EmptyRuleRepository()
+    other_operation = cast(PinnedAuthorityOperation, object())
+    ports_calls: list[tuple[str, PinnedAuthorityOperation]] = []
+    repository_calls: list[str] = []
+
+    def ports_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
+        ports_calls.append((bucket_id, operation))
+        return _executor_ports(
+            bucket_id=bucket_id,
+            operation=other_operation,
+            transaction_repository=transaction_repository,
+        )
+
+    def repository_factory(*, bucket_id: str) -> LedgerClassificationRuleRepositoryProtocol:
+        repository_calls.append(bucket_id)
+        return rule_repository
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(LedgerRuleApplyExecutor(ports_factory, repository_factory).execute(_apply_request(), context))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert phases == [LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID]
+    assert effects == []
+    assert operands == []
+    assert ports_calls == [(str(_PROFILE), operation)]
+    assert repository_calls == [str(_PROFILE)]
+    assert transaction_repository.load_calls == 0
+    assert rule_repository.list_calls == 0

@@ -28,7 +28,11 @@ from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from ..live.censo_ports import CensalFetchPort
 from ..live.session import LiveSessionWriteReceipt, SessionWriteReporter, active_verified_session
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    OPERATION_LIFECYCLE_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -43,21 +47,15 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from .access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
+from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
 from .capsule_record import ProfileRecordConflictError
-from .censal_access import profile_censal_access_disclosure, require_admitted_profile_censal_request
+from .censal_access import bind_whole_profile_censal_access
 from .censal_observation import CensalObservation
 from .censal_operation import CensalProfileBaseline
 from .censo_sync import (
@@ -193,12 +191,6 @@ class CensalPreviewBrowserResources(Protocol):
 
 
 type CensalPreviewBrowserResourcesFactory = Callable[[], CensalPreviewBrowserResources]
-
-
-def _unconfigured_provider_preflight(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
-    """Refuse provider acquisition when composition supplied no readiness check."""
-    del profile_id, operation
-    raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
 
 
 def _load_exact_baseline(
@@ -376,7 +368,7 @@ def build_censal_preview_operation_definition(
     operator_scope_ports: OperatorScopePorts,
     censal_fetch_port: CensalFetchPort,
     browser_resources_factory: CensalPreviewBrowserResourcesFactory,
-    provider_preflight: CensalPreviewProviderPreflight = _unconfigured_provider_preflight,
+    provider_preflight: CensalPreviewProviderPreflight,
     acquire: CensalPreviewAcquire | None = None,
 ) -> OperationDefinition:
     """Build the recorded census preview with worker-scoped browser custody."""
@@ -430,53 +422,17 @@ def build_censal_preview_operation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
 def resolve_censal_preview_operation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Resolve exact-profile preview access with provider readiness at worker start."""
+    """Resolve exact-profile preview access; the bound worker checks provider readiness."""
     _validated_censal_preview_request(request, context)
-    require_admitted_profile_censal_request(request, context)
-    disclosure = profile_censal_access_disclosure(context)
-
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                }
-            ),
-            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-            periods=frozenset(),
-            allow_period_independent=True,
-            requires_all_periods=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=(Availability.NEEDS_USER if context.action is AccessAction.START else Availability.NOT_REQUIRED),
-            transaction_authority_required=False,
-        ),
+    return bind_whole_profile_censal_access(
+        request, context, actions=OPERATION_LIFECYCLE_ACTIONS, provider=Availability.NOT_REQUIRED
     )
 
 

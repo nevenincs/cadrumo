@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -40,6 +42,7 @@ from .....application.auth.protocols import BrowserContextProvisioner
 from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
+from .....core.file_permissions import restrict_directory_permissions
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.operator_action_enums import NoRecoveryOutcome
@@ -93,6 +96,7 @@ class BrowserSession:
         self.profile = profile
         self.evasion_strategy = evasion_strategy or PlaywrightStealthEvasion()
         self._browser: Browser | None = None
+        self._working_directory: TemporaryDirectory[str] | None = None
         self._lifecycle_lock = asyncio.Lock()
 
     async def create_context(
@@ -145,9 +149,14 @@ class BrowserSession:
                 bool(self.settings.cadrumo_proxy_url),
             )
             proxy = self._build_proxy_settings()
-            browser = await self._launch_chromium(proxy)
-            self._browser = browser
             try:
+                await await_cancellation_complete(
+                    self._launch_owned_chromium(proxy),
+                    task_name="cadrumo-browser-launch",
+                )
+                browser = self._browser
+                if browser is None:
+                    raise RuntimeError("Chromium launch completed without an owned browser")
                 context_kwargs = self._build_context_kwargs(
                     storage_state=storage_state,
                     provisioner=provisioner,
@@ -227,14 +236,35 @@ class BrowserSession:
             precondition_verdict=status.precondition_verdict,
         )
 
+    async def _launch_owned_chromium(self, proxy: ProxySettings | None) -> None:
+        """Retain the browser before deferred launch cancellation can escape."""
+        self._browser = await self._launch_chromium(proxy)
+
     async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
         """Launch Chromium with the profile's headless/proxy config; raise BrowserError on failure."""
         self._require_bundled_browser_provisioned()
         try:
-            return await self.playwright.chromium.launch(
+            root = self.settings.cadrumo_chromium_data_root
+            root.mkdir(parents=True, exist_ok=True, mode=0o700)
+            self._working_directory = TemporaryDirectory(prefix="session-", dir=root)
+            working_path = Path(self._working_directory.name)
+            restrict_directory_permissions(working_path)
+            (working_path / "artifacts").mkdir(mode=0o700)
+            # Keep the default persistent context empty. Authenticated contexts
+            # are still isolated new_context calls with encrypted state inputs.
+            context = await self.playwright.chromium.launch_persistent_context(
+                user_data_dir=working_path / "profile",
+                downloads_path=working_path / "artifacts",
+                traces_dir=working_path / "artifacts",
+                accept_downloads=False,
                 headless=self.settings.cadrumo_browser_headless,
                 proxy=proxy,
             )
+            browser = context.browser
+            if browser is None:
+                await context.close()
+                raise RuntimeError("Chromium context has no browser owner")
+            return browser
         except Exception as exc:
             logger.error(
                 "browser launch failed failure_mode=%s profile=%s headless=%s has_proxy=%s exc_type=%s",
@@ -538,10 +568,11 @@ class BrowserSession:
     async def _close_browser_locked(self) -> None:
         """Close the retained browser while the lifecycle lock is held."""
         browser = self._browser
-        if browser is None:
-            return
         try:
-            await browser.close()
+            if browser is not None:
+                await browser.close()
+                self._browser = None
+            self._cleanup_working_directory()
         except Exception as exc:
             logger.warning(
                 "failed to close retained browser failure_mode=%s profile=%s exc_type=%s",
@@ -560,7 +591,12 @@ class BrowserSession:
                     outcome=NoRecoveryOutcome.SAFETY,
                 ),
             ) from exc
-        self._browser = None
+
+    def _cleanup_working_directory(self) -> None:
+        """Remove only this launch's temporary data after its browser has closed."""
+        if self._working_directory is not None:
+            self._working_directory.cleanup()
+            self._working_directory = None
 
 
 def _storage_state_source(context_kwargs: Mapping[str, object]) -> str:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Protocol
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -21,11 +22,93 @@ def require_access_request_profile_identity[RequestPayloadT: BaseModel](
     access_profile_id: UUID,
 ) -> None:
     """Require an access request's profile and profile-derived subject to agree."""
-    if (
-        payload_profile_id != access_profile_id
-        or request.subject_ref != profile_operation_subject(str(payload_profile_id))
+    if payload_profile_id != access_profile_id or request.subject_ref != profile_operation_subject(
+        str(payload_profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
+class ProfileAccessPayload(Protocol):
+    """An operation payload that names the profile it targets."""
+
+    @property
+    def profile_id(self) -> UUID:
+        """The profile the operation acts for."""
+        ...
+
+
+class WorkUnitAccessPayload(ProfileAccessPayload, Protocol):
+    """An operation payload that names its profile and the work unit it addresses."""
+
+    @property
+    def work_unit_id(self) -> str:
+        """The work unit the request's subject must name."""
+        ...
+
+
+def require_access_request_payload[PayloadT](
+    request: OperationRequest[BaseModel],
+    *,
+    definition_id: str,
+    payload_type: type[PayloadT],
+    exact_type: bool = False,
+) -> PayloadT:
+    """Return this operation's payload, refusing another operation or payload type as unavailable.
+
+    ``exact_type`` refuses a subclass of ``payload_type``: a subclass may carry a
+    different contract than the request model the operation was reviewed for.
+    """
+    payload = request.payload
+    if (
+        request.definition_id != definition_id
+        or not isinstance(payload, payload_type)
+        or (exact_type and type(payload) is not payload_type)
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    return payload
+
+
+def require_access_request_profile_payload[PayloadT: ProfileAccessPayload](
+    request: OperationRequest[BaseModel],
+    *,
+    definition_id: str,
+    payload_type: type[PayloadT],
+    access_profile_id: UUID,
+    exact_type: bool = False,
+) -> PayloadT:
+    """Return this operation's payload once it targets the accessing profile's own subject.
+
+    Another operation or payload type is unavailable; it is checked before the
+    profile, so a foreign request never learns whether its profile matched.
+    """
+    payload = require_access_request_payload(
+        request, definition_id=definition_id, payload_type=payload_type, exact_type=exact_type
+    )
+    require_access_request_profile_identity(
+        request, payload_profile_id=payload.profile_id, access_profile_id=access_profile_id
+    )
+    return payload
+
+
+def require_access_request_work_unit_payload[PayloadT: WorkUnitAccessPayload](
+    request: OperationRequest[BaseModel],
+    *,
+    definition_id: str,
+    payload_type: type[PayloadT],
+    access_profile_id: UUID,
+    exact_type: bool = False,
+) -> PayloadT:
+    """Return this operation's payload once it targets the accessing profile and names its work-unit subject.
+
+    Another operation or payload type is unavailable; it is checked before the
+    profile and subject.
+    """
+    payload = require_access_request_payload(
+        request, definition_id=definition_id, payload_type=payload_type, exact_type=exact_type
+    )
+    if payload.profile_id != access_profile_id or request.subject_ref != payload.work_unit_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
 
 
 def require_operation_profile[RequestPayloadT: BaseModel](

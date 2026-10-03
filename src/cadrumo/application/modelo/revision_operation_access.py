@@ -10,13 +10,11 @@ from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import (
-    ADMISSION_REPLAY_ACTIONS,
     COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_single_period_admission,
+    bind_replayed_or_fresh_single_period_access,
 )
 from ..operations.models import OperationRequest
 from ..user_profile.access_contracts import (
@@ -28,10 +26,6 @@ from .operation_definitions import (
     MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-    ModeloExportRequest,
-    ModeloWorkAmendRequest,
-    ModeloWorkFileRequest,
-    ModeloWorkVerifyRequest,
 )
 from .review_package_operation import (
     MODELO_REVIEW_PACKAGE_BUILD_OPERATION_DEFINITION_ID,
@@ -42,6 +36,10 @@ from .revision_snapshot_operation import (
     ModeloWorkRevisionSnapshotRequest,
 )
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
+from .work_amend_contracts import ModeloWorkAmendRequest
+from .work_export_contracts import ModeloExportRequest
+from .work_filing_contracts import ModeloWorkFileRequest
+from .work_verification_contracts import ModeloWorkVerifyRequest
 
 
 def compose_modelo_revision_access(factory: VerificationRepositoryBundleFactory) -> OperationAccessResolver:
@@ -49,21 +47,15 @@ def compose_modelo_revision_access(factory: VerificationRepositoryBundleFactory)
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
         filing_id, revision_id = _revision_target(request, context)
-        admitted = context.admitted_request
-        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
-            periods = require_single_period_admission(
-                admitted, profile_id=context.profile_id, definition_id=request.definition_id
-            )
-        else:
-            periods = _persisted_revision_periods(factory, request, context, filing_id, revision_id)
-        return bind_operation_access_profile(
+        return bind_replayed_or_fresh_single_period_access(
             context,
             LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS
             if request.definition_id == MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID
             else COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
-            profile_id=context.profile_id,
             definition_id=request.definition_id,
-            periods=periods,
+            fresh_period=lambda operation: _persisted_revision_period(
+                factory, request, context, filing_id, revision_id, operation=operation
+            ),
         )
 
     return resolve
@@ -151,33 +143,35 @@ def _revision_snapshot_target(
     return None
 
 
-def _persisted_revision_periods(
+def _persisted_revision_period(
     factory: VerificationRepositoryBundleFactory,
     request: OperationRequest[BaseModel],
     context: OperationAccessContext,
     filing_id: str | None,
     revision_id: str | None,
-) -> frozenset[Period]:
-    repositories, operation = _scoped_repositories(factory, context)
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Period:
+    repositories = _scoped_repositories(factory, context, operation=operation)
     filing = _scoped_filing(repositories, str(context.profile_id), filing_id) if filing_id is not None else None
     selected_revision_id = filing.calculation_revision_id if filing is not None else revision_id
     unit = _revision_work_unit(repositories, operation, request, context, selected_revision_id)
     if filing is not None:
         _require_filing_coordinates(filing, unit)
-    return frozenset({unit.period})
+    return unit.period
 
 
 def _scoped_repositories(
-    factory: VerificationRepositoryBundleFactory, context: OperationAccessContext
-) -> tuple[VerificationRepositoryBundle, PinnedAuthorityOperation]:
-    operation = context.authority_operation
-    if operation is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    factory: VerificationRepositoryBundleFactory,
+    context: OperationAccessContext,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> VerificationRepositoryBundle:
     bucket_id = str(context.profile_id)
     repositories = factory(bucket_id, operation=operation)
     if repositories.calculation.bucket_id != bucket_id or repositories.work_unit.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return repositories, operation
+    return repositories
 
 
 def _scoped_filing(repositories: VerificationRepositoryBundle, bucket_id: str, filing_id: str) -> ModeloRecord:

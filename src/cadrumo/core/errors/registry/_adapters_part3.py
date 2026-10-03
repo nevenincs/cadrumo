@@ -38,7 +38,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.local_runtime.frontend_client.RuntimeFrontendRefusedError",
+        "cadrumo.adapters.local_runtime.frontend_client_contracts.RuntimeFrontendRefusedError",
         ErrorCode(
             code="REFUSED_RUNTIME_FRONTEND",
             category=ErrorCategory.REFUSED,

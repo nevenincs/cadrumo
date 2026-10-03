@@ -305,6 +305,7 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: enrollment.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)

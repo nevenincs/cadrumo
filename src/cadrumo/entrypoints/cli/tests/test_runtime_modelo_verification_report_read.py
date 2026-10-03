@@ -10,14 +10,16 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....application.modelo.verification_report_read_operation import (
+from ....application.modelo.verification_report_public_facts import ModeloVerificationReportProjection
+from ....application.modelo.verification_report_read_contracts import (
     MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID,
     MODELO_VERIFICATION_REPORT_VIEW_OPERATION_DEFINITION_ID,
-    ModeloVerificationReportListProjection,
     ModeloVerificationReportListRequest,
-    ModeloVerificationReportProjection,
-    ModeloVerificationReportViewProjection,
     ModeloVerificationReportViewRequest,
+)
+from ....application.modelo.verification_report_read_projection import (
+    ModeloVerificationReportListProjection,
+    ModeloVerificationReportViewProjection,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef

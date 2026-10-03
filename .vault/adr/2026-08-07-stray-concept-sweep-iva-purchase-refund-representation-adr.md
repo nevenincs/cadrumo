@@ -3,15 +3,15 @@ tags:
   - '#adr'
   - '#stray-concept-sweep'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:be6f6fe0def6631a6a3c750a7c79b3fb263be0aa6d4d6e3a2475ce6c42295e6f'
+body_hash: 'sha256:b68a169a7a6191f4ec8c64d11b51e2f2d1c554c4ca2bfccdc74a2eeaa28d8209'
 related:
   - '[[2026-08-07-stray-concept-sweep-audit]]'
 ---
 # `stray-concept-sweep` adr: `representing a purchase refund on the IVA ledger axis` | (**status:** `proposed`)
 
-## Context
+## Problem Statement
 
 A stray-concept sweep found three byte-identical private copies of
 `_invoice_kind_for`, at `application/aggregation/_iva_ledger.py:1518`,
@@ -89,7 +89,13 @@ entry is represented on the IVA ledger axis at all**, and that is a modelling
 choice with legal consequences (LIVA art. 80 modificación de la base imponible;
 art. 89 rectificación de cuotas repercutidas), not an extraction.
 
-## Decision
+## Considerations
+
+- InvoiceKind carries only issued/received direction, while ledger amounts are absolute; routing a refund to RECEIVED would add a positive deductible amount rather than reverse the purchase.
+- IvaLedgerInputKind.ADJUSTMENT is the existing signed-correction shape, but this research found no production producer for it.
+- The direction-only helper is duplicated at three call sites; consolidating it is independent of choosing how the correction is represented.
+
+## Considered options
 
 Deferred pending owner adjudication. Three options are laid out; this ADR
 records the analysis and the recommended interim, and is deliberately not
@@ -129,6 +135,20 @@ regardless — three private copies of one mapping is drift by construction — 
 it must not be mistaken for the fix. Consolidating them and adding refund
 detection would produce one canonical *wrong* answer in place of three
 duplicated ones.
+
+## Constraints
+
+- Do not route a correcting purchase movement by direction alone or encode a refund as a negative ledger amount.
+- A production correction must use a representation that carries a signed adjustment and must derive the corrected base and cuota from the linked purchase evidence.
+- This remains a proposed choice because it changes filed IVA figures; implemented code does not supply the missing authorization.
+
+## Implementation
+
+The recommended interim is to refuse an incoming movement carrying purchase-invoice evidence through the existing IvaLedgerAggregationIssue channel. The destination is a production producer for IvaLedgerInputKind.ADJUSTMENT, after the base/cuota derivation and partial-refund apportionment are grounded. Consolidate the three copies separately, without treating that extraction as the refund fix.
+
+## Rationale
+
+Refusal replaces today's wrong output and omitted correction with a visible block while preserving the unresolved representation choice. ADJUSTMENT is the existing signed path; a new signed disposition would duplicate it. The refusal is therefore the narrow interim, while a grounded adjustment producer remains the principled destination.
 
 ## Consequences
 

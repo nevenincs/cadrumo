@@ -355,25 +355,35 @@ def recorded_chain_entry(history: tuple[ModeloRecord, ...], register: AeatRegist
     expediente_id = register.expediente_id.strip() if register.expediente_id is not None else None
     csv = normalise_aeat_csv(register.csv) if register.csv is not None else None
     for record in history:
-        stored = record.aeat_register
-        if stored is not None and (
-            (expediente_id is not None and (stored.expediente_id or "").strip() == expediente_id)
-            or (csv is not None and stored.csv is not None and normalise_aeat_csv(stored.csv) == csv)
-        ):
+        if _stored_register_matches(record.aeat_register, expediente_id=expediente_id, csv=csv):
             return record
-        evidence = record.external_evidence
-        if evidence is None:
-            continue
-        reference = evidence.reference_id.strip()
-        if expediente_id is not None and reference == expediente_id:
-            return record
-        if (
-            csv is not None
-            and is_justificante_backed_external_evidence(evidence.kind)
-            and normalise_aeat_csv(reference) == csv
-        ):
+        if _external_reference_matches(record.external_evidence, expediente_id=expediente_id, csv=csv):
             return record
     return None
+
+
+def _stored_register_matches(stored: AeatRegisterRef | None, *, expediente_id: str | None, csv: str | None) -> bool:
+    """Compare stored register identities in their original short-circuit order."""
+    return stored is not None and (
+        (expediente_id is not None and (stored.expediente_id or "").strip() == expediente_id)
+        or (csv is not None and stored.csv is not None and normalise_aeat_csv(stored.csv) == csv)
+    )
+
+
+def _external_reference_matches(
+    evidence: ExternalEvidence | None, *, expediente_id: str | None, csv: str | None
+) -> bool:
+    """Compare expediente first, then only a justificante-backed CSV."""
+    if evidence is None:
+        return False
+    reference = evidence.reference_id.strip()
+    if expediente_id is not None and reference == expediente_id:
+        return True
+    return (
+        csv is not None
+        and is_justificante_backed_external_evidence(evidence.kind)
+        and normalise_aeat_csv(reference) == csv
+    )
 
 
 def _evidence_reference_id(entry: AeatRegisterEntry) -> str:
@@ -394,8 +404,10 @@ def _evidence_reference_id(entry: AeatRegisterEntry) -> str:
     return reference
 
 
-def _compare_with_pending(context: _Context, *, pending: ModeloRecord) -> _Comparison:
-    entry = context.entry
+def _pending_kind_notices(
+    entry: AeatRegisterEntry, pending: ModeloRecord
+) -> tuple[bool, tuple[FilingReconciliationNotice, ...]]:
+    """Keep declaration-kind mismatch notices ahead of content comparison."""
     kind_notices: tuple[FilingReconciliationNotice, ...] = ()
     kind_matches = entry.declared_kind is None or entry.declared_kind is pending.declaration_kind
     if not kind_matches:
@@ -408,6 +420,12 @@ def _compare_with_pending(context: _Context, *, pending: ModeloRecord) -> _Compa
                 },
             ),
         )
+    return kind_matches, kind_notices
+
+
+def _compare_with_pending(context: _Context, *, pending: ModeloRecord) -> _Comparison:
+    entry = context.entry
+    kind_matches, kind_notices = _pending_kind_notices(entry, pending)
     revision = context.ports.calculation_repository.load(operation=context.operation).get(
         pending.calculation_revision_id
     )

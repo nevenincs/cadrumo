@@ -7,8 +7,8 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
 supersedes:
   - '2026-07-12-cadrumo-product-rename-adr'
-modified: '2026-07-17'
-body_hash: 'sha256:c56a4e6f41b1524e1076dadb462ec5ef2d0f9e56a43df2ab5b0a8750edd9d90b'
+modified: '2026-10-03'
+body_hash: 'sha256:076f651f9641a6b288ae31ebd737abe03e58abc554ea3cc2a211dd45c49e59de'
 ---
 # `cadrumo-cli-executable` adr: `CADRUMO product identity with aeat CLI executable` | (**status:** `accepted`)
 
@@ -138,7 +138,7 @@ classify those uses by contract and referent rather than mechanically rename
 them. A future request to add `cadrumo` as another executable requires a new
 decision because it would change the single-command guarantee.
 
-## Status note: the single binding naming ADR
+## Operator ruling: the single binding naming ADR
 
 Operator decision recorded 2026-07-13, during the 476-to-main reconciliation:
 the `aeat` executable STAYS, and this ADR is the ONE binding naming authority

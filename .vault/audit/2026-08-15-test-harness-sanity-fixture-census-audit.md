@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-15'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e083b7577c5a76a50b5e2ed97383e4bc0fbce0da2a9fbacdf01fe7565d2efba9'
 related:
-  - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
   - "[[2026-08-14-test-harness-sanity-semantic-test-corpus-drift-audit]]"
 ---

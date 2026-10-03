@@ -19,7 +19,7 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....application.ledger.evidence_ingestion_operation import (
+from ....application.ledger.evidence_ingestion_contracts import (
     LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,

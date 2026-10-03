@@ -27,14 +27,11 @@ from .operations.access_resolution import (
 )
 from .operations.capabilities import RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_READ_CAPABILITIES
 from .operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
-from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from .operations.operation_definition import OperationDefinition, build_single_phase_definition
 from .operations.owner import OperationExecutorContext
+from .operations.profile_guard import require_access_request_profile_payload
 from .operations.public_scalar import PublicNamedScalar, project_facts, restore_facts
-from .operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from .operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from .operator_actions.projection import PreconditionVerdictSnapshot
 from .preflight import HealthSeverity, PreflightCheck
 from .provisioning import DependencyStatus
@@ -138,38 +135,9 @@ class WorkstationCheckProjection(BaseModel):
         """Copy every original row, ordered fact and recovery verdict."""
         return cls(
             profile_id=report.profile_id,
-            capabilities=tuple(
-                WorkstationCapabilitySnapshot(
-                    capability=row.capability,
-                    enabled=row.enabled,
-                    source=row.source,
-                    reason=row.reason,
-                )
-                for row in report.capabilities
-            ),
-            dependencies=tuple(
-                WorkstationDependencySnapshot(
-                    service=row.service,
-                    available=row.available,
-                    facts=project_facts(row.facts),
-                    precondition_verdict=PreconditionVerdictSnapshot.from_verdict(row.precondition_verdict)
-                    if row.precondition_verdict is not None
-                    else None,
-                )
-                for row in report.dependencies
-            ),
-            preflight=tuple(
-                WorkstationPreflightSnapshot(
-                    check=row.check,
-                    healthy=row.healthy,
-                    severity=row.severity,
-                    facts=project_facts(row.facts),
-                    precondition_verdict=PreconditionVerdictSnapshot.from_verdict(row.precondition_verdict)
-                    if row.precondition_verdict is not None
-                    else None,
-                )
-                for row in report.preflight
-            ),
+            capabilities=tuple(_capability_snapshot(row) for row in report.capabilities),
+            dependencies=tuple(_dependency_snapshot(row) for row in report.dependencies),
+            preflight=tuple(_preflight_snapshot(row) for row in report.preflight),
             issues=report.issues,
         )
 
@@ -185,6 +153,42 @@ class WorkstationCheckProjection(BaseModel):
             preflight=tuple(row.to_check() for row in self.preflight),
             issues=self.issues,
         )
+
+
+def _capability_snapshot(row: CapabilityDecision) -> WorkstationCapabilitySnapshot:
+    return WorkstationCapabilitySnapshot(
+        capability=row.capability,
+        enabled=row.enabled,
+        source=row.source,
+        reason=row.reason,
+    )
+
+
+def _dependency_snapshot(row: DependencyStatus) -> WorkstationDependencySnapshot:
+    return WorkstationDependencySnapshot(
+        service=row.service,
+        available=row.available,
+        facts=project_facts(row.facts),
+        precondition_verdict=(
+            PreconditionVerdictSnapshot.from_verdict(row.precondition_verdict)
+            if row.precondition_verdict is not None
+            else None
+        ),
+    )
+
+
+def _preflight_snapshot(row: PreflightCheck) -> WorkstationPreflightSnapshot:
+    return WorkstationPreflightSnapshot(
+        check=row.check,
+        healthy=row.healthy,
+        severity=row.severity,
+        facts=project_facts(row.facts),
+        precondition_verdict=(
+            PreconditionVerdictSnapshot.from_verdict(row.precondition_verdict)
+            if row.precondition_verdict is not None
+            else None
+        ),
+    )
 
 
 class WorkstationCheckExecutionResult(BaseModel):
@@ -266,33 +270,24 @@ class WorkstationCheckExecutor:
 
 
 def _request(request: OperationRequest[BaseModel], *, profile_id: UUID) -> WorkstationCheckRequest:
-    payload = request.payload
-    if (
-        request.definition_id != WORKSTATION_CHECK_OPERATION_DEFINITION_ID
-        or type(payload) is not WorkstationCheckRequest
-        or not isinstance(payload, WorkstationCheckRequest)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != profile_id or request.subject_ref != profile_operation_subject(str(profile_id)):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return payload
+    return require_access_request_profile_payload(
+        request,
+        definition_id=WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
+        payload_type=WorkstationCheckRequest,
+        access_profile_id=profile_id,
+        exact_type=True,
+    )
 
 
 def build_workstation_check_definition(factory: WorkstationCheckPortsFactory) -> OperationDefinition:
     """Enroll the existing private CLI health report without additional frontends."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
         request_type=WorkstationCheckRequest,
         result_type=WorkstationCheckExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=WorkstationCheckRequest,
-            executor_type=WorkstationCheckExecutor,
-            build=lambda: WorkstationCheckExecutor(factory),
-        ),
-        phase_codes=(WORKSTATION_CHECK_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=WorkstationCheckExecutor,
+        build=lambda: WorkstationCheckExecutor(factory),
         capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_READ_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -326,23 +321,45 @@ def project_workstation_check_result(
     result: BaseModel, receipt: OperationTerminalReceipt, /
 ) -> WorkstationCheckProjection:
     """Release only the full exact-profile read with a successful NONE receipt."""
-    if type(result) is not WorkstationCheckExecutionResult or not isinstance(result, WorkstationCheckExecutionResult):
-        raise ValueError("invalid workstation check result")
-    projection = result.projection
+    execution = _workstation_check_execution_result(result)
+    projection = execution.projection
     if (
-        receipt.identity.definition_id != WORKSTATION_CHECK_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
+        not _receipt_identifies_workstation_check(projection, receipt)
+        or not _receipt_is_successful_result(receipt)
         or len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES
     ):
         raise ValueError("workstation check result contradicts its terminal receipt")
     return projection
+
+
+def _workstation_check_execution_result(result: BaseModel) -> WorkstationCheckExecutionResult:
+    if type(result) is not WorkstationCheckExecutionResult or not isinstance(result, WorkstationCheckExecutionResult):
+        raise ValueError("invalid workstation check result")
+    return result
+
+
+def _receipt_identifies_workstation_check(
+    projection: WorkstationCheckProjection,
+    receipt: OperationTerminalReceipt,
+) -> bool:
+    return (
+        receipt.identity.definition_id == WORKSTATION_CHECK_OPERATION_DEFINITION_ID
+        and receipt.identity.subject_ref == profile_operation_subject(str(projection.profile_id))
+    )
+
+
+def _receipt_is_successful_result(receipt: OperationTerminalReceipt) -> bool:
+    if receipt.condition is not OperationTerminalCondition.SUCCEEDED or receipt.effect is not OperationEffect.NONE:
+        return False
+    return receipt.result_ref is not None and all(
+        reference is None
+        for reference in (
+            receipt.refusal_ref,
+            receipt.refusal_detail_ref,
+            receipt.failure_error_code,
+            receipt.diagnostic_ref,
+        )
+    )
 
 
 def build_workstation_check_registration(

@@ -34,15 +34,11 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..review.filter import LedgerReviewStatus
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
@@ -162,77 +158,23 @@ class LedgerLinkExecutor:
         await context.events.phase(request.definition_id)
         tracker = LedgerCommitAttemptTracker()
 
-        def work() -> LedgerLinkProjection:
-            ports = self._factory(bucket_id=str(payload.profile_id), operation=context.authority_operation)
-            if ports.operation is not context.authority_operation:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            original = resolve_revision_guarded_transaction_repository(
-                bucket_id=str(payload.profile_id), repository=ports.transaction_repository
-            )
-            repository = RevisionGuardedTrackedLedgerTransactionRepository(original, tracker)
-            actor = (payload.actor or "operator").strip() or "operator"
-            with validating_governed_facts(context.authority_operation):
-                transaction_id = resolve_transaction_id(payload.transaction_id, repository.load().transactions)
-                result = link_manual_transaction_invoice(
-                    bucket_id=str(payload.profile_id),
-                    transaction_id=transaction_id,
-                    invoice_id=payload.invoice_id,
-                    actor=actor,
-                    source_command="aeat app ledger link",
-                    ports=replace(ports, transaction_repository=repository),
-                )
-                transaction = result.transactions.get(result.transaction_id)
-                if transaction is None:
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-                canonical = ledger_transaction_result_payload(
-                    build_manual_ledger_result(str(payload.profile_id), transaction, result.bucket_event_ids)
-                )
-            return LedgerLinkProjection(
-                profile_id=payload.profile_id,
-                bucket_id=canonical.bucket_id,
-                transaction_id=canonical.transaction_id,
-                invoice_id=result.invoice_id,
-                actor=actor,
-                bucket_event_ids=result.bucket_event_ids,
-                review_status=canonical.review_status,
-                transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
-            )
-
         try:
             projection = await run_with_ledger_commit_fence(
-                work, tracker=tracker, context=context, task_name=request.definition_id
+                lambda: self._apply_link(payload, context, tracker),
+                tracker=tracker,
+                context=context,
+                task_name=request.definition_id,
             )
         except InvoiceLinkError as error:
-            facts = error.context
-            reason: Literal["missing_invoice", "cross_bucket_invoice"] | None = None
-            if facts is not None and facts.get("invoice_id") == payload.invoice_id:
-                if facts.get("command_bucket_id") == str(payload.profile_id) and "invoice_bucket_id" in facts:
-                    reason = "cross_bucket_invoice"
-                elif facts.get("bucket_id") == str(payload.profile_id):
-                    reason = "missing_invoice"
+            reason = _invoice_link_refusal_reason(error, payload)
             if tracker.attempt_count or tracker.has_possible_write or reason is None:
                 await settle_export_link_failure(tracker, context, confirmed_effect=OperationEffect.UPDATED)
                 raise
-            result = LedgerLinkOperationResult(
-                profile_id=payload.profile_id,
-                transaction_id=payload.transaction_id,
-                invoice_id=payload.invoice_id,
-                outcome="refused",
-                reason=reason,
-            )
-            async with context.cancellation.irreversible_section():
-                require_operation_profile(request, context, payload.profile_id)
-                await context.events.effect(OperationEffect.NONE)
-                detail_ref = await context.operands.put(LedgerLinkExecutionResult(result=result), written_at=now())
-            return OperationRefusalEvidence(refusal_code=LEDGER_LINK_VALIDATION_REFUSAL_CODE, detail_ref=detail_ref)
+            return await _publish_link_refusal(request, payload, context, reason)
         except BaseException:
             await settle_export_link_failure(tracker, context, confirmed_effect=OperationEffect.UPDATED)
             raise
-        if (
-            not tracker.confirmed_write
-            or tracker.has_uncertain_write
-            or len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES
-        ):
+        if _link_result_requires_refusal(projection, tracker):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         result = LedgerLinkOperationResult(
             profile_id=payload.profile_id,
@@ -243,32 +185,130 @@ class LedgerLinkExecutor:
         )
         return await context.operands.put(LedgerLinkExecutionResult(result=result), written_at=now())
 
+    def _apply_link(
+        self,
+        payload: LedgerLinkRequest,
+        context: OperationExecutorContext,
+        tracker: LedgerCommitAttemptTracker,
+    ) -> LedgerLinkProjection:
+        """Resolve and co-commit the canonical invoice link under registry authority."""
+        profile_id = str(payload.profile_id)
+        ports = self._factory(bucket_id=profile_id, operation=context.authority_operation)
+        if ports.operation is not context.authority_operation:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        original = resolve_revision_guarded_transaction_repository(
+            bucket_id=profile_id,
+            repository=ports.transaction_repository,
+        )
+        repository = RevisionGuardedTrackedLedgerTransactionRepository(original, tracker)
+        actor = (payload.actor or "operator").strip() or "operator"
+        with validating_governed_facts(context.authority_operation):
+            transaction_id = resolve_transaction_id(payload.transaction_id, repository.load().transactions)
+            result = link_manual_transaction_invoice(
+                bucket_id=profile_id,
+                transaction_id=transaction_id,
+                invoice_id=payload.invoice_id,
+                actor=actor,
+                source_command="aeat app ledger link",
+                ports=replace(ports, transaction_repository=repository),
+            )
+            transaction = result.transactions.get(result.transaction_id)
+            if transaction is None:
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+            canonical = ledger_transaction_result_payload(
+                build_manual_ledger_result(profile_id, transaction, result.bucket_event_ids)
+            )
+        return LedgerLinkProjection(
+            profile_id=payload.profile_id,
+            bucket_id=canonical.bucket_id,
+            transaction_id=canonical.transaction_id,
+            invoice_id=result.invoice_id,
+            actor=actor,
+            bucket_event_ids=result.bucket_event_ids,
+            review_status=canonical.review_status,
+            transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        )
+
+
+def _invoice_link_refusal_reason(
+    error: InvoiceLinkError,
+    payload: LedgerLinkRequest,
+) -> Literal["missing_invoice", "cross_bucket_invoice"] | None:
+    facts = error.context
+    if facts is None or facts.get("invoice_id") != payload.invoice_id:
+        return None
+    if facts.get("command_bucket_id") == str(payload.profile_id) and "invoice_bucket_id" in facts:
+        return "cross_bucket_invoice"
+    if facts.get("bucket_id") == str(payload.profile_id):
+        return "missing_invoice"
+    return None
+
+
+async def _publish_link_refusal(
+    request: OperationRequest[BaseModel],
+    payload: LedgerLinkRequest,
+    context: OperationExecutorContext,
+    reason: Literal["missing_invoice", "cross_bucket_invoice"],
+) -> OperationRefusalEvidence:
+    result = LedgerLinkOperationResult(
+        profile_id=payload.profile_id,
+        transaction_id=payload.transaction_id,
+        invoice_id=payload.invoice_id,
+        outcome="refused",
+        reason=reason,
+    )
+    async with context.cancellation.irreversible_section():
+        require_operation_profile(request, context, payload.profile_id)
+        await context.events.effect(OperationEffect.NONE)
+        detail_ref = await context.operands.put(LedgerLinkExecutionResult(result=result), written_at=now())
+    return OperationRefusalEvidence(refusal_code=LEDGER_LINK_VALIDATION_REFUSAL_CODE, detail_ref=detail_ref)
+
+
+def _link_result_requires_refusal(projection: LedgerLinkProjection, tracker: LedgerCommitAttemptTracker) -> bool:
+    return (
+        not tracker.confirmed_write
+        or tracker.has_uncertain_write
+        or len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES
+    )
+
+
+def _link_receipt_identity_and_size_match(
+    projection: LedgerLinkOperationResult,
+    receipt: OperationTerminalReceipt,
+) -> bool:
+    return (
+        receipt.identity.definition_id == LEDGER_LINK_OPERATION_DEFINITION_ID
+        and receipt.identity.subject_ref == profile_operation_subject(str(projection.profile_id))
+        and receipt.failure_error_code is None
+        and receipt.diagnostic_ref is None
+        and len(canonical_json_bytes(projection.model_dump(mode="json"))) <= PROJECTION_DOCUMENT_MAX_BYTES
+    )
+
+
+def _link_success_receipt_matches(receipt: OperationTerminalReceipt) -> bool:
+    return receipt.condition is OperationTerminalCondition.SUCCEEDED and receipt.effect is OperationEffect.UPDATED
+
+
+def _link_refusal_receipt_matches(receipt: OperationTerminalReceipt) -> bool:
+    return (
+        receipt.condition is OperationTerminalCondition.REFUSED
+        and receipt.effect is OperationEffect.NONE
+        and receipt.refusal_ref == LEDGER_LINK_VALIDATION_REFUSAL_CODE
+        and receipt.refusal_detail_ref is not None
+    )
+
 
 def project_ledger_link_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerLinkOperationResult:
     """Require a successful atomic co-commit for the exact profile and purpose."""
     if type(result) is not LedgerLinkExecutionResult or not isinstance(result, LedgerLinkExecutionResult):
         raise ValueError("invalid ledger linkage result")
     projection = result.result
-    if (
-        receipt.identity.definition_id != LEDGER_LINK_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES
-    ):
+    if not _link_receipt_identity_and_size_match(projection, receipt):
         raise ValueError("ledger linkage result contradicts its terminal receipt")
     if projection.outcome == "linked":
-        if (
-            receipt.condition is not OperationTerminalCondition.SUCCEEDED
-            or receipt.effect is not OperationEffect.UPDATED
-        ):
+        if not _link_success_receipt_matches(receipt):
             raise ValueError("ledger linkage success contradicts its terminal receipt")
-    elif (
-        receipt.condition is not OperationTerminalCondition.REFUSED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.refusal_ref != LEDGER_LINK_VALIDATION_REFUSAL_CODE
-        or receipt.refusal_detail_ref is None
-    ):
+    elif not _link_refusal_receipt_matches(receipt):
         raise ValueError("ledger linkage refusal contradicts its terminal receipt")
     return LedgerLinkOperationResult.model_validate(projection.model_dump(mode="python"), strict=True)
 
@@ -291,15 +331,12 @@ def resolve_ledger_link_access(
 
 def build_ledger_link_definition(factory: LedgerActionPortsFactory) -> OperationDefinition:
     """Expose the existing value-safe link through the shared worker on all fronts."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_LINK_OPERATION_DEFINITION_ID,
         request_type=LedgerLinkRequest,
         result_type=LedgerLinkExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerLinkRequest, executor_type=LedgerLinkExecutor, build=lambda: LedgerLinkExecutor(factory)
-        ),
-        phase_codes=(LEDGER_LINK_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerLinkExecutor,
+        build=lambda: LedgerLinkExecutor(factory),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -313,11 +350,8 @@ def build_ledger_link_definition(factory: LedgerActionPortsFactory) -> Operation
             permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({LEDGER_LINK_VALIDATION_REFUSAL_CODE}),
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
     )
 
 

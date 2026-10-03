@@ -25,11 +25,13 @@ from ..filing_record_view_operation import (
     ModeloFilingObservationLayersProjection,
     ModeloFilingObservationOverrideProjection,
 )
-from ..local_observation_operation import (
+from ..local_observation_contracts import (
     MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,
     ModeloLocalObservationCasillaValue,
     ModeloLocalObservationMutationProjection,
     ModeloLocalObservationMutationRequest,
+)
+from ..local_observation_operation import (
     build_modelo_local_observation_definition,
     build_modelo_local_observation_registration,
     resolve_modelo_local_observation_access,

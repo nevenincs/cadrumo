@@ -24,7 +24,7 @@ from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
-from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -42,7 +42,8 @@ from cadrumo.entrypoints.tui.launcher import main
 from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
 from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
 from cadrumo.entrypoints.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginMethod, RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 
 pytestmark = [
     pytest.mark.integration,
@@ -120,6 +121,7 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )

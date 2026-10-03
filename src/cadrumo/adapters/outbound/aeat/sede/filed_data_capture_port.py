@@ -119,7 +119,7 @@ class _DeferredSedeObservations:
         """Publish source artefacts together after the caller enters its fence."""
         if self.consumed:
             raise ValueError("deferred source artefacts cannot be persisted twice")
-        expected = tuple(artefact for observation in self.observations for artefact in observation.artefacts)
+        expected = _deferred_source_artefacts(self.observations)
         if expected != tuple(artefact for _, artefact, _ in self.staged):
             raise ValueError("deferred source artefacts differ from captured observations")
         concrete_sink = _concrete_artefact_sink(sink)
@@ -394,3 +394,10 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
 
 
 __all__ = ["SedeFiledDataCapturePort", "capture_deferred_sede_observation"]
+
+
+def _deferred_source_artefacts(
+    observations: tuple[FiledDeclaracionObservation, ...],
+) -> tuple[FiledDeclaracionArtefact, ...]:
+    """Flatten source artefacts in captured observation order before the equality fence."""
+    return tuple(artefact for observation in observations for artefact in observation.artefacts)

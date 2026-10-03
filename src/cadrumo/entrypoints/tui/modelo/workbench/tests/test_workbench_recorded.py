@@ -17,7 +17,8 @@ from ......application.modelo.work_form_models import ModeloFormBlocker
 from ......core.config import override_settings
 from ......core.i18n.render import lookup_translation, tr
 from ....components.host import ScreenHostApp
-from ..casilla_list import CasillaList, CasillaListEntry
+from ..casilla_list import CasillaList
+from ..casilla_list_models import CasillaListEntry
 from ..screen import ModeloWorkbenchScreen
 from .declaration_states import recorded_as_filed, with_deadline, with_findings
 from .editor_panel import open_panel

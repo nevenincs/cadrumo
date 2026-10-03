@@ -26,7 +26,9 @@ from ...review.filter import LedgerReviewStatus
 from ...user_profile.access_contracts import AccessAction, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import classify_operation as operation
+from .. import classify_requests, classify_result_contracts
 from ..action_ports import LedgerActionPorts, LedgerActionPortsFactory
+from ..classify_result_projection import project_classify_operation_result
 from ..transaction_projection import LedgerTransactionProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -36,11 +38,11 @@ _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _TRANSACTION_ID = "b" * 64
 
 
-def _request(*, profile_id: UUID = _PROFILE) -> operation.LedgerClassifyRequest:
-    return operation.LedgerClassifyRequest(
+def _request(*, profile_id: UUID = _PROFILE) -> classify_requests.LedgerClassifyRequest:
+    return classify_requests.LedgerClassifyRequest(
         profile_id=profile_id,
         transaction_id=_TRANSACTION_ID[:12],
-        patch=operation.LedgerClassifyPatch(business_classification="PERSONAL"),
+        patch=classify_requests.LedgerClassifyPatch(business_classification="PERSONAL"),
         patch_fields=("business_classification",),
     )
 
@@ -126,7 +128,7 @@ def _receipt(
     return OperationTerminalReceipt(
         identity=OperationIdentity(
             operation_id="a" * 64,
-            definition_id=operation.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
+            definition_id=classify_requests.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE)),
         ),
         revision=1,
@@ -134,45 +136,45 @@ def _receipt(
         effect=effect,
         settled_at=datetime(2026, 4, 15, tzinfo=UTC),
         result_ref=None if refused else "f" * 64,
-        refusal_ref=operation.LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE if refused else None,
+        refusal_ref=classify_result_contracts.LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE if refused else None,
         refusal_detail_ref="e" * 64 if refused else None,
     )
 
 
 def test_request_round_trip_keeps_explicit_null_and_exact_omission_mask() -> None:
-    request = operation.LedgerClassifyRequest(
+    request = classify_requests.LedgerClassifyRequest(
         profile_id=_PROFILE,
         transaction_id=_TRANSACTION_ID[:12],
-        patch=operation.LedgerClassifyPatch(business_classification="PERSONAL", notes=None),
+        patch=classify_requests.LedgerClassifyPatch(business_classification="PERSONAL", notes=None),
         patch_fields=("business_classification", "notes"),
     )
 
-    assert operation.LedgerClassifyRequest.model_validate_json(request.model_dump_json()) == request
+    assert classify_requests.LedgerClassifyRequest.model_validate_json(request.model_dump_json()) == request
     with pytest.raises(ValidationError):
-        operation.LedgerClassifyRequest(
+        classify_requests.LedgerClassifyRequest(
             profile_id=_PROFILE,
             transaction_id=_TRANSACTION_ID[:12],
-            patch=operation.LedgerClassifyPatch(business_classification="PERSONAL", notes="unselected"),
+            patch=classify_requests.LedgerClassifyPatch(business_classification="PERSONAL", notes="unselected"),
             patch_fields=("business_classification",),
         )
 
 
 def test_mixed_share_and_m210_orphan_identity_values_are_rejected() -> None:
     with pytest.raises(ValidationError):
-        operation.LedgerClassifyRequest(
+        classify_requests.LedgerClassifyRequest(
             profile_id=_PROFILE,
             transaction_id=_TRANSACTION_ID[:12],
-            patch=operation.LedgerClassifyPatch(business_classification="MIXED"),
+            patch=classify_requests.LedgerClassifyPatch(business_classification="MIXED"),
             patch_fields=("business_classification",),
         )
 
     with pytest.raises(ValidationError):
-        operation.LedgerClassifyRequest(
+        classify_requests.LedgerClassifyRequest(
             profile_id=_PROFILE,
             transaction_id=_TRANSACTION_ID[:12],
-            patch=operation.LedgerClassifyPatch(business_classification="BUSINESS"),
+            patch=classify_requests.LedgerClassifyPatch(business_classification="BUSINESS"),
             patch_fields=("business_classification", "m210_income_classification"),
-            m210=operation.LedgerClassifyM210Options(payer_id="payer-1"),
+            m210=classify_requests.LedgerClassifyM210Options(payer_id="payer-1"),
         )
 
 
@@ -184,7 +186,7 @@ def test_registration_requires_commit_and_refuses_another_profile() -> None:
     registration = operation.build_ledger_classify_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     request = OperationRequest[BaseModel](
-        definition_id=operation.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
+        definition_id=classify_requests.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=_request(),
     )
@@ -204,7 +206,7 @@ def test_registration_requires_commit_and_refuses_another_profile() -> None:
         resolve_operation_access(
             registry=registry,
             request=OperationRequest[BaseModel](
-                definition_id=operation.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
+                definition_id=classify_requests.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
                 subject_ref=profile_operation_subject(str(_OTHER_PROFILE)),
                 payload=_request(profile_id=_OTHER_PROFILE),
             ),
@@ -213,7 +215,7 @@ def test_registration_requires_commit_and_refuses_another_profile() -> None:
 
 
 def test_terminal_projector_checks_effect_and_preserves_bounded_m210_refusal_kind() -> None:
-    projection = operation.LedgerClassifyOperationResult(
+    projection = classify_result_contracts.LedgerClassifyOperationResult(
         outcome="classified",
         profile_id=_PROFILE,
         transaction=_transaction_projection(),
@@ -221,26 +223,26 @@ def test_terminal_projector_checks_effect_and_preserves_bounded_m210_refusal_kin
         review_status=LedgerReviewStatus.PENDING,
         bucket_event_ids=("d" * 64,),
     )
-    execution = operation.LedgerClassifyExecutionResult(
+    execution = classify_result_contracts.LedgerClassifyExecutionResult(
         outcome="classified",
         profile_id=_PROFILE,
         result=projection,
     )
     receipt = _receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED)
 
-    assert operation._project_operation_result(execution, receipt) == projection
+    assert project_classify_operation_result(execution, receipt) == projection
     with pytest.raises(ValueError):
-        operation._project_operation_result(execution, receipt.model_copy(update={"effect": OperationEffect.NONE}))
+        project_classify_operation_result(execution, receipt.model_copy(update={"effect": OperationEffect.NONE}))
 
-    refusal_execution = operation.LedgerClassifyExecutionResult(
+    refusal_execution = classify_result_contracts.LedgerClassifyExecutionResult(
         outcome="validation_error",
         profile_id=_PROFILE,
         validation_kind="m210_required_options",
         validation_messages=("M210 declaration is incomplete",),
     )
     refused = cast(
-        operation.LedgerClassifyOperationResult,
-        operation._project_operation_result(
+        classify_result_contracts.LedgerClassifyOperationResult,
+        project_classify_operation_result(
             refusal_execution,
             _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE),
         ),
@@ -312,7 +314,7 @@ async def test_executor_loads_in_commit_and_passes_the_same_row_as_expected_curr
     operands = Operands()
     context = SimpleNamespace(
         identity=SimpleNamespace(
-            definition_id=operation.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
+            definition_id=classify_requests.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE)),
         ),
         authority_operation=authority,
@@ -321,7 +323,7 @@ async def test_executor_loads_in_commit_and_passes_the_same_row_as_expected_curr
         operands=operands,
     )
     transaction_projection = _transaction_projection()
-    public_result = operation.LedgerClassifyOperationResult(
+    public_result = classify_result_contracts.LedgerClassifyOperationResult(
         outcome="classified",
         profile_id=_PROFILE,
         transaction=transaction_projection,
@@ -330,7 +332,7 @@ async def test_executor_loads_in_commit_and_passes_the_same_row_as_expected_curr
     )
     projection_calls: list[object] = []
 
-    def project(_profile_id: UUID, result: object) -> operation.LedgerClassifyOperationResult:
+    def project(_profile_id: UUID, result: object) -> classify_result_contracts.LedgerClassifyOperationResult:
         projection_calls.append(result)
         return public_result
 
@@ -340,17 +342,17 @@ async def test_executor_loads_in_commit_and_passes_the_same_row_as_expected_curr
         return SimpleNamespace(bucket_event_ids=("e" * 64,))
 
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation, "_operation_result", project)
+    monkeypatch.setattr(operation, "classification_result_from_action", project)
     monkeypatch.setattr(operation, "update_manual_transaction_fields", update)
     factory = cast(LedgerActionPortsFactory, lambda **_kwargs: ports)
     executor = operation.LedgerClassifyExecutor(factory)
-    request = OperationRequest[operation.LedgerClassifyRequest](
-        definition_id=operation.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
+    request = OperationRequest[classify_requests.LedgerClassifyRequest](
+        definition_id=classify_requests.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
-        payload=operation.LedgerClassifyRequest(
+        payload=classify_requests.LedgerClassifyRequest(
             profile_id=_PROFILE,
             transaction_id=transaction_id[:12],
-            patch=operation.LedgerClassifyPatch(business_classification="BUSINESS", notes="reason"),
+            patch=classify_requests.LedgerClassifyPatch(business_classification="BUSINESS", notes="reason"),
             patch_fields=("business_classification", "notes"),
         ),
     )
@@ -365,4 +367,4 @@ async def test_executor_loads_in_commit_and_passes_the_same_row_as_expected_curr
     assert mutations[0]["expected_current"] is current
     assert mutations[0]["ports"] is ports
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
-    assert isinstance(operands.value, operation.LedgerClassifyExecutionResult)
+    assert isinstance(operands.value, classify_result_contracts.LedgerClassifyExecutionResult)

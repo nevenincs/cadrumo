@@ -17,6 +17,11 @@ from typing import Annotated, Any
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
+from cadrumo.application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculateRequest,
+)
+
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationDurability, OperationEffect, OperationLifecycle
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
@@ -221,7 +226,7 @@ def test_calculate_request_requires_the_joint_return_election_and_preserves_expl
         "ordinary_m303_filing_evidence": {"joint_return_elected": False},
     }
 
-    request = definitions_module.ModeloWorkCalculateRequest.model_validate(values)
+    request = ModeloWorkCalculateRequest.model_validate(values)
 
     evidence = request.ordinary_m303_filing_evidence
     assert evidence is not None
@@ -230,13 +235,13 @@ def test_calculate_request_requires_the_joint_return_election_and_preserves_expl
     invalid = request.model_dump(mode="python")
     del invalid["ordinary_m303_filing_evidence"]["joint_return_elected"]
     with pytest.raises(ValidationError):
-        definitions_module.ModeloWorkCalculateRequest.model_validate(invalid)
+        ModeloWorkCalculateRequest.model_validate(invalid)
 
 
 def test_calculate_request_no_longer_accepts_an_annual_volume_answer() -> None:
     """The ordinary path never prints the art. 121 answer, so a request carrying one is refused, not ignored."""
     with pytest.raises(ValidationError, match="annual_volume_nonzero"):
-        definitions_module.ModeloWorkCalculateRequest.model_validate(
+        ModeloWorkCalculateRequest.model_validate(
             {
                 "work_unit_id": "a" * 64,
                 "actor": "operator",
@@ -257,7 +262,7 @@ def test_calculate_request_v4_and_result_v2_bind_the_full_writer_contract() -> N
     assert result_schema is not None
     assert result_schema.schema_id == "modelo.work.calculate.result"
     assert result_schema.schema_version == 2
-    assert definition.result_type is definitions_module.ModeloWorkCalculatePublicResultV2
+    assert definition.result_type is ModeloWorkCalculatePublicResultV2
 
 
 def _pending_superseded_invocation(

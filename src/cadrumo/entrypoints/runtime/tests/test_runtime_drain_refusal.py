@@ -504,11 +504,11 @@ def test_drain_releases_real_prepared_approval_password_proof(tmp_path: Path, *,
             session = actual[0]
             # Inspect real preparation output, without constructing or assigning
             # the password authorization/DEK that the owning service creates.
-            assert session._proof is not None and session._dek is not None
+            assert session.prove_enrollment_approval is not None and session._dek is not None
             result = profiles.drain(deadline=time.monotonic() + 1)
             assert result.uncontained == result.unsettled == ()
             assert profiles._profiles == {}
-            assert session._proof is None and session._dek is None
+            assert session.prove_enrollment_approval is None and session._dek is None
             with pytest.raises(ValueError, match="closed"):
                 session.commit_review()
             assert failures == []

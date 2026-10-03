@@ -70,8 +70,10 @@ from .....core.i18n.render import output_language, tr
 from ...components.theme import tokenised
 from ...navigation import TuiDestinationIdV1, TuiFocusIdentityV1, TuiNavigationTargetV1
 from .casilla_list import (
-    AddressKey,
     CasillaList,
+)
+from .casilla_list_models import (
+    AddressKey,
     CasillaListEntry,
     CasillaListHeading,
     CasillaListItem,

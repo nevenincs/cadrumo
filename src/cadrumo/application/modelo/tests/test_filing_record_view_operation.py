@@ -47,7 +47,7 @@ from ...user_profile.access_contracts import (
     OperationAccessRequest,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ..filing_record_list_operation import ModeloFilingRecordListEntryProjection
+from ..filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from ..filing_record_view_operation import (
     MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
     ModeloFilingObservationLayersProjection,

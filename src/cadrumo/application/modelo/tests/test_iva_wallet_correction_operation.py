@@ -146,9 +146,11 @@ class _Factory:
         self.history = history
         self.bucket_id = bucket_id
         self.requested: list[str] = []
+        self.operations: list[object] = []
 
-    def __call__(self, *, bucket_id: str) -> ModeloIvaWalletSeedPorts:
+    def __call__(self, *, bucket_id: str, operation: object) -> ModeloIvaWalletSeedPorts:
         self.requested.append(bucket_id)
+        self.operations.append(operation)
         selected = self.bucket_id if self.bucket_id is not None else bucket_id
         return ModeloIvaWalletSeedPorts(
             work_unit_repository=ProfileOnlyCatalogueRepository[WorkUnitCatalogue](selected),
@@ -287,6 +289,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
 
     assert result_ref == "result-reference"
     assert factory.requested == [str(_PROFILE)]
+    assert factory.operations == [_AUTHORITY]
     assert seen[0]["bucket_id"] == str(_PROFILE)
     assert seen[0]["operation"] is _AUTHORITY
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]

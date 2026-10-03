@@ -24,15 +24,14 @@ from ..operations.access_resolution import (
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_profile_operation_identity
-from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
+from ..operations.profile_guard import (
+    require_access_request_profile_payload,
+    require_profile_operation_identity,
 )
+from ..operations.refusal_evidence import OperationRefusalEvidence
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -254,17 +253,13 @@ def resolve_auth_diagnostic_report_access(
 def _require_auth_diagnostic_report_request(
     request: OperationRequest[BaseModel], context: OperationAccessContext
 ) -> AuthDiagnosticReportRequest:
-    payload = request.payload
-    if (
-        request.definition_id != AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID
-        or type(payload) is not AuthDiagnosticReportRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return payload
+    return require_access_request_profile_payload(
+        request,
+        definition_id=AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
+        payload_type=AuthDiagnosticReportRequest,
+        access_profile_id=context.profile_id,
+        exact_type=True,
+    )
 
 
 def _require_diagnostic_admission_or_authority(
@@ -293,19 +288,13 @@ def _matches_diagnostic_admission(
 
 def build_auth_diagnostic_report_definition(factory: AuthDiagnosticReportPortsFactory) -> OperationDefinition:
     """Declare the encrypted phone-state report as a real guarded mutation."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
         request_type=AuthDiagnosticReportRequest,
         result_type=AuthDiagnosticReportExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=AuthDiagnosticReportRequest,
-            executor_type=AuthDiagnosticReportExecutor,
-            build=lambda: AuthDiagnosticReportExecutor(factory),
-        ),
-        phase_codes=(AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=AuthDiagnosticReportExecutor,
+        build=lambda: AuthDiagnosticReportExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=_FRONTENDS,
         refusal_detail_codes=frozenset({AUTH_DIAGNOSTIC_NOT_FOUND_REFUSAL_CODE}),
     )

@@ -58,7 +58,7 @@ from cadrumo.application.modelo.calculation_action_ports import CalculationActio
 from cadrumo.application.modelo.filing_actions import (
     file_modelo_revision,
 )
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import (
     create_work_unit,
 )
@@ -648,7 +648,7 @@ def _verify_revision(
             bucket_event=bucket_event_repository,
             filing=filing_repository or ModeloRecordCatalogueRepository(),
         )
-        return verify_modelo_revision(
+        return verify_modelo_revision_with_preconditions(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=verification_repositories,
@@ -658,7 +658,7 @@ def _verify_revision(
             clock=clock,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
 
 def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:

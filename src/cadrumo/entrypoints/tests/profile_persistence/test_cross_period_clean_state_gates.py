@@ -38,7 +38,7 @@ from ....application.calculations.cross_period_models import (
 )
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.external_import_actions import import_external_filing_evidence
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.verification_cross_period import cross_period_clean_state_findings
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -478,7 +478,7 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
         )
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_repositories(
@@ -494,7 +494,7 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         stored_reports = reports.load().for_calculation_revision(revision_id)
 
     cross_period_findings = tuple(
@@ -539,7 +539,7 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
         )
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_repositories(
@@ -555,7 +555,7 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
 
     cross_period_findings = tuple(
         finding for finding in report.findings if finding.kind.value == "cross_period_dependency_unclean"
@@ -594,7 +594,7 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
         assert no_activity_profile.activity_start_date is None
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_repositories(
@@ -610,7 +610,7 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
 
     assert report.granted_verificado_completo is False
     fail_closed_findings = tuple(

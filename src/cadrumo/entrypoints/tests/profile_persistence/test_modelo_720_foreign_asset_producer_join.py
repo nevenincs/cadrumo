@@ -77,7 +77,7 @@ from ....application.calculations.foreign_asset_redeclaration import modelo_720_
 from ....application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.aggregation import BindingSourceKind, ForeignAssetClass
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -358,7 +358,7 @@ def _calculate_through_the_mesh(
                 clock=_CLOCK_N_PLUS_1,
             ).revision
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -367,7 +367,7 @@ def _calculate_through_the_mesh(
                 clock=_CLOCK_N_PLUS_1,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         return revision, snapshot.revision, report
 
 

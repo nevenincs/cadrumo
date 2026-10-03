@@ -302,6 +302,9 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
         )
         acquired = asyncio.run(run_to_settlement(supervisor, acquired_id))
         assert acquired.terminal_condition is OperationTerminalCondition.REFUSED
+        # The provider's typed cause is kept for the frontend in another process.
+        assert acquired.terminal_receipt is not None
+        assert acquired.terminal_receipt.error_detail_ref is not None
         assert acquired.effect is OperationEffect.UNKNOWN
 
         logout_id = asyncio.run(

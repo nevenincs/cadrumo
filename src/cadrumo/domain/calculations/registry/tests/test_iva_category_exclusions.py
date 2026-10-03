@@ -20,6 +20,7 @@ from datetime import date
 
 import pytest
 
+from .....core.modelo import Modelo
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..errors import RegistryValidationError
 from ..facts.payloads import MappingFactEntry, MappingFactPayload
@@ -43,12 +44,12 @@ def _generation_pinned_authority() -> Iterator[None]:
 def test_modelo_347_excludes_goods_exports_and_imports_and_leaves_assimilated_exports_unsettled() -> None:
     catalogue = resolve_iva_category_catalogue(effective_date=_ON_DATE)
 
-    assert catalogue.exclusion("347", "export_third_country_zero_rated") is IvaCategoryExclusion.EXCLUDED
-    assert catalogue.exclusion("347", "import_third_country") is IvaCategoryExclusion.EXCLUDED
-    assert catalogue.exclusion("347", "export_assimilated_zero_rated") is IvaCategoryExclusion.UNSETTLED
-    assert catalogue.exclusion("347", "domestic_general") is None
-    assert catalogue.exclusion("347", "operacion_no_sujeta") is None
-    assert catalogue.exclusion("349", "export_third_country_zero_rated") is None
+    assert catalogue.exclusion(Modelo("347"), "export_third_country_zero_rated") is IvaCategoryExclusion.EXCLUDED
+    assert catalogue.exclusion(Modelo("347"), "import_third_country") is IvaCategoryExclusion.EXCLUDED
+    assert catalogue.exclusion(Modelo("347"), "export_assimilated_zero_rated") is IvaCategoryExclusion.UNSETTLED
+    assert catalogue.exclusion(Modelo("347"), "domestic_general") is None
+    assert catalogue.exclusion(Modelo("347"), "operacion_no_sujeta") is None
+    assert catalogue.exclusion(Modelo("349"), "export_third_country_zero_rated") is None
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,7 +82,7 @@ def test_the_extended_source_resolves_a_well_formed_exclusion() -> None:
     """The refusals below are meaningful only because this same source accepts a valid entry."""
     catalogue = _resolve_with((("category_exclusion.190.domestic_general", "unsettled"),))
 
-    assert catalogue.exclusion("190", "domestic_general") is IvaCategoryExclusion.UNSETTLED
+    assert catalogue.exclusion(Modelo("190"), "domestic_general") is IvaCategoryExclusion.UNSETTLED
 
 
 @pytest.mark.parametrize(
@@ -96,6 +97,16 @@ def test_the_extended_source_resolves_a_well_formed_exclusion() -> None:
             (("category_exclusion..domestic_general", "excluded"),),
             "names no modelo",
             id="no-modelo",
+        ),
+        pytest.param(
+            (("category_exclusion.m347.domestic_general", "excluded"),),
+            "not a canonical modelo code",
+            id="non-canonical-modelo",
+        ),
+        pytest.param(
+            (("category_exclusion.3470.domestic_general", "excluded"),),
+            "not a canonical modelo code",
+            id="overlong-modelo",
         ),
         pytest.param(
             (("category_exclusion.190.domestic_general", "excluida"),),

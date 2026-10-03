@@ -22,8 +22,9 @@ from ..operations.public_period import PublicPeriod
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .calculation_request_fields import ModeloCalculationInputFieldsV1, ModeloCalculationOverride
-from .operation_definitions import ModeloDetailRowWireV1, ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
+from .edit_apply_row_contracts import ModeloDetailRowWireV1
 from .quickfile import QuickfileStage, QuickfileStageStatus
+from .work_calculation_contracts import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 
 type QuickfileText = Annotated[str, Field(max_length=PROJECTION_DOCUMENT_MAX_BYTES)]
 type QuickfileReference = Annotated[str, Field(min_length=1, max_length=128)]

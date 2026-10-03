@@ -26,6 +26,8 @@ _MODULE = "cadrumo.adapters.local_runtime.tests.windows_inheritance_fixture"
 
 
 def test_inheritable_sentinel_is_detected_in_control_and_absent_in_job_child(tmp_path: Path) -> None:
+    if sys.platform != "win32":
+        pytest.skip("requires native Windows Job inheritance")
     import pywintypes
     import win32api
     import win32event

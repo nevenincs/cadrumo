@@ -43,7 +43,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind
@@ -353,7 +353,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     assert Decimal(result.revision.casilla_values[exterior_cuota]) == Decimal("19.00")
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -362,7 +362,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert report.granted_verificado_completo is True, report.findings
 
     output_path = tmp_path / f"modelo-369-{period_token}.txt"
@@ -549,7 +549,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
         )
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 result.revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -558,7 +558,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                 clock=_T1,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         assert ambient_invoice_repo.exists() is False
         assert any(
             ref.resolved_binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
@@ -687,7 +687,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
     assert result.revision.source_provenance == (), "unresolved OSS source must persist no resolved-source trace"
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -696,7 +696,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is False
     finding = next(
@@ -823,7 +823,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
     )
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -832,7 +832,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is False
     finding = next(
@@ -933,7 +933,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
         result.revision.source_provenance
     )
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -942,7 +942,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert report.granted_verificado_completo is True, report.findings
     assert wu_repo.load().work_units[work_unit.work_unit_id].current_calculation_revision_id == (
         result.revision.calculation_revision_id

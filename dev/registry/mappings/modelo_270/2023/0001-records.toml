@@ -603,17 +603,30 @@ record_identity = "Tipo 2 - Registro De Perceptor"
 ordinal = "20"
 
 [[entries]]
-export_field_id = "modelo-270-perc-lugar-nacimiento"
+export_field_id = "modelo-270-perc-ciudad-nacimiento"
 kind = "casilla"
-casilla_id = "perc.lugar-nacimiento"
+casilla_id = "perc.ciudad-nacimiento"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
-source_row = 588
+source_row = 601
 record_identity = "Tipo 2 - Registro De Perceptor"
-ordinal = "21"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-perc-codigo-pais-nacimiento"
+kind = "casilla"
+casilla_id = "perc.codigo-pais-nacimiento"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 605
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
 
 [[entries]]
 export_field_id = "modelo-270-perc-pais-residencia"

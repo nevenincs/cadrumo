@@ -54,7 +54,7 @@ from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.schema_base import DateAxis
 from ..transactions.m210_income_classification import resolve_m210_payer_mode
@@ -85,9 +85,7 @@ def _registry_detail_catalogue(
     mapping fact and leave the M349 projection absent.
     """
     as_of = effective_date
-    authority: GovernedFactSource | None = operation or governed_facts_in_scope()
-    if authority is None:
-        raise ValueError("detail-row registry resolution requires a generation-pinned authority operation or scope")
+    authority = require_governed_fact_authority(operation, subject="detail-row registry resolution")
     if (filing_year is None) != (period is None):
         raise ValueError("M349 registry selection requires both filing_year and period")
     periods = frozenset[str]()

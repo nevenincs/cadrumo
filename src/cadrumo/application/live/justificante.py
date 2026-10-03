@@ -684,40 +684,10 @@ def _justificante_matches_capture_axis(
     )
 
 
-def register_capture_as_filing_evidence(
-    *,
+def _current_filing_record_for_capture(
     snapshot: JustificanteCaptureSnapshot,
     ports: JustificanteRegistrationPorts,
-    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloRecord:
-    """Confirm the period's filing with a persisted live capture of its receipt.
-
-    Loads the period's current filing record first; with one present, parses
-    the captured receipt into a domain ``Justificante`` (keyed by the capture's
-    CSV, which is the gate's evidence reference), registers it, and reconciles
-    the filing chain with it through
-    :func:`~cadrumo.application.modelo.filing_chain_reconciliation.reconcile_aeat_register_entry`.
-    A receipt carries only totals, so a pending filing is confirmed only when
-    its computed result matches them. Once confirmed, the cross-period
-    clean-state gate's ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker clears for
-    the period.
-
-    Returns the confirmed :class:`~ModeloRecord`.
-
-    Raises:
-        LiveApplicationInputError: when no current filing record exists for the
-            captured ``(modelo, filing_year, period)``, when the receipt does not
-            match it, or when the reconciliation does not confirm it.
-    """
-    from ...domain.modelos.filing_record import AeatRegisterRef, ExternalEvidenceKind
-    from ..modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationOutcome
-
-    if snapshot.state is not SnapshotLifecycleState.ACTIVE:
-        raise LiveApplicationInputError(
-            translated_message="application.live.justificante.errors.evidence_snapshot_not_active",
-            context={"snapshot_id": snapshot.snapshot_id, "state": snapshot.state.value},
-        )
-
     catalogue = ports.filing.load()
     current = catalogue.current_for(
         bucket_id=snapshot.bucket_id,
@@ -730,9 +700,16 @@ def register_capture_as_filing_evidence(
             translated_message="application.live.justificante.errors.filing_record_missing",
             context={"modelo": snapshot.modelo, "period": str(snapshot.period)},
         )
+    return current
 
-    justificante = parse_capture_to_justificante(snapshot, ports=ports)
-    _require_receipt_csv_matches_capture(justificante, snapshot)
+
+def _require_capture_matches_filing_record(
+    justificante: Justificante,
+    current: ModeloRecord,
+    snapshot: JustificanteCaptureSnapshot,
+    *,
+    authority_operation: PinnedAuthorityOperation | None,
+) -> str:
     expected_tax_id = _expected_tax_id_for_filing_record(current, authority_operation=authority_operation)
     if not _justificante_matches_filing_record(
         justificante,
@@ -758,6 +735,13 @@ def register_capture_as_filing_evidence(
                 },
             ),
         )
+    return expected_tax_id
+
+
+def _require_capture_evidence_slot(
+    current: ModeloRecord,
+    snapshot: JustificanteCaptureSnapshot,
+) -> None:
     if current.external_evidence is not None and not _existing_capture_evidence_matches_current_csv(
         current, snapshot.csv
     ):
@@ -776,6 +760,20 @@ def register_capture_as_filing_evidence(
                 },
             ),
         )
+
+
+def _register_and_confirm_capture(
+    *,
+    current: ModeloRecord,
+    snapshot: JustificanteCaptureSnapshot,
+    justificante: Justificante,
+    expected_tax_id: str,
+    ports: JustificanteRegistrationPorts,
+    authority_operation: PinnedAuthorityOperation | None,
+) -> ModeloRecord:
+    from ...domain.modelos.filing_record import AeatRegisterRef, ExternalEvidenceKind
+    from ..modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationOutcome
+
     # The receipt lands before any chain entry cites it, so a failure between
     # the two leaves an orphan receipt rather than a filing record whose
     # AEAT_LIVE_CAPTURE evidence does not load.
@@ -816,6 +814,57 @@ def register_capture_as_filing_evidence(
             },
         )
     return settled
+
+
+def register_capture_as_filing_evidence(
+    *,
+    snapshot: JustificanteCaptureSnapshot,
+    ports: JustificanteRegistrationPorts,
+    authority_operation: PinnedAuthorityOperation | None = None,
+) -> ModeloRecord:
+    """Confirm the period's filing with a persisted live capture of its receipt.
+
+    Loads the period's current filing record first; with one present, parses
+    the captured receipt into a domain ``Justificante`` (keyed by the capture's
+    CSV, which is the gate's evidence reference), registers it, and reconciles
+    the filing chain with it through
+    :func:`~cadrumo.application.modelo.filing_chain_reconciliation.reconcile_aeat_register_entry`.
+    A receipt carries only totals, so a pending filing is confirmed only when
+    its computed result matches them. Once confirmed, the cross-period
+    clean-state gate's ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker clears for
+    the period.
+
+    Returns the confirmed :class:`~ModeloRecord`.
+
+    Raises:
+        LiveApplicationInputError: when no current filing record exists for the
+            captured ``(modelo, filing_year, period)``, when the receipt does not
+            match it, or when the reconciliation does not confirm it.
+    """
+    if snapshot.state is not SnapshotLifecycleState.ACTIVE:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.evidence_snapshot_not_active",
+            context={"snapshot_id": snapshot.snapshot_id, "state": snapshot.state.value},
+        )
+
+    current = _current_filing_record_for_capture(snapshot, ports)
+    justificante = parse_capture_to_justificante(snapshot, ports=ports)
+    _require_receipt_csv_matches_capture(justificante, snapshot)
+    expected_tax_id = _require_capture_matches_filing_record(
+        justificante,
+        current,
+        snapshot,
+        authority_operation=authority_operation,
+    )
+    _require_capture_evidence_slot(current, snapshot)
+    return _register_and_confirm_capture(
+        current=current,
+        snapshot=snapshot,
+        justificante=justificante,
+        expected_tax_id=expected_tax_id,
+        ports=ports,
+        authority_operation=authority_operation,
+    )
 
 
 def _expected_tax_id_for_filing_record(

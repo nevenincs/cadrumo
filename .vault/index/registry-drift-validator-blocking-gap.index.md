@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#registry-drift-validator-blocking-gap'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:650036a8db57c7e98aa66df1f20cd81fc1a1231bcf9f35deee23138ea86ee945'
+body_hash: 'sha256:f6e743cb0237de3b92f99c84133c3da7ba9ee572a7619dc4f2efd7b05d5f2a73'
 related:
   - '[[2026-06-04-registry-drift-validator-blocking-gap-adr]]'
   - '[[2026-06-04-registry-drift-validator-blocking-gap-audit]]'
   - '[[2026-06-04-registry-drift-validator-blocking-gap-closeout-audit]]'
-  - '[[2026-06-04-registry-drift-validator-blocking-gap-ledger]]'
-  - '[[2026-06-04-registry-drift-validator-blocking-gap-plan]]'
   - '[[2026-06-04-registry-drift-validator-blocking-gap-research]]'
 ---
 
@@ -30,14 +28,6 @@ Auto-generated index of all documents tagged with `#registry-drift-validator-blo
 
 - `2026-06-04-registry-drift-validator-blocking-gap-audit` - `registry-drift-validator-blocking-gap` audit: `S01 advisory gate inventory`
 - `2026-06-04-registry-drift-validator-blocking-gap-closeout-audit` - Registry Drift Validator Blocking Gap Closeout Audit
-
-### exec
-
-- `2026-06-04-registry-drift-validator-blocking-gap-ledger` - `registry-drift-validator-blocking-gap` ledger
-
-### plan
-
-- `2026-06-04-registry-drift-validator-blocking-gap-plan` - `registry-drift-validator-blocking-gap` `implementation` plan
 
 ### research
 

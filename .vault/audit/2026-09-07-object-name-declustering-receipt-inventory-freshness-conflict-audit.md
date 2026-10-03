@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:64acf152e0209645539dd43d63e6a891703fef1cd2424d0cf3860690177aac52'
 related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
   - "[[2026-09-02-object-name-declustering-adr]]"
   - "[[2026-09-02-object-name-declustering-s23-concurrency-staleness-review-audit]]"
   - "[[2026-09-02-object-name-declustering-s24-scoped-receipt-review-audit]]"

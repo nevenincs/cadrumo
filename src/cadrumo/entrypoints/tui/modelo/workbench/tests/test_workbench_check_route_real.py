@@ -28,7 +28,7 @@ from ......adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from ......application.calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH
-from ......application.modelo.verification_actions import verify_modelo_revision
+from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ......application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
 from ......core.config import override_settings
@@ -73,7 +73,7 @@ def _declaration(tmp_path: Path, *, attested: bool) -> Generator[tuple[SeededOpe
 def _check(work: SeededOperatorWork) -> VerificationReport:
     """Run the application's check of the stored current calculation, as the check operation does."""
     tax_id = "12345678Z"
-    return verify_modelo_revision(
+    return verify_modelo_revision_with_preconditions(
         work.require_head().calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
@@ -82,7 +82,7 @@ def _check(work: SeededOperatorWork) -> VerificationReport:
         settings=ready_clave_settings(tax_id),
         operator_scope_ports=build_inward_operator_scope_ports_for_active_route(),
         operation=work.operation,
-    )
+    ).report
 
 
 def _progress(load: ModeloWorkFormLoadV1) -> WorkbenchProgress:

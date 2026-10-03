@@ -261,8 +261,9 @@ def _host_browser_owner(directory: Path) -> None:
     import win32job
     import win32process
 
-    from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
+    from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
     from cadrumo.adapters.local_runtime.installation import runtime_installation
+    from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
     from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
     from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
     from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint

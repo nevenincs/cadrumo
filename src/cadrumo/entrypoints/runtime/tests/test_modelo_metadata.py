@@ -32,6 +32,8 @@ from cadrumo.adapters.persistence.storage.runtime_repository import secure_objec
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
+)
+from cadrumo.application.modelo.work_change_contracts import (
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardRequest,
     ModeloWorkRenamePublicResultV2,
@@ -288,6 +290,7 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)

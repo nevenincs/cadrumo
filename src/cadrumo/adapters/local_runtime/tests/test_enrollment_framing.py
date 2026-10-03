@@ -38,14 +38,8 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationC
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.core.time.clock import now
 
-from ..framing import (
-    VerifiedRuntimeConnection,
-    accept_runtime_handshake,
-    read_document,
-    read_secret,
-    write_document,
-    write_secret,
-)
+from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
+from ..runtime_frame_io import read_document, read_secret, write_document, write_secret
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

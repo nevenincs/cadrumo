@@ -3,45 +3,29 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
 from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ..modelo.participation_index_rebuild import rebuild_participation_index
 from ..modelo.participation_index_rebuild_ports import ParticipationIndexRebuildPortsFactory
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access
 
 LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID = "ledger.participation.rebuild"
 
@@ -115,31 +99,13 @@ class LedgerParticipationRebuildExecutor:
 
 def build_ledger_participation_rebuild_definition(ports: ParticipationIndexRebuildPortsFactory) -> OperationDefinition:
     """Declare one guarded index replacement with interrupted effects retained honestly."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
         request_type=LedgerParticipationRebuildRequest,
         result_type=LedgerParticipationRebuildProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerParticipationRebuildRequest,
-            executor_type=LedgerParticipationRebuildExecutor,
-            build=lambda: LedgerParticipationRebuildExecutor(ports),
-        ),
-        phase_codes=(LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        executor_type=LedgerParticipationRebuildExecutor,
+        build=lambda: LedgerParticipationRebuildExecutor(ports),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -152,16 +118,7 @@ def resolve_ledger_participation_rebuild_access(
         request.payload, LedgerParticipationRebuildRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {
-            # Keep nested permission models hashable inside their frozen sets.
-            # Python-mode serialization turns them into unhashable dictionaries.
-            **dict(resolved.policy),
-            "actions": resolved.policy.actions | {AccessAction.COMMIT},
-        }
-    )
-    return replace(resolved, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_participation_rebuild_registration(

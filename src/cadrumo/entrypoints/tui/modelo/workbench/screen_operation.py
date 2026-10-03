@@ -23,7 +23,7 @@ from ...components.dialogs import ConfirmScreen
 from ...operations.controller_port import OperationControllerPort
 from ...operations.refusal_explanation import public_refusal_explanation
 from ..export_result import ModeloExportResultScreen
-from .casilla_list import AddressKey
+from .casilla_list_models import AddressKey
 from .export import WorkbenchExportScreen
 from .header import result_view
 from .ports import ModeloWorkbenchActionsV1, WorkbenchExportRequest

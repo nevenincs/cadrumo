@@ -22,7 +22,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefi
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..compiler.loader import load_modelo_directory
-from ._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
+from ._export_tree import render_complete_export_tree
 from ._form_layout_companion import prepare_generated_form_layout_companion
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
@@ -35,6 +35,7 @@ from .export_fragment_provenance import (
     verify_export_fragment_provenance_manifest,
 )
 from .export_fragment_provenance_projection import loader_semantic_drift, normalised_loader_semantics
+from .export_tree_models import ExportTreeTransportProfile, RenderedExportTree
 from .joined_record_design import JoinedRecordDesign
 from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile

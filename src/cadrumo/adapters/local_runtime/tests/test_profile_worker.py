@@ -42,7 +42,7 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.operations import ProfileFieldMutationOperationRequest
+from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.async_cleanup import close_async_resources
@@ -198,6 +198,8 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N
     root, ((identity, key), _) = profiles
     worker = ProfileWorkerProcess(identity, storage_root=root)
     try:
+        # Prepare the cold application graph before starting the expiry clock.
+        worker.prepare_api_admission(deadline=time.monotonic() + 30)
         short, independent = lease(identity, seconds=2), lease(identity)
         worker.install(short, bytearray(key))
         worker.install(independent, bytearray(key))

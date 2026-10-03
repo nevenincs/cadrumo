@@ -57,8 +57,10 @@ from ...components.account_chrome import AccountChromeScreen
 from ...components.theme import toggle_appearance, tokenised
 from ...navigation import TuiNavigationTargetV1
 from .casilla_list import (
-    AddressKey,
     CasillaList,
+)
+from .casilla_list_models import (
+    AddressKey,
     CasillaListEntry,
     Density,
 )

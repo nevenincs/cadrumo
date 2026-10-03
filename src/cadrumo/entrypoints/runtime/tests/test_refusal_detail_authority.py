@@ -244,6 +244,7 @@ def test_refusal_detail_is_fenced_after_authority_revocation(
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)

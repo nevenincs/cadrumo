@@ -8,17 +8,9 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import (
-    BaseModel,
-    Field,
-    NonNegativeInt,
-    StringConstraints,
-    TypeAdapter,
-    model_validator,
-)
+from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
 
 from ...core.aeat_csv import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
@@ -32,33 +24,27 @@ from ...core.identity.aeat_expediente import (
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import SnapshotId
-from ...core.identity.profile import canonical_profile_bucket_id
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect
 from ...core.period import Period
-from ...core.time.clock import now
 from ..calculations.observations_repository import ObservationSourceKind
-from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES, OperationCapabilities
-from ..operations.models import (
-    CredentialFreeOperationRequest,
-    OperationRequest,
-    OperationTerminalReceipt,
-    require_terminal_receipt_match,
-)
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
-from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .justificante import JustificanteCaptureSnapshot, JustificanteCaptureSnapshotService
+from .live_operation_execution import publish_live_read_report, require_exact_profile_worker
+from .live_operation_registration import (
+    build_live_operation_definition,
+    require_live_read_receipt,
+    resolve_whole_profile_read_access,
+)
 from .snapshot_base import SnapshotLifecycleState
 
 JUSTIFICANTE_LIST_DEFINITION_ID = "live.justificante.list"
@@ -161,13 +147,6 @@ class JustificanteShowPublicResultV1(BaseModel):
 JustificanteCaptureSnapshotServiceFactory = Callable[[str], JustificanteCaptureSnapshotService]
 
 
-def _exact_bucket(profile_id: UUID, subject_ref: str) -> str:
-    bucket_id = canonical_profile_bucket_id(profile_id)
-    if require_active_bucket_id() != bucket_id or subject_ref != profile_operation_subject(bucket_id):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return bucket_id
-
-
 def _summary(snapshot: JustificanteCaptureSnapshot) -> JustificanteSnapshotSummaryPublicV1:
     return JustificanteSnapshotSummaryPublicV1(
         snapshot_id=_SNAPSHOT_ID.validate_python(str(snapshot.snapshot_id), strict=True),
@@ -202,7 +181,9 @@ class JustificanteListExecutor:
     async def execute(
         self, request: OperationRequest[JustificanteListRequest], context: OperationExecutorContext
     ) -> str:
-        bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
+        bucket_id = require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         if request.definition_id != JUSTIFICANTE_LIST_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_profile_operation_identity(request, context, request.payload.profile_id)
@@ -218,10 +199,12 @@ class JustificanteListExecutor:
             )
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_LIST_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="justificante-list-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_LIST_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="justificante-list-result",
         )
 
 
@@ -234,7 +217,9 @@ class JustificanteShowExecutor:
     async def execute(
         self, request: OperationRequest[JustificanteShowRequest], context: OperationExecutorContext
     ) -> str:
-        bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
+        bucket_id = require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         if request.definition_id != JUSTIFICANTE_SHOW_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_profile_operation_identity(request, context, request.payload.profile_id)
@@ -246,35 +231,27 @@ class JustificanteShowExecutor:
             return JustificanteShowOperationReport(snapshot=snapshot)
 
         report = await asyncio.to_thread(read)
-        await context.events.phase(_SHOW_PHASES[1])
-        await context.events.effect(OperationEffect.NONE)
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="justificante-show-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_SHOW_PHASES[1],
+            effect=OperationEffect.NONE,
+            task_name="justificante-show-result",
         )
-
-
-def _capabilities() -> OperationCapabilities:
-    return RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 
 
 def build_justificante_list_definition(
     service_factory: JustificanteCaptureSnapshotServiceFactory,
 ) -> OperationDefinition:
     """Declare an encrypted, profile-bound local receipt inventory."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=JUSTIFICANTE_LIST_DEFINITION_ID,
         request_type=JustificanteListRequest,
         result_type=JustificanteListOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=JustificanteListRequest,
-            executor_type=JustificanteListExecutor,
-            build=lambda: JustificanteListExecutor(service_factory),
-        ),
+        executor_type=JustificanteListExecutor,
+        build=lambda: JustificanteListExecutor(service_factory),
         phase_codes=_LIST_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 
 
@@ -282,20 +259,14 @@ def build_justificante_show_definition(
     service_factory: JustificanteCaptureSnapshotServiceFactory,
 ) -> OperationDefinition:
     """Declare a local exact-profile detail read with a closed result projection."""
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=JUSTIFICANTE_SHOW_DEFINITION_ID,
         request_type=JustificanteShowRequest,
         result_type=JustificanteShowOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=JustificanteShowRequest,
-            executor_type=JustificanteShowExecutor,
-            build=lambda: JustificanteShowExecutor(service_factory),
-        ),
+        executor_type=JustificanteShowExecutor,
+        build=lambda: JustificanteShowExecutor(service_factory),
         phase_codes=_SHOW_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 
 
@@ -306,12 +277,10 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     if type(result) is not JustificanteListOperationReport:
         raise ValueError("invalid justificante list report")
     report = JustificanteListOperationReport.model_validate(result, strict=True)
-    require_terminal_receipt_match(
+    require_live_read_receipt(
         receipt,
         definition_id=JUSTIFICANTE_LIST_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(report.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.NONE,
+        bucket_id=str(report.bucket_id),
         message=_RECEIPT_CONTRADICTION,
     )
     return JustificanteListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
@@ -322,12 +291,10 @@ def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
         raise ValueError("invalid justificante show report")
     report = JustificanteShowOperationReport.model_validate(result, strict=True)
     snapshot = report.snapshot
-    require_terminal_receipt_match(
+    require_live_read_receipt(
         receipt,
         definition_id=JUSTIFICANTE_SHOW_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(snapshot.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.NONE,
+        bucket_id=str(snapshot.bucket_id),
         message=_RECEIPT_CONTRADICTION,
     )
     return JustificanteShowPublicResultV1(
@@ -345,29 +312,22 @@ def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     )
 
 
-def _resolve_read_access(
-    request: OperationRequest[BaseModel], context: OperationAccessContext, definition_id: str
-) -> ResolvedOperationAccess:
-    expected_type = (
-        JustificanteListRequest if definition_id == JUSTIFICANTE_LIST_DEFINITION_ID else JustificanteShowRequest
-    )
-    if request.definition_id != definition_id or not isinstance(request.payload, expected_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-
-
 def resolve_justificante_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile authority for the local receipt inventory."""
-    return _resolve_read_access(request, context, JUSTIFICANTE_LIST_DEFINITION_ID)
+    return resolve_whole_profile_read_access(
+        request, context, definition_id=JUSTIFICANTE_LIST_DEFINITION_ID, payload_type=JustificanteListRequest
+    )
 
 
 def resolve_justificante_show_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile authority for one local receipt detail."""
-    return _resolve_read_access(request, context, JUSTIFICANTE_SHOW_DEFINITION_ID)
+    return resolve_whole_profile_read_access(
+        request, context, definition_id=JUSTIFICANTE_SHOW_DEFINITION_ID, payload_type=JustificanteShowRequest
+    )
 
 
 def build_justificante_list_registration(

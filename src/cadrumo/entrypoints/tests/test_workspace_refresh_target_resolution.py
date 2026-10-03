@@ -26,11 +26,11 @@ from cadrumo.application.modelo.calculation_summary_pdf_ports import (
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX,
-    ModeloWorkRenameRequest,
     build_modelo_lifecycle_operation_definitions,
     build_modelo_lifecycle_operation_registrations,
     resolve_modelo_work_unit_refresh_target,
 )
+from cadrumo.application.modelo.work_change_contracts import ModeloWorkRenameRequest
 from cadrumo.application.modelo.workspace_models import ModeloWorkspaceRefreshTargetV1
 from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
 from cadrumo.application.operations.frontend_requests import (

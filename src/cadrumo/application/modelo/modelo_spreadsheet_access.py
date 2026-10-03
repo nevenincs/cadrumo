@@ -7,13 +7,13 @@ from dataclasses import replace
 from pydantic import BaseModel
 
 from ...core.capabilities import ServiceCapability
-from ...core.operations import profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.relations import relation_source_requirements
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest
+from ..operations.profile_guard import require_access_request_profile_payload
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.capabilities import resolve_active_capability
@@ -29,14 +29,15 @@ def _admitted_access_payload(
     request: OperationRequest[BaseModel], context: OperationAccessContext
 ) -> ModeloSpreadsheetRequest:
     pair = MODELO_SPREADSHEET_OPERATION_CONTRACTS.get(request.definition_id)
-    payload = request.payload
-    if pair is None or type(payload) is not pair[0] or not isinstance(payload, ModeloSpreadsheetRequest):
+    if pair is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return payload
+    return require_access_request_profile_payload(
+        request,
+        definition_id=request.definition_id,
+        payload_type=pair[0],
+        access_profile_id=context.profile_id,
+        exact_type=True,
+    )
 
 
 def _source_periods(

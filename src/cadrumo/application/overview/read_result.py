@@ -9,7 +9,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ..operations.models import OperationTerminalReceipt
+from ..operations.models import OperationTerminalReceipt, require_terminal_receipt_match
 from .read_payload import (
     OverviewAgendaRead,
     OverviewCalendarRead,
@@ -134,13 +134,14 @@ def project_overview_read_result(result: BaseModel, receipt: OperationTerminalRe
     if type(result) is not OverviewReadResult:
         raise ValueError("invalid overview read result")
     private = OverviewReadResult.model_validate(result.model_dump(mode="python"), strict=True)
-    if (
-        receipt.identity.definition_id != OVERVIEW_READ_DEFINITION_IDS[private.request.kind]
-        or receipt.identity.subject_ref != profile_operation_subject(str(private.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-    ):
-        raise ValueError("overview read result contradicts its terminal receipt")
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=OVERVIEW_READ_DEFINITION_IDS[private.request.kind],
+        subject_ref=profile_operation_subject(str(private.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message="overview read result contradicts its terminal receipt",
+    )
     return OverviewReadProjection(profile_id=private.profile_id, request=private.request, payload=private.payload)
 
 

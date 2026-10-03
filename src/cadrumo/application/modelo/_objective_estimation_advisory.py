@@ -59,6 +59,47 @@ _OBJECTIVE_ESTIMATION_MODEL_SCOPE_FACT_ID = "modelo-objective-estimation-advisor
 _OBJECTIVE_ESTIMATION_APPLICABILITY_MAP_FACT_ID = "lirpf-objective-estimation-exclusion-applicability-map"
 
 
+def _objective_estimation_threshold_findings(
+    declared_values: tuple[tuple[str, str, object], ...],
+    *,
+    work_unit: WorkUnit,
+    modelo: str,
+    authority: ValidatedRegistryAuthority | PinnedAuthorityOperation,
+) -> tuple[ModeloVerificationFinding, ...]:
+    """Resolve each present declared volume once and emit only excess warnings."""
+    findings: list[ModeloVerificationFinding] = []
+    for profile_field, fact_id, raw_value in declared_values:
+        if raw_value is None:
+            continue
+        declared = _as_decimal(raw_value, profile_field)
+        threshold_fact = _resolve_objective_estimation_threshold(
+            fact_id=fact_id,
+            filing_year=work_unit.filing_year,
+            authority=authority,
+        )
+        threshold = _as_decimal(threshold_fact.payload.value, fact_id)
+        if declared <= threshold:
+            continue
+        findings.append(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.ADVISORY,
+                severity=ModeloVerificationFindingSeverity.WARNING,
+                message_locale_key="application.modelo.findings.objective_estimation_exclusion_threshold_exceeded",
+                message_facts={
+                    "modelo_id": modelo,
+                    "filing_year": work_unit.filing_year,
+                    "profile_field_id": profile_field,
+                    "fact_id": fact_id,
+                    "declared": declared,
+                    "threshold": threshold,
+                },
+                legal_refs=threshold_fact.legal_refs,
+                source_refs=threshold_fact.source_refs,
+            ),
+        )
+    return tuple(findings)
+
+
 def _objective_estimation_exclusion_advisory_findings(
     *,
     work_unit: WorkUnit,
@@ -144,37 +185,9 @@ def _objective_estimation_exclusion_advisory_findings(
     if all(raw_value is None for *_prefix, raw_value in declared_values):
         return ()
 
-    findings: list[ModeloVerificationFinding] = []
-    for profile_field, fact_id, raw_value in declared_values:
-        if raw_value is None:
-            continue
-        declared = _as_decimal(raw_value, profile_field)
-        threshold_fact = _resolve_objective_estimation_threshold(
-            fact_id=fact_id,
-            filing_year=work_unit.filing_year,
-            authority=authority,
-        )
-        threshold = _as_decimal(threshold_fact.payload.value, fact_id)
-        if declared <= threshold:
-            continue
-        findings.append(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.ADVISORY,
-                severity=ModeloVerificationFindingSeverity.WARNING,
-                message_locale_key="application.modelo.findings.objective_estimation_exclusion_threshold_exceeded",
-                message_facts={
-                    "modelo_id": modelo,
-                    "filing_year": work_unit.filing_year,
-                    "profile_field_id": profile_field,
-                    "fact_id": fact_id,
-                    "declared": declared,
-                    "threshold": threshold,
-                },
-                legal_refs=threshold_fact.legal_refs,
-                source_refs=threshold_fact.source_refs,
-            ),
-        )
-    return tuple(findings)
+    return _objective_estimation_threshold_findings(
+        declared_values, work_unit=work_unit, modelo=modelo, authority=authority
+    )
 
 
 def _uses_objective_estimation(profile: TaxpayerProfile) -> bool:

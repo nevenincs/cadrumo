@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import override
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 from ..compiler.authority import compiled_bundled_authority
 from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
@@ -55,46 +56,62 @@ def generated_export_trees() -> tuple[GeneratedExportTree, ...]:
     trees: list[GeneratedExportTree] = []
     for modelo in sorted(authority.modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            export_root = bundled_path(
-                "registry",
-                "aeat",
-                "modelos",
-                str(modelo.id),
-                "revisions",
-                str(revision.id),
-                "export",
-            )
-            manifest_path = export_fragment_provenance_path(export_root)
-            if not manifest_path.is_file():
-                continue
-            manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
-            if manifest.modelo != modelo.id or manifest.revision_id != revision.id:
-                raise AssertionError(
-                    "generated export provenance identity conflicts with its declared registry revision: "
-                    f"{manifest_path}",
-                )
-            coordinates = revision_selection_coordinates(
+            tree = _generated_export_tree_for_revision(
+                modelo,
                 revision,
                 assessment_horizon=assessment_horizon,
                 assessment_floor=assessment_floor,
+                below_floor=below_floor,
             )
-            if not coordinates and (str(modelo.id), str(revision.id)) in below_floor:
-                # The ledger explains why a revision below the supported floor
-                # has no selectable coordinate to reproduce it at.
-                continue
-            if not coordinates:
-                raise AssertionError(f"generated tree {modelo.id}/{revision.id} has no law-selectable coordinate")
-            filing_year, period = coordinates[0]
-            trees.append(
-                GeneratedExportTree(
-                    modelo=str(modelo.id),
-                    revision=str(revision.id),
-                    source_ref=str(manifest.source_ref),
-                    epoch=manifest.design_epoch,
-                    filing_year=filing_year,
-                    period=period,
-                )
-            )
+            if tree is not None:
+                trees.append(tree)
     if not trees:
         raise AssertionError("validated registry declares no provenance-attested generated export tree")
     return tuple(trees)
+
+
+def _generated_export_tree_for_revision(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    assessment_horizon: int,
+    assessment_floor: int,
+    below_floor: set[tuple[str, str]],
+) -> GeneratedExportTree | None:
+    export_root = bundled_path(
+        "registry",
+        "aeat",
+        "modelos",
+        str(modelo.id),
+        "revisions",
+        str(revision.id),
+        "export",
+    )
+    manifest_path = export_fragment_provenance_path(export_root)
+    if not manifest_path.is_file():
+        return None
+    manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+    if manifest.modelo != modelo.id or manifest.revision_id != revision.id:
+        raise AssertionError(
+            f"generated export provenance identity conflicts with its declared registry revision: {manifest_path}",
+        )
+    coordinates = revision_selection_coordinates(
+        revision,
+        assessment_horizon=assessment_horizon,
+        assessment_floor=assessment_floor,
+    )
+    if not coordinates and (str(modelo.id), str(revision.id)) in below_floor:
+        # The ledger explains why a revision below the supported floor has no
+        # selectable coordinate to reproduce it at.
+        return None
+    if not coordinates:
+        raise AssertionError(f"generated tree {modelo.id}/{revision.id} has no law-selectable coordinate")
+    filing_year, period = coordinates[0]
+    return GeneratedExportTree(
+        modelo=str(modelo.id),
+        revision=str(revision.id),
+        source_ref=str(manifest.source_ref),
+        epoch=manifest.design_epoch,
+        filing_year=filing_year,
+        period=period,
+    )

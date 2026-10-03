@@ -257,12 +257,7 @@ class WindowsProcessScope:
         """
         if not executable.is_absolute() or not directory.is_absolute():
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        if any("\0" in argument for argument in arguments) or any(
-            not key or "=" in key or "\0" in key or "\0" in value for key, value in environment.items()
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        if len({key.upper() for key in environment}) != len(environment):
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        _require_launch_environment(arguments, environment)
         try:
             executable = executable.resolve(strict=True)
             directory = directory.resolve(strict=True)
@@ -284,10 +279,6 @@ class WindowsProcessScope:
 
     def terminate(self, *, timeout: float = 2.0) -> None:
         """Fence launch, terminate this job and verify no active members to a bound."""
-        import pywintypes
-        import win32api
-        import win32job
-
         if not math.isfinite(timeout) or timeout < 0:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         with self._lock:
@@ -298,46 +289,13 @@ class WindowsProcessScope:
             failures: list[BaseException] = []
             if self._job is not None and not self._terminated:
                 try:
-                    terminate_job = cast("Callable[[int, int], None]", win32job.TerminateJobObject)
-                    query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
-                    terminate_job(self._job, 1)
-                    while cast("dict[str, object]", query_job(self._job, win32job.JobObjectBasicAccountingInformation))[
-                        "ActiveProcesses"
-                    ]:
-                        if time.monotonic() >= deadline:
-                            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-                        time.sleep(min(0.01, max(0, deadline - time.monotonic())))
+                    _terminate_windows_job(self._job, deadline)
                     self._terminated = True
                     self._termination_failure = None
                 except BaseException as error:
-                    if isinstance(error, pywintypes.error):
-                        primary = RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-                        native_cause = error
-                    else:
-                        primary = error
-                    self._termination_failure = (
-                        error.reason
-                        if isinstance(error, RuntimeRefusalError)
-                        else RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
-                    )
-            # Preserve the observation handle when termination is unproven.
-            # Kill-on-close alone cannot prove that independently grouped
-            # descendants have stopped; a later retry must observe this job.
-            if self._job is not None and self._terminated:
-                try:
-                    win32api.CloseHandle(self._job)
-                except BaseException as error:
-                    failures.append(error)
-                else:
-                    self._job = None
-            retained_children: list[WindowsOwnedProcess] = []
-            for child in self._children:
-                try:
-                    child.close()
-                except BaseException as error:
-                    failures.append(error)
-                    retained_children.append(child)
-            self._children = retained_children
+                    primary, native_cause = self._record_termination_failure(error)
+            failures.extend(self._release_terminated_job())
+            failures.extend(self._release_children())
             if primary is not None:
                 self._retain_cleanup(primary, (native_cause or primary, *failures))
                 if native_cause is not None:
@@ -347,6 +305,51 @@ class WindowsProcessScope:
                 raise AsyncResourceCleanupError(
                     (self,), tuple(failures), retry_task_name="windows-process-scope-release", close_attempts=1
                 ) from failures[0]
+
+    def _record_termination_failure(self, error: BaseException) -> tuple[BaseException, BaseException | None]:
+        """Retain the exact native termination refusal for later health and retry."""
+        import pywintypes
+
+        native_cause: BaseException | None = None
+        if isinstance(error, pywintypes.error):
+            primary = RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+            native_cause = error
+        else:
+            primary = error
+        self._termination_failure = (
+            error.reason if isinstance(error, RuntimeRefusalError) else RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
+        )
+        return primary, native_cause
+
+    def _release_terminated_job(self) -> list[BaseException]:
+        """Preserve the observation handle until native termination is proven."""
+        import win32api
+
+        failures: list[BaseException] = []
+        # Preserve the observation handle when termination is unproven.
+        # Kill-on-close alone cannot prove that independently grouped
+        # descendants have stopped; a later retry must observe this job.
+        if self._job is not None and self._terminated:
+            try:
+                win32api.CloseHandle(self._job)
+            except BaseException as error:
+                failures.append(error)
+            else:
+                self._job = None
+        return failures
+
+    def _release_children(self) -> list[BaseException]:
+        """Attempt every child handle and retain each failed release for retry."""
+        failures: list[BaseException] = []
+        retained_children: list[WindowsOwnedProcess] = []
+        for child in self._children:
+            try:
+                child.close()
+            except BaseException as error:
+                failures.append(error)
+                retained_children.append(child)
+        self._children = retained_children
+        return failures
 
     def _retain_cleanup(self, primary: BaseException, failures: tuple[BaseException, ...]) -> None:
         """Keep one original scope as the retry authority on the exact primary."""
@@ -424,3 +427,26 @@ class WindowsProcessScope:
             raise
         if failures:
             raise failures[0]
+
+
+def _require_launch_environment(arguments: Sequence[str], environment: Mapping[str, str]) -> None:
+    """Refuse malformed or case-ambiguous explicit child process inputs."""
+    if any("\0" in argument for argument in arguments) or any(
+        not key or "=" in key or "\0" in key or "\0" in value for key, value in environment.items()
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+    if len({key.upper() for key in environment}) != len(environment):
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+
+def _terminate_windows_job(job: int, deadline: float) -> None:
+    """Observe this exact Job empty after native termination within the original budget."""
+    import win32job
+
+    terminate_job = cast("Callable[[int, int], None]", win32job.TerminateJobObject)
+    query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
+    terminate_job(job, 1)
+    while cast("dict[str, object]", query_job(job, win32job.JobObjectBasicAccountingInformation))["ActiveProcesses"]:
+        if time.monotonic() >= deadline:
+            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        time.sleep(min(0.01, max(0, deadline - time.monotonic())))

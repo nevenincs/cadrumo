@@ -9,7 +9,7 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.modelo.work_inventory_operation import ModeloWorkListProjection, ModeloWorkListRequest
 from ....core.operations import OperationEffect
 from .. import runtime_modelo_work_inventory as bridge

@@ -38,11 +38,13 @@ from ...user_profile.access_contracts import (
     OperationAccessRequest,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ..filing_record_list_operation import (
-    MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID,
+from ..filing_record_list_contracts import (
     ModeloFilingRecordListEntryProjection,
     ModeloFilingRecordListProjection,
     ModeloFilingRecordListRequest,
+)
+from ..filing_record_list_operation import (
+    MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID,
     build_modelo_filing_record_list_definition,
     build_modelo_filing_record_list_registration,
 )

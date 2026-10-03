@@ -15,7 +15,7 @@ from click.testing import Result
 from pydantic import BaseModel
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....application.review.read_operation import (
+from ....application.review.read_contracts import (
     REVIEW_QUEUE_OPERATION_DEFINITION_ID,
     REVIEW_VIEW_OPERATION_DEFINITION_ID,
     ReviewQueueReadRequest,

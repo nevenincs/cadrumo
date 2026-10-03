@@ -149,7 +149,7 @@ def test_baseline_is_frozen_and_rejects_unknown_fields() -> None:
     """The baseline is strict, frozen, and rejects extra fields at construction."""
     baseline = _baseline()
     with pytest.raises(ValidationError):
-        baseline.baseline_id = "changed"  # type: ignore[misc]  # ty: ignore[invalid-assignment]  # reason: mutating a frozen field IS the refusal under test
+        baseline.baseline_id = "changed"  # type: ignore[misc]  # reason: mutating a frozen field IS the refusal under test
     with pytest.raises(ValidationError, match="Extra inputs"):
         ModeloEditBaselineV1(
             **{**baseline.model_dump(mode="python"), "unexpected_field": "x"}  # ty: ignore[invalid-argument-type]  # reason: deliberately malformed kwargs to prove the strict extra="forbid" refusal

@@ -77,7 +77,7 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -142,7 +142,7 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     kwargs.setdefault("certificate_secret_backend_factory", build_test_certificate_secret_backend_factory())
     kwargs.setdefault("verification_repositories", build_test_verification_repository_bundle())
     with bundled_indexed_authority().operation() as operation:
-        return verify_modelo_revision(calculation_revision_id, operation=operation, **kwargs)
+        return verify_modelo_revision_with_preconditions(calculation_revision_id, operation=operation, **kwargs).report
 
 
 def _export_modelo_revision(command: Any, **kwargs: Any) -> Any:

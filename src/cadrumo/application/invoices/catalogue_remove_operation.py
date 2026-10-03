@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -13,18 +12,16 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .catalogue_lifecycle import remove_catalogue_invoice
 from .catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
@@ -97,19 +94,13 @@ class InvoiceRemoveExecutor:
 
 def build_invoice_remove_definition(factory: CatalogueLifecyclePortsFactory) -> OperationDefinition:
     """Declare one durable, guarded removal with honest uncertain effects."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=INVOICE_REMOVE_OPERATION_DEFINITION_ID,
         request_type=InvoiceRemoveRequest,
         result_type=InvoiceRemoveResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=InvoiceRemoveRequest,
-            executor_type=InvoiceRemoveExecutor,
-            build=lambda: InvoiceRemoveExecutor(factory),
-        ),
-        phase_codes=(INVOICE_REMOVE_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=InvoiceRemoveExecutor,
+        build=lambda: InvoiceRemoveExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
@@ -123,10 +114,7 @@ def resolve_invoice_remove_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
+    return with_commit_action(resolved)
 
 
 def build_invoice_remove_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

@@ -21,7 +21,6 @@ from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Ava
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..calculation_action_ports import CalculationActionPortsFactory
 from ..metadata_projection import ModeloWorkMetadataSnapshot
-from ..operation_definitions import ModeloWorkCalculateRequest
 from ..wizard_attempt_operation import (
     MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,
     ModeloWorkWizardAttemptExecutor,
@@ -31,6 +30,7 @@ from ..wizard_attempt_operation import (
     build_modelo_work_wizard_attempt_definition,
     build_modelo_work_wizard_attempt_registration,
 )
+from ..work_calculation_contracts import ModeloWorkCalculateRequest
 from ..work_lifecycle_ports import WorkLifecyclePorts
 from ..work_wizard import ModeloWorkWizardStep
 from .test_wizard_context_operation import _unit, _WorkRepository

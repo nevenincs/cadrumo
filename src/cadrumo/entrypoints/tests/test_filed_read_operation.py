@@ -34,6 +34,7 @@ from cadrumo.application.live.filed_read_operation import (
     FiledListPublicResultV1,
     FiledListRequest,
     FiledReadComposition,
+    FiledReadCompositionFactory,
     build_filed_discover_definition,
     build_filed_discover_registration,
     build_filed_list_definition,
@@ -287,8 +288,8 @@ def test_supervisor_records_filed_list_and_discover_for_exact_mcp_profile(tmp_pa
             discover_preflights.append((profile_arg, pinned_authority))
             trace.append("discover-preflight")
 
-        def composition_factory(label: str) -> Callable[[], FiledReadComposition]:
-            def build() -> FiledReadComposition:
+        def composition_factory(label: str) -> FiledReadCompositionFactory:
+            def build(*, operation: PinnedAuthorityOperation) -> FiledReadComposition:
                 trace.append(f"{label}-composition")
                 return cast(FiledReadComposition, composition)
 

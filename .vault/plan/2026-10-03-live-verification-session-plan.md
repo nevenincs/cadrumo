@@ -10,7 +10,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:e775c1817a8f2893ac94bf71aff10a3ff8f0993a29319f4b6d7b440f8a42f59c'
+body_hash: 'sha256:f4c935ba4ec5b33b340f3b90304a56cd48f9a452e5ed219d03b68450ac7142b9'
 ---
 
 # `live-verification-session` plan
@@ -40,9 +40,9 @@ Evidence handling: each Step's ledger rows record commands, exit statuses and ty
 - [ ] `S01` - run the offline preflight: code-sanity gates, no-write and live-write refusal tests, bundled chromium doctor, product config and auth readiness, and the TUI pilot suite, recording each command and exit status; `justfile, src/cadrumo/adapters/outbound/aeat/sede/tests, src/cadrumo/entrypoints/cli/tests, env/.env`.
 - [ ] `S02` - configure the active profile for Cl@ve Movil app_request with NIE, numero de soporte and matching identity.tax_id, and prove a mismatched NIE is refused before any browser launches in an isolated profile; `aeat config auth configure, aeat config auth status`.
 - [ ] `S03` - exercise the unauthenticated live reads (site connectivity, NIF-IVA against a public VAT number, Cl@ve selector reach and evasion live tests) and prove the launched process is bundled Playwright chromium, never installed Chrome; `aeat config repair connectivity, aeat app live verify nif-iva, src/cadrumo/adapters/outbound/aeat/auth/tests, src/cadrumo/adapters/outbound/aeat/browser/tests`.
-- [ ] `S12` - build a dev-only verification harness that records method, host and path of every browser-context request (query, body, headers and cookies discarded before write) during the authenticated session, to ground the declared read requests of the accepted write-guard ADR; `dev/acceptance, src/cadrumo/adapters/outbound/aeat/browser/session.py read-only`.
+- [x] `S12` - build a dev-only verification harness that records method, host and path of every browser-context request (query, body, headers and cookies discarded before write) during the authenticated session, to ground the declared read requests of the accepted write-guard ADR; `dev/acceptance, src/cadrumo/adapters/outbound/aeat/browser/session.py read-only`.
 - [ ] `S04` - authenticate with Cl@ve Movil with the operator present through the CLI, prove the verification code reaches the operator, the login completes inside the client timeout, the encrypted session is reused without a second phone prompt, and the TUI AEAT Sync workspace adopts the same session; `aeat config auth login, aeat app tui, src/cadrumo/entrypoints/cli/config/runtime_auth_login.py`.
-- [ ] `S05` - pull censo datos censales through CLI and TUI census review, compare their divergence sets, and prove apply is idempotent; `aeat config profile censo pull, src/cadrumo/entrypoints/tui/aeat_sync`.
+- [ ] `S05` - Drive censo sync to completion through the CLI and TUI on the same profile runtime; compare fetched driver facts with CLI and TUI views, persisted encrypted database facts and provenance; prove repeat application is idempotent and repair every divergence; `src/cadrumo/entrypoints/cli/config, src/cadrumo/entrypoints/tui/aeat_sync, src/cadrumo/application/user_profile, src/cadrumo/adapters/persistence/profile, dev/acceptance`.
 - [ ] `S06` - pull previously filed declarations, expedientes and justificantes through CLI and TUI filed history, reconcile one modelo period against the local calculation, and prove a recapture creates no duplicates or drift; `aeat app live filed, aeat app live expedientes, aeat app live justificante, aeat app modelo reconcile pull`.
 - [ ] `S07` - pull the IVA compensation wallet, prove its reconciliation decision against local 303 recurrence is surfaced, absence is never coerced to zero, and the representation screen is refused; `aeat app live iva-wallet`.
 - [ ] `S08` - pull AEAT notifications and prove unread notifications remain unread at AEAT, documents are fetched only for already-read rows, and the TUI list matches the CLI; `aeat app live notifications`.

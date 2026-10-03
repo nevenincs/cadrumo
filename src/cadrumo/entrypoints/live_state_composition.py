@@ -85,8 +85,9 @@ from ..application.auth.sessions import AuthenticatedAeatSessionResult
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ..application.calculations.observations_repository import iva_wallet_decision_key
 from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
-from ..application.live.filed_data_capture import FiledHistoryEventSink, capture_report_path
+from ..application.live.filed_data_capture import capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
+from ..application.live.filed_history_events import FiledHistoryEventSink
 from ..application.live.filed_history_operation import FiledHistoryOperationRequest
 from ..application.live.filed_observation_persistence import (
     latest_declarations_by_period,
@@ -578,15 +579,7 @@ class AppIvaRemoteStatePort:
                                 },
                             )
                         declaration = candidate
-                        if progress_context is not None:
-                            progress_context.update(
-                                {
-                                    "stage": "capture_declaration_observation",
-                                    "modelo": declaration.modelo,
-                                    "ejercicio": declaration.ejercicio,
-                                    "period": declaration.period.registry_token,
-                                }
-                            )
+                        _stage_iva_history_declaration_progress(progress_context, declaration)
                         capture_timeout = settings.cadrumo_live_iva_declaration_capture_timeout_ms / 1000
                         captured = await _capture_one_iva_history_declaration(
                             register, declaration, store, persist_artefact, capture_timeout, effect_guard, failures
@@ -821,7 +814,7 @@ async def pull_filed_history_with_shared_composition(
     Core types:
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
-    from ..application.live.filed_data_capture import pull_filed_history
+    from ..application.live.filed_history_pull import pull_filed_history
 
     return await pull_filed_history(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -988,3 +981,18 @@ def _iva_history_observation_paths(reports: list[IvaCompensationHistoryCaptureRe
 def _iva_history_artefact_refs(reports: list[IvaCompensationHistoryCaptureReport]) -> tuple[str, ...]:
     """Flatten artefact_refs in report order while preserving every recorded reference."""
     return tuple(ref for report in reports for ref in report.artefact_refs)
+
+
+def _stage_iva_history_declaration_progress(
+    progress_context: dict[str, object] | None, declaration: Declaracion
+) -> None:
+    """Publish the current declaration immediately before its capture begins."""
+    if progress_context is not None:
+        progress_context.update(
+            {
+                "stage": "capture_declaration_observation",
+                "modelo": declaration.modelo,
+                "ejercicio": declaration.ejercicio,
+                "period": declaration.period.registry_token,
+            }
+        )

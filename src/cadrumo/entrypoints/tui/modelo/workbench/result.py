@@ -34,7 +34,8 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...components.theme import tokenised
 from ...components.widgets import ContentDataTable
-from .casilla_list import AddressKey, CasillaListEntry, value_text
+from .casilla_list_models import AddressKey, CasillaListEntry
+from .casilla_list_values import value_text
 from .dialog_width import fit_dialog_width
 
 

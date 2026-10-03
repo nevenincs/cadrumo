@@ -11,7 +11,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, SecretBytes
 
-from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient, WorkerAuthorizationLease
+from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
+from ...adapters.local_runtime.worker_authorization_lease import WorkerAuthorizationLease
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from ...application.auth.operation_definitions import (
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
@@ -428,21 +429,40 @@ class ProfileWorkerOperationAuthority:
         """
         task = asyncio.current_task()
         binding = self._bindings.get(identity.operation_id)
+        if not self._owns_password_rotation_commit(task, identity):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        payload = self._password_retirement_payload(identity, binding)
+        if payload is None or not self._preserves_password_profile(payload, outcome):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        self.custody.retire_password_successor(password_generation=outcome.password_generation)
+
+    def _owns_password_rotation_commit(self, task: asyncio.Task[object] | None, identity: OperationIdentity) -> bool:
+        return (
+            task is not None and self._held.get(task) == (identity, AccessAction.COMMIT) and task in self._held_leases
+        )
+
+    @staticmethod
+    def _password_retirement_payload(
+        identity: OperationIdentity, binding: WorkerOperationBinding | None
+    ) -> ProfilePassphraseRotationOperationRequest | None:
         if (
-            task is None
-            or self._held.get(task) != (identity, AccessAction.COMMIT)
-            or task not in self._held_leases
+            binding is None
             or identity.definition_id != PROFILE_ROTATION_OPERATION_DEFINITION_ID
-            or binding is None
             or binding.request.definition_id != identity.definition_id
             or binding.request.subject_ref != identity.subject_ref
             or not isinstance(binding.request.payload, ProfilePassphraseRotationOperationRequest)
-            or binding.request.payload.profile_id != self.custody.identity.binding.profile_id
-            or outcome.profile_id != str(binding.request.payload.profile_id)
-            or not outcome.dek_epoch_preserved
         ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        self.custody.retire_password_successor(password_generation=outcome.password_generation)
+            return None
+        return binding.request.payload
+
+    def _preserves_password_profile(
+        self, payload: ProfilePassphraseRotationOperationRequest, outcome: ProfilePassphraseRotationOutcome
+    ) -> bool:
+        return (
+            payload.profile_id == self.custody.identity.binding.profile_id
+            and outcome.profile_id == str(payload.profile_id)
+            and outcome.dek_epoch_preserved
+        )
 
     def require_owner(
         self,

@@ -12,7 +12,7 @@ from ..overview.calendar_models import OverviewAeatSubmissionState, OverviewLoca
 from ..overview.coverage import CoverageAdviceReason
 from .declaration_summary import DeclarationSummaryState
 from .declarations_calendar import DeclarationsCalendarEntryRefV1, DeclarationsCalendarProjectionV1
-from .declarations_workspace import DeclarationsWorkspaceDeclarationRefV1, DeclarationsWorkspaceProjectionV1
+from .declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1, DeclarationsWorkspaceProjectionV1
 
 
 class DeclarationListGroup(StrEnum):
@@ -84,33 +84,56 @@ def declaration_list_rows(
         key = (str(declaration.modelo), declaration.filing_year, declaration.period.registry_token)
         local_addresses.add(key)
         deadline = dates.get(key)
-        state = (
-            declaration.summary.state.value
-            if declaration.summary is not None
-            else (
-                DeclarationSummaryState.RECORDED.value
-                if declaration.has_current_filing
-                else DeclarationSummaryState.CALCULATED.value
-                if declaration.has_current_calculation
-                else DeclarationSummaryState.DRAFT.value
-            )
-        )
-        rows.append(
+        rows.append(_local_declaration_row(declaration, deadline, today))
+    rows.extend(_calendar_declaration_rows(dates, local_addresses, today))
+    if calendar is not None:
+        rows.extend(
             DeclarationListRow(
-                str(declaration.work_unit_id),
-                str(declaration.modelo),
-                declaration.period,
-                state,
-                _local_group(
-                    state,
-                    deadline,
-                    today,
-                    is_correction=declaration.summary is not None and declaration.summary.is_correction,
-                ),
-                declaration=declaration,
-                calendar=deadline,
+                f"advice:{item.modelo}", item.modelo, None, "maybe", DeclarationListGroup.MAYBE, advice=item.reason
             )
+            for item in calendar.coverage.advised
         )
+    return tuple(rows)
+
+
+def _local_declaration_row(
+    declaration: DeclarationsWorkspaceDeclarationRefV1, deadline: DeclarationsCalendarEntryRefV1 | None, today: date
+) -> DeclarationListRow:
+    """Keep local work status and correction urgency separate from external filing."""
+    state = (
+        declaration.summary.state.value
+        if declaration.summary is not None
+        else (
+            DeclarationSummaryState.RECORDED.value
+            if declaration.has_current_filing
+            else DeclarationSummaryState.CALCULATED.value
+            if declaration.has_current_calculation
+            else DeclarationSummaryState.DRAFT.value
+        )
+    )
+    return DeclarationListRow(
+        str(declaration.work_unit_id),
+        str(declaration.modelo),
+        declaration.period,
+        state,
+        _local_group(
+            state,
+            deadline,
+            today,
+            is_correction=declaration.summary is not None and declaration.summary.is_correction,
+        ),
+        declaration=declaration,
+        calendar=deadline,
+    )
+
+
+def _calendar_declaration_rows(
+    dates: dict[tuple[str, int, str], DeclarationsCalendarEntryRefV1],
+    local_addresses: set[tuple[str, int, str]],
+    today: date,
+) -> list[DeclarationListRow]:
+    """Append external unlinked returns and uncovered obligations in calendar order."""
+    rows: list[DeclarationListRow] = []
     for key, item in dates.items():
         external = _external_completion(item)
         if external and item.local_filing_state is OverviewLocalFilingState.NOT_READY_TO_FILE:
@@ -134,11 +157,4 @@ def declaration_list_rows(
                 else DeclarationListGroup.NOT_STARTED
             )
             rows.append(DeclarationListRow(f"due:{key}", str(item.modelo), item.period, state, group, calendar=item))
-    if calendar is not None:
-        rows.extend(
-            DeclarationListRow(
-                f"advice:{item.modelo}", item.modelo, None, "maybe", DeclarationListGroup.MAYBE, advice=item.reason
-            )
-            for item in calendar.coverage.advised
-        )
-    return tuple(rows)
+    return rows

@@ -203,6 +203,7 @@ class StorageCategory(StrEnum):
 
     # ── State substrate and identity ────────────────────────────────────────
     TOKENS = "tokens"
+    CHROMIUM_DATA = "chromium-data"
     SECRETS = "secrets"
     BLOBS = "blobs"
     LIVE_STATE = "live-state"

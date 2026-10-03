@@ -26,7 +26,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -177,7 +177,7 @@ def test_verifying_a_calculation_grade_revision_reports_the_grade_refusal_as_its
     with _calculation_grade_bucket(tmp_path, operation=operation) as bucket:
         revision_id = _calculate(bucket)
 
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             operator_scope_ports=build_operator_scope_ports(),
@@ -185,7 +185,7 @@ def test_verifying_a_calculation_grade_revision_reports_the_grade_refusal_as_its
             workflow_profile=_workflow_profile(),
             verification_repositories=build_test_verification_repository_bundle(),
             operation=operation,
-        )
+        ).report
 
         revision = (
             CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID, objects=bucket.objects).load().get(revision_id)

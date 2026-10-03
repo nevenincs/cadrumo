@@ -46,7 +46,7 @@ from ...ledger.workspace import (
     LedgerWorkspaceSource,
     LedgerWorkspaceStatus,
 )
-from ...modelo.declarations_workspace import (
+from ...modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceCalculationRevisionRefV1,

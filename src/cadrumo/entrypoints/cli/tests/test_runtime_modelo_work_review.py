@@ -10,7 +10,7 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....application.modelo.work_review_operation import (
+from ....application.modelo.work_review_contracts import (
     ModeloWorkReviewProgressSnapshot,
     ModeloWorkReviewProjection,
     ModeloWorkReviewRequest,

@@ -26,17 +26,19 @@ from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.operations import (
+    USER_PROFILE_OPERATION_DEFINITIONS,
+    build_user_profile_operation_registrations,
+)
+from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
-    USER_PROFILE_OPERATION_DEFINITIONS,
     ProfileCompleteSetupOperationRequest,
     ProfileCompleteSetupOperationResult,
     ProfileRepeatableRowChangeOperationResult,
     ProfileRepeatableRowRemoveOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
     ProfileRepeatableRowValue,
-    build_user_profile_operation_registrations,
     project_profile_mutation_result,
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository

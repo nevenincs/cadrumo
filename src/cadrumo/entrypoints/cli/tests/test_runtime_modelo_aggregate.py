@@ -18,15 +18,17 @@ from ....application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
-from ....application.modelo.aggregate_operation import (
+from ....application.modelo.aggregate_contracts import (
     MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE,
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
+)
+from ....application.modelo.aggregate_projection import (
     ModeloAggregateClaveTotals,
-    ModeloAggregateOperationRequest,
     ModeloAggregateProjection,
     ModeloAggregateWindow,
     ModeloAggregateWindowBaseline,
 )
+from ....application.modelo.aggregate_request import ModeloAggregateOperationRequest
 from ....application.operations.public_period import PublicPeriod
 from ....application.operations.public_scalar import PublicDecimal
 from ....application.runtime.contracts import RuntimeRefusalCode

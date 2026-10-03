@@ -6,14 +6,11 @@ from uuid import UUID
 
 import typer
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.modelo.operation_definitions import (
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-    ModeloWorkFilePublicResultV2,
-    ModeloWorkFileRequest,
-    ModeloWorkVerifyPublicResultV2,
-    ModeloWorkVerifyRequest,
 )
 from ...application.modelo.revision_selection_operation import (
     MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
@@ -22,6 +19,8 @@ from ...application.modelo.revision_selection_operation import (
 )
 from ...application.modelo.selectors import ModeloCalculationRevisionDefault, ModeloCalculationRevisionSelector
 from ...application.modelo.work_addressing import ModeloWorkAddressNotFoundError
+from ...application.modelo.work_filing_contracts import ModeloWorkFilePublicResultV2, ModeloWorkFileRequest
+from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.public_period import PublicPeriod
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.user_profile.access_contracts import AccessDenialCode

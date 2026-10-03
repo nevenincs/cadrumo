@@ -22,7 +22,7 @@ from cadrumo.application.modelo.iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     require_persisted_iva_compensation_decision_matches_revision,
 )
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
@@ -78,7 +78,7 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     with bundled_indexed_authority().operation() as operation:
         kwargs.setdefault("certificate_secret_backend_factory", build_test_certificate_secret_backend_factory())
         kwargs.setdefault("verification_repositories", build_test_verification_repository_bundle())
-        return verify_modelo_revision(calculation_revision_id, operation=operation, **kwargs)
+        return verify_modelo_revision_with_preconditions(calculation_revision_id, operation=operation, **kwargs).report
 
 
 def _require_persisted_iva_compensation_decision_matches_revision(work_unit: Any, revision: Any, **kwargs: Any) -> Any:

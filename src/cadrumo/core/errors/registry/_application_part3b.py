@@ -88,7 +88,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.declarations_workspace.DeclarationsWorkspaceProjectionError",
+        "cadrumo.application.modelo.declarations_workspace_contracts.DeclarationsWorkspaceProjectionError",
         ErrorCode(
             code="INTEGRITY_DECLARATIONS_WORKSPACE_PROJECTION",
             category=ErrorCategory.INTEGRITY,
@@ -148,7 +148,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.m145_communication_operation.M145CommunicationOperationRecordNotFoundError",
+        "cadrumo.application.modelo.m145_communication_contracts.M145CommunicationOperationRecordNotFoundError",
         ErrorCode(
             code="REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND",
             category=ErrorCategory.REFUSED,

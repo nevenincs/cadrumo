@@ -21,7 +21,7 @@ from ..calculations.registry.facts.string_mapping import (
     required_mapping_boolean,
 )
 from ..calculations.registry.facts.variants import FactSelector
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .proportionality import ProportionalityKind, StatutoryCapPeriod
 
@@ -91,9 +91,7 @@ def resolve_proportionality_catalogue(
 ) -> ProportionalityCatalogue:
     """Resolve and validate the dated proportionality vocabulary."""
     coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("proportionality catalogue requires an explicit authority operation or scope")
+    selected = require_governed_fact_authority(authority, subject="proportionality catalogue")
     entries = _ENTRIES_FACT.resolve_entries(selected, effective_date=coordinate)
     kinds = _proportionality_kinds(entries)
     periods = _statutory_cap_periods(entries)

@@ -77,6 +77,13 @@ _DECLARED_WRITERS: dict[str, str] = {
         "its CAS command. Every resulting fact comes from an explicit wizard answer or "
         "flag, never from an absent projected value, so a cleared path is not adopted."
     ),
+    "application/auth/preferences.py": (
+        "Reads the value projection only to check that the provider an auth reset targets "
+        "owns the stored preference, and then writes a clearing fact. The configure path "
+        "writes the operator's explicit method and route; its one default, the Cl@ve Movil "
+        "route, is decided on the effective-fact projection, so a deliberately cleared "
+        "route stays cleared."
+    ),
     "application/wizard/patch_edit.py": (
         "Reads the projection only to merge it with the supplied patch for the filing-"
         "baseline completeness check, which refuses rather than writes. Every constructed "

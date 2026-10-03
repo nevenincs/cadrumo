@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from typing import Literal
@@ -33,19 +32,17 @@ from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import IvaCategory
 from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
@@ -323,21 +320,15 @@ def _require_prepared_invoice_profile(invoice: Invoice, profile: str) -> None:
 
 def build_invoice_add_definition(factory: CatalogueCreationPortsFactory) -> OperationDefinition:
     """Declare a durable, guarded add with honest uncertain effects."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
         request_type=InvoiceAddRequest,
         result_type=InvoiceAddExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=InvoiceAddRequest,
-            executor_type=InvoiceAddExecutor,
-            build=lambda: InvoiceAddExecutor(factory),
-        ),
-        phase_codes=(INVOICE_ADD_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=InvoiceAddExecutor,
+        build=lambda: InvoiceAddExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        refusal_detail_codes=frozenset({INVOICE_ADD_VALIDATION_REFUSAL_CODE}),
         permitted_frontends=ALL_OPERATION_FRONTENDS,
+        refusal_detail_codes=frozenset({INVOICE_ADD_VALIDATION_REFUSAL_CODE}),
     )
 
 
@@ -350,10 +341,7 @@ def resolve_invoice_add_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
+    return with_commit_action(resolved)
 
 
 def build_invoice_add_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

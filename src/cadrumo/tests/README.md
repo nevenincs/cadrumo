@@ -22,6 +22,53 @@ Test module filenames must start with `test_`. `_test_*.py` and
 local `tests` directory; naked colocated tests beside production modules
 are not allowed.
 
+## Runtime test lifetimes
+
+Do not start a shared runtime before running pytest. Unit tests exercise contracts
+and isolated behavior without a background runtime. Integration fixtures that need
+native IPC or profile workers start their own runtime/server in a temporary
+synthetic storage root, wait for verified transport readiness, and stop and reap
+their resources during teardown, including failures and cancellation. Test-owned
+startup and cleanup are permitted; they do not install a service or introduce
+product autostart or health management. Never point fixtures at a developer's
+existing runtime or private profile root.
+
+The native launch-door tests own finite child processes through `_fixture`;
+installed-entrypoint tests use `launch` with an `ExitStack`; authenticated CLI/MCP
+tests use `native_api_cli_session` and `NativeRuntimeFixtureOwner`. Preserve these
+owners when adding tests so teardown also runs when setup or assertions fail.
+Installed-entrypoint checks must use the installed executable and real bootstrap.
+Tests that bind `ProfileWorkerCustody` directly must run that body in a disposable
+child process: its immutable profile binding deliberately survives custody close.
+Do not reset that production binding to make a later test pass. Publish file-based
+readiness payloads atomically so existence also means the full payload is readable.
+
+Run both runtime test scopes explicitly; the default pytest selection is unit-only:
+
+```powershell
+uv run pytest -n0 -m 'unit or integration' src/cadrumo/application/runtime/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/entrypoints/runtime/tests --durations=20
+```
+
+Native platform skips are coverage limits, not successful cross-platform checks.
+OS-keychain cases require the interactive session capability described below.
+Measure cold startup separately from request execution. Registry preparation
+must finish before a fixture exposes transport readiness. Installed-runtime
+fixtures allow 60 seconds for cold bootstrap; request deadlines stay independent.
+Diagnose and record startup phases before changing a setup budget, and never
+substitute a fixture server to conceal an installed-runtime startup failure.
+
+For manual CLI/TUI/MCP testing, explicitly run `cadrumo-runtime` in a separate
+development terminal with the same absolute storage root, native endpoint storage
+identity and installed product version as the client. Its required arguments are
+`--storage-root`, `--storage-identity` and `--expected-version`. Stop that owned
+runtime when the development session ends. Clients only connect; they do not
+start or repair it. Application provisioning will define the eventual launch policy.
+Load local development environment values explicitly, for example with
+`uv run --env-file env/.env cadrumo-runtime ...`; product settings do not read
+dotenv files themselves. Session-admission overrides belong to the runtime owner,
+and tests must select their intended policy explicitly rather than inherit a
+developer's local override.
+
 ## Marker taxonomy
 
 Every test module declares module-level markers via a single

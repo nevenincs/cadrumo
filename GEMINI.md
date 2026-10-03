@@ -4,417 +4,376 @@
 You MUST respect these rules at all times:
 
 ---
-name: aeat-agent-orchestration
+name: 00-architecture
 trigger: always_on
 ---
 
-# AEAT execution ownership
+# Cadrumo architecture
 
-## Invariants
+## Ownership and dependency boundaries
 
-- The person or agent delivering a change owns its evidence: inspect the live tree, verify any delegated finding, and report only the state that still exists at handoff.
-- Delegation is optional. Use it only when the operator permits it and the work can be split without losing the context needed for correctness. No task requires a swarm, standing team, role count, vendor, or launcher.
-- Give one writer ownership of each shared file or tightly coupled surface. Coordinate overlapping work before editing and preserve unrelated worktree changes.
-- A plan, issue, agent transcript, or prior audit is orientation, never proof that code is correct or work is complete. Acceptance comes from the current source, authoritative evidence, and the gates that exercise the changed behavior.
-- Make reversible choices from the repository when they stay within the requested scope. Do not use autonomy to broaden authorization, publish externally, write live AEAT systems, or discard another contributor's work.
-- Re-read affected files and the current diff before acting on a finding or handing work off; concurrent work can invalidate an earlier inventory.
-- Report blockers precisely. Pre-existing failures remain visible, but they do not justify hiding a regression introduced by the current change.
+Cadrumo is organized around a local profile and a pinned tax-authority generation. Keep interfaces responsible for presentation and typed requests, the installed runtime responsible for authenticated admission and operation hosting, application services responsible for orchestration and lifecycle decisions, domain and registry code responsible for typed facts and calculations, and adapters responsible for external effects and persistence. Domain code must remain independent of adapters. Development registry compilation and authoring belong under `dev/registry/`; runtime consumers use the published authority and must not import the development compiler.
 
-## Handoff
+```mermaid
+flowchart TD
+  H[Human operator] --> CLI[Typer CLI]
+  H --> TUI[Textual workbench]
+  A[Scoped agent client] --> MCP[MCP harness]
+  CLI --> IPC[Native local IPC]
+  TUI --> IPC
+  MCP --> IPC
+  IPC --> R[Installed runtime: peer and session authority]
+  R --> O[Registered operation supervisor: journal, guard, receipt]
+  O --> APP[Application services: ledger, profile, Modelo, overview, live reads]
+  APP --> D[Domain and pinned registry: facts, formulas, filing layouts]
+  APP --> S[Profile bucket: encrypted secure objects and journals]
+  APP --> EXT[Adapters: local files, AEAT read browser, models, Google]
+  EXT --> S
+  D --> K[Bundled source corpora and declarative registry]
+```
 
-A handoff states the outcome, changed surfaces, validation run with exit status, and any remaining risk. Agent topology, campaign history, and private scratch reasoning are not project facts and do not belong in source code or durable documentation.
+The diagram shows execution and data relationships, not permission to import across layer boundaries.
+
+## Authority and execution
+
+CLI, TUI and MCP submit through registered operations. Command declarations, UI state and agent prompts cannot grant authority. Native peer/login evidence anchors admission; client-supplied IDs alone do not. Bind boot, frontend, native client, exact profile, session/lease and authority generation, and recheck current authority at private submission, effects, interaction responses and disclosure.
+
+The supervisor journals execution, guards irreversible effects and correlates review and terminal receipts. Keep response scope, interaction bearers and commit permits distinct. Preserve `UNKNOWN` or `SETTLING` when effects are ambiguous; timeout is not proof that retrying a mutation is safe. Cleanup and worker containment remain owned through settlement.
+
+## Financial sources and filing state
+
+Preserve the flow from imported observations and reviewed evidence to canonical profile, ledger and invoice facts, then typed aggregation, registry-pinned calculation, verification and local export. Keep incomplete inputs unresolved. Model extraction/classification is a proposal; deterministic registry logic owns regulated arithmetic, and grounding and human review have separate roles.
+
+Do not mix authority generations within an operation. Keep local calculation, verification, exported bytes, pending local filing, authenticated remote observation and confirmed receipt as distinct states. A local `PRESENTADO` revision can still have AEAT status pending. Receipt promotion requires digest, CSV, model/period, taxpayer and current-filing-chain checks. The outbound AEAT submission gate refuses live submission; local export and registry-authority publication do not submit a taxpayer return.
+
+Overview, calendar, review and search consume admitted local projections. Preserve unavailable, stale, unknown and genuinely empty states. Read-model access does not authorize remote acquisition, and missing observations do not prove that no obligation exists.
+
+## Storage and external effects
+
+Private state belongs to exact-profile secure storage. Preserve namespace, identity, schema, provenance and revision checks at the write boundary. SQL co-commits, operation journals, atomic filesystem publication and multi-store recovery are distinct durability mechanisms. Claim atomicity only where the actual repository guarantees it; a completed method or journal entry cannot prove every dependent store committed. SQLite WAL with `synchronous=NORMAL` can lose the latest transaction on power failure.
+
+Keep integration authority and evidentiary grade separate: AEAT browser reads capture observations; Google Sheets performs authorized remote workbook writes; local exports write files; hosted-model extraction requires consent bound to the source bytes. Bundled sources, generated layouts and translations are versioned inputs, not proof of current law or publisher authenticity. Trace each guarantee through its callers and adapters before presenting a local control as an end-to-end guarantee.
+
+## Code discipline
+
+This rule uses import linting, Ruff lint and formatting checks, type checking, and strict type checking. Use `just check-import-boundaries`, `just check-style`, `just check-format` and `just check-types` for their configured scopes. The type runner uses `ty` across `src` and `pyrefly`/`basedpyright` for the configured strict production subset; do not weaken those scopes to make a change pass.
+
+Use relative imports within the actual module/package boundaries, importing from the defining module. Relative syntax must not escape configured package roots or bypass dependency contracts. All rules must be respected when working.
+
+## Implementation and verification invariants
+
+- Public symbols have one canonical defining module. Keep package `__init__.py` files inert; do not add re-exports, facade modules, forwarding aliases or cross-package imports from private modules. Put tests under the narrowest owning `tests/` directory. Use canonical Spanish tax terms and semantic module names.
+- Move definitions and all consumers atomically. Do not retain displaced internal APIs merely to satisfy old callers. Released compatibility requires an explicit supported window and migration/removal policy; historical registry baselines and evidence are not obsolete APIs.
+- Verify behavior through the real owning parser, resolver or serializer. Cover success, refusal and material boundaries; use independent expected results where available. A mocked replacement for the behavior under test is not acceptance evidence. Protective gates must detect representative defects in isolated fixtures.
+- Derive completeness and packaging inventories from the current filesystem plus the owning inclusion policy, not Git's tracked-file list. Round trips compare typed meaning, provenance and contract-defined ordering. Report new regressions separately from evidenced pre-existing failures.
+
+## Shared work and governance
+
+- Use the owning worktree and project environment. Preserve unrelated edits, re-read shared files before patching, and coordinate overlapping writers. Do not stash, reset, clean or overwrite concurrent work to obtain a clean baseline. Verify exact resolved paths before destructive filesystem operations.
+- Run focused checks before broader gates; obtain final exit status and confirm the intended tests ran. A tool wait timeout is not process failure. Isolate shared outputs when running checks concurrently, and keep source and compiler inputs stable when proving transformations.
+- Author governance in `.vaultspec/rules` and `.vaultspec/skills`; provider copies are generated. Preserve installation-owned builtins. Keep rules concise and stable, optional procedures in skill references, and agent workflow metadata out of product code and user documentation. Describe scoped inspection findings as observations requiring current-code verification, not accepted exceptions to an invariant.
 
 ---
-name: aeat-architecture-boundaries
+name: 01-operator-interfaces-part-1
 trigger: always_on
 ---
 
-# AEAT architecture boundaries
+# Operator interfaces, part 1
 
-## Placement and dependency direction
+The CLI is Cadrumo's primary operator surface. Declarative command fragments expose parameters, secrets, effect policies and output schemas, and demand-load handlers. The composed operation registry binds exact-profile repositories, secure writers and pinned tax authority. Ledger, invoice, evidence, Modelo, live-capture, overview and profile-management commands turn application results into typed text/JSON envelopes. A local calculation, verification, internal filing record, exported file and observed AEAT receipt are distinct states; none alone proves live submission. [graph](../../src/cadrumo/entrypoints/cli/command_graph.py), [composition](../../src/cadrumo/entrypoints/operation_composition.py#L966).
 
-- Put product Python code under its owning `src/` package and development-only registry compilation, authoring and migration tooling under `dev/registry/`. Runtime must not import the development compiler. Do not create parallel implementations or ad-hoc import roots.
-- Preserve the accepted dependency direction: domain code is independent of adapters; application services coordinate domain behavior; inbound, outbound, persistence, entrypoint, and core responsibilities remain separate.
-- Put every Python test below the narrowest owning `tests/` directory, never beside implementation modules as a naked `test_*.py`.
-- Keep the CLI root surface to `config` and `app`; extend the established hierarchy instead of adding a third root family.
+The knowledge displayed to operators comes from profile facts, pinned registries, ledger/evidence records and captured remote observations. Discovery names source categories and legal references without establishing their present legal validity. Off-host document extraction requires explicit consent and digest-bound review; model classification remains a proposal until accepted, with registry logic supplying regulated arithmetic. Live capture reports partial/empty/refused outcomes, and notification-document fetch is guarded by captured read state. [Evidence](../../src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py#L257), [Modelo discovery](../../src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py#L180), [notification guard](../../src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py#L364).
 
-## Canonical definitions and imports
+The strongest visible controls are exact-profile preflight, secret channels, request/result correlation, typed envelopes, explicit confirmation and local-versus-official provenance. A confirmed `bucket_id != bucket_id` predicate makes the locked-other-profile calendar collection empty. The IVA capture count validator permits a positive failure count with an empty list. Telemetry flush can conditionally send despite a local-only CLI policy; impact on enforcement remains unresolved. Lower-level IVA composition and consent metadata reads have local profile-scope gaps whose reachability depends on worker and repository paths. [Calendar](../../src/cadrumo/entrypoints/overview_read_composition.py#L447), [telemetry](../../src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py#L207).
 
-- Every public symbol has one canonical definition in a semantically named, non-underscore module.
-- Consumers import directly from that defining module. This applies to production code, tests, development tooling, plugins, dynamic imports, and type-only imports.
-- Package `__init__.py` files are inert namespace markers. Do not add exports, lazy maps, `__getattr__`, import forwarding, initialization side effects, or compatibility surfaces.
-- Do not create facade modules, re-export layers, alias modules, forwarding wrappers, duplicate definitions, or cross-package imports from private underscore modules.
-- Registry domain declarations and runtime resolvers belong to their public defining domain modules; source compilation and corpus validation belong to the development compiler. Enroll each implementation at its owning dispatch boundary without moving development dependencies into runtime.
+These scoped interface findings do not establish that a calendar omission changes filing state or that a consent read grants permission for an off-host dispatch.
 
-## Changes
+## Command and documentation invariants
 
-- Relocate a symbol atomically: create the canonical definition, update every consumer and dynamic reference, delete the old definition or forwarding path, then run import-boundary and owning tests.
-- Do not keep a transitional shim unless a released public compatibility floor explicitly requires it under `no-legacy-compatibility`.
-- Production code, tests, configuration, and user documentation must stand on their own. Do not embed Vaultspec paths, rule slugs, plan or audit identifiers, step numbers, agent roles, or campaign state in them.
+Keep the root families `config` and `app`, stable untranslated protocol tokens, and one canonical spelling per command. Subjects remain positional where the hierarchy establishes them; options express modifiers. Parse and normalize at the boundary, then call the shared application service. Keep notices and diagnostics out of structured result channels. Test live registration, refusal, output shape and promised idempotency.
 
-Authority: accepted import-centralization architecture decision and the current package-boundary tests.
+Generate help and CLI/API references from their owning sources rather than hand-maintaining inventories. Documentation uses Cadrumo and canonical domain terms, states prerequisites and observable outcomes, and keeps examples free of private data and machine-specific paths. Distinguish installed source, validated candidate, published authority and runtime adoption in completion claims.
 
 ---
-name: aeat-calculation-aggregation
+name: 01-operator-interfaces-part-2
 trigger: always_on
 ---
 
-# AEAT calculation aggregation
+# Operator interfaces, part 2
 
-## One aggregation mechanism
+The registered-operation bridge is the common CLI-to-worker protocol: it validates a typed request against a definition, binds profile/frontend/session identity, observes settlement, checks result/effect/schema, and correlates review replies. Timeout and incomplete observations stay `UNKNOWN`, which matters for mutations that may have committed. Ledger, Modelo, spreadsheet, review-package, live-capture and profile commands reuse this mechanism. A capture receipt proves that the local operation reported evidence; it does not independently authenticate current AEAT state or establish a submitted return. [runner](../../src/cadrumo/entrypoints/cli/runtime_registered_operation.py#L73).
 
-- Every registry aggregate resolves through the canonical typed aggregation mechanism. Do not add construct-name branches, modelo-specific `if` trees, substring dispatch, or a second summation path.
-- An aggregation declaration identifies its source family explicitly and is enrolled in the shared resolver dispatch. Unknown, ambiguous, or structurally invalid declarations fail validation.
-- `pull`, calculation, preview, and filing consume the same compiled aggregation semantics. No caller may reinterpret or partially reproduce the registry declaration.
+Secret input admits one bounded stdin/descriptor channel, rejects duplicate JSON keys, closes descriptors and wipes mutable byte buffers. Exact-profile runtime admission and invocation-owned client cleanup constrain lifetime; immutable decoded strings and native credential handling are outside the wipe claim. Profile edits carry revision/content-digest preconditions and preserve “committed but readback failed” outcomes. Local file input and provider effects are delegated to workers, so CLI path normalization does not by itself prove filesystem containment. [Secure input](../../src/cadrumo/entrypoints/cli/config/secure_input.py), [profile admission](../../src/cadrumo/entrypoints/cli/runtime_profile_admission.py#L48), [profile patch](../../src/cadrumo/entrypoints/cli/config/runtime_profile_patch.py).
 
-## Source eligibility
+The strongest scoped concerns are an uncorrelated 12-character work-unit selector in one reconciliation import adapter and the shape of Pydantic validation errors sent to logging. The logger has recursive scrubbing filters; a raw validation logging call is not evidence of a disk leak. Check whether generic `input` values retain a sensitive-field hint from `loc`. The command-surface reconciler checks graph/handler metadata correspondence, but actual worker effect and provider correctness remain to be verified. [Reconciliation](../../src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_import.py#L25), [scrubber](../../src/cadrumo/core/logging.py#L351), [surface](../../src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py).
 
-- A source is included only when the registry relationship proves it belongs to the aggregate for the active revision and filing context.
-- Missing source data and a proven zero are distinct states. Do not coerce absent, deferred, advisory, or unsupported inputs to zero in a filing-grade total.
-- Deferred or advisory sources may produce diagnostics, but must not silently contribute to a complete total.
-- Sign, rounding, currency, and period behavior come from the owning typed contracts; aggregation code must not infer them from field names or presentation labels.
-
-## Verification
-
-Exercise at least one positive multi-source case, exclusion cases, missing/deferred source behavior, and parity between pull and calculation. Tests must use the real resolver and compiled registry rather than a mocked substitute.
+The worker and profile repository remain the decisive boundaries for cross-profile reads and effects; CLI-side validation alone does not settle those deeper authority questions.
 
 ---
-name: aeat-calculation-grounding
+name: 02-runtime-tui-and-agent-harness
 trigger: always_on
 ---
 
-# AEAT calculation grounding
+# Runtime, TUI and agent harness
 
-## Filing-grade authority
+The installed runtime is the access and operation host for CLI/TUI/MCP. It binds native connection, frontend, profile, session, login proof, registered operation and pinned authority generation; private submission, effects, reviews and disclosure recheck those coordinates. Secret frames and bounded worker staging keep large or sensitive payloads apart from ordinary documents. Shutdown retains cleanup ownership and can terminate an uncontained process. These are source-level controls requiring OS and race testing. [authority](../../src/cadrumo/entrypoints/runtime/operation_authority.py#L221), [staging](../../src/cadrumo/entrypoints/runtime/worker_submission_staging.py#L54).
 
-- A filing-affecting formula, rate, threshold, classification, or relationship must be grounded in the official AEAT/BOE authority that governs the exact modelo, revision, period, territory, and taxpayer conditions.
-- Cite the specific provision, official instruction, record design, schema, or worked example used. A generic landing page, search result or third-party summary is not sufficient grounding. Preserve source-year and applicability scope; projection does not turn an earlier source into newly reviewed target-year evidence.
-- Preserve provenance from source capture through the compiled registry, calculation result, explanation, and filing handoff. A value without traceable authority cannot be promoted to filing grade.
-- Runtime calculations consume validated published authority. Authoring and repair use the candidate-inspection and validation boundaries defined in `aeat-registry-authority-flow`; a missing published generation must not prevent evidence-backed source repair.
+The Textual workbench consumes runtime projections for Home, Declarations, Ledger, AEAT Sync, profile management and Modelo forms. It preserves semantic selection, distinguishes local from official filing evidence, and stages typed edits for preflight/review before application operations. Evidence confirmation binds source and draft digests; local export displays a non-official warning. The generic operation modal supports public review interactions with exact operation/revision checks, while `INPUT` and `CHOICE` remain unsupported there. Ledger review/evidence row query navigation is visibly pending despite other Ledger mutation doors. [Modelo review](../../src/cadrumo/entrypoints/tui/modelo/workbench/review.py#L385), [evidence confirmation](../../src/cadrumo/entrypoints/tui/ledger/runtime_evidence.py#L208), [pending routes](../../src/cadrumo/entrypoints/tui/ledger/controller.py#L755), [modal](../../src/cadrumo/entrypoints/tui/operations/modal.py#L101).
 
-## Implementation
-
-- Encode legal variation as typed registry data or a shared domain mechanism, not as duplicated modelo-specific branches.
-- Keep applicability, units, sign, rounding, temporal window, dependencies, and exclusions explicit. Do not infer law from labels or field numbering.
-- A total is complete only when every required component is present or explicitly classified by the governing contract. Suspicious absence must remain visible under `no-silent-under-declaration`.
-- Cross-check representative live inputs against an independent official example or separately implemented oracle where one exists. Expected values copied from the implementation under test are not independent evidence.
-
-## Change evidence
-
-For a calculation change, retain the authoritative source reference, the registry or code location that carries it, and focused tests covering the normal case plus material boundaries and exclusions. If the official evidence is ambiguous, keep the capability advisory or unsupported rather than guessing.
+Bundled agent personas, rules and workflow skills guide staged tax work, source provenance, independent review and human filing, but are prompt material rather than enforcement. The MCP harness has a typed 15-tool protocol and exact-profile runtime adapter; uncertain submissions retain request identity. Skill/casilla prose is versioned orientation, not verified current law. A source-level question is whether import preview/apply detects file changes, since the UI retains a path without content digest. Other bounded concerns include non-atomic generation/profile snapshots, platform containment and logging tracebacks; none is established as a product-wide breach by static reading. [Harness protocol](../../src/cadrumo_harness/mcp/protocol_contract.py#L45), [import flow](../../src/cadrumo/entrypoints/tui/ledger/import_flow.py#L280).
 
 ---
-name: aeat-cli-contract
+name: 03-document-and-financial-imports
 trigger: always_on
 ---
 
-# AEAT CLI contract
+# Document and financial imports
 
-## Command surface
+Inbound adapters convert Modelo 100 drafts, filed-declaration PDFs, AEAT receipts, notification acts, structured e-invoices and financial files into typed observations. Borrador extraction supports printed casilla rows; filed-declaration extraction uses registry snapshot profiles; CII/UBL/Facturae parse into a neutral invoice DTO; provider files produce provenance-bearing raw transactions. The censal certificate parser explicitly refuses all documents pending a specimen-backed layout. Recognizing SII or VERI*FACTU shape does not mean that e-invoice parser accepts it. [declaration parser](../../src/cadrumo/adapters/inbound/declaracion/parser.py#L126), [e-invoice dispatch](../../src/cadrumo/adapters/inbound/einvoice/shape.py#L259), [censal refusal](../../src/cadrumo/adapters/inbound/censo/parser.py#L25).
 
-- The root command families are `config` and `app`. Commands extend the established subject hierarchy and do not create aliases or parallel spellings.
-- The subject is positional where the hierarchy already makes it the command target. Options represent modifiers or explicit parameter loci; do not encode the same concept both positionally and as an option.
-- Use stable transport tokens and machine-readable identifiers at the CLI boundary. Localized presentation text is output, never an input protocol.
-- Local file ingestion uses the subject's `import --file` flow, for example `aeat config profile censo import --file ...`; do not revive retired `file` command families.
+Knowledge comes from printed document values, provider row fields and the bundled extraction/notification registry. Digests and registry references preserve provenance, but a parsed receipt does not authenticate its AEAT CSV or URL; notification reduction fact selection uses the present Madrid date by default, a historical applicability question. XML has hardened parsing and a 32 MiB limit, while PDF attachments are read before that bound. PDF bytes routes can keep decrypted evidence in memory, and a digest-derived `.secure-source` reference is only a name until secure custody stores it. [Notification parser](../../src/cadrumo/adapters/inbound/notificacion/sancion.py#L431), [XML guard](../../src/cadrumo/adapters/inbound/einvoice/xml.py#L88), [provenance](../../src/cadrumo/adapters/inbound/pdf/source_provenance.py#L23).
 
-## Behavior
-
-- Commands are deterministic and idempotent where they mutate local configuration. Refuse ambiguous state instead of guessing.
-- User-facing notices go through the established notice/output channel. Do not mix diagnostics with structured output or write directly to arbitrary streams.
-- Parse, validate, and normalize at the boundary, then call the same application service used by non-CLI entrypoints. The CLI must not carry a second business implementation.
-- Help, completion, examples, and generated CLI reference derive from the live command tree. Do not maintain hand-copied inventories.
-
-## Verification
-
-Test the live parser and command registration, including success, refusal, idempotency, output channel, and machine-readable form. When changing a command, update its generated reference through the owning CLI generator rather than editing generated output.
+Scoped quality findings: borrador `OBSERVED` mode still applies a supplied coverage profile despite its description; declaration parser checks an injected snapshot against the template only by model ID and hides tolerated missing targets. The financial 64 MiB guard can run after auto-detection or some parser validation reads, and hash-then-reopen flows risk digest/content mismatch if a path changes. These local facts warrant tests and caller tracing; no runtime accuracy or document authenticity was established. [Borrador mode](../../src/cadrumo/adapters/inbound/borrador/parser.py#L37), [snapshot check](../../src/cadrumo/adapters/inbound/declaracion/parser.py#L587), [financial detection](../../src/cadrumo/adapters/inbound/financial/providers/detection.py#L46).
 
 ---
-name: aeat-documentation
+name: 04-external-integrations-and-local-runtime
 trigger: always_on
 ---
 
-# AEAT documentation
+# External integrations and local runtime
 
-## User-facing documentation
+The local runtime client uses verified native IPC, separate bounded document/secret frames, exact boot/connection/profile/session identity, and worker custody/operation/authorization channels. Clients connect to an explicitly started runtime and report unavailability; running state is distinct from authenticated or settled operations. Linux containment uses pidfds/cgroups; Windows uses a kill-on-close Job Object and token/desktop checks. These source-level controls need platform/race testing. [framing](../../src/cadrumo/adapters/local_runtime/framing.py#L324), [Windows process](../../src/cadrumo/adapters/local_runtime/windows_process.py#L186).
 
-- Write concise, outcome-oriented documentation in the user's language. State prerequisites, exact commands, observable results, failure behavior, and recovery where those facts matter.
-- Use the product name Cadrumo consistently. Use AEAT names, Spanish domain terms, and command tokens exactly as the product exposes them; do not invent synonyms for canonical concepts.
-- Keep each fact in one authoritative home. Link to that home instead of duplicating command inventories, schemas, legal claims, or status across documents.
-- Registry task briefs and handoffs name the target boundary: source edit, candidate verification, live source installation, authority publication or runtime adoption. State deliverables and measurable acceptance for the requested boundary; do not use ambiguous "live", "validated" or "done" for all of them.
-- Generated API and CLI references are owned by their generators. Change the source or generator, regenerate, and verify the diff; never hand-edit generated reference files.
-- Examples must be safe, runnable, and free of credentials, taxpayer data, machine-specific paths, and stale campaign state.
+AEAT browser adapters authenticate by certificate or Cl@ve, then read censal facts, filed declarations, IVA wallet, notifications, NIF-IVA/GROI and expedientes through guarded host/path/action routes. Captures carry hashes and registry references. A notification-document fetch requires a prior `leida=True` row, but the adapter depends on its caller for a fresh, same-taxpayer record. Fresh Cl@ve landing acceptance is weaker than later verification; missing persisted landing metadata can make a diagnostic probe start a challenge. Captured 303 compensation assumes `refunded=False`, requiring downstream refund reconciliation. [Notification guard](../../src/cadrumo/adapters/outbound/aeat/sede/notifications.py#L558), [Cl@ve probe](../../src/cadrumo/adapters/outbound/aeat/auth/clave_movil.py#L415), [303 derivation](../../src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py#L839).
 
-## Evidence and licensing
+Google Sheets is a remote writer and checked readback surface; offline XLSX is a separate local artifact. OAuth/Drive require scope and ownership markers. Encrypted-byte mirroring verifies object hashes and publishes manifests only for complete namespace pushes. LLM readers distinguish model proposals from deterministic grounding; canonical off-host invoice extraction binds fresh consent to stored source bytes, while generic dispatch relies on callers for that binding. Strong scoped concerns include potentially duplicated Sheets metadata on a replayed structural batch, `USER_ENTERED` literal formula interpretation, stringified missing OAuth refresh tokens and a generic Drive write/read hash-contract mismatch. [Sheets apply](../../src/cadrumo/adapters/outbound/google/calc_sheets_apply.py#L779), [LLM binding](../../src/cadrumo/application/ledger/invoice_evidence_extract_operation.py#L152), [mirror](../../src/cadrumo/adapters/outbound/storage/mirror_push.py#L404).
 
-- Legal and filing claims cite the applicable official source. Technical claims identify the live code or generated reference that establishes them.
-- External research is paraphrased and license-clean. Do not copy substantial text, diagrams, or examples whose reuse rights are unclear.
-- Reviews check terminology, command accuracy, links, safety, and consistency with the live product. No document requires a particular number or topology of reviewers.
+## Runtime lifecycle policy
 
-## Repository separation
-
-User documentation must not explain internal Vaultspec workflow, agent roles, plan steps, audit identifiers, or rule slugs. Architecture and implementation records belong in the vault; production and user documentation remain self-contained.
+Do not create, register or start scheduled tasks or persistent OS services for runtime operation, development, tests or desktop-session recovery. Manual testing uses an explicitly started runtime whose lifetime and cleanup belong to the developer session. Clients must not install, autostart, repair or supervise it. If the execution context lacks the required desktop session, report the limitation; do not install a bridge. Platform containment remains required for session-owned workers. Existing service-management code is not authorization to use or extend it.
 
 ---
-name: aeat-ledger-contract
+name: 05-persistence-and-secure-storage
 trigger: always_on
 ---
 
-# AEAT ledger contract
+# Persistence and secure storage
 
-## Monetary semantics
+Profile facts, transactions, calculations, filings and evidence live primarily in bucket-scoped encrypted SQL secure objects. Registered namespaces define sensitivity, schema and custody policy. AES-GCM binds ciphertext to namespace/key/schema; HMAC keys hide natural identifiers; revision-guarded batches and parent checks keep related records consistent. A plaintext transaction-date routing index exposes date/ID metadata but falls back to encrypted scan if incomplete. [write funnel](../../src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py#L200), [date fallback](../../src/cadrumo/adapters/persistence/profile/transactions.py#L573).
 
-- Store an amount as its non-negative magnitude and carry economic direction in the owning typed direction field. Do not encode the same direction a second time in the numeric sign.
-- Currency, precision, rounding, tax category, period, and counterparty identity remain explicit. Do not infer them from descriptions, account names, or UI placement.
-- A derived balance or tax total is reproducible from immutable ledger facts and the active registry authority. Corrections append a new revision or reversal; they do not erase the evidence chain.
+Profile DEKs are password/recovery wrapped, sentinel-proven and housed in no-replace published capsules; KDF work runs in a bounded supervised child. Session acceleration splits an OS-keychain random key from an encrypted receipt. Automation credentials use native stores and durable denial intents. Attachments and archives retain encrypted bytes with digest checks. An operation journal validates ordered history and exact lease ownership; consent history appends before off-host evidence dispatch without retaining document bytes. [Capsule](../../src/cadrumo/adapters/persistence/storage/custody/capsule.py#L431), [acceleration](../../src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py#L709), [consent ledger](../../src/cadrumo/adapters/persistence/llm/consent_ledger.py#L94).
 
-## Evidence and classification
+Scoped risks include direct in-place financial checkpoint writes, a potentially racing attachment manifest read/merge/write, database content omitted from deletion-inventory digests, and outer review-package metadata absent from this adapter's AEAD associated data pending signature tracing. SQL revision hashes are unkeyed and cover a declared subset of fields. SQLite WAL `synchronous=NORMAL` permits last-transaction loss on power failure; no crash test or arbitrary-old-schema migration was established. [Checkpoint](../../src/cadrumo/adapters/persistence/operations/financial_operand_custody.py#L70), [attachment merge](../../src/cadrumo/adapters/persistence/storage/attachment.py#L337), [inventory](../../src/cadrumo/adapters/persistence/storage/custody/_inventory.py#L78), [AEAD context](../../src/cadrumo/adapters/persistence/profile/review_package_recipient_encryption.py#L58).
 
-- Evidence attached to a ledger revision is persisted as encrypted bytes with its integrity and provenance metadata. A path, URL, filename, or plaintext cache is not the evidence.
-- IVA categories come from the canonical category set. Importers map external values into that set and refuse unknown or ambiguous classifications.
-- Participation, ownership, and allocation values are derived through the canonical typed relationship mechanism. Do not duplicate percentages in unrelated records or silently normalize an inconsistent total.
-- Missing evidence, unknown classification, and a genuine zero are distinct states and remain distinguishable through calculation and filing handoff.
+These are persistence-layer observations. A caller's journal, lock, signature verification or recovery step may narrow the practical impact; each path needs its full composition traced before it is described as an end-to-end failure. The stated confidentiality guarantees also rely on native key-store and filesystem permissions outside these SQL adapters.
 
-## Verification
+## Private-data invariants
 
-Tests cover sign/direction invariants, currency and rounding boundaries, encrypted evidence round trips, immutable revision behavior, classification refusal, and parity between ledger-derived and filing-facing totals.
+Persist private taxpayer, banking, credential, invoice, filing and evidence payloads only through approved encrypted custody. Public official publications, registry definitions and synthetic fixtures may use canonical repository storage; inspect them for embedded private data. A path or URL is not persisted evidence. Use synthetic or irreversibly anonymized test data.
+
+Do not leak private payloads through logs, exceptions, command arguments, caches, scratch files, documentation or agent transcripts. Redact before serialization or transport and use approved secret channels. Explicit operator exports and consented integrations must follow their declared authorization, destination and data-lifetime contracts; ordinary development access grants neither. Bound decrypted material's lifetime and cleanup, and refuse workflows that cannot meet their custody contract. Observed plaintext gaps require remediation, not a new storage exception.
 
 ---
-name: aeat-local-execution
+name: 06-application-orchestration-and-diagnostics
 trigger: always_on
 ---
 
-# AEAT local execution
+# Application orchestration and diagnostics
 
-- Run repository commands from the owning worktree and use the environment declared by the project. Prefer `uv run ...` for Python tools and `rg`/`rg --files` for search.
-- Use PowerShell-native quoting and path handling on Windows. Do not publish Unix-only command recipes as the sole project workflow.
-- Validate the narrow changed surface first, then the owning subsystem, then broader gates in proportion to risk. Re-run dependent commands sequentially when concurrent runs could contend for the same cache, database, port, or generated output.
-- Preserve the actual command, exit status, and complete failure identity. A truncated excerpt, passing retry without explanation, or background launch is not evidence of success.
-- A tool wait window is not a process failure. Resume the owned session to obtain its final result, and confirm the intended tests actually ran; default marker selections may exclude integration tests.
-- When proving a source transformation, identify both source and interpreting-tool dependencies. Use stable captured inputs and revalidate receipts before application; do not test a copied registry with changing compiler code and call the result current.
-- Use isolated temporary locations for destructive or detector-teeth checks. Resolve and verify exact paths before delete, move, overwrite, or cleanup operations.
-- Do not substitute a mocked service for a repository gate that claims to exercise the real integration. If an external dependency is unavailable, report that limitation explicitly.
+Evidence bundles still require recipient review for authenticity and legal relevance.
+
+Application orchestration covers profile-bound state, health, reset, local model provisioning, flows, inventory and asset operations, offline retrieval, evidence bundles, and supervised exports. The application generally distinguishes availability, stale facts, proposed calculations, and attempted external effects. Workbench generation joins secure readers only after source revision checks; Modelo readiness preserves distinct profile, registry, binding, and ledger axes. AEAT Sync's local projection reports remote data as never captured rather than reading the network. [State projection](../../src/cadrumo/application/state_projection.py#L543) [Workbench assembly](../../src/cadrumo/application/workbench_generation.py#L502) [Local AEAT Sync](../../src/cadrumo/application/aeat_sync/workspace_reader.py#L432).
+
+Enforced controls include exact-profile operation binding, typed health and result projections, confirmation and retention checks for journaled all-profile reset, memory admission for model load, stale-answer review in interactive flows, revision-guarded inventory and amortization writes, digest verification before evidence-bundle export, and consent/tier gates before telemetry sends. Remote Google workbook export records an uncertain effect before mutation; the code here cannot confirm remote delivery. Offline exact citations use pinned registry evidence, while phrase search uses a content-keyed local index of extracted HTML. [Reset recovery](../../src/cadrumo/application/config_reset.py#L516) [Model admission](../../src/cadrumo/application/provisioning_runtime.py#L256) [Bundle checks](../../src/cadrumo/application/evidence/service.py#L247) [Telemetry gate](../../src/cadrumo/application/diagnostics_telemetry.py#L171).
+
+Scoped follow-ups: failed secure-object probing can look like an empty OK integrity row; deadline errors can look like no pending obligations; a readiness probe may cold-load a model outside normal admission; legal-hold snapshots have no established post-registration refresh; spreadsheet text lacks explicit formula neutralization. These are distinct local behaviors and conditional integration risks, not verified production failures. [Integrity probe](../../src/cadrumo/application/diagnostics.py#L262) [Readiness probe](../../src/cadrumo/application/provisioning_runtime.py#L1031) [Legal-hold producer](../../src/cadrumo/application/evidence/profile_legal_hold.py#L202).
 
 ---
-name: aeat-locales-cli
+name: 07-aggregation-and-calculation-services
 trigger: always_on
 ---
 
-# AEAT locale and CLI language contract
+# Aggregation and calculation services
 
-- Locale changes are performed through the canonical CLI workflow and catalogue implementation, not by editing generated catalogues or maintaining a parallel translation path.
-- The supported locale set is the live product set. Each supported locale contains a real translation for every required key; copying the source text or filling placeholders does not satisfy coverage.
-- CLI help, notices, errors, and model or registry presentation use the same canonical keys and catalogue. Transport tokens, identifiers, enum values, and stored data remain stable and untranslated.
-- Application-authored Spanish, Catalan and Hungarian copy addresses the operator informally in the singular (tú, tu, tegező). Preserve official Spanish and verbatim corpus excerpts, and retain grammatical third-person references to children, spouses, counterparties and system behavior.
-- A concept has one canonical translation key. Reuse it across revisions when continuity is proven; create a distinct key when legal meaning differs.
-- Do not restore a retired command, locale family, or compatibility alias to make an old test or document pass.
+Aggregation and calculation services provide source resolvers that turn profile facts, transactions, invoices, registers and prior filings into values for a selected Modelo revision. A typed source mesh keeps scalar amounts, rows, relations, diagnostics and provenance distinct; exclusive merge rejects duplicate ownership. IVA uses dated admission, EUR and payment evidence, prorrata and invoice cross-checks. Renta has distinct annual, cumulative quarterly and agrarian routes; withholding recognition feeds periodic captures and annual views. OSS/IOSS, M720, inventory and counterpart previews are narrower capabilities with their own source and provenance limits. An aggregate or parser-supported input alone does not establish a filing-grade calculation. [Source mesh](../../src/cadrumo/application/aggregation/source_mesh.py#L865) [IVA admission](../../src/cadrumo/application/aggregation/_iva_transaction.py#L197) [Renta source](../../src/cadrumo/application/aggregation/renta_income_ledger.py#L292).
 
-Verify catalogue completeness, source-key parity, fallback/refusal behavior, and live CLI rendering for every supported locale through the owning tests.
+Cross-period prefill requires source observations stamped for the caller's pinned authority; a separate clean-state gate checks filing revision, member coverage, verification, and official evidence. M303 IVA carry uses a canonical disposition envelope and atomic observation/history co-commit contract; an unknown opening balance stays unresolved for annual M390. Withholding mutation uses baseline-guarded replacement and exact-command replay. These are strong local controls, while storage atomicity and authority accuracy depend on adapters and bundled data. [Clean-state gate](../../src/cadrumo/application/calculations/cross_period_clean_state.py#L639) [M303 co-commit](../../src/cadrumo/application/calculations/iva_compensation_history.py#L276) [Withholding mutation](../../src/cadrumo/application/aggregation/withholding_observation_service.py#L374).
+
+The highest-priority scoped findings are a raw foreign-currency versus EUR comparison in an invoice silence-guard branch and filing-snapshot fingerprints that omit calculation-relevant IVA fields. Authority-generation reopening in M303 transition and withholding helpers matters if historical generations are reachable; fractional integer/date coercion in detail-row assembly needs upstream admission checks. These are code-level findings and conditional impacts, not confirmed production filing errors. [Currency comparison](../../src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva_refusal.py#L36) [Snapshot fields](../../src/cadrumo/application/aggregation/ledger_filing_snapshot.py#L94) [Generation reopening](../../src/cadrumo/application/aggregation/m303_arrivals.py#L121).
+
+## Aggregation and completeness invariants
+
+Use one canonical typed aggregation mechanism across pull, preview, calculation and filing. Enroll source families and validators in the shared dispatch; do not add modelo-name branches or private summation paths. Eligibility, sign, rounding, currency and period come from the governing relationship and typed contract, never labels.
+
+Keep absent, unknown, unsupported, deferred, advisory, not-applicable and proven-zero states distinct. Resolve inherited/projected declarations before declaring registry data missing. Required gaps and independent-source disagreements must reach the user as structured findings; suppression is narrowly keyed, justified and reviewable. No downstream consumer may promote advisory inputs to filing grade. Verify multi-source inclusion/exclusion, missing inputs, diagnostic propagation and parity through the real resolver.
 
 ---
-name: aeat-naming
+name: 08-authentication-and-storage-management
 trigger: always_on
 ---
 
-# AEAT naming
+# Authentication and storage management
 
-## Domain language
+The inspected local readiness and storage contracts do not establish a successful remote login, an effective representation grant, or delivery of a cloud workbook. Those outcomes need separate remote and application evidence.
 
-- Use the official Spanish tax-domain term for public concepts and stable product language for technical concepts. Names describe legal or business meaning, not the current implementation trick.
-- A public type, command, registry key, or file family uses one canonical stem. Avoid synonyms, abbreviations without domain currency, English/Spanish duplicates, and aliases kept only for old callers.
-- Modelo identifiers use the canonical typed modelo representation; casilla, revision, period, and legal-reference identifiers keep their established structured forms.
-- CLI verbs follow the live hierarchy. For local censo ingestion, use `aeat config profile censo import --file ...`, not a parallel `file` command.
+Authentication and storage management services cover profile-bound provider configuration, session reuse/acquisition, named certificate sources and secrets, local status, redacted diagnostics, logout/reset, storage inventory/reclaim, and calculation workbook plans. Local apoderado configuration exists; the advertised live check explicitly refuses. Auth status/test are local readiness probes, distinct from remote authentication. [Auth operator](../../src/cadrumo/application/auth/operator.py#L135) [Apoderado refusal](../../src/cadrumo/application/auth/apoderado_service.py#L119).
 
-## Files and modules
+Session lifecycle checks active profile and identity, probes persisted state on both sides of acquisition locking, and stages encrypted browser-state publication until provider verification succeeds. Certificate passphrases use profile-scoped secret storage and a durable secret-free intent. Diagnostic projections suppress raw HTML/screenshots and URL query values. Bucket deletion assessment refuses unreadable/linked roots and absent retention knowledge; storage reclaim derives allowed targets from taxonomy, checks containment and protected descendants, and requires explicit confirmation. Registry-stamped workbook plans support offline bytes and an injected Google apply path; parity with caller-supplied expected values cannot itself prove AEAT or legal correctness. [Session lifecycle](../../src/cadrumo/application/auth/sessions.py#L338) [Secret intent](../../src/cadrumo/application/auth/certificate_source_operations.py#L451) [Reclaim](../../src/cadrumo/application/storage_management/service.py#L300) [Workbook plan](../../src/cadrumo/application/storage/calc_sheets/engine.py#L1003).
 
-- Public modules are semantically named and define the symbols consumers import from them. Leading-underscore modules are private to their package and are not cross-package APIs.
-- A filename, class, and registry family should reveal the same responsibility. Do not use generic buckets such as `utils`, `helpers`, `common`, or `misc` for domain behavior.
-- Renames are atomic across code, tests, dynamic references, documentation, and generated outputs. Delete the displaced name unless an explicit released compatibility floor requires it.
+The clearest local defect is an acquisition-lock recovery interleaving: after an unreadable first inspection, a replaced live lock can be deleted without a byte comparison. Other questions depend on upstream guarantees: normalized blank session identity, held-lock reset coordination, and concurrent filesystem replacement during reclaim. An unreadable storage inventory can also appear empty. [Lock comparison](../../src/cadrumo/application/auth/acquisition_lock.py#L431) [Identity comparison](../../src/cadrumo/application/auth/sessions.py#L1125) [Inventory measurement](../../src/cadrumo/application/storage_management/service.py#L487).
 
 ---
-name: aeat-no-destructive-git
+name: 09-filing-and-live-state
 trigger: always_on
 ---
 
-# No destructive git commands
+# Filing and live state
 
-## Absolute prohibition
+Filing and live-state services separate local filing work from authenticated remote observation. A registry-pinned draft takes typed casilla inputs, calculates and validates them, then approval hashes relevant draft/source state. Export renders a selected fixed-width or XML layout to a local artifact and verifies bytes; it does not submit to AEAT. M200 repeated rows remain operator supplied, M210/M296 require caller fact sourcing, and M202 explicitly refuses unsupported producer fields. [Draft](../../src/cadrumo/application/filing/draft_construction.py#L80) [Export](../../src/cadrumo/application/filing/export.py#L435) [M202 refusal](../../src/cadrumo/application/filing/producer_snapshot.py#L1151).
 
-Never run a git command that can discard, rewrite, or relocate work that is not
-yours to move. These are forbidden outright, with no exception and no "safe"
-variant:
+Live read paths capture censo, Borrador 100 PDFs, declaration registers, filed history, IVA wallet/history, notifications, notification documents and identity-verification observations into profile-bound local custody. Bulk capture reports failed pairs separately from genuine empty results; its dry run reads remotely but avoids local evidence writes. Justificante bytes become confirmed filing-chain evidence only after digest, CSV, model/period, taxpayer and current-record checks. A cotejo attempt can remain unavailable, distinct from denial. Notification document custody stores encrypted bytes and requires either a parsed reading or explicit parse refusal. [Filed capture](../../src/cadrumo/application/live/filed_data_capture.py#L665) [Receipt gate](../../src/cadrumo/application/live/filed_observation_persistence.py#L486) [Document custody](../../src/cadrumo/application/live/notification_documents.py#L240).
 
-- `git stash` in every form, including `push`, `pop`, `apply`, `drop`, `clear`,
-  and `save`. Stashing removes another contributor's in-flight edits from the
-  working tree, and popping against a moved `HEAD` writes conflict markers into
-  source files.
-- `git reset` (`--hard`, `--mixed`, `--soft`), `git restore`, and
-  `git checkout -- <path>` used to discard working-tree or index changes.
-- `git clean` in every form.
-- `git rebase`, `git cherry-pick`, `git revert`, `git commit --amend`, and any
-  history rewrite (`filter-branch`, `filter-repo`, `push --force`).
-- `git branch -D`, `git worktree remove --force` on a worktree you did not
-  create, and any deletion of a ref you do not own.
-- Removing or bypassing a lock file such as `.git/index.lock`. A held lock means
-  another process is mid-operation; wait, or report it.
+The strongest controls are exact-profile admission, guarded local writes, typed effect accounting, and gradual evidence promotion. Scoped concerns are stale approval refresh at the upper export caller, XML non-casilla values that ignore a documented header fallback, a discovery-to-bulk Cartesian expansion for ragged model/year pairs, and several result projectors that do not locally compare terminal receipts. The operation host may supply the missing receipt guarantee; this static pass did not verify it. [Approval refresh](../../src/cadrumo/application/filing/draft_review.py#L529) [Pair reduction](../../src/cadrumo/application/live/filed_data_capture.py#L2329) [Receipt projector](../../src/cadrumo/application/live/filed_bulk_capture_operation.py#L137).
 
-## Why
+## Export invariants
 
-A dirty worktree is another contributor's work in progress, and this repository
-is edited concurrently. A stash/pop cycle in one session removed a contributor's
-uncommitted edits and, on restore against an advanced `HEAD`, wrote
-`<<<<<<<`/`=======`/`>>>>>>>` markers into nine tracked source files, breaking
-every module that imported them. Nothing warned before the damage; the loss was
-found only by a later import smoke test. No reversibility argument survives
-that: the operations above destroy state that exists nowhere else.
-
-## Instead
-
-- To read a committed version, use a read-only command that writes nothing:
-  `git show HEAD:<path>`, `git diff`, `git log`, `git cat-file`.
-- To compare against a baseline, create a separate worktree
-  (`git worktree add --detach <dir> HEAD`) and read from it. Never mutate the
-  working tree to get a clean state.
-- To test whether a local edit causes a failure, reproduce it in an isolated
-  fixture or snapshot, or evaluate the question from `git diff` output. Do not
-  temporarily overwrite shared files and later restore a potentially stale copy.
-- If work genuinely must be set aside, stop and ask the operator. Removing
-  someone's uncommitted changes is their decision, never the agent's.
-
-## Scope
-
-This binds every agent and every session, including when a command appears to
-target only files the agent itself wrote: a path-scoped destructive command
-still acts on whatever the working tree holds at that moment, which may have
-changed. Commit, push, merge, and any other command that alters shared or
-external state still require an explicit operator request.
+Derive record order, field positions, widths, encoding, repetitions and conditions from the selected official design through the hydrated registry layout. Preview and emitted bytes share the canonical builder and formula results. Distinguish missing, required blank, permitted blank and zero; padding cannot supply a required fact. Refuse overflow, truncation, illegal characters, invalid cardinalities and inconsistent totals. Validate official examples where available and semantic parse/serialize round trips. Generated fixtures and references are regenerated from their owners, not hand-edited.
 
 ---
-name: aeat-quality-gates
+name: 10-ledger-invoices-and-registers
 trigger: always_on
 ---
 
-# AEAT quality gates
+# Ledger, invoices, and registers
 
-## What a gate must prove
+Ledger, invoice and register services cover bank/manual ledger entries, classification and readiness, invoice catalogue intake and reciprocal linking, document evidence and reviewed confirmation, LLM proposals, and the local IVA prorrata register. A parser-supported document first becomes lower-confidence evidence/draft; re-extraction and per-finding human review precede canonical invoice creation. Calculation readiness screens classified rows and links, while finalized calculation references block fact changes. These are local financial source capabilities, not official exports or remote filings. [Ledger guards](../../src/cadrumo/application/ledger/actions_common.py#L218) [Invoice intake](../../src/cadrumo/application/invoices/bulk_import.py#L748) [Confirmation](../../src/cadrumo/application/ledger/invoice_confirmation.py#L554).
 
-- A gate exercises the real authority path, parser, compiler, resolver, calculation, or serializer whose contract it names. Mocking the production behavior under test is not acceptance evidence.
-- Test outcomes and invariants, not implementation trivia, frozen corpus counts, campaign milestones, or the mere presence of a string.
-- Positive tests prove the supported path. Negative tests prove malformed, ambiguous, unsupported, stale, and incomplete inputs fail closed at the owning boundary.
-- Round-trip tests compare canonical typed meaning, including absence, zero, precision, contract-defined ordering, provenance, and revision identity. Mapping-key serialization order is not sequence order; exclusions require an explicit representation contract and independent checks of the meaning they omit.
-- Hydrated equivalence does not prove compact authoring. Delta acceptance independently measures redundant payload and overrides, unresolved shapes, coverage and idempotence. Discover the complete live inventory; a successful no-op or representative modelo is not registry-wide acceptance.
+Enforced controls include exact-profile operation access, revision-guarded ledger/event and invoice/transaction writes, content-derived evidence identity, explicit missing/ambiguous document facts, and canonical consent for off-host extraction: the registered path requires stored evidence, per-call acknowledgement, a minted source-hash proof and a loaded-byte digest check. Model classification remains a proposal; registry rules derive tax amounts and a captured reviewed baseline gates application. The prorrata seed rechecks prior M303 revision and commits against source plus register revisions. [Consent path](../../src/cadrumo/application/ledger/invoice_evidence_extract_operation.py#L152) [Reviewed LLM apply](../../src/cadrumo/application/ledger/llm_review_execution.py#L143) [Prorrata seed](../../src/cadrumo/application/prorrata_register/service.py#L271).
 
-## Detector teeth
+The key cross-layer question is whether a draft tax ID without its own accepted anchor can be promoted by separate role text and later accepted; model output, deterministic grounding and human confirmation must remain distinct. Confirmation's catalogue, attachment, evidence-summary and audit writes are sequential, so crash recovery needs verification. Ratio override and event writes are explicitly non-atomic; importer original-file hashing is separately timed. An IRPF-residency proxy can over-report issuer IVA establishment in non-TAI territories. [Identity seam](../../src/cadrumo/application/ledger/grounded_reading.py#L303) [Confirmation writes](../../src/cadrumo/application/ledger/invoice_confirmation.py#L758) [Ratio ordering](../../src/cadrumo/application/ledger/ratios.py#L550).
 
-A gate that protects a declaration or generated relationship must demonstrate that a representative defect is detected. Use an isolated fixture, temporary registry tree, or explicit test input; do not monkeypatch production modules globally or mutate the contributor's working tree. The defect proof and the normal path must both pass in the same test suite.
+## Ledger invariants
 
-## Repository enumeration
-
-Never use Git commands, the Git index, tracked-file lists, commit history, or branch state as the authority for a quality, completeness, parity, or packaging gate. Derive the expected set in-process from the current source tree and its checked-in inclusion, exclusion, catalogue, or schema policy.
-
-- Good: enumerate current files with `dev.source_tree.repository_files`, then project them through the packaging or corpus policy and compare that set with the built artifact.
-- Good: use Git in an explicitly named release workflow to inspect or publish a commit, where commit identity itself is the subject—not as a test oracle.
-- Bad: define expected wheel members, registry completeness, source coverage, or corpus parity with `git ls-files`, `git status`, or a commit diff.
-
-## Layered validation
-
-- Keep focused unit and contract tests near the owning boundary, integration tests at real handoffs, and end-to-end checks for user-visible flows.
-- Overlapping gates are justified when they catch distinct failure modes. Remove duplicate tests that assert the same implementation detail without adding detection value.
-- Generated-reference checks compare generated output with the committed artifact through the owning generator.
-- A change is not complete while it introduces a new lint, type, test, schema, or Vaultspec failure. Pre-existing unrelated failures are reported separately with evidence.
-- Apply the stage-specific acceptance boundaries in `aeat-registry-authority-flow`. Name the failed invariant and affected input, distinguish new or worsened findings from unchanged baseline findings, and do not substitute an aggregate red/green status for that classification.
+Preserve the owning amount/direction contract: where an amount is a magnitude, carry economic direction in its typed field rather than encoding it again in the sign. Keep currency, rounding, period and counterparty explicit. Corrections preserve revision or reversal evidence rather than erase history. Map imported IVA categories to the canonical vocabulary and refuse ambiguity. Derive participation and allocation through the typed relationship owner; do not duplicate percentages or silently normalize inconsistent totals. Verify encrypted evidence round trips and ledger-to-filing parity.
 
 ---
-name: aeat-registry-authority-flow
+name: 11-modelo-work-and-revision-lifecycle-part-1
 trigger: always_on
 ---
 
-# AEAT registry authority flow
+# Modelo work and revision lifecycle, part 1
 
-## Source, candidate and runtime boundaries
+The Modelo work lifecycle includes work-unit calculation, edit, verification, local export, local filing, external-evidence reconciliation and amendment. A registry-pinned source mesh combines profile, ledger, invoices, withholding and prior declarations into a content-addressed BORRADOR revision. Verification checks filing-grade authority, source completeness, ledger drift and model-specific evidence. Local export writes an artifact; local filing creates a PRESENTADO revision whose AEAT status remains pending. External receipt/register matching is the separate promotion path; an amendment again starts as a pending local correction. [Calculation](../../src/cadrumo/application/modelo/calculation_actions.py#L401) [Verification](../../src/cadrumo/application/modelo/verification_actions.py#L837) [Local filing](../../src/cadrumo/application/modelo/revision_persistence.py#L1208) [Reconciliation](../../src/cadrumo/application/modelo/filing_chain_reconciliation.py#L283).
 
-- Authored source is the registry data physically stored on disk. A staged candidate is an isolated proposed replacement; it is not installed source or published authority.
-- Development authoring uses the canonical compiler, parser and hydrator. `inspect_authoring_candidate()` exposes typed candidate components, source/evidence fingerprints and validation findings; those components are not a `ValidatedRegistryAuthority`. This path is available when inspecting unpublished edits, including before the first publication.
-- `compile_validated_authority()` establishes full candidate validation. Successful compilation is not publication. Product runtime consumes the published authority through the canonical reader; it must not compile mutable source or fall back to raw TOML.
-- Raw-file comparisons may measure authored structure and duplication. Claims about hydrated meaning use canonical typed loading; claims about runtime behavior use the published generation. Never invent a second loader to cross these boundaries.
+The stage gates preserve source/override precedence, typed provenance, registry revision identity and exact profile/period authority. An edit baseline is short-lived and value-free; active execution supports scalar/binding edits while refusing row intents. M123 with captured withholding refuses calculation through export pending a settled count rule; M193 prior-accrual settlement has a later filing/export refusal. M036 records and operator observations are local assertions; M145 is a payer communication, with filing/submission links explicitly refused. Report PDF signatures are pinned to a profile key only when store verification succeeds, and expressly do not claim AEAT status. [Edit admission](../../src/cadrumo/application/modelo/edit_admission.py#L268) [M123 gate](../../src/cadrumo/application/modelo/m123_count_authority_gate.py#L57) [M145 ownership](../../src/cadrumo/application/modelo/m145_communication.py#L88) [Report verification](../../src/cadrumo/application/modelo/calculation_report_verification.py#L727).
 
-## Delta authoring and hydration
-
-- Store a baseline plus genuine field/value differences, new members, explicit removals and required ordering/scope metadata. Do not repeat a whole row or family merely because one field or evidence reference changes.
-- An omitted override inherits; an explicit removal deletes. Empty values, false, zero, sequence order and revision-specific assertions retain their typed meaning. A changed default must not silently change inherited provenance.
-- Storage selectors and baselines address payload, not legal identity. Missing `continuidad_id`, a lower capability grade or a changed physical representation is not by itself a prohibition on lossless storage reuse.
-- Preserve real continuity, review and capability claims with their original scope. Do not invent evidence, advance a review date or promote capability because payload is shared. A failed migration is a tool diagnostic, not a new legal no-predecessor declaration.
-- Conversion is modelo-independent and discovers authored revisions and dependencies from canonical metadata. Existing delta chains still undergo remaining-family conversion and redundant-override assessment; they are not automatically complete.
-
-## Temporal selection
-
-- A projected edition supplies a missing temporal coordinate from the nearest eligible authored source through the canonical resolver, backward or forward and across internal gaps. It creates no copied source edition and asserts no new target-year review.
-- Resolve applicability branches, periods, ties and explicit divergences through the same typed selection contract for loaders, facts, runtime and support reporting. Do not select by lexical filenames or a consumer-specific newest-year fallback.
-- The registry's canonical support declaration owns the temporal envelope. Consumers must not introduce separate floor/ceiling constants or ranges. Historical sources outside the request envelope may remain required storage baselines.
-- Available projected data and eligibility for a particular operation are separate results. Preserve capability limitations without falsely treating an un-authored but resolvable edition as missing data.
-
-## Application, publication and completion
-
-- Prove source replacement with effective typed equivalence, independent minimality, complete assessment scope, idempotence and stable input receipts. Intentional semantic corrections need their own grounded change evidence rather than a claim of unchanged meaning.
-- Report unchanged publication-readiness defects separately from defects introduced by a representation rewrite. Unrelated unchanged defects do not automatically forbid a proven source-only replacement; full publication validation remains mandatory.
-- Installing source means the actual authoring tree matches the accepted candidate. Publishing means the active descriptor references the accepted content-addressed artifact. A temporary database, retained lock sidecar or passing compile is neither of those outcomes.
-- Publication verifies current source/evidence/compiler receipts and never exposes an incomplete generation. Runtime and packaging checks must identify the generation they actually consume; caches invalidate on relevant input or generation changes.
-- State completion separately for candidate validation, installed source, published authority and runtime/package adoption. Do not mark overall rollout complete while a required boundary remains unverified.
+Scoped concerns include calculation advisories running after revision persistence, export event recording before file publication, verification report and revision writes in separate steps, sticky wallet overrides, helpers that reopen default authority rather than reuse a pin, and feedback import without visible replay-nonce consumption. The accountant package uses member hashes, signatures and recipient encryption, but trust in a recipient key still needs out-of-band checking. Quickfile ends at local export; M100-from-M130 projection is explicitly an estimate. [Post-persist work](../../src/cadrumo/application/modelo/calculation_actions.py#L1712) [Export sequence](../../src/cadrumo/application/modelo/export.py#L1187) [Feedback route](../../src/cadrumo/application/modelo/review_package_exchange_operation.py#L295).
 
 ---
-name: aeat-registry-bindings
+name: 11-modelo-work-and-revision-lifecycle-part-2
 trigger: always_on
 ---
 
-# AEAT registry bindings
+# Modelo work and revision lifecycle, part 2
 
-- Each relationship family has a typed declaration, a typed validator enrolled in the canonical dispatch table, and a resolver at its owning public module.
-- Validation rejects unknown family names, invalid selectors, ambiguous targets, incompatible applicability, missing required provenance, and unresolvable legal references. Resolve inherited and projected declarations before evaluating the relationship; absent local payload is not itself a missing binding. Typed mapping-valued families are legitimate; unvalidated arbitrary mappings are not a substitute for their contract.
-- Aggregation source families use the canonical typed aggregation enum and resolver. A binding must not introduce a private summation path.
-- Source taxonomy distinguishes filing-grade, advisory, deferred, unsupported, and absent states. Consumers preserve that classification instead of converting it to a boolean or zero.
-- Binding provenance identifies the registry declaration and governing authority and survives into the resolved result and explanation.
-- Relation prefill is derived from the validated relationship and active filing context. User-supplied or imported values never silently override a higher-authority binding.
-- New binding families follow the existing defining-module pattern and are exercised through registry validation, positive resolution, ambiguity/refusal, and consumer parity tests.
+Work addressing binds a model/year/period or exact ID to one law-selected registry revision and rechecks work-catalogue/profile-pointer freshness. Creation applies profile readiness and applicability gates, co-commits work with its event, and distinguishes reuse, update and unknown prepublication effect. The canonical form combines registry layout, saved calculation, operator-entry provenance, verification, source records and deadlines; local filing state is explicitly separate from AEAT submission. [addressing](../../src/cadrumo/application/modelo/work_addressing.py#L921), [form](../../src/cadrumo/application/modelo/work_form.py#L105).
+
+Verification reads registry-authored predicates and prior filing/ledger/wallet evidence. Uncertain applicability keeps a cross-period blocker; a 303 carry needs a matching unblocked wallet decision. Empty annual withholding detail needs attested absence not contradicted by liability evidence, but that gate does not test a sparse nonempty store. Workbench reads are human-only and baseline-bound; wizard missing-input prompts are typed, and workflow gate results are persisted before later verify/file transitions. [Cross-period](../../src/cadrumo/application/modelo/verification_cross_period.py#L311), [withholding](../../src/cadrumo/application/modelo/withholding_detail_gate.py#L280), [workflow](../../src/cadrumo/application/modelo/workflow_gate.py#L392).
+
+Workspace static mode measures schema only; graded mode requires matching calculation, review and readiness contributors. Schema stamps, owner-scoped epochs and cursor baselines detect drift without claiming one atomic transaction across all stores. A stale module header wrongly says assembly is unfinished. Unknown blocking-predicate syntax locally passes, making registry-build validation essential; the normal route may provide it, but alternate loaders and direct helper calls need checking. No calculation, legal or runtime correctness was established. [Workspace](../../src/cadrumo/application/modelo/workspace.py#L2158), [producer epochs](../../src/cadrumo/application/modelo/workspace_producers.py#L202), [predicate dispatch](../../src/cadrumo/application/modelo/verification_predicates.py#L787).
+
+The workbench is a currentness-aware projection, not a second calculation authority. The source producers must honor their epoch promises, and the registry loader must reject malformed predicates before a verification run consumes them.
 
 ---
-name: aeat-vaultspec-centralisation
+name: 12-operations-profiles-and-workflows
 trigger: always_on
 ---
 
-# AEAT Vaultspec centralisation
+# Operations, profiles and workflows
 
-## Authority and sync
+Operations, profiles and workflows connect the registered operation owner, operator/read projections, profile custody, setup and local filing workflow. The supervisor journals `CREATED` and `RUNNING`, rechecks authority at execution, guards irreversible effects and retains `UNKNOWN` or `SETTLING` rather than inventing completion after an ambiguous interruption. Definitions constrain replay, secrets, storage and effects; digest-bound reviews and process-local response bearers keep interaction authority separate from a visible request ID. [Supervisor](../../src/cadrumo/application/operations/_supervisor_execution.py#L116), [contracts](../../src/cadrumo/application/operations/capabilities.py#L65).
 
-- `.vaultspec/rules/` and `.vaultspec/skills/` are the authored project sources. Provider directories such as `.codex/rules/`, `.agents/skills/`, `.claude/`, `.gemini/`, and `.agent/` are generated destinations.
-- Edit, add, or remove project governance only at the Vaultspec source, then preview and run `vaultspec-core sync`. Do not hand-edit provider copies.
-- Files ending in `.builtin.md` and built-in Vaultspec skills are installation-owned. Never edit, delete, fork, or shadow them from the project.
-- Use the Vaultspec CLI for vault lifecycle metadata, status, links, stamps, archive operations, and generated indexes. Body-only edits still require the owning focused check afterward.
+Operator remedies resolve catalogue actions against the reconciled live command tree. Overview calendar and coverage distinguish positively applicable obligations from unknown or out-of-scope ones; filing readiness, observed submission and verified justificante remain separate. Review gathers ledger, invoice and draft findings, while search ranks only an ephemeral, already-admitted workspace snapshot. Read operations release exact-profile, successful no-effect receipts. [Surface manifest](../../src/cadrumo/application/operator_surface/manifest.py#L621), [calendar coverage](../../src/cadrumo/application/overview/coverage.py#L221), [review](../../src/cadrumo/application/review/read_operation.py#L283), [search](../../src/cadrumo/application/search/installed_workbench.py#L41).
 
-## Context budget
+Profile access binds human or automation leases to current custody, runtime boot, native connection/client and narrowed scope. Automation approval withholds authority until protected delivery and possession acknowledgement. Profile deletion, login handover, record updates and portable export use explicit journals, compare-and-swap or event-linked writes. Wizard edits are revision-bound and preserve omitted answers; the workflow engine builds and validates a local draft but does not submit it. [Lease policy](../../src/cadrumo/application/user_profile/session_authority_policy.py#L38), [approval](../../src/cadrumo/application/user_profile/automation_approval_session.py#L216), [custody deletion](../../src/cadrumo/application/user_profile/custody_service.py#L607), [workflow](../../src/cadrumo/application/workflow/engine.py#L239).
 
-- Do not add a rule for a one-off defect, campaign, plan step, tool preference, or fact already enforced by code. Codification is retired for this project; strengthen the owning gate, schema, type, generator, or existing rule instead.
-- A rule states stable, enforceable invariants and the boundary they protect. Exclude dated inventories, frozen counts, migration history, agent topology, repeated examples, and long command transcripts.
-- A skill contains only a repeatable workflow whose procedural detail is genuinely needed at invocation time. Move optional detail into referenced resources; remove a skill when normal repository instructions are sufficient.
-- Provider-global skills and rules must be narrowly triggered and useful across projects. Project-specific behavior belongs here, not in a user's global context.
-
-## Separation
-
-- Do not create private agent memory or a parallel policy directory.
-- Production code, tests, configuration, and user documentation do not cite Vaultspec documents, rule slugs, plan steps, audit names, or agent metadata. Existing citations are migration debt; do not add new ones.
-- Preserve existing rule slugs while they are referenced by current gates or source. Rename or consolidate only with an explicit repository-wide citation migration and validation.
+The strongest scoped checks are crash recovery around custody publication/passphrase rewrap, caller validation before CLI argv construction, source-unavailable versus empty review, and the descendant relationship/date validator path. One confirmed documentation defect says workflow reset fingerprints include a content hash although only metadata is recorded. Static inspection did not execute the app, prove adapter atomicity or validate legal schedules. [Reset](../../src/cadrumo/application/workflow/persistence.py#L374), [descendant validator](../../src/cadrumo/application/wizard/descendant_group.py#L462).
 
 ---
-name: aeat-worktree-safety
+name: 13-core-authority-and-shared-controls
 trigger: always_on
 ---
 
-# AEAT worktree safety
+# Core authority and shared controls
 
-- Work only in the assigned worktree and confirm its root and branch before a material change.
-- Treat every pre-existing modification as another contributor's work. Inspect before editing, preserve unrelated changes, and never use destructive reset, checkout, clean, or broad restore operations to obtain a tidy tree.
-- Before moving or deleting recursively, resolve the exact absolute targets and verify they remain inside the intended directory. Prefer recoverable operations when practical.
-- Use one writer for a shared file or tightly coupled generated surface. Re-read the file and diff before applying a stale patch.
-- Stage or report only the files owned by the requested change. A dirty worktree is not permission to absorb, reformat, fix, commit, or discard unrelated work.
-- Do not commit, push, merge, publish, or alter external project state unless the operator requested that action or the active approved workflow explicitly requires it.
+Core authority provides typed contracts used across settings, custody, calculations, imports, output and diagnostics. Active-profile selection comes from a durable pointer rather than an environment variable, and settings route database paths from that selected bucket. Hardened atomic writes, pointer revisions, storage-location taxonomy and distinct lock protocols give callers tools for recoverable local state; caller-held locks, safe bucket IDs and adapter permissions remain integration requirements. [Settings](../../src/cadrumo/core/config.py#L1069), [pointer](../../src/cadrumo/core/bucket_pointer.py#L131), [writer](../../src/cadrumo/core/atomic_write.py#L191).
+
+Knowledge contracts keep shape, provenance and authority separate. A syntactically valid Modelo/casilla is not necessarily in the pinned registry. Financial and document inputs distinguish structured, inferred, operator-entered and independently grounded values; ambiguous European number text is refused rather than guessed. Filing references retain model-specific row and party shapes. The producer-key inventory itself documents many keys without runtime suppliers, so form coverage must be checked against each revision. Bundled corpus manifests prove internal consistency, not publisher authenticity. The AEAT access gate unconditionally refuses live submission, leaving local filing artefacts for operator upload. [Provenance](../../src/cadrumo/core/field_grounding.py#L28), [decimal](../../src/cadrumo/core/decimal/coercion.py#L129), [producer inventory](../../src/cadrumo/core/filing_producer_key.py#L402), [gate](../../src/cadrumo/core/access_gate/gate.py#L46).
+
+Strict JSON results and a registered error catalogue provide stable action and refusal shapes. Redaction covers output, logs and structured data, but pseudonymous tax-ID prefixes and a plaintext process cache are not anonymity. Run traces may contain tax amounts and are not encrypted by the core observability module. Telemetry defaults to a no-op and requires consent; the `CRASH_ONLY` tier currently has no timing filter at the payload boundary, and its free-text-like `error_kind` is not a closed code. Declared retention ages are not implemented cleanup. [Errors](../../src/cadrumo/core/errors/error_codes.py#L176), [redaction](../../src/cadrumo/core/redaction/rules.py#L940), [trace](../../src/cadrumo/core/observability/store.py#L164), [telemetry](../../src/cadrumo/core/telemetry/schema.py#L136).
+
+Priority scoped follow-up is message interpolation before error-context redaction, run-event ID binding, third-party DEBUG handling on run sinks, ASCII enforcement in ISO token helpers, and whether packaged locale mutation is supported. No application tests, live portal probes or external legal verification were performed. [Message path](../../src/cadrumo/core/errors/error_codes.py#L510), [event append](../../src/cadrumo/core/observability/store.py#L338), [ISO helper](../../src/cadrumo/core/parsing/codes.py#L28).
+
+---
+name: 14-tax-calculation-domain
+trigger: always_on
+---
+
+# Tax calculation domain
+
+The domain turns a versioned tax registry into dated, typed calculation snapshots, bindings, formulas, filing rows and export-layout projections. A filing-grade snapshot passes support-year, revision, authority-grade, source-window and cross-domain gates; a separate historical inspection path has a narrower claim. Published authority is a digest-checked, read-only SQLite generation pinned for each operation, although descriptor publisher trust remains a deployment question. These boundaries are implemented here ([snapshot](../../src/cadrumo/domain/calculations/registry/snapshot.py#L245), [authority](../../src/cadrumo/domain/calculations/registry/authority_store.py#L186)).
+
+Governed facts and catalogues select dated rates, regimes, entity categories and source references. Closed binding registration distinguishes filing-grade, manual/design-constant and deferred producers. Formula evaluation uses Decimal arithmetic, dependency order and provenance, preserving unresolved inputs rather than substituting zero. Applicability likewise separates positive yes/no, pass-through and incomplete results. These are calculation mechanisms, not validation of today's law or a taxpayer's upstream ledger facts ([fact resolution](../../src/cadrumo/domain/calculations/registry/facts/resolution.py#L344), [bindings](../../src/cadrumo/domain/calculations/registry/binding_provider_registration.py#L167), [formula](../../src/cadrumo/domain/calculations/registry/formula_runtime.py#L580)).
+
+Export layouts and a fixed-width/XML parser check record geometry, field sources, encodings and canonical values. A valid official-format payload is separate from a remote read, an attempted submission and an AEAT-confirmed filing. The remote-state guard only preflights allowed hosts, methods, paths and browser actions; it does not execute or inspect request bodies ([layout](../../src/cadrumo/domain/calculations/registry/schema_exports.py#L446), [codec](../../src/cadrumo/domain/calculations/registry/fixed_width_codec.py#L227), [guard](../../src/cadrumo/domain/calculations/registry/remote_state_guard.py#L424)).
+
+Strong controls include generation pins, legal/source traces, closed selectors, exact previous-filing folds and independent IVA quantity screens. Scoped concerns remain: an external Decimal check is a no-op; a Gasto193 nonnegative method is not an active validator; corpus-path and Unicode-code checks are locally wider than their stated contracts. Their reachability and mitigation require consumer review, not an assumed filing defect. No tests, live requests or law checks were performed during static inspection ([Decimal guard](../../src/cadrumo/domain/calculations/registry/formula_runtime_ops.py#L445), [Gasto193](../../src/cadrumo/domain/calculations/registry/gasto193_bindings.py#L52), [source path](../../src/cadrumo/domain/calculations/registry/schema_references.py#L638)).
+
+## Grounding, bindings and authority invariants
+
+Ground filing-affecting formulas, rates, classifications and relationships in specific official provisions, instructions or designs for the exact revision, period, territory and taxpayer conditions. Preserve that scope and provenance through results. Search snippets and generic landing pages are insufficient; independent official examples or separately implemented oracles provide stronger calculation checks. Ambiguous evidence keeps capability advisory or unsupported.
+
+Each binding family has one typed declaration, enrolled validator and owning resolver. Reject unknown families, ambiguous selectors, incompatible applicability and missing required provenance after hydration. Preserve capability grades and authority precedence in resolved results; imported values must not silently override governed bindings.
+
+Authoring inspection exposes candidate data and findings; validation does not install source or publish authority. Runtime must not fall back to mutable TOML or compile development source. Use canonical hydration and temporal selection, never a second loader or lexical newest-year fallback. The registry owns the support envelope.
+
+Store baselines plus genuine deltas: omission inherits, explicit removal deletes, and false/zero/empty/order remain meaningful. Storage ancestry grants no legal continuity or new review claim. Prove representation changes with typed equivalence, independent minimality, complete assessment, idempotence and stable receipts; intentional semantic changes require separate evidence. Separate unchanged publication defects from source-rewrite regressions. Publish only fully validated final inputs, verify the generation actually consumed, and report source installation, publication and runtime adoption separately.
+
+---
+name: 15-business-and-taxpayer-domain
+trigger: always_on
+---
+
+# Business and taxpayer domain
+
+The domain holds taxpayer/profile facts, family and business records, invoices, bank transactions, IVA classifications, deadlines, filing revisions and evidence. Pinned registry facts supply dated vocabularies and parameters; strict records preserve provenance, canonical identity and incomplete states. This is the substrate for local calculations and draft construction, not a live tax authority.
+
+Family rules retain dates, relationship, income, work months and nursery spend rather than reducing eligibility to age. Inventory supports evidence-backed FIFO/weighted-average valuation and an explicit closing decision. IVA classification separates establishment, VAT identification and operation date, and refuses ambiguous rate or missing agricultural code authority. Expense and asset modules keep deduction and depreciation claims tied to declared evidence and selected methods ([family](../../src/cadrumo/domain/contribuyente/family_profile.py#L414), [inventory](../../src/cadrumo/domain/contribuyente/inventory/valuation.py#L133), [IVA](../../src/cadrumo/domain/iva/classification.py#L789)).
+
+Security/integrity controls include immutable content digests, typed evidence, pinned authority, checksum-validated account identifiers, distinct local versus confirmed filing records, and optional LLM outputs constrained to classification suggestions. Privacy permission for sending transaction or invoice text to a model is caller-owned. An attachment blob can be written before its manifest; actor strings do not authenticate; the portable profile bundle holds decrypted payload bytes pending archive protection. Portal metadata and submission preflight do not execute or establish AEAT filing ([attachment](../../src/cadrumo/domain/attachments/service.py#L72), [LLM](../../src/cadrumo/domain/transactions/llm.py#L501), [filing event](../../src/cadrumo/domain/modelos/filing_record.py#L480)).
+
+The most consequential scoped quality findings are permissive stored family booleans/incomplete-row hydration, unverified transaction FX multiplication, a missing expense-result identity/year join, and IVA compensation lots that omit unused opening credit. Their end-to-end effect depends on upstream validation and downstream consumers. A parsed justificante carries a CSV and digest but cannot itself prove AEAT confirmation; receipt verification remains separate. No tests or external legal checks were performed ([stored family facts](../../src/cadrumo/domain/contribuyente/descendant_facts.py#L502), [FX](../../src/cadrumo/domain/transactions/models.py#L938), [expense join](../../src/cadrumo/domain/renta/ledger_expenses.py#L654), [opening credit](../../src/cadrumo/domain/iva_compensation/carry_forward.py#L206)).
+
+---
+name: 16-bundled-knowledge-and-localization
+trigger: always_on
+---
+
+# Bundled knowledge and localization
+
+The offline bundle supplies source material and declarative knowledge for search, explanations, model selection, calculations and layouts. It contains official AEAT artifacts, EU VAT references, Facturae vocabulary, worked examples, manuals, normative sources, normalized texts and declarative registry files. Discover current coverage through canonical manifests rather than frozen counts. Presence and syntax are strong inventory evidence; the large-document semantic reviews were representative and did not check current law.
+
+The registry links legal-source keys to form revisions, formulas, filing windows and generated placements. Read the current support envelope and selected revision claims from their canonical declarations; do not freeze year limits in consumers. Inherited live references require their own grounding, and missing render reproduction or legal attestation must remain explicit. A generated design is separate from an official export, a remote read or a confirmed filing ([year policy](../../src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml#L1), [303 revision](../../src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/revision.toml#L1)).
+
+The profile schema declares sensitive taxpayer facts, derived-selector ownership, effective dates and provenance, plus snapshot and cloud-upload policies. Its capability defaults are prose descriptions, so runtime consent enforcement cannot be inferred from the schema alone; an operator-provided census artifact is expressly not AEAT verification ([profile capability fields](../../src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml#L146), [profile provenance](../../src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml#L2179)).
+
+Knowledge quality is bounded by edition and extraction. Flat normalized text can lose page/table boundaries and contains U+FFFE artifacts; a sampled normative record has apparently unrelated text. Locale catalogs mirror four languages, but sampled 2020 Modelo 100 key sets differ, while terminology contains draft/retired entries and placeholders. Consumers need revision-aware citations, lifecycle filtering and checked fallbacks before presenting these strings as reliable guidance.
+
+## Localization invariants
+
+Author locale changes through the canonical `dev.locales` workflow; do not edit generated catalogues or add parallel translation paths. Required keys need real translations in every supported locale. Reuse canonical keys when legal continuity is established; changed meaning needs a distinct key. Keep transport tokens and stored identifiers untranslated.
+
+Application-authored Spanish, Catalan and Hungarian address the operator informally in the singular. Preserve official quotations and grammatical third-person references. Verify key coverage, fallback/refusal behavior and actual CLI rendering. Do not restore retired aliases or locale families to satisfy stale tests.
 
 ---
 name: firmware-reference-parity.builtin
@@ -524,87 +483,6 @@ author's remaining duty is to regenerate rather than hand-edit inside the marker
 Audit `2026-06-10-cli-reference-automation-audit`, the generator design plus findings
 `GENREVIEW-002` and `GENREVIEW-003`. Sibling decision ADR
 `2026-06-10-cli-reference-automation-adr`.
-
----
-name: modelo-export-mirrors-official-structure
-trigger: always_on
----
-
-# Modelo export mirrors official structure
-
-- A modelo export derives its record order, field positions, widths, repetitions, encodings, and conditional sections from the official record design or schema for the selected revision.
-- Evaluate the hydrated selected layout, not whether that layout is fully copied into the requested edition. Storage reuse must preserve edition-local identity and conditions; it does not by itself establish filing eligibility for a projected request.
-- One canonical export builder and formula path owns both preview and emitted filing data. Do not maintain a second hand-built serializer or recompute values differently for display.
-- Every exported field maps to a validated registry concept and carries the same typed meaning, formatting, sign, rounding, and provenance used by calculation.
-- Fixed-width completeness is value-aware: distinguish absent, required blank, permitted blank, zero, and populated values. Padding a missing required value does not make a record complete.
-- Conditional records and repeated groups are emitted only when their official conditions and cardinalities are satisfied. Reject overflow, truncation, illegal characters, inconsistent totals, and unsupported revision layouts.
-- Generated export references and fixtures are CLI-owned. Change the source/generator, regenerate, and verify byte-for-byte or schema parity against the official structure; do not hand-edit generated artifacts.
-- Tests cover official examples where available, boundary widths, encoding, required absence, conditional sections, totals, and parse/serialize semantic round trips.
-
----
-name: no-legacy-compatibility
-trigger: always_on
----
-
-# No unowned legacy compatibility
-
-- Before the project declares a released public compatibility floor, remove displaced commands, imports, schemas, configuration keys, aliases, facades, wrappers, and data shapes in the same change that replaces them.
-- A passing old caller or test is not by itself a reason to preserve a legacy surface. Update repository consumers to the canonical contract and delete the old path.
-- Inherited baseline data is not obsolete merely because it is historical. Remove displaced duplicate payload only after proving reconstruction; retain required baselines and evidence. Keep recovery copies outside live authoring and packaging scope.
-- After a public compatibility floor exists, compatibility requires an explicit owner, supported-version window, migration or upgrader path, deprecation signal, and removal condition. Keep it at the boundary; do not duplicate domain implementations.
-- Persistent data migrations are forward, deterministic, idempotent, and tested from every supported stored version. Silent coercion or fallback from an unknown shape is forbidden.
-- Do not create a shim merely to stage an internal relocation. Canonical definitions and all consumers move atomically under `aeat-architecture-boundaries`.
-
----
-name: no-silent-under-declaration
-trigger: always_on
----
-
-# No silent under-declaration
-
-## Preserve uncertainty
-
-- Missing, unknown, unsupported, deferred, advisory, not applicable, and proven zero are distinct states. Do not collapse any of them to zero, empty text, false, or a complete total.
-- Absence of an authored edition or override is not necessarily absent data: resolve canonical hydration and temporal projection first. Explicit deletions and genuinely missing taxpayer inputs must not be filled by that distinction.
-- A filing-grade result is complete only when every legally required input and dependency is present, validated, and covered by authority for the active filing context.
-- Suspicious zeros or absences at filing-bound fields produce a structured advisory or refusal with modelo, revision, field, source family, and reason. Diagnostics must reach the user-facing handoff.
-- A local calculation or prefill is not an official AEAT value. Label its origin and authority honestly.
-
-## Coverage and suppression
-
-- Compare independent sources where the product has both an external value and an engine-derived value. A disagreement remains visible until resolved; neither side silently wins.
-- Suppression is explicit, narrowly keyed, classified, and reviewable. It must state why the condition is safe or non-applicable and must not use a broad model, prefix, or count-based exemption.
-- New declarations are covered by semantic gates that detect unclassified filing-bound gaps. Frozen corpus counts and baseline-only ratchets do not prove completeness.
-- Advisory capability cannot be promoted to filing grade by a UI, exporter, or downstream consumer.
-
-## Tests
-
-Exercise genuine zero, missing input, unsupported authority, deferred source, mismatch, valid suppression, invalid suppression, and end-to-end diagnostic propagation through the real registry and calculation paths.
-
----
-name: sensitive-financial-data-secure-storage-only
-trigger: always_on
----
-
-# Sensitive financial data uses secure storage only
-
-## Storage and transport
-
-- Private taxpayer, credential, banking, ledger, invoice, filing and associated evidence payloads are stored only through the project's approved encrypted persistence boundary.
-- Public AEAT/BOE publications, public registry definitions and synthetic fixtures are not private taxpayer evidence merely because they concern taxation. They may use the repository's canonical source/corpus storage. Check content for embedded private data; never use this distinction to reclassify a real filing or secret as public.
-- Do not write sensitive payloads to source files, fixtures, logs, exceptions, command history, caches, plaintext databases, temporary files, generated references, vault documents, or agent transcripts.
-- Persist private evidence as encrypted bytes with integrity and provenance metadata. A filesystem path or remote URL is not a secure stored copy.
-- Secrets come from the approved secret boundary and are never committed, echoed, serialized with domain data, or passed in command-line arguments when a safer channel exists.
-- Off-host transfer requires the explicitly approved encrypted integration and the minimum necessary fields. Do not upload real financial data to search, AI, analytics, paste, or debugging services.
-
-## Execution safety
-
-- Tests use synthetic or irreversibly anonymized data. A production-shaped fixture must still contain no real identity or secret.
-- Logs and user-visible diagnostics expose stable identifiers and remediation, not raw payloads. Redaction happens before serialization or transport.
-- Local registry source replacement and authority publication are not AEAT filing submissions. They require the authorization and verification for their own workflow. Writing or signing a real remote filing requires explicit transaction-specific authorization through the product's guarded workflow; ordinary development authorization does not permit it.
-- Cleanup of decrypted material is fail-safe and verified. If a workflow cannot guarantee secure lifetime and disposal, it must refuse the operation.
-
-Verification covers encryption at rest, redaction, temporary-material cleanup, secret handling, and refusal of unauthorized live writes.
 
 ---
 name: vaultspec-archive-discipline.builtin

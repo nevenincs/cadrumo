@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#unstructured-document-ingestion'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:069a8cf2e948d76c7afb33adb412615c1bb0e1ee0cefcede98112fffbfa9829b'
+body_hash: 'sha256:365125094114cb20d5ef80631e80bb39f954aa0d6bdaa79bf29635937e23e72f'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
   - "[[2026-08-13-unstructured-document-ingestion-record-gap-close-audit]]"
 ---
-
 # `unstructured-document-ingestion` audit: `what the campaign closed without, read as an inheritor`
 
 ## Scope
@@ -25,7 +24,9 @@ This is that review, taken as someone inheriting the tree and reading the claim
 audit answers whether each closed row was built. This one asks the different and
 harder question: **what did the campaign close WITHOUT.**
 
-## Finding 1 -- the governing ADR's own named open question is still open
+## Findings
+
+### Finding 1 -- the governing ADR's own named open question is still open
 
 The ADR names exactly one question as measurable rather than decided:
 
@@ -50,14 +51,15 @@ The instrument is real and the blocker is precise -- an inference runtime with a
 low-context model pulled. That is a smaller and more actionable carry-forward
 than "unmeasured", and it is the correct place for it to have landed.
 
-## Finding 2 -- the closure summary claims nothing the tree does not support
+### Finding 2 -- the closure summary claims nothing the tree does not support
 
 Every one of the 34 record-less closures was verified against HEAD in the sibling
 audit, and none was unbuilt, narrowed or recorded-but-not-implemented. Two are
 delivered beyond their row. On the declarative-versus-action axis this campaign
 reads clean: the checkboxes are not the problem.
 
-## Finding 3 -- one row was previously found closed against its own record, and
+### Finding 3 -- one row was previously found closed against its own record, and
+
 that is the pattern worth carrying
 
 Earlier in this campaign a row had been retired while its own orphaned execution
@@ -69,7 +71,7 @@ The generalisable tell: **the exec record and the plan row disagreeing is a
 stronger signal than either alone.** A sweep that reads only the plan cannot see
 it, and this campaign's own history is the proof that it happens.
 
-## Finding 4 -- the evidence trail has two structural gaps, both recorded
+### Finding 4 -- the evidence trail has two structural gaps, both recorded
 
 34 of 306 steps closed with no execution record, and 18 phases across 10 waves
 carry no phase summary at all.
@@ -86,7 +88,7 @@ records written at the time, and there were none to synthesise. Its absence is
 total rather than partial, which makes it a convention this campaign never
 adopted rather than one that lapsed.
 
-## Finding 5 -- the deferred set is named, not implied
+### Finding 5 -- the deferred set is named, not implied
 
 The campaign's carry-forwards are recorded rather than left to be discovered: the
 call-shape measurement above; a citation-table gap and an outbound B2B/B2C fork,
@@ -99,7 +101,7 @@ explicitly needs a ruling before first use.
 That three of the six have been closed since the campaign ended is the evidence
 that naming a carry-forward precisely is what makes it actionable later.
 
-## Verdict
+### Verdict
 
 **Structurally complete, with one substantive carry-forward and two
 bibliographic gaps, all three stated rather than absorbed.**
@@ -109,3 +111,7 @@ reading -- the ADR's own measurable question -- is formally deferred here with
 its blocker named, which is what the close rule requires of an item that cannot
 be verified: closed with verification, or deferred with a reference. This is the
 reference.
+
+## Recommendations
+
+Carry the unmeasured D9 model-lane run forward as the unresolved substantive item, and keep the missing phase summaries and bibliographic gaps explicit.

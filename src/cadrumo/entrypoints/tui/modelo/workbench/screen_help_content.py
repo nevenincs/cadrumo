@@ -11,7 +11,8 @@ from .....application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
 )
 from .....core.i18n.render import lookup_translation, tr
-from .casilla_list import CasillaListEntry, description_text, grid_cell_title, rate_note
+from .casilla_list_models import CasillaListEntry
+from .casilla_list_values import description_text, grid_cell_title, rate_note
 from .editor import read_only_reason
 from .header import (
     is_result_field,

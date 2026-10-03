@@ -3,17 +3,18 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:073f26b760966631b7cac1df097713e2b4c13309f0dc6d581f99e1a3c9cf7d56'
+body_hash: 'sha256:fec32c1b9279882ef0fb9c79af9d9013f6b4784d83b1ddefa65a7e07d03d9e7e'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
 ---
-
 # `secure-storage-performance-hardening` audit: W02 demand-loading residue
 
-## Summary
+## Scope
+
+### Summary
 
 The `W03.P08.S32` cold-process listing contract was the first gate to observe a
 real CLI process end to end. On its first run it failed on three properties
@@ -120,7 +121,9 @@ its definitions split from its re-exports so the root can become inert. That is
 a structural campaign, not a patch, and it is the honest reason the remaining
 capability residue stays open.
 
-## Carry-forward
+## Recommendations
+
+### Carry-forward
 
 - The diagnostic log root (`logs`, `logs/cadrumo.log`) is still created by any
   invocation, because `get_logger` runs at module import in 178 modules and

@@ -3,22 +3,36 @@ tags:
   - '#adr'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-09-07'
-body_hash: 'sha256:c1356330f9bf42cf2613252056d5c036a4fc369c40cc62f955606eac2596602e'
+modified: '2026-10-03'
+body_hash: 'sha256:e904961255440dbbe3bd7389c6ec23bb1acb0fd0a33a59cfd168db1a392ec3cd'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'
+  - '[[2026-06-26-bindings-architecture-unification-adr]]'
 ---
 # `binding-resolver-contract-unification` adr: `resolver-contract unification: one source-resolver port and one result envelope across the calculate mesh` | (**status:** `accepted`)
 
-> PROPOSED — design-ahead for coordinator review, authored while phase-2.1 code is
-> gated on the #6/#28 peer landing. NOT self-accepted and NOT a code-execution
-> request; it does not jump the code sequence (phase 2.2 executes after phase 2.1).
-> This is phase 2.2 of the bindings-architecture-unification sweep; the canonical
-> direction is the phase + foundational ADRs (no apex).
+> Accepted phase 2.2 decision; the phase plan is complete. The phase number records
+> campaign sequence. The central apex ADR is rejected and linked only as provenance.
+>
+> Historical proposal banner (2026-06-26; retained for chronology): “PROPOSED —
+> design-ahead for coordinator review, authored while phase-2.1 code is gated on the
+> #6/#28 peer landing. NOT self-accepted and NOT a code-execution request; it does not
+> jump the code sequence (phase 2.2 executes after phase 2.1). This is phase 2.2 of
+> the bindings-architecture-unification sweep; the canonical direction is the phase +
+> foundational ADRs (no apex).” That described the pre-execution state.
+>
+> Current implementation (amendment 2026-09-07; confirmed 2026-10-03): the proposed
+> production disposition registry was removed. Ownership derives from resolver
+> `owned_sources` plus intrinsic manual/design channels; a declared registry binding
+> without an executable owner is refused, and parity compares declarations with
+> executable owners. The original design text below is historical wherever it describes
+> the retired registry or pre-execution scope. Current code is in
+> `src/cadrumo/application/modelo/calculation_route.py` and
+> `src/cadrumo/application/aggregation/source_mesh.py`.
 
 ## Problem Statement
 
@@ -73,7 +87,7 @@ parallel shapes), `composition-service-no-parallel-write-path` (a new surface
 delegates, never re-implements), and `no-legacy-compatibility` (delete the vestigial
 envelopes, do not alias).
 
-## Constraints
+## Proposal-stage constraints (2026-06-26)
 
 - **Depends on phase 2.1 (the one source-kind authority).** The disposition registry
   and the parity gate are typed on `BindingSourceKind`; phase 2.2 execution sequences
@@ -94,7 +108,7 @@ envelopes, do not alias).
   casilla value shift. Runs under the shared-branch report-before-land + abort-on-WIP
   discipline.
 
-## Implementation
+## Historical implementation proposal (2026-06-26; amended 2026-09-07)
 
 One port, one envelope, one disposition registry. Layering (the plan sequences the
 steps; this is the shape):
@@ -162,7 +176,7 @@ steps; this is the shape):
 A `{reference}` document will pin the concrete current-state anchors (every resolver
 class, every envelope type, the four enrollment structures) the plan edits.
 
-## Rationale
+## Historical rationale (2026-06-26; amended 2026-09-07)
 
 The project already decided one port and one mechanism-ownership table; the breach is
 that two more sourcing pipelines (the pre-mesh wrap and the per-modelo service) grew
@@ -175,7 +189,7 @@ coherence and coverage gap, not mere style. The disposition registry + parity ga
 the durable enforcement that converts this from a one-time cleanup into an invariant,
 mirroring phase 2.1's enum↔mesh gate.
 
-## Consequences
+## Historical proposed consequences (2026-06-26; amended 2026-09-07)
 
 Gains: one resolver contract and one envelope a reader learns once; profile/borrador
 stop the B→A→B round-trip; counterpart/720 remain explicitly scoped out for a
@@ -193,9 +207,7 @@ it. Execution accepted the unified resolver contract while explicitly scoping
 counterpart/720 out to grounded follow-up work; this ADR records that implemented
 boundary.
 
-Out of scope (later phases): the relation-vs-previous_filing value-layer fold-in dedup
-and the one compensación-carry mechanism (phase 2.3); the naming homonyms and CLI verb
-fork (phase 2.4); the `MultiYearResolver` orphan deletion (a phase-2.3/code-removal item).
+Out of scope of this accepted resolver-contract decision: relation/carry work is governed by the separate accepted phase 2.3 `binding-fold-in-carry-unification` ADR; naming and CLI work by the separate accepted phase 2.4 `binding-vocabulary-cli-cohesion` ADR. The `MultiYearResolver` deletion is recorded in the completed phase 2.3 plan.
 
 ## Amendment (2026-09-07): delete the disposition registry
 
@@ -203,10 +215,6 @@ The single disposition registry decided here proved to be a hand-maintained deve
 
 ## Codification candidates
 
-- **Rule slug:** `one-source-resolver-contract` (author at phase-2.2 review/codify,
-  after it holds through execution — not now).
-  **Rule:** A source value is resolved through exactly one port
-  (`ModeloSourceResolver`) returning one envelope (`CalculationSourceResolution`); a
-  new source enrolls in the single mesh or is recorded in the one disposition registry
-  as a documented, test-gated exception — never a parallel result shape or a second
-  pipeline — and a parity gate keeps the registry equal to the enrolled set.
+- **Rule slug:** `one-source-resolver-contract` (candidate only; no rule promotion is recorded here).
+  **Historical wording (2026-06-26; superseded by the 2026-09-07 amendment):** the proposal allowed a new source either to enroll in the mesh or to be recorded in a production disposition registry as a test-gated exception, with parity against the registry.
+  **Current candidate direction (2026-10-03):** a source value resolves through one `ModeloSourceResolver` port into one `CalculationSourceResolution` envelope. A declared registry binding without an executable owner is refused as a live defect. Parity compares current registry declarations with executable resolver `owned_sources`; temporary sequencing stays in Vaultspec plans and step records. This remains a candidate pending a separate codification review.

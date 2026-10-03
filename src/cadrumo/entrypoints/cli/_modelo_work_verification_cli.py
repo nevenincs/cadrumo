@@ -11,16 +11,15 @@ import typer
 
 from ...application.modelo.action_errors import CalculationRevisionStateError, VerificationReportNotFoundError
 from ...application.modelo.dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
-from ...application.modelo.operation_definitions import (
-    ModeloWorkFileApproval,
-    ModeloWorkFilePublicResultV2,
-    ModeloWorkFileRequest,
-    ModeloWorkVerifyPublicResultV2,
-    ModeloWorkVerifyRequest,
-)
 from ...application.modelo.preconditions import build_modelo_work_file_unverified_revision_failure
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...application.modelo.verify_selector import ModeloVerifySelector
+from ...application.modelo.work_filing_contracts import (
+    ModeloWorkFileApproval,
+    ModeloWorkFilePublicResultV2,
+    ModeloWorkFileRequest,
+)
+from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr

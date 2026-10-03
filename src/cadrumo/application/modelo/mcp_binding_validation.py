@@ -29,12 +29,8 @@ from .mcp_query_contracts import (
     ModeloBindingValueInvalidError,
     ModeloTypedBindingValue,
 )
-from .query_read_operation import (
-    ModeloBindingOverride,
-    ModeloBindingsResolveProjection,
-    ModeloBindingsResolveRequest,
-    read_modelo_bindings_resolve,
-)
+from .query_read_contracts import ModeloBindingOverride, ModeloBindingsResolveProjection, ModeloBindingsResolveRequest
+from .query_read_operation import read_modelo_bindings_resolve
 
 
 def _bound_targets(snapshot: RegistrySnapshot, binding_id: str) -> tuple[CasillaDefinition, ...]:

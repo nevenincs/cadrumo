@@ -22,7 +22,8 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.overview.home import HomeAccountSession, HomeSessionPosture
-from ...application.workbench_generation import SecureProfileWorkbenchGenerationReadDoorV1, WorkbenchGenerationInputsV1
+from ...application.workbench_generation_contracts import WorkbenchGenerationInputsV1
+from ...application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue

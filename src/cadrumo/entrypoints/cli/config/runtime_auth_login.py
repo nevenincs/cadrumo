@@ -15,8 +15,9 @@ from ....application.auth.operator_results import AuthLoginResult
 from ....application.auth.session_acquire_operation_access import AuthSessionAcquireOperationProjection
 from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.auth_provider import AuthProviderKind
+from ....core.config import load_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ..errors import CliRefusedBoundaryError
+from ..errors import CliRecordedOperationError, CliRefusedBoundaryError
 from ..registered_operation_contracts import RegisteredOperationCompletion
 from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import require_profile_client
@@ -44,6 +45,7 @@ def run_auth_login(
     profile_id = UUID(str(pointer.bucket_id))
     try:
         client = require_profile_client(ctx, expected_profile_id=profile_id)
+        settings = load_settings()
         completed = run_registered_operation(
             client,
             AuthSessionAcquireOperationRequest(provider=provider_kind, fresh=fresh, reset_lock=reset_lock),
@@ -53,15 +55,37 @@ def run_auth_login(
             request_version=1,
             result_version=1,
             timeout=120,
+            # Entry navigation, AEAT's whole approval window, the post-approval landing and the
+            # representation gate each spend their own budget; the command must outwait all of them.
+            settlement_timeout=(
+                settings.cadrumo_clave_movil_timeout_ms + 3 * settings.cadrumo_browser_navigation_timeout_ms
+            )
+            / 1000,
         )
     except RuntimeRefusalError as error:
         raise CliRefusedBoundaryError(context={"reason": error.reason.value}) from None
+    except CliRecordedOperationError as error:
+        raise _with_diagnostic_follow_up(error) from None
     projection = completed.projection
     if type(projection) is not AuthSessionAcquireOperationProjection or _auth_login_receipt_invalid(
         completed, projection, profile_id, fresh, provider_kind
     ):
         raise invalid_completion_error(completed) from None
     return projection.result
+
+
+def _with_diagnostic_follow_up(error: CliRecordedOperationError) -> CliRecordedOperationError:
+    """Name the encrypted diagnostic a failed provider attempt captured as the next action."""
+    from ....application.auth.diagnostics import auth_diagnostic_view_verdict
+    from ..common import attach_cli_policy_verdict
+
+    diagnostic_id = (error.context or {}).get("diagnostic_id")
+    if error.terminal_precondition_verdict is not None or not isinstance(diagnostic_id, str):
+        return error
+    # A capture that failed is recorded as an absent id, which the context renders as "null".
+    if not 1 <= len(diagnostic_id) <= 128 or diagnostic_id == "null":
+        return error
+    return attach_cli_policy_verdict(error, verdict=auth_diagnostic_view_verdict(diagnostic_id))
 
 
 def _auth_login_receipt_invalid(

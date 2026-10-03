@@ -340,6 +340,31 @@ def _latest_existing_edition(modelo_root: Path, revision_id: str, *, requested_v
     return max(dated)[1]
 
 
+def _validate_scaffold_target(root: Path, *, existing_modelo: bool) -> None:
+    if root.exists() and not root.is_dir():
+        raise NewModeloError(f"{root}: exists and is not a directory")
+    manifest = root / "manifest.toml"
+    if existing_modelo:
+        if not manifest.is_file() or manifest.read_text(encoding=_UTF_8).startswith(_SCAFFOLDED_MANIFEST_SENTINEL):
+            raise NewModeloError(f"{root}: new-edition requires an existing authored modelo manifest")
+    elif manifest.exists() and not manifest.read_text(encoding=_UTF_8).startswith(_SCAFFOLDED_MANIFEST_SENTINEL):
+        raise NewModeloError(f"{root}: modelo already exists; use the new-edition command")
+
+
+def _write_scaffold_plan(root: Path, plan: tuple[ScaffoldPlanEntry, ...]) -> tuple[list[Path], list[Path]]:
+    written: list[Path] = []
+    already_present: list[Path] = []
+    for entry in plan:
+        target = root / entry.relative_path
+        if target.is_file():
+            already_present.append(entry.relative_path)
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(entry.content, encoding=_UTF_8, newline="\n")
+        written.append(entry.relative_path)
+    return written, already_present
+
+
 class NewModeloScaffoldManager:
     """Plan and write the skeleton registry directory tree for a new modelo revision."""
 
@@ -466,25 +491,8 @@ class NewModeloScaffoldManager:
             existing_modelo=existing_modelo,
         )
         root = self.modelo_root(modelo_id)
-        if root.exists() and not root.is_dir():
-            raise NewModeloError(f"{root}: exists and is not a directory")
-        manifest = root / "manifest.toml"
-        if existing_modelo:
-            if not manifest.is_file() or manifest.read_text(encoding=_UTF_8).startswith(_SCAFFOLDED_MANIFEST_SENTINEL):
-                raise NewModeloError(f"{root}: new-edition requires an existing authored modelo manifest")
-        elif manifest.exists() and not manifest.read_text(encoding=_UTF_8).startswith(_SCAFFOLDED_MANIFEST_SENTINEL):
-            raise NewModeloError(f"{root}: modelo already exists; use the new-edition command")
-
-        written: list[Path] = []
-        already_present: list[Path] = []
-        for entry in plan:
-            target = root / entry.relative_path
-            if target.is_file():
-                already_present.append(entry.relative_path)
-                continue
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(entry.content, encoding=_UTF_8, newline="\n")
-            written.append(entry.relative_path)
+        _validate_scaffold_target(root, existing_modelo=existing_modelo)
+        written, already_present = _write_scaffold_plan(root, plan)
 
         if written:
             # The conformance snapshot cache is keyed only on `validate`, never

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3b300a2569449cb5236f0622079dddfd06f034c797232cb3fbbf848faca37e72'
+body_hash: 'sha256:58bbfa955073be55d2868d3e6a6d289d777cfd283f2ba2382f0b1d486e1a3f32'
 related:
   - "[[2026-10-02-duplication-remediation-plan]]"
 ---
@@ -1678,6 +1678,428 @@ related:
 - `S29` `verify:` `application/operations/tests 463 passed run 20261003T040303.476844Z-pytest-60864-e14fef5a` -> `pass`
 - `S29` `verify:` `owning packages 3699 passed 16 failed outside lane files (operation= TypeError from in-flight iva_wallet/workbench/notification edits, BindingSourceKind.RELATED_PARTY_OPERATION, source_mesh StopIteration) run 20261003T040336.513860Z-pytest-80780-d1732f51` -> `fail`
 - `S29` `by:` `opus-high`
+- `S29` `verify:` `ruff/format/ty/import on 4 files` -> `pass`
+- `S29` `verify:` `owning diagnostics/m036/borrador_100/registry tests 145 passed run 20261003T041353.519507Z-pytest-50456-f4c03cd4` -> `pass`
+- `S14` `M` `src/cadrumo/entrypoints/tests/test_runtime_management.py`
+- `S14` `verify:` `uv run --no-sync pytest -n0 -m 'unit and hex_entrypoint' src/cadrumo/entrypoints/tests/test_runtime_management.py` -> `pass`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/m347_threshold.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/modelo_pending_orden.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/modelo_rendering.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/renta_expense_policy.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/retenciones_bindings.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/setup_profile_bindings.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/citation_blocklist.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/applicability_modelo202.py`
+- `S17` `M` `src/cadrumo/domain/retention/floor.py`
+- `S17` `M` `src/cadrumo/domain/renta/retenciones_routing_integrity.py`
+- `S17` `M` `src/cadrumo/domain/renta/_first_slice_routing.py`
+- `S17` `M` `src/cadrumo/domain/transactions/irpf_categories.py`
+- `S17` `M` `src/cadrumo/domain/transactions/retencion_facts.py`
+- `S17` `M` `src/cadrumo/domain/transactions/tipo_actividad_partitions.py`
+- `S17` `M` `src/cadrumo/domain/transactions/volumen_ingresos.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py`
+- `S17` `M` `dev/registry/compiler/tests/test_m303_orden_anual.py`
+- `S17` `verify:` `w5-scope ruff/format/ty/import on 24 files` -> `pass`
+- `S17` `verify:` `missing-scope differential 21 resolvers 0 mismatches against original copies (explicit authority and ambient scope identical)` -> `pass`
+- `S17` `verify:` `test_catalogues_refuse_without_a_governed_fact_scope 122 passed` -> `pass`
+- `S17` `verify:` `domain 5 failed/5676 passed, application 33 failed/9342 passed, persistence/profile 44 failed, dev/registry 327 failed: all failures pre-existing or another writer's in-flight edits, one lane-related test updated` -> `pass`
+- `S17` `verify:` `entrypoints suite not completed before the 06:14 merge stop order` -> `fail`
+- `S17` `by:` `sonnet`
+- `S27` `M` `src/cadrumo/application/modelo/metadata_read_operation.py`
+- `S27` `M` `src/cadrumo/application/modelo/filing_selection_operation.py`
+- `S27` `M` `src/cadrumo/application/modelo/filing_record_view_operation.py`
+- `S27` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S27` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
+- `S27` `M` `src/cadrumo/application/modelo/tests/test_filing_selection_operation.py`
+- `S27` `M` `src/cadrumo/application/modelo/tests/test_filing_record_view_operation.py`
+- `S27` `M` `src/cadrumo/application/modelo/tests/test_revision_selection_operation.py`
+- `S27` `M` `src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py`
+- `S27` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_application" src/cadrumo/application/operations/tests/test_profile_guard.py src/cadrumo/application/modelo/tests/test_filing_selection_operation.py src/cadrumo/application/modelo/tests/test_filing_record_view_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py` -> `pass`
+- `S27` `verify:` `uv run --no-sync pytest -n0 -m "integration and hex_entrypoint" src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py` -> `fail`
+- `S27` `verify:` `uv run --no-sync ruff check src/cadrumo/application/operations/profile_guard.py src/cadrumo/application/modelo/metadata_read_operation.py src/cadrumo/application/modelo/filing_selection_operation.py src/cadrumo/application/modelo/filing_record_view_operation.py src/cadrumo/application/modelo/amendment_context_operation.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/tests/test_filing_selection_operation.py src/cadrumo/application/modelo/tests/test_filing_record_view_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py` -> `pass`
+- `S27` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/operations/profile_guard.py src/cadrumo/application/modelo/metadata_read_operation.py src/cadrumo/application/modelo/filing_selection_operation.py src/cadrumo/application/modelo/filing_record_view_operation.py src/cadrumo/application/modelo/amendment_context_operation.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/tests/test_filing_selection_operation.py src/cadrumo/application/modelo/tests/test_filing_record_view_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py` -> `pass`
+- `S27` `verify:` `uv run --no-sync ty check --python-platform windows src/cadrumo/application/operations/profile_guard.py src/cadrumo/application/modelo/metadata_read_operation.py src/cadrumo/application/modelo/filing_selection_operation.py src/cadrumo/application/modelo/filing_record_view_operation.py src/cadrumo/application/modelo/amendment_context_operation.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/tests/test_filing_selection_operation.py src/cadrumo/application/modelo/tests/test_filing_record_view_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py` -> `pass`
+- `S27` `verify:` `git diff --check -- src/cadrumo/application/operations/profile_guard.py src/cadrumo/application/modelo/metadata_read_operation.py src/cadrumo/application/modelo/filing_selection_operation.py src/cadrumo/application/modelo/filing_record_view_operation.py src/cadrumo/application/modelo/amendment_context_operation.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/tests/test_filing_selection_operation.py src/cadrumo/application/modelo/tests/test_filing_record_view_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py` -> `pass`
+- `S27` `verify:` `uv run --no-sync pytest -n0 -m "integration and hex_entrypoint" src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_application" src/cadrumo/application/operations/tests/test_public_scalar.py src/cadrumo/application/actividad_asset/tests/test_operation_dtos.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync ruff check --output-format concise src/cadrumo/application/actividad_asset/operation_dtos.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/actividad_asset/operation_dtos.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync ty check --python-platform win32 --output-format gitlab --color never --no-force-exclude src/cadrumo/application/actividad_asset/operation_dtos.py` -> `pass`
+- `S17` `by:` `root`
+- `S14` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_entrypoint" src/cadrumo/entrypoints/tests/test_runtime_management.py` -> `pass`
+- `S14` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/runtime_management.py src/cadrumo/entrypoints/tests/test_runtime_management.py --output-format concise` -> `pass`
+- `S14` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/runtime_management.py src/cadrumo/entrypoints/tests/test_runtime_management.py` -> `pass`
+- `S14` `verify:` `uv run --no-sync ty check --python-platform win32 src/cadrumo/entrypoints/runtime_management.py src/cadrumo/entrypoints/tests/test_runtime_management.py` -> `pass`
+- `S14` `verify:` `git diff --check HEAD -- src/cadrumo/entrypoints/runtime_management.py src/cadrumo/entrypoints/tests/test_runtime_management.py` -> `pass`
+- `S07` `M` `.vault/reference/2026-10-02-duplication-remediation-reference.md`
+- `S07` `M` `.vault/audit/2026-10-02-duplication-remediation-audit.md`
+- `S07` `by:` `root`
+- `S19` `M` `.vault/reference/2026-10-02-duplication-remediation-reference.md`
+- `S19` `M` `.vault/audit/2026-10-02-duplication-remediation-audit.md`
+- `S19` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_entrypoint" src/cadrumo/entrypoints/tui/tests/test_runtime_stop_dialog_focus.py src/cadrumo/entrypoints/tui/profile/tests/test_profile_search_folding.py src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_navigator_fit.py src/cadrumo/entrypoints/tui/components/tests/test_cell_text.py` -> `pass`
+- `S19` `by:` `root`
+- `S14` `M` `.vault/reference/2026-10-02-duplication-remediation-reference.md`
+- `S14` `M` `.vault/audit/2026-10-02-duplication-remediation-audit.md`
+- `S07` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_domain" dev/registry/tests/test_modelo_303_printed_total_check.py::test_the_check_is_general_and_refuses_an_untranscribed_2022_box` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest -n0 -m "integration and hex_inbound_adapter" src/cadrumo/adapters/local_runtime/tests/test_posix.py::test_passive_endpoint_does_not_create_missing_namespace` -> `pass`
+- `S29` `M` `.vault/reference/2026-10-02-duplication-remediation-reference.md`
+- `S29` `M` `.vault/audit/2026-10-02-duplication-remediation-audit.md`
+- `S29` `by:` `root`
+- `S29` `A` `src/cadrumo/core/startup_phase_log.py`
+- `S29` `A` `src/cadrumo/core/tests/test_startup_phase_log.py`
+- `S29` `M` `src/cadrumo/adapters/local_runtime/startup.py`
+- `S29` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S29` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S29` `M` `src/cadrumo/entrypoints/runtime/bootstrap.py`
+- `S29` `verify:` `w7-startup ruff/format/ty/import on 6 files` -> `pass`
+- `S29` `verify:` `core/tests/test_startup_phase_log.py 8 passed` -> `pass`
+- `S29` `verify:` `launch_door, server, server_cleanup, drain_order, shutdown_watchdog suites passed` -> `pass`
+- `S29` `verify:` `native runtime serial rerun 13 failed 4 errors: deadline/connection/endpoint signatures, 8 also failing at 03:26Z before the edit, none in startup-phase code` -> `fail`
+- `S29` `by:` `opus-medium`
+- `S07` `verify:` `uv run --no-sync python C:\Users\hello\AppData\Local\Temp\s07-m200-published-metadata-probe-2026-10-03.py` -> `pass`
+- `S16` `M` `.vault/reference/2026-10-02-duplication-remediation-reference.md`
+- `S16` `M` `.vault/audit/2026-10-02-duplication-remediation-audit.md`
+- `S16` `by:` `root`
+- `S21` `M` `.vault/reference/2026-10-02-duplication-remediation-reference.md`
+- `S21` `M` `.vault/audit/2026-10-02-duplication-remediation-audit.md`
+- `S21` `by:` `root`
+- `S29` `A` `src/cadrumo/application/overview/tests/test_read_result.py`
+- `S29` `verify:` `ruff/format/ty on 2 files` -> `pass`
+- `S29` `verify:` `overview package and CLI overview tests 335 passed run 20261003T075817.816419Z-pytest-44940-f2ee5248` -> `pass`
+- `S01` `M` `.vault/reference/2026-10-02-duplication-remediation-reference.md`
+- `S01` `M` `.vault/audit/2026-10-02-duplication-remediation-audit.md`
+- `S01` `A` `C:/Users/hello/AppData/Local/Temp/s01-s25-census-collector-2026-10-03-v2.py`
+- `S01` `A` `C:/Users/hello/AppData/Local/Temp/s01-s25-census-readiness-20261003T073954Z.md`
+- `S01` `A` `C:/Users/hello/AppData/Local/Temp/s01-s25-census-collector-case-repair-review-2026-10-03.md`
+- `S01` `verify:` `npx --offline --yes jscpd@4.2.0 --version` -> `pass`
+- `S01` `verify:` `uv run --no-sync python C:/Users/hello/AppData/Local/Temp/s01-s25-census-collector-2026-10-03.py` -> `fail`
+- `S01` `verify:` `uv run --no-sync python C:/Users/hello/AppData/Local/Temp/s01-s25-census-collector-2026-10-03-v2.py` -> `fail`
+- `S07` `A` `C:/Users/hello/AppData/Local/Temp/s07-m200-admission-trace-2026-10-03.md`
+- `S21` `A` `C:/Users/hello/AppData/Local/Temp/s21-activity-start-date-namespace-contract-addendum-2026-10-03.md`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tax_id_format.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/ledger_oss_bindings.py`
+- `S17` `M` `src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`
+- `S17` `M` `src/cadrumo/domain/contribuyente/descendant_facts.py`
+- `S17` `M` `src/cadrumo/domain/contribuyente/deduccion_maternidad.py`
+- `S17` `M` `src/cadrumo/domain/modelos/perceptor_clave_scope.py`
+- `S17` `M` `src/cadrumo/domain/filing/software_identity.py`
+- `S17` `M` `src/cadrumo/application/aggregation/retenciones.py`
+- `S17` `M` `dev/registry/compiler/annual_orden_auxiliary_indicator.py`
+- `S17` `M` `src/cadrumo/domain/contribuyente/tests/test_descendiente_refusal_keys.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_retencion_treatment.py`
+- `S17` `verify:` `w8-scope ruff/format/ty/import on 16 files` -> `pass`
+- `S17` `verify:` `missing-scope differential 18 callables 0 mismatches` -> `pass`
+- `S17` `verify:` `shared refusal test 150 passed` -> `pass`
+- `S17` `verify:` `domain 5860 passed 5 failed, all five the known pre-existing set` -> `pass`
+- `S17` `by:` `sonnet`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_replace_refuses_acl_denial.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_write_outlasts_a_reader.py`
+- `S16` `verify:` `uv run --no-sync pytest -n0 -m "unit and (hex_core or hex_persistence_adapter)" src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_replace_refuses_acl_denial.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_write_outlasts_a_reader.py --junitxml=C:\Users\hello\AppData\Local\Temp\s16-impl-20261003T1015Z\focused-final-junit.xml` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff check src/cadrumo/core/atomic_write.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/adapters/persistence/storage/custody/filesystem.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_replace_refuses_acl_denial.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_write_outlasts_a_reader.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff format --check src/cadrumo/core/atomic_write.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/adapters/persistence/storage/custody/filesystem.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_replace_refuses_acl_denial.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_write_outlasts_a_reader.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ty check --python-platform win32 src/cadrumo/core/atomic_write.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/adapters/persistence/storage/custody/filesystem.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_replace_refuses_acl_denial.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_write_outlasts_a_reader.py` -> `pass`
+- `S16` `verify:` `git diff --check -- src/cadrumo/core/atomic_write.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/adapters/persistence/storage/custody/filesystem.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_replace_refuses_acl_denial.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_write_outlasts_a_reader.py` -> `pass`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/inventory_anexo_d_applicability.py`
+- `S17` `M` `src/cadrumo/domain/invoices/enums.py`
+- `S17` `M` `src/cadrumo/domain/modelos/row_models.py`
+- `S17` `M` `src/cadrumo/domain/usage_ratios/tests/test_model.py`
+- `S17` `M` `src/cadrumo/domain/contribuyente/inventory/tests/test_anexo_d_projection.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_rule_add_governed_scope.py`
+- `S17` `A` `src/cadrumo/domain/calculations/registry/tests/test_m349_nif_export_rows_require_a_governed_fact_scope.py`
+- `S17` `A` `src/cadrumo/domain/invoices/tests/test_registry_tokens_require_a_governed_fact_scope.py`
+- `S17` `verify:` `ruff/format/ty/import on 25 files` -> `pass`
+- `S17` `verify:` `differential 5 callables 0 mismatches` -> `pass`
+- `S17` `verify:` `shared refusal test 160 passed` -> `pass`
+- `S17` `verify:` `domain 5878 passed 8 failed: 5 known pre-existing, 3 from another writer's 09:10 UTC user_profile registry-contract edit` -> `pass`
+- `S27` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
+- `S27` `M` `src/cadrumo/application/ledger/rule_operation.py`
+- `S27` `M` `src/cadrumo/application/ledger/tests/test_attachment_mutation_operation.py`
+- `S27` `M` `src/cadrumo/application/ledger/tests/test_rule_operation.py`
+- `S27` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_application" src/cadrumo/application/ledger/tests/test_attachment_mutation_operation.py src/cadrumo/application/ledger/tests/test_rule_operation.py src/cadrumo/application/ledger/tests/test_action_ports.py src/cadrumo/application/operations/tests/test_profile_guard.py --junitxml C:\Users\hello\AppData\Local\Temp\root-s27-current-20261003T093127Z\pytest.xml` -> `pass`
+- `S28` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
+- `S28` `M` `src/cadrumo/application/ledger/rule_operation.py`
+- `S28` `M` `src/cadrumo/application/ledger/tests/test_attachment_mutation_operation.py`
+- `S28` `M` `src/cadrumo/application/ledger/tests/test_rule_operation.py`
+- `S28` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_application" src/cadrumo/application/ledger/tests/test_attachment_mutation_operation.py src/cadrumo/application/ledger/tests/test_rule_operation.py src/cadrumo/application/ledger/tests/test_action_ports.py src/cadrumo/application/operations/tests/test_profile_guard.py --junitxml C:\Users\hello\AppData\Local\Temp\root-s27-current-20261003T093127Z\pytest.xml` -> `pass`
+- `S28` `verify:` `uv run --no-sync ruff check src/cadrumo/application/ledger/attachment_mutation_operation.py src/cadrumo/application/ledger/rule_operation.py src/cadrumo/application/ledger/tests/test_attachment_mutation_operation.py src/cadrumo/application/ledger/tests/test_rule_operation.py` -> `pass`
+- `S28` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/ledger/attachment_mutation_operation.py src/cadrumo/application/ledger/rule_operation.py src/cadrumo/application/ledger/tests/test_attachment_mutation_operation.py src/cadrumo/application/ledger/tests/test_rule_operation.py` -> `pass`
+- `S28` `verify:` `uv run --no-sync ty check --python-platform win32 src/cadrumo/application/ledger/attachment_mutation_operation.py src/cadrumo/application/ledger/rule_operation.py src/cadrumo/application/ledger/tests/test_attachment_mutation_operation.py src/cadrumo/application/ledger/tests/test_rule_operation.py` -> `pass`
+- `S28` `verify:` `git diff --check -- src/cadrumo/application/ledger/attachment_mutation_operation.py src/cadrumo/application/ledger/rule_operation.py src/cadrumo/application/ledger/tests/test_attachment_mutation_operation.py src/cadrumo/application/ledger/tests/test_rule_operation.py` -> `pass`
+- `S28` `by:` `root`
+- `S29` `M` `src/cadrumo/application/operations/profile_guard.py`
+- `S29` `M` `src/cadrumo/application/operations/tests/test_profile_guard.py`
+- `S29` `M` `src/cadrumo/application/operations/tests/test_access_profiles.py`
+- `S29` `A` `src/cadrumo/application/modelo/iva_wallet_mutation.py`
+- `S29` `A` `src/cadrumo/application/modelo/tests/test_iva_wallet_mutation.py`
+- `S29` `M` `src/cadrumo/application/modelo/iva_wallet_seed_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/iva_wallet_override_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/iva_wallet_correction_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/tests/test_work_create_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/query_read_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_registration.py`
+- `S29` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S29` `verify:` `L2 ruff/format/ty on 26 files, import smoke` -> `pass`
+- `S29` `verify:` `test_profile_guard + test_access_profiles 39 passed` -> `pass`
+- `S29` `verify:` `application/modelo/tests 2288 passed 10 failed: 3 inspect.getsource mid-edit races passing on rerun, 5 wallet test doubles lacking the operation keyword, 2 registry-data failures` -> `pass`
+- `S29` `by:` `opus-high`
+- `S29` `M` `src/cadrumo/application/auth/apoderado_operation.py`
+- `S29` `M` `src/cadrumo/application/auth/operation_definitions.py`
+- `S29` `M` `src/cadrumo/application/ledger/allocate_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/counterparty_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/evidence_followup_registration.py`
+- `S29` `M` `src/cadrumo/application/ledger/evidence_read_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/invoice_evidence_confirm_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/lifecycle_mutation_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/llm_review_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/operator_iva_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/participation_rebuild_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/remove_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/reset_operation.py`
+- `S29` `M` `src/cadrumo/application/ledger/rule_operation.py`
+- `S29` `A` `src/cadrumo/application/ledger/single_phase_definition.py`
+- `S29` `A` `src/cadrumo/application/ledger/tests/test_read_access.py`
+- `S29` `A` `src/cadrumo/application/ledger/tests/test_single_phase_definition.py`
+- `S29` `M` `src/cadrumo/application/review/read_projections.py`
+- `S29` `M` `src/cadrumo/application/review/read_registration.py`
+- `S29` `A` `src/cadrumo/application/review/tests/test_queue_row_projection_parity.py`
+- `S29` `verify:` `L4 ruff/format/ty/import on 46 files` -> `pass`
+- `S29` `verify:` `ledger, review, auth tests 1857 passed 0 failed` -> `pass`
+- `S29` `by:` `sonnet`
+- `S16` `M` `src/cadrumo/core/keyed_digest.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/secret_store/store.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py`
+- `S16` `A` `src/cadrumo/core/tests/test_keyed_digest.py`
+- `S16` `verify:` `uv run --no-sync pytest -n0 -m "unit and (hex_core or hex_persistence_adapter or hex_application)" src/cadrumo/core/tests/test_keyed_digest.py src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_store.py src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_index_digest_integrity.py src/cadrumo/adapters/persistence/storage/master_key/tests/test_hmac_subkey_memo.py src/cadrumo/application/modelo/tests/test_calculation_report_provenance_key.py --junitxml=C:\Users\hello\AppData\Local\Temp\g16-focused-run-20261003\junit.xml` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_core" src/cadrumo/core/tests/test_keyed_digest.py::test_hmac_sha256_matches_rfc_4231_case_1 --junitxml=C:\Users\hello\AppData\Local\Temp\g16-rename-followup-20261003\junit.xml` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff check src/cadrumo/core/keyed_digest.py src/cadrumo/adapters/persistence/storage/secret_store/store.py src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py src/cadrumo/core/tests/test_keyed_digest.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff format --check src/cadrumo/core/keyed_digest.py src/cadrumo/adapters/persistence/storage/secret_store/store.py src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py src/cadrumo/core/tests/test_keyed_digest.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ty check --python-platform win32 src/cadrumo/core/keyed_digest.py src/cadrumo/adapters/persistence/storage/secret_store/store.py src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py src/cadrumo/core/tests/test_keyed_digest.py` -> `pass`
+- `S16` `verify:` `git diff --check -- src/cadrumo/core/keyed_digest.py src/cadrumo/adapters/persistence/storage/secret_store/store.py src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py src/cadrumo/core/tests/test_keyed_digest.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff check src/cadrumo/core/tests/test_keyed_digest.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff format --check src/cadrumo/core/tests/test_keyed_digest.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ty check --python-platform win32 src/cadrumo/core/tests/test_keyed_digest.py` -> `pass`
+- `S16` `verify:` `git diff --check -- src/cadrumo/core/tests/test_keyed_digest.py` -> `pass`
+- `S29` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
+- `S29` `M` `src/cadrumo/application/tests/test_workbench_generation_operation.py`
+- `S29` `M` `src/cadrumo/application/workbench_generation_operation.py`
+- `S29` `M` `src/cadrumo/application/user_profile/censal_access.py`
+- `S29` `M` `src/cadrumo/application/user_profile/censal_prepare_operation.py`
+- `S29` `M` `src/cadrumo/application/user_profile/censal_preview_operation.py`
+- `S29` `M` `src/cadrumo/application/user_profile/censal_file_import_operation.py`
+- `S29` `M` `src/cadrumo/application/user_profile/censal_operation.py`
+- `S29` `M` `src/cadrumo/application/user_profile/history_operation.py`
+- `S29` `M` `src/cadrumo/application/user_profile/recovery_status_operation.py`
+- `S29` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S29` `M` `src/cadrumo/application/user_profile/profile_operation_execution.py`
+- `S29` `A` `src/cadrumo/application/user_profile/tests/test_profile_operation_access.py`
+- `S29` `verify:` `L3 ruff/format/ty/import on 14 files` -> `pass`
+- `S29` `verify:` `test_access_profiles + test_profile_guard 40 passed` -> `pass`
+- `S29` `verify:` `user_profile tests + workbench generation 510 passed; censal/recovery consumers 55 passed` -> `pass`
+- `S29` `verify:` `registered executor conformance + runtime_registered_operation run stopped at its time limit` -> `fail`
+- `S29` `by:` `opus-high`
+- `S16` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_target_refusal.py`
+- `S16` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_persistence_adapter" src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_target_refusal.py src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_secret_target.py --junitxml=C:\Users\hello\AppData\Local\Temp\cadrumo-g12-windows-target-refusal-20261003\pytest.xml` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_target_refusal.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_target_refusal.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ty check --python-platform win32 src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_automation_target_refusal.py` -> `pass`
+- `S29` `A` `src/cadrumo/application/operations/tests/test_operation_definition.py`
+- `S29` `D` `src/cadrumo/application/ledger/single_phase_definition.py`
+- `S29` `D` `src/cadrumo/application/ledger/tests/test_single_phase_definition.py`
+- `S29` `M` `src/cadrumo/application/auth/diagnostic_report_operation.py`
+- `S29` `M` `src/cadrumo/application/invoices/catalogue_intake_operation.py`
+- `S29` `M` `src/cadrumo/application/live/expedientes_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/filed_bulk_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/filed_history_operation.py`
+- `S29` `M` `src/cadrumo/application/live/filed_single_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/filed_source_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/iva_remote_state_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/iva_wallet_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/iva_wallet_history_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/justificante_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/notifications_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/verify_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/mcp_query_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S29` `M` `src/cadrumo/application/operations/operation_definition.py`
+- `S29` `verify:` `L4 follow-up ruff/format/ty/import on 111 files (one ty diagnostic at live/notifications_capture_operation.py:175 on an untouched line)` -> `pass`
+- `S29` `verify:` `operations/tests -n0 489 passed; ledger/review/auth 1857 passed; wider packages 5041 passed 2 failed in registry-data tests owned by other writers` -> `pass`
+- `S29` `by:` `sonnet`
+- `S29` `M` `src/cadrumo/adapters/local_runtime/automation_decision.py`
+- `S29` `M` `src/cadrumo/adapters/local_runtime/automation_inventory.py`
+- `S29` `A` `src/cadrumo/adapters/local_runtime/operation_run_error_context.py`
+- `S29` `M` `src/cadrumo/adapters/outbound/aeat/export/tests/test_fixed_width_codec_conformance.py`
+- `S29` `A` `src/cadrumo/adapters/persistence/profile/justificante_capture_snapshots.py`
+- `S29` `M` `src/cadrumo/application/actividad_asset/activity_asset_projections.py`
+- `S29` `M` `src/cadrumo/application/actividad_asset/activity_asset_results.py`
+- `S29` `M` `src/cadrumo/application/actividad_asset/operation_dtos.py`
+- `S29` `D` `src/cadrumo/application/filing/_record_field_renderer.py`
+- `S29` `M` `src/cadrumo/application/filing/export.py`
+- `S29` `A` `src/cadrumo/application/filing/record_field_renderer.py`
+- `S29` `M` `src/cadrumo/application/filing/record_renderer.py`
+- `S29` `M` `src/cadrumo/application/filing/tests/test_export_implicit_decimal_slots.py`
+- `S29` `M` `src/cadrumo/application/filing/tests/test_export_pad_is_total.py`
+- `S29` `M` `src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py`
+- `S29` `M` `src/cadrumo/application/filing/tests/test_export_value_policy.py`
+- `S29` `M` `src/cadrumo/application/filing/tests/test_filing_refusal_message_key_only.py`
+- `S29` `M` `src/cadrumo/application/filing/tests/test_legal_form_requirement.py`
+- `S29` `M` `src/cadrumo/application/filing/tests/test_m280_negative_imputation_context.py`
+- `S29` `M` `src/cadrumo/application/filing/tests/test_producer_snapshot.py`
+- `S29` `M` `src/cadrumo/application/filing/tests/test_projection_plan_builder_coverage.py`
+- `S29` `M` `src/cadrumo/application/modelo/dependency_projection.py`
+- `S29` `M` `src/cadrumo/application/modelo/invoice_withholding_capture_public.py`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/iva_flow_catalogue.py`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_validation_reads_the_facts_in_scope.py`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_value_policy.py`
+- `S29` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S29` `M` `src/cadrumo/domain/renta/actividad_asset/election.py`
+- `S29` `M` `src/cadrumo/domain/renta/actividad_asset/schedule.py`
+- `S29` `M` `src/cadrumo/entrypoints/justificante_composition.py`
+- `S29` `M` `src/cadrumo/entrypoints/overview_evidence_composition.py`
+- `S29` `verify:` `L5 ruff/format/ty/import on 30 files` -> `pass`
+- `S29` `verify:` `model probe: schemas, field order, 16 claim_ids, snapshot JSON identical before and after` -> `pass`
+- `S29` `verify:` `batch A 1322 passed 2 failed (modelo 360 producer keys; another writer's new m190/m280 context modules unswept)` -> `pass`
+- `S29` `verify:` `batch B entrypoints 488 passed 30 failed 1 error, unstable from runtime_connection_closed and other writers' mid-edit import errors` -> `fail`
+- `S29` `by:` `opus-high`
+- `S29` `verify:` `ruff/format/ty/import on 3 files` -> `pass`
+- `S29` `verify:` `user_profile tests + workbench generation 510 passed` -> `pass`
+- `S29` `M` `src/cadrumo/adapters/local_runtime/profile_mutations.py`
+- `S29` `M` `src/cadrumo/adapters/local_runtime/modelo_metadata.py`
+- `S29` `verify:` `ruff/format/ty/import on 2 files` -> `pass`
+- `S29` `verify:` `profile mutation boundary, client, patch client and TUI runtime manager tests 13 passed run 20261003T103207.386572Z-pytest-90760-e56150c2` -> `pass`
+- `S07` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_zero_stock_verification.py`
+- `S07` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_entrypoint" src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_zero_stock_verification.py --junitxml=C:\Users\hello\AppData\Local\Temp\s07-m200-zero-stock-20261003T104020552Z.junit.xml` -> `fail`
+- `S07` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_zero_stock_verification.py` -> `pass`
+- `S07` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_zero_stock_verification.py` -> `pass`
+- `S07` `verify:` `uv run --no-sync ty check --python-platform windows src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_zero_stock_verification.py` -> `pass`
+- `S29` `A` `src/cadrumo/application/live/live_operation_registration.py`
+- `S29` `A` `src/cadrumo/application/live/live_operation_execution.py`
+- `S29` `M` `src/cadrumo/application/live/notification_document_capture_operation.py`
+- `S29` `M` `src/cadrumo/application/live/notifications_read_operation.py`
+- `S29` `M` `src/cadrumo/application/live/notification_document_read_operation.py`
+- `S29` `M` `src/cadrumo/application/live/iva_wallet_history_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/iva_wallet_balance_operation.py`
+- `S29` `M` `src/cadrumo/application/live/filed_read_operation.py`
+- `S29` `verify:` `L1 ruff/format/ty on 23 files, import smoke, AST importer check 0 missing names` -> `pass`
+- `S29` `verify:` `live, balance and 44 entrypoint/CLI owning files 577 passed 1 failed (test_native_filed_history_requires_configured_provider_before_browser, identical in baseline)` -> `pass`
+- `S29` `verify:` `conformance -k live/balance 30 passed 4 failed, same four logged in the baseline (borrador 100 scenarios, filed-history profile_id)` -> `pass`
+- `S29` `A` `src/cadrumo/application/live/tests/test_capture_session_write_receipt.py`
+- `S29` `verify:` `L1 follow-up ruff/format/ty/import on 18 files` -> `pass`
+- `S29` `verify:` `live, operations, participation rebuild, lifecycle conformance, m303 evidence, composition tests 782 passed 2 failed in test_operation_composition` -> `fail`
+- `S29` `verify:` `new test_capture_session_write_receipt failed before the fix and passes after` -> `pass`
+- `S29` `M` `src/cadrumo/application/modelo/aggregate_projection.py`
+- `S29` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S29` `M` `src/cadrumo/application/modelo/history.py`
+- `S29` `M` `src/cadrumo/application/modelo/invoice_withholding_capture_projection.py`
+- `S29` `M` `src/cadrumo/application/modelo/iva_wallet_mutation.py`
+- `S29` `M` `src/cadrumo/application/modelo/quickfile.py`
+- `S29` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S29` `M` `src/cadrumo/application/modelo/verification_report_read_access.py`
+- `S29` `M` `src/cadrumo/application/modelo/verify_selector.py`
+- `S29` `M` `src/cadrumo/application/modelo/work_addressing.py`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_temporal_coverage.py`
+- `S29` `M` `src/cadrumo/domain/filing/validator.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_report_pdf_verb.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/modelo_operation_test_support.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/modelo_303_export_support.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_amend_flow.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_art109_activity_income_period_evidence.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_cross_period_clean_state_enforcement.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_cross_period_clean_state_gates.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_cross_period_clean_state_provenance.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_dormant_m369_oss_resolver_live.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_quarters_to_m100_annual.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_quarters_to_m390_annual.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_iva_wallet.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_events.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_verify.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_filing.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_lifecycle_gate.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m210_irnr_income_ledger.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_carry_forward_continuity.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_first_year_cuota_e2e.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_202_modality_lifecycle.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_210_inmobiliaria_e2e.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_deductible_evidence_gate.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_official_box_under_declaration.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_refund_auto_carry_e2e.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_refund_election_e2e.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_390_303_simplificado_fold_in_live.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_720_foreign_asset_producer_join.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_720_redeclaration_e2e.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_annual_reconciliations_fold_in_live.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_selectors.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verificado_completo_regression.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verification_substance_workflow.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verify_below_filing_grade_authority.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verify_ledger_drift_gate.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verify_report_idempotent_collapse.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_clock_gate.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/test_m123_count_authority_gate.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S29` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_check_route_real.py`
+- `S29` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_records_real.py`
+- `S29` `verify:` `L2 round 2 ruff/format on 70 files; ty 2 errors at test_modelo_720_foreign_asset_producer_join.py:188,199 from another writer's foreign-assets change` -> `pass`
+- `S29` `verify:` `modelo tests + test_models + test_access_profiles 2343 passed 3 failed in registry data` -> `pass`
+- `S29` `verify:` `45 migrated entrypoint test files blocked at conftest import by ForeignAssetRecordJoinRefusedError missing an ErrorCode entry` -> `fail`
+- `S21` `M` `src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_app_diagnostics_command_specs.py`
+- `S21` `M` `src/cadrumo/_data/locales/ca.yaml`
+- `S21` `M` `src/cadrumo/_data/locales/en.yaml`
+- `S21` `M` `src/cadrumo/_data/locales/es.yaml`
+- `S21` `M` `src/cadrumo/_data/locales/hu.yaml`
+- `S21` `verify:` `uv run --no-sync python -m dev.locales set-batch <captured absolute set-batch.json>` -> `pass`
+- `S21` `verify:` `uv run --no-sync python -m dev.locales remove-batch <captured absolute remove-batch.json>` -> `pass`
+- `S21` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_entrypoint" src/cadrumo/entrypoints/cli/tests/test_app_diagnostics_command_specs.py --junitxml <captured absolute pytest-s21-diagnostics-help-production-mode.xml>` -> `pass`
+- `S21` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py src/cadrumo/entrypoints/cli/tests/test_app_diagnostics_command_specs.py` -> `pass`
+- `S21` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py src/cadrumo/entrypoints/cli/tests/test_app_diagnostics_command_specs.py` -> `pass`
+- `S21` `verify:` `scoped uv run --no-sync ty check --python-platform win32 (exact argv in final receipt)` -> `pass`
+- `S21` `verify:` `six-owned-path git diff --check` -> `pass`
+- `S21` `verify:` `uv run --no-sync python -m dev.locales audit` -> `fail`
+- `S29` `M` `dev/quality/metadata/import_load_targets.json`
+- `S29` `M` `dev/quality/metadata/application_entrypoint_modules.json`
+- `S29` `verify:` `import_load_probe --compile-targets regenerated (2 removed, 92 added across all writers)` -> `pass`
+- `S29` `verify:` `dev/tests/test_import_quality_gate.py 89 passed` -> `pass`
+- `S29` `verify:` `module_target_inventory --check stale before, clean after regeneration` -> `pass`
+- `S29` `verify:` `final census 15 jscpd groups 0.09 percent; 3213 modules import; ruff F-rules clean; dead_code none` -> `pass`
+- `S29` `verify:` `integrated domain+application run 20261003T111917.837731Z-pytest-28752-e5817ab1: 15426 passed 17 failed, all previously recorded registry-data, festivos, modelo 360 producer-key and another writer's guardería-selector failures` -> `pass`
+- `S07` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_entrypoint" src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_zero_stock_verification.py --junitxml=C:/Users/hello/AppData/Local/Temp/s07-m200-renewal-20261003T112106267Z/junit.xml` -> `fail`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_zero_stock_verification.py`
+- `S07` `A` `C:/Users/hello/AppData/Local/Temp/s07-m200-coordinate-runtime-20261003T115237904Z/run.json`
+- `S07` `A` `C:/Users/hello/AppData/Local/Temp/s07-m200-coordinate-runtime-20261003T115237904Z/native-artifact-addendum.json`
+- `S07` `verify:` `uv run --no-sync pytest -n0 -m 'unit and hex_entrypoint' src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_zero_stock_verification.py --junitxml=C:/Users/hello/AppData/Local/Temp/s07-m200-coordinate-runtime-20261003T115237904Z/junit.xml` -> `fail`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py`
+- `S16` `A` `C:/Users/hello/AppData/Local/Temp/cadrumo-g11-final-addendum-20261003T121418869Z.md`
+- `S16` `A` `C:/Users/hello/AppData/Local/Temp/cadrumo-g11-diff-addendum-20261003T121757965Z.md`
+- `S16` `verify:` `uv run --no-sync pytest -n0 -m 'unit and hex_persistence_adapter' src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py::test_profile_and_storage_blob_wire_contracts_round_trip_through_real_crypto src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py::test_record_crypto_returns_the_application_dto_and_refuses_tampering src/cadrumo/adapters/persistence/storage/crypto/tests/test_crypto.py::TestEncryptedBlobShape` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ty check --python-platform win32 src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py` -> `pass`
+- `S16` `verify:` `git diff --check -- src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py` -> `pass`
+- `S07` `A` `C:/Users/hello/AppData/Local/Temp/s07-m200-profile-facts-runtime-20261003T122731Z/run.json`
+- `S07` `verify:` `uv run --no-sync pytest -n0 -m 'unit and hex_entrypoint' src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_zero_stock_verification.py --junitxml=C:/Users/hello/AppData/Local/Temp/s07-m200-profile-facts-runtime-20261003T122731Z/junit.xml` -> `fail`
+- `S20` `A` `src/cadrumo/application/modelo/tests/test_m136_2023_deadline_boundary.py`
+- `S20` `verify:` `uv run --no-sync pytest -n0 -m 'integration and hex_application' src/cadrumo/application/modelo/tests/test_m136_2023_deadline_boundary.py --junitxml=C:/Users/hello/AppData/Local/Temp/s20-coverage-implementation-20261003/m136-renewed-run-20261003/junit.xml` -> `pass`
+- `S20` `verify:` `uv run --no-sync pytest -n0 -m 'unit and (hex_application or hex_entrypoint)' src/cadrumo/application/overview/tests/test_calendar.py::test_generic_holiday_coverage_uses_literal_locale_copy_without_a_territory src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py::test_expanded_help_shows_holiday_coverage_when_nominal_and_effective_dates_match src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py::test_the_first_question_mark_names_exactly_the_symbols_on_screen --junitxml=C:/Users/hello/AppData/Local/Temp/m136-d/junit.xml` -> `fail`
+- `S20` `by:` `root`
+- `S20` `M` `src/cadrumo/locales/ca/application.yml`
+- `S20` `M` `src/cadrumo/locales/en/application.yml`
+- `S20` `M` `src/cadrumo/locales/es/application.yml`
+- `S20` `M` `src/cadrumo/locales/hu/application.yml`
+- `S20` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_help.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py`
+- `S20` `verify:` `uv run --no-sync pytest -n0 -m 'unit and (hex_application or hex_entrypoint)' src/cadrumo/application/overview/tests/test_calendar.py::test_generic_holiday_coverage_uses_literal_locale_copy_without_a_territory src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py::test_expanded_help_shows_holiday_coverage_when_nominal_and_effective_dates_match src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py::test_the_first_question_mark_names_exactly_the_symbols_on_screen --junitxml=C:/Users/hello/AppData/Local/Temp/s20-coverage-implementation-20261003/display-renewed-run-20261003/junit.xml` -> `pass`
+- `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/export_layouts/0001-declarations.toml`
+- `S29` `verify:` `tomllib parse of edited TOML; ruff/format/import of edited test` -> `pass`
+- `S29` `verify:` `word-boundary rg for every deleted symbol: zero stale hits outside vault, agent folders and generated technical articles` -> `pass`
+- `S29` `by:` `sonnet`
 
 ## Notes
 
@@ -1811,3 +2233,77 @@ related:
 - `S27` Read-only five Modelo resolver preflight root reviewed; handoffEEAB251AEC6636016ADFDF05BB97B0A15CE71854C49BA07799C87A4148434FC2. All20 preimages and19 currenthashes matched; models.py authorized receipt-helper-only drift independently read, OperationRequest unchanged. Adjusted helper placement in existing S27 `profile_guard` avoids `S29access_resolution` file. Exact10-file Luna-max `security_aeat` write reservation recorded; local shape/profile/replay/pin precedence and foreignS12/S29 baseline must stay identical. WholeS27/S25 remain open.
 - `S17` Bounded typedDecimal representation extraction accepted; actualrun20261003T040226.333719Z-pytest-10980-776a740c elevenpasses(9new+2existing), fullownedpatch/currentpreimages/dependency/artifactlogsrootreviewedmatched; exact3holdreleased. Unchangedruntimebody and8typedprojections preserveexactstrings/None;3objectloops/defaultuntouched. Foreignregisteredoperations drift reviewedbyworker/currentrootmatched25388F1F...; externalsnapshot includesbytes, no worker/rootGitmutation. HistoricalCP257/K12/wholeS17/S25remainpending.
 - `S29` `require_terminal_receipt_match` (operations/models.py) and `ALL_OPERATION_FRONTENDS` (operations/registry.py); 29 receipt and 44 frontend copies stay local in reserved or non-equivalent files; 9 frozenset(OperationFrontendProjection) sites await an explicit-versus-enum decision; `overview/read_result.py:132` does not check `diagnostic_ref`
+- `S29` Enum-derived frozenset(OperationFrontendProjection) grants moved to `ALL_OPERATION_FRONTENDS` so a future frontend is never admitted silently; five remaining enum-derived sites sit in auth, ledger and `user_profile/recovery_status` files held by their owners
+- `S14` Time-bounded owner evidence only: actual20261003T040831.829208Z-pytest-70988-a8def6eb20callpasses,exit0,scratchremoved,1integrationdeselected. Rootreadcompletefinaltestpatch andmatched actualrun/log hashesF5333B.../FBA55D...+receipt581D901.../patch732CF...; target/currentacceptanceWITHHELDafternewforeignmerge. Bothownedtargets and4deps changed; literalconflictsnow `inproductiontarget/posix/windows/startup/adaptermanagement_status.` No workerorrootGitmutation; allforeigncontentpreserved, nofurthersourcewrites. POSIXnativepending; wholeS14/S25open. The recordedpass appliesonlytoits originaltestedbytes, notcurrentmerge.
+- `S17` 17 modules (about 20 checks) now raise InternalInvariantError on a missing scope via `require_governed_fact_authority;` `iva_schema_vocabulary_source` names made public (SchemaVocabularyProjections, `SCHEMA_VOCABULARY_SUBJECT,` `UNIQUE_TOKENS_REQUIREMENT,` `csv_legal_references);` remaining hand-written checks in `modelo_obligation_scope,` `inventory_anexo_d_applicability,` `tax_id_format,` domain/categories, contribuyente, iva, invoices, modelos, `usage_ratios,` `ledger_oss_bindings` and application/filing `_m200/_m296` not migrated
+- `S27` Root read full owned patch and matched all ten current/preimage receipts, eleven read-only dependencies, actual unit39-pass and metadata zero-collection exit2 artifacts, and all four final static manifests/logs with stable ten-path pre/post hashes. Bounded canonical-helper/four-application-resolver acceptance releases eight exact paths; metadata source/test remain held pending execution after foreign lifecycle conflict resolves. Final changes following unit run are formatting only in unit/helper files; metadata dataclass context corrected to replace and statically checked. Preserve every foreign S12/S29/merge hunk. No worker/root Git mutation; whole S27/S25 remains open.
+- `S14` Read-only runtime drift addendum 6FC296A6CBC57CD3BEFFC5C19898CB2B0BB87F82738C5FC53AE83214352676BE reviewed and all six captured snapshots matched. At root check three live files still matched and three adapter dependencies had further external drift; no final current acceptance. Helper/test assertions preserved, inspect/start call sites remain on one unresolved side, incoming default10vs75 and removed `_retain_cleanup` spelling require owner reconciliation after merge. No post-drift test/static rerun or foreign write. Both endpoint target paths held; prior20-pass evidence remains tied to C0F/9431 tested bytes.
+- `S27` Read-only follow-up after the externally repaired lifecycle dependency became parseable. Actual run 20261003T043603.066957Z-pytest-72456-e02ee152 executed seven cases, exit 0. Root matched full actual manifest/log and identical thirteen-path pre/post hashes; no source/test/Git changes occurred in this follow-up.
+- `S27` Exact metadata source D71F169DAEF0E07E78F195EC28B431F0C54A24A883CA3130DB02E3E58FF8F0FB and owner test E93767FED87B342D7BCE08A8270CCF9AEB683204C094F0D8E3973489D1966F25 are released for this session's completed admission guard. The historical collection failure remains recorded. Whole S27 is still open.
+- `S27` Follow-up receipt Temp/s27-metadata-integration-followup-20261003T0433/followup-receipt.json SHA256 201104DB6595555D5C6764D96DB45781DB715FA86BFA97C4F4B0876AB16C7666. Actual run manifest CC58A2E891D60923C2AFF2F022592B998D109CEDAEA0173C25E7E6C3BD540BB2; log 7F025C85BFC2B3540D8E9F4B8293EEB189481B6260A253387E1C897928A837B9.
+- `S27` S01/S25 preparation only: root reviewed the complete scratch collector at SHA256 516AB490A25615A1DC3992BB00261246FC4FE7AEF4467941CBD1A24C31F86BCE and note 9C8FBFB7371DD098946DB2DEF1FACDE98811F76585F9D760D406294F9C6E01EE. No collector/scanner invocation or census occurred; `MERGE_HEAD` remains present. Root read-only runtime and DTO drift reconciliation is pending; no whole Step checkbox changed.
+- `S17` Read-only preservation after the foreign DTO conflict resolved. Root read the complete accepted/current five-hunk delta and matched the byte snapshots, actual eleven-pass run and all three scoped logs. Actual run 20261003T045018.938175Z-pytest-84988-8acbe277; manifest 6A504DB3201D9423F9D26F0FC0D6C5C5447C59FA254593EA973583D49ECE8BCA; log DB8441859E3FE6609909A37CADA672B185597F80333555C07D7458B2D48D871E. Sixteen pre/post/current source hashes match.
+- `S17` DTO 6B68C1732F830E9CBB5D6C24BD121EB501EC1A44C4E262D149DDFBF70B6F83FD preserves all eight accepted Decimal helper calls. Foreign delta consists of FilingYear import and four annotations only. Year-bound admission policy is outside this acceptance; no new source/test/Git edit or foreign release occurred. Whole S17, historical CP257 and object-typed loops remain open.
+- `S17` Final scratch receipt 08C125F5B8A5DAFE0591D509742BA393C68C2EE5282D2F273B96FAEB30F97194 at Temp/cp257-project-scalar-impl-20261003/postmerge-gate-20261003T044852Z/final-receipt.json. Initial prehash transcription error was corrected from the existing original receipt before any test; no actual dependency drift.
+- `S14` Bounded endpoint factory accepted and exact two completed paths released at E6721A6964AD18744A1078BF2A52CB0DFE56A4792F952377397A884A1D72D628 and 65DDC772A811B1522B2F3AC1AF00F671394CA4BA92875722B10A58A6CBBEE5F4. Root read complete resolved six-file diff, current source and late assertion delta. Foreign timeout, native peer/security and concrete macOS behavior remain outside this acceptance.
+- `S14` First current preflight stopped before any gate on manager-composition drift; root reviewed its one import-path delta before authorizing the actual attempt. Run 20261003T045747.701450Z-pytest-48808-fe66ecf4 executed 26 cases, exit 0, scratch removed; one integration case was deselected and unexecuted. Manifest 6EF978A8FCD41388722643B38A9EDB5923A21C6F68984D96252E16A0C2F85C48 and log 7C033B97F0C3878BCA3E4A0E917D0C4C717DE72670A36898C97A03280734BA4E were root-matched.
+- `S14` All seventeen watched hashes match pre/post/current. Four scoped static results and hashes are transcript-preserved tool outputs, not invented shell manifests: raw artifact B05205FEB03032E149576C76DD226A643E74D2785499028F76DEC25D5215E45E. Gate receipt 7CC81C2D6FA1C255C3519CAE649231ED6AD178A5D86CC6A1F5DE643AF05AD42A. No retry, repair, source/test edit, service start or Git mutation occurred.
+- `S14` Native POSIX no-namespace test, the deselected Windows integration, historical CP267 and whole S14/S25 remain pending. Only this session's completed endpoint helper/test reservation is released; other owners and holds persist.
+- `S07` Read-only eight-read role/requiredness evidence, not implementation or passing execution. Root read the original receipt 0E1CF83885E998166FB62676FC8E6EA01C3DA6A54D85981FE70811FD3CB97B77 with mandatory routing addendum 049025B747896F5E70912A17A41F9A124C5D43830F5D8531D630785FEC7FDD78 and matched all twenty source/test/TOML hashes.
+- `S07` Original rows 1, 7 and 8 incorrectly attached advisory declarations to blocking helpers. Corrected selected reads are advisory lines 436, 451 and 452; both implication operands are read before comparison. The original three blocking sites retain no demonstrated live blocking caller in this sample and remain unresolved.
+- `S07` Synthetic empty-map success and compiled M303 2022 `positive-total/missing-[09]` refusal are assertions in existing test source; neither test was run for this receipt and no reachable filing bypass is proven. Required manual keys, unresolved computed outputs, predicates and export representability are distinct gates.
+- `S07` Next evidence is the narrow M303 `[27]` formula/verification/export presence path, keeping explicit zero, optional blank, missing required input and unresolved output distinct. No source/test/data write or new reservation is authorized. All 31 defaults, row 9 and whole S07/S25 remain open; no new census or filing result is claimed.
+- `S07` Root reviewed and promoted the bounded M303 `[27]` presence trace (SHA256 199FA8ECF4896897B3F0C0EE377B28283EDA2D3F0A5EA56CBC8D36A6FCD4EC1A), independently matching all 13 source hashes. Generic unresolved-dependency suppression is established; the exact M303 diagnostic-to-persisted blocking issue remains pending. Fixed-width export completeness is a separate pre-write refusal, not proof of verification completeness.
+- `S07` Root reviewed the complete detail-row Decimal identity receipt (SHA256 48095FD2A93AEC7C2E503E86EAA41D1A7E59EBAE484A5B4926D3F2A08C39AE49), source serializer, secure-load invariants and all three cited accepted ADRs. Nonzero exponent equivalence already holds; signed zero differs. A fixed-point helper swap changes persisted IDs. No code, migration, accepted policy or whole-Step closure.
+- `S07` Recorded read-only S14 native Linux readiness and pending isolated environment/test preparation. Feature vault health exit 0 with 20 checks/0 errors/0 warnings/22 info validates metadata only. `MERGE_HEAD` remains present; no final census or integrated PASS.
+- `S19` Root independently reviewed current focus/filter/navigator/cell-text contracts and accepted the specified behavior in report rows 21a,21b,22. Actual run 20261003T054302.323405Z-pytest-25156-0b034bfc: 29 call-phase passes, exit0, no skipped/deselected/failed cases, scratch removed. The split is 1 real default-focus/Enter-decline,10 profile,2 navigator,16 cell-text.
+- `S19` Complete receipt 235DFED83AC32C9AE00E5A3313F4DA0F4D4937121E59AAD0A80F09B08B9A4DFC; actual native manifest 673724CF864FC74E59707DEBC8DD0F1F17514EA982DC00A6027A29B71A09ABC8 and log B250488FC247FBAEFA35BD0F554F52ADCFA983876CFAE123BCB18B8B034DD522 match raw copies. Root checked all15 raw pre/post/current source pins with zero mismatches.
+- `S19` This was existing-tests verification with no source changes or rerun. Whole S19, wider layout/workspace and static acceptance remain pending; no other owner's reservation is released and no final census or integrated PASS is implied.
+- `S07` 2026-10-03 06:03:49 UTC bounded M303 dependency-chain source evidence: complete addendum D01CCCBDD84A7D709E7824A3114289BC7EF2B14F44BA7E4526DB1D633F895AFE and all30hashes root-read/matched; no test result yet. Missing ledger casillas zero-initialize; full outage separately persists blocking printed21/24issues, internal/partialmap paths distinct. Decimal options note9DF66A766CFB48411DEE7EB2075582ED28BB3C14F8888BFEDD322BFAC321E176 read, no identitypolicy/ADR/migration accepted. Existing single-catalogue migration incomplete for escaped references; current-schema-purge not valid-evidence-deletion authority. Foreign exporter drift recorded notapproved; S07 rows9/11 and wholeStep open.
+- `S14` 2026-10-03 06:03:49 UTC isolated Linux setup incident fully reviewed: receipt1D5E494BA1D6DBBEC72332629A8EFBE5BD38CD56E68681EDCF7472229F1FA250/rawlog0E21C701C85B363DE22D43CDD1A07AAFF3106943D4A25C9F92D9465893ACE2CC, all22source/configpins matched. Editable hook publication-capable; root's setup review missed this, interruptedwrapper1 not terminaluvfailure, no test. Descriptor pre-sync hash absent, no blanketauthorityunchangedclaim. Exact empty observed candidateparent cleanup and task-scoped supported `CADRUMO_EDITABLE_AUTHORITY=skip` recovery authorized, no siblingcleanup/compiler/publication/service/Gitmutation. NativePOSIX and wholeS14 acceptance pending.
+- `S07` 2026-10-03 06:18:14 UTC accepted one actual compiled M303case/exit0, nativeB08E1ED078801D81B45C6746FD6ED589A5013E5B4D6DB573B38E6618F38CB263/26215142F298CD3A909288E12303A5EA41002D1A0CC5FBC83A4C0417D9CF1C61 independently read/hashed. All55hashrows cover51distinctfiles, rawpre/post/final/current match; count correction explicit. ReceiptACD4783FB3732068D1F07C547864DDBCFF41E553E66E5840C6FF4DFBAF139B30/final66B3883354B44099FDF183440ACBFEC4DE00AD8B2FEC47BD1621745B714271B7 preserve receipt-only mistakes; no rerun. Manuallysuppliedbindings; no actualledger/persistence/partialoverrideproof. Frozenpublishedauthority is snapshot only; reconstructed pre-authority environmentalrecord secondary. Rows9/11/wholeS07 remainopen, noforeignrelease. Reference firstCASconflict preservedconcurrentchange and reference-onlyretry succeeded; audit notduplicated.
+- `S14` 2026-10-03 06:26:37 UTC nativeLinuxoneactualcase/exit0 accepted at retainedinputs only; native203360BB2056604AB15F42DCCF7D9D8311A50A544C283DA4C2A040C7F5BEDB3B/CB7099D6F3A48BD058E1F667F03A776E7639723098643EBF6AA64B91E9639E47 read, all7original/copyhashes and scratchabsence independentlyverified. Corrected frozen devsync `task-scopedCADRUMO_EDITABLE_AUTHORITY=skip` exit0 and25pre/postpins match; env/cacheretained. Exactemptygeneratedcandidateparent removed usingrmdir, notzero-workspacechanges. Firstinterruptedattempt pre-descriptor-gap remains, `wrapperquoting/readinessfalseSTOP_REASON:none-qualified` no sync/testretry. ReceiptEAFBFFF8E884D37B5F3F16D91062EC5D922B39A6C0CADA47A57DC33BDC4C3F9F +addendum105030B5AF5589AED327196F924C76C14BE964C0AF00774766529A899C2A3DF8 +latedrift88573BDBC04B211ED33143A5EC8034BAAECA389DE15151E99C781D84489DEF87 retained. Current24of25match; startup late1889FD→BCBD17148FD0B805E0CFC6A0D3C62730877E331E3E9831B7B3134A6A69CE8AB5 notaccepted/rebaselined. Selectedpassiveprobe importsprotocol but neverexecuteslaunchdoor; no currentstartup/globalPOSIX/services/macOS/wholeS14approval or foreignholdrelease.
+- `S07` 2026-10-03 06:40:44 UTC source-only evidence: C13threeadvisorytraceE5CD21FD357BA3034B37E668BD01A7D3DFE65880A96792E698CA0F1304CDD9C8 fullyread22distincthashes rootmatched; fourprorratadefaults/eightnamedtrigger-gapreads differ in disclosure, no absence/zero tests run or newpolicy/severity. Suppliedc-modelo44-45 authenticatedat1317D54D300CEEB0BD6D22423321D316E920B706590BEB1D68CE1615B773D5F4; priorrelative-lookuplimitqualified. M303verbatimsecondarypreflightC95457302D7CC8196CFE8D3096A54B06957D71DA82F4FA1C4C7136794B441203/timingBE02329C6F6D5AA1BDD7C18D7A2A95A9ABAFACFCB1DE198454323A2846C8AD16 read; realpath/hashresolve literalplaceholders, no rerun. M200DE162AE43C798F6304F01FDE93989639C02F5657C3938C641EE30FDADFBB69D1 readincluding2addenda31table+1layoutpins rootmatch; two caps truebefore00547 onzero/absentceiling, no-priorstockzero disablesboth. Sourcegateconditionalexpectedownedsource+on-formonly; arbitrarypartialmaps/overrides/formulaomissionsuntraced. Authored2024calc/2025filingstorageinheritance notcurrentpublishedadoption/legal/or actualfilingPASS. Pinnedpublicmetadata-probe PREPARATIONONLY authorized; scriptnotexecuted atcheckpoint. Rows9/11/wholeS07open; no edits/tests/statics/scans/compiler/pub orforeignrelease.
+- `S29` 2026-10-03 06:46:41 UTC newmergeprofileaccess preflightA2742A7367B0D0A958818072B43175EE0303A3E87751FE0C622DF2E0F47E2519 fullyrootread, all12source/testpins matched; three exactduplicatepolicytails need newnamedCOMMITTING lifecycleperiod-independent `registeredPROFILE_VALUES` axes, distinctpayload/profile/subjectheads andcensal policies preserved. Canonicalbinder malformedRESULT-noschema failclosed difference requires explicitfutureproof; actualregistrations installs.result. Two-prodfile canonicalprofile/helper migration plus owningtests isproposalonly, no authoring/tests/statics/scans. S08/S27origin/dispatcherhold unresolved, no freshhelper/profile/tests release norcurrenthelperbytepreimage, no mtime-basedwritepermission. Foreignw7-startup remainsuntouched; external06:50counts/timezoneunverified. Rootfresh06:44:54UTC `HEAD3df7c143cc67663fadeacedb38a113df5aaac07e/MERGE_HEAD0f883f5c348de20f24eb2757f875e2df7faf91e7` presentexit0both. WholeS29/S27/S25open, globalcensusunrun.
+- `S29` `core/startup_phase_log.py` `(log_startup_phase,` `startup_phase)` replaces four logger copies in `local_runtime` startup and server and runtime main and bootstrap; bootstrap keeps manual enter/leave with a lazy import; open: `ObservedApproval._proof` AttributeError in `test_runtime_drain_refusal` and the broken harness-conftest import-linter contract, both outside this lane
+- `S07` Root reviewed script/preflight84557CDB..., all45sourcepins and full interpreter/descriptor/database hashes before one authorized 07:08:53.9810445Z–07:08:58.6040457Z metadata execution, exit0; complete actual receipt185113B08BBB10D8E62DD9B66280DFA9A9310196936AE7533D2D454D7F2A87DC and stdout3543201A676FCDFFDA6F736C68977457DFA45960884432104483DF1A5826EB0F independently read/rehashed, empty stderr; all45before/after/current pins and resources/runtime match. Explicit public descriptor constructor, one operation generation77b5eb47.../incarnation5e363d39..., closed afterlease; 2025-y-siguientes filing and2024 calculation each expose both source-traced blocking caps, optional applied/boundstock and internal ceiling plus formula/relation-COPY. Published metadata adoption only: no taxpayer case/formula evaluation/admission/legal PASS/publication or wholeStep closure. Unconfigured-default refusal exit1 retained; separate earlier `override_settings` descriptor preflight exit0 observed native profile pointer metadata via `load_settings` (no records/credentials/SQLite). Root withdrew wrapper, direct-reader run has no settings/pointer use. Full exact history84557CDBD7D0641E11F6AC9930D304589CF8458BBF8609831E230247222277A9; pointer event time unrecorded/predates06:54:26scriptwrite.
+- `S16` Root fully read S16phase receipt7D0312B4D33462CF8DD01CAF003672FBE409480AFA740A65C2F68710A27721C7, matched all15currentpins and four historical native log hashes, read completeACL/reader tests. Parent DACL creationrights and atomic writer order support intended stage-open denial, but native logs retain only PermissionError, no observed phase/winerror. `Earlier1.1051894s<0.5failure` retained; subsequent0.360889s pass not accepted as stable timing. Exact five-node proposed marked command is unrun; no test/static/source edit or foreign reservation release. Five-file descriptor-preserving stage-once/publication-retry design held, wholeS16 pending.
+- `S21` Exact five-file new reservation to existing Luna Max `full_finding_inventory` after root fully read proposal31FD6B1A77CE9D5101D4C0A614A6D6DEF5A491E035CFF27E01DE6025EFB26108/governinglocaleADRs/callers and independently matched all26pins. Shared reservation review/completedlocale-informal-register evidence establish no competing exactclaim; clean status/mtime not authority. catalogue.py one activity-start-date prompt substitution to existing `profile.keys.censo.activity_start_date,` canonicaldev.localesremove only retiredsetup prompt leaf in es/en/ca/hu wizard.yml. Same optionalfact and placeholder-free text acrossfourlanguages; preserve all otherleaves/help/namespaces/widget/date/type behavior. No new equality-onlytest, alias/scaffold/profile/registry/generated/allowlist changes. Worker implementing/focused existingtests+fourlocale realrender+statics pending; one historical252candidate cluster, no wholeS21completion. Vaulthealth20checks0errors0warnings22openStepinfo; six/29planchecked unchanged4072AE2C...; merge stillpresent at07:02:50read, finalcensusunrun.
+- `S21` Execution authorization for exact five-file activity-date batch superseded by PRE-WRITE HOLD: Luna Max caught WizardFlow prefix contract and stopped before product/catalogue/test/probe mutation. All five unchanged preimages captured under Temp/s21-activity-start-date-20261003-a; root fully read current WizardFlow/ProfileKey models and fingerprint/checkpoint/resume sources. Existing wizard.setup prompt and profile.keys description namespaces are both enforced; matching fourlocale prose cannot justify invalid substitution. Model/namespace exception outside write scope; no removed leaf/alias/wrapper or changed identity. Decision coverage/dependency addendum pending. Root quiet merge read07:24:35UTC `MERGE_HEADexit1/empty,` HEADexit0/8c77d143f5f506ae0b81cc0c5d30e0606b9e0ec7; external mergecomplete, not writer completion/release/integratedPASS. Never-invoked collector preflight assigned read-only; global census remains unrun, wholeS21/S01/S25open.
+- `S29` Overview read projector now uses `require_terminal_receipt_match;` it was the only read projector that released a SUCCEEDED receipt carrying a `diagnostic_ref,` contrary to the canonical matcher's no-failure-diagnostic contract; new test pins the refusal
+- `S01` S01 remains open. First attempt exit2 before all scanners: uppercase constant versus lowercase authentic digest, unchanged source; both failure JSON artifacts retained. Luna-max authored separately named v2 with exact one-literal change; root reviewed byte equality and all recorded hashes. Second attempt 07:51:14-07:53:35UTC exit1 `captured_but_unstable_during_measurement:` source population changed; Git and eleven settings pins equal, all signals available. Captured62CP/5236SEM(549meaningful)/Vulture0 are orientation, not stable baseline or final acceptance. Both invocations enforced process-local `npm_config_offline=true.` Root reviewed full summary and both metadata records and independently hashed all five recorded artifact paths. Exact drift and62-group routing delegated, no rerun. Explicit tui-e8 closing release observed, earlier timezone clarified UTC+02; preserve foreign edits and this session's other holds. No Git mutation, source edit, installation, publication or profile read.
+- `S07` S07 remains open. Root reviewed complete source-only M200 admission receipt and append-only correction, finalSHA256131C5E10CBE612C737DEE81D1F1B86F4CE022B6EE67E0C5C8E178905BB8508D5. 25 original current pins matched; one `casilla_value_absence` transcription corrected from preserved06:31/current exactEC80C5DA290E3DFB595355BA8CE5419B826E3A974C7D7B7E2C5785E6E5BF5699, no blanket original-table26/26 claim. `RELATION_PREFILL` source generates `REGISTRY_RELATION` cleanliness requirement, not suppressed by `PREVIOUS_FILING_BINDING` zero exception. Missing/unclean prior source is independently refused; no-prior-filing numeric helper true is not proven filing bypass. Clean prior2024 filing with actual zero carried stock remains distinct cap behavior; no exact2025 real-source test, formula/tax case or legal/filing PASS. Nearest existing test identities source-only/unrun. Official AEAT/BOE grounding and test-design proposal delegated; no test, model/authority/helper edit, compiler, publication, default-selector, pointer, credentials or live profile access.
+- `S21` S21 remains open. Root read namespace addendumEFB76B857FF0BE5C744CCBD9E30A417EED18D24AA86D23849A356EEFCFACCEAF,27valid current hash lines matched; malformed `test_profile_keys` pin independently corrected to4A02AB56220FAECEA5C4E293A81B9DD998553A4E344944EEB03D1911D67BBE5D. Accepted profile-setup-flow section2 and wizard prefix model require wizard.setup prompts, ProfileKey descriptions require profile.keys. Proposed direct key merger withdrawn before edits/tests/probe/CLI. Root explicitly released only its five-file reservation after independent current-versus-byte-snapshot equality for catalogue.py and four wizard shards. Separate decision-owned roles retained, no ADR/model/test expansion or whole252-group/row24b closure. Next exact same-namespace locale group proposal delegated read-only; other foreign reservations/edits preserved.
+- `S01` Historical census routing: root reviewed all 62 JG rows, eleven initial invalid ranges, exact route limits and later 48-path drift addendum. Original collector exited2 before scans; second v2 exited1 unstable. Full stdout unavailable; faithful parser extraction does not settle upstream cause. No third scan or final baseline; receipt 4C07AF33F1EAB4E6763B17CE19628CDA1203FF1BBF0EE2BCA9ED8B0601613442.
+- `S07` Source-only M200 official/test proposal reviewed; both printed-page15 public forms visually inspected and independent artifact hashes matched. Two22-path manifests show20 then19 original matches as verifier refactors moved. Clean-zero source differs from missing/unclean source; runtime reproduction pending. No test/formula/verifier/file/publish action. Final proposal272D781E11D2044041624EACC9BD66A14874EBEF9D9FB0BC358AC1FBDC150450.
+- `S21` Next diagnostics run-record since-help candidate reviewed source-only; same inclusive date-bound semantics and four equal placeholder-free translations. All four cli.yml bytes drifted; no new reservation, edit, locale CLI, render or test. Batchheld; proposal7328ADB69226A7204FCE8545236C817904D55BADD7E57B3C791EDFC9850E88B7.
+- `S17` 16 more missing-scope checks moved to `require_governed_fact_authority;` kept local: `inventory_anexo_d_applicability,` `spending_category_catalogue,` invoices/enums legal-mention and rate-slot (production handlers convert the old type), invoices/enums pinned-operation check, `row_models,` `_anexo_d_records;` `descendant_facts` and `deduccion_maternidad` stay migrated because an empty binding set on a missing scope would be silent under-declaration; `iva_flow_catalogue.py:349` discards its checked authority
+- `S16` Bounded five-file descriptor staging/custody publication acceptance only; final native 20261003T084737.699201Z-pytest-53332-7f41d6a4 passed49/no failures/errors/skips, exit0. Four xunit2 property warnings remain with actual retained properties; merged stderr/stdout, no separate stderr capture. Existing older elapsed-time failure remains without demonstrated cause. S16 and integrated verdict stay open/PENDING; exact five-file reservation released, other reservations unchanged.
+- `S16` JSON receipt SHA256 3884C4A1F7CD15284E2BD4B973A84963AFC7097DB6CE76060AB24BAD8C438BEE; owned.patch SHA256 87301F3A90E088D5BD99613A0CF082212D7DAD67020A321BCDC7ABBC81253211. Current five hashes/13 dependency pins/39 actual artifacts independently matched; initial static failures and corrective final rerun retained. No whole-process secret/import trace, publication or Git mutation claimed.
+- `S17` Operator-directed decision: the four handler-blocked missing-scope checks now raise InternalInvariantError; their handlers stay unchanged for genuine lookup failures, and caller-boundary tests prove a missing scope is no longer reported as a domain answer; the invoices/enums:418 and `_anexo_d_records:55` pinned-operation checks stay distinct
+- `S27` Bounded attachment/ruleprofile+S28portmigration accepted from complete owned diffs preservingattachmentbaseline. Owneractual41pass/static4pass and initial failedchecks retainedreceipt10B56A3086E287348B5F14B0CC341811BE0CD71249BD92F58EA2E6F99FD8D65D; uncaptured initialenv/prerunner/stderr addendum9718BE0C842A7D8D070753D39B65FEFB40B49C715C9E5C33B2BCE683340636D5. Sharedhelper/testsdrift renewedrootcurrent48pass/no failure/error/skip/native20261003T093135.182493Z-pytest-65776-612a6778,18inputpre/postunchanged,recordedabsentauthorityroot. Rootreceipt385374FA5922F09ABCC6F130B98C3AE761C0D53D0C02A1A17EC90F1471E48A24. Fourunchangedsource/teststaticsreused; nofullstep/integratedprivacyPASS. Release onlyown4filewrite; foreignL4 newerclaimseparate.
+- `S28` Bounded exact-port and profile migration, also recorded under S27. Both consumer-local port validators are deleted in favor of the defining application contract; composition/read/effect order is preserved. Current 48-case run passed with 18 named pre/post inputs unchanged; unchanged four-file statics are reused. Original 41-case run and corrected initial failures remain in receipt10B56A3086E287348B5F14B0CC341811BE0CD71249BD92F58EA2E6F99FD8D65D; original runner provenance gaps remain explicit. Root accepted only this four-file write slice and released its own reservation, preserving the newer foreign L4 claim. S28 and integrated acceptance remain open.
+- `S29` Operator override: guard heads now use `profile_guard.require_access_request_profile_payload` and `require_access_request_work_unit_payload;` tails use `access_resolution.bind_replayed_or_fresh_single_period_access` and `bind_replayed_period_independent_access;` `iva_wallet_mutation` module; `work_create` validator shared; receipt checks canonical; refusal order and S27 executor timing unchanged
+- `S29` Operator override: `ledger.read_access.resolve_ledger_commit_access` (21 copies), `ledger.single_phase_definition.build_single_phase_definition` (3), `resolve_ledger_request_read_access` (2), `require_exact_ledger_action_ports` reused; ReviewQueueRow vs projection kept because `_model_contract` forbids UtcInstant, with a parity test; remove/reset report tails kept because sharing would reorder public fields
+- `S16` G16 four-file primitive extraction accepted only; caller HKDF/context/key/memo/serialization and raw/hex persisted identities preserved. Original54-case native20261003T093914.975493Z-pytest-82176-8198a4eb passed with26 input pins unchanged. RFC section4.2 test name corrected from Case2 to Case1; original receipt and test node preserved, current1-case native20261003T094426.277293Z-pytest-35468-c67270e0 passed with4 pins unchanged. Both actual JUnit counts/no failures/errors/skips and separate empty stderr/outer0 exits verified. Final receiptD03E4BFFECAA9DB0E068BB18C31006EAFF2A1B79B64C18B8B1C489FE316C9D92. Production static passes are command/exit records without separate native logs; renamed-test statics have raw matched stdout/stderr. Initial lint failure and artifact-capture/display errors remain visible. Actual task authority root stayed absent; normal .env bridge is not a privacy trace. Exact G16 write reservation released; G11/G12 and whole S16 remain open.
+- `S29` Operator override: `COMMITTING_LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS` replaces three profile access bodies; `censal_access.bind_whole_profile_censal_access` replaces three censal bodies; history and `recovery_status` use `operation_disclosures` and `bind_operation_access;` decided behaviour change: RESULT without a registered result schema now refuses `OPERATION_UNAVAILABLE` (fail closed; unreachable for real registrations); open: history replay checks destination but not frontend, and the profile mutation/view/export resolvers have no replay check
+- `S16` Bounded G12 Windows evidence only: 22 passed including nine native-factory refusal sentinels; receipt 35DE132B906BE707812CB426838AAAFA772703F9846CCBEFC59A449248A48D65. Four runner pins captured after run only; normal .env bridge limitation; absent authority root recorded/restored. No-index whitespace exit one has empty diagnostics, final text probe passes and prior malformed regex false alarm retained. Existing dirty backends/tests preserved; Linux/macOS source review only; G11 and whole S16 remain open.
+- `S29` `access_resolution.with_commit_action` replaces 23 inline COMMIT copies; `operations/operation_definition.build_single_phase_definition` replaces 92 constructions in 86 files; `ledger/single_phase_definition.py` deleted; `ledger.read_access.resolve_ledger_commit_access` kept as a one-line ledger composition; five resolvers with extra disclosures or actions stay inline
+- `S29` Operator override: `record_field_renderer` made public as the only `render_record;` `operation_run_error_context;` `justificante_capture_snapshot_repository;` ElectionReference/EvidenceReference field aliases; actividad result checks shared; PublicModelo180Address derives from the domain address; dependency snapshot converters; `iva_flow_catalogue` now passes the checked authority; kept with named contracts: typed errors `(bind_error_code),` supervisor host surface, observation port, closing-authority UtcInstant, sede vs expedientes port DTOs
+- `S29` `build_single_phase_definition` adopted at five exact matches
+- `S29` ProfileMutationRunError and ModeloMetadataRunError context dicts now use `operation_run_error_context;` the profile mutation copy's truthiness test was equivalent because every OperationEffect member is truthy
+- `S07` Two-case run fails before import/calculation/verification: M200 2024 is calculation grade, fixture requested filing. No stock-cap reproduction. All24 source/authority entries stable; wrapper017E2C87B1DD79454523C2BEEFB620D58D51FFB594553F2B03EE5D88EDC3DBAE and JUnit412182CACDD0C660BF77F174F8735BD40A69B8382DB422F8D428ACA80426D575 retained. Static successes are transcribed agent tool output only; no raw static logs. Earlier I001/format failures retained. Wrapper `frozen_authority` field captures selected checkout artifact, not private-copy hash. Only read-only grade research next; S07 open.
+- `S29` Operator override: `live_operation_registration` (two named capability profiles, `build_live_operation_definition,` whole-profile read and capture access resolvers, `require_live_read_receipt)` and `live_operation_execution` (exact profile worker, executor identity, provider browser, fenced persistence guard, capture session tracking, report publication); `resolve_commit_fenced_ledger_access` deleted; receipts now also refuse a `diagnostic_ref;` open defect: notification capture projectors require effect NONE while executors publish UPDATED after a session write
+- `S01` L19/L20/L24 current contextual dispositions, corrected lineage and policy descriptions; packet CD0761F36F7CB84F58AE53C1740751934A615E818B35A7A70691B78DC012F9A8. Root matched12 source/8 accepted ADR/5 original artifact pins and reviewed bodies. No source edits/tests, no full historical body/hash evidence; other Lane L/S01/census remain open.
+- `S29` Capability profiles moved to operations/capabilities.py; two more inline exact matches migrated; `require_terminal_receipt_match_any_effect` and `require_live_capture_receipt` fix the notification projectors refusing a session-only UPDATED receipt; expedientes `_require_receipt` deleted
+- `S29` `verify_modelo_revision` wrapper deleted, 89 call sites moved to `verify_modelo_revision_with_preconditions(...).report;` `operations.models.require_succeeded_receipt_references` replaces 6 copies; 12 more resolver heads use `require_access_request_*_payload;` heads with exact-type checks, authority-first ordering or contract-typed request maps kept
+- `S21` Bounded six-file slice accepted/released after current-source and 27-row hash review; native pytest 20261003T104011.771775Z-pytest-72012-b4c05779: 7 passed. Fresh Ruff under current externally changed pyproject passed. Global audit failed before locale comparison on M347 inherited `legal_refs` order; no parity/completeness result. Final process environment/outer raw streams absent; earlier failed pytest manifests retained. Other S21 families and integrated acceptance remain open.
+- `S29` Generated quality metadata regenerated through its owning generators after the deduplication lanes and concurrent writers added and removed modules
+- `S29` Override lanes L1-L5 and w8 closed; the reference's 11:15 UTC paragraph records the kept groups and their contracts
+- `S07` Actual outer/native exit1, native20261003T112109.915334Z-pytest-53600-5f338be9, JUnit2failures/0errors/0skips and122stdout warnings. Both cases stopped before calculation/verifier because selected target lacks00501/00547/00550. Root matched33pins/7artifacts, actual fixture frozen-root/generation recorded; frozen copy cleaned up. Earlier grade refusal and preflight90 retained. No further edits/retry; exact published-target diagnostic assigned; S07 open.
+- `S07` Bounded coordinate fixture correction; actual 2 failures during calculation for absent modelo-200-profile-new-entity-flag before verifier. Root matched 33 source/authority pins and eight artifacts; no cap-predicate conclusion. Native Temp artifact path resolved additively; no retry, whole S07 remains open.
+- `S16` G11 intentional typed boundary mirror guarded by real six-case parity test; root reviewed byte-limited source lineage and actual artifacts, no pytest repetition after import/format-only fixes. False `environment_restored` flag and initial flattened diff retained/qualified; additive valid diff and raw named baseline blob corroboration reviewed. Whole S16 remains open.
+- `S07` Actual zero control pass and positive application missing cap blocker failure after real calculation/verifier, root45unchangedpins/nativeJUnitreview. Precise `predicate_id` modelo-200-compensacion-bin-no-excede-stock-disponible; incidental worker different name excluded. No whole filing pass/bypass claim. Read-only supported correction design pending; no generic cap change or authority publication authorized.
+- `S20` M136 renewed one case passed; normal published-authority hooks, unchanged 24 source pins and BB9F/F0E8 live bytes, passive observer missed frozen-copy bytes. Earlier exit4 scratch path setup retained. Display exit4 collection refused absent authority before any test body; setup-only renewal delegated. Whole S20 remains open; canonical locale audit not run because four foreign S21 cli.yml files drifted.
+- `S20` Eleven selected cases passed with unchanged 8 owned/12 dependencies/10 runner pins and current BB9F/F0E8/c5b8 authority. Original collection failure retained. Canonical locale audit and existing cross-surface acceptance pending; whole S20 open.
+- `S29` Stale references to renamed modules fixed (comment text only in registry 322; source fingerprint changes, no publication run); technical/articles/045 still names `_record_field_renderer.py` and belongs to its generated corpus owner

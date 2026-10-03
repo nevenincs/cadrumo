@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.ledger.attachment_review import AttachmentReviewItem
-from ....application.ledger.evidence_followup_operation import (
+from ....application.ledger.evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,

@@ -660,20 +660,10 @@ def build_work_calculate_input_bundle(
     )
 
 
-def _validate_detail_rows(
+def _validate_m349_detail_rows(
     rows: tuple[ModeloDetailRow, ...], *, work_unit: WorkUnit, operation: PinnedAuthorityOperation
 ) -> None:
-    member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
-    try:
-        validate_m184_member_share_sum(member_rows)
-    except Modelo184ShareSumError as exc:
-        raise ModeloCalculateDetailRowsError(
-            context={"total": str(exc.total), "count": str(exc.count)},
-            translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
-        ) from exc
-
-    if str(work_unit.modelo) != "349":
-        return
+    """Validate NIF and country context inside the original governed-facts scope."""
     with validating_governed_facts(operation):
         for row in rows:
             if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)) and not validate_m349_nif_format(
@@ -700,6 +690,23 @@ def _validate_detail_rows(
                     rectified_year=int(row.ejercicio),
                     rectified_period=row.periodo,
                 )
+
+
+def _validate_detail_rows(
+    rows: tuple[ModeloDetailRow, ...], *, work_unit: WorkUnit, operation: PinnedAuthorityOperation
+) -> None:
+    member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
+    try:
+        validate_m184_member_share_sum(member_rows)
+    except Modelo184ShareSumError as exc:
+        raise ModeloCalculateDetailRowsError(
+            context={"total": str(exc.total), "count": str(exc.count)},
+            translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
+        ) from exc
+
+    if str(work_unit.modelo) != "349":
+        return
+    _validate_m349_detail_rows(rows, work_unit=work_unit, operation=operation)
 
 
 def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:

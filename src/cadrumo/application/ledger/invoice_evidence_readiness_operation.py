@@ -12,10 +12,7 @@ from pydantic import BaseModel, Field
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ..local_reader import LocalReaderDocumentReadiness, LocalReaderStatus, RoleFitnessState
 from ..operations.access_resolution import (
@@ -25,14 +22,10 @@ from ..operations.access_resolution import (
     bind_operation_access_profile,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..provisioning_host import RuntimeHostPlatform, RuntimeInstaller
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -203,19 +196,13 @@ def build_ledger_evidence_reader_readiness_definition(
     read_status: Callable[[], LocalReaderStatus],
 ) -> OperationDefinition:
     """Register one read-only local reader measurement for the exact profile."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceReaderReadinessRequest,
         result_type=LedgerEvidenceReaderReadinessExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerEvidenceReaderReadinessRequest,
-            executor_type=LedgerEvidenceReaderReadinessExecutor,
-            build=lambda: LedgerEvidenceReaderReadinessExecutor(read_status),
-        ),
-        phase_codes=(LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerEvidenceReaderReadinessExecutor,
+        build=lambda: LedgerEvidenceReaderReadinessExecutor(read_status),
         capabilities=invoice_evidence_operation_capabilities(mutates=False),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -238,17 +225,15 @@ def _project_readiness(result: BaseModel, receipt: OperationTerminalReceipt, /) 
 def _resolve_metadata_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    payload = request.payload
-    if (
-        request.definition_id != LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID
-        or type(payload) is not LedgerEvidenceReaderReadinessRequest
-        or context.contract.definition_id != request.definition_id
-    ):
+    if context.contract.definition_id != LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
+        payload_type=LedgerEvidenceReaderReadinessRequest,
+        access_profile_id=context.profile_id,
+        exact_type=True,
+    )
     return bind_operation_access_profile(
         context,
         LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,

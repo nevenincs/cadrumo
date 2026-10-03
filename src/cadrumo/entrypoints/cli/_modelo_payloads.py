@@ -723,7 +723,7 @@ class WorkVerifyResult(OutputSchema):
     """Verification report returned by ``aeat app modelo work verify``.
 
     The command delegates to
-    :func:`verify_modelo_revision` and returns the
+    :func:`verify_modelo_revision_with_preconditions` and returns the
     resulting
     :class:`VerificationReportPayload`.
     On a successful

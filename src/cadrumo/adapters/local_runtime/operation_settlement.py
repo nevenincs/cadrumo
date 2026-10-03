@@ -30,7 +30,8 @@ from ...application.runtime.operation_access import (
 )
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationLifecycle
-from .frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from .frontend_client import RuntimeFrontendClient
+from .frontend_client_contracts import RuntimeFrontendRefusedError
 
 _POLL_INTERVAL_SECONDS = 0.02
 
@@ -138,13 +139,7 @@ def start_and_await_terminal(
         if not isinstance(observation, OperationObservationSuccessV1):
             raise RuntimeFrontendRefusedError(observation.code.value)
         state = observation.projection
-        if (
-            state.operation_id != operation_id
-            or state.definition_id != contract.definition_id
-            or state.subject_ref != subject_ref
-            or state.definition_contract != contract
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        _require_observation_identity(state, operation_id, contract, subject_ref)
         if state.lifecycle is OperationLifecycle.TERMINAL:
             return state
         time.sleep(min(_POLL_INTERVAL_SECONDS, remaining_budget(deadline)))
@@ -183,3 +178,19 @@ def read_settled_result_bytes(
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
         raise RuntimeFrontendRefusedError(refusal.code.value)
     return encoded
+
+
+def _require_observation_identity(
+    state: OperationPublicProjectionV1,
+    operation_id: OperationId,
+    contract: OperationPublicDefinitionContractV1,
+    subject_ref: str,
+) -> None:
+    """Refuse a projection for a different operation, subject, or definition contract."""
+    if (
+        state.operation_id != operation_id
+        or state.definition_id != contract.definition_id
+        or state.subject_ref != subject_ref
+        or state.definition_contract != contract
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

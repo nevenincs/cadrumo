@@ -142,6 +142,7 @@ def native_profile_view_server(storage_root: Path, *, allow_unavailable_shutdown
         capture_login=lambda _channel: _NativeLogin(),
         secret_store=lambda: native,
     )
+    profiles.prepare_registry()
     server = RuntimeTransportServer(
         endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
     )

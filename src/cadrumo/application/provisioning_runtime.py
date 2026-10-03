@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import time
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import datetime
 from time import monotonic
 from typing import TYPE_CHECKING, TypedDict
@@ -657,6 +658,95 @@ def _is_resident(model: str, residents: tuple[RuntimeResident, ...]) -> bool:
     return any(runtime_model_names_match(model, entry.name) for entry in residents)
 
 
+def _load_preflight(
+    model: str,
+    requirement_bytes: int,
+    *,
+    profile: HardwareProfile | None,
+    settings: Settings,
+) -> LoadOutcome | None:
+    residents = read_runtime_residents(settings)
+    if residents is None:
+        return _load_refusal(
+            model, ProvisioningPreconditionCondition.RUNTIME_REACHABLE, {"model": model, "runtime_reachable": False}
+        )
+    if _is_resident(model, residents):
+        return LoadOutcome(
+            model=model,
+            loaded=True,
+            already_loaded=True,
+            facts={"model": model, "model_resident": True, "already_loaded": True},
+        )
+    inventory = read_installed_models(settings)
+    if inventory is None:
+        return _load_refusal(
+            model,
+            ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE,
+            {"model": model, "installed_model_inventory_readable": False},
+        )
+    if not any(runtime_model_names_match(model, entry.name) for entry in inventory):
+        return _load_refusal(
+            model, ProvisioningPreconditionCondition.MODEL_INSTALLED, {"model": model, "model_installed": False}
+        )
+    snapshot = assess_model_load_contention(
+        model, requirement_bytes, profile=profile, residents=residents, settings=settings
+    )
+    if snapshot.admitted:
+        return None
+    verdict = snapshot.precondition_verdict
+    if verdict is None:
+        raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
+    return LoadOutcome(
+        model=model,
+        loaded=False,
+        contention=snapshot,
+        facts={"model": model, "admitted": False, "contention_condition": verdict.failed_condition_id},
+        precondition_verdict=verdict,
+    )
+
+
+def _request_runtime_load(model: str, settings: Settings) -> tuple[str | None, int]:
+    url = ollama_endpoint(settings.cadrumo_llm_ollama_chat_url, "generate")
+    started = time.monotonic()
+    try:
+        with httpx.Client(timeout=OLLAMA_READINESS_TIMEOUT_S) as client:
+            response = client.post(url, json={"model": model, "keep_alive": OLLAMA_LOAD_KEEP_ALIVE, "stream": False})
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        return exc.__class__.__name__, int((time.monotonic() - started) * 1000)
+    return None, int((time.monotonic() - started) * 1000)
+
+
+def _load_request_outcome(model: str, settings: Settings) -> LoadOutcome:
+    error_type, elapsed = _request_runtime_load(model, settings)
+    if error_type is not None:
+        return _load_refusal(
+            model,
+            ProvisioningPreconditionCondition.MODEL_LOADED,
+            {
+                "model": model,
+                "model_loaded": False,
+                "elapsed_ms": elapsed,
+                "runtime_error_type": error_type,
+            },
+            elapsed_ms=elapsed,
+        )
+    after = read_runtime_residents(settings)
+    if after is None or not _is_resident(model, after):
+        return _load_refusal(
+            model,
+            ProvisioningPreconditionCondition.MODEL_LOADED,
+            {"model": model, "model_loaded": False, "elapsed_ms": elapsed, "resident_set_readable": after is not None},
+            elapsed_ms=elapsed,
+        )
+    return LoadOutcome(
+        model=model,
+        loaded=True,
+        elapsed_ms=elapsed,
+        facts={"model": model, "model_resident": True, "elapsed_ms": elapsed},
+    )
+
+
 def load_runtime_model(
     model: str,
     requirement_bytes: int,
@@ -681,77 +771,10 @@ def load_runtime_model(
         A :class:`LoadOutcome`. Never raises.
     """
     resolved = settings if settings is not None else load_settings()
-    residents = read_runtime_residents(resolved)
-    if residents is None:
-        return _load_refusal(
-            model, ProvisioningPreconditionCondition.RUNTIME_REACHABLE, {"model": model, "runtime_reachable": False}
-        )
-    if _is_resident(model, residents):
-        return LoadOutcome(
-            model=model,
-            loaded=True,
-            already_loaded=True,
-            facts={"model": model, "model_resident": True, "already_loaded": True},
-        )
-    inventory = read_installed_models(resolved)
-    if inventory is None:
-        return _load_refusal(
-            model,
-            ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE,
-            {"model": model, "installed_model_inventory_readable": False},
-        )
-    if not any(runtime_model_names_match(model, entry.name) for entry in inventory):
-        return _load_refusal(
-            model, ProvisioningPreconditionCondition.MODEL_INSTALLED, {"model": model, "model_installed": False}
-        )
-    snapshot = assess_model_load_contention(
-        model, requirement_bytes, profile=profile, residents=residents, settings=resolved
-    )
-    if not snapshot.admitted:
-        verdict = snapshot.precondition_verdict
-        if verdict is None:
-            raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
-        return LoadOutcome(
-            model=model,
-            loaded=False,
-            contention=snapshot,
-            facts={"model": model, "admitted": False, "contention_condition": verdict.failed_condition_id},
-            precondition_verdict=verdict,
-        )
-    url = ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "generate")
-    started = time.monotonic()
-    try:
-        with httpx.Client(timeout=OLLAMA_READINESS_TIMEOUT_S) as client:
-            response = client.post(url, json={"model": model, "keep_alive": OLLAMA_LOAD_KEEP_ALIVE, "stream": False})
-            response.raise_for_status()
-    except httpx.HTTPError as exc:
-        elapsed = int((time.monotonic() - started) * 1000)
-        return _load_refusal(
-            model,
-            ProvisioningPreconditionCondition.MODEL_LOADED,
-            {
-                "model": model,
-                "model_loaded": False,
-                "elapsed_ms": elapsed,
-                "runtime_error_type": exc.__class__.__name__,
-            },
-            elapsed_ms=elapsed,
-        )
-    elapsed = int((time.monotonic() - started) * 1000)
-    after = read_runtime_residents(resolved)
-    if after is None or not _is_resident(model, after):
-        return _load_refusal(
-            model,
-            ProvisioningPreconditionCondition.MODEL_LOADED,
-            {"model": model, "model_loaded": False, "elapsed_ms": elapsed, "resident_set_readable": after is not None},
-            elapsed_ms=elapsed,
-        )
-    return LoadOutcome(
-        model=model,
-        loaded=True,
-        elapsed_ms=elapsed,
-        facts={"model": model, "model_resident": True, "elapsed_ms": elapsed},
-    )
+    preflight = _load_preflight(model, requirement_bytes, profile=profile, settings=resolved)
+    if preflight is not None:
+        return preflight
+    return _load_request_outcome(model, resolved)
 
 
 class PullProgress(BaseModel):
@@ -879,36 +902,62 @@ def pull_runtime_model(
     return _record_pull(outcome)
 
 
-def _pull_runtime_model(
+def _pull_contention_refusal(
     model: str,
     requirement_bytes: int,
     *,
     profile: HardwareProfile | None,
     settings: Settings,
-    on_progress: Callable[[PullProgress], None] | None,
-) -> PullOutcome:
-    resolved = settings
-    snapshot = assess_model_load_contention(model, requirement_bytes, profile=profile, settings=resolved)
-    if not snapshot.admitted:
-        contention_verdict = snapshot.precondition_verdict
-        if contention_verdict is None:
-            raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
-        return PullOutcome(
-            model=model,
-            pulled=False,
-            contention=snapshot,
-            facts={
-                "model": model,
-                "admitted": False,
-                "contention_condition": contention_verdict.failed_condition_id,
-            },
-            precondition_verdict=contention_verdict,
-        )
+) -> PullOutcome | None:
+    snapshot = assess_model_load_contention(model, requirement_bytes, profile=profile, settings=settings)
+    if snapshot.admitted:
+        return None
+    verdict = snapshot.precondition_verdict
+    if verdict is None:
+        raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
+    return PullOutcome(
+        model=model,
+        pulled=False,
+        contention=snapshot,
+        facts={"model": model, "admitted": False, "contention_condition": verdict.failed_condition_id},
+        precondition_verdict=verdict,
+    )
 
-    url = ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "pull")
-    fetched: int | None = None
-    completed = False
-    runtime_refused = False
+
+@dataclass(slots=True)
+class _PullStreamObservation:
+    bytes_fetched: int | None = None
+    completed: bool = False
+    runtime_refused: bool = False
+    http_error_type: str | None = None
+
+
+def _record_pull_stream_line(
+    line: str,
+    observation: _PullStreamObservation,
+    on_progress: Callable[[PullProgress], None] | None,
+) -> None:
+    if _pull_error_reported(line):
+        observation.runtime_refused = True
+        return
+    progress = _pull_progress(line)
+    if progress is None:
+        return
+    if progress.status == "success":
+        observation.completed = True
+    if progress.completed_bytes is not None:
+        observation.bytes_fetched = progress.completed_bytes
+    if on_progress is not None:
+        on_progress(progress)
+
+
+def _observe_pull_stream(
+    model: str,
+    settings: Settings,
+    on_progress: Callable[[PullProgress], None] | None,
+) -> _PullStreamObservation:
+    observation = _PullStreamObservation()
+    url = ollama_endpoint(settings.cadrumo_llm_ollama_chat_url, "pull")
     try:
         with (
             httpx.Client(timeout=OLLAMA_PULL_TIMEOUT_S) as client,
@@ -916,47 +965,40 @@ def _pull_runtime_model(
         ):
             response.raise_for_status()
             for line in response.iter_lines():
-                if _pull_error_reported(line):
-                    runtime_refused = True
-                    continue
-                progress = _pull_progress(line)
-                if progress is None:
-                    continue
-                if progress.status == "success":
-                    completed = True
-                if progress.completed_bytes is not None:
-                    fetched = progress.completed_bytes
-                if on_progress is not None:
-                    on_progress(progress)
+                _record_pull_stream_line(line, observation, on_progress)
     except httpx.HTTPError as exc:
+        # Keep the latest stream state: a transport or progress-callback error
+        # can happen after useful progress has already reached the caller.
+        observation.http_error_type = exc.__class__.__name__
+    return observation
+
+
+def _pull_stream_outcome(model: str, observation: _PullStreamObservation) -> PullOutcome:
+    fetched = observation.bytes_fetched
+    if observation.http_error_type is not None:
+        facts = {
+            "model": model,
+            "runtime_reachable": False,
+            "runtime_error_type": observation.http_error_type,
+            "bytes_fetched_known": fetched is not None,
+        }
         return PullOutcome(
             model=model,
             pulled=False,
             bytes_fetched=fetched,
-            facts={
-                "model": model,
-                "runtime_reachable": False,
-                "runtime_error_type": exc.__class__.__name__,
-                "bytes_fetched_known": fetched is not None,
-            },
+            facts=facts,
             precondition_verdict=provisioning_no_recovery_verdict(
                 ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
-                facts={
-                    "model": model,
-                    "runtime_reachable": False,
-                    "runtime_error_type": exc.__class__.__name__,
-                    "bytes_fetched_known": fetched is not None,
-                },
+                facts=facts,
             ),
         )
-    if runtime_refused or not completed:
-        # The runtime answered 200 and then reported the failure in-stream (an
-        # unknown model name, a registry outage, a full disk), or the stream
-        # ended without its terminal success line. Neither is a pull.
+    if observation.runtime_refused or not observation.completed:
+        # The runtime answered 200 and then reported failure in-stream, or the
+        # stream ended without its terminal success line. Neither is a pull.
         facts: dict[str, ProvisioningFactValue] = {
             "model": model,
             "runtime_reachable": True,
-            "runtime_reported_error": runtime_refused,
+            "runtime_reported_error": observation.runtime_refused,
             "pull_completed": False,
         }
         return PullOutcome(
@@ -975,6 +1017,21 @@ def _pull_runtime_model(
         bytes_fetched=fetched,
         facts={"model": model, "runtime_reachable": True, "bytes_fetched_known": fetched is not None},
     )
+
+
+def _pull_runtime_model(
+    model: str,
+    requirement_bytes: int,
+    *,
+    profile: HardwareProfile | None,
+    settings: Settings,
+    on_progress: Callable[[PullProgress], None] | None,
+) -> PullOutcome:
+    refusal = _pull_contention_refusal(model, requirement_bytes, profile=profile, settings=settings)
+    if refusal is not None:
+        return refusal
+    observation = _observe_pull_stream(model, settings, on_progress)
+    return _pull_stream_outcome(model, observation)
 
 
 def _pull_error_reported(line: str) -> bool:
@@ -1140,29 +1197,38 @@ class InstalledModel(BaseModel):
     """The runtime's content digest for the pulled weights; changes when a pull replaces them."""
 
 
+def _installed_model_from_entry(row: object) -> InstalledModel | None:
+    if not is_object_dict(row):
+        return None
+    name = row.get("name") or row.get("model")
+    if not isinstance(name, str) or not name:
+        return None
+    size = row.get("size")
+    digest = row.get("digest")
+    return InstalledModel(
+        name=name,
+        size_bytes=int(size) if isinstance(size, int) and size >= 0 else None,
+        digest=digest if isinstance(digest, str) and digest else None,
+    )
+
+
+def _installed_models_from_entries(entries: list[object]) -> tuple[InstalledModel, ...] | None:
+    installed: list[InstalledModel] = []
+    for row in entries:
+        model = _installed_model_from_entry(row)
+        if model is None:
+            return None
+        installed.append(model)
+    return tuple(installed)
+
+
 def _installed_from_payload(payload: object) -> tuple[InstalledModel, ...] | None:
     if not is_object_dict(payload):
         return None
     entries = payload.get("models")
     if not is_object_list(entries):
         return None
-    installed: list[InstalledModel] = []
-    for row in entries:
-        if not is_object_dict(row):
-            return None
-        name = row.get("name") or row.get("model")
-        if not isinstance(name, str) or not name:
-            return None
-        size = row.get("size")
-        digest = row.get("digest")
-        installed.append(
-            InstalledModel(
-                name=name,
-                size_bytes=int(size) if isinstance(size, int) and size >= 0 else None,
-                digest=digest if isinstance(digest, str) and digest else None,
-            ),
-        )
-    return tuple(installed)
+    return _installed_models_from_entries(entries)
 
 
 def read_installed_models(settings: Settings | None = None) -> tuple[InstalledModel, ...] | None:

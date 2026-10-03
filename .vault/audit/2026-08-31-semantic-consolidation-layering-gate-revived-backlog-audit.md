@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e27d46b65684e811353e4f5c20dee1d6ab21a9492571e95e19c4368735a2f46f'
+body_hash: 'sha256:73bd299bcf51b6c7850e282a7681f5070cfcccc8d27fc3d5145225a2d5132848'
 related: []
 ---
 
 # `semantic-consolidation` audit: `layering gate revived backlog`
 
-## The gate is running again, and it has a backlog
+## Scope
 
+Review the revived layering gate, distinguish inherited findings from campaign-created debt, and assess the open remediation contract.
+
+## Findings
 `lint-imports` was reported dead earlier today by another session: it aborts on
 the first syntax error it meets, prints a single narrow complaint, and evaluates
 ZERO contracts. In that state it is indistinguishable from a passing gate.
@@ -22,6 +25,13 @@ The tree now parses on both roots, so the gate runs. It analyses 5,699 files and
 
 - **`AEAT layered architecture` BROKEN** -- 82 unexempted edges
 - **`Backend and sibling entrypoints must not depend on the dedicated TUI` BROKEN**
+
+## Recommendations
+Nothing from this campaign, and that is the point of recording it. The 82 edges
+are architecture debt that became visible when the tree was repaired, and they
+belong to whoever owns the layering contract. Recorded so the next session to
+run `lint-imports` reads a known backlog rather than a fresh regression, and
+does not attribute it to the retirement work.
 
 ## The 82 are pre-existing, not campaign-created
 
@@ -64,14 +74,6 @@ now recorded three instances:
 
 The three differ in mechanism and are identical in effect: a true number about
 the wrong population, reported in the words of a clean result.
-
-## What is owed here
-
-Nothing from this campaign, and that is the point of recording it. The 82 edges
-are architecture debt that became visible when the tree was repaired, and they
-belong to whoever owns the layering contract. Recorded so the next session to
-run `lint-imports` reads a known backlog rather than a fresh regression, and
-does not attribute it to the retirement work.
 
 ## The second broken contract is a design question, not a repair
 

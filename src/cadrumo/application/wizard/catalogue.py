@@ -8,8 +8,9 @@ registry generation.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from functools import partial
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Protocol
 
 from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n.translatable import Translatable as tr
@@ -55,6 +56,283 @@ def _confirm(
     )
 
 
+class _RegistryToken(Protocol):
+    @property
+    def value(self) -> str: ...
+
+
+def _localized_choice(value: str, label_key: str, description_key: str | None = None) -> WizardChoice:
+    """Create one choice from its canonical token and reviewed copy keys."""
+    return WizardChoice(
+        value=value,
+        label=tr(label_key),
+        description=tr(description_key) if description_key is not None else None,
+    )
+
+
+def _build_iva_m303_choices(
+    operation: PinnedAuthorityOperation,
+    iva_regime_tokens: Sequence[_RegistryToken],
+) -> tuple[tuple[WizardChoice, ...], tuple[WizardChoice, ...], tuple[WizardChoice, ...]]:
+    from ...domain.calculations.registry.m303_schema_vocabulary import (
+        m303_regime_composition_choices,
+        m303_tax_territory_choices,
+    )
+
+    wizard_iva_choices = tuple(
+        _localized_choice(
+            token.value,
+            f"wizard.setup.profile.iva-regime.choices.{token.value.lower().replace('_', '-')}.label",
+            f"wizard.setup.profile.iva-regime.choices.{token.value.lower().replace('_', '-')}.description",
+        )
+        for token in iva_regime_tokens
+    )
+    wizard_m303_tax_territory_choices = tuple(
+        _localized_choice(
+            token.value,
+            f"wizard.setup.residence.tax-residence-jurisdiction-scope.choices.{token.value}.label",
+        )
+        for token in m303_tax_territory_choices(authority=operation)
+    )
+    wizard_m303_regime_composition_choices = tuple(
+        _localized_choice(
+            token.value,
+            f"wizard.setup.iva.m303-regime-composition.choices.{token.value}.label",
+        )
+        for token in m303_regime_composition_choices(authority=operation)
+    )
+    return wizard_iva_choices, wizard_m303_tax_territory_choices, wizard_m303_regime_composition_choices
+
+
+def _build_entity_choices(
+    operation: PinnedAuthorityOperation,
+) -> tuple[tuple[WizardChoice, ...], tuple[WizardChoice, ...]]:
+    from ...domain.calculations.registry.entity_type import (
+        entity_type_tokens,
+        legal_entity_form_choice_description_tokens,
+        legal_entity_form_tokens,
+    )
+
+    wizard_entity_type_choices = tuple(
+        _localized_choice(
+            member.value,
+            f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.label",
+            f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.description",
+        )
+        for member in entity_type_tokens(authority=operation)
+    )
+    described_forms = frozenset(
+        member.value for member in legal_entity_form_choice_description_tokens(authority=operation)
+    )
+    wizard_legal_entity_form_choices = tuple(
+        _localized_choice(
+            member.value,
+            f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.label",
+            (
+                f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.description"
+                if member.value in described_forms
+                else None
+            ),
+        )
+        for member in legal_entity_form_tokens(authority=operation)
+    )
+    return wizard_entity_type_choices, wizard_legal_entity_form_choices
+
+
+def _build_irpf_choices(
+    operation: PinnedAuthorityOperation,
+) -> tuple[
+    tuple[WizardChoice, ...],
+    tuple[WizardChoice, ...],
+    tuple[WizardChoice, ...],
+    tuple[WizardChoice, ...],
+    WizardCondition,
+    WizardCondition,
+]:
+    from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_choices
+    from ...domain.calculations.registry.irpf_regimes import (
+        irpf_estimation_regime_objetiva_token,
+        irpf_estimation_regime_tokens,
+        irpf_special_regime_impatriado_token,
+        irpf_special_regime_tokens,
+    )
+    from ...domain.calculations.registry.third_party_declaration_roles import third_party_declaration_role_choices
+
+    wizard_irpf_income_category_choices = tuple(
+        _localized_choice(
+            member.value,
+            f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.label",
+            f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.description",
+        )
+        for member in irpf_income_category_choices(authority=operation)
+    )
+    wizard_third_party_declaration_role_choices = tuple(
+        _localized_choice(
+            member.value,
+            f"wizard.setup.taxpayer-type.declaration-roles.choices.{member.value.replace('_', '-')}.label",
+            f"wizard.setup.taxpayer-type.declaration-roles.choices.{member.value.replace('_', '-')}.description",
+        )
+        for member in third_party_declaration_role_choices(authority=operation)
+    )
+    wizard_irpf_estimation_regime_choices = tuple(
+        _localized_choice(
+            member.value,
+            f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.label",
+            f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.description",
+        )
+        for member in irpf_estimation_regime_tokens(authority=operation)
+    )
+    wizard_irpf_special_regime_choices = tuple(
+        _localized_choice(
+            member.value,
+            f"wizard.setup.obligations.irpf-special-regime.choices.{member.value.replace('_', '-')}.label",
+            f"wizard.setup.obligations.irpf-special-regime.choices.{member.value.replace('_', '-')}.description",
+        )
+        for member in irpf_special_regime_tokens(authority=operation)
+    )
+    _impatriado_regime = WizardCondition(
+        question_id="irpf-special-regime",
+        equals=irpf_special_regime_impatriado_token(authority=operation).value,
+    )
+    _irpf_objective_estimation = WizardCondition(
+        question_id="irpf-estimation-regime",
+        equals=irpf_estimation_regime_objetiva_token(authority=operation).value,
+    )
+    return (
+        wizard_irpf_income_category_choices,
+        wizard_third_party_declaration_role_choices,
+        wizard_irpf_estimation_regime_choices,
+        wizard_irpf_special_regime_choices,
+        _impatriado_regime,
+        _irpf_objective_estimation,
+    )
+
+
+def _build_residence_choices(
+    operation: PinnedAuthorityOperation,
+) -> tuple[tuple[WizardChoice, ...], str, WizardCondition, tuple[WizardChoice, ...]]:
+    from ...domain.calculations.registry.ccaa_catalogue import ccaa_choices
+    from ...domain.calculations.registry.renta_codes_catalogue import (
+        default_fiscal_residency,
+        fiscal_residency_choices,
+        fiscal_residency_requires_country,
+    )
+
+    wizard_fiscal_residency_choices = tuple(
+        _localized_choice(
+            member.value,
+            f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.label",
+            f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.description",
+        )
+        for member in fiscal_residency_choices(authority=operation)
+    )
+    _fiscal_residency_default = default_fiscal_residency(authority=operation).value
+    _non_resident_irnr = WizardCondition(
+        question_id="fiscal-residency",
+        equals=next(
+            member.value
+            for member in fiscal_residency_choices(authority=operation)
+            if fiscal_residency_requires_country(member)
+        ),
+    )
+    wizard_ccaa_choices = tuple(
+        _localized_choice(member.value, f"wizard.setup.residence.ccaa.choices.{member.value}.label")
+        for member in ccaa_choices(authority=operation)
+    )
+    return wizard_fiscal_residency_choices, _fiscal_residency_default, _non_resident_irnr, wizard_ccaa_choices
+
+
+def _build_profile_and_personal_choices(
+    operation: PinnedAuthorityOperation,
+) -> tuple[
+    tuple[WizardChoice, ...],
+    tuple[WizardChoice, ...],
+    tuple[WizardChoice, ...],
+    tuple[WizardChoice, ...],
+    tuple[WizardChoice, ...],
+    tuple[WizardChoice, ...],
+]:
+    from ...domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_choices
+
+    wizard_output_language_choices = tuple(
+        _localized_choice(language, f"wizard.setup.profile.output-language.choices.{language}.label")
+        for language in SUPPORTED_OUTPUT_LANGUAGES
+    )
+    wizard_declaration_type_choices = (
+        _localized_choice(
+            RentaDeclaracionType.INDIVIDUAL.value,
+            "wizard.setup.profile.taxation-type.choices.individual.label",
+            "wizard.setup.profile.taxation-type.choices.individual.description",
+        ),
+        _localized_choice(
+            RentaDeclaracionType.JOINT.value,
+            "wizard.setup.profile.taxation-type.choices.joint.label",
+            "wizard.setup.profile.taxation-type.choices.joint.description",
+        ),
+    )
+    wizard_sex_choices = (
+        _localized_choice(RentaSexCode.HOMBRE.value, "wizard.setup.codes.sex.choices.h.label"),
+        _localized_choice(RentaSexCode.MUJER.value, "wizard.setup.codes.sex.choices.m.label"),
+    )
+    wizard_marital_status_choices = (
+        _localized_choice(
+            RentaMaritalStatus.SOLTERO.value, "wizard.setup.taxpayer.taxpayer-marital-status.choices.soltero.label"
+        ),
+        _localized_choice(
+            RentaMaritalStatus.CASADO.value, "wizard.setup.taxpayer.taxpayer-marital-status.choices.casado.label"
+        ),
+        _localized_choice(
+            RentaMaritalStatus.VIUDO.value, "wizard.setup.taxpayer.taxpayer-marital-status.choices.viudo.label"
+        ),
+        _localized_choice(
+            RentaMaritalStatus.SEPARADO_DIVORCIADO.value,
+            "wizard.setup.taxpayer.taxpayer-marital-status.choices.separado-divorciado.label",
+        ),
+        _localized_choice(
+            RentaMaritalStatus.PAREJA_HECHO.value,
+            "wizard.setup.taxpayer.taxpayer-marital-status.choices.pareja-hecho.label",
+        ),
+    )
+    wizard_situacion_familiar_choices = tuple(
+        _localized_choice(
+            member.value,
+            f"wizard.setup.taxpayer.situacion-familiar.choices.{member.value.replace('_', '-')}.label",
+            f"wizard.setup.taxpayer.situacion-familiar.choices.{member.value.replace('_', '-')}.description",
+        )
+        for member in situacion_familiar_choices(authority=operation)
+    )
+    wizard_disability_grade_choices = (
+        _localized_choice(
+            RentaDisabilityGrade.GE_33_LT_65.value,
+            "wizard.setup.codes.disability-grade.choices.33-64.label",
+            "wizard.setup.codes.disability-grade.choices.33-64.description",
+        ),
+        _localized_choice(
+            RentaDisabilityGrade.GE_65.value,
+            "wizard.setup.codes.disability-grade.choices.65-plus.label",
+            "wizard.setup.codes.disability-grade.choices.65-plus.description",
+        ),
+        _localized_choice(
+            RentaDisabilityGrade.JUDICIAL_INCAPACITY.value,
+            "wizard.setup.codes.disability-grade.choices.judicial-incapacity.label",
+            "wizard.setup.codes.disability-grade.choices.judicial-incapacity.description",
+        ),
+        _localized_choice(
+            RentaDisabilityGrade.ASSISTANCE_OR_REDUCED_MOBILITY.value,
+            "wizard.setup.codes.disability-grade.choices.assistance-or-reduced-mobility.label",
+            "wizard.setup.codes.disability-grade.choices.assistance-or-reduced-mobility.description",
+        ),
+    )
+    return (
+        wizard_output_language_choices,
+        wizard_declaration_type_choices,
+        wizard_sex_choices,
+        wizard_marital_status_choices,
+        wizard_situacion_familiar_choices,
+        wizard_disability_grade_choices,
+    )
+
+
 # The entity-type axis decides whether the IRPF-personal surface — the
 # spouse, family, and personal-biographic questions, plus the
 # individual-vs-joint taxation choice — is collected at all. A legal
@@ -64,9 +342,6 @@ def _confirm(
 # (or, before this gate, wrongly demands) them for a company.
 def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     """Build the setup flow from the caller's pinned authority operation."""
-    from ...domain.calculations.registry.ccaa_catalogue import (
-        ccaa_choices as _registry_ccaa_choices,
-    )
     from ...domain.calculations.registry.ccaa_catalogue import (
         default_ccaa as _default_ccaa,
     )
@@ -80,34 +355,10 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
         entity_type_natural_person_token as _entity_type_natural_person_token,
     )
     from ...domain.calculations.registry.entity_type import (
-        entity_type_tokens as _entity_type_tokens,
-    )
-    from ...domain.calculations.registry.entity_type import (
-        legal_entity_form_choice_description_tokens as _legal_entity_form_choice_description_tokens,
-    )
-    from ...domain.calculations.registry.entity_type import (
         legal_entity_form_sin_fines_lucrativos_token as _legal_entity_form_sin_fines_lucrativos_token,
-    )
-    from ...domain.calculations.registry.entity_type import (
-        legal_entity_form_tokens as _legal_entity_form_tokens,
     )
     from ...domain.calculations.registry.irpf_income_categories import (
         irpf_income_category_actividad_economica_token as _irpf_income_category_actividad_economica_token,
-    )
-    from ...domain.calculations.registry.irpf_income_categories import (
-        irpf_income_category_choices as _registry_irpf_income_category_choices,
-    )
-    from ...domain.calculations.registry.irpf_regimes import (
-        irpf_estimation_regime_objetiva_token as _irpf_estimation_regime_objetiva_token,
-    )
-    from ...domain.calculations.registry.irpf_regimes import (
-        irpf_estimation_regime_tokens as _irpf_estimation_regime_tokens,
-    )
-    from ...domain.calculations.registry.irpf_regimes import (
-        irpf_special_regime_impatriado_token as _irpf_special_regime_impatriado_token,
-    )
-    from ...domain.calculations.registry.irpf_regimes import (
-        irpf_special_regime_tokens as _irpf_special_regime_tokens,
     )
     from ...domain.calculations.registry.iva_regime_vocabulary import (
         default_iva_regime as _default_iva_regime,
@@ -115,65 +366,23 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     from ...domain.calculations.registry.iva_regime_vocabulary import (
         iva_regime_choices as _iva_regime_choices,
     )
-    from ...domain.calculations.registry.m303_schema_vocabulary import (
-        m303_regime_composition_choices as _registry_m303_regime_composition_choices,
-    )
-    from ...domain.calculations.registry.m303_schema_vocabulary import (
-        m303_tax_territory_choices as _registry_m303_tax_territory_choices,
-    )
-    from ...domain.calculations.registry.renta_codes_catalogue import (
-        default_fiscal_residency as _default_fiscal_residency,
-    )
-    from ...domain.calculations.registry.renta_codes_catalogue import (
-        fiscal_residency_choices as _registry_fiscal_residency_choices,
-    )
-    from ...domain.calculations.registry.renta_codes_catalogue import (
-        fiscal_residency_requires_country as _fiscal_residency_requires_country,
-    )
-    from ...domain.calculations.registry.situacion_familiar_catalogue import (
-        situacion_familiar_choices as _registry_situacion_familiar_choices,
-    )
-    from ...domain.calculations.registry.third_party_declaration_roles import (
-        third_party_declaration_role_choices as _registry_third_party_declaration_role_choices,
-    )
     from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 
     # Every registry projection below is evaluated through this operation.
     # The resulting descriptor must not escape the operation that supplied it
     # as a process-global catalogue.
-    ccaa_choices = partial(_registry_ccaa_choices, authority=operation)
     default_ccaa = partial(_default_ccaa, authority=operation)
     irpf_income_category_actividad_economica_token = partial(
         _irpf_income_category_actividad_economica_token, authority=operation
     )
-    irpf_income_category_choices = partial(_registry_irpf_income_category_choices, authority=operation)
-    irpf_estimation_regime_objetiva_token = partial(_irpf_estimation_regime_objetiva_token, authority=operation)
-    irpf_estimation_regime_tokens = partial(_irpf_estimation_regime_tokens, authority=operation)
-    irpf_special_regime_impatriado_token = partial(_irpf_special_regime_impatriado_token, authority=operation)
-    irpf_special_regime_tokens = partial(_irpf_special_regime_tokens, authority=operation)
     default_iva_regime = partial(_default_iva_regime, authority=operation)
     iva_regime_choices = partial(_iva_regime_choices, authority=operation)
-    m303_regime_composition_choices = partial(_registry_m303_regime_composition_choices, authority=operation)
-    m303_tax_territory_choices = partial(_registry_m303_tax_territory_choices, authority=operation)
-    default_fiscal_residency = partial(_default_fiscal_residency, authority=operation)
-    fiscal_residency_choices = partial(_registry_fiscal_residency_choices, authority=operation)
-    fiscal_residency_requires_country = partial(_fiscal_residency_requires_country, authority=operation)
-    situacion_familiar_choices = partial(_registry_situacion_familiar_choices, authority=operation)
-    third_party_declaration_role_choices = partial(
-        _registry_third_party_declaration_role_choices,
-        authority=operation,
-    )
     entity_type_attribution_entity_token = partial(_entity_type_attribution_entity_token, authority=operation)
     entity_type_legal_entity_token = partial(_entity_type_legal_entity_token, authority=operation)
     entity_type_natural_person_token = partial(_entity_type_natural_person_token, authority=operation)
-    entity_type_tokens = partial(_entity_type_tokens, authority=operation)
-    legal_entity_form_choice_description_tokens = partial(
-        _legal_entity_form_choice_description_tokens, authority=operation
-    )
     legal_entity_form_sin_fines_lucrativos_token = partial(
         _legal_entity_form_sin_fines_lucrativos_token, authority=operation
     )
-    legal_entity_form_tokens = partial(_legal_entity_form_tokens, authority=operation)
     _natural_person = WizardCondition(question_id="entity-type", equals=entity_type_natural_person_token().value)
 
     _joint_declaration = WizardCondition(question_id="taxation-type", equals="2")
@@ -191,236 +400,34 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     Shared between the :data:`wizard_iva_choices` default-marker and the
     :func:`_iva_section` question's ``default=`` so the two never drift."""
 
-    wizard_iva_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=token.value,
-            label=tr(
-                f"wizard.setup.profile.iva-regime.choices.{token.value.lower().replace('_', '-')}.label",
-            ),
-            description=tr(
-                f"wizard.setup.profile.iva-regime.choices.{token.value.lower().replace('_', '-')}.description",
-            ),
-        )
-        for token in _iva_regime_tokens
-    )
-
-    wizard_m303_tax_territory_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=token.value,
-            label=tr(
-                f"wizard.setup.residence.tax-residence-jurisdiction-scope.choices.{token.value}.label",
-            ),
-        )
-        for token in m303_tax_territory_choices()
-    )
-
-    wizard_m303_regime_composition_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=token.value,
-            label=tr(
-                f"wizard.setup.iva.m303-regime-composition.choices.{token.value}.label",
-            ),
-        )
-        for token in m303_regime_composition_choices()
-    )
-
-    wizard_entity_type_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=member.value,
-            label=tr(f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.label"),
-            description=tr(
-                f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.description"
-            ),
-        )
-        for member in entity_type_tokens()
-    )
-
-    # Only the forms whose choice carries curated explainer copy; the registry
-    # metadata owns this selector so an unlisted member never mints an
-    # unresolvable description ref.
-    wizard_described_legal_entity_forms = frozenset(
-        member.value for member in legal_entity_form_choice_description_tokens()
-    )
-
-    wizard_legal_entity_form_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=member.value,
-            label=tr(f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.label"),
-            description=(
-                tr(f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.description")
-                if member.value in wizard_described_legal_entity_forms
-                else None
-            ),
-        )
-        for member in legal_entity_form_tokens()
-    )
-
-    wizard_irpf_income_category_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=member.value,
-            label=tr(
-                f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.label"
-            ),
-            description=tr(
-                "wizard.setup.taxpayer-type.irpf-income-categories.choices."
-                f"{member.value.replace('_', '-')}.description",
-            ),
-        )
-        for member in irpf_income_category_choices()
-    )
-
-    wizard_third_party_declaration_role_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=member.value,
-            label=tr(f"wizard.setup.taxpayer-type.declaration-roles.choices.{member.value.replace('_', '-')}.label"),
-            description=tr(
-                f"wizard.setup.taxpayer-type.declaration-roles.choices.{member.value.replace('_', '-')}.description",
-            ),
-        )
-        for member in third_party_declaration_role_choices()
-    )
-
-    wizard_irpf_estimation_regime_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=member.value,
-            label=tr(f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.label"),
-            description=tr(
-                f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.description",
-            ),
-        )
-        for member in irpf_estimation_regime_tokens()
-    )
-
-    wizard_irpf_special_regime_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=member.value,
-            label=tr(f"wizard.setup.obligations.irpf-special-regime.choices.{member.value.replace('_', '-')}.label"),
-        )
-        for member in irpf_special_regime_tokens()
-    )
-
-    _impatriado_regime = WizardCondition(
-        question_id="irpf-special-regime",
-        equals=irpf_special_regime_impatriado_token().value,
-    )
-    _irpf_objective_estimation = WizardCondition(
-        question_id="irpf-estimation-regime",
-        equals=irpf_estimation_regime_objetiva_token().value,
-    )
-
-    wizard_fiscal_residency_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=member.value,
-            label=tr(f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.label"),
-            description=tr(
-                f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.description"
-            ),
-        )
-        for member in fiscal_residency_choices()
-    )
-
-    _fiscal_residency_default = default_fiscal_residency().value
-    _non_resident_irnr = WizardCondition(
-        question_id="fiscal-residency",
-        equals=next(member.value for member in fiscal_residency_choices() if fiscal_residency_requires_country(member)),
-    )
-
-    wizard_ccaa_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=member.value,
-            label=tr(f"wizard.setup.residence.ccaa.choices.{member.value}.label"),
-        )
-        for member in ccaa_choices()
-    )
-
-    wizard_output_language_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=language,
-            label=tr(f"wizard.setup.profile.output-language.choices.{language}.label"),
-        )
-        for language in SUPPORTED_OUTPUT_LANGUAGES
-    )
-
-    wizard_declaration_type_choices: tuple[WizardChoice, ...] = (
-        WizardChoice(
-            value=RentaDeclaracionType.INDIVIDUAL.value,
-            label=tr("wizard.setup.profile.taxation-type.choices.individual.label"),
-            description=tr("wizard.setup.profile.taxation-type.choices.individual.description"),
-        ),
-        WizardChoice(
-            value=RentaDeclaracionType.JOINT.value,
-            label=tr("wizard.setup.profile.taxation-type.choices.joint.label"),
-            description=tr("wizard.setup.profile.taxation-type.choices.joint.description"),
-        ),
-    )
-
-    wizard_sex_choices: tuple[WizardChoice, ...] = (
-        WizardChoice(
-            value=RentaSexCode.HOMBRE.value,
-            label=tr("wizard.setup.codes.sex.choices.h.label"),
-        ),
-        WizardChoice(
-            value=RentaSexCode.MUJER.value,
-            label=tr("wizard.setup.codes.sex.choices.m.label"),
-        ),
-    )
-
-    wizard_marital_status_choices: tuple[WizardChoice, ...] = (
-        WizardChoice(
-            value=RentaMaritalStatus.SOLTERO.value,
-            label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.soltero.label"),
-        ),
-        WizardChoice(
-            value=RentaMaritalStatus.CASADO.value,
-            label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.casado.label"),
-        ),
-        WizardChoice(
-            value=RentaMaritalStatus.VIUDO.value,
-            label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.viudo.label"),
-        ),
-        WizardChoice(
-            value=RentaMaritalStatus.SEPARADO_DIVORCIADO.value,
-            label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.separado-divorciado.label"),
-        ),
-        WizardChoice(
-            value=RentaMaritalStatus.PAREJA_HECHO.value,
-            label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.pareja-hecho.label"),
-        ),
-    )
-
-    wizard_situacion_familiar_choices: tuple[WizardChoice, ...] = tuple(
-        WizardChoice(
-            value=member.value,
-            label=tr(f"wizard.setup.taxpayer.situacion-familiar.choices.{member.value.replace('_', '-')}.label"),
-            description=tr(
-                f"wizard.setup.taxpayer.situacion-familiar.choices.{member.value.replace('_', '-')}.description",
-            ),
-        )
-        for member in situacion_familiar_choices()
-    )
-
-    wizard_disability_grade_choices: tuple[WizardChoice, ...] = (
-        WizardChoice(
-            value=RentaDisabilityGrade.GE_33_LT_65.value,
-            label=tr("wizard.setup.codes.disability-grade.choices.33-64.label"),
-            description=tr("wizard.setup.codes.disability-grade.choices.33-64.description"),
-        ),
-        WizardChoice(
-            value=RentaDisabilityGrade.GE_65.value,
-            label=tr("wizard.setup.codes.disability-grade.choices.65-plus.label"),
-            description=tr("wizard.setup.codes.disability-grade.choices.65-plus.description"),
-        ),
-        WizardChoice(
-            value=RentaDisabilityGrade.JUDICIAL_INCAPACITY.value,
-            label=tr("wizard.setup.codes.disability-grade.choices.judicial-incapacity.label"),
-            description=tr("wizard.setup.codes.disability-grade.choices.judicial-incapacity.description"),
-        ),
-        WizardChoice(
-            value=RentaDisabilityGrade.ASSISTANCE_OR_REDUCED_MOBILITY.value,
-            label=tr("wizard.setup.codes.disability-grade.choices.assistance-or-mobility.label"),
-            description=tr("wizard.setup.codes.disability-grade.choices.assistance-or-mobility.description"),
-        ),
-    )
+    (
+        wizard_iva_choices,
+        wizard_m303_tax_territory_choices,
+        wizard_m303_regime_composition_choices,
+    ) = _build_iva_m303_choices(operation, _iva_regime_tokens)
+    wizard_entity_type_choices, wizard_legal_entity_form_choices = _build_entity_choices(operation)
+    (
+        wizard_irpf_income_category_choices,
+        wizard_third_party_declaration_role_choices,
+        wizard_irpf_estimation_regime_choices,
+        wizard_irpf_special_regime_choices,
+        _impatriado_regime,
+        _irpf_objective_estimation,
+    ) = _build_irpf_choices(operation)
+    (
+        wizard_fiscal_residency_choices,
+        _fiscal_residency_default,
+        _non_resident_irnr,
+        wizard_ccaa_choices,
+    ) = _build_residence_choices(operation)
+    (
+        wizard_output_language_choices,
+        wizard_declaration_type_choices,
+        wizard_sex_choices,
+        wizard_marital_status_choices,
+        wizard_situacion_familiar_choices,
+        wizard_disability_grade_choices,
+    ) = _build_profile_and_personal_choices(operation)
 
     _entity_legal = WizardCondition(question_id="entity-type", equals=entity_type_legal_entity_token().value)
     _entity_attribution = WizardCondition(

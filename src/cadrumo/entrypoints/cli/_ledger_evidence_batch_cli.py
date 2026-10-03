@@ -25,7 +25,7 @@ keeps its status -- the document was read and stored -- and is reported beside
 it: the row carries the reason, and the run warns once with the count.
 
 See Also:
-    :class:`~cadrumo.application.ledger.evidence_ingestion_operation.LedgerEvidenceBatchProjection`
+    :class:`~cadrumo.application.ledger.evidence_ingestion_contracts.LedgerEvidenceBatchProjection`
         The typed worker result this module presents.
 """
 

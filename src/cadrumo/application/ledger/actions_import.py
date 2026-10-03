@@ -768,6 +768,20 @@ def _import_batch_id(
 apply_fx_conversion = _apply_fx_conversion
 
 
+def _require_one_import_context(results: Sequence[LedgerSourceImportResult]) -> LedgerSourceImportResult:
+    """Return the first result after proving all files describe one invocation."""
+    if not results:
+        raise TransactionValidationError("cannot aggregate an empty set of import results")
+    first = results[0]
+    for field in ("dry_run", "verify", "period", "bucket_id"):
+        values = {getattr(result, field) for result in results}
+        if len(values) > 1:
+            raise TransactionValidationError(
+                f"import results disagree on {field!r}, so they are not one import: {sorted(map(str, values))}"
+            )
+    return first
+
+
 def aggregate_ledger_import_results(
     results: Sequence[LedgerSourceImportResult],
 ) -> LedgerSourceImportResult:
@@ -798,15 +812,7 @@ def aggregate_ledger_import_results(
         TransactionValidationError: If ``results`` is empty, or if the results
             disagree on a field that describes the invocation.
     """
-    if not results:
-        raise TransactionValidationError("cannot aggregate an empty set of import results")
-    first = results[0]
-    for field in ("dry_run", "verify", "period", "bucket_id"):
-        values = {getattr(result, field) for result in results}
-        if len(values) > 1:
-            raise TransactionValidationError(
-                f"import results disagree on {field!r}, so they are not one import: {sorted(map(str, values))}"
-            )
+    first = _require_one_import_context(results)
 
     def _concat[T](select: Callable[[LedgerSourceImportResult], tuple[T, ...]]) -> tuple[T, ...]:
         # Selected by accessor rather than by field NAME: a stringly-typed

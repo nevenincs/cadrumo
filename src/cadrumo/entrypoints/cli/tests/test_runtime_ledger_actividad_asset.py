@@ -12,6 +12,30 @@ import pytest
 import typer
 from pydantic import BaseModel
 
+from ....application.actividad_asset.activity_asset_contracts import (
+    ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ActivityAssetAuthorityProvenance,
+    ActivityAssetClaimRequest,
+    ActivityAssetCorrectRequest,
+    ActivityAssetCreateRequest,
+    ActivityAssetFilingHandoffRequest,
+    ActivityAssetForecastRequest,
+    ActivityAssetInspectRequest,
+)
+from ....application.actividad_asset.activity_asset_projections import (
+    ActivityAssetClaimProjection,
+    ActivityAssetCorrectProjection,
+    ActivityAssetCreateProjection,
+    ActivityAssetFilingHandoffProjection,
+    ActivityAssetForecastProjection,
+    ActivityAssetInspectProjection,
+)
+from ....application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operation_dtos import (
     ActivityAssetFilingHandoffSnapshot,
@@ -21,28 +45,6 @@ from ....application.actividad_asset.operation_dtos import (
     ScheduledAmortizationChargeSnapshot,
 )
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
-from ....application.actividad_asset.registered_operations import (
-    ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
-    ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
-    ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
-    ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
-    ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
-    ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
-    ActivityAssetAuthorityProvenance,
-    ActivityAssetClaimProjection,
-    ActivityAssetClaimRequest,
-    ActivityAssetCorrectProjection,
-    ActivityAssetCorrectRequest,
-    ActivityAssetCreateProjection,
-    ActivityAssetCreateRequest,
-    ActivityAssetFilingHandoffProjection,
-    ActivityAssetFilingHandoffRequest,
-    ActivityAssetForecastProjection,
-    ActivityAssetForecastRequest,
-    ActivityAssetInspectionRevision,
-    ActivityAssetInspectProjection,
-    ActivityAssetInspectRequest,
-)
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection, asset_schedule_history

@@ -547,15 +547,32 @@ def _earliest_supported_period(
         if year < declared.filing_year or not revision.period_selector.includes_year(year):
             continue
         served = tuple(str(token) for token in revision.period_selector.periods_for_year(year))
-        preferred = declared.registry_token
-        for token in dict.fromkeys((*(item for item in served if item == preferred), *served)):
-            try:
-                selected = select_revision(modelo, filing_year=year, period=token, support=support)
-                candidate = Period.from_year_and_code(year, token)
-            except (RegistryError, ValueError):
-                continue
-            if str(selected.id) == revision_id:
-                return candidate
+        tokens = _preferred_scenario_period_tokens(served, declared.registry_token)
+        candidate = _supported_period_for_revision(modelo, year, revision_id, tokens, support)
+        if candidate is not None:
+            return candidate
+    return None
+
+
+def _preferred_scenario_period_tokens(served: tuple[str, ...], preferred: str) -> tuple[str, ...]:
+    return tuple(dict.fromkeys((*(item for item in served if item == preferred), *served)))
+
+
+def _supported_period_for_revision(
+    modelo: ModeloDefinition,
+    year: int,
+    revision_id: str,
+    tokens: tuple[str, ...],
+    support: SupportedFilingYearsCatalogue,
+) -> Period | None:
+    for token in tokens:
+        try:
+            selected = select_revision(modelo, filing_year=year, period=token, support=support)
+            candidate = Period.from_year_and_code(year, token)
+        except (RegistryError, ValueError):
+            continue
+        if str(selected.id) == revision_id:
+            return candidate
     return None
 
 

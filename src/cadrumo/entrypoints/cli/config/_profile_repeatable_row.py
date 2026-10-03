@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ....application.user_profile.operations import (
+from ....application.user_profile.profile_operation_contracts import (
     ProfileRepeatableRowChangeOperationProjection,
     ProfileRepeatableRowMutationOperationProjection,
     ProfileRepeatableRowMutationOperationRequest,

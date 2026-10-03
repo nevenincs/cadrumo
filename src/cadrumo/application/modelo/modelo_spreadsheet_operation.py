@@ -20,8 +20,8 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
-from ..operations.registry import OperationFrontendProjection, OperationReconciliationPolicy
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
+from ..operations.registry import OperationFrontendProjection
 from .modelo_spreadsheet_executor import ModeloSpreadsheetExecutor
 from .modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID,
@@ -61,17 +61,12 @@ def build_modelo_spreadsheet_definitions(
             else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
         )
         definitions.append(
-            OperationDefinition(
+            build_single_phase_definition(
                 definition_id=definition_id,
                 request_type=request_type,
                 result_type=ModeloSpreadsheetExecutionResult,
-                executor_factory=OperationExecutorFactory(
-                    request_type=request_type,
-                    executor_type=ModeloSpreadsheetExecutor,
-                    build=lambda: ModeloSpreadsheetExecutor(factory, source_reader=source_reader),
-                ),
-                phase_codes=(definition_id,),
-                interaction_kinds=frozenset(),
+                executor_type=ModeloSpreadsheetExecutor,
+                build=lambda: ModeloSpreadsheetExecutor(factory, source_reader=source_reader),
                 capabilities=OperationCapabilities(
                     durability=OperationDurability.RECORDED,
                     cancellation=OperationCancellation.UNSUPPORTED,
@@ -85,9 +80,8 @@ def build_modelo_spreadsheet_definitions(
                     permitted_effects=effects,
                     close_policy=OperationClosePolicy.DETACH_ALLOWED,
                 ),
-                reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-                refusal_detail_codes=_declared_refusal_codes(definition_id),
                 permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+                refusal_detail_codes=_declared_refusal_codes(definition_id),
             )
         )
     return tuple(sorted(definitions, key=lambda row: row.definition_id))

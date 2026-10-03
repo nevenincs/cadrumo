@@ -11,7 +11,6 @@ import time
 from pathlib import Path
 from threading import Timer
 
-from ..windows_process import WindowsProcessScope
 from .process_support import fixture_arguments, fixture_environment, native_python
 
 
@@ -94,6 +93,7 @@ def _launch_owner_loss(record: Path) -> None:
     from cadrumo.core.async_cleanup import close_async_resources
 
     from .. import windows_process
+    from ..windows_process import WindowsProcessScope
 
     scope = WindowsProcessScope()
     original = windows_process._launch_in_job
@@ -163,6 +163,8 @@ def main() -> None:
     if mode == "launch-owner-loss":
         _launch_owner_loss(record)
     elif mode in {"owner", "browser-owner"}:
+        from ..windows_process import WindowsProcessScope
+
         scope = WindowsProcessScope()
         try:
             scope.launch(

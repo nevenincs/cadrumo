@@ -10,14 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
-from ....application.actividad_asset.operation_dtos import (
-    ActivityAssetHistorySnapshot,
-    ActivityAssetRevisionSnapshot,
-    ScheduledAmortizationChargeSnapshot,
-)
-from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
-from ....application.actividad_asset.registered_operations import (
+from ....application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
@@ -25,19 +18,28 @@ from ....application.actividad_asset.registered_operations import (
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
     ActivityAssetAuthorityProvenance,
-    ActivityAssetClaimProjection,
     ActivityAssetClaimRequest,
-    ActivityAssetCorrectProjection,
     ActivityAssetCorrectRequest,
-    ActivityAssetCreateProjection,
     ActivityAssetCreateRequest,
-    ActivityAssetFilingHandoffProjection,
     ActivityAssetFilingHandoffRequest,
-    ActivityAssetForecastProjection,
     ActivityAssetForecastRequest,
-    ActivityAssetInspectProjection,
     ActivityAssetInspectRequest,
 )
+from ....application.actividad_asset.activity_asset_projections import (
+    ActivityAssetClaimProjection,
+    ActivityAssetCorrectProjection,
+    ActivityAssetCreateProjection,
+    ActivityAssetFilingHandoffProjection,
+    ActivityAssetForecastProjection,
+    ActivityAssetInspectProjection,
+)
+from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
+from ....application.actividad_asset.operation_dtos import (
+    ActivityAssetHistorySnapshot,
+    ActivityAssetRevisionSnapshot,
+    ScheduledAmortizationChargeSnapshot,
+)
+from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.public_scalar import PublicDecimal
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError

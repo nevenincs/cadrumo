@@ -40,7 +40,8 @@ from .....application.modelo.work_form_models import (
 )
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
-from .casilla_list import AddressKey, CasillaListEntry, value_text
+from .casilla_list_models import AddressKey, CasillaListEntry
+from .casilla_list_values import value_text
 from .page_items import StagedDisplay
 from .ports import WorkbenchChange, WorkbenchChangeKind
 from .vocabulary import TYPED_EDITABILITIES

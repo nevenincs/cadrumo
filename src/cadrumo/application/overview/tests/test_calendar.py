@@ -9,6 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -1232,6 +1233,64 @@ def test_missing_holiday_calendar_keeps_the_original_close_visibly_unverified(
     assert entry.shift_reason == "calendar_unavailable"
     assert entry.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     assert entry.holiday_territory is None
+
+
+@pytest.mark.parametrize(
+    ("language", "coverage", "expected"),
+    (
+        (
+            "en",
+            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "national and applicable regional holidays checked; local holidays not checked",
+        ),
+        (
+            "en",
+            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+            "national holidays only; the applicable regional calendar is unverified; local holidays are not checked",
+        ),
+        (
+            "es",
+            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "festivos nacionales y autonómicos aplicables comprobados; festivos locales sin comprobar",
+        ),
+        (
+            "es",
+            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+            "solo festivos nacionales; el calendario autonómico aplicable no está verificado; los festivos locales no se comprueban",
+        ),
+        (
+            "ca",
+            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "festius nacionals i autonòmics aplicables comprovats; festius locals sense comprovar",
+        ),
+        (
+            "ca",
+            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+            "només festius nacionals; el calendari autonòmic aplicable no està verificat; els festius locals no es comproven",
+        ),
+        (
+            "hu",
+            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "országos és az alkalmazandó regionális ünnepnapok ellenőrizve; a helyi ünnepnapok nincsenek ellenőrizve",
+        ),
+        (
+            "hu",
+            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+            "csak országos ünnepnapok; az alkalmazandó regionális naptár nincs ellenőrizve; a helyi ünnepnapok sincsenek ellenőrizve",
+        ),
+    ),
+)
+def test_generic_holiday_coverage_uses_literal_locale_copy_without_a_territory(
+    language: str,
+    coverage: DeadlineHolidayCoverage,
+    expected: str,
+) -> None:
+    with override_settings(cadrumo_output_language=language):
+        statement = holiday_coverage_statement(coverage, None)
+
+    assert statement == expected
+    assert "None" not in statement
+    assert "%{" not in statement
 
 
 def test_entry_refuses_a_shift_its_coverage_did_not_evaluate() -> None:

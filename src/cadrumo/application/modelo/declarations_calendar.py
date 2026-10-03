@@ -146,29 +146,8 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
             raise ValueError("calendar original close cannot follow its adjusted close")
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.adjusted_closes_on:
             raise ValueError("calendar payment cutoff cannot follow its adjusted close")
-        expected_user_state = {
-            ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
-            ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
-            ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
-            ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
-            ObligationStatus.FILED: OverviewPeriodState.FILED,
-            ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
-        }[self.legal_status]
-        if self.user_state is not expected_user_state:
-            raise ValueError("calendar legal status and user state disagree")
-        expected_days_overdue = max(0, (self.evaluated_on - self.adjusted_closes_on).days)
-        if self.legal_status is ObligationStatus.OVERDUE:
-            if self.days_overdue != expected_days_overdue or expected_days_overdue == 0:
-                raise ValueError("calendar overdue age must measure the effective close")
-        elif self.days_overdue is not None:
-            raise ValueError("calendar overdue age is only valid for an overdue obligation")
-        if self.aeat_submission_state is None:
-            if self.justificante_verified is not None:
-                raise ValueError("unknown AEAT evidence cannot carry justificante certainty")
-        elif (self.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED) != (
-            self.justificante_verified is True
-        ):
-            raise ValueError("AEAT justificante state and verification flag disagree")
+        _validate_calendar_obligation_axes(self)
+        _validate_calendar_aeat_certainty(self)
         return self
 
     @model_validator(mode="after")
@@ -202,6 +181,35 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     def semantic_key(self) -> tuple[str, int, str]:
         """Return the public natural obligation identity."""
         return (str(self.modelo), self.filing_year, self.period.registry_token)
+
+
+def _validate_calendar_obligation_axes(entry: DeclarationsCalendarEntryRefV1) -> None:
+    expected_user_state = {
+        ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
+        ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
+        ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
+        ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
+        ObligationStatus.FILED: OverviewPeriodState.FILED,
+        ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
+    }[entry.legal_status]
+    if entry.user_state is not expected_user_state:
+        raise ValueError("calendar legal status and user state disagree")
+    expected_days_overdue = max(0, (entry.evaluated_on - entry.adjusted_closes_on).days)
+    if entry.legal_status is ObligationStatus.OVERDUE:
+        if entry.days_overdue != expected_days_overdue or expected_days_overdue == 0:
+            raise ValueError("calendar overdue age must measure the effective close")
+    elif entry.days_overdue is not None:
+        raise ValueError("calendar overdue age is only valid for an overdue obligation")
+
+
+def _validate_calendar_aeat_certainty(entry: DeclarationsCalendarEntryRefV1) -> None:
+    if entry.aeat_submission_state is None:
+        if entry.justificante_verified is not None:
+            raise ValueError("unknown AEAT evidence cannot carry justificante certainty")
+    elif (entry.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED) != (
+        entry.justificante_verified is True
+    ):
+        raise ValueError("AEAT justificante state and verification flag disagree")
 
 
 class DeclarationsCalendarProjectionV1(BaseModel):

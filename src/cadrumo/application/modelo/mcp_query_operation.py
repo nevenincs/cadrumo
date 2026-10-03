@@ -19,13 +19,9 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_scalars import CalendarDate, DecimalValue
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..operator_actions.preconditions import PROFILE_SETUP_DECLARED_COMPLETE_CONDITION
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..state_projection import ModeloProfileRefusalCause, ProjectionModeloReadiness
@@ -41,11 +37,13 @@ from .mcp_query_contracts import (
     ModeloReadinessSafeRecovery,
     ModeloReadinessSummaryProjection,
 )
-from .query_read_operation import (
+from .query_read_contracts import (
     ModeloBindingsResolveRequest,
     ModeloQueryReadPortsFactory,
     ModeloReadinessOperationRequest,
     ModeloReadinessProjection,
+)
+from .query_read_operation import (
     modelo_query_read_capabilities,
     read_modelo_readiness,
     require_modelo_query_worker_identity,
@@ -202,38 +200,26 @@ class ModeloReadinessSummaryExecutor:
 
 def build_modelo_bindings_resolve_typed_definition() -> OperationDefinition:
     """Define the agent-only validated binding preview."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_BINDINGS_RESOLVE_TYPED_OPERATION_DEFINITION_ID,
         request_type=ModeloBindingsResolveRequest,
         result_type=ModeloBindingsResolveTypedProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloBindingsResolveRequest,
-            executor_type=ModeloBindingsResolveTypedExecutor,
-            build=ModeloBindingsResolveTypedExecutor,
-        ),
-        phase_codes=(MODELO_BINDINGS_RESOLVE_TYPED_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloBindingsResolveTypedExecutor,
+        build=ModeloBindingsResolveTypedExecutor,
         capabilities=modelo_query_read_capabilities(sensitive=True),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.MCP}),
     )
 
 
 def build_modelo_readiness_summary_definition(factory: ModeloQueryReadPortsFactory) -> OperationDefinition:
     """Define the agent-only readiness summary."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_READINESS_SUMMARY_OPERATION_DEFINITION_ID,
         request_type=ModeloReadinessOperationRequest,
         result_type=ModeloReadinessSummaryProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloReadinessOperationRequest,
-            executor_type=ModeloReadinessSummaryExecutor,
-            build=lambda: ModeloReadinessSummaryExecutor(factory),
-        ),
-        phase_codes=(MODELO_READINESS_SUMMARY_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloReadinessSummaryExecutor,
+        build=lambda: ModeloReadinessSummaryExecutor(factory),
         capabilities=modelo_query_read_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.MCP}),
     )
 

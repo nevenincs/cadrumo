@@ -157,10 +157,7 @@ class _WindowsCredentialManager:
         finally:
             # CredRead returns a caller-owned copy, so clear its blob before freeing it.
             try:
-                if credential_pointer and credential_pointer.contents.CredentialBlob:
-                    blob_size = int(credential_pointer.contents.CredentialBlobSize)
-                    if 0 < blob_size <= _MAX_CREDENTIAL_BLOB_SIZE:
-                        ctypes.memset(credential_pointer.contents.CredentialBlob, 0, blob_size)
+                _clear_native_credential_copy(credential_pointer)
             finally:
                 self._cred_free(ctypes.cast(credential_pointer, ctypes.c_void_p))
 
@@ -272,3 +269,11 @@ def native_automation_secret_store(backend: NativeSecretBackend) -> AutomationSe
 
         return MacOSKeychainAutomationSecretStore()
     raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
+
+
+def _clear_native_credential_copy(credential_pointer: Any) -> None:
+    """Wipe a bounded caller-owned native credential blob before its original free."""
+    if credential_pointer and credential_pointer.contents.CredentialBlob:
+        blob_size = int(credential_pointer.contents.CredentialBlobSize)
+        if 0 < blob_size <= _MAX_CREDENTIAL_BLOB_SIZE:
+            ctypes.memset(credential_pointer.contents.CredentialBlob, 0, blob_size)

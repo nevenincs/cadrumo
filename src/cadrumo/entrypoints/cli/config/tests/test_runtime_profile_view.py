@@ -62,6 +62,7 @@ def test_named_profile_view_uses_installed_runtime_and_preserves_cli_envelope(tm
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: native,
         )
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )

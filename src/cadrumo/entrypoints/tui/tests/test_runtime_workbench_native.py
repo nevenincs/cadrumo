@@ -20,7 +20,8 @@ from textual.pilot import Pilot
 from textual.widgets import Input, Select, Static
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
@@ -38,10 +39,8 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-    ModeloWorkVerifyPublicResultV2,
-)
+from cadrumo.application.modelo.operation_definitions import MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
@@ -79,7 +78,7 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLoginContext,
     SessionKind,
 )
-from cadrumo.application.workbench_generation import WorkbenchGenerationAvailability, WorkbenchGenerationV1
+from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationAvailability, WorkbenchGenerationV1
 from cadrumo.application.workbench_generation_operation import (
     WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
     WorkbenchGenerationOperationRequest,
@@ -116,7 +115,8 @@ from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperati
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
 from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginMethod, RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 
 pytestmark = [

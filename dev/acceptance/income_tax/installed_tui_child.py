@@ -267,7 +267,10 @@ async def _submit_visible_runtime_login(
     """Submit only the selected public profile and require its exact password handoff."""
     from textual.widgets import Input, Select
 
-    from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginHandoff, RuntimeLoginMethod
+    from cadrumo.entrypoints.tui.secret.runtime_login_contracts import (
+        RuntimeLoginHandoff,
+        RuntimeLoginMethod,
+    )
 
     profile = query_public_selector(pilot, "#runtime-login-profile", Select).value
     if not isinstance(profile, str):

@@ -18,19 +18,16 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    OperationAccessPolicy,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import PurchaseInvoiceEvidenceService
@@ -54,7 +51,7 @@ from .invoice_evidence_operation_dtos import (
     InvoiceDraftProjectionV1,
     LabelReadingFallbackProjectionV1,
 )
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 
 LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID = "ledger.evidence.extract"
 
@@ -242,19 +239,13 @@ def build_ledger_evidence_extract_definition(
     ports_factory: InvoiceEvidenceOperationPortsFactory,
 ) -> OperationDefinition:
     """Register on-host extraction and explicit per-invocation off-host reading."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceExtractRequest,
         result_type=LedgerEvidenceExtractExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerEvidenceExtractRequest,
-            executor_type=LedgerEvidenceExtractExecutor,
-            build=lambda: LedgerEvidenceExtractExecutor(ports_factory),
-        ),
-        phase_codes=(LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=LedgerEvidenceExtractExecutor,
+        build=lambda: LedgerEvidenceExtractExecutor(ports_factory),
         capabilities=invoice_evidence_operation_capabilities(mutates=False, off_host_optional=True),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -287,13 +278,8 @@ def _resolve_extract_access(
         or type(request.payload) is not LedgerEvidenceExtractRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    if request.payload.off_host_provider is None:
-        return resolved
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    resolve = resolve_ledger_read_access if request.payload.off_host_provider is None else resolve_ledger_commit_access
+    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_evidence_extract_registration(

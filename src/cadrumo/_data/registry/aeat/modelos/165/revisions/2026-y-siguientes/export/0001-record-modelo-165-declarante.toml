@@ -1,0 +1,398 @@
+[[revisions.2026-y-siguientes.export_layouts]]
+id = 'modelo-165-fichero'
+
+[[revisions.2026-y-siguientes.export_layouts.records]]
+id = 'modelo-165-declarante'
+record_type = 'declarante'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '1'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '165'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-ejercicio'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-nif-declarante'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-razon-social'
+offset = 18
+length = 40
+kind = 'casilla'
+casilla_id = 'declarante-razon-social'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-tipo-soporte'
+offset = 58
+length = 1
+kind = 'literal'
+literal = 'T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-contact-phone'
+offset = 59
+length = 9
+kind = 'header'
+producer_key = 'contact_person.phone'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-contact-name'
+offset = 68
+length = 40
+kind = 'header'
+producer_key = 'contact_person.full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-numero-identificativo'
+offset = 108
+length = 13
+kind = 'casilla'
+casilla_id = 'numero-identificativo-declaracion'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-complementaria-sustitutiva'
+offset = 121
+length = 2
+kind = 'casilla'
+casilla_id = 'declaracion-complementaria-sustitutiva'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-numero-identificativo-anterior'
+offset = 123
+length = 13
+kind = 'casilla'
+casilla_id = 'numero-identificativo-anterior'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-numero-total-declarados'
+offset = 136
+length = 9
+kind = 'casilla'
+casilla_id = 'numero-total-declarados'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-importe-total-suscripciones-component-145'
+offset = 145
+length = 13
+kind = 'casilla'
+casilla_id = 'importe-total-suscripciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-importe-total-suscripciones-component-158'
+offset = 158
+length = 2
+kind = 'casilla'
+casilla_id = 'importe-total-suscripciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-fecha-constitucion-component-160'
+offset = 160
+length = 4
+kind = 'casilla'
+casilla_id = 'fecha-constitucion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-year'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-fecha-constitucion-component-164'
+offset = 164
+length = 2
+kind = 'casilla'
+casilla_id = 'fecha-constitucion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-month'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-fecha-constitucion-component-166'
+offset = 166
+length = 2
+kind = 'casilla'
+casilla_id = 'fecha-constitucion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-day'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-importe-fondos-propios-sign'
+offset = 168
+length = 1
+kind = 'casilla'
+casilla_id = 'importe-fondos-propios'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'signed-component-sign'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-importe-fondos-propios-component-169'
+offset = 169
+length = 13
+kind = 'casilla'
+casilla_id = 'importe-fondos-propios'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'signed-component-integer-part'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-importe-fondos-propios-component-182'
+offset = 182
+length = 2
+kind = 'casilla'
+casilla_id = 'importe-fondos-propios'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'signed-component-fractional-digits'
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-empresa-emergente'
+offset = 184
+length = 1
+kind = 'casilla'
+casilla_id = 'empresa-emergente'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-165-t1-blancos'
+offset = 185
+length = 316
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2455-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-165-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.row_field_casilla_ids]

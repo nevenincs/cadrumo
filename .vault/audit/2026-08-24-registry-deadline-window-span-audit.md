@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-deadline-window-span'
 date: '2026-08-24'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:23e85e62e97b2ae9e23a4c502d26e76ab8bfa1b1c2077643ecdf306449c498a4'
+body_hash: 'sha256:1fdacccab6f2e43ac267f2e50d30d886c9937aaa1b531046d6984218ff7f9c48'
 related: []
 ---
 
@@ -15,6 +15,18 @@ A registry revision may declare deadline windows only for filing years inside
 its own span. Four modelos violated that, and the violations made the entire
 registry fail to load, which reddened twelve core tests that never mention
 deadlines.
+
+## Scope
+
+Review revision deadline-window declarations and downstream registry, application, CLI, and TUI measurements, including the effects of concurrent tree changes.
+
+## Findings
+
+The audit corrected copied over-span windows and an erroneous Modelo 184 edit. Filing windows for Modelos 303 and 322 and a Modelo 036 period ruling remain open; several broader failures depended on the measured commit.
+
+## Recommendations
+
+Author filing windows only from official calendars, route open filing-grade gaps to their owners, and use frozen-worktree measurements before attributing downstream test failures.
 
 ## Fixed: revisions declaring another revision's windows
 

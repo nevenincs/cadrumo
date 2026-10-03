@@ -4,13 +4,12 @@ tags:
   - '#index'
   - '#session-honest-followups'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:38ee2220531e48c922ef7689f8d27b131413519e28d0e5f5b4894fc48315c617'
+body_hash: 'sha256:386e220a015057f83355fdc63535debb77caa339d27c4046776b36aa6c34a69c'
 related:
   - '[[2026-06-02-session-honest-followups-ledger]]'
   - '[[2026-06-02-session-honest-followups-plan]]'
-  - '[[2026-06-04-session-honest-followups-adr]]'
   - '[[2026-06-04-session-honest-followups-research]]'
 ---
 
@@ -19,10 +18,6 @@ related:
 Auto-generated index of all documents tagged with `#session-honest-followups`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-session-honest-followups-adr` - `session-honest-followups` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### exec
 

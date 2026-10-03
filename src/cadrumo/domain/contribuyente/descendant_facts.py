@@ -68,7 +68,7 @@ from ..calculations.registry.descendant_relacion_catalogue import (
 )
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.tax_id_format import runtime_tax_id_format
 from .descendant import DescendantInfo
@@ -146,9 +146,7 @@ familiar at all.
 
 def _disability_band_declarations(*, authority: GovernedFactSource | None = None) -> Mapping[str, str]:
     """Resolve descendant disability-grade vocabulary from the dated registry fact."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("descendant facts require an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="descendant facts")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_DISABILITY_BAND_FACT_ID,
@@ -401,9 +399,7 @@ def _stored_relacion(
     """
     if raw is None:
         return None
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("descendant facts require an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="descendant facts")
     try:
         return require_descendant_relacion(raw.strip().lower(), authority=authority)
     except (RegistryValidationError, ValueError):

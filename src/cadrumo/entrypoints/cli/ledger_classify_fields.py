@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from ...application.ledger.classify_operation import (
+from ...application.ledger.classify_requests import (
     LedgerClassifyM210Options,
-    LedgerClassifyOperationResult,
     LedgerClassifyPatch,
+)
+from ...application.ledger.classify_result_contracts import (
+    LedgerClassifyOperationResult,
 )
 from ...application.ledger.transaction_projection import LedgerM210IncomeProjection, LedgerTransactionProjection
 from ...domain.transactions.enums import BusinessClassification

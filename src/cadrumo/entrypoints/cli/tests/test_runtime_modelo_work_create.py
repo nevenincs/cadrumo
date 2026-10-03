@@ -10,7 +10,7 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
 from ....application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,

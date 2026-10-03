@@ -1120,7 +1120,7 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     from cadrumo.adapters.local_runtime.installation import runtime_installation
     from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
     from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
-    from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+    from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
     from cadrumo.adapters.persistence.storage.custody.automation_store_composition import (
         installed_automation_secret_store,
     )

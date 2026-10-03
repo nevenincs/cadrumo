@@ -1,12 +1,9 @@
-"""One bounded launch door over native ownership, manager control and readiness."""
+"""Bounded connection to the native owner and authenticated runtime handshake."""
 
 from __future__ import annotations
 
 import asyncio
-import time
-from collections.abc import Callable, Generator
-from contextlib import contextmanager
-from typing import Literal, Protocol
+from typing import Protocol
 
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
@@ -15,60 +12,18 @@ from ...application.runtime.contracts import (
     RuntimeRefusalError,
 )
 from ...application.runtime.deadline_budget import deadline_after, remaining_budget
-from ...application.runtime.management import RuntimeUserManager
 from ...core.async_cleanup import (
     AsyncResourceCleanupError,
     attach_async_cleanup_error,
     await_cancellation_complete,
     close_async_resources,
 )
-from ...core.logging import LogExtra, get_logger
-from .framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
+from ...core.logging import get_logger
+from ...core.startup_phase_log import startup_phase
+from .framing import VerifiedRuntimeConnection
+from .runtime_transport_cleanup import RuntimeTransportCleanup
 
 _LOGGER = get_logger(__name__)
-
-
-def _log_startup_phase(
-    phase: Literal["existing_connect", "manager_inspect", "manager_start", "readiness_wait"],
-    transition: Literal["enter", "leave"],
-    elapsed: float,
-    *,
-    primary_error: BaseException | None = None,
-) -> None:
-    """Keep diagnostic failures from replacing an existing product primary."""
-    try:
-        _LOGGER.info(
-            "runtime_startup phase=%s transition=%s elapsed_seconds=%.6f",
-            phase,
-            transition,
-            elapsed,
-            extra=LogExtra(
-                {"startup_phase": phase, "transition": transition, "elapsed_seconds": elapsed}
-            ).for_logging(),
-        )
-    except Exception:
-        return
-    except BaseException:
-        if primary_error is None:
-            raise
-
-
-@contextmanager
-def _startup_phase(
-    phase: Literal["existing_connect", "manager_inspect", "manager_start", "readiness_wait"],
-) -> Generator[None]:
-    """Emit only fixed phase names and elapsed native monotonic seconds."""
-    started = time.monotonic()
-    primary: list[BaseException] = []
-    _log_startup_phase(phase, "enter", 0.0)
-    try:
-        yield
-    except BaseException as error:
-        primary.append(error)
-        raise
-    finally:
-        elapsed = time.monotonic() - started
-        _log_startup_phase(phase, "leave", elapsed, primary_error=primary[0] if primary else None)
 
 
 class RuntimeEndpointConnector(Protocol):
@@ -95,32 +50,19 @@ def _carry_cleanup_owner(target: BaseException, source: BaseException) -> None:
 
 
 class RuntimeLaunchDoor:
-    """Connect first, otherwise request existing provisioning once and await readiness.
-
-    This is not admission, an operation supervisor or a direct-process launcher.
-    A manager start may complete after cancellation/timeout; no rollback or
-    service stop is implied. Another invocation always attempts connection first.
-    Missing supported provisioning refuses rather than spawning an uncontained
-    process or changing autostart, lingering or unattended authorization.
-    """
+    """Connect to an existing owner without provisioning or starting a process."""
 
     def __init__(
         self,
         endpoint: RuntimeEndpointConnector,
         *,
         expected: RuntimeClientHello,
-        manager: RuntimeUserManager | None = None,
-        manager_factory: Callable[[], RuntimeUserManager | None] | None = None,
     ) -> None:
         """Bind a native endpoint to the exact expected root and installed cohort."""
         if endpoint.storage_identity != expected.storage_identity:
             raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
-        if manager is not None and manager_factory is not None:
-            raise ValueError("supply one runtime manager source")
         self._endpoint = endpoint
         self._expected = expected
-        self._manager = manager
-        self._manager_factory = manager_factory
 
     async def _connect(self, deadline: float) -> VerifiedRuntimeConnection:
         def connect() -> VerifiedRuntimeConnection:
@@ -156,36 +98,13 @@ class RuntimeLaunchDoor:
         try:
             async with asyncio.timeout(timeout):
                 try:
-                    with _startup_phase("existing_connect"):
+                    with startup_phase(_LOGGER, "existing_connect"):
                         opened = await self._connect(deadline)
                         return opened
                 except RuntimeRefusalError as error:
                     if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY:
                         raise
-                manager = self._manager if self._manager_factory is None else self._manager_factory()
-                if manager is None:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-                with _startup_phase("manager_inspect"):
-                    current = await manager.inspect()
-                if not current.available or not current.provisioned:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-                if not current.binding_matches:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
-                # login_autostart is deliberately not an admission condition.
-                # Native manager adapters re-check the binding before control.
-                remaining_budget(deadline)
-                with _startup_phase("manager_start"):
-                    await manager.start()
-                with _startup_phase("readiness_wait"):
-                    while True:
-                        remaining_budget(deadline)
-                        try:
-                            opened = await self._connect(deadline)
-                            return opened
-                        except RuntimeRefusalError as error:
-                            if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY:
-                                raise
-                        await asyncio.sleep(min(0.05, remaining_budget(deadline)))
+                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from error
         except TimeoutError as error:
             refusal = RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
             if isinstance(error.__cause__, asyncio.CancelledError):

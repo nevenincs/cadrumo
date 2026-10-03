@@ -19,6 +19,8 @@ from ....core.period import Period
 from .election import (
     WORKFORCE_CONDITIONED_METHODS,
     AmortizationMethod,
+    ElectionReference,
+    EvidenceReference,
     require_euro_cents,
     require_free_depreciation_facts,
 )
@@ -69,8 +71,8 @@ class AmortizationClaim(BaseModel):
     calculation_revision_id: CalculationRevisionId | None = None
     filing_revision_id: Hex64Str | None = None
     method: AmortizationMethod = AmortizationMethod.LINEAR
-    free_depreciation_election_reference: str | None = Field(default=None, min_length=1, max_length=256)
-    free_depreciation_new_material_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
+    free_depreciation_election_reference: ElectionReference | None = None
+    free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: Decimal | None = None
     free_depreciation_annual_cap: Decimal | None = None
 

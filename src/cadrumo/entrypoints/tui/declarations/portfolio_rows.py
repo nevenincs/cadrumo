@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from ....application.modelo.declaration_targets import DeclarationTarget
 from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
-from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
+from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....core.external_constants import OutputLanguage
 from ....core.text_fold import fold_for_matching
 from ..modelo.workbench.wording import modelo_title, period_words

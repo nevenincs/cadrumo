@@ -1,0 +1,43 @@
+# Workspace producer contracts and capture ports
+
+[Technical overview](../README.md) · [Article index](README.md) · [Snapshot and reading guide](../reading-guide.md)
+
+> This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
+
+**Report:** `STAGE-2-088` · **Topic:** [Modelo work and revision lifecycle, part 2: verification, workbench and workspace](../topics/modelo-work-and-revision-lifecycle-part-2.md)
+
+<!-- preserved:article -->
+**Scope:** `src/cadrumo/application/modelo/workspace_producers.py`, all 864 lines, 37,346 bytes and 7,320 measured `o200k_base` proxy tokens. Both bounded-reader pages were read completely. Static inspection only; no application execution or tests were run.
+
+## Capabilities and mechanisms
+
+This module gives the workspace assembler a single typed envelope for each source projection: its value, the exact producer contract stamp and an owner-scoped invalidation epoch. The closed contributor set is registry, work, bounded review, calculation, readiness, locale catalogue and field manifest. Application-owned adapters connect those categories to the native authority and capture functions; they do not independently synthesize domain facts. Contributor denominator and immutable base models (`src/cadrumo/application/modelo/workspace_producers.py`), projection, stamp and epoch envelope (`src/cadrumo/application/modelo/workspace_producers.py`)
+
+Each declared producer contract fixes contributor kind and identity, discriminator, contract version, projection schema fingerprint and epoch schema. Its digest is reproducibly derived from these fields and the atomic-read operation. A stamp copies the contract identity, and a capture must match the declared stamp, owner, epoch kind/version and projection schema. The schema fingerprint uses Pydantic's serialization schema, which matches what the workspace consumer receives; the implementation explains why requiring validation and serialization schemas to be identical would incorrectly reject valid Decimal-bearing projections. Fingerprint rule (`src/cadrumo/application/modelo/workspace_producers.py`), contract declaration and digest validation (`src/cadrumo/application/modelo/workspace_producers.py`), capture contract checks (`src/cadrumo/application/modelo/workspace_producers.py`)
+
+Epochs pair a positive monotonic generation with an owner, schema version and comparison-domain digest. Equality is valid only for the same owner and domain, so generation reuse across a process incarnation cannot make an old capture look current. `require_current` then rejects any generation change. This is the module's explicit ABA defense; whether each native source increments its generation correctly is delegated to those source implementations. Epoch comparison rules (`src/cadrumo/application/modelo/workspace_producers.py`)
+
+Seven fixed contracts describe the exact owner/producer identities expected by the workspace boundary. The registry envelope discriminates between a static `RegistryRevisionInspection` and graded `RegistrySnapshot` and rejects both-present or both-absent states. Readiness and locale have thin Pydantic wrappers because their native captures are a tuple and a dataclass, respectively; the wrappers retain the producer's values without adding computed fields. Registry admission envelope and wrappers (`src/cadrumo/application/modelo/workspace_producers.py`), canonical contributor contracts (`src/cadrumo/application/modelo/workspace_producers.py`)
+
+Contracts are declared from the projection classes' current serialization schema at module initialization. Building a port attaches the stamp and epoch; the generic capture envelope's `require_contract` method performs the comparison when invoked. That separation means the aggregator or its caller must actually make the check before trusting each capture; construction alone does not validate it against a freshly declared contract. Contract digest mismatch and projection mismatch currently surface as `ValueError`, leaving conversion into a user-facing typed refusal to the caller. Capture validation method (`src/cadrumo/application/modelo/workspace_producers.py`), contract constants (`src/cadrumo/application/modelo/workspace_producers.py`), simple envelope construction (`src/cadrumo/application/modelo/workspace_producers.py`)
+
+The registry port delegates to the authority's law-selected projection capture, passing model, year, period, date and optional grade, then wraps the capture with its returned comparison domain and generation. The work port delegates to `capture_modelo_work_resolution`; bounded review binds the bucket and target coordinates with its work, calculation and verification repositories; calculation captures one revision; readiness captures its report set; locale captures one key or batches many keys through one catalogue window; and field-manifest capture dispatches to the appropriate snapshot or inspection manifest generator. Each also exposes a current-epoch read where its owner has one. Registry capture port (`src/cadrumo/application/modelo/workspace_producers.py`), work and review ports (`src/cadrumo/application/modelo/workspace_producers.py`), calculation and readiness ports (`src/cadrumo/application/modelo/workspace_producers.py`), locale batch and manifest ports (`src/cadrumo/application/modelo/workspace_producers.py`)
+
+## Knowledge, security, and implementation assessment
+
+The module carries identities, serialized contract shape, captured producer projections and freshness coordinates; it does not itself decide tax results, readiness, locale fallback or review contents. Those remain with the registry authority, work addressing, review, calculation, readiness, locale and manifest producers. Contract stamps and epochs allow the consumer to detect schema drift and stale snapshots, while strict frozen models constrain mutation of the captured envelope. Frozen model configuration and contributor kinds (`src/cadrumo/application/modelo/workspace_producers.py`), contract and epoch validation (`src/cadrumo/application/modelo/workspace_producers.py`)
+
+The adapters' names and contract field `atomic_read_operation` state that projection and epoch are captured together. The port implementations generally delegate to native `capture_*` calls returning both. That is a meaningful interface promise; this file alone does not prove the internals are atomic, durable, or synchronized with writes. The later `read_current_epoch` check is a freshness test, not a transaction covering all source repositories. Locale batching specifically captures multiple entries over one catalogue window; the single-entry port remains available for isolated resolution. Atomic capture contract (`src/cadrumo/application/modelo/workspace_producers.py`), locale batch capture (`src/cadrumo/application/modelo/workspace_producers.py`)
+
+The enforced controls are explicit and useful: closed contributor kinds, schema-derived contract digests, exact stamps, distinct registry admission arms, positive generations, and owner/domain comparison checks. There is no filesystem, network, credential, PII, or mutation behavior shown in this module; that observation is local to this chunk. No assigned test files or execution evidence are present, so generation rollover, contract-change detection, native capture atomicity and port compatibility are unverified here. A further cross-module question is whether the required owner identity table is checked against one canonical registry contract elsewhere; this module hard-codes its seven entries.
+
+## Dependencies and follow-up
+
+Synthesis should trace each delegated capture and current-coordinate function to establish its locking and generation semantics, especially registry authority, readiness, work resolution and bounded review. It should also verify how producer contracts are registered and consumed, and whether schema fingerprints are checked at startup or only when a port capture is validated. The manifest port's process-local domain should be reconciled with the workspace manifest lifecycle.
+
+## Complete assigned-file coverage
+
+The assigned file was read completely through pages 1–2; no portions were unread.
+
+- workspace_producers.py (`src/cadrumo/application/modelo/workspace_producers.py`)
+<!-- /preserved:article -->

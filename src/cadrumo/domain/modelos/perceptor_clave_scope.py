@@ -26,7 +26,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period, StandardPeriodCode
 from ..calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import DateAxis
@@ -96,9 +96,7 @@ def resolve_perceptor_clave_scope(
     selector, so the coordinate is the period's own end date and the governed
     fact resolver picks the edition, including any temporal projection.
     """
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError("perceptor clave scope requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="perceptor clave scope")
     effective_date = period.end_date
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(

@@ -15,7 +15,8 @@ import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import OptionList, Static
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
 from cadrumo.application.user_profile.access_contracts import AccessScope, Availability, ProfileAccessStatus

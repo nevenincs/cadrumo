@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:26f6181f4539b7f7abcee170b695cc490a130cf4ac47f952ea11f1ba45772586'
+body_hash: 'sha256:7df2a455c89458830614975e87c8315dfabaf8a267821e2b03e9863a79927836'
 related: []
 ---
 
 # `semantic-consolidation` audit: `production scan surface definitions`
 
-## The finding
+## Scope
 
+Compare production-scan surface definitions across walkers and assess whether the differences change the detected module set.
+
+## Findings
 `cadrumo.tests._inventory.production_python_files` documents itself as the
 shared definition: test modules, `conftest.py` files and the bundled `_data`
 tree are excluded "so structural production ratchets share one definition of
@@ -26,6 +29,18 @@ Reported by another session as a pair -- `_inventory.production_python_files`
 against `dev/source_connectivity/discovery._production_python_files` -- with the
 caveat that the count came from looking for one behaviour rather than sweeping.
 The caveat was right: it is a family, not a pair.
+
+## Recommendations
+A designed answer for the shared surface, then adoption by the walkers that mean
+"production" -- not by all 55. The scoped walkers should keep their scopes and
+say so.
+
+One constraint worth stating before anyone reaches for it: pointing
+`dev/source_connectivity/discovery.py` at `cadrumo.tests._inventory` creates a
+`dev -> cadrumo.tests` edge, and `cadrumo.tests` is currently the trigger for
+nine armed import-linter pins that name the bare package and will stop matching
+if its `__init__` goes inert. That is not a reason to avoid the consolidation,
+but it belongs in the same change.
 
 ## The disagreements have teeth
 
@@ -81,19 +96,6 @@ The reporting session declined to fix it and gave the reason: a name convention
 guesses at what agents call their scratch files, and a git-tracked filter
 couples a pure AST walker to a checkout. Both objections hold, and the second is
 strengthened by the measurement above.
-
-## What this needs
-
-A designed answer for the shared surface, then adoption by the walkers that mean
-"production" -- not by all 55. The scoped walkers should keep their scopes and
-say so.
-
-One constraint worth stating before anyone reaches for it: pointing
-`dev/source_connectivity/discovery.py` at `cadrumo.tests._inventory` creates a
-`dev -> cadrumo.tests` edge, and `cadrumo.tests` is currently the trigger for
-nine armed import-linter pins that name the bare package and will stop matching
-if its `__init__` goes inert. That is not a reason to avoid the consolidation,
-but it belongs in the same change.
 
 ## Design input: reachability was tested and is not sufficient
 

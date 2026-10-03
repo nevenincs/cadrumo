@@ -4,12 +4,11 @@ tags:
   - '#index'
   - '#registry-row-width-pressure'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4e90d445ed62d3769abffd90ffe7828250a715600b394501f3b85d54b291986'
+body_hash: 'sha256:2a91ed972974f293df64a052f3932d2dddf28d9d47ce97cfd01550b76ae0a1dd'
 related:
   - '[[2026-06-04-registry-row-width-pressure-P03-summary]]'
-  - '[[2026-06-04-registry-row-width-pressure-adr]]'
   - '[[2026-06-04-registry-row-width-pressure-audit]]'
   - '[[2026-06-04-registry-row-width-pressure-code-review-audit]]'
   - '[[2026-06-04-registry-row-width-pressure-ledger]]'
@@ -23,10 +22,6 @@ related:
 Auto-generated index of all documents tagged with `#registry-row-width-pressure`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-registry-row-width-pressure-adr` - `registry-row-width-pressure` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### audit
 

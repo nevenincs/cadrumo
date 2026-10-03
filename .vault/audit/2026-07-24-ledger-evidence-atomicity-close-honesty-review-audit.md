@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#ledger-evidence-atomicity'
 date: '2026-07-24'
-modified: '2026-07-24'
+modified: '2026-10-03'
 body_hash: 'sha256:b24e14e87dbccda7c778f5ce95cabeb65d9cbeeed45d362d6ba010987203909f'
 related:
   - "[[2026-07-17-ledger-evidence-atomicity-plan]]"
-  - "[[2026-07-17-ledger-evidence-atomicity-adr]]"
   - "[[2026-07-17-ledger-evidence-atomicity-audit]]"
+  - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---
 
 # `ledger-evidence-atomicity` audit: `Close honesty review`

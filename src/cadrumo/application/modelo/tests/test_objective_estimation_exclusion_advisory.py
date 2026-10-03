@@ -25,7 +25,7 @@ from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
-from ..verification_actions import _collect_revision_verification_findings
+from ..verification_revision_findings import collect_revision_verification_findings
 from .invoice_catalogue_fake import InvoiceCatalogueFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -245,7 +245,7 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
             objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
         )
 
-        findings, _resolved, _missing, _failures_by_finding_id = _collect_revision_verification_findings(
+        findings, _resolved, _missing, _failures_by_finding_id = collect_revision_verification_findings(
             work_unit=work_unit,
             target=_calculation_revision(work_unit),
             profile=profile,

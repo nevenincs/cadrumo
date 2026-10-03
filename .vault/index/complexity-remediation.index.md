@@ -6,10 +6,11 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:60a0cacafcac9a8c89231cbeaf792ce214a2dd710cc6eafb62d3129df5733715'
+body_hash: 'sha256:06332a70a5b5a8ef656aca7ee48b004e2dce2a82e0fe8e0bc0187438ebde671d'
 related:
   - '[[2026-10-02-complexity-remediation-ledger]]'
   - '[[2026-10-02-complexity-remediation-plan]]'
+  - '[[2026-10-03-complexity-remediation-audit]]'
 ---
 
 # `complexity-remediation` feature index
@@ -17,6 +18,10 @@ related:
 Auto-generated index of all documents tagged with `#complexity-remediation`.
 
 ## Documents
+
+### audit
+
+- `2026-10-03-complexity-remediation-audit` - `complexity-remediation` audit: `Integrated complexity remediation review`
 
 ### exec
 

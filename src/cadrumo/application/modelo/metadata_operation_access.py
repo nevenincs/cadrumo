@@ -22,6 +22,7 @@ from ..user_profile.access_contracts import (
     OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .edit_apply_contracts import ModeloEditApplyOperationRequestV1
 from .m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
     ModeloWorkM303AttestationRequest,
@@ -31,11 +32,9 @@ from .operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
-    ModeloEditApplyOperationRequestV1,
-    ModeloWorkCalculateRequest,
-    ModeloWorkDiscardRequest,
-    ModeloWorkRenameRequest,
 )
+from .work_calculation_contracts import ModeloWorkCalculateRequest
+from .work_change_contracts import ModeloWorkDiscardRequest, ModeloWorkRenameRequest
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 

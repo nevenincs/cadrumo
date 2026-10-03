@@ -9,7 +9,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import (
     OperationCancellation,
@@ -17,7 +16,6 @@ from ...core.operations import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
-    profile_operation_subject,
 )
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -36,17 +34,16 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPorts, LedgerActionPortsFactory
+from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_classification import (
     ClassificationRulePlan,
     ClassificationRulePlanRow,
@@ -61,7 +58,7 @@ from .commit_fence import (
     run_with_ledger_commit_fence,
 )
 from .models import ApplyRulesAppliedRow, ApplyRulesResult
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 from .rule_contracts import (
     LedgerRuleAddExecutionResult,
     LedgerRuleAddProjection,
@@ -220,7 +217,7 @@ class LedgerRuleAddExecutor:
         """Validate and persist one rule, returning its complete encrypted row."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        _require_operation_identity(request, context, LEDGER_RULE_ADD_OPERATION_DEFINITION_ID, bucket_id)
+        _require_operation_identity(request, context, LEDGER_RULE_ADD_OPERATION_DEFINITION_ID, payload.profile_id)
         await context.events.phase(LEDGER_RULE_ADD_OPERATION_DEFINITION_ID)
         operation: PinnedAuthorityOperation = context.authority_operation
         prepared = await _prepare_rule_add(payload, bucket_id=bucket_id, operation=operation, context=context)
@@ -265,7 +262,7 @@ class LedgerRuleListExecutor:
         """Read the complete profile-local rule list in canonical order."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        _require_operation_identity(request, context, LEDGER_RULE_LIST_OPERATION_DEFINITION_ID, bucket_id)
+        _require_operation_identity(request, context, LEDGER_RULE_LIST_OPERATION_DEFINITION_ID, payload.profile_id)
         await context.events.phase(LEDGER_RULE_LIST_OPERATION_DEFINITION_ID)
         repository = await asyncio.to_thread(self._repository_factory, bucket_id=bucket_id)
         rules = await asyncio.to_thread(repository.list_rules)
@@ -297,14 +294,14 @@ class LedgerRuleApplyExecutor:
         """Preview canonical matches or apply each match behind its write fence."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        _require_operation_identity(request, context, LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID, bucket_id)
+        _require_operation_identity(request, context, LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID, payload.profile_id)
         await context.events.phase(LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID)
         operation: PinnedAuthorityOperation = context.authority_operation
         ports, repository = await asyncio.gather(
             asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation),
             asyncio.to_thread(self._repository_factory, bucket_id=bucket_id),
         )
-        _require_exact_ports(ports, bucket_id=bucket_id, operation=operation)
+        require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
         plan = await asyncio.to_thread(
             plan_classification_rules,
             bucket_id=bucket_id,
@@ -445,32 +442,12 @@ def _require_operation_identity[RequestPayloadT: BaseModel](
     request: OperationRequest[RequestPayloadT],
     context: OperationExecutorContext,
     definition_id: str,
-    bucket_id: str,
+    profile_id: UUID,
 ) -> None:
     """Refuse request, subject, active-profile, or owner identity substitution."""
-    subject = profile_operation_subject(bucket_id)
-    if (
-        request.definition_id != definition_id
-        or context.identity.definition_id != definition_id
-        or request.subject_ref != subject
-        or context.identity.subject_ref != subject
-        or require_active_bucket_id() != bucket_id
-    ):
+    if request.definition_id != definition_id or context.identity.definition_id != definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-
-def _require_exact_ports(
-    ports: LedgerActionPorts,
-    *,
-    bucket_id: str,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Refuse any broad ledger capability not bound to the active request."""
-    if ports.operation is not operation or ports.transaction_repository.bucket_id != bucket_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    for repository in (ports.invoice_repository, ports.work_unit_repository, ports.calculation_repository):
-        if getattr(repository, "bucket_id", None) != bucket_id:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    require_operation_profile(request, context, profile_id)
 
 
 def _resolve_category(category_id: str | None, *, operation: PinnedAuthorityOperation) -> str | None:
@@ -522,17 +499,12 @@ def _definition[RequestT: BaseModel, ResultT: BaseModel, ExecutorT](
     refusal_detail_codes: frozenset[str] = frozenset({LEDGER_RULE_VALIDATION_REFUSAL_CODE}),
 ) -> OperationDefinition:
     """Declare one CLI-only, exact-profile recorded rule operation."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=executor_type,
-            build=build,
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
+        executor_type=executor_type,
+        build=build,
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -546,7 +518,6 @@ def _definition[RequestT: BaseModel, ResultT: BaseModel, ExecutorT](
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=refusal_detail_codes,
     )
@@ -608,13 +579,8 @@ def _resolve_rule_access(
 ) -> ResolvedOperationAccess:
     if request.definition_id != definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
-    if not commit:
-        return resolved
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    resolve = resolve_ledger_commit_access if commit else resolve_ledger_read_access
+    return resolve(request, context, profile_id=profile_id, periods=frozenset())
 
 
 def resolve_ledger_rule_add_access(
