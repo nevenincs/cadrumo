@@ -2,20 +2,63 @@
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "real_decreto"
-corpus_ref = "corpus/normatives/html/rd-1065-2007-art-31.html#a31"
+corpus_ref = "corpus/normatives/html/rd-1065-2007.html#a31"
 document_id = "BOE-A-2007-15984"
 article = "31"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a31"
 published_at = 2007-09-05
 effective_from = 2008-01-01
-review_status = "operator_reviewed"
-reviewed_at = 2026-05-27
-reviewed_by = "operator"
-notes = "RGAT art 31: obligacion de informar sobre las operaciones con terceras personas. Base reglamentaria del Modelo 347 (declaracion anual de operaciones con terceras personas, umbral de 3.005,06 EUR / contraparte / ejercicio)."
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-03
+reviewed_by = "agent-review"
+notes = """\
+RGAT art 31: obligados a suministrar informacion sobre operaciones con terceras personas. \
+Apartado 1 obliga a quienes desarrollen actividades empresariales o profesionales a presentar \
+la declaracion anual (base reglamentaria del Modelo 347); apartado 2 extiende la obligacion a \
+las adquisiciones al margen de la actividad de las entidades del art 94.1 y 2 LGT; apartado 3 \
+alcanza a las entidades que cobran honorarios o derechos por cuenta de sus socios, asociados o \
+colegiados. El articulo no fija ningun importe: el umbral por contraparte lo establece el art 33 \
+y la exclusion de quienes no lo superan el art 32.c. Texto verificado contra el consolidado \
+bundled corpus/normatives/html/rd-1065-2007.html (redaccion del apartado 1 por RD 828/2013, \
+BOE-A-2013-11216).\
+"""
 required_text = [
-    "deberán presentar una declaración anual relativa a sus operaciones",
-    "con terceras personas",
-    "3.005,06 euros",
+    "que desarrollen actividades empresariales o profesionales, deberán presentar una declaración anual relativa a sus operaciones con terceras personas",
+    "incluirán también en la declaración anual de operaciones con terceras personas las adquisiciones en general de bienes o servicios que efectúen al margen de las actividades empresariales o profesionales",
+    "realicen la de cobro, por cuenta de sus socios, asociados o colegiados, de honorarios profesionales o de derechos derivados de la propiedad intelectual",
+]
+forbidden_text = ["3.005,06"]
+
+[legal."rd-1065-2007:art-32"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007.html#a32"
+document_id = "BOE-A-2007-15984"
+article = "32"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a32"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-03
+reviewed_by = "agent-review"
+notes = """\
+RGAT art 32: personas o entidades excluidas de la obligacion de presentar la declaracion \
+anual de operaciones con terceras personas (Modelo 347). Letra b) excluye las actividades en \
+estimacion objetiva del IRPF que tributan simultaneamente en los regimenes especiales \
+simplificado, agricultura o recargo de equivalencia del IVA, salvo por las operaciones por las \
+que emitan factura; letra c) a quienes no superen 3.005,06 EUR por contraparte y ano natural, \
+o 300,51 EUR en el cobro por cuenta de terceros; letra e) a los obligados del art 62.6 RIVA \
+(llevanza de libros registro por el SII). Texto verificado contra el consolidado bundled \
+corpus/normatives/html/rd-1065-2007.html (letra e en la redaccion del RD 1512/2018, \
+BOE-A-2018-17995).\
+"""
+required_text = [
+    "No estarán obligados a presentar la declaración anual",
+    "por las actividades que tributen en dicho impuesto por el método de estimación objetiva",
+    "salvo por las operaciones por las que emitan factura",
+    "hayan superado la cifra de 3.005,06 euros durante el año natural correspondiente o de 300,51 euros durante el mismo periodo",
+    "Los obligados tributarios a que se refiere el artículo 62.6 del Reglamento del Impuesto sobre el Valor Añadido",
 ]
 
 [legal."orden-eha-3012-2008:art-1"]
@@ -227,11 +270,16 @@ excluye determinadas operaciones del deber de declarar (apartado 2), y establece
 umbral separado de 300,51 EUR para los cobros por cuenta de terceros de honorarios \
 profesionales o derechos de propiedad intelectual/industrial (apartado 4, remitiendo a \
 los obligados del art 31.3). Es la base reglamentaria de las claves A/B (umbral general) \
-y C (cobros por cuenta de terceros) del diseno de registro del Modelo 347. Texto \
+y C (cobros por cuenta de terceros) del diseno de registro del Modelo 347. El parrafo \
+segundo del apartado 1 computa por separado las entregas y las adquisiciones, de modo que el \
+umbral se juzga por contraparte y sentido de la operacion; el apartado 3 relaciona las \
+subvenciones satisfechas por las Administraciones Publicas cualquiera que sea su importe. Texto \
 verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html.\
 """
 required_text = [
     "hayan superado la cifra de 3.005,06 euros durante el año natural",
+    "se computarán de forma separada las entregas y las adquisiciones de bienes y servicios",
+    "a quienes hayan satisfecho subvenciones, auxilios o ayudas, cualquiera que sea su importe",
     "haya superado la cifra de 300,51 euros",
 ]
 

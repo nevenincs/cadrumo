@@ -225,16 +225,16 @@ def _build_contraparte_clave_rows(
     ``importe_total``, so the annual total is the sum of the four quarters by
     construction, not by a separate reconciling step.
 
-    Applies the RD 1065/2007 art. 31 declaration floor to *this* family
-    before grouping, routed through :func:`_m347_row_family_threshold_filter`,
-    which itself delegates to the same canonical comparison
-    (:func:`~.m347_threshold.m347_declarable_party_ids` /
-    ``m347_clave_c_declarable_party_ids``) rather than a new one written out
-    here. A party's TOTAL across every NON-clave-C clave decides general
-    declarability (the floor is strictly exceeded, ``>``, never merely
-    reached); a beneficiary's clave-C total is judged separately against its
-    OWN, lower 300,51 EUR floor (arts. 32.c, 33.4), alongside rather than
-    instead of the general one.
+    Applies the RD 1065/2007 art. 33 declaration floor to *this* family
+    before grouping, through the ``m347_threshold_filter`` the caller passes
+    (the invoice family's ``_m347_row_family_threshold_filter``), which
+    delegates to the one canonical comparison,
+    :func:`~.m347_threshold.m347_declarable_party_buckets`, rather than a new
+    one written out here. The floor is judged per counterparty AND per
+    threshold bucket of the dated clave-bucket fact: entregas and
+    adquisiciones are computed separately (art. 33.1), clave C against its
+    own 300,51 EUR floor (arts. 32.c, 33.4), and the floor is strictly
+    exceeded, ``>``, never merely reached.
     """
     observations = m347_threshold_filter(observations)
     grouped: dict[tuple[str, str, str], _ContraparteClaveAccumulator] = {}

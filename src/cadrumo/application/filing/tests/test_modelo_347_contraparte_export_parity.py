@@ -150,13 +150,13 @@ def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation(revision_
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
 def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(revision_id: str) -> None:
-    """RD 1065/2007 art. 31's floor, proven for all three cases through the real resolver.
+    """RD 1065/2007 art. 33.1's floor, proven for all three cases through the real resolver.
 
     Before this fix, the ``contraparte_clave`` per-row family applied NO
     threshold at all -- a real over-declaration bug, distinct from the
     under-declaration findings elsewhere in this area. This proves the
     fix routes through the one canonical comparison
-    (``m347_declarable_party_ids``) rather than a new one written here: a
+    (``m347_declarable_party_buckets``) rather than a new one written here: a
     counterparty BELOW the floor produces no row, one landing EXACTLY on it
     (the `>`, never `>=`, semantics the canonical comparison's own docstring
     names) produces no row either, and one ABOVE it still produces its row.
@@ -485,9 +485,11 @@ def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_
 
     Both designs: the count is the number of declarado records, a declarado
     counted once per record it appears in, and the amount is the signed sum of
-    those records' annual amounts. One counterparty with a sale and a purchase
-    is two records; a clave C beneficiary above its own lower floor is one; a
-    counterparty under the general floor emits nothing and adds nothing.
+    those records' annual amounts. One counterparty whose sales and purchases
+    each exceed the floor is two records (RD 1065/2007 art. 33.1 computes the
+    entregas and the adquisiciones separately); a clave C beneficiary above its
+    own lower floor is one; a counterparty under the general floor emits
+    nothing and adds nothing.
     """
     revision = _revision(revision_id)
     above_general = (_m347_threshold() + Decimal("1000.00")).quantize(Decimal("0.01"))
@@ -507,7 +509,7 @@ def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
             transaction_date=date(2025, 6, 1),
-            total="200.00",
+            total=str(above_general),
             operation_clave="A",
         ),
         _observation(
@@ -540,5 +542,5 @@ def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_
     assert totals["modelo-347-declarante-numero-personas-entidades"] == Decimal(len(emitted))
     assert totals["modelo-347-declarante-importe-total-anual-operaciones"] == sum(emitted, Decimal("0"))
     assert totals["modelo-347-declarante-importe-total-anual-operaciones"] == (
-        above_general + Decimal("200.00") + above_clave_c
+        above_general + above_general + above_clave_c
     )

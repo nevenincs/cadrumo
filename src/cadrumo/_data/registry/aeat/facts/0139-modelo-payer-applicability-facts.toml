@@ -9,6 +9,7 @@ valid_from = 2011-01-01
 valid_to = 2012-12-31
 legal_refs = [
   "rd-1065-2007:art-31",
+  "rd-1065-2007:art-33",
   "orden-eha-3012-2008:art-1",
   "orden-eha-3012-2008:art-10",
   "ley-58-2003:art-93",
@@ -33,7 +34,7 @@ entries = [
   { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
-  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|rd-1065-2007:art-33|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
   { key = "payer_fact.pays_capital_income_with_retencion.value", value = "pays_capital_income_with_retencion" },
   { key = "payer_fact.pays_capital_income_with_retencion.profile_key", value = "pays_capital_income_with_retencion" },
   { key = "payer_fact.pays_capital_income_with_retencion.label", value = "paga rendimientos del capital mobiliario sujetos a retención" },
@@ -68,6 +69,7 @@ valid_from = 2013-01-01
 valid_to = 2022-12-31
 legal_refs = [
   "rd-1065-2007:art-31",
+  "rd-1065-2007:art-33",
   "orden-eha-3012-2008:art-1",
   "orden-eha-3012-2008:art-10",
   "ley-58-2003:art-93",
@@ -97,7 +99,7 @@ entries = [
   { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
-  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|rd-1065-2007:art-33|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
   { key = "payer_fact.bienes_extranjero_above_threshold.value", value = "bienes_extranjero_above_threshold" },
   { key = "payer_fact.bienes_extranjero_above_threshold.profile_key", value = "bienes_extranjero_above_threshold" },
   { key = "payer_fact.bienes_extranjero_above_threshold.label", value = "posee bienes o derechos en el extranjero por encima del umbral" },
@@ -160,6 +162,7 @@ date_axis = "filing_period"
 valid_from = 2023-01-01
 legal_refs = [
   "rd-1065-2007:art-31",
+  "rd-1065-2007:art-33",
   "orden-eha-3012-2008:art-1",
   "orden-eha-3012-2008:art-10",
   "ley-58-2003:art-93",
@@ -196,7 +199,7 @@ entries = [
   { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
-  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|rd-1065-2007:art-33|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
   { key = "payer_fact.bienes_extranjero_above_threshold.value", value = "bienes_extranjero_above_threshold" },
   { key = "payer_fact.bienes_extranjero_above_threshold.profile_key", value = "bienes_extranjero_above_threshold" },
   { key = "payer_fact.bienes_extranjero_above_threshold.label", value = "posee bienes o derechos en el extranjero por encima del umbral" },

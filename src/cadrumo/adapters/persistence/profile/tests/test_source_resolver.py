@@ -357,12 +357,15 @@ def test_invoice_catalogue_source_resolver_counts_received_acquisition_for_m349(
 def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_invoice_totals(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """M347 counts a counterparty only once it passes the declaration floor.
+    """M347 counts a counterparty only once one of its threshold buckets passes the floor.
 
-    The third invoice sits at EXACTLY the threshold, not above it: M347's floor
-    is "supera", so a counterparty landing on the figure is not declarable, and
-    a test whose control sat comfortably below would pass just as well against
-    a `>=` comparison.
+    The first counterparty's sale and purchase together exceed the floor, but
+    RD 1065/2007 art. 33.1 computes "de forma separada las entregas y las
+    adquisiciones", so each bucket stays below it and nothing is declared. The
+    third invoice sits at EXACTLY the threshold, not above it: M347's floor is
+    "supera", so a counterparty landing on the figure is not declarable, and a
+    test whose control sat comfortably below would pass just as well against a
+    `>=` comparison.
     """
     collectible = _domestic_invoice(
         bucket_id=secure_profile.bucket_id,
@@ -414,14 +417,14 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         )
 
     assert floor_control.grand_total == m347_threshold
-    # One counterparty with a sale (clave B) and a purchase (clave A) is two
-    # declarado records, and the type 1 count is the number of records: "si un
-    # mismo declarado figura en varios registros, se computará tantas veces como
-    # figure relacionado" (aeat-dr-347-2011 and aeat-dr-347-2025, positions 136-144).
-    assert m347_resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("2")
-    assert m347_resolution.binding_values[
-        "modelo-347-declarante-importe-total-anual-operaciones"
-    ] == m347_threshold + Decimal("0.01")
+    assert collectible.grand_total + payable.grand_total > m347_threshold
+    assert collectible.grand_total < m347_threshold
+    assert payable.grand_total < m347_threshold
+    # Neither the entregas nor the adquisiciones bucket of the first
+    # counterparty exceeds the floor, and the second sits exactly on it, so
+    # no declarado record exists and the type 1 totals over them are zero.
+    assert m347_resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
+    assert m347_resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("0")
     assert m347_resolution.detail_rows == ()
     assert {item.source_ref for item in m347_resolution.provenance} == {
         f"collectible_invoice:{collectible.invoice_id}",

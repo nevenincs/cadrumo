@@ -35,7 +35,7 @@ from .binding_selector_utils import (
 )
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
+from .m347_threshold import m347_declarable_party_buckets
 from .schema_base import coerce_enum_member
 from .schema_exports import ExportFieldDataType
 
@@ -847,34 +847,32 @@ def _m347_row_family_threshold_filter(
     *,
     effective_date: date,
 ) -> tuple[InvoiceObservation, ...]:
-    """Filter the per-row family's observations, clave C judged on its own floor.
+    """Keep the observations whose (counterparty, threshold bucket) passes its floor.
 
-    Clave C carries its OWN, lower 300,51 EUR floor (RD 1065/2007 arts. 32.c,
-    33.4), applied ALONGSIDE -- never instead of -- the general 3.005,06 EUR
-    floor every other clave shares: the same party can carry both ordinary
-    operations and a clave-C collection in the same year, and each must be
-    judged against its own figure.
+    RD 1065/2007 art. 33.1 computes "de forma separada las entregas y las
+    adquisiciones", and arts. 32.c and 33.4 give clave C its own 300,51 EUR
+    floor, so a party's total is never one sum across every clave: the dated
+    clave-bucket fact groups the claves (entregas B+F, adquisiciones A+G, C,
+    D and E each apart) and :func:`~.m347_threshold.m347_declarable_party_buckets`
+    judges each bucket against its own floor. Filtering observation by
+    observation on that (party, bucket) pair means a party that clears one
+    bucket keeps none of its below-floor operations in another.
 
-    Filters observation-by-observation on a (party, clave-bucket) pair
-    rather than returning a flat party-id set: a beneficiary who clears the
-    LOWER clave-C floor but not the general floor must still lose their
-    below-floor ORDINARY rows, and a flat "party is declarable" set would
-    let those through once the party cleared either floor at all.
+    An observation without an operation_clave is not an M347 operation: it
+    adds to no bucket and is dropped, exactly as the row builder skips it.
     """
-    clave_c_totals: dict[str, Decimal] = {}
-    general_totals: dict[str, Decimal] = {}
+    clave_totals: dict[tuple[str, str], Decimal] = {}
     for observation in observations:
-        totals = clave_c_totals if observation.operation_clave == "C" else general_totals
-        totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
-            observation,
-        )
-    clave_c_declarable = m347_clave_c_declarable_party_ids(clave_c_totals, effective_date=effective_date)
-    general_declarable = m347_declarable_party_ids(general_totals, effective_date=effective_date)
+        if observation.operation_clave is None:
+            continue
+        key = (observation.party_tax_id, observation.operation_clave)
+        clave_totals[key] = clave_totals.get(key, Decimal("0")) + _invoice_total_amount(observation)
+    declarable = m347_declarable_party_buckets(clave_totals, effective_date=effective_date)
     return tuple(
         observation
         for observation in observations
-        if (observation.operation_clave == "C" and observation.party_tax_id in clave_c_declarable)
-        or (observation.operation_clave != "C" and observation.party_tax_id in general_declarable)
+        if observation.operation_clave is not None
+        and declarable.admits(observation.party_tax_id, observation.operation_clave)
     )
 
 
