@@ -6,7 +6,6 @@ date: '2026-10-03'
 tier: L1
 related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
-  - '[[2026-10-03-application-packaging-adr]]'
   - '[[2026-09-02-python-runtime-compatibility-adr]]'
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -14,18 +13,22 @@ related:
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:ca335164d049fea4ade0e84144a993e59189a4f73c4fc9b7cf2f3153eee0edde'
+body_hash: 'sha256:a07b4345fd973f7bd76f77b511d2e8b6c14d27bd0e1af1e3285cb259b7fc1111'
 ---
 
 # `application-core-packaging` plan
 
 ## Description
 
-Draft continuation requested 2026-10-03. The user explicitly requires a multiplatform build framework: Windows x64, Linux x64, Linux ARM64 and macOS ARM64. Windows is the current development host, not the framework's architecture. Shared policy and build stages must be portable; OS APIs, loaders, compiler settings and resource formats belong in bounded target adapters. Tauri remains settled.
+Approved 2026-10-03
 
-This plan follows `2026-10-03-application-packaging-plan`; it does not take over or close that session's open Steps. The requested deliverable here is the continuation plan, not execution of its new management capabilities. S01 records the stable handoff before shared files change. Earlier macOS deferral bounded the Windows interpreter proof; it does not defer this plan's required macOS build conformance. Full application runtime platform behavior and the Tauri UI remain separately owned.
+Authorization: the user instructed this session to read and execute this continuation plan, while the separate interpreter/package-basis session remains active and cannot be contacted. The user clarified that this session owns the Rust application library while the other session owns Python packaging. Shared integration waits for handoff; independent Rust library implementation proceeds immediately.
 
-Decision coverage: `2026-10-03-application-packaging-interpreter-foundation-adr` governs retained interpreter/ABI ownership; `2026-09-02-python-runtime-compatibility-adr` and `2026-06-28-product-packaging-adr` govern the pin, dependency closure and exact-version cohort in S02-S05/S10-S11. `2026-08-03-canonical-storage-management-adr` and `2026-09-20-lud-authority-adr` govern generated paths, custody and published authority in S01/S07-S09. `2026-10-03-runtime-without-service-manager-adr` excludes service installation, autostart and runtime supervision throughout. The proposed `2026-10-03-application-packaging-adr` supplies S06-S10's application-library composition; S01 must reconcile its affected clauses and obtain decision coverage before dependent implementation. This draft does not promote the whole proposal.
+Continuation requested 2026-10-03. The user explicitly requires a multiplatform build framework: Windows x64, Linux x64, Linux ARM64 and macOS ARM64. Windows is the current development host, not the framework's architecture. Shared policy and build stages must be portable; OS APIs, loaders, compiler settings and resource formats belong in bounded target adapters. Tauri remains settled.
+
+This plan follows `2026-10-03-application-packaging-plan`; it does not take over or close that session's open Steps. The original deliverable was this continuation plan; the user's subsequent execution instruction authorizes its scoped implementation. S01 records the stable handoff before shared files change. Earlier macOS deferral bounded the Windows interpreter proof; it does not defer this plan's required macOS build conformance. Full application runtime platform behavior and the Tauri UI remain separately owned.
+
+Decision coverage: `2026-10-03-application-packaging-interpreter-foundation-adr` governs retained interpreter/ABI ownership; `2026-09-02-python-runtime-compatibility-adr` and `2026-06-28-product-packaging-adr` govern the pin, dependency closure and exact-version cohort in S02-S05/S10-S11. `2026-08-03-canonical-storage-management-adr` and `2026-09-20-lud-authority-adr` govern generated paths, custody and published authority in S01/S07-S09. `2026-10-03-runtime-without-service-manager-adr` excludes service installation, autostart and runtime supervision throughout. The proposed `2026-10-03-application-packaging-adr` supplies design context. The user's explicit Rust-library clarification authorizes the standalone S06 implementation and library-owned S07-S08 behavior against supplied contracts; S01 still reconciles broader composition and shared integration before S09-S10 adoption. This execution authorization does not promote unrelated choices in the broader proposal.
 
 ### Current evidence and required corrections
 
@@ -36,7 +39,7 @@ Read on 2026-10-03 while the interpreter session was editing these files:
 - `CMakeLists.txt:11` and its MSVC checks restrict the shared graph to Windows. `native/toolchain.json` mixes common pins with one target's compiler/SDK details.
 - `dev/packaging/native/layout.py:16` defaults to the build host; `assemble.py:35` evaluates dependency markers against that host. Provisioning/product helpers execute the selected SDK interpreter. These must not silently determine a different target's package.
 - `stdlib.py:19` requires the exact pinned build-host Python for bytecode generation. Preserve that requirement and prove target bytecode/ABI compatibility explicitly.
-- The storage policy in the accepted foundation ADR differs from the current Settings-projected developer behavior documented in `native/CONTRACT.md`. S01 resolves delivered-user defaults, allowed overrides and containment through the storage owner; neither the continuation nor a second Rust parser silently chooses a new root.
+- The accepted foundation ADR's CMake/platform amendment now explicitly supersedes the earlier Known Folder and empty-override policy with Settings-owned defaults and storage overrides, matching `native/CONTRACT.md`. S01 must still reconcile the broader proposed application ADR's delivered-user defaults and containment claims through the storage owner; neither the continuation nor a second Rust parser silently chooses a new root.
 - Existing `build/windows-x64/artifacts-Release.json` is a generated output locator. Its existence does not prove current-source package validity.
 
 ### Canonical targets
@@ -89,6 +92,26 @@ Deliver typed package inventory/readiness, immutable child-process configuration
 
 The component contract must represent optional Python dependencies, Google client-library/public-registration requirements, local-model engines/weights and authority retention without claiming they are implemented. Their full provisioning flows, the Tauri shell, installers, public signing/publication, independent authority updates and runtime supervision are follow-on work. Chromium remains downloadable. Settle trusted download metadata, delivered storage policy and contract compatibility in S01; do not turn plain package hashes into a signature claim.
 
+### S01 execution checkpoint, 2026-10-03
+
+Read-only handoff assessment found that the interpreter session has not yet delivered the stable prerequisite. Its plan has S01 checked and S02-S05 open. `native/CONTRACT.md` explicitly says revised ZIP verification is in progress and historical evidence belongs to the earlier artifact. Scoped Git inspection shows modified shared native/generator files, deleted predecessors and untracked root CMake files, platform adapters and tests. No shared implementation or acceptance output was changed by this continuation session.
+
+Confirmed current inputs: ABI 1; standard library `python.zip`; packages `cadrumo/site-packages`; native files `bin`; one assembled `data/package-manifest.json`; canonical four-target declarations in `dev/packaging/runtime_wheelhouse_contract.py`. Root CMake still rejects non-Windows hosts and only the `windows-x64` native mapping is declared. These observations identify integration work; they are not a final handoff or build verification.
+
+Resume S01 from the interpreter owner's final source/contract and artifact-bound acceptance evidence once ownership is released. Reconcile the shared-file diff, target spelling, Settings projection, manifest compatibility and trusted Chromium download metadata before dependent implementation. Do not resurrect the superseded Known Folder policy or treat the old macOS pikepdf-floor observation as a newly reproduced dependency failure: the canonical target already declares macOS 14.0.
+
+The initial assessment incorrectly blocked independent Rust work. The user corrected that interpretation: S01 remains an integration checkpoint, while S06 and the library-owned portions of S07-S09 may proceed in native/application/ using explicit input contracts. Shared generators, native/platform/, root CMake and Python packaging remain untouched until integration. No current-source build, target execution, provisioning or containment claim follows from this checkpoint.
+
+### Rust library execution checkpoint, 2026-10-03
+
+The user corrected the initial ownership interpretation: independent Rust library work is authorized while Python packaging continues. `native/application/` now contains `cadrumo-application`, a GUI-independent Rust crate consuming supplied package manifests, target identities, storage roots and child environments. No Python, native/platform or root CMake source was changed by this work.
+
+S06 owns the independently testable crate and typed inventory/readiness surface. Library portions of S07 and S08 include immutable child commands and a verified ZIP component store with HTTPS transport, writer exclusion, staged activation, cancellation, retained repair generations and process-termination recovery. Their shared platform/storage integration and full target acceptance remain open. Component hashes establish integrity, not publisher authentication; private store ownership is a prerequisite, not a same-user filesystem sandbox.
+
+The read-only review found and corrected Unix backslash aliasing, transport metadata being confused with content identity, and inability to repair oversized damaged versions. Receipts now retain archive entry counts for consistent admission on reuse. Focused checks and current results are recorded in the execution ledger and audit. Outputs are isolated under `build/windows-x86-64/application-core/` and `build/linux-x86-64/application-core/`.
+
+S09 still needs trusted Chromium metadata and a complete projected Playwright requirement set. The existing Python owner requires both Chromium and headless-shell revisions and completion markers; installing one executable does not satisfy that contract. S10 retains assembler/metadata/platform integration. Linux ARM64, macOS ARM64 and full packaged execution remain unverified; the Windows/Linux library checks do not close S11.
+
 ## Steps
 
 - [ ] `S01` - Record the interpreter handoff and reconcile delivered storage, manifest and target contracts against current source; settle dependent decision wording before implementation; `.vault/adr/2026-10-03-application-packaging-adr.md, native/CONTRACT.md and this plan`.
@@ -96,20 +119,20 @@ The component contract must represent optional Python dependencies, Google clien
 - [ ] `S03` - Pass an explicit target through SDK acquisition, wheel selection, contract generation, metadata, bytecode assembly and reuse keys without executing a foreign target interpreter; `dev/packaging/native/, native/package-layout.json and existing runtime_wheelhouse_contract.py consumers`.
 - [ ] `S04` - Implement shared Linux native host, loader and packaging adapters for both x86-64 and AArch64 and prove real dependency imports; `native/interpreter/linux/, native/platform/src/ platform adapters, native/cmake/ and dev/packaging/native/platforms/ (Linux additions)`.
 - [ ] `S05` - Implement macOS ARM64 native host, loader and bundle mappings with deployment-floor and signing compatibility proof; `native/interpreter/macos/, native/platform/src/ platform adapters, native/cmake/ and dev/packaging/native/platforms/ (macOS additions)`.
-- [ ] `S06` - Create the portable Rust application library and typed component/readiness contracts, extending the existing assembled manifest through one generator; `native/application/ (new), native/components.json (new) and dev/packaging/native/components.py (new)`.
+- [x] `S06` - Create the independently buildable Rust application library and typed package inventory and capability readiness contracts consuming the existing manifest; shared metadata generation joins at S10; `native/application/ (new)`.
 - [ ] `S07` - Expose immutable child-process environment and configuration projections through the platform boundary, preserving canonical Settings and storage ownership; `native/platform/, native/application/ and dev/packaging/native/generate.py`.
 - [ ] `S08` - Implement verified component staging and activation with bounded extraction, target-aware selection, cancellation, writer exclusion and interruption recovery; `native/application/ component store and owning tests`.
 - [ ] `S09` - Integrate explicit Chromium provisioning and capability inspection for each target while preserving Python browser ownership and declared user-data containment; `native/application/ browser adapter, native/components.json and existing Python browser/provisioning interfaces`.
-- [ ] `S10` - Assemble the application library and capability metadata through the common CMake graph and existing package manifest without copying development tooling into delivery; `native/application/CMakeLists.txt (new), native/cmake/Packaging.cmake and dev/packaging/native/assemble.py`.
+- [ ] `S10` - Integrate the Rust application library, canonical platform projections and generated capability metadata through the common CMake graph and existing package manifest without copying development tooling into delivery; `native/application/CMakeLists.txt (new), native/components.json (new), dev/packaging/native/components.py (new), native/cmake/Packaging.cmake and dev/packaging/native/assemble.py`.
 - [ ] `S11` - Prove build, package, relocation, component lifecycle and cleanup on all four targets and complete integrated review with artifact-bound evidence; `native/tests/, dev/packaging/native/ verification helpers and application-core-packaging audit`.
 
 ## Parallelization
 
-The existing interpreter session retains exclusive ownership of its current `native/`, `dev/packaging/native/`, root CMake files and acceptance outputs until the S01 handoff. Re-read its final contract and reconcile the shared-file diff before integrating; do not overwrite concurrent changes or reuse historical green evidence.
+User clarification on 2026-10-03 assigns this session the Rust application library and the other session the Python package. S01 gates shared integration, not independent library development. This session owns new files under `native/application/`; the Python session retains its current `native/platform/`, interpreter, shared declarations, root CMake, generators and acceptance outputs.
 
-S01 precedes execution. S02 then S03 establish the common target contract. S04 and S05 use separate platform adapters but share one integrator for CMake and declarations. After S01 fixes the interface, S06's new library and component-schema work may proceed alongside S02-S05 with disjoint ownership; changes to shared generators wait for the foundation owner. S07 follows S02-S06, then S08 and S09. S10 joins those results; S11 closes the complete four-target proof.
+Proceed with S06 and library-owned S07-S09 against explicit input contracts. Consume target identity, package inventory and resolved storage/environment projections; do not duplicate the canonical target list or reimplement Settings defaults. Reconcile those interfaces at S01/S10 before changing shared owners. S02-S05 and four-target integrated acceptance remain outstanding.
 
-Each executor uses its own CMake binary directory. Builds, cleanup and verification never race in a shared `B`. No parallel worker may edit the canonical target list or shared manifests independently.
+Use `build/windows-x86-64/application-core/` for this session's Rust build and test outputs. Other targets use equivalent target-specific roots. Builds, cleanup and verification never race in the Python owner's binary directory.
 
 ## Verification
 
