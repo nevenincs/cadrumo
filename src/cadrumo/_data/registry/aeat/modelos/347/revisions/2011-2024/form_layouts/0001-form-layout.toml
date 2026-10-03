@@ -7,7 +7,7 @@ revision_id = "2011-2024"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "02fc337d9524d0eab498a6fb76a9b38d1abb03a724c471b347079fd5523acb14"
+source_state_digest = "cb9560b121e8061f0b8bbae25ade200a4e6d9235674d1c786a85ec7c7ba3be84"
 placements = [
     { casilla_id = "contraparte.arrendamiento-local-negocio", kind = "on_form" },
     { casilla_id = "contraparte.clave-operacion", kind = "on_form" },
@@ -85,6 +85,7 @@ blocks = [
 id = "m347-inmueble"
 official_ref = "m347-inmueble"
 heading_key = "modelo.schema.347.form.page.m347-inmueble.heading"
+condition = "optional_record"
 
 [[revisions.2011-2024.form_layouts.pages.sections]]
 id = "general"
