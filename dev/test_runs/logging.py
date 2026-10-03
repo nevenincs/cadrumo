@@ -20,8 +20,10 @@ from .paths import (
     ScratchOwnershipError,
     allocate_scratch_directory,
     remove_scratch_directory,
+    scratch_base,
     scratch_environment,
 )
+from .reaper import sweep_scratch_directories
 
 _STATE_KEY = pytest.StashKey["RunLog"]()
 _SILENT_COLLECTION_KEY = pytest.StashKey[bool]()
@@ -39,8 +41,8 @@ class RunLog:
     def __init__(self, repository: Path, *, scratch: Path | None = None) -> None:
         """Mint the run directory and take ``scratch``, or allocate one, as the run's scratch.
 
-        The scratch is released when the process exits: removed when the run
-        passed, kept when it did not. Exit is the one point after which nothing
+        Dead-owner scratch beside it is swept first. The run's own scratch is
+        released when the process exits, whatever the run's outcome. Exit is the one point after which nothing
         of this run still writes there: xdist tears its workers down when the
         session finishes, and the run controller mints this log before the
         conftests register the collection storage root's exit cleanup, so that
@@ -56,6 +58,7 @@ class RunLog:
         self.cache = self.root / "cache"
         for path in (self.artifacts, self.cache):
             path.mkdir()
+        sweep_scratch_directories(scratch_base())
         self.scratch = allocate_scratch_directory() if scratch is None else scratch
         self.scratch_allocation = ScratchAllocation.record(self.scratch)
         atexit.register(self.release_scratch)
@@ -97,30 +100,24 @@ class RunLog:
         self.metadata_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
 
     def release_scratch(self) -> str:
-        """Remove a passing run's scratch, keep any other run's, and record which in the run log.
+        """Remove this run's scratch whatever its exit status, and record the outcome in the run log.
 
-        Decided by the exit status :meth:`finish` recorded, so a run that never
-        reached it -- one that crashed before its session finished -- keeps its
-        scratch like a failing one. A kept scratch stays for inspection and is
-        reclaimed by the run reaper once this process is gone. Nothing here can
-        change the run's exit status: a refused or incomplete removal is written
-        to the log beside the verdict, never raised.
+        Failure detail belongs in the run log, which lives outside the scratch;
+        keeping a failed run's scratch let concurrent sessions fill the disk.
+        Nothing here can change the run's exit status: a refused or incomplete
+        removal is written to the log, never raised, and left for the next
+        run's start-of-run sweep.
 
         Returns:
             The line recorded in the run log.
         """
         scratch = self.scratch_allocation.path
-        if self.exit_status is None:
-            line = f"SCRATCH KEPT {scratch}: the run recorded no exit status"
-        elif self.exit_status != 0:
-            line = f"SCRATCH KEPT {scratch}: exit={self.exit_status}"
+        try:
+            remove_scratch_directory(self.scratch_allocation)
+        except (ScratchOwnershipError, OSError) as error:
+            line = f"SCRATCH NOT REMOVED {scratch}: {type(error).__name__}: {error}"
         else:
-            try:
-                remove_scratch_directory(self.scratch_allocation)
-            except (ScratchOwnershipError, OSError) as error:
-                line = f"SCRATCH NOT REMOVED {scratch}: {type(error).__name__}: {error}"
-            else:
-                line = f"SCRATCH REMOVED {scratch}"
+            line = f"SCRATCH REMOVED {scratch}"
         try:
             with self.path.open("a", encoding="utf-8", newline="\n") as stream:
                 stream.write(line + "\n")

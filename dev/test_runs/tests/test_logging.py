@@ -8,7 +8,6 @@ import re
 import shutil
 import subprocess
 import sys
-import time
 from io import StringIO
 from pathlib import Path
 from typing import IO
@@ -24,7 +23,6 @@ from dev.test_runs.paths import (
     ScratchAllocation,
     allocate_scratch_directory,
 )
-from dev.test_runs.reaper import INTERRUPTED_GRACE_SECONDS, assess_scratch_directories, reclaim_run_directories
 from dev.test_runs.tests.authority_probe import LEAK_LEASE_ENV
 from dev.test_runs.tests.failing_probe import FAILURE_MESSAGE
 from dev.test_runs.tests.setup_skip_probe import SKIP_REASON
@@ -85,21 +83,16 @@ def _scratch_of(run_log: Path) -> Path:
     return Path(json.loads(run_log.with_name("run.json").read_text(encoding="utf-8"))["scratch"])
 
 
-@pytest.mark.parametrize(
-    ("exit_status", "verdict"),
-    [(0, "SCRATCH REMOVED"), (1, "SCRATCH KEPT"), (None, "SCRATCH KEPT")],
-)
-def test_the_recorded_exit_status_alone_decides_the_scratch(
-    tmp_path: Path, exit_status: int | None, verdict: str
-) -> None:
+@pytest.mark.parametrize("exit_status", [0, 1, None])
+def test_every_exit_status_removes_the_scratch(tmp_path: Path, exit_status: int | None) -> None:
     scratch = allocate_scratch_directory()
     (scratch / "left-by-a-test.txt").write_text("scratch content", encoding="utf-8")
     run_log = _FinishedRunLog(tmp_path / "run.log", ScratchAllocation.record(scratch), exit_status)
     try:
         line = run_log.release_scratch()
 
-        assert line.startswith(f"{verdict} {scratch}"), line
-        assert scratch.exists() is (exit_status != 0)
+        assert line == f"SCRATCH REMOVED {scratch}", line
+        assert not scratch.exists()
         assert (tmp_path / "run.log").read_text(encoding="utf-8") == line + "\n"
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
@@ -142,7 +135,7 @@ def test_a_passing_run_removes_its_scratch_and_leaves_its_run_log() -> None:
     assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
 
 
-def test_a_failing_run_keeps_its_scratch_until_the_reaper_reclaims_it() -> None:
+def test_a_failing_run_removes_its_scratch() -> None:
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/failing_probe.py"],
         cwd=REPO_ROOT,
@@ -158,17 +151,8 @@ def test_a_failing_run_keeps_its_scratch_until_the_reaper_reclaims_it() -> None:
     assert result.returncode == pytest.ExitCode.TESTS_FAILED, output
     assert FAILURE_MESSAGE in output
     scratch = _scratch_of(run_log)
-    assert scratch.is_dir(), f"a failing run's scratch was not kept: {scratch}"
-    assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH KEPT {scratch}: exit=1"
-
-    # Its owner has exited, so once the grace has passed the reaper judges it reclaimable.
-    later = time.time() + INTERRUPTED_GRACE_SECONDS + 1
-    verdicts = tuple(
-        verdict for verdict in assess_scratch_directories(scratch.parent, now=later) if verdict.directory == scratch
-    )
-    assert [verdict.reclaimable for verdict in verdicts] == [True], verdicts
-    assert reclaim_run_directories(verdicts) == 1
-    assert not scratch.exists()
+    assert not scratch.exists(), f"a failing run left its scratch behind: {scratch}"
+    assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
 
 
 def _registry_reading_environment(*, leak_lease: bool = False) -> dict[str, str]:
@@ -223,7 +207,7 @@ def test_a_parallel_run_that_read_the_registry_removes_its_scratch() -> None:
     assert not scratch.exists()
 
 
-def test_a_failing_run_that_read_the_registry_still_keeps_its_scratch() -> None:
+def test_a_failing_run_that_read_the_registry_removes_its_scratch() -> None:
     result = subprocess.run(
         [
             sys.executable,
@@ -246,8 +230,8 @@ def test_a_failing_run_that_read_the_registry_still_keeps_its_scratch() -> None:
     scratch = _scratch_of(run_log)
     try:
         assert result.returncode == pytest.ExitCode.TESTS_FAILED, output
-        assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH KEPT {scratch}: exit=1"
-        assert scratch.is_dir()
+        assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
+        assert not scratch.exists()
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
 
