@@ -1,6 +1,15 @@
 modelo:
   schema:
     '347':
+      binding:
+        modelo-347-declarante-importe-total-anual-operaciones:
+          help: Field declared on modelo 347, the annual return of transactions with
+            third parties.
+          label: TOTAL ANNUAL AMOUNT OF THE TRANSACTIONS
+        modelo-347-declarante-numero-personas-entidades:
+          help: Field declared on modelo 347, the annual return of transactions with
+            third parties.
+          label: TOTAL NUMBER OF PERSONS AND ENTITIES
       casilla:
         continuidad:
           arrendamiento-local-negocio:
@@ -70,10 +79,6 @@ modelo:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
             label: AMOUNT RECEIVED IN CASH
-          importe-total-anual-operaciones:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: TOTAL ANNUAL AMOUNT OF THE TRANSACTIONS
           importe-total-arrendamiento-locales:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
@@ -144,10 +149,6 @@ modelo:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
             label: TOTAL NUMBER OF PROPERTIES
-          total-personas-entidades:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: TOTAL NUMBER OF PERSONS AND ENTITIES
       construct:
         modelo-347-informative:
           field:

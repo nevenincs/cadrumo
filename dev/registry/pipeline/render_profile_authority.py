@@ -5,8 +5,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections.abc import Mapping
-from hashlib import sha256
-from typing import Final
+from typing import Final, cast
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
@@ -28,6 +27,7 @@ from .render_profile_rules import (
     SingletonNumericRule,
 )
 from .render_profile_validation import _anchor_key, _duplicates, _field_anchor
+from .source_defects import adjudicated_integer_range_for
 
 
 def validate_render_profile_authority(
@@ -187,28 +187,90 @@ def _validate_reviewed_evidence(
             )
 
 
-_COMPOSITE_DEFINITION_RE: Final[re.Pattern[str]] = re.compile(
-    r'(?P<framing>[a-z][a-z "]{0,399}\.?)\s+este campo se subdivide en\s*:\s*'
-    r"(?P<sign_position>\d+)\s+signo\s*:\s*(?P<sign_nature>[a-z]+)\.\s*"
-    r"se cumplimentara cuando el resultado anteriormente mencionado sea menor de 0 \(cero\)\.\s*"
-    r'en este caso se consignara una "(?P<sign_token>[a-z])", en cualquier otro caso el contenido de este '
-    r"campo sera un espacio\.\s*"
-    r"(?P<magnitude_start>\d+)\s*-\s*(?P<magnitude_end>\d+)\s+importe\s*:\s*"
-    r"campo numerico de (?P<magnitude_digits>\d+) posiciones\.\s*"
-    r"se consignara sin signo y sin coma decimal, el importe mencionado anteriormente\.\s*"
-    r"este campo se subdivide en dos\s*:\s*"
-    r"(?P<integer_start>\d+)\s*-\s*(?P<integer_end>\d+)\s+parte entera del importe"
-    r"(?P<integer_qualifier> de [a-z ]{1,200})?,\s*"
-    r"si no tiene contenido se consignara a ceros\.\s*"
-    r"(?P<decimal_start>\d+)\s*-\s*(?P<decimal_end>\d+)\s+parte decimal del importe"
-    r"(?P<decimal_qualifier> de [a-z ]{1,200})?,\s*"
-    r"si no tiene contenido se consignara a ceros\.",
+#: Running BOE page furniture the PDF text layer splices into a cell when the
+#: printed description crosses a page boundary. It is print, never a wire
+#: statement, and it is removed before the grammar reads the cell.
+_BOE_PAGE_FURNITURE_RE: Final[re.Pattern[str]] = re.compile(
+    r"\s*cve: BOE-[A-Z]-\d{4}-\d+ BOLETIN OFICIAL DEL ESTADO Num\. \d+ "
+    r"(?:Lunes|Martes|Miercoles|Jueves|Viernes|Sabado|Domingo) \d{1,2} de [a-z]+ de \d{4} "
+    r"Sec\. [IVX]+\. Pag\. \d+\s*",
     re.IGNORECASE,
 )
 
+#: The complete signed-composite definition: optional descriptive framing, the
+#: sign slot, the magnitude range and its two partition statements. Every
+#: policy-bearing clause is a fixed phrase; the free segments between them are
+#: classified sentence by sentence and may not carry a wire instruction.
+_COMPOSITE_DEFINITION_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?:(?P<framing>.+?)\s+)?"
+    r"este campo se subdivide en(?: dos)?\s*:\s*"
+    r"(?P<sign_position>\d+)\s+signo\s*:\s*(?:campo\s+)?(?P<sign_nature>[a-z]+)\s*[.,]?\s*"
+    r"(?P<sign_statement>.+?)\s+"
+    r"(?P<magnitude_start>\d+)\s*-\s*(?P<magnitude_end>\d+)\s+importe\s*[:.]\s*"
+    r"(?P<magnitude_body>.+?)\s+"
+    r"(?:este campo se subdivide en dos\s*:\s*)?"
+    r"(?P<integer_start>\d+)\s*-\s*(?P<integer_end>\d+)\s*parte entera del importe"
+    r"(?P<integer_qualifier> [a-z ]{1,200}?)?,\s*si no tiene contenido se consignara a ceros\.\s*"
+    r"(?:(?P<interstitial>.+?)\s+)?"
+    r"(?P<decimal_start>\d+)\s*-\s*(?P<decimal_end>\d+)\s*parte decimal del importe"
+    r"(?P<decimal_qualifier> [a-z ]{1,200}?)?,\s*si no tiene contenido se consignara a ceros\."
+    r"(?:\s+(?P<trailer>.+))?",
+    re.IGNORECASE,
+)
 
-_COMPOSITE_NON_POLICY_WIRE_TERMS: Final[re.Pattern[str]] = re.compile(
-    r"\b(?:alfabetico|ceros|coma|decimal|digitos?|entera|espacio|importe|menor|numerico|parte|posiciones?|signo)\b",
+#: The two published orders of one sign statement: the condition before the
+#: token, or the token before the condition.
+_COMPOSITE_SIGN_STATEMENT_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?:que\s+)?se cumplimentara (?:este campo )?cuando (?P<condition_first>.+?)\s*[.;]\s*"
+    r'en este caso se consignara una "(?P<token_after>[a-z])"\s*[.,]\s*'
+    r"en cualquier otro caso el contenido (?:de este|del) campo sera un espacio\."
+    r'|se consignara una "(?P<token_first>[a-z])" cuando (?P<condition_after>.+?)\.\s*'
+    r"en cualquier otro caso el contenido (?:de este|del) campo sera un espacio\.",
+    re.IGNORECASE,
+)
+
+_COMPOSITE_NEGATIVE_CONDITION_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?P<subject>.+?) sea menor (?:de|que) 0 \(cero\)",
+    re.IGNORECASE,
+)
+
+#: The one non-arithmetic sign condition the designs print: a perceptor amount
+#: returned for an earlier year. The composite writes "N" for a negative value,
+#: so the reintegro is carried as a negative amount.
+_COMPOSITE_REINTEGRO_CONDITION: Final = (
+    "las percepciones correspondan a cantidades reintegradas por el perceptor en el ejercicio, "
+    "como consecuencia de haber sido indebida o excesivamente percibidas en ejercicios anteriores"
+)
+
+_COMPOSITE_WIDTH_RE: Final[re.Pattern[str]] = re.compile(
+    r"campo (?P<nature>alfanumerico|numerico) de (?P<digits>\d+) posiciones",
+    re.IGNORECASE,
+)
+_COMPOSITE_UNSIGNED_MAGNITUDE_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?:se consignara|se hara constar) sin signo y sin coma decimal\b(?P<rest>.*)"
+    r"|el importe no ira precedido de signo alguno \(\+/-\), ni incluira coma decimal",
+    re.IGNORECASE,
+)
+_COMPOSITE_MAGNITUDE_SUBJECT_RE: Final[re.Pattern[str]] = re.compile(
+    r"campo numerico en el que se consignara\b(?P<rest>.*)",
+    re.IGNORECASE,
+)
+_COMPOSITE_CURRENCY_RE: Final[re.Pattern[str]] = re.compile(r"los importes deben consignarse en euros", re.IGNORECASE)
+#: A total's statement that its source records' "N" amounts are summed as
+#: negative: aggregation semantics of the total, not this field's wire form.
+_COMPOSITE_SIGNED_SUM_RE: Final[re.Pattern[str]] = re.compile(
+    r'en el supuesto de que en (?:estos|los) registros de [a-z]+ se hubiera consignado "N" en el campo '
+    r'"?signo [a-z ]+"?,? \(posicion \d+ del registro de tipo 2\),? '
+    r"(?:por corresponder al reintegro de [a-z ,]+, dichas cantidades|las cantidades) "
+    r"se computaran (?:igualmente )?con signo menos "
+    r"(?:a efecto de esta suma|al totalizar los importes que deben reflejarse en esta suma)",
+    re.IGNORECASE,
+)
+#: A quoted upper-case field name is a cross-reference, not a wire token.
+_COMPOSITE_QUOTED_FIELD_NAME_RE: Final[re.Pattern[str]] = re.compile(r'"[A-Z][A-Z ]+"')
+_COMPOSITE_DESCRIPTIVE_WIRE_TERMS: Final[re.Pattern[str]] = re.compile(
+    r"\bsigno\b|\bcoma\b|\bdigitos?\b|\bparte (?:entera|decimal)\b|\bespacio\b|\bceros?\b|\bmenor\b|\bmayor\b"
+    r'|\bdecimal(?:es)?\b|\bposicion(?:es)?\b(?!\s+\d)|\b(?:alfa)?numerico\b|\balfabetico\b|"',
     re.IGNORECASE,
 )
 
@@ -219,87 +281,163 @@ def _validate_signed_composite_source_agreement(
     identity: RenderProfileDesignIdentity,
 ) -> None:
     """Verify a reviewed rule against source prose without deriving policy from it."""
-    if identity.modelo == "180" and field.offset in (79, 145):
-        _validate_reviewed_m180_composite(rule, field, identity)
-        return
-    normalised_source, definition = _signed_composite_source_definition(field)
-    _validate_composite_wire_terms(definition)
-    _validate_composite_sign_statement(definition, normalised_source)
-    _validate_composite_geometry(rule, field, definition)
+    definition = _signed_composite_source_definition(field)
+    _validate_composite_sign_statement(definition)
+    magnitude_digits = _validate_composite_free_prose(definition, field)
+    _validate_composite_geometry(rule, field, definition, identity, magnitude_digits=magnitude_digits)
 
 
-def _signed_composite_source_definition(
-    field: RecordDesignIntermediateField,
-) -> tuple[str, re.Match[str]]:
-    if field.source_cell is not None or normalise_aeat_type(field.aeat_type) != "alfanumerico":
-        raise RegistryValidationError("signed monetary composite requires an unsplit alphanumeric PDF anchor")
-    source_text = (field.content or "").replace("�", '"').replace("�", '"')
-    normalised_source = " ".join(
-        unicodedata.normalize("NFKD", source_text).encode("ascii", "ignore").decode("ascii").split()
-    )
+def _signed_composite_source_definition(field: RecordDesignIntermediateField) -> re.Match[str]:
+    if field.source_cell is not None or normalise_aeat_type(field.aeat_type) not in {"alfanumerico", "numerico"}:
+        raise RegistryValidationError("signed monetary composite requires an unsplit PDF amount anchor")
+    source_text = field.content or ""
+    for quote in ("“", "”", "«", "»", "�"):
+        source_text = source_text.replace(quote, '"')
+    ascii_text = unicodedata.normalize("NFKD", source_text).encode("ascii", "ignore").decode("ascii")
+    normalised_source = re.sub(r'"+', '"', " ".join(ascii_text.split()))
+    normalised_source = _BOE_PAGE_FURNITURE_RE.sub(" ", normalised_source).strip()
     definition = _COMPOSITE_DEFINITION_RE.fullmatch(normalised_source)
     if definition is None:
         raise RegistryValidationError(
             "signed monetary composite source must exactly match the reviewed complete wire definition"
         )
-    return normalised_source, definition
+    return definition
 
 
-def _validate_composite_wire_terms(definition: re.Match[str]) -> None:
-    non_policy_segments = (
-        definition.group("framing"),
-        definition.group("integer_qualifier") or "",
-        definition.group("decimal_qualifier") or "",
-    )
-    if any(_COMPOSITE_NON_POLICY_WIRE_TERMS.search(segment) is not None for segment in non_policy_segments):
-        raise RegistryValidationError("signed monetary composite source non-policy framing contains a wire instruction")
-    if definition.group("integer_qualifier") != definition.group("decimal_qualifier"):
-        raise RegistryValidationError("signed monetary composite source partition descriptions do not agree")
-
-
-def _validate_composite_sign_statement(definition: re.Match[str], normalised_source: str) -> None:
+def _validate_composite_sign_statement(definition: re.Match[str]) -> None:
     if normalise_aeat_type(definition.group("sign_nature")) != "alfabetico":
         raise RegistryValidationError("signed monetary composite source sign slot must be alphabetic")
+    statement = _COMPOSITE_SIGN_STATEMENT_RE.fullmatch(definition.group("sign_statement"))
+    if statement is None:
+        raise RegistryValidationError("signed monetary composite source sign statement is not a reviewed form")
     # Prose spelling and case are normalized by the grammar, but the wire token
     # is not: the existing codec emits uppercase N.
-    if definition.group("sign_token") != "N":
+    if (statement.group("token_after") or statement.group("token_first")) != "N":
         raise RegistryValidationError("signed monetary composite source must declare uppercase N as its wire token")
-    quoted_sign_tokens = tuple(
-        token for token in re.findall(r'"([^"]+)"', normalised_source) if token.casefold() == "n"
+    condition = statement.group("condition_first") or statement.group("condition_after")
+    negative = _COMPOSITE_NEGATIVE_CONDITION_RE.fullmatch(condition)
+    if negative is None:
+        if condition != _COMPOSITE_REINTEGRO_CONDITION:
+            raise RegistryValidationError("signed monetary composite source sign condition is not a reviewed form")
+        return
+    subject = negative.group("subject")
+    _require_descriptive_composite_prose(subject)
+    if re.search(r"\bno\b", subject, re.IGNORECASE) is not None:
+        raise RegistryValidationError("signed monetary composite source sign condition is negated")
+
+
+def _validate_composite_free_prose(definition: re.Match[str], field: RecordDesignIntermediateField) -> int | None:
+    """Classify every free sentence; return the magnitude width the source states, if any."""
+    _validate_composite_segment(definition.group("framing"), width_nature="alfanumerico", width=field.length)
+    magnitude_width = int(definition.group("magnitude_end")) - int(definition.group("magnitude_start")) + 1
+    stated = _validate_composite_segment(
+        definition.group("magnitude_body"),
+        width_nature="numerico",
+        width=magnitude_width,
+        magnitude=True,
     )
-    if quoted_sign_tokens != ("N",):
-        raise RegistryValidationError(
-            "signed monetary composite source must declare exactly one uppercase N wire token"
+    _validate_composite_segment(definition.group("interstitial"), width_nature=None, width=None)
+    _validate_composite_segment(definition.group("trailer"), width_nature=None, width=None)
+    integer_qualifier = definition.group("integer_qualifier") or ""
+    decimal_qualifier = definition.group("decimal_qualifier") or ""
+    _require_descriptive_composite_prose(integer_qualifier)
+    if integer_qualifier.casefold() != decimal_qualifier.casefold():
+        raise RegistryValidationError("signed monetary composite source partition descriptions do not agree")
+    return stated
+
+
+def _validated_composite_width(
+    width_statement: re.Match[str],
+    *,
+    width_nature: str | None,
+    stated: int | None,
+    width: int | None,
+) -> int:
+    """Admit one source width only in its own slot and against the exact anchor."""
+    if width_nature is None or stated is not None or width_statement.group("nature").casefold() != width_nature:
+        raise RegistryValidationError("signed monetary composite source states a width outside its slot")
+    parsed = int(width_statement.group("digits"))
+    if parsed != width:
+        raise RegistryValidationError("signed monetary composite source width conflicts with its anchor")
+    return parsed
+
+
+def _validate_composite_segment(
+    segment: str | None,
+    *,
+    width_nature: str | None,
+    width: int | None,
+    magnitude: bool = False,
+) -> int | None:
+    stated: int | None = None
+    for sentence in _composite_sentences(segment):
+        width_statement = _COMPOSITE_WIDTH_RE.fullmatch(sentence)
+        if width_statement is not None:
+            stated = _validated_composite_width(
+                width_statement,
+                width_nature=width_nature,
+                stated=stated,
+                width=width,
+            )
+            continue
+        if _COMPOSITE_CURRENCY_RE.fullmatch(sentence) or _COMPOSITE_SIGNED_SUM_RE.fullmatch(sentence):
+            continue
+        described = (
+            _COMPOSITE_UNSIGNED_MAGNITUDE_RE.fullmatch(sentence) or _COMPOSITE_MAGNITUDE_SUBJECT_RE.fullmatch(sentence)
+            if magnitude
+            else None
         )
+        _require_descriptive_composite_prose(sentence if described is None else described.group("rest") or "")
+    return stated
+
+
+def _composite_sentences(segment: str | None) -> tuple[str, ...]:
+    if not segment:
+        return ()
+    sentences = cast(list[str], re.split(r"(?<=[.;])\s+", segment.strip()))
+    parts = (part.strip(" .;") for part in sentences)
+    return tuple(part for part in parts if part)
+
+
+def _require_descriptive_composite_prose(text: str) -> None:
+    if _COMPOSITE_DESCRIPTIVE_WIRE_TERMS.search(_COMPOSITE_QUOTED_FIELD_NAME_RE.sub(" ", text)) is not None:
+        raise RegistryValidationError("signed monetary composite source non-policy framing contains a wire instruction")
 
 
 def _validate_composite_geometry(
     rule: SignedMonetaryCompositeRule,
     field: RecordDesignIntermediateField,
     definition: re.Match[str],
+    identity: RenderProfileDesignIdentity,
+    *,
+    magnitude_digits: int | None,
 ) -> None:
     sign_position = int(definition.group("sign_position"))
     magnitude_start = int(definition.group("magnitude_start"))
     magnitude_end = int(definition.group("magnitude_end"))
-    integer_start = int(definition.group("integer_start"))
-    integer_end = int(definition.group("integer_end"))
+    integer_start, integer_end = adjudicated_integer_range_for(
+        source_ref=identity.source_ref,
+        source_sha256=identity.source_sha256,
+        sheet=field.sheet,
+        source_row=field.source_row,
+        published_integer_range=(int(definition.group("integer_start")), int(definition.group("integer_end"))),
+    )
     decimal_start = int(definition.group("decimal_start"))
     decimal_end = int(definition.group("decimal_end"))
-    magnitude_digits = int(definition.group("magnitude_digits"))
-    expected_end = field.offset + field.length - 1
+    digits = magnitude_end - magnitude_start + 1 if magnitude_digits is None else magnitude_digits
     bounds_match = _composite_bounds_match(
         field,
         sign_position=sign_position,
         magnitude_start=magnitude_start,
         magnitude_end=magnitude_end,
-        magnitude_digits=magnitude_digits,
-        expected_end=expected_end,
+        magnitude_digits=digits,
+        expected_end=field.offset + field.length - 1,
     )
     parts_match = _composite_parts_match(
         rule,
         magnitude_start=magnitude_start,
         magnitude_end=magnitude_end,
-        magnitude_digits=magnitude_digits,
+        magnitude_digits=digits,
         integer_start=integer_start,
         integer_end=integer_end,
         decimal_start=decimal_start,
@@ -307,70 +445,6 @@ def _validate_composite_geometry(
     )
     if not bounds_match or not parts_match:
         raise RegistryValidationError("signed monetary composite source ranges do not exactly partition its anchor")
-
-
-_M180_COMPOSITE_EVIDENCE: Final[dict[tuple[str, str, str, int], tuple[str, int, int, int, str]]] = {
-    # The first two complete cells print an impossible 146-159 integer part
-    # overlapping the 159-160 decimal part. Their @145+16 parent and @146-160
-    # magnitude uniquely give a 13+2 partition; no PDF cell is rewritten.
-    (
-        "aeat-dr-180-2014",
-        "281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741",
-        "2014",
-        116,
-    ): ("8c8d3eb199a0e15b451c4bc31d2c946369e9ae60c9bc31c4fe48084c4fba04eb", 145, 16, 13, "12"),
-    (
-        "aeat-dr-180-2023",
-        "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda",
-        "2023",
-        109,
-    ): ("8c8d3eb199a0e15b451c4bc31d2c946369e9ae60c9bc31c4fe48084c4fba04eb", 145, 16, 13, "12"),
-    # The perceptor cells use different complete prose and consistent @79+14
-    # geometry; their original exact text is required because the generic
-    # algebraic-total grammar does not describe reintegro conditions.
-    (
-        "aeat-dr-180-2014",
-        "281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741",
-        "2014",
-        302,
-    ): ("717b65731382049112cbeb64060de2242167d32b4d5f88989e8181fb85f6f5c7", 79, 14, 11, "10"),
-    (
-        "aeat-dr-180-2023",
-        "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda",
-        "2023",
-        292,
-    ): ("5a7c26013e17a4da04630ed2fb6bc3ad6c4c7a0dcdffd0c7520a780442debd50", 79, 14, 11, "10"),
-}
-
-
-def _validate_reviewed_m180_composite(
-    rule: SignedMonetaryCompositeRule,
-    field: RecordDesignIntermediateField,
-    identity: RenderProfileDesignIdentity,
-) -> None:
-    """Validate four exact source cells, including the two printed overlaps."""
-    expected = _M180_COMPOSITE_EVIDENCE.get(
-        (identity.source_ref, identity.source_sha256, identity.design_epoch, field.source_row)
-    )
-    accepted = (
-        expected is not None
-        and field.record_identity == rule.anchor.record_identity
-        and field.sheet == rule.anchor.sheet
-        and field.source_row == rule.anchor.source_row
-        and field.source_cell is None
-        and field.ordinal == expected[4]
-        and normalise_aeat_type(field.aeat_type) == "alfanumerico"
-        and field.offset == expected[1]
-        and field.length == expected[2]
-        and rule.integer_digits == expected[3]
-        and rule.decimal_digits == 2
-        and rule.sign_policy == "blank-or-n-leading"
-        and sha256((field.content or "").encode("utf-8")).hexdigest() == expected[0]
-    )
-    if not accepted:
-        raise RegistryValidationError(
-            "signed monetary composite M180 source overlap differs from exact reviewed evidence"
-        )
 
 
 def _composite_bounds_match(

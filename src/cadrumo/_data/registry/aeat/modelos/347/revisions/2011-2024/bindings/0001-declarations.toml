@@ -15,6 +15,7 @@ aggregation = { op = "count_distinct" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
     "rd-1065-2007:art-31",
+    "rd-1065-2007:art-33",
     "ley-58-2003:art-93",
 ]
 additional_source_refs = ["boe-modelo-347-2008-form"]
@@ -31,6 +32,7 @@ aggregation = { op = "sum" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
     "rd-1065-2007:art-31",
+    "rd-1065-2007:art-33",
     "ley-58-2003:art-93",
 ]
 additional_source_refs = ["boe-modelo-347-2008-form"]
@@ -75,7 +77,7 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-nif"
-provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "party_tax_id", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "declarado_tax_id", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
@@ -191,7 +193,7 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-pais-codigo"
-provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "country_code", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "residence_country_code", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [

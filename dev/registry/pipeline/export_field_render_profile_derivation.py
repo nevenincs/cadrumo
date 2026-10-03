@@ -77,6 +77,11 @@ def _render_profile_numeric_derivation(
     export_record_id: str,
 ) -> ExportFieldDerivation:
     anchor = _render_profile_anchor(joined_field)
+    # The sign subdivision is stated in the cell prose, so a composite governs
+    # its anchor even where the naturaleza column prints the slot as numeric.
+    composite = profile.signed_composite_rule_by_anchor.get(anchor)
+    if composite is not None:
+        return _profile_signed_composite_derivation(joined_field, composite, export_record_id=export_record_id)
     # Indexed on the profile, not scanned here: a scan compared this anchor
     # against every anchor of every rule, and anchors are pydantic models whose
     # equality is not cheap.

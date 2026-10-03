@@ -43,6 +43,11 @@ class RenderProfile(_StrictModel):
         return {rule.anchor: rule for rule in self.literal_numeric_rules}
 
     @cached_property
+    def signed_composite_rule_by_anchor(self) -> Mapping[RenderProfileAnchor, SignedMonetaryCompositeRule]:
+        """The signed monetary composite governing each anchor, whatever naturaleza AEAT printed for it."""
+        return {rule.anchor: rule for rule in self.signed_composite_rules}
+
+    @cached_property
     def width_17_rule_by_anchor(self) -> Mapping[RenderProfileAnchor, Width17MembershipRule]:
         """The width-17 rule covering each anchor, indexed rather than scanned.
 

@@ -162,8 +162,8 @@ record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
 export_field_id = "m347-2011.declarante.f012"
-kind = "casilla"
-casilla_id = "decl.total-personas-entidades"
+kind = "binding"
+binding = "modelo-347-declarante-numero-personas-entidades"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
@@ -176,8 +176,8 @@ record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
 export_field_id = "m347-2011.declarante.f013"
-kind = "casilla"
-casilla_id = "decl.importe-total-anual"
+kind = "binding"
+binding = "modelo-347-declarante-importe-total-anual-operaciones"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 

@@ -9,10 +9,13 @@ from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict
 
+from ....core.identity.nif_iva import normalise_nif_iva
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.period import Period
+from ...iva.establishment import SPAIN_COUNTRY_CODE
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .nif_iva_catalogue import resolve_nif_iva_catalogue
 
 if TYPE_CHECKING:
     from .invoice_bindings import InvoiceObservation
@@ -278,8 +281,39 @@ def _build_contraparte_clave_rows(
             "importe_q2": bucket.importe_q2,
             "importe_q3": bucket.importe_q3,
             "importe_q4": bucket.importe_q4,
+            **_m347_declarado_identification(bucket.party_tax_id, bucket.country_code),
         },
     )
+
+
+def _m347_declarado_identification(party_tax_id: str, country_code: str) -> dict[str, str]:
+    """Project one counterparty onto the 347 declarado identification slots.
+
+    Both 347 record designs fill the NIF DEL DECLARADO slot "solo ... con los NIF
+    asignados en España" and, for "no residentes sin establecimiento permanente",
+    write the país de residencia; the 2025 design adds the NIF OPERADOR
+    COMUNITARIO slot, "incompatible (excluyente)" with the Spanish NIF, carrying
+    the Member State prefix and number. A counterparty observed in another
+    country is therefore declared by country, and by NIF-IVA only when its
+    identifier has the structure the NIF-IVA catalogue publishes for that State.
+    """
+    if country_code == SPAIN_COUNTRY_CODE:
+        return {"declarado_tax_id": party_tax_id, "residence_country_code": "", "community_vat_number": ""}
+    return {
+        "declarado_tax_id": "",
+        "residence_country_code": country_code,
+        "community_vat_number": _community_vat_number(party_tax_id, country_code),
+    }
+
+
+def _community_vat_number(party_tax_id: str, country_code: str) -> str:
+    catalogue = resolve_nif_iva_catalogue()
+    prefix = catalogue.prefix_for_country(country_code)
+    if prefix is None:
+        return ""
+    number = normalise_nif_iva(party_tax_id)
+    candidate = number if number.startswith(str(prefix)) else f"{prefix}{number}"
+    return candidate if catalogue.definition(prefix).spec.pattern.fullmatch(candidate) else ""
 
 
 def _build_operator_clave_period_rows(

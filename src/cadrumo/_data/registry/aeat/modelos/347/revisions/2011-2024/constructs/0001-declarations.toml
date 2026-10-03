@@ -33,8 +33,6 @@ casilla_ids = [
     "contraparte.nif-operador-comunitario",
     "decl.numero-justificante",
     "decl.complementaria-sustitutiva",
-    "decl.total-personas-entidades",
-    "decl.importe-total-anual",
     "decl.total-inmuebles",
     "decl.importe-total-arrendamiento-locales",
     "decl.persona-relacion",

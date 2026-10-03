@@ -78,6 +78,9 @@ _InvoiceRowField = Literal[
     "rectified_year",
     "rectified_period",
     "rectified_base_previous",
+    "declarado_tax_id",
+    "residence_country_code",
+    "community_vat_number",
 ]
 
 # Canonical invoice-shaped binding source kinds, imported from

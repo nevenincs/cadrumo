@@ -21,14 +21,6 @@ casilla_id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
 
 [[revisions."2011-2024".completeness_manifest.casillas]]
-casilla_id = "decl.total-personas-entidades"
-number = "decl.total-personas-entidades"
-
-[[revisions."2011-2024".completeness_manifest.casillas]]
-casilla_id = "decl.importe-total-anual"
-number = "decl.importe-total-anual"
-
-[[revisions."2011-2024".completeness_manifest.casillas]]
 casilla_id = "contraparte.nif"
 number = "contraparte.nif"
 

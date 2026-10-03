@@ -21,6 +21,7 @@ allowed_values = []
 [singleton_rules.anchor]
 sheet = "Tipo 2 - Registro De Declarado"
 source_row = 267
+semantic_part_offset = 77
 ordinal = "9"
 record_identity = "Tipo 2 - Registro De Declarado"
 
@@ -33,6 +34,7 @@ justification = "The design divides the cell in its own text: '77-78 CODIGO PROV
 [singleton_rules.evidence.governed_anchor]
 sheet = "Tipo 2 - Registro De Declarado"
 source_row = 267
+semantic_part_offset = 77
 ordinal = "9"
 record_identity = "Tipo 2 - Registro De Declarado"
 
@@ -454,34 +456,6 @@ justification = "The design directs 'Consignar lo contenido en estas mismas posi
 sheet = "Tipo 2 - Registro De Inmueble"
 source_row = 808
 ordinal = "3"
-record_identity = "Tipo 2 - Registro De Inmueble"
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "decimal"
-value_policy = "implied-decimal"
-integer_digits = 14
-decimal_digits = 2
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Tipo 2 - Registro De Inmueble"
-source_row = 856
-ordinal = "10"
-record_identity = "Tipo 2 - Registro De Inmueble"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m347-inmueble-importe-operacion"
-decision_statement = "Sixteen digits as fourteen integer digits and two implied decimals, unsigned."
-justification = "The design states 'el importe total, del arrendamiento del local de negocios' -- a euro amount on a design whose sibling amount field states 'sin signo y sin coma decimal', and the design's closing note states every importe is positive."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Tipo 2 - Registro De Inmueble"
-source_row = 856
-ordinal = "10"
 record_identity = "Tipo 2 - Registro De Inmueble"
 
 [[singleton_rules]]

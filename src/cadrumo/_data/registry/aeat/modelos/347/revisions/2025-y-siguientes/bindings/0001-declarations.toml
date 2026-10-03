@@ -1,0 +1,25 @@
+# Type 2 declarado NIF OPERADOR COMUNITARIO (positions 264-280), new in the
+# 2025 design: the Member State prefix and NIF-IVA of a counterparty
+# established in another Member State, "incompatible (excluyente)" with the
+# Spanish NIF slot (RD 1065/2007 art. 34.1.b: "el numero de identificacion
+# fiscal a efectos del Impuesto sobre el Valor Añadido atribuido al empresario
+# o profesional ... por el Estado miembro de establecimiento"). It is one more
+# column of the shared contraparte_clave row family, so it rides the same row
+# indexes as the declarado NIF, name, clave and amounts.
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-347-contraparte-row-nif-operador-comunitario"
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "community_vat_number", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-34",
+    "ley-58-2003:art-93",
+]
+additional_source_refs = ["aeat-modelo-347-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["operaciones con terceras personas"]

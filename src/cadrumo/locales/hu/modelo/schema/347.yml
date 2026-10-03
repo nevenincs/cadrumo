@@ -1,6 +1,15 @@
 modelo:
   schema:
     '347':
+      binding:
+        modelo-347-declarante-importe-total-anual-operaciones:
+          help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
+            éves bevallásán bevallott adat.
+          label: AZ ÜGYLETEK TELJES ÉVES ÖSSZEGE
+        modelo-347-declarante-numero-personas-entidades:
+          help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
+            éves bevallásán bevallott adat.
+          label: A SZEMÉLYEK ÉS SZERVEZETEK TELJES SZÁMA
       casilla:
         continuidad:
           arrendamiento-local-negocio:
@@ -70,10 +79,6 @@ modelo:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
             label: KÉSZPÉNZBEN KAPOTT ÖSSZEG
-          importe-total-anual-operaciones:
-            help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
-              éves bevallásán bevallott adat.
-            label: AZ ÜGYLETEK TELJES ÉVES ÖSSZEGE
           importe-total-arrendamiento-locales:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
@@ -140,10 +145,6 @@ modelo:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
             label: AZ INGATLANOK TELJES SZÁMA
-          total-personas-entidades:
-            help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
-              éves bevallásán bevallott adat.
-            label: A SZEMÉLYEK ÉS SZERVEZETEK TELJES SZÁMA
       construct:
         modelo-347-informative:
           field:

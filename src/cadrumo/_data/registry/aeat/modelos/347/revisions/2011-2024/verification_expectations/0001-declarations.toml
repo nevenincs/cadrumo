@@ -3,8 +3,6 @@ id = "modelo-347-informative-summary-verification"
 computed_casilla_ids = [
     "decl.ejercicio",
     "decl.tipo-declaracion",
-    "decl.total-personas-entidades",
-    "decl.importe-total-anual",
     "contraparte.nif",
     "contraparte.clave-operacion",
     "contraparte.importe-anual",
