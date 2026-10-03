@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from dataclasses import asdict
 from pathlib import Path
@@ -15,7 +16,7 @@ from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildError
 from dev.acceptance.income_tax.tui_contracts import TuiJourneyError
 from dev.acceptance.installed_cli import CommandEvidence, InstalledCliError
 
-from .. import installed_tui_seed, installed_tui_withholding
+from .. import installed_tui_controls, installed_tui_seed, installed_tui_withholding
 from ..cli_contracts import RetencionesInstalledCliError
 from ..installed_tui_seed import WithholdingWork
 from ..installed_tui_withholding import main, validate_child_receipt
@@ -189,6 +190,80 @@ def test_pilot_failure_receipt_keeps_public_surface_without_private_notice(tmp_p
     assert document["live_submission"] is False
     assert document["aeat_acceptance_claimed"] is False
     assert secret not in contents
+
+
+def test_home_return_waits_for_one_back_transition_and_the_public_root_refresh(monkeypatch) -> None:
+    """A delayed child dismissal needs one Back; the root must settle before Home is usable."""
+    child = SimpleNamespace(query=lambda _selector: [])
+    root = SimpleNamespace(query=lambda selector: [object()] if selector == "#root-shell" else [])
+    home = SimpleNamespace(query=lambda selector: [object()] if selector == "#home-agenda" else [])
+
+    class DelayedPilot:
+        def __init__(self) -> None:
+            self.app = SimpleNamespace(screen=child)
+            self.back_count = 0
+            self.pause_count = 0
+
+        async def press(self, key: str) -> None:
+            assert key == "escape"
+            assert self.app.screen is child
+            self.back_count += 1
+            assert self.back_count == 1, "Back was repeated while dismissal was still pending"
+
+        async def pause(self) -> None:
+            self.pause_count += 1
+            if self.pause_count == 3:
+                self.app.screen = root
+
+    async def refresh(pilot: DelayedPilot, *, polls: int) -> None:
+        assert pilot.app.screen is root
+        assert polls > pilot.pause_count
+        # Only the actual public Home arrival resolves the refresh door.
+        pilot.app.screen = home
+
+    monkeypatch.setattr(installed_tui_controls, "wait_for_refreshed_home", refresh)
+    pilot = DelayedPilot()
+    asyncio.run(installed_tui_controls._home(pilot))
+    assert pilot.app.screen is home
+    assert pilot.back_count == 1
+
+
+@pytest.mark.parametrize(
+    ("reason", "expected_reason"),
+    (
+        (
+            "installed TUI did not complete its public Home refresh",
+            "installed TUI did not complete its public Home refresh",
+        ),
+        ("private-profile-and-credential", "installed withholding public control failed"),
+    ),
+)
+def test_unavailable_home_retains_trusted_control_stage_without_claiming_success(
+    reason: str, expected_reason: str, monkeypatch
+) -> None:
+    """A root shell alone neither completes Home nor permits another Back or private diagnostics."""
+    root = SimpleNamespace(
+        id="_default",
+        query=lambda selector: [SimpleNamespace(id="root-shell")] if selector in {"#root-shell", "*"} else [],
+    )
+
+    class RootPilot:
+        app = SimpleNamespace(screen=root, query=root.query)
+
+        async def press(self, _key: str) -> None:
+            raise AssertionError("a loading root must not receive Back")
+
+    async def unavailable_refresh(_pilot: Any, *, polls: int) -> None:
+        raise InstalledTuiChildError(reason)
+
+    monkeypatch.setattr(installed_tui_controls, "wait_for_refreshed_home", unavailable_refresh)
+    pilot = RootPilot()
+    with pytest.raises(InstalledTuiChildError) as caught:
+        asyncio.run(installed_tui_controls._home(pilot))
+    failure = installed_tui_withholding._pilot_failure(caught.value, pilot=pilot, stage="lifecycle")
+    assert failure.stage == "lifecycle._home"
+    assert str(failure) == f"installed withholding lifecycle._home failed: {expected_reason}"
+    assert "private-profile-and-credential" not in str(failure)
 
 
 @pytest.mark.parametrize("private_suffix", (" (notice private-facts)", ": private-facts", " private-facts"))

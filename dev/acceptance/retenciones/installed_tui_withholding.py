@@ -71,6 +71,21 @@ _SAFE_OPERATION_FAILURES = (
     "did not expose a terminal operation status",
     "would start under an earlier workbench notice; open the declaration afresh first",
 )
+_SAFE_WITHHOLDING_CONTROL_REASONS = frozenset(
+    {
+        "installed withholding journey could not return to Home",
+        "installed withholding public Back control did not change its screen",
+        "installed TUI did not complete its public Home refresh",
+        "installed palette offered the unavailable withholding capture route",
+        "installed withholding refusal check never observed a populated palette",
+        "installed palette search offered unavailable withholding capture",
+        "installed withholding assumed-value confirmation did not succeed",
+        "installed withholding fresh reopen did not show the recorded filing state",
+    }
+)
+_SAFE_WITHHOLDING_CONTROL_FUNCTIONS = frozenset(
+    {"_home", "open_withholding_work", "assert_capture_unavailable", "run_work_lifecycle", "assert_recorded_reopen"}
+)
 
 
 class WithholdingTuiError(InstalledTuiChildError):
@@ -85,6 +100,8 @@ class WithholdingTuiError(InstalledTuiChildError):
 def _safe_tui_failure_reason(error: Exception) -> str:
     """Project known driver messages without copying notices or findings."""
     message = str(error)
+    if isinstance(error, InstalledTuiChildError) and message in _SAFE_WITHHOLDING_CONTROL_REASONS:
+        return message
     reasons = (
         *_SAFE_TUI_REASONS,
         *(
@@ -104,8 +121,12 @@ def _pilot_failure(error: Exception, *, pilot: Any, stage: str) -> WithholdingTu
     traceback = error.__traceback__
     while traceback is not None:
         module = traceback.tb_frame.f_globals.get("__name__", "")
-        if isinstance(module, str) and module.startswith("dev.acceptance.income_tax.tui_"):
-            stage = f"{stage.split('.')[0]}.{traceback.tb_frame.f_code.co_name}"
+        function = traceback.tb_frame.f_code.co_name
+        if (isinstance(module, str) and module.startswith("dev.acceptance.income_tax.tui_")) or (
+            module == "dev.acceptance.retenciones.installed_tui_controls"
+            and function in _SAFE_WITHHOLDING_CONTROL_FUNCTIONS
+        ):
+            stage = f"{stage.split('.')[0]}.{function}"
         traceback = traceback.tb_next
     reason = _safe_tui_failure_reason(error)
     return WithholdingTuiError(

@@ -22,11 +22,20 @@ from .installed_tui_seed import WithholdingWork
 async def _home(pilot: Any) -> None:
     """Dismiss public child screens so Home obtains a fresh runtime projection."""
     for _ in range(12):
-        if pilot.app.screen.query("#home-agenda"):
+        if pilot.app.screen.query("#home-agenda") or pilot.app.screen.query("#root-shell"):
+            # Child dismissal exposes the root while its asynchronous search
+            # and Home reads finish. Its shell is an intermediate state, not
+            # another child to dismiss and not proof that Home is admitted.
             await wait_for_refreshed_home(pilot, polls=900)
             return
+        departing = pilot.app.screen
         await pilot.press("escape")
-        await pilot.pause()
+        for _ in range(900):
+            await pilot.pause()
+            if pilot.app.screen is not departing:
+                break
+        else:
+            raise InstalledTuiChildError("installed withholding public Back control did not change its screen")
     raise InstalledTuiChildError("installed withholding journey could not return to Home")
 
 

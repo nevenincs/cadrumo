@@ -73,10 +73,10 @@
     }
   ],
   "modified_files_sha256": {
-    "dev/acceptance/retenciones/installed_tui_withholding.py": "a1c66c92d360d9309d0db4632b2a69da8aae2a850344ecd37a552bad1d27bd5d",
+    "dev/acceptance/retenciones/installed_tui_withholding.py": "960a9594b18f6bb003b695950451808f0ff8e998e88be2bbbf6d803d58eedde7",
     "dev/acceptance/retenciones/installed_tui_seed.py": "d2bf580d9cd14dd815a622329694b327ce7fabc4caa09216915431c35b6f81ad",
-    "dev/acceptance/retenciones/installed_tui_controls.py": "5dcca7a58aca28095447ca5ed3cc3191011dc781ceb1075d0715daacc2ec45e0",
-    "dev/acceptance/retenciones/tests/test_installed_tui_withholding.py": "2fdf32f213c68b1ccd4479c45752c388ab3ece92909bc2489a82c198f5a912d6",
+    "dev/acceptance/retenciones/installed_tui_controls.py": "aa30d6864f17ace17aae1100b5908c30f6bd1c1bc0de78177656f4749862f515",
+    "dev/acceptance/retenciones/tests/test_installed_tui_withholding.py": "c6735ed5073cf2cb77df75764fe59816383eb05bf95c037aa07810386a521bae",
     "dev/acceptance/installed_cli.py": "77d6a9e3aa68d8ee680b78ff44634e1c5d94d5c0365b20baf465010d843ff2f7",
     "dev/acceptance/tests/test_installed_cli.py": "8e8143335337b74f161cb8e94b7513498c90b8d7cb604f641a8212c09473f6c9",
     "dev/acceptance/income_tax/installed_tui_child.py": "7132fdb998705403404b1e6db7b5051f1b1164171872a46ed93006f30f36dc7b",
@@ -90,13 +90,15 @@
     "meaning": "Refuse nominal child success for checkout product, live-submission claim, mismatched manifest, empty-palette absence, missing/wrong work, missing artifact, omitted export, obsoletefile-before-export order, unobserved reopen; preserve existing caller receipt on refusal.",
     "ruff": "pass",
     "stateful_owner": "root",
-    "stateful_result": "fresh installed CLI seeding succeeds after native namespace correction; lifecycle driver fails while genuine WorkbenchResultScreen is visible; acceptance terminal observation repair pending, not a demonstrated product defect",
+    "stateful_result": "Native CLI seeding succeeds. Journey remains unproven after lifecycle default-root transition failure. Retained-terminal and Home-wait driver corrections are implemented; final freshly built-wheel rerun deferred after user-directed baseline.",
     "safe_diagnostic_repair": "17 focused tests passed; Ruff/format/driver type check passed; committed68258c3539",
-    "native_receipt": "/tmp/cdwMhXfF3/outputs/lifecycle-receipt.json",
+    "native_receipt": "/tmp/cdwS8HsKE/outputs/lifecycle-receipt.json",
     "native_stage": "lifecycle._observe_operation_terminal",
     "native_log": ".logs/tui-all-mcp-native-withholding-diagnostic-lf.txt",
     "baseline_implementation_commit": "68258c3539",
-    "deferral": "User directed concrete baseline first; combined verification follows baseline."
+    "deferral": "User directed concrete baseline first; combined verification follows baseline.",
+    "retained_terminal_native": "7focusedcasespassed4.21s onDarwin, including failed/running result-statement false-success oracles",
+    "home_transition_repair": "3focused helpercasespassed4.23s; wait public asynchronous Home refresh, never inferadmission fromroot shell"
   },
   "stateful_invocation": {
     "command": "uv run --no-sync python -m dev.acceptance.retenciones.installed_tui_withholding --cli <installed-aeat> --python <installed-wheel-python> --authority-root <published-authority-directory> --storage-root <fresh-empty-store> --output-dir <fresh-empty-outputs> --receipt <fresh-parent-receipt.json> --year 2025",

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d02d71a0d1e3074d6dabb034d125f33bdb973ab97dd71871ad2067ca5d7ebdcd'
+body_hash: 'sha256:a8d0a1daaf0314db2cb51791a84b115de97200a41540afd673ac9ae48f4b1076'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -2297,6 +2297,18 @@ related:
 - `S05` `M` `src/cadrumo/locales/hu/common.yml`
 - `S05` `M` `src/cadrumo/locales/hu/modelo/schema/347.yml`
 - `S05` `by:` `root`
+- `S05` `M` `dev/acceptance/income_tax/tui_terminal_observation.py`
+- `S05` `M` `dev/acceptance/income_tax/tests/test_tui_journey.py`
+- `S05` `M` `dev/acceptance/retenciones/installed_tui_controls.py`
+- `S05` `M` `dev/acceptance/retenciones/installed_tui_withholding.py`
+- `S05` `M` `dev/acceptance/retenciones/tests/test_installed_tui_withholding.py`
+- `S05` `M` `src/cadrumo/domain/invoices/tests/test_business_premises_lease.py`
+- `S05` `D` `.codex/handoffs/tui-all-mcp-later-product-merge/30.merged`
+- `S05` `D` `.codex/handoffs/tui-all-mcp-later-product-merge/31.merged`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-baseline-state.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-dispositions-withholding.json`
+- `S05` `verify:` `Darwin focused terminal regressions7cases` -> `pass`
+- `S05` `verify:` `Home helper delayed-transition and safe-error3cases` -> `pass`
 
 ## Notes
 
@@ -2304,3 +2316,4 @@ related:
 - `S03` User directed a concrete complete MCP baseline checkpoint before remaining verification. Implementation and original-base dispositions are recorded; this Step remains open. No final combined or installed-runtime success is claimed. Interrupted affected test run:466 passed,61 failed,41 uncompleted; follow-up verification deferred.
 - `S04` User directed a concrete complete MCP baseline checkpoint before remaining verification. Implementation and original-base dispositions are recorded; this Step remains open. No final combined or installed-runtime success is claimed. Interrupted affected test run:466 passed,61 failed,41 uncompleted; follow-up verification deferred.
 - `S05` User directed a concrete complete MCP baseline checkpoint before remaining verification. Implementation and original-base dispositions are recorded; this Step remains open. No final combined or installed-runtime success is claimed. Interrupted affected test run:466 passed,61 failed,41 uncompleted; follow-up verification deferred.
+- `S05` Continue native Mac work after agent briefing: retain actual terminal/receipt widgets across modal dismissal and wait genuine public Home refresh after Back. Full installed journey remains unproven and final verification deferred. Retire marker-containing saved previews to external preservation evidence; normalize incoming test CRLF only. No live source worktree/index or admission policy changed.

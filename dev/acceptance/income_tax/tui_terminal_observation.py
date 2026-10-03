@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import TYPE_CHECKING, Any
 
 from .scenario import AcceptanceOutcome
 from .tui_contracts import TerminalCondition, TuiJourneyError, TuiOperationBinding, TuiTerminalEvidence, _TuiScreen
 from .tui_readback import _rendered_text, _stack_text
+from .tui_selectors import _RESULT_STATEMENT_CLOSE
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
@@ -70,7 +72,11 @@ async def _observe_operation_terminal(
     settle.  The installed driver answers that phase through the modal's
     ordinary Apply button once.  It never calls an operation controller or
     assumes that opening the modal executed the action.  Once the modal has
-    dismissed itself, the workbench's notice carries the settled result.
+    dismissed itself, retain the same public widgets: Textual removes them
+    from the modal's query tree, but their final rendered terminal and receipt
+    still belong to the operation we observed. A result statement may appear
+    above the workbench; it is closed only after independently observing the
+    terminal, and is never itself evidence of success.
     """
     from textual.css.query import NoMatches
 
@@ -88,27 +94,30 @@ async def _observe_operation_terminal(
         raise TuiJourneyError(f"{binding.operation_id} has no terminal result control")
     review_applied = False
     status: str | None = None
+    retained_widgets: tuple[object, object, object] | None = None
     for _ in range(maximum_polls):
-        try:
-            status = _rendered_text(modal.query_one(terminal_result_id))
-            receipt = _rendered_text(modal.query_one("#operation-modal-receipt"))
-            diagnostic = _rendered_text(modal.query_one("#operation-modal-diagnostic"))
-        except NoMatches:
+        # A dismissed screen loses its descendants from the query tree.
+        # Keep the public controls already captured from this exact modal,
+        # rather than querying an unrelated screen or a private controller.
+        with suppress(NoMatches):
+            retained_widgets = (
+                modal.query_one(terminal_result_id),
+                modal.query_one("#operation-modal-receipt"),
+                modal.query_one("#operation-modal-diagnostic"),
+            )
+        receipt = diagnostic = ""
+        terminal = None
+        if retained_widgets is not None:
+            status = _rendered_text(retained_widgets[0])
+            receipt = _rendered_text(retained_widgets[1])
+            diagnostic = _rendered_text(retained_widgets[2])
+            terminal = expected.get(status)
+        if terminal is None and (retained_widgets is None or not getattr(modal, "is_mounted", True)):
             terminal = _settled_terminal(pilot, binding)
-            if terminal is not None:
-                condition, outcome = terminal
-                return TuiTerminalEvidence(
-                    operation_id=binding.operation_id,
-                    terminal_condition=condition,
-                    outcome=outcome,
-                    receipt_present=False,
-                    diagnostic_present=False,
-                )
-            await pilot.pause()
-            continue
-        terminal = expected.get(status)
         if terminal is not None:
             condition, outcome = terminal
+            if condition == "succeeded":
+                await _close_operation_result_statement(pilot)
             return TuiTerminalEvidence(
                 operation_id=binding.operation_id,
                 terminal_condition=condition,
@@ -116,17 +125,6 @@ async def _observe_operation_terminal(
                 receipt_present=bool(receipt),
                 diagnostic_present=bool(diagnostic),
             )
-        if not getattr(modal, "is_mounted", True):
-            terminal = _settled_terminal(pilot, binding)
-            if terminal is not None:
-                condition, outcome = terminal
-                return TuiTerminalEvidence(
-                    operation_id=binding.operation_id,
-                    terminal_condition=condition,
-                    outcome=outcome,
-                    receipt_present=bool(receipt),
-                    diagnostic_present=bool(diagnostic),
-                )
         # The generic modal keeps Apply disabled unless its public projection
         # has reached REVIEW.  A single click is the same operator act as the
         # visible button; repeating it while the projected revision catches up
@@ -145,6 +143,17 @@ async def _observe_operation_terminal(
     except NoMatches:
         detail = f"modal_unmounted=True, apply_attempted={review_applied!r}"
     raise TuiJourneyError(f"{binding.operation_id} did not expose a terminal operation status ({detail})")
+
+
+async def _close_operation_result_statement(pilot: Pilot[Any]) -> None:
+    """Acknowledge the current result statement through its ordinary Close button."""
+    from cadrumo.entrypoints.tui.modelo.workbench.result import WorkbenchResultScreen
+
+    if isinstance(pilot.app.screen, WorkbenchResultScreen):
+        close = pilot.app.screen.query_one(_RESULT_STATEMENT_CLOSE)
+        close.focus()
+        await pilot.press("enter")
+        await pilot.pause()
 
 
 def _settled_terminal(
