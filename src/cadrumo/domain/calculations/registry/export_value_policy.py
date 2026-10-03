@@ -162,6 +162,15 @@ def policy_defines_absent_slot(policy: ExportValuePolicy | None) -> bool:
     return policy in _POLICIES_DEFINING_ABSENCE
 
 
+def policy_admits_wire_value(policy: ExportValuePolicy, raw: str) -> bool:
+    """Whether ``raw`` is a wire token ``policy`` can carry as a value."""
+    try:
+        validate_export_wire_value(policy, raw)
+    except RegistryValidationError:
+        return False
+    return True
+
+
 def validate_export_wire_value(policy: ExportValuePolicy | None, raw: str) -> None:
     """Refuse a wire token that contradicts its declared value policy."""
     if policy is None:
@@ -346,10 +355,16 @@ def _project_full_year(value: object) -> str:
         raw = f"{value.year:04d}"
     elif isinstance(value, int):
         raw = str(value)
+    elif isinstance(value, Decimal) and value.is_finite() and value == value.to_integral_value():
+        # An integer casilla reaches the renderer as the Decimal every numeric
+        # casilla value is carried as; an integral one is the same year.
+        raw = str(int(value))
     elif isinstance(value, str):
         raw = value
     else:
-        raise RegistryValidationError("four-digit-year export value must be an integer or ASCII digit string")
+        raise RegistryValidationError(
+            "four-digit-year export value must be an integer, an integral Decimal or an ASCII digit string",
+        )
     _validate_full_year(raw)
     return raw
 
@@ -571,6 +586,7 @@ __all__ = [
     "coerce_export_value_policy",
     "export_value_policy_wire_length",
     "normalize_parsed_export_policy_value",
+    "policy_admits_wire_value",
     "project_export_value",
     "validate_export_wire_value",
 ]

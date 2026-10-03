@@ -16,6 +16,7 @@ from ....core.money.rounding import round_to_cents
 from .errors import RegistryValidationError
 from .export_value_policy import (
     ExportValuePolicy,
+    policy_admits_wire_value,
     policy_defines_absent_slot,
     project_export_value,
     validate_export_wire_value,
@@ -527,8 +528,20 @@ def _is_absent_slot(field: _ExportField, value: object) -> bool:
 
 
 def _zero_fill_is_only_absence(field: _ExportField) -> bool:
-    """Whether a numeric zero fill cannot be a value because the field's allowed values exclude zero."""
-    return field.allowed_values is not None and "0" not in field.allowed_values
+    """Whether a numeric zero fill cannot be a value, so it can only be the absent slot.
+
+    It cannot when the field's allowed values exclude zero, or when its value
+    policy cannot carry the all-zero token at all: a four-digit year, a month,
+    a day or a calendar date has no zero, so the zeros AEAT's designs write in
+    an empty numeric slot ("los campos numéricos que no tengan contenido se
+    rellenarán a ceros") read back as absence rather than as a malformed value.
+    """
+    if field.allowed_values is not None and "0" not in field.allowed_values:
+        return True
+    return field.value_policy is not None and not policy_admits_wire_value(
+        field.value_policy,
+        "0" * _require_length(field),
+    )
 
 
 def _render_absent_slot(field: _ExportField) -> str:

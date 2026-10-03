@@ -29,6 +29,7 @@ importe_q2 = "contraparte.importe-Q2"
 importe_q3 = "contraparte.importe-Q3"
 importe_q4 = "contraparte.importe-Q4"
 residence_country_code = "contraparte.pais-codigo"
+provincia_code = "contraparte.provincia-codigo"
 
 # Only an arrendador of locales de negocio files this record: "el arrendador consignará [...] las
 # referencias catastrales y los datos necesarios para la localización de los inmuebles arrendados"
