@@ -20,6 +20,7 @@ from ...domain.deadlines.models import ObligationStatus, RecargoBand, Recovery
 from ..operations.public_scalar import PublicDecimal
 from .calendar_models import (
     CalendarWarning,
+    OverviewAeatEvidenceConcern,
     OverviewAeatSubmissionState,
     OverviewCalendarEntry,
     OverviewCalendarEntrySource,
@@ -56,6 +57,7 @@ class OverviewFilingEvidenceSnapshot(BaseModel):
     aeat_snapshot_id: SnapshotId | None = None
     aeat_evidence_kind: str | None = None
     aeat_evidence_conflict_reference_ids: tuple[str, ...] = ()
+    aeat_evidence_concerns: tuple[OverviewAeatEvidenceConcern, ...] = ()
     verified_justificante_csv: str | None = None
     justificante_required: bool
     justificante_verified: bool

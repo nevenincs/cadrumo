@@ -15,6 +15,7 @@ from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.hashing import canonical_json_bytes, content_hash_hex, prefixed_digest
 from ...core.identity.digest import ContentDigest
+from ...core.logging import get_logger
 from ...core.operations import (
     OperationDeadline,
     OperationEffect,
@@ -60,6 +61,8 @@ from .persistence.journal import (
 from .refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from .registry import OperationReconciliationPolicy, OperationRegistry
 from .secret_submission import BoundEphemeralSecretAccess, OperationSecretRequirement, zeroize_secret_buffer
+
+_log = get_logger(__name__)
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25
@@ -358,6 +361,15 @@ class SupervisorExecutionMixin(SupervisorHost):
             self.registry, snapshot.identity.definition_id, self._operands, error, written_at=settled_at
         )
         if registered is not None and registered.category is ErrorCategory.REFUSED:
+            # Persistence keeps only the registry code; the local log keeps which check refused.
+            _log.warning(
+                "operation refused definition=%s operation=%s code=%s denial=%s",
+                snapshot.identity.definition_id,
+                snapshot.identity.operation_id,
+                registered.code,
+                getattr(error, "reason", None),
+                exc_info=error,
+            )
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,
                 revision=snapshot.revision + 1,
@@ -368,6 +380,15 @@ class SupervisorExecutionMixin(SupervisorHost):
                 error_detail_ref=error_detail_ref,
             )
         else:
+            diagnostic_ref = self._executor_failure_diagnostic_reference(snapshot, error)
+            # The frontend shows only this opaque reference; the local log pairs it with the cause.
+            _log.error(
+                "operation failed definition=%s operation=%s diagnostic_ref=%s",
+                snapshot.identity.definition_id,
+                snapshot.identity.operation_id,
+                diagnostic_ref,
+                exc_info=error,
+            )
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,
                 revision=snapshot.revision + 1,
@@ -375,7 +396,7 @@ class SupervisorExecutionMixin(SupervisorHost):
                 effect=snapshot.effect,
                 settled_at=settled_at,
                 failure_error_code=None if registered is None else registered.code,
-                diagnostic_ref=self._executor_failure_diagnostic_reference(snapshot, error),
+                diagnostic_ref=diagnostic_ref,
                 error_detail_ref=error_detail_ref,
             )
         return await self.settle(snapshot.identity.operation_id, receipt)
