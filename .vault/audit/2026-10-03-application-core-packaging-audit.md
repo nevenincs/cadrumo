@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:08d1d4412edc645d9ede67c898c9ad0a29dff3d72cfc0b73a68043f7896b9e7f'
+body_hash: 'sha256:76dc8296a26338b541fc7b6b16547414a5dbbba5e307762cd072a3fd38c77a11'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -64,6 +64,30 @@ Corrective review found the initial live acceptance test reread the manifest aft
 ### final-probe-acceptance | low | Relocated Release cohort and original inventory both pass
 
 Final optimized Windows acceptance passed against the pinned archive copy: CPython 3.13.11 matched all 80 manifest distribution versions, reported MissingDependency for Playwright, and left the original manifest bytes and original file inventory unchanged. The explicit browser cache remained absent. The final development-interpreter probe also passed with MissingBuilds and both canonical requirements. Commands: cargo test --locked --release --features live-package-tests --test live_package and cargo test --locked --release --features live-python-tests --test live_python, each with the owning fixture environment. Required fixture paths and expectations are documented by the tests; selected live features fail if prerequisites are absent. Windows Clippy with all targets/features, formatting, Ruff and optimized library build passed after the corrections. The stricter package run completed in 229.62 seconds; this is acceptance evidence, not a performance benchmark. Verdict: PASS for this bounded library/probe checkpoint; overall S07/S09/S11 remain PENDING for their outstanding integration requirements.
+
+### cmake-application-integration | low | Shared Cargo invocation preserves layout and runtime ownership
+
+S10 review covers native/cmake/Rust.cmake, both Rust build consumers, the bundle/verify graph, CTest package verification and native/CONTRACT.md. The application crate now builds under the selected CMake binary directory and configuration with the same platform-projected compiler/linker environment as the platform crate. Cargo owns application input freshness. The application rlib remains build-only because no delivered runtime consumer exists; it is not injected into the Python package or file manifest. CTest receives the selected layout's manifest location, platform and ABI; it does not validate those fields against values taken from the tested manifest itself. Package tests serialize inventory access with the Python smoke test. Review found no concrete graph/configuration defect; a low test-label mismatch between staged and relocated inputs was corrected. Debug builds of both crates and application CTest pass; final Release graph/package verification is parent-owned and pending. Full S10 generated capability declarations and four-target acceptance remain open.
+
+### fresh-python-product | low | Current authority source blocks the clean Release bundle
+
+The isolated CMake Release bundle build passed dependency provisioning and Rust application compilation, then failed inside the existing Python authority wheel hook. The canonical registry compiler rejected unknown bindings in Modelo 232 revision 2016-2017. This is not recorded as successful fresh-package acceptance, and no registry validation was bypassed or source registry changed. The failing build directory is build/windows-x64/application-cmake; product/ready and a completed Release stage were not produced. Continue with the owning registry work to restore a valid source cohort before rerunning bundle/verify-package. The previously verified immutable Release ZIP remains a separate compatibility fixture only.
+
+### selected-package-test | low | Artifact-specific CTest input is explicit
+
+CADRUMO_APPLICATION_TEST_PACKAGE_ROOT defaults to the configuration's stage/app and optionally accepts an absolute independently extracted or installed package root. This allows the CMake-wired Rust compatibility test to exercise the prior verified Release artifact without implying the current source built successfully. The test receives canonical expected platform, ABI and manifest location from CMake. The test still requires an unchanged original inventory, exact Python/distribution versions and non-ready browser status against an absent disposable cache; optional fixture state assertions remain available. Release platform static/DLL/Rust consumers and application unit tests pass; the package test is in progress.
+
+### cargo-native-toolchain | medium | Explicit C compiler projection also requires SDK headers
+
+Final integration inspection identified Cargo C dependencies as another consumer of the selected toolchain. The Windows adapter now projects target-specific CC and AR alongside Rust compiler/doc tool, linker, static CRT flags and LIB. With CC pinned, standalone CTest exposed reliance on MSBuild's ambient INCLUDE: ring failed to find stddef.h even though the MSBuild build passed. Corrected by projecting the pinned MSVC and Windows SDK include directories through the same shared command. Both Release crates rebuilt successfully after this correction. Final independent review found no new concrete integration defect. Final Debug/Release CTest results remain parent-owned and will be recorded below.
+
+### cmake-final-verification | low | Final Debug and Release CTest checks pass against their stated inputs
+
+After explicit CC/AR/INCLUDE projection, both Rust crates build in Release; the Debug application CTest and all five selected Release CTests pass. Release covers platform static, DLL and Rust consumers, application Rust tests, and package compatibility against the pinned prior ZIP extraction. That package has no rlib, Cargo manifest or development packaging tooling in its inventory. Rust formatting and Clippy checks pass. Independent corrective review found no new integration defect. Verdict: PASS for the shared CMake/Cargo wiring and prior-artifact compatibility scope; fresh current-source bundle/ZIP acceptance remains PENDING because the existing authority compiler rejects the recorded registry bindings. S10 is not closed.
+
+### cargo-reuse | low | Identical CMake builds reuse artifacts but CTest transitions can rebuild native dependencies
+
+The first CMake build immediately after standalone CTest rebuilt ring and downstream crates, so its attempted unchanged-artifact assertion failed. Both invocations project the pinned tools and SDK paths, but Cargo also observes ambient MSBuild/CTest build-script environment differences. No fingerprint was bypassed. A subsequent identical CMake invocation completed Cargo in 0.11 seconds and preserved both the application rlib timestamp and SHA256. Reuse is demonstrated for repeated identical build invocations; optimal reuse across CTest/MSBuild environments is not claimed. Further normalization of non-toolchain build-script environment remains an improvement, not a passing performance claim.
 
 ## Recommendations
 

@@ -1,4 +1,4 @@
-//! Explicit acceptance against a separately extracted artifact, never the assembler's tree.
+//! Explicit acceptance against a selected staged or independently relocated package.
 #![cfg(feature = "live-package-tests")]
 use cadrumo_application::{
     child::ChildConfiguration,
@@ -10,12 +10,16 @@ use cadrumo_application::{
 use std::{collections::BTreeMap, path::PathBuf, time::Duration};
 
 #[tokio::test]
-async fn manifest_cohort_matches_relocated_packaged_interpreter() {
+async fn manifest_cohort_matches_selected_packaged_interpreter() {
     let root = PathBuf::from(
         std::env::var_os("CADRUMO_TEST_PACKAGE_ROOT")
             .expect("CADRUMO_TEST_PACKAGE_ROOT is required"),
     );
-    let manifest_path = RelativePath::new("data/package-manifest.json").unwrap();
+    let manifest_path = RelativePath::new(
+        std::env::var("CADRUMO_TEST_PACKAGE_MANIFEST")
+            .expect("CADRUMO_TEST_PACKAGE_MANIFEST is required from the selected layout"),
+    )
+    .unwrap();
     let manifest_bytes = std::fs::read(manifest_path.under(&root)).unwrap();
     let layout: serde_json::Value = serde_json::from_slice(&manifest_bytes).unwrap();
     let executable = RelativePath::new(
@@ -25,8 +29,12 @@ async fn manifest_cohort_matches_relocated_packaged_interpreter() {
     )
     .unwrap();
     let manifest = PackageManifest::read(&root, &manifest_path).unwrap();
-    let platform = manifest.layout.platform.clone();
-    let abi = manifest.layout.abi;
+    let platform = std::env::var("CADRUMO_TEST_PACKAGE_PLATFORM")
+        .expect("CADRUMO_TEST_PACKAGE_PLATFORM is required from the selected layout");
+    let abi = std::env::var("CADRUMO_TEST_PACKAGE_ABI")
+        .expect("CADRUMO_TEST_PACKAGE_ABI is required from the selected layout")
+        .parse()
+        .expect("package ABI must be an integer");
     let inspection = manifest
         .inspect(&root, &manifest_path, &platform, abi)
         .unwrap();
@@ -70,12 +78,16 @@ async fn manifest_cohort_matches_relocated_packaged_interpreter() {
     .await
     .unwrap();
     assert!(!browser.root.unwrap().exists());
-    let expected_state: python::BrowserState = serde_json::from_value(serde_json::Value::String(
-        std::env::var("CADRUMO_TEST_BROWSER_STATE")
-            .expect("CADRUMO_TEST_BROWSER_STATE is required"),
-    ))
-    .unwrap();
-    assert_eq!(report.browser.as_ref().unwrap().state, expected_state);
+    assert_ne!(
+        report.browser.as_ref().unwrap().state,
+        python::BrowserState::Ready,
+        "browser reported ready against an absent cache"
+    );
+    if let Ok(expected_state) = std::env::var("CADRUMO_TEST_BROWSER_STATE") {
+        let expected_state: python::BrowserState =
+            serde_json::from_value(serde_json::Value::String(expected_state)).unwrap();
+        assert_eq!(report.browser.as_ref().unwrap().state, expected_state);
+    }
     assert_eq!(
         std::fs::read(manifest_path.under(&root)).unwrap(),
         manifest_bytes,
@@ -91,7 +103,7 @@ async fn manifest_cohort_matches_relocated_packaged_interpreter() {
         "probe changed package inventory"
     );
     println!(
-        "Relocated CPython {}: {} exact distribution versions; browser {:?}",
+        "Packaged CPython {}: {} exact distribution versions; browser {:?}",
         report.version,
         report.distributions.len(),
         report.browser.unwrap().state

@@ -12,6 +12,7 @@ behavior. Native code owns bootstrap before Python exists.
 | --- | --- | --- |
 | C interpreter host and CPython initialization | `native/interpreter/windows/` | `build/windows-x64/bin/<Config>/` |
 | Shared Rust platform implementation and C ABI | `native/platform/` | `build/windows-x64/cargo/` |
+| Rust application library and compatibility probes | `native/application/` | `build/windows-x64/cargo/<rust-target>/<profile>/` |
 | Shared package declarations and physical platform mappings | `native/package-layout.json`, `native/platforms/` | `build/windows-x64/generated/` |
 | Build-time contract projection | `dev/packaging/native/` | C header, Rust constants, JSON contract |
 | Build graph and packaging targets | `CMakeLists.txt`, `CMakePresets.json`, `native/cmake/` | `build/windows-x64/` |
@@ -37,6 +38,25 @@ generators do not ship. Each assembly starts in a fresh directory. Runtime paths
 are resolved from the executable and the canonical Settings storage contract,
 never compiled from the build machine. Runtime state is separate from the
 immutable application package.
+
+Both Rust crates use the CMake Cargo command in `native/cmake/Rust.cmake` and
+the selected platform adapter's compiler/linker environment. `rust_application`
+participates in the default build and `bundle`; Cargo owns its incremental input
+tracking, including embedded probe source. Debug and Release map to Cargo's
+development and release profiles beneath the selected CMake binary directory.
+The application `.rlib` is a build artifact for a Rust consumer, not a Python
+extension or a runtime file to install. It does not enter the package manifest.
+
+`verify` includes `application.rust` and `application.package` through CTest.
+The package test consumes the selected layout's manifest location, checks its
+complete file inventory, probes the delivered interpreter against every declared
+distribution version, and checks the original inventory again. It uses a disposable
+browser cache and calls the existing Python readiness owner. This checks the staged
+package; `verify-package` retains ZIP relocation and artifact acceptance ownership.
+For a separately extracted or installed artifact, configure the absolute
+`CADRUMO_APPLICATION_TEST_PACKAGE_ROOT` and run
+`ctest -C Release -R "^application\." --output-on-failure` in that build directory. This verifies that
+selected artifact and does not establish a successful fresh `bundle` build.
 
 ## Platform mappings
 

@@ -48,11 +48,13 @@ add_custom_command(OUTPUT "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/ready"
     "${PROJECT_SOURCE_DIR}/native/interpreter/${CADRUMO_BACKEND}/bootstrap.py"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_custom_target(bundle ALL DEPENDS "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/ready")
+add_dependencies(bundle rust_application)
 if(BUILD_TESTING)
   add_test(NAME bundle.python COMMAND "${CMAKE_COMMAND}" -E env
     "CADRUMO_LOCAL_STORAGE_ROOT=${PROJECT_BINARY_DIR}/testing/$<CONFIG>/storage"
     "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app"
     "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app/${CADRUMO_PACKAGE_MANIFEST}")
+  set_tests_properties(bundle.python PROPERTIES RESOURCE_LOCK package_inventory)
 endif()
 install(DIRECTORY "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app/" DESTINATION .)
 set(CPACK_GENERATOR ZIP)
@@ -77,7 +79,7 @@ foreach(group stage packages dependencies native all)
 endforeach()
 add_custom_target(verify
   COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure
-  DEPENDS bundle platform_static_consumer platform_dll_consumer rust_platform
+  DEPENDS bundle platform_static_consumer platform_dll_consumer rust_platform rust_application
   USES_TERMINAL VERBATIM)
 add_custom_target(zip
   COMMAND "${CMAKE_CPACK_COMMAND}" --config "${PROJECT_BINARY_DIR}/CPackConfig.cmake" -C "$<CONFIG>"

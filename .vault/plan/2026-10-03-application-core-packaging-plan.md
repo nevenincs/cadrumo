@@ -13,7 +13,7 @@ related:
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:ab8cb3b36d51d2552a5b46b47ac7ab0769b4e3cffd02c83de46169ba5b5b9039'
+body_hash: 'sha256:67f2909dba788ffa50311b1ed0c8a98659f66b62a14c1e40c95cb071f3ea1d7f'
 ---
 
 # `application-core-packaging` plan
@@ -117,6 +117,14 @@ S09 still needs trusted Chromium metadata and a complete projected Playwright re
 Library-owned S07/S09 now includes bounded explicit CPython interrogation and executable digest/header checks. Interpreter expectations project from the existing assembler manifest. Browser dependency/readiness/build facts come from the existing Python owners through a fixed embedded query; the Rust library does not copy Playwright revision selection or Settings defaults. Cancellation, timeout, EOF delivery, output bounds and immediate-child OS-resource release have focused tests. Development CPython 3.13.11 live execution passes; an independently copied Windows Release archive is also exercised with artifact-bound results in the ledger/audit. The concurrent packaging source/output tree remains unchanged.
 
 This checkpoint does not close S07 or S09: canonical platform environment integration and authenticated Chromium/headless-shell acquisition metadata remain outstanding. S11 still requires Linux ARM64/macOS ARM64 builds and execution, all-target packaged acceptance and write-containment tracing. Header parsing of synthetic Mach-O fixtures is not native macOS proof. Logging/diagnostic event design, hostile same-user race resistance, browser launch acceptance and full transport adversarial coverage remain outside the demonstrated scope.
+
+### Shared CMake integration authorization, 2026-10-03
+
+The user explicitly redirected this session to Python package/layout/CMake integration and asked whether Rust belongs in the CMake build. Proceed with S10 shared build wiring. Current shared CMake/platform/packaging sources are committed and clean; the native contract now records Windows Debug/Release ZIP and Release installation acceptance. This authorization supersedes the earlier library-only ownership restriction for these integration edits; it does not accept unimplemented cross-platform behavior or unrelated proposed decisions. Reuse the platform adapter's Rust toolchain facts and the canonical package layout. Build the application rlib through Cargo under CMake, exclude build-only Rust artifacts from the Python runtime package, and register package-cohort verification through CTest. Use a separate binary directory for integration evidence.
+
+### S10 CMake checkpoint, 2026-10-03
+
+Both Rust crates now use one Cargo invocation projected by CMake and the Windows adapter. Default/bundle builds include the application crate; verify registers its Rust suite and package compatibility test. The latter receives the canonical manifest location, expected platform and ABI. An explicit absolute package-root override supports separately extracted acceptance inputs. The application rlib is not a Python extension or shipped runtime payload and stays outside the assembled file inventory. The fresh isolated Release bundle was attempted but the existing Python authority wheel hook rejected Modelo 232 revision 2016-2017 registry bindings; no guard was bypassed. Debug library tests and Release platform/application checks pass, including the separately extracted prior Release artifact. Fresh current-source bundle/ZIP acceptance remains blocked by that registry input; S10 capability generation and S11 all-target requirements remain open.
 
 ## Steps
 

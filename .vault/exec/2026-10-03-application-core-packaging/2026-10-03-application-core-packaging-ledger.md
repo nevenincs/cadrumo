@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-core-packaging'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:d9d54497c740a982cdeae850e24944b5aedcf6c2e6460d9890297bee58fe5dba'
+body_hash: 'sha256:d07cf7391610105ae34f83c408b9781b7dd771615bcb2862a2ef4aa297517974'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -62,6 +62,25 @@ related:
 - `S09` `verify:` `Windows cargo test --release --features live-python-tests --test live_python; CPython3.13.11 MissingBuilds and version/distribution refusals` -> `pass`
 - `S09` `verify:` `Initial relocated Windows Release package execution; CPython3.13.11 all80manifest distributions MissingDependency` -> `pass`
 - `S09` `verify:` `Final Windows cargo test --locked --release --features live-package-tests --test live_package; original manifest+inventory unchanged, CPython3.13.11 all80distributions matched` -> `pass`
+- `S10` `M` `native/CMakeLists.txt`
+- `S10` `A` `native/cmake/Rust.cmake`
+- `S10` `M` `native/cmake/platforms/Windows.cmake`
+- `S10` `A` `native/application/CMakeLists.txt`
+- `S10` `M` `native/cmake/Packaging.cmake`
+- `S10` `M` `native/application/tests/live_package.rs`
+- `S10` `M` `native/CONTRACT.md`
+- `S10` `M` `.vault/plan/2026-10-03-application-core-packaging-plan.md`
+- `S10` `M` `.vault/audit/2026-10-03-application-core-packaging-audit.md`
+- `S10` `verify:` `CMake 4.4.3 isolated configure build/windows-x64/application-cmake` -> `pass`
+- `S10` `verify:` `CMake Debug rust_application and rust_platform build` -> `pass`
+- `S10` `verify:` `CMake Release rust_application and rust_platform build with explicit CC AR INCLUDE` -> `pass`
+- `S10` `verify:` `Final CTest Debug -R ^application.rust$` -> `pass`
+- `S10` `verify:` `Final CTest Release -R ^(application.|platform.) with prior extracted Release fixture; five CTests` -> `pass`
+- `S10` `verify:` `Fresh CMake Release bundle; existing authority compiler refuses Modelo2322016-2017 bindings` -> `fail`
+- `S10` `verify:` `Rust cargo fmt --check and clippy --all-targets --all-features -- -D warnings` -> `pass`
+- `S10` `verify:` `Prior release manifest excludes rlibs Cargo manifests and dev packaging tooling` -> `pass`
+- `S10` `verify:` `CMake build immediately after standalone CTest preserves artifact timestamp` -> `fail`
+- `S10` `verify:` `Repeated identical CMake Release rust_application build preserves rlib timestamp and SHA256` -> `pass`
 
 ## Notes
 
@@ -75,3 +94,8 @@ related:
 - `S09` Release archive SHA256 be4eaf81eb2b254d2d535db69609efbe684bca9c790d0994609268fb39923b0b copied after matching source/copy/source hashes; isolated extraction locator build/windows-x86-64/application-core/live-package-dir.txt. Stronger original-manifest postcondition rerun is pending; final result will be appended to audit.
 - `S09` Corrective independent review resolved dynamic-library/fat-header acceptance, EOF handling and live-test original-inventory comparison. No new production defect remains; no descendant containment or hostile same-user filesystem guarantee.
 - `S09` Resolves the prior pending stronger package-immutability rerun. Archive identity and isolated extraction locator remain as recorded. S09 remains open for trusted acquisition metadata and complete Chromium provisioning.
+- `S10` User explicitly authorizes shared CMake/package integration. Shared inputs were clean/committed before edits. S10 partial checkpoint only: capability projections and four-target acceptance remain open.
+- `S10` Standalone CTest initially failed after pinning CC because it lacked SDK INCLUDE; adapter now projects pinned header directories. Final both configurations passed.
+- `S10` Package CTest used the immutable prior Release archive SHA256 be4eaf81eb2b254d2d535db69609efbe684bca9c790d0994609268fb39923b0b via absolute `CADRUMO_APPLICATION_TEST_PACKAGE_ROOT;` canonical expected platform ABI and manifest location still come from current layout. This does not establish fresh bundle success.
+- `S10` Fresh product/ready and stage/Release/ready were not produced. No registry validation guard bypass, registry source edits, or build-only rlib installation. S10 remains open.
+- `S10` Cross-CTest/MSBuild Cargo rebuild behavior remains recorded; no cache fingerprint bypass. All final correctness tests passed.
