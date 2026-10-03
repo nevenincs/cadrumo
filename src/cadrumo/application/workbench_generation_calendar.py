@@ -35,6 +35,7 @@ from ..domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
 from ..domain.modelos.work_unit import WorkUnitCatalogue
 from ..domain.user_profile.errors import UserProfileValidationError
 from ..domain.user_profile.values import UserProfileRecord
+from .invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from .modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
@@ -47,6 +48,7 @@ from .modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZoneObservationV1,
 )
 from .overview.agenda import OverviewAgenda, build_overview_agenda
+from .overview.applicability_evidence import FilingYearApplicabilityEvidence, bind_filing_year_applicability_evidence
 from .overview.calendar import build_overview_calendar
 from .overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from .overview.evidence import (
@@ -209,6 +211,7 @@ def _read_workbench_calendar_inputs(
     observed_at: UtcInstant,
     operation: PinnedAuthorityOperation,
     memo: _CalendarMemo,
+    invoice_source_ports: InvoiceSourceResolverPorts,
     aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
 ) -> _WorkbenchCalendarInputs:
     """Project the taxpayer once and build every calendar-derived input from it.
@@ -217,6 +220,11 @@ def _read_workbench_calendar_inputs(
     broken session: the operator reached it by editing a field. The refusal is
     published on the zones that need the projection, and every other zone of
     the generation is served, rather than the whole workbench failing to start.
+
+    Each obligation is decided on the per-filing-year evidence the overview
+    reads bind: the profile as of the year and the ledger's own derivations
+    from ``invoice_source_ports``, so the workbench and the CLI reach the same
+    verdict for the same records.
     """
     try:
         taxpayer = projection_for_taxpayer(
@@ -243,6 +251,14 @@ def _read_workbench_calendar_inputs(
         operation=operation,
         memo=memo,
         aeat_evidence=aeat_evidence,
+        applicability_evidence=bind_filing_year_applicability_evidence(
+            record=record,
+            schema=operation.profile_schema(),
+            bucket_id=str(record.profile_id),
+            invoice_source_ports=invoice_source_ports,
+            operation=operation,
+            today=as_of,
+        ),
     )
     if not model_declared:
         # The schedule observation already says why the calendar is empty; the
@@ -341,6 +357,7 @@ def _build_workbench_calendar_inputs(
     operation: PinnedAuthorityOperation,
     memo: _CalendarMemo,
     aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
+    applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda, bool]:
     query_range = _calendar_query_range(as_of)
 
@@ -378,6 +395,7 @@ def _build_workbench_calendar_inputs(
             raw_values=raw_values,
             work_units=tuple(work_units.values()),
             operation=operation,
+            applicability_evidence=applicability_evidence,
         )
         return WorkbenchCalendarWork(
             schedule_calendar=schedule_calendar,
@@ -389,8 +407,15 @@ def _build_workbench_calendar_inputs(
                 filing_evidence=evidence_for(schedule_calendar).evidence,
                 work_units=tuple(work_units.values()),
                 operation=operation,
+                applicability_evidence=applicability_evidence,
             ),
-            agenda=build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values, operation=operation),
+            agenda=build_overview_agenda(
+                taxpayer,
+                as_of=as_of,
+                raw_values=raw_values,
+                operation=operation,
+                applicability_evidence=applicability_evidence,
+            ),
         )
 
     work = memo.reuse(compute)

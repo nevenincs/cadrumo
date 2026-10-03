@@ -89,6 +89,28 @@ class _CatalogueReadOnce:
         return self._catalogue
 
 
+class _CatalogueAlreadyRead:
+    """Serve a catalogue the caller already loaded, or report that none can be read."""
+
+    def __init__(self, catalogue: InvoiceCatalogue | None) -> None:
+        self._catalogue = catalogue
+
+    def load(self) -> InvoiceCatalogue:
+        if self._catalogue is None:
+            raise InvoiceSourcePersistenceError("invoice_catalogue_unbound")
+        return self._catalogue
+
+
+def loaded_invoice_source_ports(catalogue: InvoiceCatalogue | None) -> InvoiceSourceResolverPorts:
+    """Return invoice source ports over a catalogue the composition root already loaded.
+
+    ``None`` means the host bound no invoice store. The resolver then reports
+    the catalogue as unreadable, so every ledger derivation is unknown rather
+    than an empty ledger read as a ledger without operations.
+    """
+    return InvoiceSourceResolverPorts(catalogue_reader=_CatalogueAlreadyRead(catalogue))
+
+
 def _memoized[T](derive: Callable[[int], T]) -> Callable[[int], T]:
     derived: dict[int, T] = {}
 
@@ -251,4 +273,5 @@ __all__ = [
     "bind_filing_year_applicability_evidence",
     "declared_record_count_derivation",
     "derive_ledger_payer_facts",
+    "loaded_invoice_source_ports",
 ]

@@ -80,6 +80,8 @@ class WorkbenchCalendarMemoKey:
     as_of: date
     generation: AuthorityGenerationPin
     aeat_evidence_revision: str = "unbound"
+    invoice_catalogue_revision: str = "unbound"
+    """The invoice catalogue the ledger obligation signals are derived from."""
 
 
 @dataclass(frozen=True, slots=True)

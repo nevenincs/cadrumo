@@ -83,6 +83,7 @@ from .modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
 )
 from .operations.registry import OperationPublicContractSetV1
+from .overview.applicability_evidence import loaded_invoice_source_ports
 from .overview.evidence import (
     AeatCalendarEvidenceSources,
     CalendarEvidenceReadOutcome,
@@ -264,6 +265,22 @@ def _read_declarations_workspace(
         return None
 
 
+def _invoice_catalogue_revision(
+    ledger_revision: tuple[str, str] | None,
+    ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+) -> str:
+    """Name the invoice catalogue the calendar's ledger signals were derived from.
+
+    The store's own revision when it states one, otherwise the digest of the
+    catalogue itself; ``unbound`` when no invoice store is bound.
+    """
+    if ledger_revision is not None:
+        return ledger_revision[1]
+    if ledger_sources is None:
+        return "unbound"
+    return content_hash_hex(ledger_sources[1].model_dump(mode="json"))
+
+
 @dataclass(frozen=True, slots=True)
 class SecureProfileWorkbenchGenerationReadDoorV1:
     """Read one generation from explicit secure profile repositories.
@@ -336,6 +353,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             observed_at=observed_at,
         )
         raw_values = record_to_path_values(record)
+        # The ledger is read before the calendar: its invoices answer the
+        # ledger-derived obligation signals the calendar decides on.
+        ledger_revision = self._ledger_revision()
+        ledger_sources = self._load_ledger_sources()
         calendar_inputs = self._read_calendar_inputs(
             record=record,
             raw_values=raw_values,
@@ -346,9 +367,9 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             operation=self.operation,
             work_units_revision=work_units_revision,
             filings_revision=filings_revision,
+            ledger_revision=ledger_revision,
+            ledger_sources=ledger_sources,
         )
-        ledger_revision = self._ledger_revision()
-        ledger_sources = self._load_ledger_sources()
         custody_count = self._load_custody_count()
         ledger_ports = self.ledger_action_ports
         ledger = (
@@ -456,6 +477,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         operation: PinnedAuthorityOperation,
         work_units_revision: str,
         filings_revision: str,
+        ledger_revision: tuple[str, str] | None,
+        ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
     ) -> _WorkbenchCalendarInputs:
         aeat_evidence = (
             _unbound_calendar_aeat_evidence()
@@ -479,6 +502,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             observed_at=observed_at,
             operation=operation,
             aeat_evidence=aeat_evidence,
+            invoice_source_ports=loaded_invoice_source_ports(None if ledger_sources is None else ledger_sources[1]),
             memo=_CalendarMemo(
                 memory=self.capture_memory,
                 key=WorkbenchCalendarMemoKey(
@@ -493,6 +517,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                             "evidence": [row.model_dump(mode="json") for row in aeat_projection.evidence],
                         }
                     ),
+                    invoice_catalogue_revision=_invoice_catalogue_revision(ledger_revision, ledger_sources),
                 ),
             ),
         )
