@@ -14,9 +14,11 @@ from ....core.secure_object_write import SecureObjectWrite
 from ....core.time.clock import now
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.currency.models import EurRateLookup
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.models import TransactionCatalogue
+from ....tests.fx_lookup import eur_rate_lookup
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ...operations.owner import OperationExecutorContext
 from ..persistence_ports import LedgerPersistenceConflictError
@@ -35,7 +37,10 @@ class Rates:
 
     rate_source_id = "synthetic"
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return eur_rate_lookup(self._rate(currency, rate_date), rate_date=rate_date, source=self.rate_source_id)
+
+    def _rate(self, currency: str, rate_date: date) -> Decimal | None:
         raise AssertionError("EUR fixture must not dispatch a rate lookup")
 
 

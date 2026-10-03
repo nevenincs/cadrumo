@@ -3,11 +3,14 @@ from decimal import Decimal
 
 import pytest
 
+from ....tests.fx_lookup import eur_rate_lookup
 from ..models import (
     CurrencyNormalizationStatus,
+    EurRateLookup,
+    EurRateLookupStatus,
     MonetaryAmount,
 )
-from ..service import CurrencyNormalizationService
+from ..service import CurrencyNormalizationService, resolve_fx_conversion_stamp
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -24,7 +27,10 @@ class _StaticRateProvider:
 
     rate_source_id = _RATE_SOURCE_ID
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return eur_rate_lookup(self._rate(currency, rate_date), rate_date=rate_date, source=self.rate_source_id)
+
+    def _rate(self, currency: str, rate_date: date) -> Decimal | None:
         if currency == "USD" and rate_date == _RATE_DATE:
             return _ECB_2025_03_14_USD_RATE
         return None
@@ -52,7 +58,8 @@ def test_currency_normalization_missing_provider() -> None:
     result = svc.normalize(amount, date(2026, 1, 1))
 
     assert result.status == CurrencyNormalizationStatus.MISSING_RATE
-    assert result.eur_amount == Decimal("0.0")
+    # No euro amount at all: a zero would read as a converted figure.
+    assert result.eur_amount is None
     assert result.original == amount
 
 
@@ -63,7 +70,8 @@ def test_currency_normalization_missing_rate() -> None:
     result = svc.normalize(amount, _RATE_DATE)
 
     assert result.status == CurrencyNormalizationStatus.MISSING_RATE
-    assert result.eur_amount == Decimal("0.0")
+    # No euro amount at all: a zero would read as a converted figure.
+    assert result.eur_amount is None
     assert result.original == amount
 
 
@@ -112,3 +120,72 @@ def test_currency_normalization_padded_foreign_currency_resolves_the_same_rate()
     assert padded.original.currency == "USD"
     assert padded.rate == canonical.rate
     assert padded.eur_amount == canonical.eur_amount
+
+
+class _UnsupportedCurrencyProvider:
+    rate_source_id = _RATE_SOURCE_ID
+
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return EurRateLookup(
+            status=EurRateLookupStatus.UNSUPPORTED_CURRENCY, rate_date=rate_date, source=_RATE_SOURCE_ID
+        )
+
+
+class _WeekendProvider:
+    """Answers a Sunday request with the Friday publication, as the ECB does."""
+
+    rate_source_id = _RATE_SOURCE_ID
+
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return eur_rate_lookup(
+            _ECB_2025_03_14_USD_RATE, rate_date=rate_date, source=_RATE_SOURCE_ID, observation_date=_RATE_DATE
+        )
+
+
+def test_an_unsupported_currency_normalizes_to_no_euro_amount() -> None:
+    svc = CurrencyNormalizationService(rate_provider=_UnsupportedCurrencyProvider())
+
+    result = svc.normalize(MonetaryAmount(amount=Decimal("100.00"), currency="XYZ"), _RATE_DATE)
+
+    assert result.status == CurrencyNormalizationStatus.UNSUPPORTED_CURRENCY
+    assert result.eur_amount is None
+
+
+def test_a_weekend_conversion_records_the_publication_it_used() -> None:
+    sunday = date(2025, 3, 16)
+    svc = CurrencyNormalizationService(rate_provider=_WeekendProvider())
+
+    result = svc.normalize(MonetaryAmount(amount=Decimal("100.00"), currency="USD"), sunday)
+    stamp = resolve_fx_conversion_stamp(currency="USD", on_date=sunday, rate_provider=_WeekendProvider())
+
+    assert result.rate_date == sunday
+    assert result.rate_observation_date == _RATE_DATE
+    assert stamp is not None
+    assert (stamp.rate_date, stamp.observation_date) == (sunday, _RATE_DATE)
+
+
+def test_an_unresolvable_rate_leaves_the_record_unstamped() -> None:
+    assert (
+        resolve_fx_conversion_stamp(currency="XYZ", on_date=_RATE_DATE, rate_provider=_UnsupportedCurrencyProvider())
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    ("fields", "message"),
+    [
+        ({"status": EurRateLookupStatus.FOUND}, "carries its rate and observation date"),
+        (
+            {"status": EurRateLookupStatus.FOUND, "rate": Decimal("1.1"), "observation_date": date(2025, 3, 15)},
+            "cannot postdate",
+        ),
+        (
+            {"status": EurRateLookupStatus.FOUND, "rate": Decimal("0"), "observation_date": _RATE_DATE},
+            "strictly positive",
+        ),
+        ({"status": EurRateLookupStatus.MISSING_RATE, "rate": Decimal("1.1")}, "only a found rate"),
+    ],
+)
+def test_an_incoherent_lookup_is_refused(fields: dict[str, object], message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        EurRateLookup.model_validate({"rate_date": _RATE_DATE, "source": _RATE_SOURCE_ID, **fields})

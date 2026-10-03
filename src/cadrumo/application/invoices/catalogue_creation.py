@@ -358,6 +358,8 @@ def _apply_fx_conversion_stamp(
         invoice_payload["fx_rate"] = format(fx_stamp.rate, "f")
         invoice_payload["fx_rate_date"] = fx_stamp.rate_date.isoformat()
         invoice_payload["fx_rate_source"] = fx_stamp.source
+        if fx_stamp.observation_date is not None:
+            invoice_payload["fx_rate_observation_date"] = fx_stamp.observation_date.isoformat()
 
 
 def build_catalogue_invoice(

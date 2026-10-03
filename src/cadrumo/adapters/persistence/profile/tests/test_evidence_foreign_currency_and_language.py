@@ -23,6 +23,7 @@ prints. Nothing is recomputed from the code under test.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -38,6 +39,8 @@ from cadrumo.core.config import Settings
 from cadrumo.core.external_constants import DEFAULT_CURRENCY
 from cadrumo.domain.iva.classification import InvoiceKind
 
+from .....domain.currency.models import EurRateLookup
+from .....tests.fx_lookup import eur_rate_lookup
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
@@ -93,7 +96,10 @@ class _AlwaysSilentRateProvider:
     def rate_source_id(self) -> str:
         return "test_silent"
 
-    def get_eur_rate(self, currency: str, rate_date: object) -> Decimal | None:
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return eur_rate_lookup(self._rate(currency, rate_date), rate_date=rate_date, source=self.rate_source_id)
+
+    def _rate(self, currency: str, rate_date: date) -> Decimal | None:
         del currency, rate_date
         return None
 

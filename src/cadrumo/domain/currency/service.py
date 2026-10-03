@@ -2,12 +2,10 @@
 
 Provides :class:`ExchangeRateProvider` — the protocol an exchange-rate
 backend must implement — and :class:`CurrencyNormalizationService`, which
-applies a provider-supplied rate to produce a :class:`NormalizedAmount`
-(from ``._models``).  When no provider is configured or no rate is
-available the service returns a ``NormalizedAmount`` with
-``status = CurrencyNormalizationStatus.MISSING_RATE`` so callers can
-surface a human-readable warning rather than silently propagating a zero
-amount into a filing (modelo = an AEAT tax form).
+applies a provider-supplied rate to produce a :class:`NormalizedAmount`.
+When no provider is configured, no rate is available, or the rate authority
+publishes no series for the currency, the result carries the matching status
+and no euro amount, so a caller can never read a zero into a filing.
 """
 
 from __future__ import annotations
@@ -20,6 +18,8 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money.rounding import round_to_cents
 from .models import (
     CurrencyNormalizationStatus,
+    EurRateLookup,
+    EurRateLookupStatus,
     FxConversionStamp,
     MonetaryAmount,
     NormalizedAmount,
@@ -40,11 +40,14 @@ class ExchangeRateProvider(Protocol):
         """
         ...
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
-        """Get the exchange rate to EUR for a given currency and date.
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        """Look up the currency-to-EUR rate for a date.
 
-        Returns the rate such that original_amount * rate = eur_amount.
-        Returns None if no rate is available.
+        A found rate satisfies ``original_amount * rate = eur_amount`` and names
+        the observation it came from. A transport failure raises
+        :exc:`~domain.currency.errors.ExchangeRateProviderError` rather than
+        answering, so an unreachable authority is never mistaken for a missing
+        rate.
         """
         ...
 
@@ -75,18 +78,24 @@ class CurrencyNormalizationService:
         if not self._rate_provider:
             return NormalizedAmount(
                 original=amount,
-                eur_amount=Decimal("0.0"),
+                eur_amount=None,
                 status=CurrencyNormalizationStatus.MISSING_RATE,
             )
 
-        rate = self._rate_provider.get_eur_rate(amount.currency, rate_date)
-        if rate is None:
+        lookup = self._rate_provider.lookup_eur_rate(amount.currency, rate_date)
+        if lookup.status is EurRateLookupStatus.UNSUPPORTED_CURRENCY:
             return NormalizedAmount(
                 original=amount,
-                eur_amount=Decimal("0.0"),
+                eur_amount=None,
+                status=CurrencyNormalizationStatus.UNSUPPORTED_CURRENCY,
+            )
+        if lookup.status is not EurRateLookupStatus.FOUND or lookup.rate is None:
+            return NormalizedAmount(
+                original=amount,
+                eur_amount=None,
                 status=CurrencyNormalizationStatus.MISSING_RATE,
             )
-
+        rate = lookup.rate
         eur_amount = amount.amount * rate
 
         return NormalizedAmount(
@@ -100,6 +109,7 @@ class CurrencyNormalizationService:
             # nothing an auditor could go back to.
             rate_source=self._rate_provider.rate_source_id,
             rate_date=rate_date,
+            rate_observation_date=lookup.observation_date,
         )
 
 
@@ -147,7 +157,12 @@ def resolve_fx_conversion_stamp(
     """
     if currency.strip().upper() == DEFAULT_CURRENCY:
         return None
-    rate = rate_provider.get_eur_rate(currency, on_date)
-    if rate is None:
+    lookup = rate_provider.lookup_eur_rate(currency, on_date)
+    if lookup.status is not EurRateLookupStatus.FOUND or lookup.rate is None:
         return None
-    return FxConversionStamp(rate=rate, rate_date=on_date, source=rate_provider.rate_source_id)
+    return FxConversionStamp(
+        rate=lookup.rate,
+        rate_date=on_date,
+        source=rate_provider.rate_source_id,
+        observation_date=lookup.observation_date,
+    )

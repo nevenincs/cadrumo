@@ -383,6 +383,11 @@ class Invoice(BaseModel):
     # the same reason the rate and its date are: half a provenance is a claim
     # nothing can check.
     fx_rate_source: str | None = Field(default=None, min_length=1)
+    # The publication the rate was read from. It differs from `fx_rate_date` on
+    # every weekend and holiday, when the rate in force is the last one published
+    # before the operation date. Absent on a stamp recorded before this was kept,
+    # which is a known earlier shape rather than a defaulted value.
+    fx_rate_observation_date: date | None = None
     # When this RECORD was entered and last amended, which is a different fact
     # from `issued_at` (when the document was issued) and from `operation_date`
     # (when the operation occurred). Both are outside the identity derived by
@@ -618,6 +623,16 @@ class Invoice(BaseModel):
                 (
                     (stamp_flags[0], fx_rate <= Decimal("0")) == (True, True),
                     "fx_rate must be strictly positive",
+                ),
+                (
+                    self.fx_rate_observation_date is not None and not stamp_present,
+                    "fx_rate_observation_date belongs to an fx conversion stamp",
+                ),
+                (
+                    self.fx_rate_observation_date is not None
+                    and self.fx_rate_date is not None
+                    and self.fx_rate_observation_date > self.fx_rate_date,
+                    "fx_rate_observation_date cannot postdate fx_rate_date",
                 ),
             ),
         )

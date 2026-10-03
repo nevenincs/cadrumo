@@ -38,6 +38,7 @@ from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceReso
 from cadrumo.core.aggregation import IntracomOperationType, InvoiceDevengoRank
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.currency.models import EurRateLookup
 from cadrumo.domain.invoices.decomposition import decompose_invoice
 from cadrumo.domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
 from cadrumo.domain.invoices.errors import InvoiceValidationError
@@ -45,6 +46,7 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
+from cadrumo.tests.fx_lookup import eur_rate_lookup
 
 from ..maintenance_support import load_modelo_path
 
@@ -77,7 +79,10 @@ class _CanonicalOnlyRateProvider:
     def rate_source_id(self) -> str:
         return "test_canonical_only"
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return eur_rate_lookup(self._rate(currency, rate_date), rate_date=rate_date, source=self.rate_source_id)
+
+    def _rate(self, currency: str, rate_date: date) -> Decimal | None:
         del rate_date
         return Decimal("1.2") if currency == "GBP" else None
 

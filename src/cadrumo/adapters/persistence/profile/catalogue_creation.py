@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
-from decimal import Decimal
 from typing import Protocol, override
 
 from ....application.invoices.catalogue_creation_ports import (
@@ -29,6 +28,7 @@ from ....domain.buckets.errors import BucketEventValidationError
 from ....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError, append_bucket_event
 from ....domain.currency.errors import ExchangeRateProviderError
+from ....domain.currency.models import EurRateLookup
 from ....domain.currency.service import ExchangeRateProvider
 from ....domain.invoices.errors import InvoicePersistenceError, InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
@@ -277,10 +277,10 @@ class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):
         return self._provider.rate_source_id
 
     @override
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
-        """Fetch a rate while hiding outbound-provider failure types."""
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        """Look up a rate while hiding outbound-provider failure types."""
         try:
-            return self._provider.get_eur_rate(currency, rate_date)
+            return self._provider.lookup_eur_rate(currency, rate_date)
         except (ExchangeRateProviderError, OSError) as exc:
             raise CatalogueInvoiceRateError("exchange_rate_lookup") from exc
 
