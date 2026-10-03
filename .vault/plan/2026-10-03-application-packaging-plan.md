@@ -13,7 +13,7 @@ related:
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:4638c032078973a5c2155d10c252f3db468a0f11bcce83f71b3c6ba41f24b77f'
+body_hash: 'sha256:8e6e46da29d4e562e62bdc9d6aa939faa302756ae69636df0e202648a88cb6af'
 ---
 
 # `application-packaging` plan
@@ -29,7 +29,7 @@ S01 owns native/CONTRACT.md and the package-only declaration. S02 owns the C ABI
 ## Steps
 
 - [x] `S01` - Establish ownership, platform mappings and scoped decision coverage; `native/ and dev/packaging/native/`.
-- [ ] `S02` - Prove Windows toolchains and C ABI linkage with pinned CPython; `native/`.
+- [x] `S02` - Prove Windows toolchains and C ABI linkage with pinned CPython; `native/`.
 - [ ] `S03` - Build isolated host and assemble the locked Python product; `native/ and dev/packaging/native/`.
 - [ ] `S04` - Verify relocated artifact, hostile environments, child processes and filesystem writes; `dev/packaging/native/tests/ and native/`.
 

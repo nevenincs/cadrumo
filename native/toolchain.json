@@ -1,0 +1,9 @@
+{
+  "cpython_source": "https://api.nuget.org/v3-flatcontainer/python/{version}/python.{version}.nupkg",
+  "cpython_sha256": "56060654f7a552992cf27f64ac427001446f2c3f15b6acb41b1b8f38a75b5403",
+  "rust": "1.96.0",
+  "rust_target": "x86_64-pc-windows-msvc",
+  "msvc": "14.44.35207",
+  "windows_sdk": "10.0.26100.0",
+  "cmake": "4.4.3"
+}

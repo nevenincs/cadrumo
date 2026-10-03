@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:465cc177be77fed8bb3fc42b6bb1b1050c39652b4442dbc7afc59db4eded17ff'
+body_hash: 'sha256:a11bc32caf6b043e4593d3558ffcbdeff51bd4c0496b50b9b476c70adfe97643'
 related:
   - "[[2026-10-03-application-packaging-plan]]"
 ---
@@ -46,3 +46,19 @@ related:
 - `S01` `M` `.vault/adr/2026-10-03-application-packaging-adr.md`
 - `S01` `M` `.vault/research/2026-10-03-application-packaging-research.md`
 - `S01` `verify:` `canonical ownership and Windows Linux macOS mapping review` -> `pass`
+- `S02` `A` `native/toolchain.json`
+- `S02` `A` `native/CMakeLists.txt`
+- `S02` `A` `native/platform/Cargo.toml`
+- `S02` `A` `native/platform/Cargo.lock`
+- `S02` `A` `native/platform/include/cadrumo_platform.h`
+- `S02` `A` `native/platform/src/lib.rs`
+- `S02` `A` `native/platform/src/consumer.rs`
+- `S02` `A` `native/platform/tests/consumer.c`
+- `S02` `A` `dev/packaging/native/__init__.py`
+- `S02` `A` `dev/packaging/native/generate.py`
+- `S02` `A` `dev/packaging/native/build.ps1`
+- `S02` `A` `dev/packaging/native/provision.py`
+- `S02` `verify:` `MSVC SDK Rust pinned native build and C static DLL Rust consumers` -> `pass`
+- `S02` `verify:` `fresh official SDK SHA256 and 77 locked Windows dependency wheels` -> `pass`
+- `S02` `A` `native/interpreter/host.c`
+- `S02` `A` `native/interpreter/python.c`
