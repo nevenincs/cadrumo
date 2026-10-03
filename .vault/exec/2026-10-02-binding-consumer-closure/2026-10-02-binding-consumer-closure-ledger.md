@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7bd3027b1ef074c921938b3d453f1ea8d0277e86bef2d2ec1d654297c40cf0fe'
+body_hash: 'sha256:482969887a3bce5959eb7fe330e5b6f1b47d663ad5d0a00069e3ee4fcc75deed'
 related:
   - "[[2026-10-02-binding-consumer-closure-plan]]"
 ---
@@ -328,6 +328,11 @@ related:
 - `S06` `verify:` `pytest domain/foreign_assets + aggregation/test_foreign_assets + test_per_modelo_service + row builders + row-set assembly + spreadsheet + 720 e2e (256+5+10+15 passed against published 5ccd414b)` -> `pass`
 - `S06` `verify:` `just check-bindings (10 findings: 720 5, 347 5; 720 down from 6)` -> `pass`
 - `S06` `verify:` `lint-imports (only the pre-existing cadrumo_harness conftest contract broken)` -> `pass`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_foreign_asset_register_roundtrip.py`
+- `S06` `M` `src/cadrumo/domain/foreign_assets/record_join.py`
+- `S06` `M` `src/cadrumo/domain/foreign_assets/register.py`
+- `S06` `M` `src/cadrumo/domain/foreign_assets/tests/test_register.py`
+- `S06` `verify:` `pytest domain/foreign_assets + register roundtrip + aggregation foreign assets + per-modelo service + row builders (129+27 passed) and 720 e2e producer-join/enrolment/redeclaration (20 passed)` -> `pass`
 
 ## Notes
 
@@ -360,3 +365,4 @@ related:
 - `S08` Section 0: `relation_evidence` consumer kind enrolled in the shared `binding_consumers` census (read by the gate, compiler and `registry_status),` selected through `relation_prefill_bindings_for_period` over declared periods so it counts exactly what calculation resolves. The 193 2025 dependency treatment override `(factual_evidence)` was already in the authored source. The S08 compiler refusal itself waits for zero residue (720 S06, 347 with CADRUMO-ADMIN).
 - `S06` FX prerequisite for W3 (findings G5, G8, G11 of 2026-10-02-binding-consumer-closure-modelo-720-fx-research) committed as 178005fb2c: typed EurRateLookup with observation date, ECB 404 as unsupported currency, no zero euro amount for a missing rate, observation date on stamps and stored invoices. Also committed on the paused lane's behalf: invoice catalogue split 35c0193485. CLI suites could not run cleanly: other lanes (application/live, application/ledger) were mid-edit and the profile worker imports the worktree.
 - `S06` W2+W3 08d98d173c and W4 1e909a09e8 landed; authority republished from HEAD 08d98d173c (identity 5ccd414b). Implementation details within the 2026-10-02 amendment: (a) the currency column is kept as a worksheet input declared `non_calculation/application_calculation_handoff` instead of being deleted, because the worksheet's columns are the row bindings and the amendment requires worksheet currency input; `asset_ref,` `valuation_event` and `valuation_event_date` are added the same way; (b) a declaration with no lot in a declarable block is an advisory, not a refusal, because the register does not yet record when an asset left the declarant (a refusal would block every later ejercicio); flagged to the user. Also 55c6b85c0a moved `fx_lookup` out of core-only cadrumo.tests (import contract regression from 178005fb2c). W5-W8 remain.
+- `S06` b6af0bca3a supersedes ledger note (b) above: researched RD 1065/2007 art. 42 bis (apartado 1 held at 31 December; apartados 3 and 5 cessation reported in that year; 4.e every asset of a declarable block reported). The register now records `held_since/ceased_on,` so a declared asset held in the ejercicio with no lot is refused as the amendment requires; an asset that ceased earlier forms no record; a lot outside the period is a register mismatch; a declared asset in a block under its floor stays an advisory. Note (a), the currency column kept as a non-exported conversion input, is consistent with Orden HAP/72/2013 type 2 pos. 432-446 (amounts in euros, no currency slot) and Ley 46/1998 art. 36.
