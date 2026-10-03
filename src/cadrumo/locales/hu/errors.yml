@@ -1064,6 +1064,9 @@ errors:
     refused_flow_submit: A vezetett folyamat elutasította a beküldést.
     refused_flow_unsupported_console: A vezetett folyamat nem futtatható, mert ez
       a konzol nem tud interaktív kérdéseket megjeleníteni.
+    refused_foreign_asset_valuation: Egy 720-as modell szerinti értékelést nem sikerült
+      euróra átváltani a jogszabályi árfolyamnapon. Ellenőrizd a vagyonelem pénznemét
+      és értékelési dátumát.
     refused_google_impersonation: Az IAM megtagadta a megszemélyesített token kiállítását
       a cél szolgáltatásfiók számára. Add meg neki a roles/iam.serviceAccountTokenCreator
       szerepkört.

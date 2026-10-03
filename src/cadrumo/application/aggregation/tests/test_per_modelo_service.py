@@ -37,9 +37,9 @@ from ....core.errors.error_codes import get_registered_error_code
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from ....domain.calculations.registry.detail_record_bindings import resolve_foreign_asset_binding_row_values
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....domain.foreign_assets.valuation import M720ValuationEvent
 from .._preconditions import AggregationPreconditionCondition
 from ..counterpart import (
     CounterpartAggregation,
@@ -53,7 +53,6 @@ from ..foreign_assets import (
     ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
     ForeignAssetsAggregationSourceResolver,
-    _registry_observations_from_foreign_assets_aggregation,
     aggregate_foreign_assets_720,
     declarable_asset_classes_720,
 )
@@ -155,12 +154,33 @@ def _asset_obs(
             if source_kind is BindingSourceKind.LEDGER_TRANSACTION
             else declared_source_id
         ),
+        asset_ref=_asset_ref(asset_external_id or f"{source_kind.value}-account"),
         asset_class=asset_class,
         asset_external_id=asset_external_id or f"{source_kind.value}-account",
         country=country,
-        valuation_eur=Decimal(valuation),
+        valuation_amount=Decimal(valuation),
+        currency_code="EUR",
+        valuation_event=M720ValuationEvent.YEAR_END,
         acquisition_date=acquisition_date,
     )
+
+
+def _asset_ref(label: str) -> str:
+    return "m720a_" + hashlib.sha256(label.encode("utf-8")).hexdigest()[:32]
+
+
+def _m720_row(index: int, *, label: str, asset_class: str, country: str, valuation: str, acquired: str) -> dict:
+    return {
+        ("modelo-720-asset-row-asset-ref", index): _asset_ref(label),
+        ("modelo-720-asset-row-valuation-event", index): "year_end",
+        ("modelo-720-asset-row-valuation-event-date", index): "",
+        ("modelo-720-asset-row-class", index): asset_class,
+        ("modelo-720-asset-row-country", index): country,
+        ("modelo-720-asset-row-currency", index): "EUR",
+        ("modelo-720-asset-row-identifier", index): label,
+        ("modelo-720-asset-row-valuation", index): Decimal(valuation),
+        ("modelo-720-asset-row-acquisition-date", index): acquired,
+    }
 
 
 def test_command_contract_is_strict_and_immutable() -> None:
@@ -370,36 +390,22 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
             period=_P_2025_ANNUAL,
             revision=snapshot.revision,
         )
-        row_observations = _registry_observations_from_foreign_assets_aggregation(
-            expected_aggregation,
-            observations,
-        )
-        expected_row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
-
         resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
 
         assert service_result.aggregation == expected_aggregation
-        assert expected_row_values == {
-            ("modelo-720-asset-row-class", 1): "C",
-            ("modelo-720-asset-row-country", 1): "AD",
-            ("modelo-720-asset-row-currency", 1): "EUR",
-            ("modelo-720-asset-row-identifier", 1): "AD-ACCOUNT-001",
-            ("modelo-720-asset-row-valuation", 1): Decimal("40000.00"),
-            ("modelo-720-asset-row-acquisition-date", 1): "2020-01-15",
-            ("modelo-720-asset-row-class", 2): "C",
-            ("modelo-720-asset-row-country", 2): "CH",
-            ("modelo-720-asset-row-currency", 2): "EUR",
-            ("modelo-720-asset-row-identifier", 2): "CH-ACCOUNT-002",
-            ("modelo-720-asset-row-valuation", 2): Decimal("15000.00"),
-            ("modelo-720-asset-row-acquisition-date", 2): "2021-02-20",
+        assert dict(resolution.row_binding_values) == {
+            **_m720_row(
+                1, label="AD-ACCOUNT-001", asset_class="C", country="AD", valuation="40000.00", acquired="2020-01-15"
+            ),
+            **_m720_row(
+                2, label="CH-ACCOUNT-002", asset_class="C", country="CH", valuation="15000.00", acquired="2021-02-20"
+            ),
         }
         assert resolution.binding_values == {}
-        assert dict(resolution.row_binding_values) == expected_row_values
         assert resolution.source_transaction_ids == (_ledger_identity("tx-account-ad"),)
-        # M720 is deliberately grounding-blocked: the resolver emits NO
-        # provenance because no upstream carrier id can truthfully stand in for
-        # an authoritative persisted identity of the resolved asset. The
-        # contributing sources stay visible through source_transaction_ids.
+        # Ledger-side rows carry no primary provenance until the register join
+        # grounds it; the contributing sources stay visible through
+        # source_transaction_ids.
         assert resolution.provenance == ()
 
 
@@ -444,12 +450,6 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
             period=_P_2025_ANNUAL,
             revision=snapshot.revision,
         )
-        row_observations = _registry_observations_from_foreign_assets_aggregation(
-            expected_aggregation,
-            observations,
-        )
-        expected_row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
-
         resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
 
         assert service_result.aggregation == expected_aggregation
@@ -459,27 +459,19 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
                 ForeignAssetClass.INSURANCE,
             },
         )
-        assert expected_row_values == {
-            ("modelo-720-asset-row-class", 1): "S",
-            ("modelo-720-asset-row-country", 1): "CH",
-            ("modelo-720-asset-row-currency", 1): "EUR",
-            ("modelo-720-asset-row-identifier", 1): "CH-INSURANCE-001",
-            ("modelo-720-asset-row-valuation", 1): Decimal("25000.00"),
-            ("modelo-720-asset-row-acquisition-date", 1): "2021-02-20",
-            ("modelo-720-asset-row-class", 2): "V",
-            ("modelo-720-asset-row-country", 2): "LI",
-            ("modelo-720-asset-row-currency", 2): "EUR",
-            ("modelo-720-asset-row-identifier", 2): "LI-SECURITY-001",
-            ("modelo-720-asset-row-valuation", 2): Decimal("30000.00"),
-            ("modelo-720-asset-row-acquisition-date", 2): "2020-01-15",
+        assert dict(resolution.row_binding_values) == {
+            **_m720_row(
+                1, label="CH-INSURANCE-001", asset_class="S", country="CH", valuation="25000.00", acquired="2021-02-20"
+            ),
+            **_m720_row(
+                2, label="LI-SECURITY-001", asset_class="V", country="LI", valuation="30000.00", acquired="2020-01-15"
+            ),
         }
         assert resolution.binding_values == {}
-        assert dict(resolution.row_binding_values) == expected_row_values
         assert resolution.source_transaction_ids == (_ledger_identity("tx-security-li"),)
-        # M720 is deliberately grounding-blocked: the resolver emits NO
-        # provenance because no upstream carrier id can truthfully stand in for
-        # an authoritative persisted identity of the resolved asset. The
-        # contributing sources stay visible through source_transaction_ids.
+        # Ledger-side rows carry no primary provenance until the register join
+        # grounds it; the contributing sources stay visible through
+        # source_transaction_ids.
         assert resolution.provenance == ()
 
 

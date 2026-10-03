@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
+from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ...aggregation.counterpart import CounterpartObservation
 from ...aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
@@ -401,13 +402,16 @@ def test_public_command_round_trips_each_supported_observation_family() -> None:
     foreign_asset = ForeignAssetIngestObservation(
         source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         source_object_id="evidence-1",
+        asset_ref="m720a_" + "e" * 32,
         asset_class=ForeignAssetClass.ACCOUNT,
         asset_external_id="bank-account-1",
         country="FR",
         issuer_or_institution="Bank",
-        valuation_eur=Decimal("50000.50"),
+        valuation_amount=Decimal("50000.50"),
+        currency_code="USD",
+        valuation_event=M720ValuationEvent.EXTINCTION,
+        valuation_event_date="2025-06-13",
         acquisition_date="2024-06-30",
-        held_at_year_end=True,
     )
     command = PerModeloAggregationCommand(
         modelo="347",

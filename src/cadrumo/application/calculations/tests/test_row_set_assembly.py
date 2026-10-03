@@ -168,49 +168,85 @@ def test_assemble_withholding_unknown_binding_silently_dropped() -> None:
     assert observations[0].perceptor_tax_id == "12345678A"
 
 
-def test_assemble_foreign_asset_parses_iso_acquisition_date() -> None:
-    revision = _modelo("720", "2013-y-siguientes")
-    cells = (
-        _TestRowCell(binding="modelo-720-asset-row-class", row_index=1, value="C"),
-        _TestRowCell(binding="modelo-720-asset-row-country", row_index=1, value="CH"),
-        _TestRowCell(binding="modelo-720-asset-row-currency", row_index=1, value="CHF"),
-        _TestRowCell(binding="modelo-720-asset-row-identifier", row_index=1, value="CH-iban-001"),
-        _TestRowCell(binding="modelo-720-asset-row-acquisition-date", row_index=1, value="2020-01-15"),
-        _TestRowCell(binding="modelo-720-asset-row-valuation", row_index=1, value=Decimal("120000")),
+_M720_ASSET_REF = "m720a_" + "c" * 32
+_M720_ROW = {
+    "modelo-720-asset-row-asset-ref": _M720_ASSET_REF,
+    "modelo-720-asset-row-class": "C",
+    "modelo-720-asset-row-country": "CH",
+    "modelo-720-asset-row-currency": "CHF",
+    "modelo-720-asset-row-identifier": "CH-iban-001",
+    "modelo-720-asset-row-acquisition-date": "2020-01-15",
+    "modelo-720-asset-row-valuation": Decimal("120000"),
+    "modelo-720-asset-row-valuation-event": "year_end",
+}
+
+
+def _m720_cells(*, omit: str | None = None) -> tuple[_TestRowCell, ...]:
+    return tuple(
+        _TestRowCell(binding=binding, row_index=1, value=value)
+        for binding, value in _M720_ROW.items()
+        if binding != omit
     )
 
-    observations = assemble_foreign_asset_observations(cells, revision, filing_year=2025)
+
+def test_assemble_foreign_asset_parses_a_complete_row() -> None:
+    revision = _modelo("720", "2013-y-siguientes")
+
+    observations = assemble_foreign_asset_observations(_m720_cells(), revision, filing_year=2025)
 
     assert len(observations) == 1
     obs = observations[0]
+    assert obs.asset_ref == _M720_ASSET_REF
     assert obs.country_code == "CH"
     assert obs.currency_code == "CHF"
     assert obs.acquisition_date == date(2020, 1, 15)
     assert obs.valuation_amount == Decimal("120000")
+    assert obs.valuation_event == "year_end"
+    assert obs.valuation_event_date is None
 
 
-def test_assemble_foreign_asset_refuses_a_row_with_no_country() -> None:
-    """Modelo 720 declares assets situated ABROAD, so Spain is not a usable fallback.
-
-    The observation model already requires the country; the assembler's ES
-    fallback was the only reason that requirement never reached a row. The
-    positive control is ``test_assemble_foreign_asset_parses_iso_acquisition_date``,
-    which is the identical row with the country cell present.
-    """
+def test_assemble_foreign_asset_reads_an_extinction_date() -> None:
     revision = _modelo("720", "2013-y-siguientes")
     cells = (
-        _TestRowCell(binding="modelo-720-asset-row-class", row_index=1, value="C"),
-        _TestRowCell(binding="modelo-720-asset-row-currency", row_index=1, value="CHF"),
-        _TestRowCell(binding="modelo-720-asset-row-identifier", row_index=1, value="CH-iban-001"),
-        _TestRowCell(binding="modelo-720-asset-row-acquisition-date", row_index=1, value="2020-01-15"),
-        _TestRowCell(binding="modelo-720-asset-row-valuation", row_index=1, value=Decimal("120000")),
+        *_m720_cells(omit="modelo-720-asset-row-valuation-event"),
+        _TestRowCell(binding="modelo-720-asset-row-valuation-event", row_index=1, value="extinction"),
+        _TestRowCell(binding="modelo-720-asset-row-valuation-event-date", row_index=1, value="2025-06-13"),
     )
 
+    (obs,) = assemble_foreign_asset_observations(cells, revision, filing_year=2025)
+
+    assert obs.valuation_event == "extinction"
+    assert obs.valuation_event_date == date(2025, 6, 13)
+
+
+@pytest.mark.parametrize(
+    ("omitted", "field"),
+    [
+        ("modelo-720-asset-row-country", "country_code"),
+        ("modelo-720-asset-row-class", "asset_class_code"),
+        ("modelo-720-asset-row-currency", "currency_code"),
+        ("modelo-720-asset-row-valuation", "valuation_amount"),
+        ("modelo-720-asset-row-acquisition-date", "acquisition_date"),
+        ("modelo-720-asset-row-asset-ref", "asset_ref"),
+        ("modelo-720-asset-row-valuation-event", "valuation_event"),
+    ],
+)
+def test_assemble_foreign_asset_refuses_a_row_missing_a_required_field(omitted: str, field: str) -> None:
+    """A blank field is the operator's to supply, never a default.
+
+    Spain is no fallback country (modelo 720 declares assets ABROAD), EUR no
+    fallback currency, zero no fallback valuation, 31 December no fallback
+    acquisition date, and C no fallback class. The positive control is
+    ``test_assemble_foreign_asset_parses_a_complete_row``, the identical row
+    with every cell present.
+    """
+    revision = _modelo("720", "2013-y-siguientes")
+
     with pytest.raises(RegistryValidationError) as excinfo:
-        assemble_foreign_asset_observations(cells, revision, filing_year=2025)
+        assemble_foreign_asset_observations(_m720_cells(omit=omitted), revision, filing_year=2025)
 
     assert str(excinfo.value) == "application.calculations.row_set.errors.row_assembly_failed"
-    assert "country_code" in str((excinfo.value.context or {})["validation_error_detail"])
+    assert field in str((excinfo.value.context or {})["validation_error_detail"])
 
 
 def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
@@ -387,14 +423,9 @@ def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> 
 
 def test_assemble_observations_for_grouping_dispatches_foreign_asset() -> None:
     revision = _modelo("720", "2013-y-siguientes")
-    cells = (
-        _TestRowCell(binding="modelo-720-asset-row-class", row_index=1, value="C"),
-        _TestRowCell(binding="modelo-720-asset-row-country", row_index=1, value="CH"),
-    )
-
     source_kind, observations = assemble_observations_for_grouping(
         "per_foreign_asset",
-        cells,
+        _m720_cells(),
         revision,
         filing_year=2025,
     )

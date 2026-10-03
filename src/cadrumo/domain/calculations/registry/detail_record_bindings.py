@@ -7,15 +7,18 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.external_constants import DEFAULT_CURRENCY
 from ....core.foreign_asset_obligation import M720AssetClassCode
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.parsing.codes import IsoCurrencyCode
+from ...currency.models import CurrencyNormalizationStatus, MonetaryAmount, NormalizedAmount
+from ...foreign_assets.register import M720AssetRef
+from ...foreign_assets.valuation import M720ValuationEvent
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     invariant_diagnostics,
@@ -34,6 +37,8 @@ if TYPE_CHECKING:
 __all__ = [
     "AtributionMemberObservation",
     "Modelo720RowObservation",
+    "Modelo720ValuedRow",
+    "foreign_asset_row_order",
     "resolve_atribucion_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
     "validate_atribucion_binding",
@@ -84,29 +89,41 @@ def _validate_detail_record_row_field(
 
 
 _ForeignAssetRowField = Literal[
+    "asset_ref",
     "asset_class_code",
     "country_code",
     "currency_code",
     "asset_identifier",
     "valuation_amount",
+    "valuation_event",
+    "valuation_event_date",
     "acquisition_date",
 ]
 
 
 class Modelo720RowObservation(BaseModel):
-    """One foreign asset for modelo 720."""
+    """One foreign-asset lot for modelo 720, valued in the currency it is held in.
+
+    ``asset_ref`` is the register identity the type 2 record joins on, and
+    ``asset_identifier`` the official identifier kept as a cross-check.
+    ``valuation_amount`` is the native amount measured at ``valuation_event``;
+    its euro value exists only once a :class:`Modelo720ValuedRow` converts it.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
+    asset_ref: M720AssetRef
     asset_class_code: M720AssetClassCode
     country_code: CountryCodeAlpha2
-    currency_code: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
+    currency_code: IsoCurrencyCode
     asset_identifier: str = Field(default="", max_length=128)
     acquisition_date: date
     valuation_amount: Decimal
+    valuation_event: M720ValuationEvent
+    valuation_event_date: date | None = None
 
-    _iso_code_uppercase = field_validator("country_code", "currency_code")(uppercase_alpha_code("ISO code"))
+    _iso_code_uppercase = field_validator("country_code")(uppercase_alpha_code("ISO code"))
 
     @field_validator("valuation_amount")
     @classmethod
@@ -115,6 +132,50 @@ class Modelo720RowObservation(BaseModel):
         if value < Decimal("0"):
             raise RegistryValidationError("foreign asset valuation must be non-negative")
         return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _event_date_only_for_extinction(self) -> Modelo720RowObservation:
+        is_extinction = self.valuation_event is M720ValuationEvent.EXTINCTION
+        if is_extinction != (self.valuation_event_date is not None):
+            raise RegistryValidationError("an extinction valuation, and only one, carries its extinction date")
+        return self
+
+    @property
+    def native_amount(self) -> MonetaryAmount:
+        """The valuation in the currency it is held in."""
+        return MonetaryAmount(amount=self.valuation_amount, currency=self.currency_code)
+
+
+class Modelo720ValuedRow(BaseModel):
+    """A modelo 720 lot with the euro value its type 2 record declares.
+
+    Admits only a native-euro or rate-converted valuation of the observation's
+    own amount, so a missing rate can never reach a row as a figure.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    observation: Modelo720RowObservation
+    valuation: NormalizedAmount
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _valuation_converts_the_observation(self) -> Modelo720ValuedRow:
+        converted = {CurrencyNormalizationStatus.NATIVE_EUR, CurrencyNormalizationStatus.NORMALIZED}
+        if self.valuation.status not in converted or self.valuation.eur_amount is None:
+            raise RegistryValidationError("a modelo 720 row declares only a native or converted euro valuation")
+        if self.valuation.original != self.observation.native_amount:
+            raise RegistryValidationError("a modelo 720 valuation converts the observation's own amount")
+        return self
+
+    @property
+    def valuation_eur(self) -> Decimal:
+        """The euro valuation the record declares."""
+        eur_amount = self.valuation.eur_amount
+        if eur_amount is None:
+            raise RegistryValidationError("a modelo 720 row declares only a native or converted euro valuation")
+        return eur_amount
 
 
 class ForeignAssetProvider(BaseModel):
@@ -194,13 +255,13 @@ def _resolve_foreign_asset_rows(
 
 def resolve_foreign_asset_binding_row_values(
     revision: ModeloRevision,
-    observations: Iterable[Modelo720RowObservation],
+    observations: Iterable[Modelo720ValuedRow],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer foreign-asset bindings into per-row indexed values.
 
     Args:
         revision: The :class:`ModeloRevision` whose foreign-asset bindings are resolved.
-        observations: Modelo 720 row observations to group into rows.
+        observations: Euro-valued modelo 720 lots to group into rows.
     """
     available = tuple(observations)
     members, cohort_classes = _foreign_asset_binding_members(revision)
@@ -209,26 +270,40 @@ def resolve_foreign_asset_binding_row_values(
     # All bindings in a cohort share the same asset_classes filter.
     sample_classes = next(iter(cohort_classes)) if cohort_classes else ()
     class_filter = set(sample_classes)
-    filtered = tuple(obs for obs in available if not class_filter or obs.asset_class_code in class_filter)
+    filtered = tuple(row for row in available if not class_filter or row.observation.asset_class_code in class_filter)
     rows = _build_foreign_asset_rows(filtered)
     return _resolve_foreign_asset_rows(members, rows)
 
 
+def foreign_asset_row_order(row: Modelo720ValuedRow) -> tuple[str, str, str, str, str]:
+    """Return the deterministic row order of a valued modelo 720 lot."""
+    obs = row.observation
+    return (
+        obs.country_code,
+        obs.asset_class_code,
+        obs.asset_identifier,
+        obs.acquisition_date.isoformat(),
+        obs.asset_ref,
+    )
+
+
 def _build_foreign_asset_rows(
-    observations: tuple[Modelo720RowObservation, ...],
+    valued_rows: tuple[Modelo720ValuedRow, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     rows: list[Mapping[str, Decimal | str]] = []
-    for obs in sorted(
-        observations,
-        key=lambda o: (o.country_code, o.asset_class_code, o.asset_identifier, o.acquisition_date.isoformat()),
-    ):
+    for row in sorted(valued_rows, key=foreign_asset_row_order):
+        obs = row.observation
+        event_date = obs.valuation_event_date
         rows.append(
             {
+                "asset_ref": obs.asset_ref,
                 "asset_class_code": obs.asset_class_code,
                 "country_code": obs.country_code,
                 "currency_code": obs.currency_code,
                 "asset_identifier": obs.asset_identifier,
-                "valuation_amount": obs.valuation_amount,
+                "valuation_amount": row.valuation_eur,
+                "valuation_event": obs.valuation_event,
+                "valuation_event_date": event_date.isoformat() if event_date is not None else "",
                 "acquisition_date": obs.acquisition_date.isoformat(),
             },
         )

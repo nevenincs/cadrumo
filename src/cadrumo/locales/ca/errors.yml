@@ -1139,6 +1139,9 @@ errors:
     refused_flow_submit: El flux guiat ha rebutjat l'enviament.
     refused_flow_unsupported_console: El flux guiat no es pot executar perquè aquesta
       consola no pot mostrar preguntes interactives.
+    refused_foreign_asset_valuation: No s'ha pogut convertir a euros una valoració
+      del model 720 en la seva data de canvi legal. Revisa la divisa i la data de
+      valoració del bé.
     refused_google_impersonation: IAM ha rebutjat emetre un testimoni de suplantació
       per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal

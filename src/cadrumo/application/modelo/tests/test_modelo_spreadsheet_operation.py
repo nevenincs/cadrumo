@@ -549,10 +549,14 @@ def test_prefill_admission_uses_only_published_source_periods_and_requires_a_pin
         (
             Modelo720RowObservation,
             {
+                "asset_ref": "m720a_" + "f" * 32,
                 "asset_class_code": "C",
                 "country_code": "CH",
+                "currency_code": "CHF",
                 "acquisition_date": "2020-01-15",
                 "valuation_amount": "120000.00",
+                "valuation_event": "extinction",
+                "valuation_event_date": "2025-06-13",
             },
         ),
         (

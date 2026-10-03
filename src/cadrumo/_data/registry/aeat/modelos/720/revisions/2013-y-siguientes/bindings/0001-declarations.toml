@@ -256,6 +256,45 @@ provider = { kind = "manual_input", record = "type_2", field = "porcentaje-de-pa
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 [[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-asset-ref"
+provider = { kind = "foreign_asset", fact = "row_field", row_field = "asset_ref", grouping = "per_foreign_asset", data_type = "text" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "the Modelo 720 foreign-asset resolver, which joins each lot to its registered asset and declaration entries; the record design has no slot for it" }
+value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-valuation-event"
+provider = { kind = "foreign_asset", fact = "row_field", row_field = "valuation_event", grouping = "per_foreign_asset", data_type = "text" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "the Modelo 720 foreign-asset resolver, which takes the euro rate at 31 December or at the cessation or extinction date the event names" }
+value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-valuation-event-date"
+provider = { kind = "foreign_asset", fact = "row_field", row_field = "valuation_event_date", grouping = "per_foreign_asset", data_type = "text" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "the Modelo 720 foreign-asset resolver, which converts a cessation or extinction valuation at the rate of this date" }
+value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-class"
 provider = { kind = "foreign_asset", fact = "row_field", row_field = "asset_class_code", grouping = "per_foreign_asset", record = "bien", data_type = "text" }
 value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
@@ -281,7 +320,8 @@ required_text = ["bienes y derechos situados en el extranjero"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-currency"
-provider = { kind = "foreign_asset", fact = "row_field", row_field = "currency_code", grouping = "per_foreign_asset", record = "bien", data_type = "text" }
+provider = { kind = "foreign_asset", fact = "row_field", row_field = "currency_code", grouping = "per_foreign_asset", data_type = "text" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "the Modelo 720 foreign-asset resolver, which converts the lot's valuation to euros through the ECB reference-rate port; the record design has no currency slot" }
 value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]

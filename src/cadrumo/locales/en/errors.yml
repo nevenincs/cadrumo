@@ -1048,6 +1048,8 @@ errors:
     refused_flow_submit: The guided flow refused the submission.
     refused_flow_unsupported_console: The guided flow cannot run because this console
       cannot host interactive questions.
+    refused_foreign_asset_valuation: A Modelo 720 valuation could not be converted
+      to euros at its legal rate date. Check the asset's currency and valuation date.
     refused_google_impersonation: IAM refused to mint an impersonated token for the
       target service account. Grant it roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: Google login needs an interactive terminal with

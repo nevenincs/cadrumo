@@ -7,7 +7,7 @@ revision_id = "2013-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "60527375930c8d7f3bde15695c601368098749a102c345cec357316621820e9a"
+source_state_digest = "e63816fbea2fab98fd64da355afd66783f34fd44180b3bf9f8f0efff12ce4b76"
 placements = [
     { casilla_id = "cuentas.codigo-de-cuenta", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "cuentas.valoracion", kind = "unplaced", unplaced_reason = "no_official_anchor" },

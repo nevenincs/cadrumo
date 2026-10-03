@@ -123,12 +123,15 @@ class SpreadsheetModelo720RowObservation(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     source_id: _Text
+    asset_ref: _Text
     asset_class_code: _Text
     country_code: CountryCodeAlpha2
     currency_code: _Text
     asset_identifier: _Text
     acquisition_date: _Text
     valuation_amount: _Text
+    valuation_event: _Text
+    valuation_event_date: _Text | None
 
 
 class SpreadsheetAtributionMemberObservation(BaseModel):

@@ -46,6 +46,10 @@ def _foreign_asset(*, row_index: int) -> RowSetEdit:
             ),
             RowSetCellEdit(binding="modelo-720-asset-row-acquisition-date", row_index=row_index, value="2020-01-15"),
             RowSetCellEdit(binding="modelo-720-asset-row-valuation", row_index=row_index, value=Decimal("120000")),
+            RowSetCellEdit(
+                binding="modelo-720-asset-row-asset-ref", row_index=row_index, value=f"m720a_{row_index:032x}"
+            ),
+            RowSetCellEdit(binding="modelo-720-asset-row-valuation-event", row_index=row_index, value="year_end"),
         ),
     )
 

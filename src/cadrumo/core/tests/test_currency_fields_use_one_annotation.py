@@ -93,14 +93,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "this expense projection is euro-only by construction and the literal "
         "states that in the type rather than in a comment"
     ),
-    "domain/calculations/registry/detail_record_bindings.py::currency_code": (
-        "governed by the shared uppercase_alpha_code validator this model "
-        "already applies to country_code beside it, which REFUSES a lowercase "
-        "code rather than folding it -- a Modelo 720 declaration states the "
-        "code, and a normalising annotation here would layer a second policy "
-        "over the one its sibling field follows"
-    ),
-    # The seven entries below share one structural cause, stated per site
+    # The eight entries below share one structural cause, stated per site
     # because each also names the boundary that does own its ISO policy.
     # IsoCurrencyCode is a BeforeValidator, and a BeforeValidator carries
     # ``__get_pydantic_core_schema__``; ``_require_no_custom_core_schema_hook``
@@ -150,11 +143,15 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
     ),
     "application/modelo/modelo_spreadsheet_observations.py::currency_code": (
         "the public wire mirror of Modelo720RowObservation.currency_code, "
-        "which is itself exempt here because the uppercase_alpha_code "
-        "validator beside its country_code REFUSES a lowercase code rather "
-        "than folding it; the operation schema contract separately forbids the "
+        "which IS IsoCurrencyCode; the operation schema contract forbids the "
         "canonical annotation on this mirror, and the mirror projects an "
         "already-validated row"
+    ),
+    "application/modelo/aggregate_public.py::currency_code": (
+        "a public projection of ForeignAssetIngestObservation.currency_code, "
+        "which is IsoCurrencyCode, under the same operation schema contract; "
+        "to_domain revalidates through that model and refuses a value its "
+        "canonical round trip would change"
     ),
     "application/invoices/catalogue_intake_contracts.py::currency": (
         "a wizard request field held as raw transport text because "

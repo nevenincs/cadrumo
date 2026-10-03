@@ -149,6 +149,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.foreign_assets.valuation.ForeignAssetValuationRefusedError",
+        ErrorCode(
+            code="REFUSED_FOREIGN_ASSET_VALUATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_foreign_asset_valuation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva.prorrata_especial_parameters.ProrrataEspecialMandatoryParameterError",
         ErrorCode(
             code="REFUSED_IVA_PRORRATA_ESPECIAL_MARGIN_UNGROUNDED",

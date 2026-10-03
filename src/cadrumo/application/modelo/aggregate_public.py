@@ -90,13 +90,16 @@ class PublicForeignAssetObservation(BaseModel):
 
     source_kind: str = Field(min_length=1, max_length=64)
     source_object_id: str = Field(min_length=1, max_length=128)
+    asset_ref: str = Field(min_length=1, max_length=64)
     asset_class: str = Field(min_length=1, max_length=64)
     asset_external_id: str = Field(min_length=1, max_length=128)
     country: str = Field(pattern=r"^[A-Z]{2}$")
     issuer_or_institution: str = Field(default="", max_length=200)
-    valuation_eur: PublicDecimal
+    valuation_amount: PublicDecimal
+    currency_code: str = Field(pattern=r"^[A-Z]{3}$")
+    valuation_event: str = Field(min_length=1, max_length=32)
+    valuation_event_date: date | None = None
     acquisition_date: date
-    held_at_year_end: bool = True
 
     @classmethod
     def from_domain(cls, value: ForeignAssetIngestObservation) -> Self:
@@ -105,6 +108,9 @@ class PublicForeignAssetObservation(BaseModel):
             {
                 **public_model_mapping(value),
                 "acquisition_date": date.fromisoformat(str(value.acquisition_date)),
+                "valuation_event_date": (
+                    date.fromisoformat(value.valuation_event_date) if value.valuation_event_date is not None else None
+                ),
             },
             strict=True,
         )
@@ -115,6 +121,9 @@ class PublicForeignAssetObservation(BaseModel):
             {
                 **domain_model_mapping(self),
                 "acquisition_date": self.acquisition_date.isoformat(),
+                "valuation_event_date": (
+                    self.valuation_event_date.isoformat() if self.valuation_event_date is not None else None
+                ),
             },
             strict=False,
         )

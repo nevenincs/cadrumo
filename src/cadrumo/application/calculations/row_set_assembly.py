@@ -43,7 +43,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Protocol, TypedDict
 
@@ -51,9 +51,8 @@ from pydantic import ValidationError
 
 from ...core.aggregation import BindingAggregationOp, RowSetGroupingKind
 from ...core.decimal.coercion import coerce_decimal
-from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.foreign_asset_obligation import M720AssetClassCode
-from ...core.parsing.dates import parse_iso8601_date
+from ...core.parsing.dates import require_iso8601_date
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.detail_record_bindings import (
@@ -68,6 +67,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.withholding296_bindings import Withholding296Observation
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation, resolve_retencion_clave
+from ...domain.foreign_assets.valuation import M720ValuationEvent
 
 __all__ = [
     "AssembledObservations",
@@ -351,17 +351,6 @@ def _coerce_optional_int(value: Decimal | str | None) -> int | None:
         return int(Decimal(text))
     except (ArithmeticError, ValueError):
         return None
-
-
-def _coerce_iso_date(value: Decimal | str | None, *, default: date) -> date:
-    if value is None or value == "":
-        return default
-    if isinstance(value, str):
-        try:
-            return parse_iso8601_date(value) or default
-        except ValueError:
-            return default
-    return default
 
 
 def _optional_text_kwarg(
@@ -734,15 +723,17 @@ def assemble_foreign_asset_observations(
         revision: The
             :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             map binding ids to row fields.
-        filing_year: Calendar year of the filing; used to derive default
-            acquisition dates.
+        filing_year: Calendar year of the filing; carried for dispatch parity.
 
     Each element in the returned tuple is a
     :class:`~domain.calculations.registry.detail_record_bindings.Modelo720RowObservation`.
+    Every field the record or its euro conversion needs is the operator's to
+    supply: a blank class, country, currency, valuation, valuation event,
+    acquisition date or asset reference is refused, never defaulted.
     """
+    del filing_year
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
-    default_acquisition_date = date(filing_year, 12, 31)
 
     observations: list[Modelo720RowObservation] = []
     for row_index in sorted(by_row):
@@ -754,31 +745,55 @@ def assemble_foreign_asset_observations(
                 continue
             fields[field] = value if value is not None else ""
         try:
+            supplied = {
+                key: text
+                for key in (
+                    "asset_ref",
+                    "asset_class_code",
+                    "country_code",
+                    "currency_code",
+                    "asset_identifier",
+                    "valuation_amount",
+                    "valuation_event",
+                    "valuation_event_date",
+                    "acquisition_date",
+                )
+                for text in _optional_text_kwarg(fields, key).values()
+            }
             observations.append(
-                Modelo720RowObservation(
-                    source_id=f"detalle:per_foreign_asset:row-{row_index}",
-                    asset_class_code=_hydrate_coded_field(
-                        field_name="asset_class_code",
-                        text=_coerce_text(fields.get("asset_class_code"), default="C") or "C",
-                        code_set=M720AssetClassCode,
-                    ),
-                    # No invented default, and Spain least of all: modelo 720
-                    # declares bienes y derechos situados en el EXTRANJERO, so
-                    # ES is not merely unstated here but the one value the
-                    # declaration cannot carry. The observation model already
-                    # requires the field; this fallback was the sole reason
-                    # that requirement never reached a row.
-                    **_optional_text_kwarg(fields, "country_code"),
-                    currency_code=_coerce_text(fields.get("currency_code"), default=DEFAULT_CURRENCY)
-                    or DEFAULT_CURRENCY,
-                    asset_identifier=_coerce_text(fields.get("asset_identifier")),
-                    acquisition_date=_coerce_iso_date(fields.get("acquisition_date"), default=default_acquisition_date),
-                    valuation_amount=coerce_decimal(fields.get("valuation_amount"), default=Decimal("0")),
+                Modelo720RowObservation.model_validate(
+                    {
+                        "source_id": f"detalle:per_foreign_asset:row-{row_index}",
+                        **supplied,
+                        **_foreign_asset_typed_fields(supplied),
+                    },
                 ),
             )
-        except (ValidationError, RegistryValidationError) as exc:
+        except (ValidationError, RegistryValidationError, ValueError) as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
+
+
+def _foreign_asset_typed_fields(supplied: Mapping[str, str]) -> dict[str, object]:
+    """Lift the supplied worksheet texts the strict observation model types."""
+    typed: dict[str, object] = {}
+    if "asset_class_code" in supplied:
+        typed["asset_class_code"] = _hydrate_coded_field(
+            field_name="asset_class_code",
+            text=supplied["asset_class_code"],
+            code_set=M720AssetClassCode,
+        )
+    if "valuation_event" in supplied:
+        typed["valuation_event"] = M720ValuationEvent(supplied["valuation_event"])
+    if "valuation_amount" in supplied:
+        try:
+            typed["valuation_amount"] = Decimal(supplied["valuation_amount"])
+        except InvalidOperation as exc:
+            raise ValueError(f"valuation_amount {supplied['valuation_amount']!r} is not a decimal amount") from exc
+    for key in ("acquisition_date", "valuation_event_date"):
+        if key in supplied:
+            typed[key] = require_iso8601_date(supplied[key])
+    return typed
 
 
 def assemble_atribucion_observations(
