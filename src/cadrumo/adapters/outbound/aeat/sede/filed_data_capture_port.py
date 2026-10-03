@@ -25,6 +25,7 @@ from .....application.live.session import SessionWriteReporter, active_verified_
 from .....application.runtime.contracts import RuntimeRefusalError
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....application.user_profile.automation_custody_port import AutomationCustodyError
+from .....core.errors.hierarchy import AuthError
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.schema import ModeloRevision
@@ -57,7 +58,9 @@ async def _call_adapter[T](operation: str, callback: Callable[[], Awaitable[T]])
     """Invoke one Sede capability and translate its exception at this boundary."""
     try:
         return await callback()
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    # An authentication failure is the operator's login, not this read; it keeps
+    # its own registered code so the operator sees, for example, an approval timeout.
+    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError, AuthError):
         raise
     except LiveApplicationError:
         raise
