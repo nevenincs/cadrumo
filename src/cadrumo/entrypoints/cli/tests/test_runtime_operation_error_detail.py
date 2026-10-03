@@ -451,7 +451,7 @@ def test_settlement_wait_prompts_each_known_operation_notice_once_on_stderr(
     assert wire.requested_cursors == [0, 2, 2, 3]
     captured = capsys.readouterr()
     assert captured.out == ""
-    approval = tr("cli.common.operation_notices.clave_movil_approval_pending_with_code", code="YLL")
-    scan = tr("cli.common.operation_notices.clave_movil_qr_scan_pending")
+    approval = tr("operation.notice.clave_movil_approval_pending_with_code", code="YLL")
+    scan = tr("operation.notice.clave_movil_qr_scan_pending")
     assert "YLL" in approval
     assert captured.err == f"{approval}\n{scan}\n"

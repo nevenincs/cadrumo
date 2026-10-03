@@ -48,6 +48,7 @@ from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationLifecycle
 from ....core.time.clock import now
+from ...operation_notice_messages import operation_notice_message
 from ..components.theme import tokenised
 from .controller_port import OperationControllerPort, OperationErrorDetailPort
 from .interactions import (
@@ -55,7 +56,7 @@ from .interactions import (
     OperationModalReviewInteractionV1,
     resolve_modal_interaction_state,
 )
-from .logs import OperationModalLogViewV1, build_initial_log_view, fold_event_page
+from .logs import OperationModalLogRowV1, OperationModalLogViewV1, build_initial_log_view, fold_event_page
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
 from .refusal_explanation import operation_error_explanation, public_refusal_explanation
 
@@ -272,7 +273,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         else:
             review.update("")
         log_widget = self.query_one("#operation-modal-log", Static)
-        log_widget.update("\n".join(tr(row.code) for row in self._log_view.rows))
+        log_widget.update("\n".join(_log_row_text(row) for row in self._log_view.rows))
         self.query_one("#btn-operation-cancel", Button).disabled = not view_model.cancel_control_enabled
         self.query_one("#btn-operation-detach", Button).disabled = not view_model.detach_control_enabled
         apply_enabled = isinstance(interaction, OperationModalReviewInteractionV1) and interaction.apply_enabled
@@ -466,6 +467,15 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self.query_one("#operation-modal-action-refusal", Static).update(
             "" if refusal is None else f"{tr('operation.modal.detail.action_refused')}: {refusal}"
         )
+
+
+def _log_row_text(row: OperationModalLogRowV1) -> str:
+    """Render one log row, as the operator's own prompt when its notice asks them to act."""
+    if row.notice_code is not None:
+        prompt = operation_notice_message(row.notice_code, row.display_code)
+        if prompt is not None:
+            return prompt
+    return f"{tr(row.code)}: {row.display_code}" if row.display_code is not None else tr(row.code)
 
 
 __all__ = [

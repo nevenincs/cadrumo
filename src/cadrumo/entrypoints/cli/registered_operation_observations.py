@@ -30,8 +30,8 @@ from ...application.runtime.operation_access import (
     RuntimeOperationReply,
     RuntimeOperationRequest,
 )
-from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationLifecycle
+from ..operation_notice_messages import operation_notice_message
 from .errors import write_stderr
 from .registered_operation_contracts import (
     RegisteredOperationProgress,
@@ -44,18 +44,6 @@ from .registered_operation_projections import decode_registered_observation
 from .registered_operation_reviews import respond_registered_pending_review
 
 _OBSERVATION_EVENT_PAGE_LIMIT = 100
-
-# Operation notices this command line prompts the operator for, by the
-# executor's stable notice code. A code absent here (``operation.started``, or
-# one a newer runtime adds) prints nothing.
-_OPERATION_NOTICE_LOCALE_KEYS: dict[str, str] = {
-    "auth.clave-movil.approval-pending": "cli.common.operation_notices.clave_movil_approval_pending",
-    "auth.clave-movil.qr-scan-pending": "cli.common.operation_notices.clave_movil_qr_scan_pending",
-}
-_OPERATION_NOTICE_DISPLAY_CODE_LOCALE_KEYS: dict[str, str] = {
-    "auth.clave-movil.approval-pending": "cli.common.operation_notices.clave_movil_approval_pending_with_code",
-    "auth.clave-movil.qr-scan-pending": "cli.common.operation_notices.clave_movil_qr_scan_pending_with_code",
-}
 
 
 def observe_registered_operation(
@@ -119,14 +107,9 @@ def render_registered_operation_notices(page: OperationPublicEventPageV1) -> Ope
 
 def _render_operation_notice(event: OperationPublicNoticeEventV1) -> None:
     """Write one localized notice to stderr, keeping the structured result channel pure."""
-    if event.display_code is not None:
-        code_message_key = _OPERATION_NOTICE_DISPLAY_CODE_LOCALE_KEYS.get(event.notice_code)
-        if code_message_key is not None:
-            write_stderr(tr(code_message_key, code=event.display_code) + "\n")
-            return
-    message_key = _OPERATION_NOTICE_LOCALE_KEYS.get(event.notice_code)
-    if message_key is not None:
-        write_stderr(tr(message_key) + "\n")
+    message = operation_notice_message(event.notice_code, event.display_code)
+    if message is not None:
+        write_stderr(message + "\n")
 
 
 def wait_registered_settlement[ReviewT: BaseModel](

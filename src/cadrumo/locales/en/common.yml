@@ -755,6 +755,19 @@ operation:
       succeeded: Succeeded
       succeeded_partial: Partly succeeded
       timed_out: Timed out
+  notice:
+    clave_movil_approval_pending: 'Cl@ve Móvil: open the Cl@ve app now and approve
+      the pending AEAT request before it expires in about two minutes.'
+    clave_movil_approval_pending_with_code: 'Cl@ve Móvil: open the Cl@ve app now and
+      approve the pending AEAT request before it expires in about two minutes. Check
+      that the code %{code} matches in the app.'
+    clave_movil_qr_scan_pending: 'Cl@ve Móvil: open the Cl@ve app now, scan the QR
+      code shown in the browser window and approve the AEAT request before it expires
+      in about two minutes.'
+    clave_movil_qr_scan_pending_with_code: 'Cl@ve Móvil: open the Cl@ve app now, scan
+      the QR code shown in the browser window and approve the AEAT request before
+      it expires in about two minutes. Check that the code %{code} matches in the
+      app.'
 overview:
   no_aeat_history: This profile holds no filing evidence AEAT confirmed.
   no_aeat_history_sociedades: This profile holds no filing evidence AEAT confirmed.

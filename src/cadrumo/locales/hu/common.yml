@@ -769,6 +769,20 @@ operation:
       succeeded: Sikeres
       succeeded_partial: Részben sikeres
       timed_out: Időtúllépés
+  notice:
+    clave_movil_approval_pending: 'Cl@ve Móvil: nyisd meg most a Cl@ve alkalmazást,
+      és hagyd jóvá a függőben lévő AEAT-kérést, mielőtt nagyjából két perc múlva
+      lejár.'
+    clave_movil_approval_pending_with_code: 'Cl@ve Móvil: nyisd meg most a Cl@ve alkalmazást,
+      és hagyd jóvá a függőben lévő AEAT-kérést, mielőtt nagyjából két perc múlva
+      lejár. Ellenőrizd, hogy az alkalmazásban is a(z) %{code} kód látszik-e.'
+    clave_movil_qr_scan_pending: 'Cl@ve Móvil: nyisd meg most a Cl@ve alkalmazást,
+      olvasd be a böngészőablakban megjelenő QR-kódot, és hagyd jóvá az AEAT-kérést,
+      mielőtt nagyjából két perc múlva lejár.'
+    clave_movil_qr_scan_pending_with_code: 'Cl@ve Móvil: nyisd meg most a Cl@ve alkalmazást,
+      olvasd be a böngészőablakban megjelenő QR-kódot, és hagyd jóvá az AEAT-kérést,
+      mielőtt nagyjából két perc múlva lejár. Ellenőrizd, hogy az alkalmazásban is
+      a(z) %{code} kód látszik-e.'
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
