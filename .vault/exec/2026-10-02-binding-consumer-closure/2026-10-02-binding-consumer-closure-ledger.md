@@ -5,40 +5,14 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9989d3f5fa198421a56f4be6cfc844487c677668d48b4ef8adb33e9adbb547c3'
+body_hash: 'sha256:d70e9cba7a7a0a4e3c7afd3f85ad83b51e8a38fdd9248ee79780cc6160dac933'
 related:
   - "[[2026-10-02-binding-consumer-closure-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `binding-consumer-closure` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/bindings/0001-declarations.toml`
 - `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/form_layouts/0001-form-layout.toml`
@@ -298,6 +272,30 @@ related:
 - `S08` `A` `dev/registry/compiler/tests/test_relation_evidence_consumer.py`
 - `S08` `verify:` `pytest relation evidence consumer + validate_bindings (15 passed)` -> `pass`
 - `S08` `verify:` `check-bindings 193 findings cleared (10 left: 720 6, 347 4)` -> `pass`
+- `S06` `M` `src/cadrumo/domain/currency/models.py`
+- `S06` `M` `src/cadrumo/domain/currency/service.py`
+- `S06` `M` `src/cadrumo/domain/currency/tests/test_service.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/fx/ecb_provider.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/fx/tests/test_ecb_provider.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/fx/tests/test_ecb_non_finite_quotes.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/fx/tests/test_recorded_ecb_rates.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/fx/tests/test_fx_conversion.py`
+- `S06` `M` `src/cadrumo/application/invoices/catalogue_creation_ports.py`
+- `S06` `M` `src/cadrumo/application/invoices/catalogue_creation.py`
+- `S06` `M` `src/cadrumo/application/invoices/tests/_catalogue_creation_fakes.py`
+- `S06` `M` `src/cadrumo/application/invoices/tests/test_fx_conversion_provenance.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/catalogue_creation.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_evidence_foreign_currency_and_language.py`
+- `S06` `M` `src/cadrumo/entrypoints/invoice_intake_operation_composition.py`
+- `S06` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S06` `M` `src/cadrumo/application/ledger/tests/export_link_operation_support.py`
+- `S06` `M` `src/cadrumo/application/tests/test_exchange_rate_provider_port.py`
+- `S06` `M` `src/cadrumo/domain/invoices/models.py`
+- `S06` `M` `src/cadrumo/domain/invoices/normalization.py`
+- `S06` `M` `src/cadrumo/tests/ecb_stub.py`
+- `S06` `A` `src/cadrumo/tests/fx_lookup.py`
+- `S06` `M` `dev/registry/tests/test_creation.py`
+- `S06` `verify:` `pytest currency + fx + invoices + ledger conversion + creation (2010 passed; 50 import-conversion parity passed)` -> `pass`
 
 ## Notes
 
@@ -328,3 +326,4 @@ related:
 - `S07` Scope additions forced by the retirement: count-desync advisory retired (its premise, a binding reading the stored count, no longer exists); anualidades injector routed through `renta_family_profile_from_facts` to keep the by-index birth-date refusal; `descendientes_guarderia_count` and `gastos_guarderia_reales` removed as unused.
 - `S11` Handed to the CADRUMO-ADMIN session on operator instruction (2026-10-03): modelo 347 is supported and binds to ledger invoice data. Resolver half already in HEAD `(invoice_bindings._resolve_m347_declarante_summary_values).` Binding the type 1 casillas is refused by `validate_informative_class_invariant` because 347 declares `calculation_class` = informative; resolution is that session's call. S12 signed-amount design offered with it.
 - `S08` Section 0: `relation_evidence` consumer kind enrolled in the shared `binding_consumers` census (read by the gate, compiler and `registry_status),` selected through `relation_prefill_bindings_for_period` over declared periods so it counts exactly what calculation resolves. The 193 2025 dependency treatment override `(factual_evidence)` was already in the authored source. The S08 compiler refusal itself waits for zero residue (720 S06, 347 with CADRUMO-ADMIN).
+- `S06` FX prerequisite for W3 (findings G5, G8, G11 of 2026-10-02-binding-consumer-closure-modelo-720-fx-research) committed as 178005fb2c: typed EurRateLookup with observation date, ECB 404 as unsupported currency, no zero euro amount for a missing rate, observation date on stamps and stored invoices. Also committed on the paused lane's behalf: invoice catalogue split 35c0193485. CLI suites could not run cleanly: other lanes (application/live, application/ledger) were mid-edit and the profile worker imports the worktree.
