@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:41a8678fdbd77fb222a0c1817dcb070d85a7527eaa6543d4046ffb825420f6d2'
+body_hash: 'sha256:e6742460fabb09d42eacb03c014c0946fb3a6fac73c91e544eea47a6fe1b9f4d'
 ---
 
 # `modelo-347-fileability` plan
@@ -59,7 +59,7 @@ Decide who must file from typed profile facts and the ledger per filing year, th
 
 - [x] `P04.S10` - Add a typed exclusion list to applicability rules with its validator and evaluator step, and declare the 347 SII exclusion, the art. 31.1 activity gate and the clave C floor handling; `src/cadrumo/domain/calculations/registry/schema_revision_members.py, src/cadrumo/domain/calculations/registry/applicability.py, src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/applicability/, src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml`.
 - [ ] `P04.S11` - Derive a per-year ledger 347 threshold signal from the resolver's own observations, read the profile answer per filing year, and keep any disagreement visible in applicability and the calendar; `src/cadrumo/application/overview/, src/cadrumo/entrypoints/overview_read_composition.py, src/cadrumo/domain/deadlines/`.
-- [ ] `P04.S12` - Adopt SII, IVA regime, criterio de caja and estimation regime from census data, list the deciding facts in explain, and fix the threshold label and informal register in all locales; `src/cadrumo/application/user_profile/censo_sync.py, src/cadrumo/application/overview/explain.py, src/cadrumo/locales/`.
+- [x] `P04.S12` - Adopt SII, IVA regime, criterio de caja and estimation regime from census data, list the deciding facts in explain, and fix the threshold label and informal register in all locales; `src/cadrumo/application/user_profile/censo_sync.py, src/cadrumo/application/overview/explain.py, src/cadrumo/locales/`.
 
 ### Phase `P05` - Advisories and fileability acceptance
 

@@ -5,40 +5,14 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5595727f8b0d61b6a30bec3e69c54c3388b2a2198ba167106f8cfbde89cdfb20'
+body_hash: 'sha256:cb5cc77c7562d45369abe9262c530c1da7be756fcc924e4fcf88b50539b10d9d'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `modelo-347-fileability` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml`
 - `S01` `M` `src/cadrumo/_data/registry/aeat/legal/iva-flow.toml`
@@ -108,6 +82,19 @@ related:
 - `S03` `M` `src/cadrumo/locales/hu/errors.yml`
 - `S03` `verify:` `pytest focused S03 suite` -> `pass`
 - `S03` `verify:` `ruff check` -> `pass`
+- `S12` `M` `src/cadrumo/application/overview/explain.py`
+- `S12` `M` `src/cadrumo/application/overview/tests/test_explain.py`
+- `S12` `M` `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`
+- `S12` `M` `src/cadrumo/locales/ca/profile.yml`
+- `S12` `M` `src/cadrumo/locales/ca/wizard.yml`
+- `S12` `M` `src/cadrumo/locales/en/profile.yml`
+- `S12` `M` `src/cadrumo/locales/en/wizard.yml`
+- `S12` `M` `src/cadrumo/locales/es/profile.yml`
+- `S12` `M` `src/cadrumo/locales/es/wizard.yml`
+- `S12` `M` `src/cadrumo/locales/hu/profile.yml`
+- `S12` `M` `src/cadrumo/locales/hu/wizard.yml`
+- `S12` `verify:` `pytest explain and applicability suites` -> `pass`
+- `S12` `verify:` `dev.locales status --check` -> `pass`
 
 ## Notes
 
@@ -115,3 +102,4 @@ related:
 - `S02` 44 tests that read the published authority await the P01 Phase-close publication
 - `S10` `applicability_payer_facts.py` includes another writer's helper split of the new code; published-authority tests await Phase publication
 - `S03` two known failures: one awaits publication of fact 0080, one is the pre-existing dead 349 summary loop (operator 349 rows do not reach type 1 totals), recorded as follow-up
+- `S12` census adoption not implemented: no census source Cadrumo reads carries SII, IVA regime, criterio de caja or estimation regime; needs a certificate or 036 read-back reader (new scope)
