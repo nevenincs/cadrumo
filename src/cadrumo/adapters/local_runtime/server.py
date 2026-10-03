@@ -67,6 +67,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         stop: Event,
         profiles: RuntimeProfileHandler | None = None,
         boot_id: UUID | None = None,
+        authority_generation: str | None = None,
     ) -> None:
         """Bind one endpoint and a fresh process boot, without claiming ownership yet."""
         self.listener = listener
@@ -74,7 +75,10 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         self.stop = stop
         self.profiles = profiles
         self.identity = RuntimeServerHello(
-            product_version=product_version, storage_identity=listener.storage_identity, boot_id=boot_id or uuid4()
+            product_version=product_version,
+            storage_identity=listener.storage_identity,
+            boot_id=boot_id or uuid4(),
+            authority_generation=authority_generation,
         )
         self.ready = Event()
         self._failed = Event()

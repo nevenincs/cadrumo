@@ -51,7 +51,12 @@ from .authority_artifact import (
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
 )
-from .authority_store import AUTHORITY_DESCRIPTOR_FILENAME, AuthorityStoreError, SQLiteAuthorityReader
+from .authority_store import (
+    AUTHORITY_DESCRIPTOR_FILENAME,
+    AuthorityDescriptor,
+    AuthorityStoreError,
+    SQLiteAuthorityReader,
+)
 from .errors import AuthorityDescriptorUnavailableError, RegistrySnapshotError, RegistryValidationError
 from .facts.resolution import (
     GovernedFactQuery,
@@ -1037,3 +1042,18 @@ def bundled_authority_descriptor_path() -> Path:
     if not packaged.is_file():
         raise AuthorityDescriptorUnavailableError.for_packaged_location(descriptor_path=packaged)
     return packaged
+
+
+def published_authority_generation() -> str | None:
+    """Return the logical generation the selector names now, without admitting its database.
+
+    Processes that must serve one authority cohort -- a runtime and the
+    frontends connecting to it -- compare this value. An editable install
+    keeps its package version while the published generation moves, so the
+    version alone cannot tell them apart. ``None`` means no well-formed
+    descriptor resolves; admission refuses that case where it reads.
+    """
+    try:
+        return AuthorityDescriptor.read(bundled_authority_descriptor_path()).logical_generation
+    except (AuthorityDescriptorUnavailableError, AuthorityStoreError):
+        return None

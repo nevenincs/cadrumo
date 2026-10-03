@@ -27,6 +27,7 @@ from ...core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failu
 from ...core.config import load_settings, override_settings
 from ...core.logging import configure_logging, get_logger
 from ...core.startup_phase_log import startup_phase
+from ...domain.calculations.registry.authority import published_authority_generation
 from .profile_connections import RuntimeProfileConnections
 from .shutdown import RuntimeShutdownEvent, RuntimeShutdownWatchdog, terminate_runtime
 
@@ -80,6 +81,7 @@ def _serve_transport(
             stop=stop,
             profiles=profiles,
             boot_id=boot_id,
+            authority_generation=published_authority_generation(),
         ).serve()
     except RuntimeShutdownIncompleteError:
         # Never release the owner lock while callbacks, constructors or

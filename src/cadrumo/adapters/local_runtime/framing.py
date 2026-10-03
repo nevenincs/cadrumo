@@ -47,7 +47,9 @@ class VerifiedRuntimeConnection(RuntimeOperationTransport):
             hello = decode_document(
                 read_frame_payload(channel, kind=DOCUMENT_FRAME_KIND, deadline=deadline), RuntimeServerHello
             )
-            if hello.product_version != expected.product_version:
+            if hello.product_version != expected.product_version or _authority_generations_differ(
+                hello.authority_generation, expected.authority_generation
+            ):
                 raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
             if hello.storage_identity != expected.storage_identity:
                 raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
@@ -56,6 +58,15 @@ class VerifiedRuntimeConnection(RuntimeOperationTransport):
         except BaseException as error:
             self._close_after_failure(error)
             raise
+
+
+def _authority_generations_differ(observed: str | None, expected: str | None) -> bool:
+    """Whether both sides name a published authority generation and the names differ.
+
+    A side that resolved no descriptor asserts no generation; the authority
+    admission that would read one refuses that case on its own.
+    """
+    return observed is not None and expected is not None and observed != expected
 
 
 def accept_runtime_handshake(
@@ -68,7 +79,9 @@ def accept_runtime_handshake(
         # mismatch, so the client can issue the precise refusal before secrets.
         # No application admission follows unless both sides match below.
         write_document(channel, identity, deadline=deadline)
-        if hello.product_version != identity.product_version:
+        if hello.product_version != identity.product_version or _authority_generations_differ(
+            hello.authority_generation, identity.authority_generation
+        ):
             raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
         if hello.storage_identity != identity.storage_identity:
             raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
