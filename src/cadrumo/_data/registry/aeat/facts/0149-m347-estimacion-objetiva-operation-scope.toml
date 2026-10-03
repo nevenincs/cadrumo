@@ -1,0 +1,43 @@
+# Modelo 347 operation scope for estimación objetiva filers, RD 1065/2007 art.
+# 32.b. A natural person or entidad en atribución de rentas whose activity is
+# taxed in IRPF by estimación objetiva and, simultaneously, in IVA under the
+# régimen simplificado, the régimen especial de la agricultura, ganadería y
+# pesca or the recargo de equivalencia is not obliged "salvo por las
+# operaciones por las que emitan factura": only the invoices it ISSUES are
+# related. "No obstante lo anterior, los sujetos pasivos acogidos al régimen
+# simplificado ... incluirán ... las adquisiciones de bienes y servicios que
+# realicen que deban ser objeto de anotación en el libro registro de facturas
+# recibidas del artículo 40.1" of the RIVA, so under the simplificado the
+# RECEIVED invoices are related too. Every other pairing of regimes is outside
+# art. 32.b and relates both directions. The letter is quoted in the
+# redaction of RD 828/2013, in force from 2014; no Modelo 347 year below the
+# product's support floor depends on the earlier wording.
+[fact]
+fact_id = "m347-estimacion-objetiva-operation-scope"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m347-estimacion-objetiva-operation-scope:2014-01-01"
+date_axis = "filing_period"
+valid_from = 2014-01-01
+legal_refs = ["rd-1065-2007:art-32"]
+source_refs = ["boe-rd-1065-2007-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rd-1065-2007-statutory-facts"
+required_text = [
+    "por las actividades que tributen en dicho impuesto por el método de estimación objetiva y, simultáneamente, en el Impuesto sobre el Valor Añadido por los regímenes especiales simplificado o de la agricultura, ganadería y pesca o del recargo de equivalencia, salvo por las operaciones por las que emitan factura",
+    "los sujetos pasivos acogidos al régimen simplificado del Impuesto sobre el Valor Añadido incluirán en la declaración anual de operaciones con terceras personas las adquisiciones de bienes y servicios que realicen que deban ser objeto de anotación en el libro registro de facturas recibidas",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "irpf_estimation_regime", value = "objetiva" },
+    { key = "iva_regime.order", value = "SIMPLIFICADO,REAGP,RECARGO_EQUIVALENCIA" },
+    { key = "iva_regime.SIMPLIFICADO.declared_invoice_kinds", value = "issued,received" },
+    { key = "iva_regime.REAGP.declared_invoice_kinds", value = "issued" },
+    { key = "iva_regime.RECARGO_EQUIVALENCIA.declared_invoice_kinds", value = "issued" },
+]

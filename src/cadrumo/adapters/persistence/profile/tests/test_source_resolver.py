@@ -25,6 +25,7 @@ from cadrumo.application.invoices.source_resolver_ports import (
     InvoiceSourcePersistenceError,
     InvoiceSourceResolverPorts,
 )
+from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.core.aggregation import (
     BindingSourceKind,
     IntracomOperationType,
@@ -1758,6 +1759,172 @@ def test_m347_nil_total_in_a_bucket_without_floor_is_declared_and_disclosed(
     advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
     assert "M347-E-NIL-2026-001" in advisory.message
     assert "M347-E-POSITIVE-2026-001" not in advisory.message
+
+
+def _regime_profile_facts(
+    *,
+    estimation: str,
+    iva_regime: str,
+    extra: tuple[UserProfileFact, ...] = (),
+) -> tuple[UserProfileFact, ...]:
+    return (
+        UserProfileFact(path="identity.tax_id", value="B12345674"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="irpf.estimation_regime", value=estimation),
+        UserProfileFact(path="iva.regime", value=iva_regime),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        *extra,
+    )
+
+
+def _supplier_and_customer_invoices(bucket_id: str) -> tuple[Invoice, Invoice]:
+    """A received invoice from a supplier and an issued one to a customer, each above the floor."""
+    received = _domestic_invoice(
+        bucket_id=bucket_id,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-PROVEEDOR-2026-001",
+        issued_at=date(2026, 6, 1),
+        counterparty_tax_id="A58818501",
+        counterparty_name="Proveedor Mayorista SA",
+        base_total=Decimal("5000.00"),
+        iva_total=Decimal("1050.00"),
+    )
+    issued = _domestic_invoice(
+        bucket_id=bucket_id,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-CLIENTE-2026-001",
+        issued_at=date(2026, 6, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Cliente Hosteleria SL",
+        base_total=Decimal("4000.00"),
+        iva_total=Decimal("840.00"),
+    )
+    return received, issued
+
+
+def _declared_invoice_ids(resolution) -> set[str]:
+    return {item.source_ref.split(":", 1)[1] for item in resolution.provenance}
+
+
+@pytest.mark.parametrize(
+    ("estimation", "iva_regime", "received_declared"),
+    [
+        pytest.param("objetiva", "RECARGO_EQUIVALENCIA", False, id="modulos-recargo"),
+        pytest.param("objetiva", "REAGP", False, id="modulos-reagp"),
+        pytest.param("objetiva", "SIMPLIFICADO", True, id="modulos-simplificado"),
+        pytest.param("directa_normal", "GENERAL", True, id="directa-general"),
+        pytest.param("directa_simplificada", "RECARGO_EQUIVALENCIA", True, id="directa-recargo"),
+    ],
+)
+def test_m347_relates_only_issued_invoices_of_an_estimacion_objetiva_filer_under_a_special_regime(
+    secure_profile: TestRuntimeProfile,
+    estimation: str,
+    iva_regime: str,
+    received_declared: bool,
+) -> None:
+    """Art. 32.b: "salvo por las operaciones por las que emitan factura", plus the simplificado's received invoices.
+
+    The issued invoice is declared for every filer. The received one from a
+    supplier above the floor is left out only for a módulos filer under the
+    recargo de equivalencia or the REAGP; the simplificado's libro registro de
+    facturas recibidas keeps it, and a filer outside estimación objetiva is
+    never scoped.
+    """
+    _seed_profile(secure_profile.bucket_id, _regime_profile_facts(estimation=estimation, iva_regime=iva_regime))
+    received, issued = _supplier_and_customer_invoices(secure_profile.bucket_id)
+
+    resolution = _public_resolution(
+        (received, issued), context=_m347_context(secure_profile.bucket_id, filing_year=2026)
+    )
+
+    expected = {issued.invoice_id, received.invoice_id} if received_declared else {issued.invoice_id}
+    assert _declared_invoice_ids(resolution) == expected
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal(len(expected))
+
+
+def test_m347_reads_the_filer_regime_as_of_the_filing_period(secure_profile: TestRuntimeProfile) -> None:
+    """A regime that starts after the ejercicio does not reach back into it.
+
+    The filer moves from the general regime to the recargo de equivalencia
+    from 2027. For 2026 the received invoice is still related; read without
+    the filing period's date, the later regime would wrongly drop it.
+    """
+    general_until_2026 = tuple(
+        fact.model_copy(update={"valid_to": date(2026, 12, 31)}) if fact.path == "iva.regime" else fact
+        for fact in _regime_profile_facts(estimation="objetiva", iva_regime="GENERAL")
+    )
+    recargo_from_2027 = UserProfileFact(path="iva.regime", value="RECARGO_EQUIVALENCIA", valid_from=date(2027, 1, 1))
+    _seed_profile(secure_profile.bucket_id, (*general_until_2026, recargo_from_2027))
+    received, issued = _supplier_and_customer_invoices(secure_profile.bucket_id)
+
+    in_2026 = _public_resolution((received, issued), context=_m347_context(secure_profile.bucket_id, filing_year=2026))
+
+    assert _declared_invoice_ids(in_2026) == {issued.invoice_id, received.invoice_id}
+
+
+def test_m347_reads_the_filer_from_the_calculation_pinned_profile_not_per_invoice() -> None:
+    """The pinned profile and authority lease of the context decide every invoice; nothing is reloaded.
+
+    No profile is stored for this bucket and no profile session is open, so an
+    invoice-by-invoice reload would find no roles and no regime. The roles and
+    the art. 32.b scope therefore reach the three invoices only through the
+    context's own pinned profile: the received clave D acquisition classifies
+    as D, the received ordinary purchase is related under the simplificado,
+    and a recargo de equivalencia filer drops the received ones.
+    """
+    operation = published_authority_operation()
+    decode_context = operation.profile_decode_context()
+    outside_activity, issued = _supplier_and_customer_invoices(_BUCKET_ID)
+    outside_activity = outside_activity.model_copy(update={"outside_economic_activity": True})
+    ordinary_purchase = _domestic_invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-COMPRA-2026-002",
+        issued_at=date(2026, 7, 1),
+        counterparty_tax_id="B11223344",
+        counterparty_name="Otro Proveedor SL",
+        base_total=Decimal("5000.00"),
+        iva_total=Decimal("1050.00"),
+    )
+    roles = UserProfileFact(
+        path="taxpayer_type.declaration_roles",
+        value=ThirdPartyDeclarationRole.from_registry("statutory_information_duty_entity").value,
+    )
+
+    def resolution_for(iva_regime: str):
+        record = _create_profile_record_for_test(
+            context=_profile_creation_context_for_test(),
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=_BUCKET_ID,
+            facts=_regime_profile_facts(estimation="objetiva", iva_regime=iva_regime, extra=(roles,)),
+        )
+        context = _m347_context(_BUCKET_ID, filing_year=2026).model_copy(
+            update={
+                "profile": ModeloWorkProfile(record=record, profile_decode_context=decode_context),
+                "operation": operation,
+            },
+        )
+        return _public_resolution((outside_activity, issued, ordinary_purchase), context=context)
+
+    simplificado = resolution_for("SIMPLIFICADO")
+    recargo = resolution_for("RECARGO_EQUIVALENCIA")
+
+    assert _declared_invoice_ids(simplificado) == {
+        outside_activity.invoice_id,
+        issued.invoice_id,
+        ordinary_purchase.invoice_id,
+    }
+    clave_d_rows = {
+        row_index
+        for (binding_id, row_index), value in simplificado.row_binding_values.items()
+        if binding_id == "modelo-347-contraparte-row-clave" and value == "D"
+    }
+    assert len(clave_d_rows) == 1
+    assert _declared_invoice_ids(recargo) == {issued.invoice_id}
 
 
 @pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])

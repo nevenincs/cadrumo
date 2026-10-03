@@ -108,7 +108,6 @@ from ._modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
     revision_has_binding_source,
-    source_context_operation,
 )
 from ._retencion_rate_advisory import (
     inferred_actividad_retencion_rate_advisory_observations,
@@ -159,11 +158,12 @@ from .source_mesh import (
 )
 from .source_resolution_operations import sorted_source_ids as sorted_ids
 from .source_resolution_operations import (
-    source_diagnostics_for as _diagnostics_for,
-)
-from .source_resolution_operations import (
+    source_context_operation,
     source_issue_diagnostics,
     storage_degradation_resolution,
+)
+from .source_resolution_operations import (
+    source_diagnostics_for as _diagnostics_for,
 )
 from .source_resolution_operations import (
     source_provenance_for as _provenance_for,

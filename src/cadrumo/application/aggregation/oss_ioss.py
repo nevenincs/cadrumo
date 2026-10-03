@@ -61,7 +61,6 @@ from ...domain.iva.lookup import lookup_rate
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, IvaRateKind
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
-from ._modelo_bindings_support import source_context_operation
 from .errors import AggregationValidationError
 from .invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
@@ -74,7 +73,7 @@ from .source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from .source_resolution_operations import storage_degradation_resolution
+from .source_resolution_operations import source_context_operation, storage_degradation_resolution
 
 _LedgerId = Annotated[
     str,

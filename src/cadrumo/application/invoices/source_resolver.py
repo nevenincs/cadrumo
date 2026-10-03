@@ -21,6 +21,7 @@ one resolver envelope.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import ClassVar
@@ -33,9 +34,9 @@ from ...core.aggregation import (
 )
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import prefixed_digest
-from ...core.identity.bucket import BucketId
 from ...core.modelo import Modelo
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
@@ -51,6 +52,7 @@ from ...domain.calculations.registry.iva_category_catalogue import (
     require_iva_category,
     resolve_iva_category_catalogue,
 )
+from ...domain.calculations.registry.m347_operation_scope import resolve_m347_estimacion_objetiva_scope
 from ...domain.calculations.registry.m347_threshold import M347DeclarableSet, M347ThresholdBucket
 from ...domain.calculations.registry.third_party_declaration_roles import (
     resolve_third_party_declaration_role_catalogue,
@@ -63,13 +65,15 @@ from ...domain.invoices.models import Invoice
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo349OperadorRow, validate_m349_country_prefix_context
+from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.values import UserProfileRecord
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..aggregation.source_resolution_operations import source_context_operation, storage_degradation_resolution
 from .source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
@@ -195,6 +199,7 @@ def _observe_invoice_sources(
     source_invoices: Sequence[Invoice],
     *,
     context: CalculationSourceContext,
+    m347_filer: _M347Filer,
 ) -> tuple[tuple[_ObservedInvoice, ...], tuple[_IncoherentInvoice, ...], tuple[Invoice, ...]]:
     observed_items: list[_ObservedInvoice] = []
     incoherent: list[_IncoherentInvoice] = []
@@ -202,7 +207,7 @@ def _observe_invoice_sources(
     for invoice in source_invoices:
         if _is_unconverted_foreign_invoice(invoice):
             withheld_for_conversion.append(invoice)
-        observation = _invoice_observation(invoice, context=context)
+        observation = _invoice_observation(invoice, context=context, m347_filer=m347_filer)
         if observation is None:
             continue
         verdict = _m349_incoherent_verdict(invoice, context=context)
@@ -223,6 +228,7 @@ def _invoice_resolution_from_observations(
     withheld_for_conversion: tuple[Invoice, ...],
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
+    m347_filer: _M347Filer,
 ) -> CalculationSourceResolution:
     observations = tuple(observation for _, observation in observed_items)
     binding_values = resolve_invoice_binding_values(
@@ -244,7 +250,12 @@ def _invoice_resolution_from_observations(
             bucket_invoices=catalogue_invoices,
             resolver_id=resolver_id,
         )
-    diagnostics += _m347_role_fact_advisories(source_invoices, context=context, resolver_id=resolver_id)
+    diagnostics += _m347_role_fact_advisories(
+        source_invoices,
+        context=context,
+        resolver_id=resolver_id,
+        declaration_roles=m347_filer.declaration_roles,
+    )
     diagnostics += _m347_threshold_reading_advisories(observed_items, context=context, resolver_id=resolver_id)
     diagnostics += _m347_exclusion_reading_advisories(observed_items, context=context, resolver_id=resolver_id)
     return CalculationSourceResolution(
@@ -324,9 +335,11 @@ class InvoiceCatalogueSourceResolver:
             context=context,
             active_sources=active_sources,
         )
+        m347_filer = _m347_filer(context)
         observed_items, incoherent, withheld_for_conversion = _observe_invoice_sources(
             source_invoices,
             context=context,
+            m347_filer=m347_filer,
         )
         return _invoice_resolution_from_observations(
             context=context,
@@ -337,6 +350,7 @@ class InvoiceCatalogueSourceResolver:
             withheld_for_conversion=withheld_for_conversion,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
+            m347_filer=m347_filer,
         )
 
 
@@ -591,6 +605,7 @@ def _m347_role_fact_advisories(
     *,
     context: CalculationSourceContext,
     resolver_id: str,
+    declaration_roles: frozenset[ThirdPartyDeclarationRole],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise on a Modelo 347 clave D/E fact left UNDECLARED, rather than silently deciding it.
 
@@ -604,7 +619,6 @@ def _m347_role_fact_advisories(
     """
     if context.modelo != Modelo("347").value:
         return ()
-    declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
     if not declaration_roles:
         return ()
     role_catalogue = resolve_third_party_declaration_role_catalogue()
@@ -958,7 +972,12 @@ def _is_unconverted_foreign_invoice(invoice: Invoice) -> bool:
     return invoice.currency != DEFAULT_CURRENCY and invoice.grand_total_eur is None
 
 
-def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
+def _invoice_observation(
+    invoice: Invoice,
+    *,
+    context: CalculationSourceContext,
+    m347_filer: _M347Filer,
+) -> InvoiceObservation | None:
     if _is_unconverted_foreign_invoice(invoice):
         return None
     if invoice.counterparty_tax_id is None:
@@ -967,7 +986,7 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
         # it has nothing these informativas can declare rather than a defect.
         return None
     if context.modelo == Modelo("347").value:
-        return _m347_invoice_observation(invoice, context=context)
+        return _m347_invoice_observation(invoice, m347_filer=m347_filer)
     clave = _intracommunity_clave(invoice)
     if clave is None:
         return None
@@ -991,32 +1010,86 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
     )
 
 
-def _m347_filer_declaration_roles(bucket_id: BucketId) -> frozenset[ThirdPartyDeclarationRole]:
-    """Load the filer's :class:`ThirdPartyDeclarationRole` memberships for *bucket_id*.
+@dataclass(frozen=True, slots=True)
+class _M347Filer:
+    """The filer facts Modelo 347 classification reads, resolved once per calculation context.
 
-    Mirrors the established bucket-scoped profile-fact loading pattern (see
-    e.g. ``m111_no_retenciones_periods_for_bucket``): a missing or unset
-    profile fails closed to an empty role set rather than raising, because
-    the overwhelming majority of filers legitimately carry none. An empty
-    set means claves C, D and E simply do not classify for this filer --
-    never that A, B, F or G are affected, since those read no profile fact.
+    ``declared_invoice_kinds`` is ``None`` when RD 1065/2007 art. 32.b does
+    not scope the filer, so every invoice direction is related; otherwise it
+    is the set the ``m347-estimacion-objetiva-operation-scope`` fact keeps for
+    the filer's IRPF estimation and IVA regimes.
     """
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    declaration_roles: frozenset[ThirdPartyDeclarationRole] = frozenset()
+    declared_invoice_kinds: frozenset[InvoiceKind] | None = None
+
+    def relates(self, kind: InvoiceKind) -> bool:
+        """Whether an invoice of this direction is related for this filer."""
+        return self.declared_invoice_kinds is None or kind in self.declared_invoice_kinds
+
+
+_UNSCOPED_M347_FILER = _M347Filer()
+
+
+def _m347_filer(context: CalculationSourceContext) -> _M347Filer:
+    """Read the filer's Modelo 347 roles and art. 32.b scope once for ``context``.
+
+    The profile is the one the calculation pinned (``context.profile``), read
+    through the context's own authority lease, and projected as of the last day
+    of the filing period, so a role or regime recorded for a later window does
+    not reach back into an earlier ejercicio. Only a context built outside a
+    calculation command loads the profile itself, once. A missing profile
+    fails closed to no roles and no scoping, because the overwhelming majority
+    of filers legitimately carry no role and an unscoped filer relates every
+    operation: claves C, D and E simply do not classify, and nothing is left
+    out that art. 32.b has not been shown to exclude.
+    """
+    if context.modelo != Modelo("347").value:
+        return _UNSCOPED_M347_FILER
     from ..user_profile.projections import projection_for_taxpayer
 
-    with bundled_indexed_authority().operation() as operation:
-        try:
-            profile_decode_context = operation.profile_decode_context()
-            repository = ProfileRecordRepository.for_current_session(
-                bucket_id,
-                profile_decode_context=profile_decode_context,
-            )
-            record = repository.load(bucket_id)
-        except ProfileNotFoundError:
-            return frozenset[ThirdPartyDeclarationRole]()
-        return projection_for_taxpayer(record, schema=profile_decode_context.schema).declaration_roles
+    as_of = context.period.end_date
+    with source_context_operation(context) as operation:
+        loaded = _m347_filer_profile(context, operation=operation)
+        if loaded is None:
+            return _UNSCOPED_M347_FILER
+        record, schema = loaded
+        taxpayer = projection_for_taxpayer(record, schema=schema, as_of=as_of)
+        if taxpayer.irpf_estimation_regime is None:
+            # Art. 32.b concerns activities taxed by an IRPF estimation method;
+            # a filer that declares none is outside it and relates every invoice.
+            return _M347Filer(declaration_roles=taxpayer.declaration_roles)
+        scope = resolve_m347_estimacion_objetiva_scope(effective_date=as_of, authority=operation)
+    return _M347Filer(
+        declaration_roles=taxpayer.declaration_roles,
+        declared_invoice_kinds=scope.invoice_kinds_for(
+            irpf_estimation_regime=taxpayer.irpf_estimation_regime,
+            iva_regime=taxpayer.iva_regime,
+        ),
+    )
+
+
+def _m347_filer_profile(
+    context: CalculationSourceContext,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[UserProfileRecord, ProfileSchemaDefinition] | None:
+    """Return the pinned profile record and schema, loading it only when the context carries none."""
+    if context.profile is not None:
+        return context.profile.record, context.profile.profile_decode_context.schema
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    profile_decode_context = operation.profile_decode_context()
+    try:
+        repository = ProfileRecordRepository.for_current_session(
+            context.bucket_id,
+            profile_decode_context=profile_decode_context,
+        )
+        record = repository.load(context.bucket_id)
+    except ProfileNotFoundError:
+        return None
+    return record, profile_decode_context.schema
 
 
 def _m347_category_exclusion(invoice: Invoice) -> IvaCategoryExclusion | None:
@@ -1031,7 +1104,7 @@ def _carries_withholding(invoice: Invoice) -> bool:
     return invoice.retention_amount is not None and invoice.retention_amount > 0
 
 
-def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
+def _m347_invoice_observation(invoice: Invoice, *, m347_filer: _M347Filer) -> InvoiceObservation | None:
     """Build the M347 observation for one invoice, or ``None`` if excluded.
 
     This is the single point where RD 1065/2007 art. 33.2 excludes an
@@ -1062,11 +1135,14 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
     Letters c, e, f and h turn on facts the invoice does not carry (a
     gratuitous title, stamps or postage, the social entity's exempt sector,
     a shipment to or from Canarias, Ceuta or Melilla), so nothing here
-    decides them.
+    decides them. Art. 32.b scopes the operations of an estimación objetiva
+    filer under a special IVA regime to the invoices it issues (plus, under
+    the régimen simplificado, the received invoices of its libro registro);
+    ``m347_filer`` carries that scope, read once for the calculation.
 
     Clave C additionally needs the filer's own
-    :class:`ThirdPartyDeclarationRole` membership, loaded here via
-    ``context.bucket_id``. When the invoice IS a clave-C collection
+    :class:`ThirdPartyDeclarationRole` membership, carried by ``m347_filer``.
+    When the invoice IS a clave-C collection
     (``collected_on_behalf_of_tax_id`` set AND the filer carries the
     registry-selected collector role), the declared counterparty is the
     BENEFICIARY whose fees were collected (RD 1065/2007 art. 34.g), not
@@ -1079,6 +1155,8 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
         return None
     if invoice.kind is InvoiceKind.RECEIVED and _carries_withholding(invoice):
         return None
+    if not m347_filer.relates(invoice.kind):
+        return None
     if invoice.counterparty_tax_id is None:
         # Same reason as the general builder above: M347 declares a third party
         # by their tax id, and a factura simplificada legitimately carries none
@@ -1086,8 +1164,7 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
         # constructor with None and raised there instead of being skipped.
         return None
     source_kind = BindingSourceKind(_invoice_source_kind(invoice))
-    declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
-    clave = _m347_operation_clave(invoice, source_kind=source_kind, declaration_roles=declaration_roles)
+    clave = _m347_operation_clave(invoice, source_kind=source_kind, declaration_roles=m347_filer.declaration_roles)
     is_third_party_collection = clave == "C"
     party_tax_id = invoice.collected_on_behalf_of_tax_id if is_third_party_collection else invoice.counterparty_tax_id
     party_legal_name = invoice.collected_on_behalf_of_name if is_third_party_collection else invoice.counterparty_name

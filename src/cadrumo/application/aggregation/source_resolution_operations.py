@@ -9,7 +9,8 @@ contract while preserving one implementation for every merge collision rule.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
@@ -19,7 +20,9 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_provider_registration import registration_for
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
@@ -29,6 +32,7 @@ from ...domain.modelos.row_models import ModeloDetailRow
 from .errors import AggregationValidationError
 from .source_mesh import (
     BorradorSourceProvenance,
+    CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceDiagnosticReason,
     CalculationSourceProvenance,
@@ -371,6 +375,17 @@ def collect_unhandled_source_diagnostics(
     return tuple(diagnostics)
 
 
+@contextmanager
+def source_context_operation(context: CalculationSourceContext) -> Generator[PinnedAuthorityOperation]:
+    """Reuse a caller's lease; admit one only for a standalone resolver boundary."""
+    if context.operation is not None:
+        with validating_governed_facts(context.operation):
+            yield context.operation
+        return
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
 def storage_degradation_resolution(
     *,
     resolver_id: str,
@@ -475,6 +490,7 @@ __all__ = [
     "merge_source_resolutions",
     "merge_source_resolutions_by_precedence",
     "sorted_source_ids",
+    "source_context_operation",
     "source_diagnostics_for",
     "source_issue_diagnostics",
     "source_provenance_for",

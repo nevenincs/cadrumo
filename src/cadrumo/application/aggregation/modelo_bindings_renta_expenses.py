@@ -27,7 +27,6 @@ from ._modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
     revision_has_binding_source,
-    source_context_operation,
 )
 from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_actividad_assets import (
@@ -48,6 +47,7 @@ from .source_resolution_operations import (
 )
 from .source_resolution_operations import sorted_source_ids as sorted_ids
 from .source_resolution_operations import (
+    source_context_operation,
     source_issue_diagnostics,
     storage_degradation_resolution,
 )

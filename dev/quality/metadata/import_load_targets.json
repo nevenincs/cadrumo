@@ -1982,6 +1982,7 @@
         "cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings",
         "cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection",
         "cadrumo.domain.calculations.registry.m303_schema_vocabulary",
+        "cadrumo.domain.calculations.registry.m347_operation_scope",
         "cadrumo.domain.calculations.registry.m347_threshold",
         "cadrumo.domain.calculations.registry.manual_input_selector",
         "cadrumo.domain.calculations.registry.modelo_inception",

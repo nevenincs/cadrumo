@@ -47,7 +47,9 @@ RGAT art 32: personas o entidades excluidas de la obligacion de presentar la dec
 anual de operaciones con terceras personas (Modelo 347). Letra b) excluye las actividades en \
 estimacion objetiva del IRPF que tributan simultaneamente en los regimenes especiales \
 simplificado, agricultura o recargo de equivalencia del IVA, salvo por las operaciones por las \
-que emitan factura; letra c) a quienes no superen 3.005,06 EUR por contraparte y ano natural, \
+que emitan factura, y su segundo parrafo hace que los acogidos al regimen simplificado incluyan \
+ademas las adquisiciones anotadas en el libro registro de facturas recibidas del art 40.1 RIVA \
+(redaccion del RD 828/2013); letra c) a quienes no superen 3.005,06 EUR por contraparte y ano natural, \
 o 300,51 EUR en el cobro por cuenta de terceros; letra e) a los obligados del art 62.6 RIVA \
 (llevanza de libros registro por el SII). Texto verificado contra el consolidado bundled \
 corpus/normatives/html/rd-1065-2007.html (letra e en la redaccion del RD 1512/2018, \
@@ -57,6 +59,7 @@ required_text = [
     "No estarán obligados a presentar la declaración anual",
     "por las actividades que tributen en dicho impuesto por el método de estimación objetiva",
     "salvo por las operaciones por las que emitan factura",
+    "los sujetos pasivos acogidos al régimen simplificado del Impuesto sobre el Valor Añadido incluirán en la declaración anual de operaciones con terceras personas las adquisiciones de bienes y servicios",
     "hayan superado la cifra de 3.005,06 euros durante el año natural correspondiente o de 300,51 euros durante el mismo periodo",
     "Los obligados tributarios a que se refiere el artículo 62.6 del Reglamento del Impuesto sobre el Valor Añadido",
 ]
