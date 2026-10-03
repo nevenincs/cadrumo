@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1c829ef6bf0bfe4e1824044adc9e9c24ba0e99b9c777b5974277cbcef1c8bad4'
+body_hash: 'sha256:15d10934cf562a4e5ac1e6ed2affe60d227451a08bb7280d1cfb2c3345647cd0'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -219,6 +219,29 @@ related:
 - `S17` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
 - `S17` `M` `src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`
 - `S17` `verify:` `pytest 347 resolver suites in HEAD export` -> `pass`
+- `S15` `M` `src/cadrumo/application/operations/_supervisor_execution.py`
+- `S15` `M` `src/cadrumo/application/overview/read_calendar_item_projection.py`
+- `S15` `A` `src/cadrumo/application/overview/tests/test_read_calendar_item_projection.py`
+- `S15` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S15` `verify:` `form_layout generate --check` -> `pass`
+- `S15` `verify:` `pytest 347 inmueble and renderer suites` -> `pass`
+- `S15` `M` `dev/registry/mappings/modelo_347/2011/0001-records.toml`
+- `S15` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S15` `D` `src/cadrumo/_data/registry/.aeat-generated-export-transaction-347-2011-2024.lock`
+- `S15` `D` `src/cadrumo/_data/registry/.aeat-generated-export-transaction-347-2025-y-siguientes.lock`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0003-record-m347-inmueble.toml`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0003-record-m347-inmueble.toml`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S15` `M` `src/cadrumo/application/filing/record_renderer.py`
+- `S15` `A` `src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py`
+- `S15` `A` `src/cadrumo/application/filing/tests/test_optional_record_omission.py`
+- `S15` `A` `src/cadrumo/application/modelo/_m347_inmueble_advisory.py`
+- `S15` `M` `src/cadrumo/application/modelo/calculation_diagnostics.py`
+- `S15` `A` `src/cadrumo/application/modelo/tests/test_m347_inmueble_advisory.py`
+- `S15` `verify:` `inspect_authoring_candidate` -> `pass`
 
 ## Notes
 
@@ -237,3 +260,5 @@ related:
 - `S11` explain wiring and registry-declared ledger source; TUI reader wiring still pending another writer's workbench calendar split
 - `S18` landed inside another writer's whole-tree snapshot commit f4729489f9; completeness confirmed by the implementer and repaired in f4729489f9
 - `S17` landed inside another writer's whole-tree snapshot commit f4729489f9; completeness confirmed by the implementer and repaired in f4729489f9
+- `S15` found two export blockers for S06: decl.ejercicio passed as Decimal, absent ejercicio-operacion written as 0000
+- `S15` correction: the previous S15 rows were read from another writer's commit 659fe64d35 by mistake; these rows are commit 57c565dbd1. Export blockers for S06: decl.ejercicio passed as Decimal, absent ejercicio-operacion written as 0000
