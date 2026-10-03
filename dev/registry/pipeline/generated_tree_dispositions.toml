@@ -38,7 +38,7 @@ source_ref = 'aeat-dr-232-2016'
 source_sha256 = 'fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad'
 remedy = 'republish'
 differing_records = 4
-reason = '''The committed 2016 layout calls official DR23200 an auxiliary header and its two body-record files carry 140 obsolete position-inclusive binding identifiers, whereas the source-pinned typed model has the same 140 stable authored bindings. Official DR23200 is a Total:Variable envelope with a 328-byte prefix, an 18-byte closer and an explicit two-byte CRLF terminator. The fresh static render differs in the layout and three record fragments, with no added or removed files. This source-only target correction does not lower the 2022 runtime filing floor or admit a historical filing snapshot.'''
+reason = '''The committed 2016 layout calls official DR23200 an auxiliary header and its three record fragments across two body-record identities carry 140 obsolete position-inclusive binding identifiers, whereas the source-pinned typed model has the same 140 stable authored bindings. Official DR23200 is a Total:Variable envelope with a 328-byte prefix, an 18-byte closer and an explicit two-byte CRLF terminator. The fresh static render differs in the layout and three record fragments, with no added or removed files. This source-only target correction does not lower the 2022 runtime filing floor or admit a historical filing snapshot.'''
 reconsideration_condition = 'Retire immediately after the exact 2016 static target reproduces its official-source render, its generated form is current, and ordinary runtime selection still refuses filing years below 2022.'
 
 [[dispositions]]
