@@ -1420,7 +1420,6 @@ def _bucket_aggregation_channels(
     )
     _raise_if_m349_intracom_ledger_rows_need_operator_rows(
         work_unit=preparation.work_unit,
-        revision=preparation.snapshot.revision,
         transaction_repository=transaction_repository,
         detail_rows=all_detail_rows,
     )

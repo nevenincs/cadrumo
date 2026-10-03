@@ -31,6 +31,7 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -405,7 +406,7 @@ def build_automation_operation_definitions(
                 permitted_frontends=(
                     frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
                     if identity in _HUMAN_DEFINITIONS
-                    else frozenset(OperationFrontendProjection)
+                    else ALL_OPERATION_FRONTENDS
                 ),
                 ephemeral_secret=None
                 if secret_kind is None

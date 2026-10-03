@@ -44,6 +44,7 @@ from .invoice_bindings import (
     CollectibleInvoiceProvider,
     LedgerTransactionProvider,
     M347ThirdPartyOperationProvider,
+    M349IntracommunityOperationProvider,
     PayableInvoiceProvider,
     PurchaseInvoiceEvidenceProvider,
 )
@@ -92,6 +93,7 @@ BindingProvider = Annotated[
     | PayableInvoiceProvider
     | CollectibleInvoiceProvider
     | M347ThirdPartyOperationProvider
+    | M349IntracommunityOperationProvider
     | ForeignAssetProvider
     | AtribucionMemberProvider
     | Gasto193ContributorProvider

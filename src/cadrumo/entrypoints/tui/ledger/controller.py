@@ -733,7 +733,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
 
     def on_ledger_transaction_detail_requested(self, event: LedgerTransactionDetailRequested) -> None:
         """Open the selected transaction without resolving a row position."""
-        from .record_views import LedgerTransactionDetailScreen
+        from .transaction_views import LedgerTransactionDetailScreen
 
         doors = self.controller.record_doors
         if doors is None:

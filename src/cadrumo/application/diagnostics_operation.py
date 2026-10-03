@@ -73,6 +73,7 @@ from .operations.profile_guard import require_operation_profile
 from .operations.public_scalar import PublicDecimal
 from .operations.read_capture import capture_read_result
 from .operations.registry import (
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -88,7 +89,6 @@ from .user_profile.access_errors import ProfileAccessRefusedError
 DIAGNOSTICS_READ_OPERATION_DEFINITION_ID = "diagnostics.read"
 DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID = "diagnostics.telemetry.flush"
 type DiagnosticsReadKind = Literal["run_health", "runs", "latency", "errors", "llm_usage"]
-_READ_FRONTENDS = frozenset(OperationFrontendProjection)
 _FLUSH_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
 
 
@@ -661,7 +661,7 @@ def _resolve_access(
         str(payload.profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    frontends = _FLUSH_FRONTENDS if flush else _READ_FRONTENDS
+    frontends = _FLUSH_FRONTENDS if flush else ALL_OPERATION_FRONTENDS
     actions = RESUMABLE_READ_ACTIONS
     if isinstance(payload, DiagnosticsTelemetryFlushRequest) and not payload.dry_run:
         actions = actions | frozenset({AccessAction.COMMIT})
@@ -756,7 +756,7 @@ def build_diagnostics_read_definition(factory: DiagnosticsReadPortsFactory) -> O
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=_READ_FRONTENDS,
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

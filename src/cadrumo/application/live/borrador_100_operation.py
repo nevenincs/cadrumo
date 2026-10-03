@@ -60,6 +60,7 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicDecimal, PublicNamedScalar, project_facts
 from ..operations.registry import (
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -87,7 +88,6 @@ BORRADOR_100_QUERY_OPERATION_DEFINITION_ID = "live.borrador.100.query"
 BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID = "live.borrador.100.import"
 type Borrador100ReadKind = Literal["list", "view", "latest"]
 _HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-_ALL_FRONTENDS = frozenset(OperationFrontendProjection)
 _IMPORT_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
 _BINDING_ID: TypeAdapter[BindingId] = TypeAdapter(BindingId)
 
@@ -546,7 +546,7 @@ def resolve_borrador_100_access(
         str(payload.profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    frontends = _IMPORT_FRONTENDS if importing else _ALL_FRONTENDS if query else _HUMAN_FRONTENDS
+    frontends = _IMPORT_FRONTENDS if importing else ALL_OPERATION_FRONTENDS if query else _HUMAN_FRONTENDS
     access_profile = (
         HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
         if importing
@@ -634,7 +634,12 @@ def build_borrador_100_operation_definitions(
         )
         for definition_id, result_type, query, frontends in (
             (BORRADOR_100_READ_OPERATION_DEFINITION_ID, Borrador100ReadExecutionResult, False, _HUMAN_FRONTENDS),
-            (BORRADOR_100_QUERY_OPERATION_DEFINITION_ID, Borrador100QueryExecutionResult, True, _ALL_FRONTENDS),
+            (
+                BORRADOR_100_QUERY_OPERATION_DEFINITION_ID,
+                Borrador100QueryExecutionResult,
+                True,
+                ALL_OPERATION_FRONTENDS,
+            ),
         )
     )
     importing = OperationDefinition(

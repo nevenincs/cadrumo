@@ -36,14 +36,7 @@ def compose_calendar_aeat_reader(
             store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
             observations = store.list_observations()
             if not observations:
-                return CalendarEvidenceReadOutcome(
-                    state=HomeZoneState(
-                        availability=HomeAvailability.STALE if retained else HomeAvailability.NEVER_CAPTURED,
-                        reason_code="workbench.calendar.no_aeat_observations",
-                        observed_at=retained_at,
-                    ),
-                    value=AeatCalendarEvidenceSources(observed_events=retained) if retained else None,
-                )
+                return _calendar_no_observations(retained, retained_at)
             healthy = tuple(
                 item
                 for item in observations
@@ -78,13 +71,34 @@ def compose_calendar_aeat_reader(
                 value=AeatCalendarEvidenceSources(filed_declaration_observations=healthy),
             )
         except (CadrumoError, ValueError, OSError):
-            return CalendarEvidenceReadOutcome(
-                state=HomeZoneState(
-                    availability=HomeAvailability.STALE if retained else HomeAvailability.UNAVAILABLE,
-                    reason_code="workbench.calendar.aeat_reader_unavailable",
-                    observed_at=retained_at if retained else None,
-                ),
-                value=AeatCalendarEvidenceSources(observed_events=retained) if retained else None,
-            )
+            return _calendar_reader_unavailable(retained, retained_at)
 
     return read
+
+
+def _calendar_no_observations(
+    retained: tuple[OverviewCalendarEvent, ...], retained_at: datetime | None
+) -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
+    """Report an absent capture while retaining the original last observation timestamp."""
+    return CalendarEvidenceReadOutcome(
+        state=HomeZoneState(
+            availability=HomeAvailability.STALE if retained else HomeAvailability.NEVER_CAPTURED,
+            reason_code="workbench.calendar.no_aeat_observations",
+            observed_at=retained_at,
+        ),
+        value=AeatCalendarEvidenceSources(observed_events=retained) if retained else None,
+    )
+
+
+def _calendar_reader_unavailable(
+    retained: tuple[OverviewCalendarEvent, ...], retained_at: datetime | None
+) -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
+    """Retain prior events on a refused or unreadable observation source."""
+    return CalendarEvidenceReadOutcome(
+        state=HomeZoneState(
+            availability=HomeAvailability.STALE if retained else HomeAvailability.UNAVAILABLE,
+            reason_code="workbench.calendar.aeat_reader_unavailable",
+            observed_at=retained_at if retained else None,
+        ),
+        value=AeatCalendarEvidenceSources(observed_events=retained) if retained else None,
+    )

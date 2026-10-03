@@ -209,6 +209,7 @@ def test_metadata_read_uses_canonical_selection_and_persisted_period(
             published_authority=Availability.AVAILABLE,
             authority_operation=operation,
         )
+        no_pin_context = context.model_copy(update={"authority_operation": None})
         request = OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=payload)
         access = resolve_operation_access(registry=registry, request=request, context=context)
         assert access.request.periods == frozenset({unit.period})
@@ -223,9 +224,30 @@ def test_metadata_read_uses_canonical_selection_and_persisted_period(
                     subject_ref=subject_ref,
                     payload=payload.model_copy(update={"profile_id": uuid4()}),
                 ),
-                context=context,
+                context=no_pin_context,
             )
         assert denied.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+        with pytest.raises(ProfileAccessRefusedError) as wrong_subject:
+            resolve_operation_access(
+                registry=registry,
+                request=request.model_copy(update={"subject_ref": "not-the-profile"}),
+                context=no_pin_context,
+            )
+        assert wrong_subject.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+        registration = registry.lookup_public_registration(definition_id)
+        resolver = registration.access_resolver
+        assert resolver is not None
+        malformed_requests = (
+            request.model_copy(update={"definition_id": "wrong.definition", "subject_ref": "wrong-subject"}),
+            request.model_copy(update={"payload": object(), "subject_ref": "wrong-subject"}),
+        )
+        for malformed_request in malformed_requests:
+            with pytest.raises(ProfileAccessRefusedError) as malformed:
+                resolver(malformed_request, no_pin_context)
+            assert malformed.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
         before = _stored_fingerprints()
         submitted, observed = asyncio.run(
             driver.run(definition_id=definition_id, subject_ref=subject_ref, payload=payload)

@@ -6,7 +6,8 @@ read capability. It projects those records into the calculation mesh as
 :class:`~application.aggregation.source_mesh.CalculationSourceResolution` values for
 :attr:`~core.aggregation.BindingSourceKind.COLLECTIBLE_INVOICE`,
 :attr:`~core.aggregation.BindingSourceKind.PAYABLE_INVOICE`, and the combined-direction
-:attr:`~core.aggregation.BindingSourceKind.M347_THIRD_PARTY_OPERATION`.
+:attr:`~core.aggregation.BindingSourceKind.M347_THIRD_PARTY_OPERATION` and
+:attr:`~core.aggregation.BindingSourceKind.M349_INTRACOMMUNITY_OPERATION`.
 
 The :class:`~domain.invoices.models.Invoice` aggregate is the sole invoice record and
 the reconciliation and link authority. Records reach the mesh only once they can
@@ -39,7 +40,6 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.invoice_bindings import (
     InvoiceObservation,
-    is_m347_declarante_summary_invoice_binding,
     m347_operation_clave,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
@@ -69,15 +69,16 @@ _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
     BindingSourceKind.PAYABLE_INVOICE,
     BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+    BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
+)
+_COMBINED_DIRECTION_SOURCES: frozenset[BindingSourceKind] = frozenset(
+    {
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
+    },
 )
 _ObservedInvoice = tuple[Invoice, InvoiceObservation]
 _IncoherentInvoice = tuple[Invoice, InvoiceDecomposition]
-_M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
-    "iva-349-declarante-numero-operadores-adquisicion": "iva-349-declarante-numero-operadores",
-    "iva-349-declarante-importe-operaciones-adquisicion": "iva-349-declarante-importe-operaciones",
-    "iva-349-declarante-numero-rectificaciones-adquisicion": "iva-349-declarante-numero-rectificaciones",
-    "iva-349-declarante-importe-rectificaciones-adquisicion": "iva-349-declarante-importe-rectificaciones",
-}
 _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
     "iva-349-operador-row-codigo-pais": "codigo_pais",
     "iva-349-operador-row-nif": "nif_comunitario",
@@ -239,7 +240,7 @@ def _invoice_resolution_from_observations(
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
-        binding_values=_m349_declarante_summary_union(context=context, binding_values=binding_values),
+        binding_values=binding_values,
         detail_rows=_m349_operador_rows_from_observations(context=context, observations=observations),
         source_transaction_ids=tuple(
             sorted(
@@ -635,7 +636,8 @@ def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozense
     declared_sources = frozenset(
         binding.source for binding in context.revision.bindings if binding.source in _OWNED_SOURCES
     )
-    if any(is_m347_declarante_summary_invoice_binding(binding) for binding in context.revision.bindings):
+    if declared_sources & _COMBINED_DIRECTION_SOURCES:
+        # A combined-direction binding reads both invoice directions, so both feed it.
         return frozenset(_OWNED_SOURCES)
     return declared_sources
 
@@ -966,21 +968,6 @@ def _m349_clave_for_operation_type(
             f"with source kind {source_kind.value!r}; accepted: {accepted}",
         )
     return operation_type.value
-
-
-def _m349_declarante_summary_union(
-    *,
-    context: CalculationSourceContext,
-    binding_values: dict[str, Decimal],
-) -> dict[str, Decimal]:
-    if context.modelo != Modelo("349").value:
-        return binding_values
-    merged = dict(binding_values)
-    for payable_binding, public_binding in _M349_PAYABLE_SUMMARY_BINDING_MIRRORS.items():
-        if payable_binding not in binding_values:
-            continue
-        merged[public_binding] = merged.get(public_binding, Decimal("0")) + binding_values[payable_binding]
-    return merged
 
 
 def _m349_operador_row_indexes(row_values: Mapping[tuple[BindingId, int], Decimal | str]) -> list[int]:

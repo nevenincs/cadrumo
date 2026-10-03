@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:309353ddcd5405913658fdb0cb32d402b217264e3e83505ec11d223e0f2d8635'
+body_hash: 'sha256:3b300a2569449cb5236f0622079dddfd06f034c797232cb3fbbf848faca37e72'
 related:
   - "[[2026-10-02-duplication-remediation-plan]]"
 ---
@@ -1652,6 +1652,32 @@ related:
 - `S25` `by:` `root`
 - `S17` `by:` `root`
 - `S14` `by:` `root`
+- `S27` `by:` `root`
+- `S17` `M` `src/cadrumo/application/operations/public_scalar.py`
+- `S17` `M` `src/cadrumo/application/actividad_asset/operation_dtos.py`
+- `S17` `A` `src/cadrumo/application/operations/tests/test_public_scalar.py`
+- `S17` `verify:` `uv run --no-sync pytest -n0 -m 'unit and hex_application' src/cadrumo/application/operations/tests/test_public_scalar.py src/cadrumo/application/actividad_asset/tests/test_operation_dtos.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync ruff check --output-format concise src/cadrumo/application/operations/public_scalar.py src/cadrumo/application/actividad_asset/operation_dtos.py src/cadrumo/application/operations/tests/test_public_scalar.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/operations/public_scalar.py src/cadrumo/application/actividad_asset/operation_dtos.py src/cadrumo/application/operations/tests/test_public_scalar.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync ty check --python-platform win32 --output-format gitlab --color never --no-force-exclude src/cadrumo/application/operations/public_scalar.py src/cadrumo/application/actividad_asset/operation_dtos.py src/cadrumo/application/operations/tests/test_public_scalar.py src/cadrumo/application/workflow/run_projection.py src/cadrumo/application/operator_actions/projection.py src/cadrumo/application/modelo/verification_projection.py` -> `pass`
+- `S29` `M` `src/cadrumo/application/actividad_asset/registered_operations.py`
+- `S29` `M` `src/cadrumo/application/bienes_inversion/registered_operation.py`
+- `S29` `M` `src/cadrumo/application/export/google_operation.py`
+- `S29` `M` `src/cadrumo/application/inventory/registered_operation.py`
+- `S29` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
+- `S29` `M` `src/cadrumo/application/invoices/catalogue_read_operation.py`
+- `S29` `M` `src/cadrumo/application/invoices/catalogue_remove_operation.py`
+- `S29` `M` `src/cadrumo/application/invoices/catalogue_update_operation.py`
+- `S29` `M` `src/cadrumo/application/local_reader_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/aggregate_operation.py`
+- `S29` `M` `src/cadrumo/application/modelo/projection_operation.py`
+- `S29` `M` `src/cadrumo/application/operations/registry.py`
+- `S29` `M` `src/cadrumo/application/operations/tests/test_registry.py`
+- `S29` `M` `src/cadrumo/application/prorrata_register/registered_operations.py`
+- `S29` `verify:` `w6-receipts ruff/format/ty on 32 files exit0` -> `pass`
+- `S29` `verify:` `application/operations/tests 463 passed run 20261003T040303.476844Z-pytest-60864-e14fef5a` -> `pass`
+- `S29` `verify:` `owning packages 3699 passed 16 failed outside lane files (operation= TypeError from in-flight iva_wallet/workbench/notification edits, BindingSourceKind.RELATED_PARTY_OPERATION, source_mesh StopIteration) run 20261003T040336.513860Z-pytest-80780-d1732f51` -> `fail`
+- `S29` `by:` `opus-high`
 
 ## Notes
 
@@ -1782,3 +1808,6 @@ related:
 - `S25` Fresh complete feature vault health after accepted F09/F06 source batches and their durable reviews: exit0, unchanged metadata,0errors/0warnings/22info open-Step ledger mappings, diagnostics untruncated. Six of29 plan Steps checked; no additional Step closed. This is vault metadata health only; product integrated gates, filing workflows and stable post-merge census remain PENDING.
 - `S17` CP257 independent typed-Decimal extraction preflight reviewed: helper/current8typed sites and existingDTOsuite read, all12 current/preimage receipts matched, newtest absent. Manifest SHA2564274FFEDC75112223683A6D6EC42FCB7EA93AD580F284D41D30BADCF7FA272C5. Exact3-file Luna-max `full_finding_inventory` write reservation recorded in shared reference; foreign S09 scalar baseline and tui-e8 S17claims/schedule stay preserved/read-only. Historical CP257/K12 and wholeS17 remain pending.
 - `S14` CP267 independent passive endpoint mechanism preflight reviewed: bothcompletecurrent source/test files and foreignsourceworktreediff read; targetbytepreimages matched 164D7C006E434AB01B9811524ECA92039DEC4E472C7E360D21C2C3D73B126750 and3E44D1B5A4FD4FDFF5B9351F5909896707D570B34316595D6785DA038B6702DB. Exact2-file Luna-max `security_drive` write reservation recorded. Four constructor callsites only; lifecycle/admission/cleanup preserved. POSIXnative no-namespace integration remains separatelypending Windows; historicalCP267 and wholeS14/S25 remain open.
+- `S27` Read-only five Modelo resolver preflight root reviewed; handoffEEAB251AEC6636016ADFDF05BB97B0A15CE71854C49BA07799C87A4148434FC2. All20 preimages and19 currenthashes matched; models.py authorized receipt-helper-only drift independently read, OperationRequest unchanged. Adjusted helper placement in existing S27 `profile_guard` avoids `S29access_resolution` file. Exact10-file Luna-max `security_aeat` write reservation recorded; local shape/profile/replay/pin precedence and foreignS12/S29 baseline must stay identical. WholeS27/S25 remain open.
+- `S17` Bounded typedDecimal representation extraction accepted; actualrun20261003T040226.333719Z-pytest-10980-776a740c elevenpasses(9new+2existing), fullownedpatch/currentpreimages/dependency/artifactlogsrootreviewedmatched; exact3holdreleased. Unchangedruntimebody and8typedprojections preserveexactstrings/None;3objectloops/defaultuntouched. Foreignregisteredoperations drift reviewedbyworker/currentrootmatched25388F1F...; externalsnapshot includesbytes, no worker/rootGitmutation. HistoricalCP257/K12/wholeS17/S25remainpending.
+- `S29` `require_terminal_receipt_match` (operations/models.py) and `ALL_OPERATION_FRONTENDS` (operations/registry.py); 29 receipt and 44 frontend copies stay local in reserved or non-equivalent files; 9 frozenset(OperationFrontendProjection) sites await an explicit-versus-enum decision; `overview/read_result.py:132` does not check `diagnostic_ref`

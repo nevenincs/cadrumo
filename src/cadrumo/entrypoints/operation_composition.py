@@ -1017,7 +1017,7 @@ def build_production_operation_registry(
     modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory = _build_modelo_workbench_read_ports,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
-    resolved_settings = settings or load_settings()
+    resolved_settings = _production_registry_settings(settings)
     # A refused Apply's named prerequisite stays in this registry's worker
     # memory until the workbench reads it once; the journal never holds it.
     edit_prerequisites = ModeloEditRefusalProjectionStore()
@@ -1052,7 +1052,7 @@ def build_production_operation_registry(
     recipient_remove_definition = build_review_package_recipient_remove_definition(
         recipient_registry_ports_factory, recipient_event_repository_factory
     )
-    resolved_operator_scope_ports = operator_scope_ports or build_operator_scope_ports()
+    resolved_operator_scope_ports = _production_registry_operator_scope(operator_scope_ports)
     resolved_auth_ports = build_auth_operation_ports(resolved_operator_scope_ports)
     resolved_auth_definitions = (
         auth_definitions
@@ -1267,15 +1267,9 @@ def build_production_operation_registry(
         expected: IdentityCheckVerdictValue | None,
         operation: PinnedAuthorityOperation,
     ) -> VerifyLiveObservation:
-        del operation
-        expected_by_nif = {tax_id_identity_token(nif): expected or "unknown"}
-        if surface is VerifySurface.NIF_IVA:
-            result = await collect_nif_iva_check_observations(b"", expected=expected_by_nif, settings=resolved_settings)
-        else:
-            result = await collect_groi_observations(b"", expected=expected_by_nif, settings=resolved_settings)
-        if len(result.observations) != 1:
-            raise ValueError("verify acquisition must return exactly one observation")
-        return VerifyLiveObservation.model_validate(result.observations[0], from_attributes=True)
+        return await _acquire_registry_verify_observation(
+            surface, nif, expected, operation, resolved_settings=resolved_settings
+        )
 
     def verify_live_preflight(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
         del profile_id, operation
@@ -2060,3 +2054,33 @@ __all__ = [
     "build_production_operation_registry",
     "compose_operation_dependencies",
 ]
+
+
+def _production_registry_settings(settings: Settings | None) -> Settings:
+    """Retain the supplied settings or load the original production default."""
+    return settings or load_settings()
+
+
+def _production_registry_operator_scope(operator_scope_ports: OperatorScopePorts | None) -> OperatorScopePorts:
+    """Retain an injected scope or compose the same native operator authority."""
+    return operator_scope_ports or build_operator_scope_ports()
+
+
+async def _acquire_registry_verify_observation(
+    surface: VerifySurface,
+    nif: str,
+    expected: IdentityCheckVerdictValue | None,
+    operation: PinnedAuthorityOperation,
+    *,
+    resolved_settings: Settings,
+) -> VerifyLiveObservation:
+    """Acquire exactly one canonical verdict observation under the same resolved settings."""
+    del operation
+    expected_by_nif = {tax_id_identity_token(nif): expected or "unknown"}
+    if surface is VerifySurface.NIF_IVA:
+        result = await collect_nif_iva_check_observations(b"", expected=expected_by_nif, settings=resolved_settings)
+    else:
+        result = await collect_groi_observations(b"", expected=expected_by_nif, settings=resolved_settings)
+    if len(result.observations) != 1:
+        raise ValueError("verify acquisition must return exactly one observation")
+    return VerifyLiveObservation.model_validate(result.observations[0], from_attributes=True)

@@ -145,6 +145,36 @@ def _settled_result_matches_binding[ResultT: BaseModel](
     )
 
 
+def _submission_session(client: RuntimeFrontendClient, expected_session_id: UUID | None) -> UUID:
+    if client.frontend is not OperationFrontendProjection.TUI:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    session_id = client.session_id
+    if expected_session_id is not None and session_id != expected_session_id:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+    return session_id
+
+
+async def _admit_submission_contract(
+    client: RuntimeFrontendClient, definition_id: str, deadline: float, session_id: UUID
+) -> None:
+    contract = await await_cancellation_complete(
+        asyncio.to_thread(client.contract, definition_id, deadline=deadline),
+        task_name="tui-runtime-definition",
+    )
+    if contract.ephemeral_secret_required:
+        # This door carries credential-free operands only. Refuse before
+        # persisting work whose separate secret handoff is not composed.
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+    if client.session_id != session_id:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+
+
+def _submitted_receipt(reply: RuntimeOperationReply) -> RuntimeOperationSubmitted:
+    if not isinstance(reply, RuntimeOperationSubmitted) or reply.receipt.secret_requirement is not None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return reply
+
+
 class RuntimeReviewDocument(RootModel[dict[str, JsonValue]]):
     """Preserve a registered server-validated review for the generic modal renderer.
 
@@ -207,24 +237,11 @@ class RuntimeOperationController:
         expected_session_id: UUID | None = None,
     ) -> RuntimeOperationController:
         """Submit a registered request without transferring response capabilities."""
-        if client.frontend is not OperationFrontendProjection.TUI:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        session_id = client.session_id
-        if expected_session_id is not None and session_id != expected_session_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        session_id = _submission_session(client, expected_session_id)
         exchange_deadline = min(time.monotonic() + 30, deadline) if deadline is not None else time.monotonic() + 30
         if exchange_deadline <= time.monotonic():
             raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-        contract = await await_cancellation_complete(
-            asyncio.to_thread(client.contract, definition_id, deadline=exchange_deadline),
-            task_name="tui-runtime-definition",
-        )
-        if contract.ephemeral_secret_required:
-            # This door carries credential-free operands only. Refuse before
-            # persisting work whose separate secret handoff is not composed.
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        if client.session_id != session_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        await _admit_submission_contract(client, definition_id, exchange_deadline, session_id)
         request = RuntimeOperationSubmit(
             request_id=uuid4(),
             profile_id=client.profile_id,
@@ -238,11 +255,10 @@ class RuntimeOperationController:
             asyncio.to_thread(client.operation, request, deadline=exchange_deadline),
             task_name="tui-runtime-submission",
         )
-        if not isinstance(reply, RuntimeOperationSubmitted) or reply.receipt.secret_requirement is not None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        receipt = _submitted_receipt(reply)
         if client.session_id != session_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
-        return cls(client=client, operation_id=reply.receipt.operation_id, session_id=session_id, deadline=deadline)
+        return cls(client=client, operation_id=receipt.receipt.operation_id, session_id=session_id, deadline=deadline)
 
     async def read_settled_result[ResultT: BaseModel](
         self,

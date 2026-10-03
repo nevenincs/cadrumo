@@ -821,6 +821,7 @@ cli:
           gasto193_contribuyente: contribuent de la relació de despeses
           inventario: inventari d’existències
           miembro_atribucion: membre d'atribució de rendes
+          operacion_intracomunitaria: operació intracomunitària
           operacion_tercero: operació amb tercers
           registro_retenciones: registre de retencions
           regularizacion_bienes_inversion: regularització de béns d’inversió

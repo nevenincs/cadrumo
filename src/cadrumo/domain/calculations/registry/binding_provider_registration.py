@@ -65,6 +65,7 @@ from .invoice_bindings import (
     CollectibleInvoiceProvider,
     LedgerTransactionProvider,
     M347ThirdPartyOperationProvider,
+    M349IntracommunityOperationProvider,
     PayableInvoiceProvider,
     PurchaseInvoiceEvidenceProvider,
     validate_invoice_binding,
@@ -538,6 +539,7 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
     _invoice_catalogue(BindingSourceKind.PAYABLE_INVOICE, PayableInvoiceProvider),
     _invoice_catalogue(BindingSourceKind.COLLECTIBLE_INVOICE, CollectibleInvoiceProvider),
     _invoice_catalogue(BindingSourceKind.M347_THIRD_PARTY_OPERATION, M347ThirdPartyOperationProvider),
+    _invoice_catalogue(BindingSourceKind.M349_INTRACOMMUNITY_OPERATION, M349IntracommunityOperationProvider),
     _filing_grade(
         BindingSourceKind.FOREIGN_ASSET,
         ForeignAssetProvider,

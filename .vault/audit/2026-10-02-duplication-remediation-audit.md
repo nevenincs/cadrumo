@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e61c651b64f3d259261d0d5cdea34e9f23edb0d1bc5d82ffa47c02f0953e5c5d'
+body_hash: 'sha256:53725f923b02ccb8208984c2fb75293655de6595b30e939d5977939243b0c00b'
 related:
   - "[[2026-10-02-duplication-remediation-plan]]"
   - "[[2026-10-02-duplication-remediation-reference]]"
@@ -243,6 +243,18 @@ Receipt `C:/Users/hello/AppData/Local/Temp/cadrumo-s27-auth-caller-preflight-202
 |s01-cp062-cp257-cp267-current-traces|low|Current bounded source REVIEWED, historical clones PENDING. Root read artifact `s01-cp062-cp257-cp267-current-source-review-2026-10-03.md` (`B1C37E003BB1DD9E70762838537BDD21FFFA43ECD1F8622C568C91FA3836B321`) and matched thirteen source hashes. Current roles are supervisor contract/implementation/owner guard, DTO/domain delegated validation, and distinct runtime lifecycle phases. Decimal wire projection and four endpoint constructors are separate preflight candidates, no new code authorized by the trace. Missing historical matched text/hash and moved locators prevent raw closure; no F03/K12/B10/B19 or S01/S25 acceptance, no tests/scans/source changes.|
 
 |s17-f06-strict-map-adapter|low|Bounded PASS. Four equal strict adapter declarations are replaced by one public core definition; non-strict/tuple policies, four local error/fallback contracts, foreign S09 hash hunk and S07 row context are preserved. Root read full patch and matched current/preimage/artifact/actual-test/static/whitespace evidence and LF modes. Correct five-test-file run `20261003T033248.961588Z-pytest-13196-d457a439` has83 call passes, exit0; seven added meaningful shape/caller cases and existing positives. Ten-path static checks pass. Receipt `56B49489662D122E30DD19CB2CC7229804614CDFAF590022D419DAF23719311A`, addendum `2BBF0605ACC6B67EFD1BA32C452D5EB452C15DDC70235A0F466373027481C657`, patch `4293EE21B3B7CFEF4DD19CD5D9125DC75936244B1A8BB794DDE2F0046A338274`. Initial83 mis-scoped test run is superseded rather than added; repaired lint/format, unretained scratch-probe error and mutation wording corrected openly. Exact ten paths released, no published authority/filing/global verdict. Whole S17 remains PENDING.|
+
+### runtime-endpoint-concurrent-cleanup | medium | Foreign cleanup extraction appeared during the exact endpoint reservation
+
+Root's preimage-to-current review detected an additional _runtime_stop_connection_owner helper and preview exception-branch delegation while the Luna endpoint writer had changed only Path/import, one private constructor and four call sites. The writer confirmed the cleanup change was foreign. Root stopped further production writes, preserved the foreign bytes and allowed only its captured owning-test repairs/read-only verification. An external snapshot commit c7ce3265b191e4d3cbf3f472d089047c140a0fef then incorporated the current source; no root/worker Git mutation occurred. The complete foreign extraction retains the same nullable-connection, exact retained-resource identity and fallback construction predicate; no changed behavior is inferred from source. Current consent/preview cleanup owner tests and final source/check receipts remain required before bounded endpoint acceptance. This is a concurrent ownership event, not a grant to revert or share a production file. Whole S14/S25 remains PENDING.
+
+### external-merge-state-checkpoint | low | The former merge-marker prerequisite has changed
+
+Read-only root verification at 2026-10-03 04:06:18 UTC finds feature/tui at the external snapshot commit above and MERGE_HEAD absent. Prior statements that the marker remained present are historical, not current blockers. Actual captured source bytes survive; clean named Git status after external incorporation is not verification or a source population oracle. Current writers must finish before the stable-source final census. Published authority, filing contract gaps, exact foreign ownership holds and integrated gates remain separate prerequisites.
+
+### s17-typed-decimal-projection | low | Eight typed wire projections reuse the existing scalar owner
+
+Bounded PASS. The new Decimal-specific typing overload and unchanged union fallback leave project_scalar's runtime behavior unchanged. Eight typed DTO fields now call it; optionality, domain validators, exact Decimal strings, model shape and fingerprints are retained. Three object-typed loops and the literal default remain unchanged, including the historically tracked AmortizationClaim loop. Independent tests preserve trailing zeros, exponent spelling, signed zero and primitive identity, and refuse non-finite Decimal values. Root read the complete owned changes, matched current/preimage/dependency/patch hashes and actual run/copy artifacts. Eleven actual cases passed (nine new plus two existing DTO cases), with scoped Ruff/format/Windows types and root LF/whitespace checks. The existing union callers remain compatible. Foreign S09/typed-ID and registered-operation changes are preserved; external snapshot incorporation is provenance, not worker Git activity. The exact three-file hold is released. This accepts the independent representation mechanism; historical CP257/K12 and whole S17/S25 remain PENDING.
 
 ## Recommendations
 

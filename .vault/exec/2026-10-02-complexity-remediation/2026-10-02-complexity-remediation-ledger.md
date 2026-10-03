@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e82b945943dd100c135497a2c474d1499a7b6bf2f7e32fa0b49163afbf436ff2'
+body_hash: 'sha256:3832b92751a6875ddd2e7a763965c9f341efb152d0d5488de149123b43ce8ac4'
 related:
   - "[[2026-10-02-complexity-remediation-plan]]"
 ---
@@ -1780,6 +1780,40 @@ related:
 - `S07` `verify:` `receipt resource ownership and selector unit contracts 115 tests` -> `pass`
 - `S07` `verify:` `credential-reference archive route refusal expectation` -> `fail`
 - `S07` `verify:` `captured original preflight reproduces same archive route storage-admission assertion` -> `pass`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_rendering.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_projection_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/profile_status_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_ledger_counterparty_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_root_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/recovery.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/main.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_batch_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_profile_session_gate.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/_auth_diagnostics.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/runtime_profile_patch.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/command_suggestions.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_payloads.py`
+- `S07` `M` `src/cadrumo/entrypoints/google_configuration_operation_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/modelo_spreadsheet_operation_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime_management.py`
+- `S07` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S07` `verify:` `complete CLI production scan zero CC MI cognitive findings` -> `pass`
+- `S07` `verify:` `13 surface-stage and two lazy/automation owner files Ruff format ty` -> `pass`
+- `S07` `verify:` `surface root grammar lazy loading option materialization and recovery unit lane 74 tests` -> `pass`
+- `S07` `verify:` `discovery calendar evidence and aggregate unit lane 55 tests` -> `pass`
+- `S07` `verify:` `selected native binding discovery refusal invoice aggregation work review and filtered history six cases` -> `pass`
+- `S07` `verify:` `selected native calendar maritime and verification four cases` -> `fail`
+- `S07` `verify:` `captured-original replay reproduces calendar and maritime failures on identical fixtures` -> `pass`
+- `S07` `verify:` `expanded actual CLI diagnostics and LLM owning suite 61 tests` -> `pass`
+- `S07` `verify:` `two expanded diagnostics native connection failures` -> `fail`
+- `S07` `verify:` `four outer composition owners CC MI cognitive zero Ruff format ty` -> `pass`
+- `S07` `verify:` `actual Google configuration persistence digest refusal and idempotent logout two owning tests` -> `pass`
+- `S07` `verify:` `spreadsheet assembly runtime management and evidence extraction owning cohort 21 tests` -> `pass`
 
 ## Notes
 
@@ -1857,3 +1891,4 @@ related:
 - `S07` The two Quickfile/authconfigure failures reproduce using captured original functions with the same current fixtures, dispatch and native runtime (baseline replay log 20261003T032421.916712Z). Cross-period result remains None where fixture expects False; invalid-provider refusal retains the pre-existing input echo. No unrelated output or financial/refusal semantics were altered to hide these findings. Four calculation detail-row tests fail at the OS credential-store synthetic probe with WinVault CredRead 1312 before changed code; no keychain guard weakened. Successful owning run log 20261003T032140.735868Z reports 136 passed and four prerequisite failures. Ordered short circuits, exact-profile result coordinates, receipt effect/refusal custody, Decimal spelling and review proposal identity preserved. Additional diagnostics owning tests are still running. S07 stays open.
 - `S05` Log .logs/audit-runs/2026-10-03/20261003T033640.714556Z-audit-complexity-18028-5987ea1a/run.log. Live-interval scanner count680, down from761; unchanged configured roots and CC/MI/cognitive thresholds. Advisory exit0 is not zero acceptance. Fleet continues S06/S07/S09/S11 with final complete population and integrated review still open.
 - `S07` Unit lane log20261003T034221.785154Z; 14 integration cases deselected, not acceptance evidence. The original preflight body yields the identical refusal-provisioned-storage assertion on the same fixture in baseline replay20261003T034833.401108Z. No source-route expectation or storage/secret read gate was changed. Native transport cleanup still joins its release thread and retains actual owner custody on failure; released-resource references are discarded only in the original unconditional finalization phase. Native CLI scenarios remain running; do not infer their success from unit checks.
+- `S07` S07 remains open for TUI, runtime and other shared compositions. Partial unit marker runs leave native cases unverified (74 selected/103 deselected; 55 selected/73 deselected). Native scenario log20261003T034221.750371Z has six passes and four failures; original-function replay20261003T035414.491000Z reproduces both calendar terminal INTERNAL failures and the maritime fixture KeyError0525. The verify scenario stopped at `runtime_unavailable` while creating M130 before its changed selector; isolated rerun remains pending. Expanded diagnostics run20261003T033425.785473Z has61 passed and two `runtime_connection_closed` failures; exact isolated reruns remain pending. No unsupported schema, unknown-provider output, runtime deadline, financial authority, source exclusion or detector threshold was changed to hide failures. Google branch effects preserve admission, review acknowledgement, credential/store handoff, commit order and bounded original refusal facts; scoped tests use canonical persistence. Spreadsheet grouping strict alignment and cleanup-resource custody remain intact. Original complete CLI source roots remain scanned.

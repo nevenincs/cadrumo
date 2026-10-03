@@ -7,7 +7,7 @@ revision_id = "2020-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "85ea4ba09f1886f73fb9a36d9322eebe7f718f9c137784282a68b3886e2a0645"
+source_state_digest = "eef804d906ae042746939f90bcd5832196d301e48edb55c859a9098d44e15e6f"
 design_sources = [
     { source_ref = "aeat-dr-349-2020-current", sha256 = "7576b0099d9167cc756b6b99c67400fdef031165712f8f327f454d6ac4c6d015" },
 ]

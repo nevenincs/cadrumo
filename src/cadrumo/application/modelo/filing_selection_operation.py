@@ -23,6 +23,7 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABIL
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_profile_identity
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import (
     OperationFrontendProjection,
@@ -142,10 +143,11 @@ def build_modelo_work_filing_record_registration(
             payload, ModeloWorkFilingRecordRequest
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_access_request_profile_identity(
+            request,
+            payload_profile_id=payload.profile_id,
+            access_profile_id=context.profile_id,
+        )
         admitted = context.admitted_request
         if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
             periods = require_single_period_admission(

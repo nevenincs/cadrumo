@@ -14,7 +14,6 @@ from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import timedelta
 from math import isfinite
-from .session_authority_core import SessionAuthorityCore
 from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
@@ -36,6 +35,8 @@ from .access_policy import intersect_scopes
 from .automation_custody_port import AutomationCustodySnapshot
 from .login_session import ProfileLoginOutcome
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
+from .session_authority_core import SessionAuthorityCore
+
 
 class _ProspectiveSessionRetirement:
     """Retain one prospective lease whose original physical retirement failed."""
@@ -97,8 +98,10 @@ class _HumanAdmissionCandidate:
 
 
 class SessionAuthorityAdmission(SessionAuthorityCore):
+    """Authenticate and publish human or API-key session leases."""
+
     def _revalidate_admission(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         connection_id: UUID,
         *,
         deadline: float,
@@ -124,7 +127,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         return current
 
     def admit_api_key(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         *,
         connection_id: UUID,
         target: ProfileAccessBinding,
@@ -143,7 +146,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         return self._publish_api_key_candidate(candidate, credential)
 
     def _prepare_api_key_candidate(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         connection_id: UUID,
         target: ProfileAccessBinding,
         credential: SecretBytes,
@@ -190,7 +193,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             return _ApiKeyAdmissionCandidate(connection_id, facts, snapshot, grant, key, session)
 
     def _publish_api_key_candidate(
-        self: SessionAuthorityCore, candidate: _ApiKeyAdmissionCandidate, credential: SecretBytes
+        self: SessionAuthorityAdmission, candidate: _ApiKeyAdmissionCandidate, credential: SecretBytes
     ) -> AccessSession | AccessDenied:
         retirement = _ProspectiveSessionRetirement(self.owner, lambda: self._retire({candidate.session.session_id}))
         primary: BaseException | None = None
@@ -210,7 +213,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             retirement.close_if_uncommitted(primary, retry_task_name="api-session-retirement")
 
     def _activate_api_key_candidate(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         candidate: _ApiKeyAdmissionCandidate,
         credential: SecretBytes,
         deadline: float,
@@ -249,7 +252,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             return revalidated if isinstance(revalidated, AccessDenied) else None
 
     def _api_key_preparation_denial(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         candidate: _ApiKeyAdmissionCandidate,
         current: SessionAuthorityFacts,
         deadline: float,
@@ -266,7 +269,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         decision = self._evaluate(candidate.session, current, candidate.grant, candidate.key)
         return decision if isinstance(decision, AccessDenied) else None
 
-    def admit_human(self: SessionAuthorityCore, *, connection_id: UUID) -> AccessSession | AccessDenied:
+    def admit_human(self: SessionAuthorityAdmission, *, connection_id: UUID) -> AccessSession | AccessDenied:
         """Bind existing password admission without consulting automation custody."""
         with self.owner.admission_guard():
             facts = self._facts(connection_id)
@@ -287,7 +290,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             retirement.close_if_uncommitted(primary, retry_task_name="human-session-retirement")
 
     def _authenticate_human_candidate(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         connection_id: UUID,
         identity: UUID,
         baseline: SessionAuthorityFacts,
@@ -316,7 +319,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
                 return _HumanAdmissionCandidate(deadline, session)
 
     def _human_admission_denial(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         baseline: SessionAuthorityFacts,
         current: SessionAuthorityFacts,
         deadline: float,
@@ -334,7 +337,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         return None
 
     def _human_admission_session(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         connection_id: UUID,
         identity: UUID,
         facts: SessionAuthorityFacts,
@@ -358,7 +361,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         )
 
     def _publish_human_candidate(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         connection_id: UUID,
         candidate: _HumanAdmissionCandidate,
         retirement: _ProspectiveSessionRetirement,
@@ -377,7 +380,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             return candidate.session
 
     def refresh_api_key(
-        self: SessionAuthorityCore, *, connection_id: UUID, session_id: UUID
+        self: SessionAuthorityAdmission, *, connection_id: UUID, session_id: UUID
     ) -> AccessSession | AccessDenied:
         """Refresh a live root API lease; expired or disconnected leases require login."""
         with self.owner.admission_guard():
@@ -395,7 +398,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             return refreshed
 
     def _api_key_refresh_context(
-        self: SessionAuthorityCore, connection_id: UUID, session_id: UUID
+        self: SessionAuthorityAdmission, connection_id: UUID, session_id: UUID
     ) -> tuple[AccessSession, SessionAuthorityFacts, AutomationGrant, ApiKeyRecord] | AccessDenied:
         session = self._sessions.get(session_id)
         if session is None:
@@ -431,7 +434,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         )
 
     def delegate(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         *,
         connection_id: UUID,
         parent_session_id: UUID,
@@ -457,7 +460,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             return child
 
     def _delegation_authority(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         connection_id: UUID,
         recipient_connection_id: UUID,
         parent_session_id: UUID,
@@ -484,7 +487,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         return parent, recipient, grant, key
 
     def _delegated_session(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAdmission,
         parent: AccessSession,
         recipient: SessionAuthorityFacts,
         grant: AutomationGrant,

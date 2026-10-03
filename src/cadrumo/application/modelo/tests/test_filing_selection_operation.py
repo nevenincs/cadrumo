@@ -151,7 +151,7 @@ def _request(record: ModeloRecord, *, profile_id: UUID = _PROFILE) -> OperationR
 
 
 def _access_context(
-    registration, *, operation: PinnedAuthorityOperation, profile_id: UUID = _PROFILE
+    registration, *, operation: PinnedAuthorityOperation | None, profile_id: UUID = _PROFILE
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
@@ -292,19 +292,34 @@ def test_filing_reader_refuses_foreign_or_coordinate_mismatched_source(
     assert refused.value.reason is expected_reason
 
 
-def test_filing_reader_refuses_wrong_profile_or_subject_before_disclosure(
-    *, operation: PinnedAuthorityOperation
-) -> None:
-    """The public read subject is profile-bound and cannot be substituted by a work id."""
+@pytest.mark.parametrize("kind", ["filing", "amendment"])
+def test_filing_and_amendment_access_refuse_identity_before_pin_or_shape(kind: str) -> None:
+    """Profile identity precedes pins while each registered resolver retains shape refusal."""
     _unit_value, record = _source()
-    _definition, registration, registry = _build(_bundle(record=record))
-    request = _request(record)
+    bundle = _bundle(record=record)
+    if kind == "filing":
+        _definition, registration, registry = _build(bundle)
+        request = _request(record)
+    else:
+        def factory(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+            assert profile_id == str(_PROFILE)
+            assert isinstance(operation, PinnedAuthorityOperation)
+            return bundle
+
+        definition = build_modelo_work_amendment_context_definition(factory)
+        registration = build_modelo_work_amendment_context_registration(definition, factory)
+        registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+        request = OperationRequest[BaseModel](
+            definition_id=MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+            payload=ModeloWorkAmendmentContextRequest(profile_id=_PROFILE, filing_record_id=record.filing_record_id),
+        )
 
     with pytest.raises(ProfileAccessRefusedError) as foreign_profile:
         resolve_operation_access(
             registry=registry,
             request=request,
-            context=_access_context(registration, operation=operation, profile_id=_OTHER_PROFILE),
+            context=_access_context(registration, operation=None, profile_id=_OTHER_PROFILE),
         )
     assert foreign_profile.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
@@ -313,9 +328,21 @@ def test_filing_reader_refuses_wrong_profile_or_subject_before_disclosure(
         resolve_operation_access(
             registry=registry,
             request=wrong_subject,
-            context=_access_context(registration, operation=operation),
+            context=_access_context(registration, operation=None),
         )
     assert foreign_subject.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+    resolver = registration.access_resolver
+    assert resolver is not None
+    no_pin_context = _access_context(registration, operation=None, profile_id=_OTHER_PROFILE)
+    malformed_requests = (
+        request.model_copy(update={"definition_id": "wrong.definition", "subject_ref": "wrong-subject"}),
+        request.model_copy(update={"payload": object(), "subject_ref": "wrong-subject"}),
+    )
+    for malformed_request in malformed_requests:
+        with pytest.raises(ProfileAccessRefusedError) as malformed:
+            resolver(malformed_request, no_pin_context)
+        assert malformed.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 
 def test_filing_executor_stores_typed_source_projection_without_a_report_repository(

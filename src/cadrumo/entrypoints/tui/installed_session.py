@@ -180,6 +180,50 @@ async def _run_runtime_session(
         return await run_precomposed_runtime_root_session(load_root=root.load, headless=headless, auto_pilot=auto_pilot)
 
 
+def _unavailable_inventory(inventory: ProfileLoginInventoryV1) -> int | None:
+    if inventory.state not in {ProfileLoginInventoryState.CONCURRENT_CHANGE, ProfileLoginInventoryState.DEGRADED}:
+        return None
+    sys.stderr.write(f"{inventory.reason_code}\n")
+    return SESSION_INVENTORY_UNAVAILABLE
+
+
+def _registration_completed(headless: bool) -> bool:
+    return False if headless else _run_registration_screen()
+
+
+def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusalError) -> int:
+    if any(
+        isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
+        for name in ("async_cleanup_error", "cleanup_error")
+    ):
+        # A numeric refusal cannot retain an unsettled native owner.
+        raise error
+    reason = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
+    sys.stderr.write(f"{reason}\n")
+    return SESSION_INVENTORY_UNAVAILABLE
+
+
+def _attempt_runtime_session(
+    inventory: ProfileLoginInventoryV1,
+    operation_contracts: OperationPublicContractSetV1,
+    choose_profile: bool,
+    headless: bool,
+    auto_pilot: AutopilotCallbackType | None,
+) -> AccountRecomposeRequiredV1 | int | None:
+    try:
+        return asyncio.run(
+            _run_runtime_session(
+                inventory,
+                operation_contracts=operation_contracts,
+                choose_profile=choose_profile,
+                headless=headless,
+                auto_pilot=auto_pilot,
+            )
+        )
+    except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        return _runtime_session_refusal(error)
+
+
 def run_installed_workbench_session(
     *,
     headless: bool = False,
@@ -197,35 +241,24 @@ def run_installed_workbench_session(
         operation_contracts = build_production_operation_registry().public_contract_set
         while True:
             inventory = observe_profile_login_inventory()
-            if inventory.state in {ProfileLoginInventoryState.CONCURRENT_CHANGE, ProfileLoginInventoryState.DEGRADED}:
-                sys.stderr.write(f"{inventory.reason_code}\n")
-                return SESSION_INVENTORY_UNAVAILABLE
+            unavailable = _unavailable_inventory(inventory)
+            if unavailable is not None:
+                return unavailable
             if inventory.state is ProfileLoginInventoryState.EMPTY:
-                if headless or not _run_registration_screen():
+                if not _registration_completed(headless):
                     return SESSION_COMPLETED
                 continue
             if headless and auto_pilot is None:
                 return SESSION_COMPLETED
-            try:
-                recompose = asyncio.run(
-                    _run_runtime_session(
-                        inventory,
-                        operation_contracts=operation_contracts,
-                        choose_profile=choose_profile,
-                        headless=headless,
-                        auto_pilot=auto_pilot,
-                    )
-                )
-            except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
-                if any(
-                    isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
-                    for name in ("async_cleanup_error", "cleanup_error")
-                ):
-                    # A numeric refusal cannot retain an unsettled native owner.
-                    raise
-                reason = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
-                sys.stderr.write(f"{reason}\n")
-                return SESSION_INVENTORY_UNAVAILABLE
+            recompose = _attempt_runtime_session(
+                inventory,
+                operation_contracts,
+                choose_profile,
+                headless,
+                auto_pilot,
+            )
+            if isinstance(recompose, int):
+                return recompose
             if recompose is None:
                 return SESSION_COMPLETED
             choose_profile = recompose.reason is AccountRecomposeReasonV1.CHANGE_USER

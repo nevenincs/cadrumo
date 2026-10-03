@@ -25,6 +25,7 @@ docs:
       m303_regimen_simplificado_annual_summary: a Modelo 303 egyszerűsített rendszerének
         éves összesítéséből
       m347_third_party_operation: a harmadik felekkel folytatott ügyleteidből
+      m349_intracommunity_operation: a Közösségen belüli ügyleteidből
       manual_input: az általad megadott értékből
       payable_invoice: a beérkezett számláiból
       previous_filing: a korábbi bevallásából

@@ -12,6 +12,7 @@ from datetime import UTC, datetime, timedelta
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
+from types import SimpleNamespace
 from typing import Literal, cast, override
 from uuid import uuid4
 
@@ -44,6 +45,10 @@ from cadrumo.entrypoints.runtime_management import (
     inspect_runtime_management,
     preview_installed_runtime_stop,
 )
+
+from ...application.runtime.management_status import RuntimeManagementSnapshot
+from ...application.runtime.owner_control import RuntimeStopPreviewRequest
+from .. import runtime_management
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
@@ -341,6 +346,318 @@ class _SlowManager(_Manager):
     async def inspect(self) -> RuntimeManagerInspection:
         await asyncio.sleep(0.1)
         return self.facts
+
+
+def _management_facts() -> RuntimeManagerInspection:
+    return RuntimeManagerInspection(
+        kind=RuntimeManagerKind.LINUX_USER_SERVICE,
+        available=True,
+        provisioned=True,
+        binding_matches=True,
+        login_autostart=False,
+        process_state=RuntimeManagerProcessState.RUNNING,
+    )
+
+
+class _ComposedEndpoint:
+    storage_identity = _IDENTITY
+
+    def __init__(self, events: list[tuple[object, ...]]) -> None:
+        self.events = events
+
+    def close(self) -> None:
+        self.events.append(("endpoint.close",))
+
+
+class _ComposedManager(_Manager):
+    def __init__(self, events: list[tuple[object, ...]]) -> None:
+        super().__init__(_management_facts())
+        self.events = events
+
+    @override
+    async def inspect(self) -> RuntimeManagerInspection:
+        self.events.append(("manager.inspect",))
+        return self.facts
+
+    @override
+    async def start(self) -> None:
+        pytest.fail("the installed management composition launched a user service")
+
+    @override
+    async def stop(self) -> None:
+        pytest.fail("the installed management composition stopped a user service")
+
+    async def configure(self, *, login_autostart: bool) -> RuntimeManagerInspection:
+        self.events.append(("manager.configure", login_autostart))
+        return self.facts
+
+
+class _ComposedConnection:
+    def __init__(self, events: list[tuple[object, ...]]) -> None:
+        self.events = events
+        self.close_calls = 0
+
+    def owner_control(self, request: RuntimeStopPreviewRequest, *, deadline: float) -> RuntimeStopPreview:
+        assert deadline > time.monotonic()
+        self.events.append(("owner_control", request.request_id))
+        return RuntimeStopPreview(
+            request_id=request.request_id,
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            preview_id=uuid4(),
+            expires_at=datetime.now(UTC) + timedelta(seconds=60),
+        )
+
+    def close(self) -> None:
+        self.close_calls += 1
+        self.events.append(("connection.close",))
+
+
+def _install_management_environment(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    events: list[tuple[object, ...]],
+    *,
+    platform: str = "linux",
+) -> _ComposedEndpoint:
+    endpoint = _ComposedEndpoint(events)
+    monkeypatch.setattr(runtime_management, "sys", SimpleNamespace(platform=platform))
+
+    def storage_root() -> Path:
+        events.append(("storage_root",))
+        return tmp_path
+
+    def package_version(package_name: str) -> str:
+        events.append(("version", package_name))
+        return "management-test"
+
+    def windows_endpoint(*, storage_root: Path) -> _ComposedEndpoint:
+        events.append(("windows_endpoint", storage_root))
+        return endpoint
+
+    def posix_endpoint(*, storage_root: Path, create_namespace: bool) -> _ComposedEndpoint:
+        events.append(("posix_endpoint", storage_root, create_namespace))
+        return endpoint
+
+    monkeypatch.setattr(runtime_management, "effective_storage_root", storage_root)
+    monkeypatch.setattr(runtime_management, "version", package_version)
+    monkeypatch.setattr(runtime_management, "WindowsRuntimeEndpoint", windows_endpoint)
+    monkeypatch.setattr(runtime_management, "PosixRuntimeEndpoint", posix_endpoint)
+    return endpoint
+
+
+def _install_management_manager(
+    monkeypatch: pytest.MonkeyPatch,
+    events: list[tuple[object, ...]],
+    manager: _ComposedManager,
+) -> None:
+    def manager_factory(*, root: Path, endpoint: object, product_version: str) -> _ComposedManager:
+        events.append(("manager_factory", root, endpoint, product_version))
+        return manager
+
+    monkeypatch.setattr(runtime_management, "installed_runtime_manager", manager_factory)
+
+
+def _install_fake_launch_door(
+    monkeypatch: pytest.MonkeyPatch,
+    events: list[tuple[object, ...]],
+    connection: _ComposedConnection,
+) -> None:
+    class FakeLaunchDoor:
+        def __init__(self, endpoint: object, *, expected: RuntimeClientHello, manager: object = None) -> None:
+            events.append(("door.construct", endpoint, expected, manager))
+
+        async def open(self, *, timeout: float = 10) -> VerifiedRuntimeConnection:
+            events.append(("door.open", timeout))
+            return cast("VerifiedRuntimeConnection", connection)
+
+    monkeypatch.setattr(runtime_management, "RuntimeLaunchDoor", FakeLaunchDoor)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("platform", "expected_constructor"),
+    (
+        ("win32", ("windows_endpoint",)),
+        ("linux", ("posix_endpoint",)),
+    ),
+)
+def test_installed_management_endpoint_preserves_platform_constructor_arguments(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, platform: str, expected_constructor: tuple[str, ...]
+) -> None:
+    events: list[tuple[object, ...]] = []
+    endpoint = _ComposedEndpoint(events)
+    monkeypatch.setattr(runtime_management, "sys", SimpleNamespace(platform=platform))
+
+    def windows_endpoint(*, storage_root: Path) -> _ComposedEndpoint:
+        events.append(("windows_endpoint", storage_root))
+        return endpoint
+
+    def posix_endpoint(*, storage_root: Path, create_namespace: bool) -> _ComposedEndpoint:
+        events.append(("posix_endpoint", storage_root, create_namespace))
+        return endpoint
+
+    monkeypatch.setattr(runtime_management, "WindowsRuntimeEndpoint", windows_endpoint)
+    monkeypatch.setattr(runtime_management, "PosixRuntimeEndpoint", posix_endpoint)
+
+    actual = runtime_management._installed_management_endpoint(storage_root=tmp_path)
+
+    assert actual is endpoint
+    if expected_constructor == ("windows_endpoint",):
+        assert events == [("windows_endpoint", tmp_path)]
+    else:
+        assert events == [("posix_endpoint", tmp_path, False)]
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_installed_inspection_composes_passive_endpoint_after_admission(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    events: list[tuple[object, ...]] = []
+    endpoint = _install_management_environment(monkeypatch, tmp_path, events)
+    manager = _ComposedManager(events)
+    _install_management_manager(monkeypatch, events, manager)
+    snapshot = RuntimeManagementSnapshot(
+        listener=RuntimeListenerState.READY,
+        manager_availability=RuntimeManagerAvailability.UNAVAILABLE,
+    )
+
+    async def inspect_composed(
+        *,
+        endpoint: object,
+        expected: RuntimeClientHello,
+        manager: object,
+        manager_if_absent: RuntimeManagerAvailability,
+        timeout: float = 3,
+    ) -> RuntimeManagementSnapshot:
+        events.append(("inspect", endpoint, expected, manager, manager_if_absent, timeout))
+        return snapshot
+
+    monkeypatch.setattr(runtime_management, "inspect_runtime_management", inspect_composed)
+
+    actual = await runtime_management.inspect_installed_runtime_management()
+
+    assert actual is snapshot
+    assert events[:4] == [
+        ("storage_root",),
+        ("version", "cadrumo"),
+        ("posix_endpoint", tmp_path, False),
+        ("manager_factory", tmp_path, endpoint, "management-test"),
+    ]
+    inspected = events[4]
+    assert inspected[0] == "inspect"
+    assert inspected[1] is endpoint
+    expected = cast("RuntimeClientHello", inspected[2])
+    assert expected.product_version == "management-test" and expected.storage_identity == _IDENTITY
+    assert inspected[3] is manager
+    assert inspected[4:] == (RuntimeManagerAvailability.UNAVAILABLE, 3)
+    assert events[5:] == [("endpoint.close",)]
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_installed_start_wires_manager_and_closes_probe_before_endpoint(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    events: list[tuple[object, ...]] = []
+    endpoint = _install_management_environment(monkeypatch, tmp_path, events)
+    manager = _ComposedManager(events)
+    _install_management_manager(monkeypatch, events, manager)
+    connection = _ComposedConnection(events)
+    _install_fake_launch_door(monkeypatch, events, connection)
+    snapshot = RuntimeManagementSnapshot(
+        listener=RuntimeListenerState.READY,
+        manager_availability=RuntimeManagerAvailability.UNAVAILABLE,
+    )
+
+    async def inspect_composed(
+        *,
+        endpoint: object,
+        expected: RuntimeClientHello,
+        manager: object,
+        manager_if_absent: RuntimeManagerAvailability,
+        timeout: float = 3,
+    ) -> RuntimeManagementSnapshot:
+        events.append(("inspect", endpoint, expected, manager, manager_if_absent, timeout))
+        return snapshot
+
+    monkeypatch.setattr(runtime_management, "inspect_runtime_management", inspect_composed)
+
+    actual = await runtime_management.start_installed_runtime_management()
+
+    assert actual is snapshot
+    assert events[:4] == [
+        ("storage_root",),
+        ("version", "cadrumo"),
+        ("posix_endpoint", tmp_path, False),
+        ("manager_factory", tmp_path, endpoint, "management-test"),
+    ]
+    door = events[4]
+    assert door[0] == "door.construct" and door[1] is endpoint and door[3] is manager
+    expected = cast("RuntimeClientHello", door[2])
+    assert expected.product_version == "management-test" and expected.storage_identity == _IDENTITY
+    assert events[5:7] == [("door.open", 10), ("connection.close",)]
+    inspected = events[7]
+    assert inspected[0] == "inspect" and inspected[1] is endpoint and inspected[3] is manager
+    assert inspected[4:] == (RuntimeManagerAvailability.UNAVAILABLE, 3)
+    assert events[8:] == [("endpoint.close",)]
+    assert manager.starts == manager.stops == 0
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_installed_configuration_uses_manager_and_releases_endpoint(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    events: list[tuple[object, ...]] = []
+    endpoint = _install_management_environment(monkeypatch, tmp_path, events)
+    manager = _ComposedManager(events)
+    _install_management_manager(monkeypatch, events, manager)
+
+    actual = await runtime_management.configure_installed_runtime_management(login_autostart=True)
+
+    assert actual is manager.facts
+    assert events == [
+        ("storage_root",),
+        ("version", "cadrumo"),
+        ("posix_endpoint", tmp_path, False),
+        ("manager_factory", tmp_path, endpoint, "management-test"),
+        ("manager.configure", True),
+        ("endpoint.close",),
+    ]
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_installed_stop_preview_retains_same_connection_until_release(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    events: list[tuple[object, ...]] = []
+    endpoint = _install_management_environment(monkeypatch, tmp_path, events)
+    connection = _ComposedConnection(events)
+    _install_fake_launch_door(monkeypatch, events, connection)
+
+    consent = await runtime_management.preview_installed_runtime_stop()
+
+    assert isinstance(consent, RuntimeStopConsent)
+    assert events[:3] == [
+        ("storage_root",),
+        ("version", "cadrumo"),
+        ("posix_endpoint", tmp_path, False),
+    ]
+    door = events[3]
+    assert door[0] == "door.construct" and door[1] is endpoint and door[3] is None
+    expected = cast("RuntimeClientHello", door[2])
+    assert expected.product_version == "management-test" and expected.storage_identity == _IDENTITY
+    assert events[4] == ("door.open", 5)
+    assert events[5][0] == "owner_control"
+    assert not consent.released and connection.close_calls == 0
+
+    await consent.release()
+
+    assert consent.released and connection.close_calls == 1
+    assert events[6:] == [("connection.close",), ("endpoint.close",)]
 
 
 @pytest.mark.unit

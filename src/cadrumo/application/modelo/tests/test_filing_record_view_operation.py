@@ -241,7 +241,7 @@ def _request(record: ModeloRecord, *, profile_id: UUID = _PROFILE) -> OperationR
 def _context(
     registration,
     *,
-    operation: PinnedAuthorityOperation,
+    operation: PinnedAuthorityOperation | None,
     action: AccessAction = AccessAction.SUBMIT,
     profile_id: UUID = _PROFILE,
     admitted: OperationAccessRequest | None = None,
@@ -312,6 +312,41 @@ def test_submission_scope_is_exact_and_result_disclosure_is_tax_values() -> None
     assert permission.projection_id == registration.contract.result_schema.schema_id
     assert permission.category is DisclosureCategory.TAX_VALUES
     assert definition.result_type is ModeloFilingRecordViewProjection
+
+
+def test_view_request_identity_refuses_before_missing_pin_and_shape() -> None:
+    _unit, record = _source()
+    _factory, _definition, registration, registry = _registered(_bundle())
+    request = _request(record)
+
+    with pytest.raises(ProfileAccessRefusedError) as foreign_profile:
+        resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=_context(registration, operation=None, profile_id=_OTHER_PROFILE),
+        )
+    assert foreign_profile.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+    wrong_subject = request.model_copy(update={"subject_ref": record.work_unit_id})
+    with pytest.raises(ProfileAccessRefusedError) as foreign_subject:
+        resolve_operation_access(
+            registry=registry,
+            request=wrong_subject,
+            context=_context(registration, operation=None),
+        )
+    assert foreign_subject.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+    resolver = registration.access_resolver
+    assert resolver is not None
+    no_pin_context = _context(registration, operation=None, profile_id=_OTHER_PROFILE)
+    malformed_requests = (
+        request.model_copy(update={"definition_id": "wrong.definition", "subject_ref": "wrong-subject"}),
+        request.model_copy(update={"payload": object(), "subject_ref": "wrong-subject"}),
+    )
+    for malformed_request in malformed_requests:
+        with pytest.raises(ProfileAccessRefusedError) as malformed:
+            resolver(malformed_request, no_pin_context)
+        assert malformed.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 
 def test_executor_reads_layers_once_on_worker_and_stores_one_typed_result() -> None:

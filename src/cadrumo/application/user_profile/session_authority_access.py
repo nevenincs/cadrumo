@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from .session_authority_core import SessionAuthorityCore
 from uuid import UUID, uuid4
 
 from ...core.hashing import canonical_json_bytes, sha256_hex
@@ -39,10 +38,14 @@ from .access_projections import PublicAccessSession, project_access_session, pro
 from .automation_enrollment import AdministrationFacts
 from .operation_access_policy import evaluate_operation_access, evaluate_response_scope
 from .session_authority_contracts import SessionAuthorityFacts
+from .session_authority_core import SessionAuthorityCore
+
 
 class SessionAuthorityAccess(SessionAuthorityCore):
+    """Resolve caller-bound access and publish safe authority projections."""
+
     def session_inventory(
-        self: SessionAuthorityCore, *, connection_id: UUID, session_id: UUID
+        self: SessionAuthorityAccess, *, connection_id: UUID, session_id: UUID
     ) -> tuple[PublicAccessSession, ...]:
         """Project all currently live leases only for the exact human owner.
 
@@ -59,7 +62,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             )
 
     def _current_operation_authority(
-        self: SessionAuthorityCore, connection_id: UUID, session_id: UUID
+        self: SessionAuthorityAccess, connection_id: UUID, session_id: UUID
     ) -> tuple[SessionAuthorityFacts, AccessSession, AutomationGrant | None, ApiKeyRecord | None]:
         """Reobserve authority only while the caller holds the admission guard."""
         facts = self._facts(connection_id)
@@ -81,7 +84,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
         return facts, session, grant, key
 
     def automation_request_session(
-        self: SessionAuthorityCore, *, connection_id: UUID, session_id: UUID
+        self: SessionAuthorityAccess, *, connection_id: UUID, session_id: UUID
     ) -> AccessSession:
         """Resolve an exact root-key lease for an inactive grant-change request.
 
@@ -98,7 +101,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             return session
 
     def human_administration_facts(
-        self: SessionAuthorityCore, *, connection_id: UUID, session_id: UUID
+        self: SessionAuthorityAccess, *, connection_id: UUID, session_id: UUID
     ) -> AdministrationFacts:
         """Resolve fresh human facts from live leases, never from frontend identities.
 
@@ -109,7 +112,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             return self._human_administration_facts_locked(connection_id, session_id)
 
     def _human_administration_facts_locked(
-        self: SessionAuthorityCore, connection_id: UUID, session_id: UUID
+        self: SessionAuthorityAccess, connection_id: UUID, session_id: UUID
     ) -> AdministrationFacts:
         """Check exact human authority under the caller's existing guard."""
         facts, session, _, _ = self._current_operation_authority(connection_id, session_id)
@@ -124,7 +127,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
 
     @contextmanager
     def operation_guard(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAccess,
         *,
         connection_id: UUID,
         session_id: UUID,
@@ -158,7 +161,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
 
     @contextmanager
     def response_scope_guard(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAccess,
         *,
         connection_id: UUID,
         session_id: UUID,
@@ -185,7 +188,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             yield allowed
 
     def lock_session(
-        self: SessionAuthorityCore, *, connection_id: UUID, session_id: UUID, target_session_id: UUID
+        self: SessionAuthorityAccess, *, connection_id: UUID, session_id: UUID, target_session_id: UUID
     ) -> tuple[UUID, ...] | AccessDenied:
         """Allow own-session lock, or a human owner's selected-session revocation."""
         with self.owner.admission_guard():
@@ -222,7 +225,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             return tuple(sorted(before - self._sessions.keys()))
 
     def status(
-        self: SessionAuthorityCore,
+        self: SessionAuthorityAccess,
         *,
         connection_id: UUID,
         session_id: UUID,
@@ -250,7 +253,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             )
 
     def _status_context(
-        self: SessionAuthorityCore, facts: SessionAuthorityFacts, connection_id: UUID, session_id: UUID
+        self: SessionAuthorityAccess, facts: SessionAuthorityFacts, connection_id: UUID, session_id: UUID
     ) -> tuple[AccessSession | None, AutomationGrant | None, ApiKeyRecord | None] | AccessDenied:
         session = self._sessions.get(session_id)
         if session is not None and session.connection_id != connection_id:

@@ -109,6 +109,7 @@ _FAMILY_AND_SURFACE: Final[Mapping[BindingSourceKind, tuple[SourceFamily, Source
         BindingSourceKind.PAYABLE_INVOICE: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.M347_THIRD_PARTY_OPERATION: (SourceFamily.RECORDS, SourceSurface.LEDGER),
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.RETENCIONES_AGGREGATION: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.WITHHOLDING: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.WITHHOLDING296: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),

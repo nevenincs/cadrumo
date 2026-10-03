@@ -28,45 +28,7 @@ frequent cause: a definition that cannot be reached is a definition that gets re
 _M349_EXPORT_NIF_COUNTRY_BINDINGS: dict[BindingId, BindingId] = {
     "iva-349-operador-row-nif": "iva-349-operador-row-codigo-pais",
     "iva-349-rectificacion-row-nif": "iva-349-rectificacion-row-codigo-pais",
-    "iva-349-operador-row-nif-adquisicion": "iva-349-operador-row-codigo-pais-adquisicion",
-    "iva-349-rectificacion-row-nif-adquisicion": "iva-349-rectificacion-row-codigo-pais-adquisicion",
 }
-_M349_PAYABLE_ROW_BINDING_MIRRORS: dict[BindingId, BindingId] = {
-    "iva-349-operador-row-codigo-pais-adquisicion": "iva-349-operador-row-codigo-pais",
-    "iva-349-operador-row-nif-adquisicion": "iva-349-operador-row-nif",
-    "iva-349-operador-row-apellidos-adquisicion": "iva-349-operador-row-apellidos",
-    "iva-349-operador-row-clave-adquisicion": "iva-349-operador-row-clave",
-    "iva-349-operador-row-base-adquisicion": "iva-349-operador-row-base",
-    "iva-349-rectificacion-row-codigo-pais-adquisicion": "iva-349-rectificacion-row-codigo-pais",
-    "iva-349-rectificacion-row-nif-adquisicion": "iva-349-rectificacion-row-nif",
-    "iva-349-rectificacion-row-apellidos-adquisicion": "iva-349-rectificacion-row-apellidos",
-    "iva-349-rectificacion-row-clave-adquisicion": "iva-349-rectificacion-row-clave",
-    "iva-349-rectificacion-row-ejercicio-adquisicion": "iva-349-rectificacion-row-ejercicio",
-    "iva-349-rectificacion-row-periodo-adquisicion": "iva-349-rectificacion-row-periodo",
-    "iva-349-rectificacion-row-base-rectificada-adquisicion": "iva-349-rectificacion-row-base-rectificada",
-    "iva-349-rectificacion-row-base-anterior-adquisicion": "iva-349-rectificacion-row-base-anterior",
-}
-_M349_OPERADOR_PUBLIC_ROW_BINDINGS: frozenset[BindingId] = frozenset(
-    {
-        "iva-349-operador-row-codigo-pais",
-        "iva-349-operador-row-nif",
-        "iva-349-operador-row-apellidos",
-        "iva-349-operador-row-clave",
-        "iva-349-operador-row-base",
-    },
-)
-_M349_RECTIFICACION_PUBLIC_ROW_BINDINGS: frozenset[BindingId] = frozenset(
-    {
-        "iva-349-rectificacion-row-codigo-pais",
-        "iva-349-rectificacion-row-nif",
-        "iva-349-rectificacion-row-apellidos",
-        "iva-349-rectificacion-row-clave",
-        "iva-349-rectificacion-row-ejercicio",
-        "iva-349-rectificacion-row-periodo",
-        "iva-349-rectificacion-row-base-rectificada",
-        "iva-349-rectificacion-row-base-anterior",
-    },
-)
 
 
 def normalise_m349_nif_export_rows(
@@ -82,26 +44,6 @@ def normalise_m349_nif_export_rows(
             continue
         normalised[(binding_id, row_index)] = _m349_export_nif_number(value, country_value)
     return normalised
-
-
-def m349_public_row_union(
-    rows: dict[tuple[BindingId, int], Decimal | str],
-) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Append payable acquisition rows onto the public Modelo 349 row ids."""
-    merged = dict(rows)
-    operador_offset = _max_row_index(rows, _M349_OPERADOR_PUBLIC_ROW_BINDINGS)
-    rectificacion_offset = _max_row_index(rows, _M349_RECTIFICACION_PUBLIC_ROW_BINDINGS)
-    for (binding_id, row_index), value in sorted(rows.items()):
-        public_binding = _M349_PAYABLE_ROW_BINDING_MIRRORS.get(binding_id)
-        if public_binding is None:
-            continue
-        offset = rectificacion_offset if public_binding in _M349_RECTIFICACION_PUBLIC_ROW_BINDINGS else operador_offset
-        merged[(public_binding, row_index + offset)] = value
-    return merged
-
-
-def _max_row_index(rows: Mapping[tuple[BindingId, int], object], bindings: frozenset[BindingId]) -> int:
-    return max((row_index for (binding_id, row_index) in rows if binding_id in bindings), default=0)
 
 
 def build_invoice_rows(

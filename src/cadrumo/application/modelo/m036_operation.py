@@ -53,6 +53,7 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -75,7 +76,6 @@ M036_READ_OPERATION_DEFINITION_ID = "modelo.036.read"
 M036_QUERY_OPERATION_DEFINITION_ID = "modelo.036.query"
 M036_RECORD_OPERATION_DEFINITION_ID = "modelo.036.record"
 _HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-_QUERY_FRONTENDS = frozenset(OperationFrontendProjection)
 _RECORD_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
 type M036ReadKind = Literal["list", "view"]
 
@@ -413,7 +413,7 @@ def resolve_m036_operation_access(
         str(payload.profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    frontends = _RECORD_FRONTENDS if recording else _QUERY_FRONTENDS if query else _HUMAN_FRONTENDS
+    frontends = _RECORD_FRONTENDS if recording else ALL_OPERATION_FRONTENDS if query else _HUMAN_FRONTENDS
     access_profile = (
         HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
         if recording
@@ -475,7 +475,7 @@ def build_m036_operation_definitions(factory: M036OperationPortsFactory) -> tupl
         )
         for definition_id, result_type, query, frontends in (
             (M036_READ_OPERATION_DEFINITION_ID, M036ReadExecutionResult, False, _HUMAN_FRONTENDS),
-            (M036_QUERY_OPERATION_DEFINITION_ID, M036QueryExecutionResult, True, _QUERY_FRONTENDS),
+            (M036_QUERY_OPERATION_DEFINITION_ID, M036QueryExecutionResult, True, ALL_OPERATION_FRONTENDS),
         )
     )
     recording = OperationDefinition(

@@ -18,7 +18,7 @@ import typer
 from ..compiler.loader import load_registry_tree
 from ..record_design_labels import DATA_ROOT
 from .coverage import coverage_rows, coverage_totals
-from .generator import generate_modelo_layouts
+from .generator import LayoutGeneration, generate_modelo_layouts
 from .serialization import FORM_LAYOUT_DIRECTORY, form_layout_fragment_path, render_form_layout_toml
 from .stability import moved_placements, read_acknowledgements, unacknowledged_moves
 
@@ -31,6 +31,50 @@ app = typer.Typer(
     help="Generate, check and report the declared form layouts of every modelo revision.",
     no_args_is_help=True,
 )
+
+
+def _remove_empty_layout_directory(path: Path) -> None:
+    if path.parent.name == FORM_LAYOUT_DIRECTORY and not any(path.parent.iterdir()):
+        path.parent.rmdir()
+
+
+def _record_undeclared_layout(path: Path, *, check: bool, changed: list[str]) -> None:
+    if not path.is_file():
+        return
+    changed.append(path.as_posix())
+    if check:
+        return
+    path.unlink()
+    _remove_empty_layout_directory(path)
+
+
+def _record_generated_layout(path: Path, text: str, *, check: bool, changed: list[str]) -> None:
+    if path.is_file() and path.read_text(encoding="utf-8") == text:
+        return
+    changed.append(path.as_posix())
+    if check:
+        return
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(text, encoding="utf-8", newline="\n")
+
+
+def _record_revision_layout(
+    registry_root: Path,
+    modelo_id: str,
+    revision_id: str,
+    outcome: LayoutGeneration,
+    *,
+    check: bool,
+    changed: list[str],
+    undeclared: list[str],
+) -> None:
+    path = form_layout_fragment_path(registry_root / "modelos" / modelo_id / "revisions" / revision_id)
+    if outcome.layout is None:
+        undeclared.append(f"{modelo_id} {revision_id}: {outcome.failure}")
+        _record_undeclared_layout(path, check=check, changed=changed)
+        return
+    text = render_form_layout_toml(revision_id, outcome.layout)
+    _record_generated_layout(path, text, check=check, changed=changed)
 
 
 def synchronise_form_layouts(
@@ -53,25 +97,15 @@ def synchronise_form_layouts(
             continue
         outcomes = generate_modelo_layouts(modelo, sources=catalogues.sources, data_root=data_root)
         for revision_id, outcome in outcomes.items():
-            path = form_layout_fragment_path(
-                registry_root / "modelos" / str(modelo.id) / "revisions" / str(revision_id)
+            _record_revision_layout(
+                registry_root,
+                str(modelo.id),
+                str(revision_id),
+                outcome,
+                check=check,
+                changed=changed,
+                undeclared=undeclared,
             )
-            if outcome.layout is None:
-                undeclared.append(f"{modelo.id} {revision_id}: {outcome.failure}")
-                if path.is_file():
-                    changed.append(path.as_posix())
-                    if not check:
-                        path.unlink()
-                        if path.parent.name == FORM_LAYOUT_DIRECTORY and not any(path.parent.iterdir()):
-                            path.parent.rmdir()
-                continue
-            text = render_form_layout_toml(str(revision_id), outcome.layout)
-            if path.is_file() and path.read_text(encoding="utf-8") == text:
-                continue
-            changed.append(path.as_posix())
-            if not check:
-                path.parent.mkdir(exist_ok=True)
-                path.write_text(text, encoding="utf-8", newline="\n")
     return changed, undeclared
 
 

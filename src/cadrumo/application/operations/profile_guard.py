@@ -1,4 +1,4 @@
-"""Shared profile-boundary checks for operation executors."""
+"""Shared profile identity checks for operation access and execution."""
 
 from __future__ import annotations
 
@@ -12,6 +12,20 @@ from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .models import OperationRequest
 from .owner import OperationExecutorContext
+
+
+def require_access_request_profile_identity[RequestPayloadT: BaseModel](
+    request: OperationRequest[RequestPayloadT],
+    *,
+    payload_profile_id: UUID,
+    access_profile_id: UUID,
+) -> None:
+    """Require an access request's profile and profile-derived subject to agree."""
+    if (
+        payload_profile_id != access_profile_id
+        or request.subject_ref != profile_operation_subject(str(payload_profile_id))
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
 def require_operation_profile[RequestPayloadT: BaseModel](

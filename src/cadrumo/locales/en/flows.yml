@@ -179,6 +179,7 @@ flows:
           ledger_transaction: Record
           m303_regimen_simplificado_annual_summary: Modelo 303 simplified-regime summary
           m347_third_party_operation: Third-party operation
+          m349_intracommunity_operation: Intra-community operation
           manual_input: Manual input
           payable_invoice: Supplier invoice
           previous_filing: Previous filing

@@ -26,6 +26,7 @@ docs:
       m303_regimen_simplificado_annual_summary: from Modelo 303's simplified-regime
         annual summary
       m347_third_party_operation: from your third-party operations
+      m349_intracommunity_operation: from your intra-community operations
       manual_input: from a value you supply
       payable_invoice: from the invoices you received
       previous_filing: from your previous filing

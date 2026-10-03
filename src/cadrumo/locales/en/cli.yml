@@ -760,6 +760,7 @@ cli:
           gasto193_contribuyente: gastos-relationship contributor
           inventario: inventory stock schedule
           miembro_atribucion: income-attribution member
+          operacion_intracomunitaria: intra-community operation
           operacion_tercero: third-party operation
           registro_retenciones: withholding register
           regularizacion_bienes_inversion: capital-goods adjustment

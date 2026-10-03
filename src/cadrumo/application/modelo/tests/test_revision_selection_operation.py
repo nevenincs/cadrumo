@@ -338,6 +338,63 @@ def test_fresh_submission_without_authority_pin_refuses_before_repository_creati
     assert bundle_calls == 0
 
 
+def test_revision_request_identity_refuses_before_missing_pin_and_shape() -> None:
+    bundle_calls = 0
+
+    def bundle(_profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+        nonlocal bundle_calls
+        bundle_calls += 1
+        raise AssertionError("profile admission must finish before repository creation")
+
+    definition = build_modelo_work_revision_definition(bundle)
+    registration = build_modelo_work_revision_registration(definition, bundle)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    request = OperationRequest[BaseModel](
+        definition_id=MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=ModeloWorkRevisionRequest(profile_id=_PROFILE, work_unit_id=_unit().work_unit_id),
+    )
+
+    def no_pin_context(profile_id: UUID) -> OperationAccessContext:
+        return OperationAccessContext(
+            profile_id=profile_id,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=OperationFrontendProjection.CLI,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+        )
+
+    with pytest.raises(ProfileAccessRefusedError) as foreign_profile:
+        resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=no_pin_context(_OTHER_PROFILE),
+        )
+    assert foreign_profile.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+    wrong_subject = request.model_copy(update={"subject_ref": "not-the-profile"})
+    with pytest.raises(ProfileAccessRefusedError) as foreign_subject:
+        resolve_operation_access(
+            registry=registry,
+            request=wrong_subject,
+            context=no_pin_context(_PROFILE),
+        )
+    assert foreign_subject.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+    resolver = registration.access_resolver
+    assert resolver is not None
+    malformed_requests = (
+        request.model_copy(update={"definition_id": "wrong.definition", "subject_ref": "wrong-subject"}),
+        request.model_copy(update={"payload": object(), "subject_ref": "wrong-subject"}),
+    )
+    for malformed_request in malformed_requests:
+        with pytest.raises(ProfileAccessRefusedError) as malformed:
+            resolver(malformed_request, no_pin_context(_OTHER_PROFILE))
+        assert malformed.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    assert bundle_calls == 0
+
+
 @pytest.mark.parametrize("selector", ["exact", "natural"])
 def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     selector: str,

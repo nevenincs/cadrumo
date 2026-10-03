@@ -182,6 +182,7 @@ flows:
           m303_regimen_simplificado_annual_summary: Modelo 303 egyszerűsített rendszer
             összesítő
           m347_third_party_operation: Harmadik féllel folytatott ügylet
+          m349_intracommunity_operation: Közösségen belüli ügylet
           manual_input: Kézi adatbevitel
           payable_invoice: Bejövő számla
           previous_filing: Előző bevallás

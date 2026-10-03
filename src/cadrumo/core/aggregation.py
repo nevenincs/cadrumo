@@ -340,6 +340,13 @@ class BindingSourceKind(StrEnum):
     # entregas y adquisiciones) is never lost, only the BINDING's declared
     # source is honest about spanning both.
     M347_THIRD_PARTY_OPERATION = "m347_third_party_operation"
+    # The Modelo 349 operador and rectificacion records are likewise ONE
+    # population across both invoice directions: record design type 2 pos. 133
+    # admits claves E,M,H,T,S,R,D,C from supplies and A,I,T from acquisitions,
+    # with one record per operator, clave and period (RIVA arts. 79-80). Each
+    # underlying InvoiceObservation keeps its own PAYABLE_INVOICE /
+    # COLLECTIBLE_INVOICE source_kind.
+    M349_INTRACOMMUNITY_OPERATION = "m349_intracommunity_operation"
     LEDGER_TRANSACTION = "ledger_transaction"
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
@@ -384,6 +391,7 @@ INVOICE_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
     },
 )
 """Invoice-shaped binding source kinds, derived from :class:`BindingSourceKind`."""

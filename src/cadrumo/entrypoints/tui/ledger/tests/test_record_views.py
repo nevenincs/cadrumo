@@ -24,7 +24,8 @@ from .....domain.transactions.models import Transaction
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..controller import LedgerWorkspaceController
 from ..models import LedgerRecordDoorsV1
-from ..record_views import LedgerInvoiceCatalogueScreen, LedgerInvoiceDetailScreen, LedgerTransactionDetailScreen
+from ..record_views import LedgerInvoiceCatalogueScreen, LedgerInvoiceDetailScreen
+from ..transaction_views import LedgerTransactionDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection
 from .test_ledger_selection_journey import _WorkspaceHostApp
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action

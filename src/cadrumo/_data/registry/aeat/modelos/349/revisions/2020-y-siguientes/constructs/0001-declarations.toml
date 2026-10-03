@@ -36,7 +36,6 @@ source_refs = [
     "aeat-calendario-contribuyente-2026",
 ]
 bindings = [
-    "modelo-349-ledger-intracommunity-guard",
     "iva-349-declarante-numero-operadores",
     "iva-349-declarante-importe-operaciones",
     "iva-349-declarante-numero-rectificaciones",
@@ -54,23 +53,6 @@ bindings = [
     "iva-349-rectificacion-row-periodo",
     "iva-349-rectificacion-row-base-rectificada",
     "iva-349-rectificacion-row-base-anterior",
-    "iva-349-declarante-numero-operadores-adquisicion",
-    "iva-349-declarante-importe-operaciones-adquisicion",
-    "iva-349-declarante-numero-rectificaciones-adquisicion",
-    "iva-349-declarante-importe-rectificaciones-adquisicion",
-    "iva-349-operador-row-codigo-pais-adquisicion",
-    "iva-349-operador-row-nif-adquisicion",
-    "iva-349-operador-row-apellidos-adquisicion",
-    "iva-349-operador-row-clave-adquisicion",
-    "iva-349-operador-row-base-adquisicion",
-    "iva-349-rectificacion-row-codigo-pais-adquisicion",
-    "iva-349-rectificacion-row-nif-adquisicion",
-    "iva-349-rectificacion-row-apellidos-adquisicion",
-    "iva-349-rectificacion-row-clave-adquisicion",
-    "iva-349-rectificacion-row-ejercicio-adquisicion",
-    "iva-349-rectificacion-row-periodo-adquisicion",
-    "iva-349-rectificacion-row-base-rectificada-adquisicion",
-    "iva-349-rectificacion-row-base-anterior-adquisicion",
 ]
 casilla_ids = [
     "decl.numero-operadores",

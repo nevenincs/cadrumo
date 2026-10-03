@@ -806,6 +806,7 @@ cli:
           gasto193_contribuyente: költség-kimutatás adóalanya
           inventario: készletnyilvántartás
           miembro_atribucion: jövedelemtulajdonítás tagja
+          operacion_intracomunitaria: Közösségen belüli ügylet
           operacion_tercero: harmadik féllel folytatott ügylet
           registro_retenciones: levonási nyilvántartás
           regularizacion_bienes_inversion: tárgyi eszközök korrekciója

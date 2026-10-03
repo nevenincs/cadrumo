@@ -9,7 +9,7 @@ dependency on a frontend package.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import datetime
@@ -19,7 +19,11 @@ from uuid import UUID
 
 from ..adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ..adapters.outbound.aeat.sede.declarations import (
+    DeclaracionesRegisterSession,
+    open_declarations_register,
+    shared_playwright,
+)
 from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
 from ..adapters.outbound.aeat.sede.filed_data_capture_port import (
@@ -88,7 +92,11 @@ from ..application.live.filed_observation_persistence import (
     latest_declarations_by_period,
     persistiva_compensation_history_observations_strict,
 )
-from ..application.live.filed_observation_ports import FiledObservationPersistencePorts, FiledObservationProtocol
+from ..application.live.filed_observation_ports import (
+    FiledObservationPersistencePort,
+    FiledObservationPersistencePorts,
+    FiledObservationProtocol,
+)
 from ..application.live.iva_remote_state_ports import IvaRemoteStatePort
 from ..application.live.notification_documents import NotificationDocumentRecord, NotificationDocumentService
 from ..application.live.notification_ports import (
@@ -580,36 +588,12 @@ class AppIvaRemoteStatePort:
                                 }
                             )
                         capture_timeout = settings.cadrumo_live_iva_declaration_capture_timeout_ms / 1000
-                        if effect_guard is None:
-                            try:
-                                observation = await asyncio.wait_for(
-                                    register.capture_observation(declaration, artefact_sink=persist_artefact),
-                                    timeout=capture_timeout,
-                                )
-                            except (TimeoutError, CadrumoError, OSError) as exc:
-                                failures.append(
-                                    f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
-                                    f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
-                                )
-                                continue
-                            manifest_path = store.persist_observation(observation)
-                        else:
-                            try:
-                                deferred = await asyncio.wait_for(
-                                    capture_deferred_sede_observation(register, declaration),
-                                    timeout=capture_timeout,
-                                )
-                            except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
-                                raise
-                            except (TimeoutError, CadrumoError, OSError) as exc:
-                                failures.append(
-                                    f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
-                                    f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
-                                )
-                                continue
-                            async with effect_guard():
-                                observation = deferred.persist_artefacts(persist_artefact)
-                                manifest_path = store.persist_observation(observation)
+                        captured = await _capture_one_iva_history_declaration(
+                            register, declaration, store, persist_artefact, capture_timeout, effect_guard, failures
+                        )
+                        if captured is None:
+                            continue
+                        observation, manifest_path = captured
                         paths.append(capture_report_path(manifest_path, output_root=output_root))
                         artefacts.extend(
                             artefact.storage_ref
@@ -805,8 +789,8 @@ def aggregate_iva_compensation_history_reports(
         year_from=year_from,
         year_to=year_to,
         captured_count=sum(report.captured_count for report in reports),
-        observation_paths=tuple(path for report in reports for path in report.observation_paths),
-        artefact_refs=tuple(ref for report in reports for ref in report.artefact_refs),
+        observation_paths=_iva_history_observation_paths(reports),
+        artefact_refs=_iva_history_artefact_refs(reports),
         casilla_count=sum(report.casilla_count for report in reports),
         calculation_observation_count=sum(report.calculation_observation_count for report in reports),
         calculation_observation_keys=tuple(key for report in reports for key in report.calculation_observation_keys),
@@ -949,3 +933,58 @@ __all__ = [
     "pull_filed_history_with_shared_composition",
     "taxpayer_ref",
 ]
+
+
+async def _capture_one_iva_history_declaration(
+    register: DeclaracionesRegisterSession,
+    declaration: Declaracion,
+    store: FiledObservationPersistencePort,
+    persist_artefact: Callable[
+        [tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes], FiledDeclaracionArtefact
+    ],
+    capture_timeout: float,
+    effect_guard: FiledEffectGuard | None,
+    failures: list[str],
+) -> tuple[FiledObservationProtocol, Path] | None:
+    """Capture one declaration under the original refusal, timeout, and artefact-write fence."""
+    if effect_guard is None:
+        try:
+            observation = await asyncio.wait_for(
+                register.capture_observation(declaration, artefact_sink=persist_artefact),
+                timeout=capture_timeout,
+            )
+        except (TimeoutError, CadrumoError, OSError) as exc:
+            failures.append(
+                f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
+                f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
+            )
+            return None
+        manifest_path = store.persist_observation(observation)
+    else:
+        try:
+            deferred = await asyncio.wait_for(
+                capture_deferred_sede_observation(register, declaration),
+                timeout=capture_timeout,
+            )
+        except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+            raise
+        except (TimeoutError, CadrumoError, OSError) as exc:
+            failures.append(
+                f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
+                f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
+            )
+            return None
+        async with effect_guard():
+            observation = deferred.persist_artefacts(persist_artefact)
+            manifest_path = store.persist_observation(observation)
+    return observation, manifest_path
+
+
+def _iva_history_observation_paths(reports: list[IvaCompensationHistoryCaptureReport]) -> tuple[str, ...]:
+    """Flatten observation_paths in report order while preserving every recorded reference."""
+    return tuple(path for report in reports for path in report.observation_paths)
+
+
+def _iva_history_artefact_refs(reports: list[IvaCompensationHistoryCaptureReport]) -> tuple[str, ...]:
+    """Flatten artefact_refs in report order while preserving every recorded reference."""
+    return tuple(ref for report in reports for ref in report.artefact_refs)

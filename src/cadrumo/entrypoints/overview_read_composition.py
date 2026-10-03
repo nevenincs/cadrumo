@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
-from ..application.overview.calendar_models import OverviewCalendar
+from ..application.overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..application.overview.read_calendar_projection import (
     OverviewAgendaSnapshot,
     OverviewBacklogSnapshot,
@@ -37,7 +37,9 @@ from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..application.user_profile.projections import fact_value, projection_for_taxpayer, record_to_values
+from ..application.workflow.profile_bucket_models import ProfileBucketPointer
 from ..core.bucket_pointer import require_active_bucket_id
+from ..core.json_contract import Notice
 from ..core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -223,7 +225,6 @@ class _OverviewReadPorts:
     ) -> OverviewCalendarRead:
         from ..application.overview.calendar import build_overview_calendar
         from ..application.overview.calendar_models import OverviewCalendarRange
-        from ..application.workflow.profile_bucket_scan import list_profile_buckets
         from ..domain.calculations.registry.applicability import derive_tax_route
         from ..domain.user_profile.values import ProfileSetupState
         from .payer_fact_migration_notices import pending_payer_fact_notices
@@ -269,9 +270,8 @@ class _OverviewReadPorts:
             )
             active = OverviewCalendarSnapshot.from_calendar(calendar)
             legal_ref = _deemed_served_legal_ref(calendar, operation=operation)
-            notices = tuple(
-                OverviewNoticeSnapshot.from_notice(notice)
-                for notice in (
+            notices = _calendar_notice_snapshots(
+                (
                     live_notice,
                     modelo_notice,
                     evidence_notice,
@@ -279,7 +279,6 @@ class _OverviewReadPorts:
                     history,
                     *pending_payer_fact_notices(record, operation=operation),
                 )
-                if notice is not None
             )
         if not request.all_profiles:
             if active is None or calendar is None:
@@ -295,40 +294,8 @@ class _OverviewReadPorts:
                     warning_codes=tuple(warning.code for warning in calendar.warnings),
                 ),
             )
-        pointers = list_profile_buckets()
-        own_pointer = pointers.get(self.bucket_id)
-        other = tuple(
-            OverviewLockedProfileSnapshot(profile_id=pointer.bucket_id, label=pointer.label)
-            for bucket_id, pointer in sorted(pointers.items(), key=lambda pair: pair[1].label)
-            if bucket_id != self.bucket_id
-        )
-        incomplete = record.setup_state is not ProfileSetupState.COMPLETE
-        return OverviewCalendarRead(
-            survey=OverviewCalendarSurveySnapshot(
-                from_date=rng.from_date,
-                to_date=rng.to_date,
-                active_profile_id=self.bucket_id if active is not None else None,
-                active_label=own_pointer.label if own_pointer is not None and active is not None else None,
-                active_calendar=active,
-                locked=other,
-                setup_incomplete=(
-                    (OverviewLockedProfileSnapshot(profile_id=own_pointer.bucket_id, label=own_pointer.label),)
-                    if incomplete and own_pointer is not None
-                    else ()
-                ),
-            ),
-            notices=notices,
-            deemed_served_legal_ref=legal_ref,
-            refusal_requirements=(
-                _refusal_requirements(
-                    operation=operation,
-                    taxpayer=taxpayer,
-                    taxpayer_model_declared=calendar.taxpayer_model_declared,
-                    warning_codes=tuple(warning.code for warning in calendar.warnings),
-                )
-                if active is not None and calendar is not None
-                else ()
-            ),
+        return _calendar_profile_survey(
+            self.bucket_id, rng, record, operation, taxpayer, active, calendar, legal_ref, notices
         )
 
     def _agenda(
@@ -468,3 +435,68 @@ def build_overview_read_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
 
 
 __all__ = ["build_overview_read_ports"]
+
+
+def _calendar_other_profiles(
+    bucket_id: str, pointers: Mapping[str, ProfileBucketPointer]
+) -> tuple[OverviewLockedProfileSnapshot, ...]:
+    """List every other public profile pointer in the established label order."""
+    other = tuple(
+        OverviewLockedProfileSnapshot(profile_id=pointer.bucket_id, label=pointer.label)
+        for bucket_id, pointer in sorted(pointers.items(), key=lambda pair: pair[1].label)
+        if bucket_id != bucket_id
+    )
+    return other
+
+
+def _calendar_profile_survey(
+    bucket_id: str,
+    rng: OverviewCalendarRange,
+    record: UserProfileRecord,
+    operation: PinnedAuthorityOperation,
+    taxpayer: TaxpayerProfile,
+    active: OverviewCalendarSnapshot | None,
+    calendar: OverviewCalendar | None,
+    legal_ref: str | None,
+    notices: tuple[OverviewNoticeSnapshot, ...],
+) -> OverviewCalendarRead:
+    """Project locked, incomplete, and active profiles without reading their private records."""
+    from ..application.workflow.profile_bucket_scan import list_profile_buckets
+    from ..domain.user_profile.values import ProfileSetupState
+
+    pointers = list_profile_buckets()
+    own_pointer = pointers.get(bucket_id)
+    other = _calendar_other_profiles(bucket_id, pointers)
+    incomplete = record.setup_state is not ProfileSetupState.COMPLETE
+    return OverviewCalendarRead(
+        survey=OverviewCalendarSurveySnapshot(
+            from_date=rng.from_date,
+            to_date=rng.to_date,
+            active_profile_id=bucket_id if active is not None else None,
+            active_label=own_pointer.label if own_pointer is not None and active is not None else None,
+            active_calendar=active,
+            locked=other,
+            setup_incomplete=(
+                (OverviewLockedProfileSnapshot(profile_id=own_pointer.bucket_id, label=own_pointer.label),)
+                if incomplete and own_pointer is not None
+                else ()
+            ),
+        ),
+        notices=notices,
+        deemed_served_legal_ref=legal_ref,
+        refusal_requirements=(
+            _refusal_requirements(
+                operation=operation,
+                taxpayer=taxpayer,
+                taxpayer_model_declared=calendar.taxpayer_model_declared,
+                warning_codes=tuple(warning.code for warning in calendar.warnings),
+            )
+            if active is not None and calendar is not None
+            else ()
+        ),
+    )
+
+
+def _calendar_notice_snapshots(notices: tuple[Notice | None, ...]) -> tuple[OverviewNoticeSnapshot, ...]:
+    """Keep every available calendar notice in source order without changing its facts."""
+    return tuple(OverviewNoticeSnapshot.from_notice(notice) for notice in notices if notice is not None)

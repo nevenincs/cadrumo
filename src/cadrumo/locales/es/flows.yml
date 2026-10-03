@@ -185,6 +185,7 @@ flows:
           m303_regimen_simplificado_annual_summary: Resumen régimen simplificado (modelo
             303)
           m347_third_party_operation: Operación con terceros
+          m349_intracommunity_operation: Operación intracomunitaria
           manual_input: Entrada manual
           payable_invoice: Factura recibida
           previous_filing: Declaración anterior

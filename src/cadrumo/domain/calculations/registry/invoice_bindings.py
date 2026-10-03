@@ -19,7 +19,6 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ._invoice_row_materialization import (
     InvoiceGrouping,
     build_invoice_rows,
-    m349_public_row_union,
     normalise_m349_nif_export_rows,
 )
 from .binding_aggregation import binding_aggregation_op
@@ -88,7 +87,6 @@ _InvoiceRowField = Literal[
 # taxonomy from its defining core module.
 __all__ = [
     "InvoiceObservation",
-    "is_m347_declarante_summary_invoice_binding",
     "m347_operation_clave",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
@@ -270,24 +268,10 @@ class M347ThirdPartyOperationProvider(InvoiceProviderBase):
     kind: Literal[BindingSourceKind.M347_THIRD_PARTY_OPERATION] = BindingSourceKind.M347_THIRD_PARTY_OPERATION
 
 
-def is_m347_declarante_summary_invoice_binding(binding: BindingDefinition) -> bool:
-    """Return whether ``binding`` is the M347 declarante-summary invoice binding.
+class M349IntracommunityOperationProvider(InvoiceProviderBase):
+    """The combined-direction M349 intra-community operation, one record per operator, clave and period."""
 
-    The canonical, single-defined predicate over ``_M347_DECLARANTE_SUMMARY_RECORD``,
-    read through the typed provider member rather than a raw
-    ``selector_as_dict(binding).get("record")``: a caller outside this module
-    (``application/invoices/source_resolver.py``) once carried its own copy of
-    both the literal and a ``.get()`` read, so a rename of the ``record`` field
-    would have silently, permanently misclassified the M347 declarante-summary
-    binding as absent rather than raising.
-
-    ``binding.source`` is checked first because :class:`InvoiceProviderBase`
-    validates only invoice-family selectors; a non-invoice binding's selector
-    shape is a different family's concept entirely, never this one's business.
-    """
-    if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
-        return False
-    return provider_member(binding, InvoiceProviderBase).record == _M347_DECLARANTE_SUMMARY_RECORD
+    kind: Literal[BindingSourceKind.M349_INTRACOMMUNITY_OPERATION] = BindingSourceKind.M349_INTRACOMMUNITY_OPERATION
 
 
 def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
@@ -583,9 +567,11 @@ def resolve_invoice_family_row_values(
     grouping-keyed exception: every ``contraparte_clave`` binding declares the
     combined-direction :attr:`~core.aggregation.BindingSourceKind.M347_THIRD_PARTY_OPERATION`
     source (see that member's docstring), so ``binding.source`` is already
-    identical across claves and the cohort key naturally coincides. M349's own
-    two groupings, which still declare distinct ``payable_invoice`` /
-    ``collectible_invoice`` sources per binding, are unaffected.
+    identical across claves and the cohort key naturally coincides. M349's two
+    groupings declare the combined-direction
+    :attr:`~core.aggregation.BindingSourceKind.M349_INTRACOMMUNITY_OPERATION`
+    source the same way, so supplies and acquisitions share one operador and one
+    rectificacion row sequence.
     """
     cohorts = _collect_invoice_row_cohorts(
         revision,
@@ -758,22 +744,24 @@ def resolve_invoice_binding_row_values(
             effective_date=_require_m347_effective_date(effective_date),
         ),
     )
-    return m349_public_row_union(normalise_m349_nif_export_rows(rows))
+    return normalise_m349_nif_export_rows(rows)
 
 
 def _observations_for_binding_source(
     observations: tuple[InvoiceObservation, ...],
     binding: BindingDefinition,
 ) -> tuple[InvoiceObservation, ...]:
-    if binding.source == BindingSourceKind.M347_THIRD_PARTY_OPERATION:
-        # A binding declaring the combined-direction source reads BOTH
+    if binding.source in (
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
+    ):
+        # A binding declaring a combined-direction source reads BOTH
         # underlying invoice directions: each InvoiceObservation still
         # carries its own true PAYABLE_INVOICE/COLLECTIBLE_INVOICE direction
-        # as its own source_kind (see M347_THIRD_PARTY_OPERATION's
-        # docstring), so this union is the resolver honouring what the
-        # binding's own declared source now truthfully claims to consume --
-        # the M347 declarante-summary totals and the per-counterparty
-        # contraparte_clave row family both declare this source.
+        # as its own source_kind (see the members' docstrings), so this union
+        # is the resolver honouring what the binding's own declared source
+        # truthfully claims to consume -- the M347 declarante-summary totals
+        # and contraparte_clave rows, and every M349 total and record.
         return tuple(
             observation
             for observation in observations
