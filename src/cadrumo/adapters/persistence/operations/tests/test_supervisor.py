@@ -2296,6 +2296,51 @@ def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path:
         assert replacement == "6" * 64
 
 
+def test_a_submission_recovers_a_started_holder_whose_owner_lapsed(tmp_path: Path) -> None:
+    """A runtime that died mid-run must not hold its subject until someone reconciles by hand."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        started = asyncio.Event()
+        executor = WaitingExecutor(started=started, release=asyncio.Event())
+        registry = _registry(
+            executor_type=WaitingExecutor,
+            build=lambda: executor,
+            capabilities=_capabilities(permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})),
+        )
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
+        assert abandoned.lifecycle is OperationLifecycle.RUNNING
+        recovered_at = _NOW + timedelta(minutes=2)
+        successor = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: recovered_at,
+        )
+
+        replacement = asyncio.run(successor.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
+
+        assert replacement == "6" * 64
+        recovered = asyncio.run(journal.load(operation_id))
+        assert recovered.lifecycle is OperationLifecycle.TERMINAL
+        assert recovered.terminal_condition is OperationTerminalCondition.INTERRUPTED
+        assert recovered.effect is OperationEffect.UNKNOWN
+
+
 def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign_journal(tmp_path: Path) -> None:
     """A target owns only its acquired takeover; the foreign operation record is untouched."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
