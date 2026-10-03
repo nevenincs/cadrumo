@@ -34,10 +34,12 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
 from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.models import Transaction
 from .action_ports import LedgerActionPorts
 from .extraction_draft_store import ExtractionDraftDocument, write_extraction_draft
 from .invoice_draft_records import InvoiceDraft
 from .llm_classification import (
+    apply_evidence_classification,
     apply_evidence_split,
     apply_llm_classification,
     apply_saturated_llm_classification,
@@ -201,6 +203,7 @@ def execute_reviewed_decision(
     ports: LedgerActionPorts | None = None,
     occurred_at: datetime | None = None,
     settings: Settings | None = None,
+    expected_current: Transaction | None = None,
 ) -> LlmReviewResult:
     """Route one reviewed LLM suggestion to its canonical persistence authority.
 
@@ -214,6 +217,8 @@ def execute_reviewed_decision(
 
     A ``decision``/``suggestion`` shape mismatch (e.g. ``SPLIT`` on a
     non-split suggestion) raises :class:`TransactionValidationError`.
+    ``expected_current`` carries the immutable reviewed ledger row to the
+    existing guarded writer; it is never replaced by a freshly loaded baseline.
     """
     source_command = origin.source_command
 
@@ -276,6 +281,7 @@ def execute_reviewed_decision(
                 source_command=source_command,
                 ports=ports,
                 occurred_at=occurred_at,
+                expected_current=expected_current,
             )
         if isinstance(suggestion, LLMClassificationSuggestion):
             if ports is None:
@@ -289,6 +295,23 @@ def execute_reviewed_decision(
                 transaction_repository=ports.transaction_repository,
                 bucket_event_repository=ports.bucket_event_repository,
                 occurred_at=occurred_at,
+                expected_current=expected_current,
+            )
+        if (
+            isinstance(suggestion, LLMSplitSuggestion)
+            and origin is LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT
+            and len(suggestion.children) == 1
+        ):
+            if ports is None:
+                raise AssertionError("ports are required for an evidence classification")
+            return apply_evidence_classification(
+                suggestion,
+                bucket_id=bucket_id,
+                actor=actor,
+                source_command=source_command,
+                ports=ports,
+                occurred_at=occurred_at,
+                expected_current=expected_current,
             )
         raise TransactionValidationError(
             "APPLY decision requires a classification or saturated suggestion, not a split proposal",
@@ -306,6 +329,7 @@ def execute_reviewed_decision(
                 source_command=source_command,
                 ports=ports,
                 occurred_at=occurred_at,
+                expected_current=expected_current,
             )
         raise TransactionValidationError(
             "SPLIT decision requires an evidence split proposal",

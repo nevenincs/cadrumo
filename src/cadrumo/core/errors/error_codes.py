@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from ..json_contract import Notice, ResolvedPreconditionAction
 
 _SECRET_FIELD_PATTERN = re.compile(
-    r"(credential|token|secret|pkcs12|passphrase|cert_password|cookie|bearer)",
+    r"(credential|token|secret|pkcs12|passphrase|password|cookie|bearer)",
     re.IGNORECASE,
 )
 
@@ -309,6 +309,10 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
     here on first use.
     """
     _flush_deferred_binds()
+    from .hierarchy import RecordedRegisteredError
+
+    if isinstance(error, RecordedRegisteredError):
+        return get_registered_error_code_by_code(error.recorded_code)
     error_type = error if isinstance(error, type) else type(error)
     code = _CLASS_CODE_REGISTRY.get(error_type)
     if code is None:

@@ -172,6 +172,12 @@ errors:
       mielőtt AEAT-bizonyítékot adott volna vissza.
     error_application_registry: A modellnyilvántartás vezénylése meghiúsult vagy el
       lett utasítva.
+    error_automation_decision_run: Az automatizálási döntést nem sikerült megerősíteni.
+      Újrapróbálkozás előtt ellenőrizd a műveletet.
+    error_automation_inventory_read: Az automatizálási jogosultságok listáját nem
+      sikerült ellenőrizni.
+    error_automation_requester_uncertain: Az engedélykérés eredményét nem sikerült
+      megerősíteni. Újrapróbálkozás előtt ellenőrizd a meglévő kérelmet.
     error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert Modelo
       100 tervezet-sémával sem.
     error_cadrumo_async_resource_cleanup: Az aszinkron erőforrás-tisztítás meghiúsult;
@@ -274,6 +280,8 @@ errors:
     error_modelo_filing_record_not_found: A kért benyújtási rekord nem található.
     error_modelo_iva_wallet_reconciliation_blocked: 'A Modelo 303 számítása blokkolva:
       az IVA tárca egyeztetése szükséges'
+    error_modelo_metadata_run: A munka metaadatain végzett művelet nem adott megerősített
+      eredményt. Újrapróbálás előtt ellenőrizd a művelet azonosítóját.
     error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
     error_modelo_work_unit_already_discarded: A munkajegység már el van vetve.
     error_modelo_work_unit_mutation_refused: Egy elvetett munkajegység nem módosítható.
@@ -298,6 +306,8 @@ errors:
     error_profile_bienes_inversion_record: Egy beruházási javak áfa-korrekciós nyilvántartása
       szerkezetileg érvénytelen.
     error_profile_inventory_ledger: Egy profil készlet-főkönyvi művelete érvénytelen.
+    error_profile_mutation_run: A profilmódosítás használható eredmény nélkül zárult.
+      Újrapróbálkozás előtt ellenőrizd a műveletet.
     error_profile_prorrata_register_record: Egy időszakok közötti áfa-arányosítási
       nyilvántartás szerkezetileg érvénytelen.
     error_profile_tax_residence: Adóügyi illetőségi profil hiba történt.
@@ -735,6 +745,8 @@ errors:
       magát az alkalmazáson kívül kell elvégezni.
     locked_auth_acquisition: Egy másik folyamat éppen AEAT-hitelesítést szerez. Várd
       meg, amíg befejeződik, és próbáld újra.
+    locked_cli_operation_still_running: A(z) {operation_id} művelet még fut. Az eredménye
+      még nem ismert. Ellenőrizd az eredményét, mielőtt újra próbálkozol.
     locked_google_keychain: A Google-hitelesítő adatokat tároló operációs rendszer
       kulcstára zárolt vagy elérhetetlen. Oldd fel a kulcstárat, és próbáld újra.
     locked_journal_busy: Egy naplófájlt egy másik program használatban tartott, ezért
@@ -778,6 +790,8 @@ errors:
       le, mert egy másik olvasás már használta ezt a gépet.
     canonical_invoice_draft_reader_headroom_refused: Az automatikus számlaolvasó nem
       futott le, mert ezen a gépen nincs elég szabad memória hozzá.
+    canonical_invoice_evidence_review_changed: A bizonylat vagy a számlatervezet megváltozott
+      az áttekintés óta. Megerősítés előtt olvasd be és tekintsd át az aktuális dokumentumot.
     canonical_invoice_withholding_defects: A számla nem használható a levonás rögzítéséhez,
       amíg a számlán minden felsorolt hibát ki nem javítasz.
     canonical_invoice_withholding_evidence: A számla bizonyítékai alapján a forrásadó-levonás
@@ -798,6 +812,10 @@ errors:
       exportálható: olyan tételt tartalmaz, amely korábbi évben keletkezett jövedelmet
       fizet ki, és egyetlen hivatalos forrás sem határozza meg, milyen alapot és forrásadót
       kell ebben a tételben bevallani.'
+    canonical_modelo_binding_value_contract_unsupported: Az adatkapcsolathoz nem tartozik
+      az automatikus előnézet által támogatott hivatalos értékformátum.
+    canonical_modelo_binding_value_invalid: A megadott érték nem felel meg az adatkapcsolat
+      hivatalos értékformátumának.
     canonical_modelo_lifecycle_clock_precedes: A művelet órája korábbi egy frissítendő
       rekordnál, ezért semmi sem lett mentve. Próbáld újra az aktuális idővel.
     canonical_modelo_workspace_stale_cursor: A rögzített kurzor már nem egyezik az
@@ -917,6 +935,8 @@ errors:
     modelo_work_period_token: Érvénytelen bevallási időszak.
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.
+    modelo_work_rename_approval_stale: A munka megváltozott a beolvasása óta. Átnevezés
+      előtt olvasd be újra.
     modelo_work_selector_ambiguous: Több bevallás is illeszkedik a választóra.
     modelo_work_selector_contradiction: A bevallás kiválasztásának argumentumai ellentmondanak
       egymásnak.
@@ -1212,6 +1232,8 @@ errors:
       kötelező profilválasztót. A folytatás előtt töltsd ki a profilt.
     refused_profile_prorrata_register_validation: Egy időszakok közötti áfa-arányosítási
       nyilvántartás nem ment át az ellenőrzésen.
+    refused_profile_receipt: A mentett emberi bejelentkezési igazolás nem tudta hitelesíteni
+      ezt a profilt.
     refused_profile_schema_validation: A profiladatok sértik a séma-szerződést. Javítsd
       a megjelenített értékeket.
     refused_renta_maritime_exemption_inactive: A tengeri munkából származó jövedelem
@@ -1223,6 +1245,7 @@ errors:
       a felülbíráláshoz.'
     refused_review_filter_parse: A `--filter KULCS=ÉRTÉK` paramétert nem sikerült
       elemezni. Ellenőrizd a megadott szűrő szintaxisát.
+    refused_runtime_frontend: A profil futtatókörnyezete elutasította a kérést.
     refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
     refused_storage_bucket_already_present: Már létezik ilyen azonosítójú bucket.
     refused_storage_master_key_no_active_session: A titkosításhoz aktív munkamenet

@@ -21,7 +21,6 @@ import typer
 
 from ...application.export.tabular import ExportSerializationFormat
 from ...application.operator_actions.models import ActionReference
-from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.i18n.render import tr
 from ...core.json_contract import (
@@ -32,22 +31,17 @@ from ...core.json_contract import (
 )
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...domain.buckets.event import BucketEventType
 from ._decimal_parsing import optional_decimal_text
 from .common import (
     active_profile_label,
     bad,
-    current_workflow_state,
     emit_envelope,
     resolve_notice_action,
-    transaction_catalogue_repo,
 )
 from .period_parsing import _canonical_period, _optional_canonical_period
 from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...application.ledger.action_ports import LedgerActionPorts
     from ...application.ledger.llm_diagnostics import (
         LlmConfidenceProviderMetrics,
         LlmDiagnosticsReport,
@@ -55,53 +49,26 @@ if TYPE_CHECKING:
     )
     from ...application.ledger.preflight import LedgerPreflightIssue
     from ...application.ledger.readiness_query import LedgerReadinessIssueV1
+    from ...application.ledger.track_operation import LedgerTrackProjection
+    from ...application.ledger.view_operation import LedgerViewProjection
     from ...domain.invoices.service import LinkInconsistency
-    from ...domain.transactions.models import Transaction
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
-
-
-def resolve_ledger_transaction_id(
-    transaction_repository: TransactionCatalogueRepository,
-    prefix: str,
-) -> str:
-    """Resolve a read-side transaction id while following stable edit lineage.
-
-    Core types:
-    :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
-    """
-    from ...application.cli_exception_preconditions import CliExceptionPrecondition
-    from ...application.ledger.id_resolution import resolve_lineage_transaction_id
-    from ...domain.transactions.errors import TransactionIdPrefixError
-    from ._ledger_support import ledger_cli_no_recovery
-
-    catalogue = transaction_repository.load()
-    try:
-        return resolve_lineage_transaction_id(prefix, catalogue)
-    except TransactionIdPrefixError as exc:
-        raise ledger_cli_no_recovery(
-            exc,
-            condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
-            facts={"transaction_id_resolves": False},
-        ) from None
 
 
 def ledger_llm_diagnostics(
     ctx: typer.Context, since: str | None = None, until: str | None = None, low_confidence_below: float = 0.5
 ) -> None:
     """Report existing LLM usage, cost, and classification-confidence metrics."""
-    from ...application.ledger.llm_diagnostics import build_llm_diagnostics_report
     from ...core.unit_proportion import is_unit_proportion
-    from ..ledger_llm_diagnostics_composition import compose_ledger_llm_diagnostics_ports
-    from .common import active_bucket_id_or_refuse
+    from .runtime_ledger_llm_diagnostics import read_ledger_llm_diagnostics_for_cli
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
     threshold = coerce_decimal_strict(low_confidence_below)
     if not is_unit_proportion(threshold):
         raise bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
-    ports = compose_ledger_llm_diagnostics_ports(bucket_id=active_bucket_id_or_refuse())
-    report = build_llm_diagnostics_report(
-        ports=ports,
+    report = read_ledger_llm_diagnostics_for_cli(
+        ctx,
         since=since_date,
         until=until_date,
         low_confidence_threshold=threshold,
@@ -361,24 +328,14 @@ def ledger_check(
     ctx: typer.Context, bucket_id_option: str | None = None, period: str | None = None, year: int | None = None
 ) -> None:
     """Surface ledger anomalies and broken invoice links without mutating state."""
-    from ...adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...application.ledger.check_query import read_ledger_check
     from ._ledger_payloads import LedgerCheckResult, LedgerLinkInconsistencyPayload
+    from .runtime_ledger_check import read_ledger_check_for_cli
 
-    if bucket_id_option is not None:
-        transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
-    else:
-        transaction_repository = transaction_catalogue_repo(current_workflow_state())
-
-    operation = authority_operation(ctx)
-    check = read_ledger_check(
-        bucket_id=transaction_repository.bucket_id,
-        transactions=transaction_repository.load(),
-        ports=build_invoice_catalogue_read_ports(bucket_id=transaction_repository.bucket_id),
-        operation=operation,
+    check = read_ledger_check_for_cli(
+        ctx,
         period=_optional_canonical_period(period, year=year),
-    )
+        bucket_id_option=bucket_id_option,
+    ).to_check()
     link_rows = [
         LedgerLinkInconsistencyPayload(
             invoice_id=row.invoice_id, transaction_id=row.transaction_id, direction=row.direction
@@ -422,19 +379,10 @@ def _ledger_check_issue_lines_from_items(issues: Sequence[LedgerPreflightIssue])
 
 def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    from ...application.ledger.preflight import preflight_ledger_tax_readiness
-    from ..ledger_action_composition import compose_ledger_action_ports
+    from .runtime_ledger_preflight import read_ledger_preflight_for_cli
 
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     canonical = _canonical_period(period, year=year)
-    report = preflight_ledger_tax_readiness(
-        bucket_id=transaction_repository.bucket_id,
-        period=canonical,
-        transaction_repository=transaction_repository,
-        usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
-        operation=ports.operation,
-    )
+    report = read_ledger_preflight_for_cli(ctx, period=canonical).to_report()
     payload = report.model_dump(mode="json")
     lines = [
         f"bucket\t{report.bucket_id}",
@@ -470,18 +418,11 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
 
 def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblings: bool = False) -> None:
     """Emit the chronological event chain for one ledger transaction id."""
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    from ...application.ledger.history_query import LedgerHistoryQuery, read_ledger_history
-    from ..ledger_action_composition import compose_ledger_action_ports
+    from .runtime_ledger_history import read_ledger_history_for_cli
 
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
-    history = read_ledger_history(
-        LedgerHistoryQuery(transaction_id=resolved_id, include_split_siblings=include_split_siblings),
-        bucket_id=transaction_repository.bucket_id,
-        transaction_repository=ports.transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
-    )
+    history = read_ledger_history_for_cli(
+        ctx, transaction_id=transaction_id, include_split_siblings=include_split_siblings
+    ).to_history()
     lines = [
         f"{tr('cli.ledger.labels.bucket')}	{history.bucket_id}",
         f"{tr('cli.ledger.labels.id')}	{history.transaction_id}",
@@ -516,32 +457,29 @@ def ledger_export(
     year: int | None = None,
     actor: str | None = None,
 ) -> None:
-    """Export canonical bucket-scoped ledger rows through the backend."""
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    from ...application.ledger.actions_export import export_ledger_transactions
-    from ...application.ledger.models import LedgerExportCommand
-    from ..ledger_action_composition import compose_ledger_action_ports
+    """Export canonical exact-profile ledger rows through the authenticated worker."""
+    from .runtime_ledger_export_link import export_ledger_for_cli
 
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    result = export_ledger_transactions(
-        LedgerExportCommand(
-            bucket_id=transaction_repository.bucket_id,
-            export_format=export_kind,
-            include_inactive=include_inactive,
-            output_path=output,
-            period=_optional_canonical_period(period, year=year),
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger export",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
+    projection = export_ledger_for_cli(
+        ctx,
+        output=output,
+        export_format=export_kind,
+        include_inactive=include_inactive,
+        period=_optional_canonical_period(period, year=year),
+        actor=actor,
     )
     from ._ledger_payloads import LedgerExportPayload
 
+    result = LedgerExportPayload.model_validate(
+        {
+            **projection.model_dump(mode="json", exclude={"profile_id", "output_path"}),
+            "output_path": str(output),
+        }
+    )
     emit_envelope(
         ctx,
         command="ledger.export",
-        result=LedgerExportPayload.from_result(result, output_path=str(output)),
+        result=result,
         lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
             f"{tr('cli.ledger.labels.export_id')}\t{result.export_id}",
@@ -566,11 +504,11 @@ def ledger_list(
     hide_llm_rejected: bool = False,
 ) -> None:
     """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list`."""
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     from ...application.review.errors import FilterParseError
     from ...application.review.filter import LedgerReviewFilterSpec
     from ._ledger_list import project_ledger_list
     from ._ledger_support import ledger_cli_no_recovery
+    from .runtime_ledger_list import read_ledger_list_for_cli
 
     resolved_filters = list(filters)
     if period is not None:
@@ -587,8 +525,8 @@ def ledger_list(
             condition=CliExceptionPrecondition.LEDGER_FILTER_VALID,
             facts={"ledger_filter_valid": False, "reason": exc.reason},
         ) from None
-    projection = project_ledger_list(
-        transaction_repository=transaction_repository,
+    snapshot = read_ledger_list_for_cli(
+        ctx,
         spec=spec,
         group=group,
         by_group=by_group,
@@ -598,6 +536,7 @@ def ledger_list(
         sort_order=sort_order,
         exclude_llm_rejected=hide_llm_rejected,
     )
+    projection = project_ledger_list(snapshot)
     from ._ledger_payloads import LedgerListResult
 
     emit_envelope(
@@ -623,27 +562,17 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
 
     Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerViewResult`.
     """
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    from ...application.ledger.actions_manual import get_manual_transaction, ledger_transaction_result_payload
-    from ...application.ledger.review_projection import ledger_transaction_review_status
-    from ..ledger_action_composition import compose_ledger_action_ports
+    from .runtime_ledger_view import read_ledger_view_for_cli
 
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
-    result = get_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        ports=ports,
-    )
-    result_payload = ledger_transaction_result_payload(result)
-    transaction_payload = result_payload.transaction
-    review_status = ledger_transaction_review_status(result.transaction)
+    projection = read_ledger_view_for_cli(ctx, transaction_id=transaction_id)
+    transaction_payload = projection.transaction
+    review_status = projection.review_status
 
     def _field(value: object) -> str:
         return "-" if value is None or value == "" else str(value)
 
     lines = [
-        f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
+        f"{tr('cli.ledger.labels.id')}\t{transaction_payload.transaction_id}",
         f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
         f"{tr('cli.ledger.labels.value_date')}\t{_field(transaction_payload.value_date)}",
         f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
@@ -675,7 +604,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
     from ._ledger_payloads import LedgerViewResult
 
     notices: list[Notice] = []
-    rejection_notice = _latest_llm_rejection_notice(transaction_repository, resolved_id=resolved_id, ports=ports)
+    rejection_notice = _latest_llm_rejection_notice(projection)
     if rejection_notice is not None:
         notices.append(rejection_notice)
         reason = (rejection_notice.context or {}).get("operator_reason", "")
@@ -684,7 +613,14 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
     emit_envelope(
         ctx,
         command="ledger.view",
-        result=strict_round_trip(LedgerViewResult, result_payload),
+        result=LedgerViewResult.model_validate(
+            {
+                "bucket_id": str(projection.profile_id),
+                "transaction_id": transaction_payload.transaction_id,
+                "review_status": review_status.value,
+                "transaction": transaction_payload.model_dump(mode="json"),
+            }
+        ),
         lines=lines,
         notices=notices,
     )
@@ -692,17 +628,10 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
 
 def ledger_status(ctx: typer.Context, period: str | None = None, year: int | None = None) -> None:
     """Summarize active-bucket ledger state through the backend status service."""
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    from ...application.ledger.actions_manual import summarize_manual_transactions
-    from ..ledger_action_composition import compose_ledger_action_ports
+    from .runtime_ledger_status import read_ledger_status_for_cli
 
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    report = summarize_manual_transactions(
-        bucket_id=transaction_repository.bucket_id,
-        period=_optional_canonical_period(period, year=year),
-        ports=ports,
-    )
-    transactions = transaction_repository.load()
+    projection = read_ledger_status_for_cli(ctx, period=_optional_canonical_period(period, year=year))
+    report = projection.to_report()
     lines = [
         f"{tr('cli.ledger.labels.profile')}\t{active_profile_label() or '<none>'}",
         f"business_income_total\t{report.business_income_total}",
@@ -716,7 +645,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
         f"{tr('cli.ledger.labels.reviewed')}\t{report.reviewed_count}",
         f"{tr('cli.ledger.labels.skipped')}\t{report.skipped_count}",
     ]
-    readiness_issues: tuple[LedgerReadinessIssueV1, ...] = ()
+    readiness_issues = tuple(issue.to_issue() for issue in projection.readiness_issues)
     if report.period is not None:
         lines.extend(
             [
@@ -726,28 +655,8 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
                 f"{tr('cli.ledger.labels.ready')}\t{report.ready}",
             ]
         )
-        from ...application.ledger.readiness_query import read_ledger_readiness
-
-        # Bound once and reused for both surfaces: reading twice could report a
-        # different set to the JSON consumer than the text lines just listed.
-        readiness_issues = read_ledger_readiness(
-            bucket_id=transaction_repository.bucket_id,
-            period=report.period,
-            transaction_repository=ports.transaction_repository,
-            usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
-            operation=ports.operation,
-        )
         lines.extend(_ledger_status_readiness_issue_line(issue) for issue in readiness_issues)
-    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.ledger.stale_filing_query import read_stale_ledger_filings
-
-    stale_filings = read_stale_ledger_filings(
-        bucket_id=transaction_repository.bucket_id,
-        revisions=CalculationRevisionCatalogueRepository().load().revisions,
-        work_units=WorkUnitCatalogueRepository().load(),
-        transactions=transactions,
-    )
+    stale_filings = projection.stale_filings
     lines.extend(
         "	".join(
             (
@@ -784,126 +693,40 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
 
 
 def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
-    """Show audit lineage for one transaction.
-
-    Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
-    """
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    from ...application.ledger.actions_manual import (
-        get_manual_transaction,
-        ledger_transaction_payload,
-        ledger_transaction_tracking_payload,
-    )
-    from ..ledger_action_composition import compose_ledger_action_ports
-
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
-    result = get_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        ports=ports,
-    )
+    """Render admitted audit lineage without opening frontend profile custody."""
     from ._ledger_payloads import LedgerTrackResult
+    from .runtime_ledger_track import read_ledger_track_for_cli
 
-    participated_in = _ledger_track_participated_in(
-        transaction_id=result.ref.transaction_id, bucket_id=transaction_repository.bucket_id
-    )
+    projection = read_ledger_track_for_cli(ctx, transaction_id=transaction_id)
+    provenance = projection.imported_provenance
     emit_envelope(
         ctx,
         command="ledger.track",
         result=LedgerTrackResult.model_validate(
             {
-                "bucket_id": result.ref.bucket_id,
-                "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
-                "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
-                "source_filename": (
-                    result.transaction.raw.provenance.source_path.name
-                    if result.transaction.created_event_id is None
+                "bucket_id": str(projection.profile_id),
+                "transaction": projection.transaction.model_dump(mode="json"),
+                "tracking": projection.tracking.model_dump(mode="json"),
+                "source_filename": provenance.source_filename if provenance is not None else None,
+                "source_row_index": provenance.source_row_index if provenance is not None else None,
+                "participated_in": (
+                    [row.model_dump(mode="json") for row in projection.participated_in]
+                    if projection.participated_in is not None
                     else None
                 ),
-                "source_row_index": (
-                    result.transaction.raw.provenance.source_row_index
-                    if result.transaction.created_event_id is None
-                    else None
-                ),
-                "participated_in": participated_in,
             }
         ),
-        lines=_ledger_track_lines(result.ref.transaction_id, result.transaction),
+        lines=_ledger_track_lines(projection),
     )
 
 
-def _ledger_track_participated_in(
-    *,
-    transaction_id: str,
-    bucket_id: str | None,
-) -> list[dict[str, object]] | None:
-    """Return the finalized-revision participations for ``transaction_id``, or ``None``.
-
-    Wraps :func:`~cadrumo.application.ledger.participation_read.get_transaction_participation`, whose
-    :class:`~TransactionRevisionParticipationIndex` is the
-    rebuildable inverse index from ledger rows to finalized revisions.
-    Surfaces the inverse audit trail on the ``ledger track`` lineage output:
-    every finalized modelo revision and filing that consumed this transaction.
-    Returns ``None`` when the transaction appears in no finalized revision so the
-    field is omitted from the JSON for transactions with no declarations.
-    """
-    from ...application.ledger.participation_read import get_transaction_participation
-    from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
-
-    index = get_transaction_participation(transaction_id=transaction_id, bucket_id=bucket_id)
-    if not index.participations:
+def _latest_llm_rejection_notice(projection: LedgerViewProjection) -> Notice | None:
+    """Render the standing rejection already resolved inside worker custody."""
+    latest = projection.latest_llm_rejection
+    if latest is None:
         return None
-    return [
-        LedgerTransactionParticipationEntryPayload.model_validate(
-            {
-                "calculation_revision_id": participation.calculation_revision_id,
-                "work_unit_id": participation.work_unit_id,
-                "modelo": str(participation.modelo),
-                "filing_year": participation.filing_year,
-                "period": participation.period,
-                "revision_state": participation.revision_state,
-                "filing_record_id": participation.filing_record_id,
-                "justificante_reference": participation.justificante_reference,
-            },
-        ).model_dump(mode="json")
-        for participation in index.participations
-    ]
-
-
-def _latest_llm_rejection_notice(
-    transaction_repository: TransactionCatalogueRepository,
-    *,
-    resolved_id: str,
-    ports: LedgerActionPorts,
-) -> Notice | None:
-    """Return a notice when the row's most recent LLM decision was a rejection.
-
-    Returns a :class:`~cadrumo.core.json_contract.Notice` derived from
-    :data:`~cadrumo.application.ledger.list_query.LLM_DECISION_EVENT_TYPES`.
-    Reads the bucket-event history for the transaction (and its edit lineage) and
-    finds the latest LLM-decision event. When that is a rejection — i.e. the
-    operator declined an LLM suggestion and has not since accepted one — `view`
-    surfaces a one-line advisory carrying the recorded reason, so prior judgement
-    is visible without opening `history`.
-    """
-    from ...application.ledger.history_query import LedgerHistoryQuery, read_ledger_history
-    from ...application.ledger.list_query import LLM_DECISION_EVENT_TYPES
-
-    history = read_ledger_history(
-        LedgerHistoryQuery(transaction_id=resolved_id),
-        bucket_id=transaction_repository.bucket_id,
-        transaction_repository=ports.transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
-    )
-    decisions = [event for event in history.events if event.event_type in LLM_DECISION_EVENT_TYPES]
-    if not decisions:
-        return None
-    latest = decisions[-1]  # the assembled history is already in occurrence order
-    if latest.event_type is not BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED:
-        return None
-    reason = latest.payload.get("operator_reason", "")
-    context = {"transaction_id": resolved_id, "occurred_at": latest.occurred_at.isoformat()}
+    reason = latest.operator_reason
+    context = {"transaction_id": projection.transaction.transaction_id, "occurred_at": latest.occurred_at.isoformat()}
     if reason:
         context["operator_reason"] = reason
     return Notice(
@@ -940,20 +763,21 @@ def _ledger_status_readiness_issue_line(issue: LedgerReadinessIssueV1) -> str:
     return "	".join((*fields, "transaction=absent"))
 
 
-def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[str]:
-    """Track lines, naming the import-batch provenance for imported rows."""
+def _ledger_track_lines(projection: LedgerTrackProjection) -> list[str]:
+    """Render the canonical lineage and imported provenance supplied by custody."""
+    tracking = projection.tracking
     lines = [
-        f"{tr('cli.ledger.labels.id')}\t{transaction_id}",
-        f"{tr('cli.ledger.labels.lifecycle_state')}\t{transaction.lifecycle_state.value}",
-        f"{tr('cli.ledger.labels.created_event_id')}\t{transaction.created_event_id or '-'}",
+        f"{tr('cli.ledger.labels.id')}\t{tracking.transaction_id}",
+        f"{tr('cli.ledger.labels.lifecycle_state')}\t{tracking.lifecycle_state}",
+        f"{tr('cli.ledger.labels.created_event_id')}\t{tracking.created_event_id or '-'}",
     ]
-    if transaction.created_event_id is None:
-        provenance = transaction.raw.provenance
+    provenance = projection.imported_provenance
+    if provenance is not None:
         lines.append(f"import_provider\t{provenance.provider_name}")
-        lines.append(f"import_source\t{provenance.source_path.name}")
+        lines.append(f"import_source\t{provenance.source_filename}")
         lines.append(f"import_source_row\t{provenance.source_row_index}")
-        lines.append(f"import_ingested_at\t{provenance.ingested_at.isoformat()}")
-        lines.append(f"import_fingerprint\t{transaction.import_fingerprint or '-'}")
+        lines.append(f"import_ingested_at\t{provenance.ingested_at}")
+        lines.append(f"import_fingerprint\t{provenance.import_fingerprint or '-'}")
     return lines
 
 
@@ -968,5 +792,4 @@ __all__ = [
     "ledger_status",
     "ledger_track",
     "ledger_view",
-    "resolve_ledger_transaction_id",
 ]

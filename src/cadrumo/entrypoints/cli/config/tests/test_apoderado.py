@@ -6,13 +6,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.persistence.storage.tests.profile_storage_root_fixture import profile_storage_root_fixture
-from ...tests.cli_runner import invoke_typer_app
-
-__all__ = ["profile_storage_root_fixture"]
-
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...config_payloads import (
     ApoderadoCheckResult,
@@ -21,171 +14,72 @@ from ...config_payloads import (
     ApoderadoStatusResult,
 )
 from ...main import app as root_app
+from ...tests.cli_runner import invoke_typer_app
+from ...tests.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from ...tests.runtime_profile_cli_fixture import NativeCliProfileFixture
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.serial,
+    pytest.mark.usefixtures("authority_operation"),
+]
+
+__all__ = ["diagnostics_native_profile"]
 
 
 def test_apoderado_status_fails_without_profile(tmp_path: Path) -> None:
-    # Pin an isolated storage root with no active profile so an ambient
-    # active-profile pointer left by a peer test cannot mask the
-    # no-active-profile refusal this test asserts.
+    """Keep the root admission refusal clear when no profile exists."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Invoke through the ROOT app (the production path). The config
-        # sub-app is never reached directly in production, and invoking it
-        # directly breaks under test ordering once another test has lazily
-        # materialised the config subtree on the full app (see #211). Through
-        # the root app the error boundary RENDERS the no-active-profile
-        # refusal, so assert the rendered refusal rather than the leaked
-        # exception.
-        result = invoke_typer_app(root_app, ["config", "auth", "apoderado", "status"])
-        # Must refuse — any non-zero exit code is acceptable (the boundary
-        # maps refusals to its own exit category) — and it must be a clean
-        # refusal, not a crash.
-        assert result.exit_code != 0, result.output
-        assert "Traceback" not in result.output, result.output
-        assert "Refused" in result.output, result.output
-        # The rendered copy is the no-active-profile refusal specifically: it
-        # is the refusal that directs the operator to create a profile. The
-        # `config profile create` guidance is locale-independent (the prose
-        # around it localises, this command token does not).
-        assert "config profile create" in result.output, result.output
+        result = invoke_typer_app(root_app, ["--language", "en", "config", "auth", "apoderado", "status"])
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output, result.output
+    assert "Refused" in result.output, result.output
+    assert "config profile create" in result.output, result.output
 
 
-def test_apoderado_scopes_list() -> None:
-    # Through the ROOT app, for the reason the sibling case above records: the
-    # config subtree is never composed standalone in production.
-    result = invoke_typer_app(root_app, ["config", "auth", "apoderado", "scopes", "list"])
+def test_apoderado_scopes_list_remains_public() -> None:
+    from ...tests.cli_runner import invoke_cached_cli
+
+    result = invoke_cached_cli(["config", "auth", "apoderado", "scopes", "list"])
     assert result.exit_code == 0
     assert "GENERAL" in result.output
 
 
-def test_apoderado_service_importable_and_has_cli_callers() -> None:
-    from .....application.auth.apoderado_service import ApoderadoService
-    from .....application.auth.tests.apoderado_fakes import InMemoryApoderadoConfigurationRepositoryFactory
-    from .....core.config import load_settings
-    from .....domain.calculations.registry.authority import bundled_indexed_authority
-    from .._apoderado import apoderado_scopes_list
-
-    with bundled_indexed_authority().operation() as operation:
-        service = ApoderadoService(
-            repository_factory=InMemoryApoderadoConfigurationRepositoryFactory(),
-            operation=operation,
-            settings=load_settings(),
-        )
-    scope_codes = service.catalogue.code_set()
-
-    assert callable(apoderado_scopes_list)
-    assert "GENERALNT" in scope_codes
-
-
-def test_apoderado_happy_path_against_active_profile(profile_storage_root: Path) -> None:
-    """status/configure/clear succeed against the active profile.
-
-    The active-profile pointer carries the immutable UUID identity; the
-    apoderado verbs must resolve that UUID directly, not feed it to the
-    label-based ``read_profile_bucket`` resolver. This exercises the
-    normal active-profile path the no-active-profile test cannot reach.
-    """
-    from .....adapters.persistence.storage.sql.engine import dispose_engine
-
-    register_cli_profile(
-        label="myco",
-        facts={
-            "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "MyCo",
-            "identity.surnames": "Operator",
-            "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-        },
-        log_in=False,
-    )
-
-    # status: exit 0 on the active profile (previously crashed with
-    # AttributeError because the UUID never matched a label).
-    dispose_engine()
-    status = invoke_typer_app(root_app, ["config", "auth", "apoderado", "status"])
+def test_apoderado_happy_path_uses_exact_encrypted_profile_worker(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
+    """Every private verb stays bound to the registered profile worker."""
+    status = invoke_diagnostics_cli(["config", "auth", "apoderado", "status"])
     assert status.exit_code == 0, f"apoderado status failed: {status.output}"
     assert "configured\tFalse" in status.output
 
-    # configure: exit 0, persists the apoderado config.
-    dispose_engine()
-    configure = invoke_typer_app(
-        root_app,
-        [
-            "config",
-            "auth",
-            "apoderado",
-            "configure",
-            "--represented-nif",
-            "87654321X",
-            "--scope",
-            "RENT",
-        ],
+    configure = invoke_diagnostics_cli(
+        ["config", "auth", "apoderado", "configure", "--represented-nif", "87654321X", "--scope", "RENT"],
     )
     assert configure.exit_code == 0, f"apoderado configure failed: {configure.output}"
-    # NIF is identity-class data: the CLI success-output redactor rewrites
-    # any 8-digits+letter NIF span via SHA256_PREFIX, so the rendered line
-    # carries the fingerprint, not the raw NIF. Pin both the field label
-    # and the fingerprint shape so an unintended raw leak would still fail.
     assert "represented_nif\tsha256:" in configure.output
     assert "87654321X" not in configure.output, f"raw NIF leaked into CLI output: {configure.output!r}"
     assert "RENT" in configure.output
 
-    # status now reflects the configured state.
-    dispose_engine()
-    status_after = invoke_typer_app(root_app, ["config", "auth", "apoderado", "status"])
+    status_after = invoke_diagnostics_cli(["config", "auth", "apoderado", "status"])
     assert status_after.exit_code == 0, status_after.output
     assert "configured\tTrue" in status_after.output
 
-    # check: refuses. It is the live-verification verb and the live AEAT-read
-    # path is sealed, so it must NOT silently re-read the stored config and
-    # present it as a live result — it refuses with the registered REFUSED
-    # copy instead. Any non-zero exit is acceptable; the refusal carries the
-    # operator-facing message.
-    dispose_engine()
-    check = invoke_typer_app(root_app, ["config", "auth", "apoderado", "check"])
+    check = invoke_diagnostics_cli(["config", "auth", "apoderado", "check"])
     assert check.exit_code != 0, f"apoderado check should refuse, got: {check.output}"
     assert "configured\tTrue" not in check.output, (
         f"check leaked a stored-config status as a live result: {check.output!r}"
     )
 
-    # clear: exit 0, retires the apoderado config.
-    dispose_engine()
-    clear = invoke_typer_app(root_app, ["config", "auth", "apoderado", "clear"])
+    clear = invoke_diagnostics_cli(["config", "auth", "apoderado", "clear"])
     assert clear.exit_code == 0, f"apoderado clear failed: {clear.output}"
     assert "cleared\tTrue" in clear.output
 
 
-def _create_active_profile() -> None:
-    """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
-        label="myco",
-        facts={
-            "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "MyCo",
-            "identity.surnames": "Operator",
-            "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-        },
-        log_in=False,
-    )
-
-
-def test_apoderado_configure_without_nif_refuses_naming_the_flags(profile_storage_root: Path) -> None:
+def test_apoderado_configure_without_nif_refuses_naming_the_flags(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
     """The interactive door under a non-interactive host names the recovery flags.
 
     Invoked without ``--represented-nif`` the verb opens the paged flow; the
@@ -193,26 +87,17 @@ def test_apoderado_configure_without_nif_refuses_naming_the_flags(profile_storag
     refusal must name ``--represented-nif`` (the real recovery), not the
     generic scripted-answer-file copy.
     """
-    from .....adapters.persistence.storage.sql.engine import dispose_engine
-
-    _create_active_profile()
-    dispose_engine()
-
-    result = invoke_typer_app(root_app, ["config", "auth", "apoderado", "configure", "--scope", "RENT"])
+    result = invoke_diagnostics_cli(["config", "auth", "apoderado", "configure", "--scope", "RENT"])
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output, result.output
     assert "--represented-nif" in result.output, result.output
 
 
-def test_apoderado_configure_without_scope_lists_the_accepted_codes(profile_storage_root: Path) -> None:
+def test_apoderado_configure_without_scope_lists_the_accepted_codes(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
     """A missing --scope refuses by enumerating the accepted catalogue codes."""
-    from .....adapters.persistence.storage.sql.engine import dispose_engine
-
-    _create_active_profile()
-    dispose_engine()
-
-    result = invoke_typer_app(
-        root_app,
+    result = invoke_diagnostics_cli(
         ["config", "auth", "apoderado", "configure", "--represented-nif", "87654321X"],
     )
     assert result.exit_code != 0, result.output
@@ -222,19 +107,15 @@ def test_apoderado_configure_without_scope_lists_the_accepted_codes(profile_stor
     assert "GENERALNT" in result.output, result.output
 
 
-def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(profile_storage_root: Path) -> None:
+def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
     """The flags path validates the represented NIF through the same identity authority.
 
     A malformed ``--represented-nif`` refuses (parity with the interactive
     page validator) and never echoes the raw value.
     """
-    from .....adapters.persistence.storage.sql.engine import dispose_engine
-
-    _create_active_profile()
-    dispose_engine()
-
-    result = invoke_typer_app(
-        root_app,
+    result = invoke_diagnostics_cli(
         ["config", "auth", "apoderado", "configure", "--represented-nif", "NOTANIF", "--scope", "RENT"],
     )
     assert result.exit_code != 0, result.output
@@ -242,72 +123,31 @@ def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(profile_stora
     assert "NOTANIF" not in result.output, f"raw represented NIF leaked: {result.output!r}"
 
 
-def test_apoderado_configure_leaves_profile_facts_untouched(profile_storage_root: Path) -> None:
-    """Configuring apoderado writes only to the ApoderadoService namespace.
+def test_apoderado_configure_leaves_profile_facts_untouched(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
+    """Profile facts remain stable while delegation state uses its own namespace."""
+    import json
 
-    Representation is NOT a profile fact: the door routes writes to the
-    apoderado encrypted namespace, never the taxpayer profile record. This
-    snapshots the active profile's facts before and after a configure and
-    asserts the fact set is byte-identical, so no ``renta_family.*`` /
-    profile fact was minted by the apoderado walk.
-    """
-    from .....adapters.persistence.storage.sql.engine import dispose_engine
-    from .._profile_readiness import _read_profile_record
+    before = invoke_diagnostics_cli(["--format", "json", "config", "profile", "view"])
+    assert before.stdout
+    before_document = json.loads(before.stdout)
+    before_facts = before_document["result"]["facts"]
 
-    register_cli_profile(
-        label="myco",
-        facts={
-            "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "MyCo",
-            "identity.surnames": "Operator",
-            "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-        },
-        log_in=False,
-    )
-
-    from .....application.workflow.profile_bucket_scan import read_profile_bucket
-
-    pointer = read_profile_bucket("myco")
-    assert pointer is not None
-    before = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
-    before_facts = {fact.path: fact.value for fact in before.facts}
-
-    dispose_engine()
-    configure = invoke_typer_app(
-        root_app,
-        [
-            "config",
-            "auth",
-            "apoderado",
-            "configure",
-            "--represented-nif",
-            "87654321X",
-            "--scope",
-            "RENT",
-        ],
+    configure = invoke_diagnostics_cli(
+        ["config", "auth", "apoderado", "configure", "--represented-nif", "87654321X", "--scope", "RENT"],
     )
     assert configure.exit_code == 0, f"apoderado configure failed: {configure.output}"
 
-    dispose_engine()
-    after = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
-    after_facts = {fact.path: fact.value for fact in after.facts}
+    after = invoke_diagnostics_cli(["--format", "json", "config", "profile", "view"])
+    assert after.stdout
+    after_document = json.loads(after.stdout)
+    after_facts = after_document["result"]["facts"]
     assert after_facts == before_facts, (
-        f"apoderado configure mutated profile facts: "
-        f"added={set(after_facts) - set(before_facts)} removed={set(before_facts) - set(after_facts)}"
+        f"apoderado configure changed profile facts: before={before_facts!r} after={after_facts!r}"
     )
 
-    # The representation landed in the apoderado namespace: the status verb
-    # (which opens the active-profile storage span) reads it back configured.
-    dispose_engine()
-    status = invoke_typer_app(root_app, ["config", "auth", "apoderado", "status"])
+    status = invoke_diagnostics_cli(["config", "auth", "apoderado", "status"])
     assert status.exit_code == 0, status.output
     assert "configured\tTrue" in status.output
     assert "RENT" in status.output

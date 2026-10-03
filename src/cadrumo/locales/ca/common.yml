@@ -720,62 +720,6 @@ llm:
         per a aquesta invocació.'
       mint_refused: 'Rebutjat: la lectura externa de documents del contribuent no
         està permesa per a aquesta invocació.'
-mcp:
-  call:
-    timeout: '''{command}'' ha superat el límit de temps del nivell {tier} ({seconds}s)
-      i s''ha cancel·lat. Torna-ho a provar o executa l''ordre equivalent de Cadrumo
-      directament en un terminal si l''operació és llarga.'
-    timeout_may_complete: '''{command}'' ha superat el seu límit de temps; l''operació
-      encara pot estar completant-se en segon pla. Torna a executar-la amb la mateixa
-      clau d''idempotència per comprovar-ho: la garantia d''idempotència fa que el
-      reintent sigui segur i mai no escriu dues vegades.'
-  elicitation:
-    confirm:
-      consequence_handoff: Això genera l'arxiu definitiu que el contribuent presentarà
-        davant l'AEAT pel seu compte. En confirmar no s'envia res a cap lloc.
-      consequence_local: Això modifica dades locals del perfil de contribuent actiu.
-      declined: L'usuari no ha confirmat '{command}' ({outcome}); no s'ha executat
-        res.
-      field_description: Vols executar '{command}' ara?
-      message: Confirma l'execució de '{command}'. {consequence} Respon sí per continuar
-        o no per aturar.
-    refusal:
-      blocked: '''{command}'' està bloquejat de manera permanent: l''enviament en
-        directe a l''AEAT està prohibit per disseny. Exporta en local; el contribuent
-        presenta pel seu compte.'
-      no_channel: '''{command}'' necessita una confirmació humana i aquest client
-        no admet sol·licituds interactives. Executa''l des d''un client que pugui
-        fer-te preguntes o executa l''ordre equivalent de Cadrumo CLI directament
-        en un terminal.'
-  faithfulness:
-    advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
-      que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb
-      una lectura de càlcul o revisió abans de confiar-hi.'
-  harness:
-    off_host_consent: 'Avís de privadesa: llegeix-lo abans de continuar. Aquesta consola
-      la maneja un assistent d''IA que s''executa en el proveïdor de LLM que hagis
-      triat. Les teves paraules i les xifres amb què treballa l''assistent (imports,
-      valors de casella, obligacions) s''envien a aquest proveïdor per operar la consola.
-      Els teus DOCUMENTS D''ORIGEN (factures, extractes bancaris i qualsevol byte
-      d''evidència) MAI no surten del teu equip: es queden en emmagatzematge local
-      xifrat i no es transmeten mai. Si actues per compte d''un tercer (un gestor
-      o professional), confirma que això és acceptable abans de continuar.'
-  identity_gate:
-    elicitation_echo: 'Actuant com el perfil de contribuent: %{label}.'
-    first_mutation_refused: 'Rebutjat: confirma el contribuent actiu abans del primer
-      canvi d''aquesta sessió. Una presentació o edició mai no s''ha d''executar amb
-      la identitat equivocada. Crida whoami (o ''config profile status'' / ''overview
-      status'') per veure quin contribuent està actiu i torna-ho a provar: una sola
-      lectura d''identitat allibera això durant la sessió fins que canviïs de perfil.'
-  persona:
-    handoff_denied: '''{command}'' és el límit irreversible de lliurament per a la
-      presentació, propietat del rol ''{owner}''; al rol ''{persona}'' se li denega
-      estructuralment. Lliura la unitat de treball verificada a la sessió verificadora
-      per generar l''exportació o el marcador de registre.'
-  serving:
-    warm_degraded: '''{command}'' s''ha atès mitjançant el transport de subprocés
-      perquè l''entorn d''execució en calent estava {reason}; el resultat és idèntic,
-      només més lent. L''atenció en calent es reprèn quan acaba la crida lenta.'
 operation:
   modal:
     action:
@@ -796,6 +740,7 @@ operation:
       cancellation_unavailable: La cancel·lació no està disponible ara mateix. Torna-ho
         a provar d'aquí a poc.
       cancellation_unsupported: Aquesta operació no es pot cancel·lar un cop iniciada.
+      detach_not_allowed: Aquesta operació no es pot desvincular.
       operation_terminal: L'operació ja ha acabat, així que no hi ha res a cancel·lar.
       response_authority_unavailable: No s'ha pogut registrar la resposta ara mateix.
         Torna-ho a provar d'aquí a poc.
@@ -805,13 +750,22 @@ operation:
       unknown_operation: El backend ja no coneix aquesta operació.
       unsupported_cancellation_version: Aquesta versió no pot cancel·lar aquesta operació.
         Actualitza Cadrumo.
+      unsupported_detach_version: Aquesta versió no pot desvincular aquesta operació.
+        Actualitza l'aplicació.
       unsupported_response_control_version: Aquesta versió no pot respondre a aquesta
         operació. Actualitza Cadrumo.
     status:
+      access_unavailable: L'accés a aquesta operació no està disponible. Tanca aquesta
+        vista i torna a iniciar la sessió si cal.
       running: En curs
     terminal:
+      cancelled: Cancel·lada
       failed: Fallida
+      interrupted: Interrompuda
+      refused: Rebutjada
+      succeeded: Completada
       succeeded_partial: Completada en part
+      timed_out: Temps esgotat
 overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.
@@ -1273,6 +1227,102 @@ tui:
       notifications: Notificacions
       overview: Resum
       reconciliation: Conciliació
+  automation_decision:
+    access_lost: L’accés al perfil ha finalitzat. Torna a autenticar-te per consultar
+      l’operació.
+    busy: S’està registrant la teva decisió…
+    cancel: Cancel·lar
+    completed: Decisió registrada.
+    confirm_approve: Aprovar aquesta sol·licitud exacta
+    confirm_decline: Rebutjar aquesta sol·licitud exacta
+    consent: Accés sol·licitat
+    effect: Efecte observat
+    missing_selection: Selecciona una sol·licitud per revisar-la.
+    operation_id: Operació
+    password: Contrasenya actual del perfil
+    terminal_condition: Estat terminal
+    title: Revisar la sol·licitud d’automatització
+    unavailable: No s’ha pogut confirmar la decisió. Consulta l’operació abans de
+      tornar-ho a provar.
+    unknown_effect: Desconegut; consulta l’operació abans de tornar-ho a provar.
+  automation_inventory:
+    access_lost: Aquesta sessió del perfil ja no està disponible.
+    actions: Accions
+    all_periods: Tots els períodes de declaració
+    approve: Aprovar la sol·licitud
+    client: Client
+    close: Tanca
+    decline: Rebutjar la sol·licitud
+    delegation: Delegació
+    destination: Destinació
+    details: Detalls
+    disclosures: Dades que es poden revelar
+    empty: No hi ha elements
+    expires: Caduca
+    grant: Concessió
+    grant_expires: Caducitat proposada de la concessió
+    grants: Concessions
+    id: ID
+    key_expires: Caducitat proposada de la clau
+    keys: Claus
+    kind: Tipus
+    last_used: Últim ús
+    no_periods: Cap període de declaració
+    not_applicable: No aplicable
+    operations: Operacions
+    os_lock: Permès amb el sistema bloquejat
+    period_independent: Independent del període
+    periods: Períodes
+    profile: Perfil
+    refresh: Actualitza
+    requests: Sol·licituds
+    review_digest: Empremta de revisió
+    state: Estat
+    target_grant: Concessió de destinació
+    target_key: Clau de destinació
+    title: Accés automatitzat
+    unattended: Sense supervisió
+    unattended_notice: Amb una autorització vàlida per a l'accés sense supervisió,
+      aquesta instal·lació pot desbloquejar el perfil després de tancar la sessió
+      humana. Les normes de blocatge i revocació continuen vigents.
+    unavailable: L'inventari d'automatització no està disponible. Actualitza per tornar-ho
+      a provar.
+  automation_request:
+    actions: Accions
+    capability_note: Les operacions llistades descriuen capacitats, no la disponibilitat
+      actual.
+    change_scope: Canvia l'abast
+    complete: Aprovat i completat
+    credential_reference: UUID de la referència de credencial protegida existent
+    declined: Rebutjat
+    delegation: Permet la delegació
+    disclosures: Divulgacions
+    enroll: Crea un accés
+    grant_expiry: Caducitat de la concessió (data i hora ISO)
+    invalid: Sol·licitud no vàlida o no disponible
+    key_expiry: Caducitat de la clau (data i hora ISO)
+    kind: Tipus de sol·licitud
+    operations: Operacions
+    os_lock: Permet l'ús amb el sistema operatiu bloquejat
+    period_add: Afegeix un període
+    period_code: Codi del període
+    period_independent: Permet operacions independents del període
+    period_mode: Abast dels períodes
+    period_selected: Períodes seleccionats
+    period_year: Any
+    reference: Referència de credencial protegida
+    renew: Renova la concessió
+    request_id: ID de la sol·licitud
+    requested: Pendent d'una revisió humana independent
+    review_digest: Empremta de la revisió
+    rotate: Canvia la clau
+    submit: Envia a revisió
+    target_grant: UUID de la concessió existent
+    target_key: UUID de la clau existent (només en canviar-la)
+    title: Sol·licita accés a l'API
+    unattended: Permet l'ús sense supervisió
+    uncertain: Resultat desconegut; conserva l'ID de la sol·licitud
+    waiting: S'està enviant la sol·licitud
   declarations:
     availability:
       available: Disponible
@@ -1734,8 +1784,23 @@ tui:
       confirming: S'està registrant la factura a partir del document…
       detail: 'Mida: {size} bytes · afegit {captured}'
       draft:
+        adjustments: 'Recàrrec: {recargo} · percentatge de retenció: {retention_rate}
+          · retenció: {retention} · bestretes per compte del client: {suplidos}'
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        breakdown: '{index}. tipus: {rate} · base: {base} · IVA: {iva} · tipus de
+          recàrrec: {recargo_rate} · recàrrec: {recargo}'
+        breakdown_empty: No hi ha desglossament per tipus
+        breakdown_heading: Desglossament
+        candidate: 'Valor proposat: {field} = {value} · referència: {anchor} · nota:
+          {note}'
+        customer_role: Client
         discrepancies: 'Comprovacions que no quadren amb el document: {count}'
+        document: 'Document {number} · sèrie: {series} · data: {date} · rectifica:
+          {rectifies} · naturalesa del subministrament: {supply_nature} · categoria
+          d’IVA: {iva_category} · tipus suggerit: {suggested_kind}'
+        finding: '{kind}: {field} · {detail} · esperat: {expected} · observat: {observed}'
+        findings_empty: No hi ha observacions
+        findings_heading: Resultats de la revisió
         identity: Factura {number} amb data {date}
         label_reading:
           busy_refused: 'El lector automàtic no s''ha executat perquè una altra lectura
@@ -1749,8 +1814,29 @@ tui:
           reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
             camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
             {fields}. Torna a llegir el document més tard.'
+        line: '{index}. {description} · quantitat: {quantity} · preu unitari: {unit_price}
+          · base: {base} · tipus: {rate} · IVA: {iva} · tipus de recàrrec: {recargo_rate}
+          · recàrrec: {recargo}'
+        lines_empty: No hi ha línies
+        lines_heading: Línies
+        'no': 'No'
+        party: '{role}: {name} · identificador fiscal: {tax_id} · codi postal: {postal_code}
+          · país: {country} · codi de país: {country_code} · codi de país declarat:
+          {stated_country_code}'
+        provenance: 'Camp: {field} · origen: {origin} · fonament: {grounding} · referència:
+          {anchor} · referència rebutjada: {refused_anchor} · declaració pròpia: {self_reported}
+          · derivat de: {derived_from} · prova del rol: {role_evidence} · no verificat:
+          {unverified} · nota: {note}'
+        provenance_empty: No hi ha dades de procedència
+        provenance_heading: Procedència de les dades
+        regime: 'Règim: {value}'
+        source_metadata: 'Metadades de la font · SHA-256 de la transcripció: {transcription_sha256}
+          · longitud del text original: {raw_text_length}'
+        structured_class: 'Classificació del document: {kind} · codi d’origen: {source_code}'
         supplier: 'Proveïdor: {name} · NIF {nif}'
+        supplier_role: Proveïdor
         unread: sense llegir
+        'yes': Sí
       empty: No hi ha justificants pendents de revisió.
       extract: Llegeix el document
       loading: S'estan llegint els documents…
@@ -1765,9 +1851,6 @@ tui:
         amb `aeat config provision status`.
       reader_ready: El lector de documents està a punt en aquest equip.
       reading: S'està llegint el document en aquest equip…
-      reading_refused:
-        reader: Encara no es poden llegir documents en aquest equip ({condition}).
-          Inicia o instal·la el lector amb `aeat config provision` i torna-ho a provar.
       record_detail: '{kind} · proveïdor {supplier} · afegit el {added} · {status}'
       record_status:
         awaiting: Pendent de confirmar
@@ -1777,7 +1860,8 @@ tui:
       records_empty: Encara no hi ha documents de factura registrats.
       records_heading: Documents de factura en aquest equip
       reviewed: Revisat
-      safe_metadata: Només metadades segures; el contingut del document continua protegit.
+      safe_metadata: El document d’origen continua protegit i xifrat; els camps recuperats
+        es mostren per revisar-los.
       title: Revisió de justificants
     flow:
       in_flight_refusal: Espera que acabi l'operació actual abans de sortir d'aquesta
@@ -2003,92 +2087,11 @@ tui:
     unavailable:
       title: Registres no disponibles
   local_reader:
-    answer:
-      'no': 'no'
-      unmeasured: sense mesurar
-      'yes': sí
     card:
       action: Obre el lector de documents
       description: Comprova si els documents de factura es poden llegir en aquest
         equip i prepara el lector, el seu runtime i els seus models.
       title: Lector de documents
-    checklist:
-      models_loaded: Models carregats
-      service_installed: Runtime instal·lat
-      service_running: Runtime en marxa
-      text_model_pulled: Model de text baixat
-      verified: Lector comprovat
-      vision_model_pulled: Model d'escanejos baixat
-    choose_role: Tria una tasca de la taula per baixar, carregar, comprovar o eliminar-ne
-      el model.
-    column:
-      fitness: Prova del model
-      installed: Instal·lat
-      loaded: Carregat
-      model: Model
-      ready: A punt
-      role: Tasca
-      state: Estat
-      step: Pas
-    confirm:
-      cancel: Cancel·la
-      install_accept: Instal·la
-      install_message: La instal·lació executa {installer} per baixar i instal·lar
-        el runtime local de models en aquest equip. Vols continuar?
-      install_title: Vols instal·lar el runtime local?
-      remove_accept: Elimina
-      remove_message: Vols eliminar {model} d'aquest equip? Caldrà tornar-lo a baixar
-        abans de fer-lo servir.
-      remove_title: Vols eliminar aquest model?
-    extraction_not_ready: Encara no es poden llegir documents de factura en aquest
-      equip.
-    extraction_ready: Els documents de factura es poden llegir en aquest equip.
-    fitness:
-      fit: apte
-      not_verified: sense comprovar
-      timed_out: temps esgotat
-      unfit: no apte
-    host: 'Runtime a {endpoint} · instal·lat: {installed} · respon: {reachable} ·
-      versió {version}'
-    install: Instal·la el runtime
-    install_cancelled: Instal·lació cancel·lada; no s'ha canviat res.
-    intro: El lector local llegeix els documents de factura en aquest equip. No s'envia
-      res enlloc.
-    last_pull: 'Darrera baixada en aquesta sessió: {model} · completada: {outcome}
-      · {size} bytes'
-    load: Carrega el model
-    measuring: S'està comprovant el lector…
-    no_installer: No hi ha cap instal·lador disponible en aquest sistema. Instal·la
-      tu mateix el runtime de models i torna a comprovar.
-    no_model: cap seleccionat
-    pull: Baixa el model
-    refresh: Torna a comprovar
-    refused: No s'ha pogut iniciar l'acció.
-    remove: Elimina el model
-    remove_cancelled: Eliminació cancel·lada; no s'ha canviat res.
-    role:
-      column_role_mapping: Columnes de fulls de càlcul
-      supply_nature_proposal: Proposta de béns o serveis
-      text_extraction: Documents amb text
-      vision_transcription: Documents escanejats
-    selected_role: 'Seleccionada: {role}'
-    setup: Prepara el lector
-    setup_done: El lector està preparat.
-    setup_step:
-      install: la instal·lació
-      load: la càrrega
-      pull: la baixada
-      start: l'arrencada
-      verify: la comprovació
-    setup_stopped: 'La preparació s''ha aturat a {step}: {condition}.'
-    start: Inicia el runtime
-    state:
-      done: fet
-      missing: pendent
-    submitting: S'està iniciant…
-    title: Lector de documents
-    unreadable: No s'ha pogut llegir l'estat del lector.
-    verify: Comprova el model
   modelo:
     export:
       artefact:
@@ -2816,8 +2819,26 @@ tui:
       value:
         not_applicable: no s'aplica
       was: 'abans: {value}'
+  restricted:
+    actions: 'Accions permeses: {values}'
+    all_periods: Tots els períodes
+    availability: 'Disponibilitat - emmagatzematge: {storage}; autoritat: {authority};
+      proveïdor: {provider}'
+    change_user: Canvia d’usuari
+    close: Tanca
+    grant: 'Concessió vàlida: {valid}; venç: {expires_at}'
+    lock: Bloqueja aquesta sessió
+    'no': 'No'
+    none: Cap
+    operations: 'Operacions permeses: {values}'
+    periods: 'Períodes: {values}; treball sense període: {independent}'
+    profile: 'Perfil: {label} ({profile_id})'
+    session_expiry: 'La sessió venç: {expires_at}'
+    title: Sessió API restringida
+    'yes': Sí
   root:
     account:
+      access: Accés
       appearance: Aparença
       change_user: Canvia d'usuari
       default_profile: Compte
@@ -2830,6 +2851,7 @@ tui:
       line: '{label} · {status}'
       line_with_expiry: '{label} · {status} · fins a les {expires_at}'
     account_help:
+      access: Gestionar sessions i accés d'automatització
       appearance: Canvia entre l'aparença clara i la fosca
       change_user: Inicia la sessió en un altre perfil d'aquest ordinador
       language: Tria l'idioma en què es mostren les pàgines d'aquest perfil
@@ -2837,6 +2859,7 @@ tui:
       profile: Revisa i edita les dades d'aquest perfil
       sign_out: Tanca la sessió d'aquest perfil i bloqueja les seves dades
     account_key:
+      access: Accés
       appearance: Tema
       change_user: Usuari
       language: Idioma
@@ -2854,6 +2877,101 @@ tui:
       quit_help: Surt de Cadrumo; la sessió del perfil queda com està
     title: 'Cadrumo: sessió de terminal'
     updating: S'està actualitzant…
+  runtime_access:
+    access_lost: L'accés a aquest perfil no està disponible. Torna a iniciar la sessió.
+    busy: S'està processant…
+    close: Tanca
+    completed: Completat.
+    denial_acknowledgement: 'Accés denegat: {access_denied} · Neteja de credencials
+      pendent: {cleanup_pending}'
+    deny_all: Revoca tota l'automatització
+    deny_grant: Revoca la concessió
+    deny_key: Revoca la clau
+    deny_target: UUID de la destinació
+    invalid_grants: Introdueix UUID vàlids de concessions.
+    invalid_target: Introdueix un UUID de destinació vàlid.
+    lock_current: Bloqueja aquesta sessió
+    lock_profile: Bloqueja el perfil arreu
+    refresh: Actualitza
+    refused: S'ha rebutjat l'accés.
+    resume: Desbloqueja el perfil
+    resume_grants: UUID de les concessions que es reactivaran
+    resume_password: Contrasenya del perfil
+    revoke_session: Revocar la sessió
+    session_details: 'Sessió: {session_id} | Client: {client_id} | Sessió pare: {parent_session_id}
+      | Autorització: {grant_id} | Clau: {key_id} | Tipus: {kind} | Estat: {state}
+      | Caduca: {expires_at}'
+    sessions: Sessions
+    sessions_empty: No hi ha sessions actuals.
+    sessions_locked: 'Sessions blocades: {session_ids}'
+    title: Accés al perfil
+    view_automation: Mostra l'automatització
+  runtime_login:
+    cancel: Cancel·la
+    credential_hint_api_key: Introdueix la clau del perfil seleccionat.
+    credential_hint_api_reference: Llegeix la clau exacta de les credencials locals
+      protegides i autentica't al servei local.
+    credential_hint_receipt: Fa servir el rebut protegit d’aquest perfil; no cal introduir
+      cap contrasenya ni clau API.
+    credential_label_api_key: Clau d'API
+    credential_label_api_reference: Referència de credencial (UUID)
+    credential_label_password: Contrasenya
+    credential_required: Introdueix una credencial.
+    method_api_key: Clau d'API
+    method_api_reference: Clau API desada
+    method_label: Mètode d'inici de sessió
+    method_password: Contrasenya
+    method_receipt: Reprèn amb el rebut protegit
+    profile_label: Perfil
+    progress: S'està iniciant la sessió…
+    reference_invalid: Introdueix un UUID vàlid de referència de credencial.
+    refused: S'ha rebutjat l'inici de sessió.
+    submit: Inicia la sessió
+    title: Inicia la sessió en un perfil
+  runtime_management:
+    availability:
+      available: Disponible
+      refused: Rebutjat
+      unavailable: No disponible
+      unknown: Desconegut
+      unsupported: No compatible
+    busy: S'està comprovant l'estat del servei local…
+    disable: A demanda
+    enable: Inicia en obrir sessió
+    kind:
+      linux_user_service: Servei d'usuari de Linux
+      macos_agent: Agent d'inici de macOS
+      windows_task: Tasca programada de Windows
+    labels:
+      binding_matches: Vinculat a aquesta instal·lació
+      listener: Punt d'escolta
+      login_autostart: S'inicia en obrir sessió
+      manager_availability: Disponibilitat del gestor
+      manager_kind: Tipus de gestor
+      process_state: Estat del procés
+      provisioned: Configurat
+    listener:
+      draining: En aturada
+      ready: A punt
+      refused: Rebutjat
+      unavailable: No disponible
+      unknown: Desconegut
+    not_reported: No informat
+    open: Administrar el servei
+    open_help: Consulta, inicia o configura el servei local.
+    process:
+      running: En execució
+      starting: S'està iniciant
+      stopped: Aturat
+      unknown: Desconegut
+    refused: No s'ha pogut confirmar l'estat del servei.
+    start: Inicia
+    stop: Atura
+    stop_accepted: Aturada acceptada; el servei s'està finalitzant.
+    stop_cancel: Mantén-lo en marxa
+    stop_confirm: Atura tots els perfils i treballs
+    stop_scope: Vols aturar el servei compartit per a tots els perfils i treballs?
+    title: Administració del servei local
   search:
     action:
       classify_ledger: Classifica els registres

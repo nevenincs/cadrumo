@@ -20,7 +20,7 @@ def compose_ledger_action_ports(*, bucket_id: str, operation: PinnedAuthorityOpe
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
-    from ..adapters.persistence.storage.attachment import resolve_attachment_store
+    from ..adapters.persistence.storage.attachment import AttachmentStore
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..core.config import load_settings
     from .adapter_composition import build_ledger_evidence_ports
@@ -43,7 +43,7 @@ def compose_ledger_action_ports(*, bucket_id: str, operation: PinnedAuthorityOpe
         transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id=bucket_id),
-        attachment_store=resolve_attachment_store(None),
+        attachment_store=AttachmentStore(objects=objects, bucket_id=bucket_id),
         usage_ratio_profile=load_pinned_usage_ratios(bucket_id=bucket_id, operation=operation),
         usage_ratio_profile_loader=load_pinned_usage_ratios,
         work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),

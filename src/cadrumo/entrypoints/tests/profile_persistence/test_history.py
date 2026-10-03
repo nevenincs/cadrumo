@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile import modelos_calculation as calculation_persistence
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -17,6 +18,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
+from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from cadrumo.application.modelo.history import assemble_work_unit_history
 from cadrumo.application.modelo.history_ports import ModeloHistoryPorts
 from cadrumo.application.modelo.work_lifecycle import (
@@ -28,11 +30,18 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.errors import ModeloError
+from cadrumo.domain.modelos.verification_report import (
+    VerificationCompletenessStatus,
+    VerificationReport,
+    derive_verification_report_id,
+)
+from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -405,3 +414,80 @@ def test_a_real_assembled_row_satisfies_the_tightened_identities(
     assert event.event_id == event.event_id.lower()
     assert int(event.event_id, 16) >= 0
     assert event.actor == "operator@example.test"
+
+
+def test_history_decodes_persisted_calculation_with_retained_authority_pin(
+    repos: _Repos, monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
+    """History must pass its published pin into encrypted calculation decoding."""
+    wu_repo, cr_repo, _fr_repo, vr_repo, bv_repo = repos
+    period = Period.from_year_and_code(2025, "2T")
+    revision_id = operation.snapshot("123", filing_year=2025, period="2T").revision.id
+    unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="123",
+        filing_year=2025,
+        period=period,
+        revision_id=revision_id,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+        operation=operation,
+    )
+    inputs = WorkCalculateInputBundle.build(
+        casilla_inputs={},
+        binding_values={},
+        enum_binding_values={},
+        relation_values={},
+        detail_rows=(),
+        borrador_snapshot_id=None,
+    )
+    with calculation_ports_for_test(bucket_id=_BUCKET_ID) as calculation_ports:
+        published = calculate_modelo_work_revision(
+            work_unit_id=unit.work_unit_id,
+            actor="operator",
+            inputs=inputs,
+            ports=calculation_ports,
+        )
+    assert published.revision_published
+    revision_id = published.revision.calculation_revision_id
+    assert revision_id in cr_repo.load(operation=operation).revisions
+    # A real encrypted report row makes verification-catalogue validation
+    # traverse its same-store parent calculation catalogue during history.
+    report_id = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.INCOMPLETE,
+        findings=(),
+        verified_by="operator",
+    )
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=revision_id,
+        registry_snapshot_ref=published.revision.registry_snapshot_ref,
+        completeness_status=VerificationCompletenessStatus.INCOMPLETE,
+        findings=(),
+        run_at=datetime(2026, 1, 15, 13, tzinfo=UTC),
+        verified_by="operator",
+        granted_verificado_completo=False,
+    )
+    vr_repo.save(upsert_verification_report(vr_repo.load(), report))
+    assert vr_repo.load(operation=operation).get(report_id) == report
+
+    def reject_nested_authority() -> None:
+        raise AssertionError("history reacquired authority instead of retaining its published pin")
+
+    monkeypatch.setattr(calculation_persistence, "bundled_indexed_authority", reject_nested_authority)
+    # Both write preparations validate the same encrypted parent calculation.
+    # They must use the caller's retained pin even when ambient acquisition is
+    # unavailable after the report was prepared.
+    catalogue = vr_repo.load(operation=operation)
+    vr_repo.save(catalogue, operation=operation)
+    persisted, report_revision_id = vr_repo.load_revisioned(operation=operation)
+    assert persisted.get(report_id) == report
+    guarded_write = vr_repo.to_secure_object_write(
+        persisted, expected_revision_id=report_revision_id, operation=operation
+    )
+    assert guarded_write.expected_revision_id == report_revision_id
+    history = assemble_work_unit_history(unit.work_unit_id, ports=_history_ports(repos), operation=operation)
+    assert any(
+        event.object_type is BucketEventObjectType.CALCULATION_REVISION and event.object_id == revision_id
+        for event in history.events
+    )

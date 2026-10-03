@@ -53,7 +53,8 @@ from cadrumo.application.modelo.verification_repository_ports import Verificatio
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
@@ -63,6 +64,7 @@ from cadrumo.domain.modelos.verification_report import (
 )
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
+from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from cadrumo.entrypoints.adapter_composition import (
     build_ledger_evidence_ports,
     build_ledger_membership_ports,
@@ -111,11 +113,11 @@ def _ledger_ports(
         yield ports
 
 
-def _verification_ports(repos: _Repos) -> VerificationRepositoryBundle:
+def _verification_ports(repos: _Repos, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
     """Compose the complete verification bundle over the isolated repositories."""
     wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = repos
     return replace(
-        build_verification_repository_bundle(BUCKET_ID),
+        build_verification_repository_bundle(BUCKET_ID, operation=operation),
         work_unit=wu_repo,
         calculation=cr_repo,
         filing=filing_repo,
@@ -126,9 +128,15 @@ def _verification_ports(repos: _Repos) -> VerificationRepositoryBundle:
     )
 
 
+def _transaction(tx_repo: TransactionCatalogueRepositoryProtocol, transaction_id: str) -> Transaction | None:
+    """Read one stored ledger row under the published authority its registry vocabulary validates against."""
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        return tx_repo.load().get(transaction_id)
+
+
 def _row(tx_repo: TransactionCatalogueRepository, transaction_id: str) -> Transaction:
     """Return one live ledger row, refusing the optional the catalogue returns."""
-    row = tx_repo.load().get(transaction_id)
+    row = _transaction(tx_repo, transaction_id)
     assert row is not None
     return row
 
@@ -169,7 +177,7 @@ def test_attaching_evidence_does_not_move_the_row_fingerprint(tmp_path: Path) ->
                 occurred_at=_AT,
             )
 
-        attached = tx_repo.load().get(purchase.transaction_id)
+        attached = _transaction(tx_repo, purchase.transaction_id)
         assert attached is not None
         # The attach really happened; the fingerprint is unmoved anyway.
         assert attached.purchase_invoice_evidence_id == evidence.record.evidence_id
@@ -202,7 +210,7 @@ def test_reclassifying_a_row_moves_the_row_fingerprint(tmp_path: Path) -> None:
                 occurred_at=_AT,
             )
 
-        reclassified = tx_repo.load().get(purchase.transaction_id)
+        reclassified = _transaction(tx_repo, purchase.transaction_id)
         assert reclassified is not None
         assert row_fingerprint(reclassified) != before
 
@@ -239,7 +247,7 @@ def _verify(
             actor="operator",
             workflow_profile=workflow_profile(),
             settings=ready_clave_settings(TAX_ID),
-            verification_repositories=verification_ports or _verification_ports(repos),
+            verification_repositories=verification_ports or _verification_ports(repos, operation=operation),
             clock=_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -537,9 +545,9 @@ def test_unavailable_membership_refuses_even_an_empty_draft(tmp_path: Path) -> N
                 operation=operation,
                 empty=True,
             )
+            repos: _Repos = result[3:]
+            ports = _verification_ports(repos, operation=operation)
         revision = result[0]
-        repos: _Repos = result[3:]
-        ports = _verification_ports(repos)
         wrong_bucket = TransactionCatalogueRepository(
             bucket_id="11111111-1111-4111-8111-111111111111",
             objects=profile.repository,
@@ -617,7 +625,7 @@ def test_an_added_sale_in_a_different_encrypted_bucket_does_not_stale_the_draft(
                 ports=ports,
                 occurred_at=_AT,
             ).transaction
-            assert ports.transaction_repository.load().get(added.transaction_id) is not None
-        assert repos[-1].load().get(added.transaction_id) is None
+            assert _transaction(ports.transaction_repository, added.transaction_id) is not None
+        assert _transaction(repos[-1], added.transaction_id) is None
         report = _verify(revision.calculation_revision_id, repos)
         assert not any(finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for finding in report.findings)

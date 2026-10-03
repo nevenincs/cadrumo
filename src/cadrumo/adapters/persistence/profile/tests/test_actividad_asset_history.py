@@ -43,15 +43,16 @@ def _revision(
     asset_id: str = "asset-no-plaintext-secret",
     number: int = 1,
     supersedes_revision_id: str | None = None,
+    evidence_marker: str = "a",
 ) -> ActivityAssetRevision:
     return ActivityAssetRevision(
         asset_id=asset_id,
         revision_number=number,
         supersedes_revision_id=supersedes_revision_id,
         acquisition=AcquisitionLineageReference(
-            observed_transaction_id="a" * 64,
-            invoice_evidence_id="invoice-no-plaintext-secret",
-            evidence_fingerprint="b" * 64,
+            observed_transaction_id=evidence_marker * 64,
+            invoice_evidence_id=f"invoice-no-plaintext-secret-{evidence_marker}",
+            evidence_fingerprint=chr(ord(evidence_marker) + 1) * 64,
         ),
         acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
         asset_kind=AssetKind.MATERIAL,
@@ -168,6 +169,83 @@ def test_cas_retry_keeps_revisions_appended_by_independent_repositories(tmp_path
             "asset-cas-first",
             "asset-cas-second",
         }
+
+
+def test_cas_retry_refuses_a_correction_that_lost_the_revision_race(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The retry validates its candidate against the winner read after a real CAS miss."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="afc2b38b-0e81-4e6f-b868-2c2a7e1cb38f"):
+        repository = ActividadAssetHistoryRepository()
+        interloper = ActividadAssetHistoryRepository()
+        initial = _revision(asset_id="asset-correction-race")
+        repository.append_revision(initial)
+        winner = _revision(
+            asset_id=initial.asset_id,
+            number=2,
+            supersedes_revision_id=initial.revision_id,
+            evidence_marker="c",
+        )
+        stale = _revision(
+            asset_id=initial.asset_id,
+            number=2,
+            supersedes_revision_id=initial.revision_id,
+            evidence_marker="e",
+        )
+        original_save_many = repository._storage._objects.save_many
+        interloper_written = False
+
+        def save_after_interloper(writes) -> None:
+            nonlocal interloper_written
+            if not interloper_written:
+                interloper_written = True
+                interloper.append_revision(winner)
+            original_save_many(writes)
+
+        monkeypatch.setattr(repository._storage._objects, "save_many", save_after_interloper)
+
+        with pytest.raises(ActividadAssetClaimConflictError, match="current revision"):
+            repository.append_revision(stale)
+
+        reopened = repository.load()
+        assert reopened.revisions == (initial, winner)
+
+
+def test_cas_retry_refuses_a_claim_forecasted_against_stale_history(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A valid but stale schedule cannot cross a history mutation during its CAS write."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="93d372c5-2ad4-42f6-8cb0-7557a07af5d0"):
+        repository = ActividadAssetHistoryRepository()
+        interloper = ActividadAssetHistoryRepository()
+        revision = _revision(asset_id="claim-forecast-race")
+        repository.append_revision(revision)
+        expected_history = repository.load()
+        concurrent_claim = _claim(revision)
+        stale_forecast_claim = _claim(
+            revision,
+            covered_from=date(2025, 4, 1),
+            covered_until=date(2025, 7, 1),
+        )
+        original_save_many = repository._storage._objects.save_many
+        interloper_written = False
+
+        def save_after_interloper(writes) -> None:
+            nonlocal interloper_written
+            if not interloper_written:
+                interloper_written = True
+                interloper.record_claim(concurrent_claim)
+            original_save_many(writes)
+
+        monkeypatch.setattr(repository._storage._objects, "save_many", save_after_interloper)
+
+        with pytest.raises(ActividadAssetClaimConflictError, match="changed after the forecast"):
+            repository.record_claim(stale_forecast_claim, expected_history=expected_history)
+
+        assert interloper_written is True
+        assert repository.load().claims == (concurrent_claim,)
 
 
 def test_cas_rechecks_effective_free_depreciation_cap_after_an_independent_write(

@@ -1,0 +1,236 @@
+"""Closed local profile-admission messages; credentials use separate bounded frames."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Annotated, Literal, Protocol
+from uuid import UUID
+
+from pydantic import BaseModel, Field, RootModel
+
+from ...core.identity.digest import ContentDigest
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ..operations.registry import OperationFrontendProjection
+from ..user_profile.access_contracts import AccessDenialCode, AccessScope, ProfileAccessStatus
+from ..user_profile.automation_custody_port import AutomationCustodyCode
+from ..user_profile.login_session import ProfileHumanLoginReceipt
+from .access_management import (
+    RuntimeAccessManagementReply,
+    RuntimeAccessManagementRequest,
+    RuntimeAutomationDeny,
+    RuntimeProfileRecoveryPrepare,
+    RuntimeProfileResume,
+    RuntimeSessionInventory,
+    RuntimeSessionInventoryTransfer,
+)
+from .contracts import RuntimeByteChannel, RuntimeRefusalCode
+from .enrollment_access import (
+    RuntimeEnrollmentReply,
+    RuntimeEnrollmentRequest,
+)
+from .operation_access import RuntimeOperationReply, RuntimeOperationRequest
+from .owner_control import RuntimeStopAccepted, RuntimeStopConfirm, RuntimeStopPreview, RuntimeStopPreviewRequest
+from .transport import RuntimeConnectionContext, RuntimeStatusRequest, RuntimeTransportStatus
+
+if TYPE_CHECKING:
+    from .profile_worker import ProfileWorkerDrained
+
+
+type RuntimeHumanProofMethod = Literal["password", "receipt"]
+
+# One cold profile admission can launch and prepare an isolated worker before
+# its first reply. The same budget covers human proof and protected references.
+PROFILE_ADMISSION_TIMEOUT_SECONDS = 75.0
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeHumanProof:
+    """Borrowed secret and native login context, never a serialized credential."""
+
+    method: RuntimeHumanProofMethod
+    secret: bytearray = field(repr=False)
+    originating_login_id: str
+    persist_receipt: bool = False
+
+
+class RuntimeProfileLogin(BaseModel):
+    """Name an exact profile and credential class, without asserting native identity."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["profile_login"] = "profile_login"
+    request_id: UUID
+    profile_id: UUID
+    method: Literal["password", "receipt", "api_key"]
+    frontend: OperationFrontendProjection
+    scope: AccessScope | None = None
+    persist_receipt: bool = False
+
+
+class RuntimeSessionRequest(BaseModel):
+    """Address one connection-bound lease; its identifier is never a bearer."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["session_status", "session_refresh", "session_lock"]
+    request_id: UUID
+    profile_id: UUID
+    session_id: UUID
+    target_session_id: UUID | None = None
+
+
+class RuntimeRequest(
+    RootModel[
+        Annotated[
+            RuntimeStatusRequest
+            | RuntimeStopPreviewRequest
+            | RuntimeStopConfirm
+            | RuntimeProfileLogin
+            | RuntimeSessionRequest
+            | RuntimeOperationRequest
+            | RuntimeEnrollmentRequest
+            | RuntimeAccessManagementRequest,
+            Field(discriminator="action"),
+        ]
+    ]
+):
+    """The exhaustive public request door, excluding arbitrary command dispatch."""
+
+
+class RuntimeSecretReady(BaseModel):
+    """Authorize exactly one following secret frame after native/profile preflight."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["secret_ready"] = "secret_ready"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+
+
+class RuntimeProfileStatus(BaseModel):
+    """Release only the canonical nonsecret access projection."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["profile_status"] = "profile_status"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    status: ProfileAccessStatus
+    human_login: ProfileHumanLoginReceipt | None = None
+
+
+class RuntimeProfileStatusTransfer(BaseModel):
+    """Bounded full-scope status transfer, correlated before its chunks are read."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["profile_status_transfer"] = "profile_status_transfer"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    byte_count: Annotated[int, Field(ge=2, le=1_048_576)]
+    payload_digest: ContentDigest
+
+
+class RuntimeSessionsLocked(BaseModel):
+    """Acknowledge precisely the sessions retired by the application authority."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["sessions_locked"] = "sessions_locked"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    session_ids: tuple[UUID, ...]
+
+
+class RuntimeAccessRefusal(BaseModel):
+    """Allowlisted application or native refusal, with no input or diagnostic text."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["access_refusal"] = "access_refusal"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    code: AccessDenialCode | AutomationCustodyCode | RuntimeRefusalCode
+
+
+class RuntimeReply(
+    RootModel[
+        Annotated[
+            RuntimeTransportStatus
+            | RuntimeStopPreview
+            | RuntimeStopAccepted
+            | RuntimeSecretReady
+            | RuntimeProfileStatus
+            | RuntimeProfileStatusTransfer
+            | RuntimeSessionInventoryTransfer
+            | RuntimeSessionsLocked
+            | RuntimeOperationReply
+            | RuntimeEnrollmentReply
+            | RuntimeAccessManagementReply
+            | RuntimeAccessRefusal,
+            Field(discriminator="kind"),
+        ]
+    ]
+):
+    """Strict response union shared by local projections."""
+
+
+@dataclass(frozen=True)
+class RuntimeProfileDrainResult:
+    """Host-only proof of receipts and containment, never a public wire reply."""
+
+    receipts: tuple[ProfileWorkerDrained, ...]
+    missing_receipts: tuple[UUID, ...]
+    uncontained: tuple[UUID, ...]
+    unsettled: tuple[UUID, ...]
+
+
+class RuntimeProfileHandler(Protocol):
+    """Host-owned profile admission and lifetime hooks after the native handshake."""
+
+    def handle(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeProfileLogin | RuntimeSessionRequest,
+    ) -> RuntimeProfileStatus | RuntimeSessionsLocked | RuntimeAccessRefusal:
+        """Admit or observe only the exact current connection."""
+        ...
+
+    def disconnect(self, context: RuntimeConnectionContext) -> None:
+        """Fence this connection without terminating other independently admitted work."""
+        ...
+
+    def operation(
+        self, context: RuntimeConnectionContext, channel: RuntimeByteChannel, request: RuntimeOperationRequest
+    ) -> None:
+        """Resolve and write a canonical projection while holding current output authority."""
+        ...
+
+    def enrollment(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeEnrollmentRequest,
+    ) -> None:
+        """Complete one exact pre-unlock exchange on the verified native channel."""
+        ...
+
+    def manage_access(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeAutomationDeny | RuntimeProfileRecoveryPrepare | RuntimeProfileResume | RuntimeSessionInventory,
+    ) -> None:
+        """Complete one exact access-management exchange on the verified channel."""
+        ...
+
+    def poll(self) -> None:
+        """Revalidate leases without requiring a frontend call."""
+        ...
+
+    def close(self) -> None:
+        """Fence and settle owned profile custody before runtime ownership is released."""
+        ...
+
+    def drain(self, *, deadline: float) -> RuntimeProfileDrainResult:
+        """Fence admissions and drain all workers under one monotonic deadline."""
+        ...

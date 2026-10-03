@@ -65,30 +65,51 @@ def _registration() -> App[Any]:
 
 
 def _login() -> App[Any]:
-    from cadrumo.application.user_profile.login_interaction import (
-        attempt_profile_login,
-        preselected_profile_login_id,
-        profile_login_choices,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
+    import asyncio
+    from uuid import UUID
 
-    def authenticate(profile_id: str, passphrase: str):
-        with bundled_indexed_authority().operation() as operation:
-            return attempt_profile_login(
-                profile_id,
-                passphrase,
-                profile_decode_context=operation.profile_decode_context(),
+    from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
+    from cadrumo.application.operations.registry import OperationFrontendProjection
+    from cadrumo.application.user_profile.login_interaction import preselected_profile_login_id, profile_login_choices
+    from cadrumo.core.async_cleanup import close_async_resources
+    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+    from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginHandoff, RuntimeLoginScreen
+
+    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        return await open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+
+    class LoginSurface(ScreenHostApp[RuntimeLoginHandoff]):
+        """Keep an accepted runtime connection owned until the surface exits."""
+
+        def __init__(self) -> None:
+            self.handoff: RuntimeLoginHandoff | None = None
+            self.accepting = True
+            super().__init__(
+                RuntimeLoginScreen(
+                    choices=profile_login_choices(),
+                    open_client=open_client,
+                    accept_handoff=self.accept,
+                    preselected=preselected_profile_login_id(None),
+                )
             )
 
-    return ScreenHostApp(
-        LoginScreen(
-            choices=profile_login_choices(),
-            authenticate=authenticate,
-            preselected=preselected_profile_login_id(None),
-        )
-    )
+        def accept(self, handoff: RuntimeLoginHandoff) -> bool:
+            if not self.accepting or not self.is_running or self.handoff is not None:
+                return False
+            self.handoff = handoff
+            return True
+
+        async def close(self) -> None:
+            if self.handoff is not None:
+                await asyncio.to_thread(self.handoff.client.close)
+                self.handoff = None
+
+        async def on_unmount(self) -> None:
+            self.accepting = False
+            await close_async_resources(self, task_name="tui-harness-login-close")
+
+    return LoginSurface()
 
 
 def _manager() -> App[Any]:
@@ -242,10 +263,7 @@ SURFACES: dict[str, Surface] = {
             "The way back into a locked profile",
             _login,
             needs_profile=True,
-            interfaces=(
-                "cadrumo.entrypoints.tui.secret.login.LoginScreen",
-                "cadrumo.entrypoints.tui.secret.credentials.CredentialScreen",
-            ),
+            interfaces=("cadrumo.entrypoints.tui.secret.runtime_login.RuntimeLoginScreen",),
         ),
         Surface(
             "manager",

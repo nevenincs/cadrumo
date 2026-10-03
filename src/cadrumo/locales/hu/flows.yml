@@ -57,6 +57,8 @@ flows:
       choose_one: Válassz egy lehetőséget, vagy a mégse gombbal hagyd változatlanul
         az értéket.
       clear: Törlés
+      completed_refresh_unavailable: A művelet befejeződött, de a frissített nézet
+        nem érhető el. Térj vissza a kezdőlapra a frissítéshez.
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
         megőrzéshez, vagy írj be egy újat a cseréhez.
       no_change: Nem volt szükség módosításra.

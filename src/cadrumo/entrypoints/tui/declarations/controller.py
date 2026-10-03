@@ -196,6 +196,24 @@ class DeclarationsWorkspaceController:
         self.creation_targets = creation_targets
         self.refresh_data = refresh_data
 
+    def refresh_from_capture(self) -> bool:
+        """Replace safe facts only when the refreshed data still names this profile bucket."""
+        if self.refresh_data is None:
+            return False
+        projection, calendar_projection = self.refresh_data()
+        if (
+            projection.contract_version != DECLARATIONS_WORKSPACE_CONTRACT_VERSION
+            or projection.bucket_id != self.projection.bucket_id
+            or (
+                calendar_projection is not None
+                and calendar_projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION
+            )
+        ):
+            raise ValueError("Declarations refresh data changed its profile bucket")
+        self.projection = projection
+        self.calendar_projection = calendar_projection
+        return True
+
     def zone_state(self, zone: DeclarationsWorkspaceZone) -> DeclarationsWorkspaceZoneStateV1:
         """Return one closed zone state."""
         return next(item for item in self.projection.zones if item.zone is zone)

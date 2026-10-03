@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -32,6 +33,7 @@ from cadrumo.application.ledger.llm_classification_ports import (
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
     LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
 )
 from cadrumo.application.ledger.llm_review_workflow import (
     LlmReviewDecision,
@@ -39,6 +41,7 @@ from cadrumo.application.ledger.llm_review_workflow import (
     execute_reviewed_decision,
 )
 from cadrumo.application.ledger.models import ManualLedgerTransactionResult
+from cadrumo.application.ledger.persistence_ports import LedgerPersistenceConflictError
 from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
@@ -50,7 +53,7 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.llm import LLMSplitResponse
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.entrypoints.cli.ledger_llm_composition import compose_ledger_llm
+from cadrumo.entrypoints.ledger_llm_composition import compose_ledger_llm
 
 from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
@@ -568,3 +571,127 @@ def test_cli_route_parity_split_apply_matches_direct_primitive(
     )
 
     assert direct == workflow
+
+
+@pytest.mark.parametrize("review_kind", ["classification", "saturated", "split"])
+def test_reviewed_apply_refuses_stale_row_without_overwriting_newer_persistence(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    review_kind: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The actual reviewed writers keep a later encrypted row and audit intact."""
+    repository, events = repositories
+    tx_id = _seed_parent(repository)
+    reviewed = repository.load().get(tx_id)
+    assert reviewed is not None
+    with _workflow_ports(repository, events) as (ports, llm_ports, settings):
+        suggestion: LLMClassificationSuggestion | LLMSaturatedSuggestion | LLMSplitSuggestion
+        if review_kind == "classification":
+            suggestion = _classification_suggestion(tx_id)
+            origin = LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY
+            decision = LlmReviewDecision.APPLY
+        elif review_kind == "saturated":
+            suggestion = _saturated_suggestion(
+                repository, tx_id, ledger_ports=ports, llm_ports=llm_ports, settings=settings, operation=operation
+            )
+            origin = LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY
+            decision = LlmReviewDecision.APPLY
+        else:
+            suggestion = _split_suggestion(
+                repository,
+                tx_id,
+                proposal=_two_line_proposal(),
+                ledger_ports=ports,
+                llm_ports=llm_ports,
+                settings=settings,
+                operation=operation,
+            )
+            origin = LlmReviewInvocationOrigin.SPLIT_LLM
+            decision = LlmReviewDecision.SPLIT
+        newer = reviewed.model_copy(update={"notes": "a later operator edit must survive"})
+        repository.save(TransactionCatalogue.from_transactions([newer]))
+        before_events = events.load()
+        with pytest.raises((TransactionValidationError, LedgerPersistenceConflictError), match="changed since it was"):
+            execute_reviewed_decision(
+                suggestion,
+                origin=origin,
+                decision=decision,
+                bucket_id=_BUCKET,
+                ports=ports,
+                expected_current=reviewed,
+                occurred_at=_NOW,
+            )
+    stored = repository.load()
+    assert stored.get(tx_id) == newer
+    assert tuple(stored.values()) == (newer,)
+    assert events.load() == before_events
+
+
+def test_review_rejection_audits_fresh_current_row_without_replaying_reviewed_fields(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+) -> None:
+    """Declining an older proposal writes an audit event and preserves the current row."""
+    repository, events = repositories
+    tx_id = _seed_parent(repository)
+    reviewed = repository.load().get(tx_id)
+    assert reviewed is not None
+    newer = reviewed.model_copy(update={"notes": "operator changed the row after review"})
+    repository.save(TransactionCatalogue.from_transactions([newer]))
+    with _workflow_ports(repository, events) as (ports, _, _):
+        result = execute_reviewed_decision(
+            _classification_suggestion(tx_id),
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
+            decision=LlmReviewDecision.REJECT,
+            bucket_id=_BUCKET,
+            ports=ports,
+            expected_current=reviewed,
+            reason="decline this captured proposal",
+            occurred_at=_NOW,
+        )
+    assert isinstance(result, LLMSuggestionRejectionResult)
+    assert repository.load().get(tx_id) == newer
+    rejected = _events_of(events, BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED)
+    assert len(rejected) == 1 and rejected[0].event_id == result.bucket_event_id
+    assert rejected[0].payload["operator_reason"] == "decline this captured proposal"
+    assert rejected[0].payload["source_command"] == LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT.source_command
+    assert _events_of(events, BucketEventType.LEDGER_TRANSACTION_CLASSIFIED) == ()
+
+
+def test_review_rejection_refuses_actual_catalogue_revision_race_without_partial_audit(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+) -> None:
+    """A real write after the decline's read makes its encrypted co-commit refuse."""
+    repository, events = repositories
+    tx_id = _seed_parent(repository)
+    reviewed = repository.load().get(tx_id)
+    assert reviewed is not None
+    newer = reviewed.model_copy(update={"notes": "concurrent committed row"})
+
+    class RacingRepository(TransactionCatalogueRepository):
+        @override
+        def load_revisioned(self) -> tuple[TransactionCatalogue, str]:
+            catalogue, revision = super().load_revisioned()
+            # A separate real writer commits after the rejection captured its
+            # revision, before its genuine secure-object co-commit executes.
+            repository.save(TransactionCatalogue.from_transactions([newer]))
+            return catalogue, revision
+
+    racing_repository = RacingRepository(bucket_id=_BUCKET, objects=repository._objects)
+    before_events = events.load()
+    with (
+        _workflow_ports(racing_repository, events) as (ports, _, _),
+        pytest.raises(LedgerPersistenceConflictError),
+    ):
+        execute_reviewed_decision(
+            _classification_suggestion(tx_id),
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
+            decision=LlmReviewDecision.REJECT,
+            bucket_id=_BUCKET,
+            ports=ports,
+            expected_current=reviewed,
+            occurred_at=_NOW,
+        )
+    assert repository.load().get(tx_id) == newer
+    assert events.load() == before_events
+    assert _events_of(events, BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED) == ()

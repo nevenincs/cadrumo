@@ -517,7 +517,7 @@ def descendant_facts_from_answers(
         if not row["birth-date"]:
             continue
         descendientes.append(_descendant_from_row(row, operation=operation))
-    return descendant_facts_from_list(descendientes)
+    return descendant_facts_from_list(descendientes, authority=operation)
 
 
 def descendant_answers_from_record(
@@ -552,10 +552,16 @@ def descendant_answers_from_record(
     """
     if record is None:
         return {}
-    from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
     from ..user_profile.projections import record_to_path_values
 
-    descendientes = descendant_list_from_facts(record_to_path_values(record))
+    return descendant_answers_from_values(record_to_path_values(record), operation=operation)
+
+
+def descendant_answers_from_values(values: Mapping[str, str], *, operation: PinnedAuthorityOperation) -> dict[str, str]:
+    """Seed the canonical repeating flow from an authorized, complete fact view."""
+    from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
+
+    descendientes = descendant_list_from_facts(dict(values), authority=operation)
     if not descendientes:
         return {}
     answers: dict[str, str] = {DESCENDANTS_COUNT_PAGE_ID: str(len(descendientes))}
@@ -674,6 +680,7 @@ def _optional_bool_answer(value: bool | None) -> str | None:
 __all__ = [
     "WizardPersistMode",
     "descendant_answers_from_record",
+    "descendant_answers_from_values",
     "descendant_facts_from_answers",
     "parse_canonical",
     "profile_values_from_patch",

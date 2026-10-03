@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import sys
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pytest
 import typer
@@ -20,6 +23,7 @@ from ....core.config import override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from .cli_runner import cadrumo_click_command, invoke_cached_cli
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -152,15 +156,13 @@ class _WorkflowRoundTripOutcome:
     """Bundle returned by _drive_workflow_round_trip.
 
     Captures every payload the focused tests inspect: the
-    post-init profile status, the certificate-auth configure /
-    status / test results, and the imported / overview / review
+    post-init profile status, the certificate-auth configure result,
+    and the imported / overview / review
     payloads emitted by the canonical operator round-trip.
     """
 
     status_payload: dict[str, object]
     configured_payload: dict[str, object]
-    auth_status_payload: dict[str, object]
-    auth_test_payload: dict[str, object]
     imported_payload: dict[str, object]
     overview_payload: dict[str, object]
     review_payload: dict[str, object]
@@ -187,9 +189,8 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
        filing identity flags and --accept-defaults.
     2. `config profile status` — verify the wizard persisted every
        required profile fact.
-    3. `config auth configure/status/test --provider certificate` —
-       register a synthetic certificate file and exercise the
-       three auth-CLI verbs that read it back.
+    3. `config auth configure --provider certificate` —
+       register a synthetic certificate file.
     4. `app ledger import <csv>` — ingest one synthetic bank row.
     5. `app overview status` + `app review queue` — verify the
        imported row surfaces in the operator overview and review
@@ -223,11 +224,7 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     configured = _invoke(
         ["--format", "json", "config", "auth", "configure", "--provider", "certificate", "--file", str(certificate)],
     )
-    auth_status = _invoke(["--format", "json", "config", "auth", "status", "--provider", "certificate"])
-    auth_test = _invoke(["--format", "json", "config", "auth", "test", "--provider", "certificate"])
     assert configured.exit_code == 0, configured.output
-    assert auth_status.exit_code == 0, auth_status.output
-    assert auth_test.exit_code == 0, auth_test.output
 
     statement = backend / "bank.csv"
     statement.write_text(
@@ -245,8 +242,6 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     return _WorkflowRoundTripOutcome(
         status_payload=_json(status),
         configured_payload=_json(configured),
-        auth_status_payload=_json(auth_status),
-        auth_test_payload=_json(auth_test),
         imported_payload=_json(imported),
         overview_payload=_json(overview),
         review_payload=_json(review),
@@ -295,16 +290,67 @@ def test_config_app_round_trip_certificate_configure_records_provider(
     assert workflow_round_trip.configured_payload["provider"] == "certificate"
 
 
+@pytest.fixture(scope="module")
+def native_certificate_auth_reads(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Iterator[tuple[dict[str, Any], dict[str, Any]]]:
+    """Read configured certificate state through a protected native worker."""
+    if sys.platform != "win32":
+        pytest.skip("requires native Windows profile workers")
+    with native_cli_profile_scope(tmp_path_factory.mktemp("auth-read-round-trip")) as fixture:
+        fixture.register(label="auth-reader", facts={"identity.name": "Auth", "identity.surnames": "Reader"})
+        certificate = fixture.storage_root / "certificate.p12"
+        certificate.write_bytes(b"not-a-real-certificate")
+        with override_settings(cadrumo_certificate_path=certificate):
+            configured = _invoke(
+                [
+                    "--format",
+                    "json",
+                    "config",
+                    "auth",
+                    "configure",
+                    "--provider",
+                    "certificate",
+                    "--file",
+                    str(certificate),
+                ]
+            )
+            assert configured.exit_code == 0, configured.output
+
+            def invoke_read(verb: str):
+                return invoke_cached_cli(
+                    [
+                        "--format",
+                        "json",
+                        "--profile",
+                        "auth-reader",
+                        "--profile-secrets-stdin",
+                        "config",
+                        "auth",
+                        verb,
+                        "--provider",
+                        "certificate",
+                    ],
+                    input=json.dumps({"profile_passphrase": fixture.passphrase}),
+                )
+
+            status = invoke_read("status")
+            tested = invoke_read("test")
+            assert status.exit_code == 0, status.output
+            assert tested.exit_code == 0, tested.output
+            yield _json(status), _json(tested)
+
+
 def test_config_app_round_trip_certificate_auth_status_reports_configured(
-    workflow_round_trip: _WorkflowRoundTripOutcome,
+    native_certificate_auth_reads: tuple[dict[str, Any], dict[str, Any]],
 ) -> None:
-    assert workflow_round_trip.auth_status_payload["configured"] is True
+    assert native_certificate_auth_reads[0]["configured"] is True
 
 
 def test_config_app_round_trip_certificate_auth_test_records_provider(
-    workflow_round_trip: _WorkflowRoundTripOutcome,
+    native_certificate_auth_reads: tuple[dict[str, Any], dict[str, Any]],
 ) -> None:
-    assert workflow_round_trip.auth_test_payload["provider"] == "certificate"
+    assert native_certificate_auth_reads[1]["provider"] == "certificate"
 
 
 def test_config_app_round_trip_ledger_import_records_one_row(workflow_round_trip: _WorkflowRoundTripOutcome) -> None:

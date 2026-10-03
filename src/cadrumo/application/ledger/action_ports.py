@@ -7,7 +7,7 @@ for one bucket and passes its members to the public action it invokes.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
@@ -41,4 +41,12 @@ class LedgerActionPorts:
     purchase_invoice_evidence_records: tuple[PurchaseInvoiceEvidence, ...]
 
 
-__all__ = ["LedgerActionPorts"]
+class LedgerActionPortsFactory(Protocol):
+    """Compose one profile's existing ledger services under the retained authority."""
+
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
+        """Return the service ports bound to ``bucket_id`` and ``operation``."""
+        ...
+
+
+__all__ = ["LedgerActionPorts", "LedgerActionPortsFactory"]

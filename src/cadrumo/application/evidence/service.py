@@ -19,7 +19,7 @@ See Also:
 from __future__ import annotations
 
 import zipfile
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import NamedTuple
 
@@ -121,13 +121,14 @@ def _completeness_ratio(*, total: int, total_bytes: int, reachable: int, reachab
 def _verification_state(
     *,
     all_passed: bool,
+    integrity_passed: bool,
     digest_failures: list[str],
     completeness: float,
 ) -> BundleVerificationState:
     """Classify a bundle from its checks: a disagreeing digest always fails."""
     if all_passed:
         return BundleVerificationState.VERIFIED
-    if digest_failures:
+    if not integrity_passed or digest_failures:
         return BundleVerificationState.FAILED
     if completeness < 1.0:
         return BundleVerificationState.INCOMPLETE
@@ -377,6 +378,7 @@ class EvidenceBundleService:
             bundle_id=bundle.bundle_id,
             verification_state=_verification_state(
                 all_passed=all(f.passed for f in findings),
+                integrity_passed=bundle.bucket_id == bucket_id and expected_bundle_id == bundle.bundle_id,
                 digest_failures=digest_failures,
                 completeness=completeness,
             ),
@@ -392,15 +394,17 @@ class EvidenceBundleService:
         output_path: Path,
         record_payloads: Mapping[tuple[str, str], bytes] | None = None,
         force_incomplete: bool = False,
+        write: Callable[[Callable[[], None]], None] | None = None,
     ) -> Path:
         """Write a ZIP with each record file then manifest.json last.
 
-        Runs verification first. On failed verification, refuses with
-        :class:`EvidenceBundleVerificationError` unless ``force_incomplete``
-        is True. Incomplete bundles require ``force_incomplete=True``;
-        failed-verification bundles always refuse. The archive is an
+        Runs verification first. Incomplete bundles require
+        ``force_incomplete=True``; failed-verification bundles always refuse
+        with :class:`EvidenceBundleVerificationError`. The archive is an
         operator-directed plaintext export written to ``output_path``;
         it does not create or update encrypted bucket catalogue records.
+        The optional ``write`` callback admits only the existing filesystem
+        writer after verification and manifest preparation have completed.
         """
         if record_payloads is None:
             record_payloads = dict[tuple[str, str], bytes]()
@@ -425,19 +429,25 @@ class EvidenceBundleService:
                 },
             )
 
-        output_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_payload = bundle.model_dump_json(indent=2).encode(UTF_8_ENCODING)
 
-        # Write records first; manifest.json LAST so a partial archive
-        # never carries a manifest claiming records that aren't there.
-        with zipfile.ZipFile(output_path, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
-            for record in bundle.records:
-                key = (record.object_type.value, record.object_id)
-                if key not in record_payloads:
-                    continue
-                arcname = f"records/{record.object_type.value}/{record.object_id}.bin"
-                archive.writestr(arcname, record_payloads[key])
-            archive.writestr(_MANIFEST_FILENAME, manifest_payload)
+        def publish() -> None:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            # Write records first; manifest.json LAST so a partial archive
+            # never carries a manifest claiming records that aren't there.
+            with zipfile.ZipFile(output_path, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
+                for record in bundle.records:
+                    key = (record.object_type.value, record.object_id)
+                    if key not in record_payloads:
+                        continue
+                    arcname = f"records/{record.object_type.value}/{record.object_id}.bin"
+                    archive.writestr(arcname, record_payloads[key])
+                archive.writestr(_MANIFEST_FILENAME, manifest_payload)
+
+        if write is None:
+            publish()
+        else:
+            write(publish)
         return output_path
 
 

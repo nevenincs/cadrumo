@@ -22,7 +22,6 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n.render import tr
@@ -109,13 +108,10 @@ def _profile_resolved_binding_ids(
     *,
     operation: PinnedAuthorityOperation,
 ) -> frozenset[str]:
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return frozenset[str]()
     try:
         values = profile_resolvable_binding_ids(
             modelo=str(unit.modelo),
-            bucket_id=bucket_id,
+            bucket_id=unit.bucket_id,
             filing_year=unit.filing_year,
             period=unit.period,
             operation=operation,
@@ -324,13 +320,25 @@ def open_modelo_work_wizard(
     *,
     operation: PinnedAuthorityOperation,
 ) -> Generator[ModeloWorkWizardRun]:
-    """Open one copy-scoped wizard run and remove its entries on exit."""
+    """Discover canonical steps, then open their copy-scoped wizard run."""
+    steps = discover_modelo_work_wizard_steps(unit, operation=operation)
+    with open_modelo_work_wizard_from_steps(unit, steps=steps) as run:
+        yield run
+
+
+@contextmanager
+def open_modelo_work_wizard_from_steps(
+    unit: WorkUnit,
+    *,
+    steps: tuple[ModeloWorkWizardStep, ...],
+) -> Generator[ModeloWorkWizardRun]:
+    """Render supplied authenticated steps with one private copy-table lifetime."""
     run_token = uuid4().hex
     _ACTIVE_COPY_RUNS[run_token] = {}
     try:
         yield ModeloWorkWizardRun(
             unit=unit,
-            steps=discover_modelo_work_wizard_steps(unit, operation=operation),
+            steps=steps,
             _run_token=run_token,
         )
     finally:
@@ -345,4 +353,5 @@ __all__ = [
     "discover_modelo_work_wizard_steps",
     "modelo_work_wizard_follow_up_step",
     "open_modelo_work_wizard",
+    "open_modelo_work_wizard_from_steps",
 ]

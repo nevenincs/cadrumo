@@ -581,10 +581,6 @@ function Invoke-HostSmoke {
             uninstall_preserved_persistence = $true
             reinstall_preserved_persistence = $true
             tax_evidence = $oracleEvidence.tax_evidence
-            # The manifest is CLI-only: its bin block shims aeat alone, so the
-            # cadrumo-mcp console script the same distribution declares is
-            # never exposed for this lane to drive.
-            mcp_evidence = $null
         }
     }
     finally {

@@ -20,10 +20,9 @@ from ....core.operator_action_enums import ActionConditionality, ActionEvidenceP
 from ...user_profile.registration import ProfileRegistrationError
 from ...workflow.state_models import WorkflowState
 from .. import commands as commands_module
+from .. import patch_edit as patch_edit_module
 from .. import status as status_module
 from ..commands import (
-    _missing_filing_baseline_flag_groups,
-    _require_filing_baseline,
     _require_profile_label_available,
     _require_profile_name,
     _run_full_flow,
@@ -35,6 +34,7 @@ from ..errors import (
     WizardPreconditionCondition,
     WizardValidationError,
 )
+from ..patch_edit import missing_filing_baseline_flag_groups_for_flow, require_filing_baseline
 from ..status import (
     WizardStatusError,
     _next_wizard_action,
@@ -78,7 +78,7 @@ _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "commands:_require_filing_baseline:WizardMissingFlagError:1": _contract(
+    "patch_edit:require_filing_baseline:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
         (("filing_baseline_complete", "False"), ("missing_flag_count", "len(missing)")),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -122,7 +122,7 @@ _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     ),
 }
 
-_WIZARD_PRODUCER_MODULES: tuple[ModuleType, ...] = (status_module, commands_module)
+_WIZARD_PRODUCER_MODULES: tuple[ModuleType, ...] = (status_module, commands_module, patch_edit_module)
 
 
 def _call_name(node: ast.expr) -> str | None:
@@ -431,12 +431,12 @@ def test_missing_filing_baseline_has_an_exact_runtime_operator_decision_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
     answers = registry_setup_flow.answers_model.model_validate({"tax_id": "00000000T"})
-    identity_missing, conditional_missing = _missing_filing_baseline_flag_groups(registry_setup_flow, answers)
+    identity_missing, conditional_missing = missing_filing_baseline_flag_groups_for_flow(registry_setup_flow, answers)
     missing = (*identity_missing, *conditional_missing)
     assert missing
 
     with pytest.raises(WizardMissingFlagError) as raised:
-        _require_filing_baseline(registry_setup_flow, answers)
+        require_filing_baseline(registry_setup_flow, answers)
 
     _assert_terminal_contract(
         raised.value,

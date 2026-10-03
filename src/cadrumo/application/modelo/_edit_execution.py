@@ -619,7 +619,7 @@ def apply_modelo_edit(
     # the guarded commit below other than the calculation boundary's own
     # internal, independently CAS-guarded reads.
     work_catalogue = ports.work_unit_repository.load()
-    calculation_catalogue = ports.calculation_repository.load()
+    calculation_catalogue = ports.calculation_repository.load(operation=ports.operation)
     stale = reconfirm_modelo_edit_baseline(
         baseline, work_catalogue=work_catalogue, calculation_catalogue=calculation_catalogue
     )

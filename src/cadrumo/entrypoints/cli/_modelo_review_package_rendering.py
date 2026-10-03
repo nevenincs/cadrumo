@@ -25,7 +25,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core.identity.hex_ids import CalculationRevisionId
 from ...domain.modelos.codes import ModeloCode
 from ._modelo_review_package_payloads import (
     ModeloReviewPackageBuildResult,
@@ -41,17 +40,15 @@ from ._modelo_review_package_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ...application.modelo.recipient_encryption import (
-        RecipientDecryptedPackage,
-        RecipientEncryptedPackage,
+    from ...application.modelo.review_package import ReviewPackageBuildResult, ReviewPackageVerification
+    from ...application.modelo.review_package_exchange_operation import (
+        ModeloReviewPackageCounterSignProjection,
+        ModeloReviewPackageDecryptProjection,
+        ModeloReviewPackageEncryptFeedbackProjection,
+        ModeloReviewPackageEncryptForRecipientProjection,
+        ModeloReviewPackageImportFeedbackProjection,
+        ModeloReviewPackageSignProjection,
     )
-    from ...application.modelo.review_package import (
-        ReviewPackageBuildResult,
-        ReviewPackageVerification,
-    )
-    from ...application.modelo.review_package_counter_sign import CounterSignedReceipt
-    from ...application.modelo.review_package_feedback import ImportedFeedback
-    from ...application.modelo.review_package_signing import SignedReviewPackage
 
 
 def review_package_build_result_payload(build_result: ReviewPackageBuildResult) -> ModeloReviewPackageBuildResult:
@@ -133,30 +130,25 @@ def review_package_verify_result(
 
 
 def review_package_sign_result(
-    package: Path,
-    output: Path,
-    *,
-    bucket_id: str,
-    signed: SignedReviewPackage,
-    signer_public_key_hex: str,
+    projection: ModeloReviewPackageSignProjection,
 ) -> tuple[ModeloReviewPackageSignResult, list[str]]:
     """Project a review-package signature write into envelope output."""
     result = ModeloReviewPackageSignResult(
-        package_path=str(package),
-        signature_path=str(output),
-        bucket_id=bucket_id,
-        calculation_revision_id=signed.calculation_revision_id,
-        manifest_sha256=signed.manifest_sha256,
-        signer_public_key_hex=signer_public_key_hex,
-        signed_at=signed.signed_at,
+        package_path=projection.package_path,
+        signature_path=projection.signature_path,
+        bucket_id=projection.bucket_id,
+        calculation_revision_id=projection.calculation_revision_id,
+        manifest_sha256=projection.manifest_sha256,
+        signer_public_key_hex=projection.signer_public_key_hex,
+        signed_at=projection.signed_at,
     )
     lines = [
         "operation\tmodelo.review_package.sign",
-        f"package_path\t{package}",
-        f"signature_path\t{output}",
-        f"bucket\t{bucket_id}",
-        f"calculation_revision_id\t{signed.calculation_revision_id}",
-        f"signer_public_key_hex\t{signer_public_key_hex}",
+        f"package_path\t{projection.package_path}",
+        f"signature_path\t{projection.signature_path}",
+        f"bucket\t{projection.bucket_id}",
+        f"calculation_revision_id\t{projection.calculation_revision_id}",
+        f"signer_public_key_hex\t{projection.signer_public_key_hex}",
     ]
     return result, lines
 
@@ -185,30 +177,24 @@ def review_package_verify_signature_result(
 
 
 def review_package_counter_sign_result(
-    package: Path,
-    signature: Path,
-    output: Path,
-    *,
-    bucket_id: str,
-    receipt: CounterSignedReceipt,
-    counter_signer_public_key_hex: str,
+    projection: ModeloReviewPackageCounterSignProjection,
 ) -> tuple[ModeloReviewPackageCounterSignResult, list[str]]:
     """Project an accountant counter-signature receipt into envelope output."""
     result = ModeloReviewPackageCounterSignResult(
-        package_path=str(package),
-        signature_path=str(signature),
-        receipt_path=str(output),
-        bucket_id=bucket_id,
-        note=receipt.note,
-        counter_signer_public_key_hex=counter_signer_public_key_hex,
-        counter_signed_at=receipt.counter_signed_at,
+        package_path=projection.package_path,
+        signature_path=projection.signature_path,
+        receipt_path=projection.receipt_path,
+        bucket_id=projection.bucket_id,
+        note=projection.note,
+        counter_signer_public_key_hex=projection.counter_signer_public_key_hex,
+        counter_signed_at=projection.counter_signed_at,
     )
     lines = [
         "operation\tmodelo.review_package.counter_sign",
-        f"package_path\t{package}",
-        f"receipt_path\t{output}",
-        f"bucket\t{bucket_id}",
-        f"counter_signer_public_key_hex\t{counter_signer_public_key_hex}",
+        f"package_path\t{projection.package_path}",
+        f"receipt_path\t{projection.receipt_path}",
+        f"bucket\t{projection.bucket_id}",
+        f"counter_signer_public_key_hex\t{projection.counter_signer_public_key_hex}",
     ]
     return result, lines
 
@@ -239,118 +225,98 @@ def review_package_verify_receipt_result(
 
 
 def review_package_encrypt_for_recipient_result(
-    package: Path,
-    output: Path,
-    *,
-    recipient_id: str,
-    recipient_public_key_hex: str,
-    envelope: RecipientEncryptedPackage,
+    projection: ModeloReviewPackageEncryptForRecipientProjection,
 ) -> tuple[ModeloReviewPackageEncryptForRecipientResult, list[str]]:
     """Project recipient-encryption output into the CLI envelope."""
     result = ModeloReviewPackageEncryptForRecipientResult(
-        package_path=str(package),
-        output_path=str(output),
-        recipient_id=recipient_id,
-        recipient_public_key_hex=recipient_public_key_hex,
-        review_only=envelope.review_only,
-        issued_at=envelope.issued_at,
-        valid_until=envelope.valid_until,
+        package_path=projection.package_path,
+        output_path=projection.output_path,
+        recipient_id=projection.recipient_id,
+        recipient_public_key_hex=projection.recipient_public_key_hex,
+        review_only=projection.review_only,
+        issued_at=projection.issued_at,
+        valid_until=projection.valid_until,
     )
     lines = [
         "operation\tmodelo.review_package.encrypt_for_recipient",
-        f"package_path\t{package}",
-        f"output_path\t{output}",
-        f"recipient_id\t{recipient_id}",
-        f"recipient_public_key_hex\t{recipient_public_key_hex}",
-        f"review_only\t{envelope.review_only}",
-        f"valid_until\t{envelope.valid_until.isoformat() if envelope.valid_until is not None else 'never'}",
+        f"package_path\t{projection.package_path}",
+        f"output_path\t{projection.output_path}",
+        f"recipient_id\t{projection.recipient_id}",
+        f"recipient_public_key_hex\t{projection.recipient_public_key_hex}",
+        f"review_only\t{projection.review_only}",
+        f"valid_until\t{projection.valid_until.isoformat() if projection.valid_until is not None else 'never'}",
     ]
     return result, lines
 
 
 def review_package_decrypt_result(
-    envelope_path: Path,
-    output: Path,
-    *,
-    bucket_id: str,
-    decrypted: RecipientDecryptedPackage,
+    projection: ModeloReviewPackageDecryptProjection,
 ) -> tuple[ModeloReviewPackageDecryptResult, list[str]]:
     """Project recipient-decryption output into the CLI envelope."""
     result = ModeloReviewPackageDecryptResult(
-        envelope_path=str(envelope_path),
-        output_path=str(output),
-        bucket_id=bucket_id,
-        review_only=decrypted.review_only,
+        envelope_path=projection.envelope_path,
+        output_path=projection.output_path,
+        bucket_id=projection.bucket_id,
+        review_only=projection.review_only,
     )
     lines = [
         "operation\tmodelo.review_package.decrypt",
-        f"envelope_path\t{envelope_path}",
-        f"output_path\t{output}",
-        f"bucket\t{bucket_id}",
-        f"review_only\t{decrypted.review_only}",
+        f"envelope_path\t{projection.envelope_path}",
+        f"output_path\t{projection.output_path}",
+        f"bucket\t{projection.bucket_id}",
+        f"review_only\t{projection.review_only}",
     ]
     return result, lines
 
 
 def review_package_encrypt_feedback_result(
-    output: Path,
-    *,
-    originator_id: str,
-    originator_public_key_hex: str,
-    work_unit_id: str,
-    calculation_revision_id: CalculationRevisionId,
-    has_counter_sign: bool,
-    envelope: RecipientEncryptedPackage,
+    projection: ModeloReviewPackageEncryptFeedbackProjection,
 ) -> tuple[ModeloReviewPackageEncryptFeedbackResult, list[str]]:
     """Project encrypted feedback output into the CLI envelope."""
     result = ModeloReviewPackageEncryptFeedbackResult(
-        output_path=str(output),
-        originator_id=originator_id,
-        originator_public_key_hex=originator_public_key_hex,
-        work_unit_id=work_unit_id,
-        calculation_revision_id=calculation_revision_id,
-        has_counter_sign=has_counter_sign,
-        issued_at=envelope.issued_at,
-        valid_until=envelope.valid_until,
+        output_path=projection.output_path,
+        originator_id=projection.originator_id,
+        originator_public_key_hex=projection.originator_public_key_hex,
+        work_unit_id=projection.work_unit_id,
+        calculation_revision_id=projection.calculation_revision_id,
+        has_counter_sign=projection.has_counter_sign,
+        issued_at=projection.issued_at,
+        valid_until=projection.valid_until,
     )
     lines = [
         "operation\tmodelo.review_package.encrypt_feedback",
-        f"output_path\t{output}",
-        f"originator_id\t{originator_id}",
-        f"work_unit_id\t{work_unit_id}",
-        f"calculation_revision_id\t{calculation_revision_id}",
-        f"has_counter_sign\t{has_counter_sign}",
+        f"output_path\t{projection.output_path}",
+        f"originator_id\t{projection.originator_id}",
+        f"work_unit_id\t{projection.work_unit_id}",
+        f"calculation_revision_id\t{projection.calculation_revision_id}",
+        f"has_counter_sign\t{projection.has_counter_sign}",
     ]
     return result, lines
 
 
 def review_package_import_feedback_result(
-    envelope_path: Path,
-    *,
-    bucket_id: str,
-    imported: ImportedFeedback,
-    attached: bool,
+    projection: ModeloReviewPackageImportFeedbackProjection,
 ) -> tuple[ModeloReviewPackageImportFeedbackResult, list[str]]:
     """Project imported feedback output into the CLI envelope."""
     result = ModeloReviewPackageImportFeedbackResult(
-        envelope_path=str(envelope_path),
-        bucket_id=bucket_id,
-        work_unit_id=imported.feedback.work_unit_id,
-        calculation_revision_id=imported.feedback.calculation_revision_id,
-        note=imported.feedback.note,
-        submitted_by=imported.feedback.submitted_by,
-        counter_signature_verified=imported.counter_signature_verified,
-        attached_to_journal=attached,
+        envelope_path=projection.envelope_path,
+        bucket_id=projection.bucket_id,
+        work_unit_id=projection.work_unit_id,
+        calculation_revision_id=projection.calculation_revision_id,
+        note=projection.note,
+        submitted_by=projection.submitted_by,
+        counter_signature_verified=projection.counter_signature_verified,
+        attached_to_journal=projection.attached_to_journal,
     )
     lines = [
         "operation\tmodelo.review_package.import_feedback",
-        f"envelope_path\t{envelope_path}",
-        f"bucket\t{bucket_id}",
-        f"work_unit_id\t{imported.feedback.work_unit_id}",
-        f"calculation_revision_id\t{imported.feedback.calculation_revision_id}",
-        f"submitted_by\t{imported.feedback.submitted_by}",
-        f"counter_signature_verified\t{imported.counter_signature_verified}",
-        f"attached_to_journal\t{attached}",
+        f"envelope_path\t{projection.envelope_path}",
+        f"bucket\t{projection.bucket_id}",
+        f"work_unit_id\t{projection.work_unit_id}",
+        f"calculation_revision_id\t{projection.calculation_revision_id}",
+        f"submitted_by\t{projection.submitted_by}",
+        f"counter_signature_verified\t{projection.counter_signature_verified}",
+        f"attached_to_journal\t{projection.attached_to_journal}",
     ]
     return result, lines
 

@@ -16,6 +16,7 @@ class ProfilePasswordProofOperation(StrEnum):
     RECOVERY_REVOKE = "recovery_revoke"
     RECOVERY_RESET = "recovery_reset"
     ROTATION = "password_rotation"
+    AUTOMATION_APPROVAL = "automation_approval"
 
 
 class ProfileAuthenticationRefusedError(CadrumoError):

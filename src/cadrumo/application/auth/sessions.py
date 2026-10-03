@@ -20,8 +20,8 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncGenerator, Mapping
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator, Callable, Mapping
+from contextlib import AbstractAsyncContextManager, asynccontextmanager, nullcontext
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
@@ -29,7 +29,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, TypeAdapter, ValidationError
 
-from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ...core.async_cleanup import close_async_resources
 from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError
 from ...core.identity.documents import IdentityError
@@ -348,6 +348,7 @@ async def ensure_authenticated_aeat_session(
     certificate_credentials: ActiveCertificateCredentials | None = None,
     operator_scope_ports: OperatorScopePorts,
     profile_decode_context: ProfileDecodeContext,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]] | None = None,
 ) -> AuthenticatedAeatSessionResult:
     """Serialize and fail-close the central live-session writer."""
     with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports) as bucket_id:
@@ -373,6 +374,7 @@ async def ensure_authenticated_aeat_session(
                 certificate_credentials=certificate_credentials,
                 operator_scope_ports=operator_scope_ports,
                 profile_decode_context=profile_decode_context,
+                effect_guard=effect_guard,
             )
 
 
@@ -389,6 +391,7 @@ async def _ensure_authenticated_aeat_session_locked(
     certificate_credentials: ActiveCertificateCredentials | None = None,
     operator_scope_ports: OperatorScopePorts,
     profile_decode_context: ProfileDecodeContext,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]] | None = None,
 ) -> AuthenticatedAeatSessionResult:
     """Return a verified AEAT session, authenticating only when required.
 
@@ -418,11 +421,10 @@ async def _ensure_authenticated_aeat_session_locked(
         operator_scope_ports=operator_scope_ports,
         profile_decode_context=profile_decode_context,
     )
-    reset_status = (
-        clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-before-ensure")
-        if reset_lock
-        else None
-    )
+    reset_status = None
+    if reset_lock:
+        async with effect_guard() if effect_guard is not None else nullcontext():
+            reset_status = clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-before-ensure")
     if not fresh:
         reused = await _try_probe_verified_session(
             settings,
@@ -1220,19 +1222,19 @@ async def _authenticate_and_verify_provider(
 @asynccontextmanager
 async def _provider_lifecycle(provider: AuthProvider) -> AsyncGenerator[None]:
     """Close ``provider`` without hiding a primary auth failure."""
+    primary_error: BaseException | None = None
     try:
         yield
+    except BaseException as error:
+        primary_error = error
+        raise
     finally:
-        try:
-            await close_async_resources(
-                provider,
-                task_name="cadrumo-auth-provider-close",
-                close_attempts=2,
-            )
-        except AsyncResourceCleanupError as cleanup_error:
-            raise AuthSessionUnavailableError(
-                translated_message="application.auth.sessions.errors.provider_close_failed",
-            ) from cleanup_error
+        await close_async_resources(
+            provider,
+            task_name="cadrumo-auth-provider-close",
+            close_attempts=2,
+            primary_error=primary_error,
+        )
 
 
 __all__ = [

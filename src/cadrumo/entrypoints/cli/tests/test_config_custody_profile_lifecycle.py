@@ -35,6 +35,7 @@ from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
 from ....tests.inventory import REPO_ROOT
 from ....tests.os_keychain_hook import require_os_credential_store
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -287,6 +288,7 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
     assert "active_profile\tcustody" in switched_default.stdout
 
 
+@pytest.mark.windows_only
 def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path: Path) -> None:
     """The rotation leaf proves custody itself and survives a failing keychain.
 
@@ -316,50 +318,51 @@ def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path
     rotated_value = "correct horse battery staple"
     failing_keychain = {"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"}
 
-    changed = _run_cadrumo(
-        tmp_path,
-        ("config", "passphrase", "change", "--secrets-stdin"),
-        extra_env=failing_keychain,
-        stdin_payload=json.dumps(
-            {
-                "current_passphrase": provisioning_passphrase,
-                "new_passphrase": rotated_value,
-                "new_passphrase_confirmation": rotated_value,
-            }
-        ),
-    )
-    assert changed.returncode == 0, _combined_output(changed)
-    assert "changed\tyes" in changed.stdout
-    assert provisioning_passphrase not in _combined_output(changed)
-    assert rotated_value not in _combined_output(changed)
+    with native_profile_view_server(tmp_path):
+        changed = _run_cadrumo(
+            tmp_path,
+            ("config", "passphrase", "change", "--secrets-stdin"),
+            extra_env=failing_keychain,
+            stdin_payload=json.dumps(
+                {
+                    "current_passphrase": provisioning_passphrase,
+                    "new_passphrase": rotated_value,
+                    "new_passphrase_confirmation": rotated_value,
+                }
+            ),
+        )
+        assert changed.returncode == 0, _combined_output(changed)
+        assert "changed\tyes" in changed.stdout
+        assert provisioning_passphrase not in _combined_output(changed)
+        assert rotated_value not in _combined_output(changed)
 
-    refused_old_proof = _run_cadrumo(
-        tmp_path,
-        ("config", "passphrase", "change", "--secrets-stdin"),
-        extra_env=failing_keychain,
-        stdin_payload=json.dumps(
-            {
-                "current_passphrase": provisioning_passphrase,
-                "new_passphrase": "irrelevant replacement value",
-                "new_passphrase_confirmation": "irrelevant replacement value",
-            }
-        ),
-    )
-    assert refused_old_proof.returncode == 2, _combined_output(refused_old_proof)
+        refused_old_proof = _run_cadrumo(
+            tmp_path,
+            ("config", "passphrase", "change", "--secrets-stdin"),
+            extra_env=failing_keychain,
+            stdin_payload=json.dumps(
+                {
+                    "current_passphrase": provisioning_passphrase,
+                    "new_passphrase": "irrelevant replacement value",
+                    "new_passphrase_confirmation": "irrelevant replacement value",
+                }
+            ),
+        )
+        assert refused_old_proof.returncode == 2, _combined_output(refused_old_proof)
 
-    rotated_again = _run_cadrumo(
-        tmp_path,
-        ("config", "passphrase", "change", "--secrets-stdin"),
-        extra_env=failing_keychain,
-        stdin_payload=json.dumps(
-            {
-                "current_passphrase": rotated_value,
-                "new_passphrase": "second rotated passphrase value",
-                "new_passphrase_confirmation": "second rotated passphrase value",
-            }
-        ),
-    )
-    assert rotated_again.returncode == 0, _combined_output(rotated_again)
+        rotated_again = _run_cadrumo(
+            tmp_path,
+            ("config", "passphrase", "change", "--secrets-stdin"),
+            extra_env=failing_keychain,
+            stdin_payload=json.dumps(
+                {
+                    "current_passphrase": rotated_value,
+                    "new_passphrase": "second rotated passphrase value",
+                    "new_passphrase_confirmation": "second rotated passphrase value",
+                }
+            ),
+        )
+        assert rotated_again.returncode == 0, _combined_output(rotated_again)
 
 
 @_KEYCHAIN_REFUSALS

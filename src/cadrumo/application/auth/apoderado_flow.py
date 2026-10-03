@@ -203,20 +203,26 @@ def run_apoderado_flow(
     same line frontend, flow validators, and service writer then execute with
     no callback substitute or post-flow persistence step.
     """
-    from ..flows.line_frontend import LineFlowFrontend
-
-    definition = build_apoderado_flow_definition(service.catalogue)
-    state, _projection = LineFlowFrontend(
-        definition,
-        input=input,
-        output=output,
-    ).run(mode=FlowMode.MODIFY)
-    represented_nif, scope_tokens = apoderado_answers_from_state(state)
+    represented_nif, scope_tokens = collect_apoderado_flow_answers(service.catalogue, input=input, output=output)
     return service.configure(
         bucket_id=bucket_id,
         represented_nif=represented_nif,
         scope_tokens=scope_tokens,
     )
+
+
+def collect_apoderado_flow_answers(
+    catalogue: ApoderamientosCatalogue,
+    *,
+    input: Input | None = None,
+    output: Output | None = None,
+) -> tuple[str, tuple[str, ...]]:
+    """Collect reviewed answers without opening a repository or committing them."""
+    from ..flows.line_frontend import LineFlowFrontend
+
+    definition = build_apoderado_flow_definition(catalogue)
+    state, _projection = LineFlowFrontend(definition, input=input, output=output).run(mode=FlowMode.MODIFY)
+    return apoderado_answers_from_state(state)
 
 
 __all__ = [
@@ -227,5 +233,6 @@ __all__ = [
     "ApoderadoFlowAnswers",
     "apoderado_answers_from_state",
     "build_apoderado_flow_definition",
+    "collect_apoderado_flow_answers",
     "run_apoderado_flow",
 ]

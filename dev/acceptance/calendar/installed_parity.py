@@ -6,7 +6,7 @@ the same calendar meaning for one evaluation date:
 * ``cli_only`` and ``tui_only`` are independent stores read by one frontend each;
 * ``cli_to_tui`` creates local work through the CLI, then reads it in the TUI;
 * ``tui_to_cli`` creates local work through the TUI calendar, then reads it
-  through the CLI, which resumes the session the TUI login admitted.
+  through the CLI, which authenticates afresh with password proof supplied on stdin.
 
 Each store's profile is admitted through the public CLI ``config profile
 create`` flow; the calendar reads and the continuation writes are the frontend
@@ -30,7 +30,6 @@ from zoneinfo import ZoneInfo
 
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
-    admit_existing_profile_for_headless_launcher,
     assert_installed_product_origin,
     installed_product_evidence,
     query_public_selector,
@@ -365,7 +364,6 @@ async def _wait_for_refreshed_workbench(pilot: Any, *, polls: int = 180) -> None
 
 def _run_child(*, workspace_root: Path, mode: ChildMode, write_row: str | None, passphrase: str) -> dict[str, object]:
     """Read, or create then read, the calendar through one fresh installed TUI process."""
-    admit_existing_profile_for_headless_launcher(passphrase=passphrase)
     observed: dict[str, dict[str, str]] = {}
     work_units: list[str] = []
 
@@ -413,25 +411,9 @@ def _require_empty_directory(path: Path, *, label: str) -> Path:
     return path.resolve()
 
 
-def _resumed_cli_calendar(cli: InstalledCli, window: CalendarWindow) -> tuple[dict[str, CliCalendarRow], str]:
-    """Read the calendar after a TUI login, resuming its session where the OS keychain allows.
-
-    The product keeps a resumable session only in the OS keychain; without one it
-    refuses to resume and accepts the stdin credential instead.  Either way the
-    read is a fresh installed process over the same store the TUI wrote.
-    """
-    probe = cli.run(
-        ("app", "overview", "calendar", "--from", window.from_date.isoformat(), "--to", window.from_date.isoformat()),
-        command="overview.calendar.resume_probe",
-        authenticated=False,
-        allow_error=True,
-    )
-    error = probe.get("error")
-    if probe.get("status") != "error":
-        return _cli_calendar(cli, window, authenticated=False), "resumed_tui_session"
-    if isinstance(error, dict) and error.get("code") == "AUTH_STORAGE_KEYRING_UNAVAILABLE":
-        return _cli_calendar(cli, window, authenticated=True), "stdin_secret_os_keychain_unavailable"
-    raise CalendarParityError("installed CLI could neither resume the TUI session nor report the keychain refusal")
+def _fresh_cli_calendar(cli: InstalledCli, window: CalendarWindow) -> tuple[dict[str, CliCalendarRow], str]:
+    """Read after the TUI using fresh secure stdin proof, independently of its connection."""
+    return _cli_calendar(cli, window, authenticated=True), "stdin_secret"
 
 
 def _cli_calendar(cli: InstalledCli, window: CalendarWindow, *, authenticated: bool) -> dict[str, CliCalendarRow]:
@@ -604,10 +586,10 @@ def _run_outer(args: argparse.Namespace, progress: dict[str, object]) -> dict[st
     )
     completed.append(cli_to_tui)
 
-    # TUI -> CLI: the TUI calendar writes local work, the resumed CLI must state it.
+    # TUI -> CLI: the TUI writes local work; the CLI uses fresh stdin password proof to read it.
     t2c_path, t2c_cli, t2c_secret = store("tui_to_cli")
     t2c_tui = child(t2c_path, t2c_secret, "tui_to_cli", "create_then_inspect", write_row=tui_row)
-    t2c_rows, t2c_authentication = _resumed_cli_calendar(t2c_cli, window)
+    t2c_rows, t2c_authentication = _fresh_cli_calendar(t2c_cli, window)
     tui_work = t2c_rows[tui_row].work_unit_id
     tui_to_cli = _scenario(
         "tui_to_cli",

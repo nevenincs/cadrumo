@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-08-01'
-body_hash: 'sha256:53459b847dea3900efd61fb641aa64fd7bf0f960f3c1d573b13c1ea9318f5c33'
+modified: '2026-09-26'
+body_hash: 'sha256:f9a008fd79445d7d6ce84528fdda96fc1c76c838963cb47810e37a0a02519035'
 related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
   - "[[2026-07-03-claude-ecosystem-packaging-adr]]"
   - "[[2026-07-08-mcp-progressive-discovery-adr]]"
   - "[[2026-07-08-mcp-protocol-hardening-adr]]"
+  - '[[2026-09-26-mcp-purpose-authentication-adr]]'
 ---
 
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
@@ -242,3 +243,11 @@ scrubbing boundary needs its own conformance gate so raw evidence bytes cannot
 enter model context.
 
 **Pathways opened.** The manifest-derived toolset surface and the on-host grounding index feed documentation generation, future personas, and additional situation skills without re-deriving the catalogue. The live harness plus the telemetry flywheel become the standing assurance loop — every rule, skill, prompt, and tool-description change is re-measured against a real model, and every live failure becomes a golden regression — turning the harness from a shipped artifact into a continuously-verified operating system for the black-box tool universe.
+
+## Amendment 2026-09-26: shared application execution beneath all entrypoints
+
+Accepted under the operator's instruction to continue the presented mcp-purpose-authentication plan. 2026-09-26-mcp-purpose-authentication-adr replaces the CLI-subprocess-only parts of R1, Q1, the CLI-as-contract consideration and their dependent implementation prose. The application operation/action authorities supply typed contracts and policy; CLI JSON, TUI and MCP are projections over the shared local runtime.
+
+The agent still sees a confined deterministic tool universe, with no arbitrary code, SQL or shell capability. MCP may call the public application operation boundary without going through command functions or an aeat subprocess. Catalogue-derived discovery, operating-layer content, provenance, human approval where required and the applicable never-live-submit/data-disclosure rules survive.
+
+Persona/tool filtering can narrow presentation but cannot grant authority. Runtime credential, profile, scope and disclosure checks remain mandatory on every path. Client confirmation hints and an LLM's claimed approval never replace application authorization. API-key enrollment and secret collection use trusted local CLI/TUI channels governed by 2026-09-26-mcp-purpose-authentication-profile-access-adr; this does not reopen unrelated skill taxonomy or distribution decisions.

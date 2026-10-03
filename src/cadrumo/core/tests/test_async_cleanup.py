@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import override
 
 import pytest
 
@@ -29,6 +30,47 @@ def test_cleanup_error_retains_failures_and_registry_contract() -> None:
     code = get_registered_error_code(error)
     assert code.code == "ERROR_CADRUMO_ASYNC_RESOURCE_CLEANUP"
     assert code.retryable is True
+    merged = error.merged_with(error)
+    assert merged._failures == (failure, failure)
+
+
+class _EqualReleaseOwners:
+    """Distinct unhashable owners may compare equal without sharing custody."""
+
+    __hash__ = None
+
+    def __init__(self, *, failures: int) -> None:
+        self.failures = failures
+        self.calls = 0
+        self.released = False
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, _EqualReleaseOwners)
+
+    async def close(self) -> None:
+        self.calls += 1
+        if self.calls <= self.failures:
+            raise OSError("synthetic owned release failure")
+        self.released = True
+
+
+@pytest.mark.asyncio
+async def test_overlapping_cleanup_records_retry_each_distinct_owner_once() -> None:
+    first = _EqualReleaseOwners(failures=3)
+    second = _EqualReleaseOwners(failures=1)
+    with pytest.raises(AsyncResourceCleanupError) as earlier:
+        await close_async_resources(first, task_name="earlier-release", primary_error=None)
+    with pytest.raises(AsyncResourceCleanupError) as later:
+        await close_async_resources(first, second, task_name="later-release", primary_error=None)
+    retained = earlier.value.merged_with(later.value)
+    with pytest.raises(AsyncResourceCleanupError) as retry_failed:
+        await retained.retry_cleanup()
+    assert first.calls == 3 and not first.released
+    assert second.calls == 2 and second.released
+    await retry_failed.value.retry_cleanup()
+    assert first.calls == 4 and first.released
+    assert second.calls == 2
 
 
 @pytest.mark.asyncio

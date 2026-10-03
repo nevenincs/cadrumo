@@ -14,18 +14,29 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....application.ledger.actions_manual import ledger_transaction_payload
+from ....application.ledger.list_operation import LedgerListProjection as LedgerListSnapshot
+from ....application.ledger.list_query import LedgerTransactionListQuery, query_ledger_transaction_list
 from ....application.ledger.list_query import sort_ledger_results as _sort_results
 from ....application.ledger.models import ManualLedgerTransactionResult
+from ....application.ledger.review_projection import ledger_transaction_review_status
+from ....application.ledger.transaction_projection import (
+    LedgerTransactionProjection,
+    LedgerTransactionReviewProjection,
+)
 from ....application.review.filter import LedgerReviewFilterSpec
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...ledger_action_composition import compose_ledger_action_ports
 from .._ledger_list import project_ledger_list
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -196,14 +207,17 @@ def test_optional_sort_key_sorts_last_under_both_orders() -> None:
     assert [r.transaction.raw.value_date for r in desc[:2]] == [date(2024, 6, 1), date(2024, 1, 1)]
 
 
-def test_project_ledger_list_applies_sort_over_real_repository(tmp_path: Path) -> None:
-    """End-to-end: project_ledger_list sorts a real encrypted catalogue by amount.
+def test_project_ledger_list_renders_canonical_sort_from_real_encrypted_repository(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Query real encrypted storage under one authority, then render its canonical page.
 
     Persists three transactions through the real
-    :class:`TransactionCatalogueRepository`, then lists them through
-    ``project_ledger_list`` with ``sort_by=amount``. The rendered rows must
-    appear in ascending magnitude order — proving the sort is wired into the
-    projection path, not only the helper.
+    :class:`TransactionCatalogueRepository`, runs the registered list use case's
+    canonical query with explicit pinned ledger ports, and feeds its admitted
+    rows to the pure CLI renderer. The rendered rows must appear in ascending
+    magnitude order.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="65853d4f-9e30-443f-9f91-b048ef4d292e") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -218,16 +232,33 @@ def test_project_ledger_list_applies_sort_over_real_repository(tmp_path: Path) -
         ]
         repo.save(TransactionCatalogue.from_transactions(txns))
 
-        projection = project_ledger_list(
-            transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
-            spec=LedgerReviewFilterSpec.from_strings([]),
-            group=None,
-            by_group=False,
-            limit=None,
-            offset=0,
-            sort_by=LedgerSortField.AMOUNT,
-            sort_order=LedgerSortOrder.ASC,
+        ports = compose_ledger_action_ports(bucket_id=profile.bucket_id, operation=authority_operation)
+        canonical_page = query_ledger_transaction_list(
+            LedgerTransactionListQuery(
+                spec=LedgerReviewFilterSpec.from_strings([]),
+                sort_by=LedgerSortField.AMOUNT,
+                sort_order=LedgerSortOrder.ASC,
+            ),
+            bucket_id=profile.bucket_id,
+            ports=ports,
         )
+        snapshot = LedgerListSnapshot(
+            profile_id=UUID(profile.bucket_id),
+            rows=tuple(
+                LedgerTransactionReviewProjection(
+                    transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(item.transaction)),
+                    review_status=ledger_transaction_review_status(item.transaction),
+                    group_label=item.transaction.group_label,
+                )
+                for item in canonical_page.results
+            ),
+            total=canonical_page.total,
+            truncated=canonical_page.truncated,
+            offset=0,
+            limit=None,
+            by_group=False,
+        )
+        projection = project_ledger_list(snapshot)
 
     # D2: projection.rows are typed LedgerListRowPayload objects, not bare dicts.
     # The display projection normalises the magnitude (no forced trailing cents),

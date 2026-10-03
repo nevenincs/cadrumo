@@ -108,6 +108,7 @@ class MountedCommandDomain(StrEnum):
     REVIEW = "review"
     REGISTRY = "registry"
     QUICKFILE = "quickfile"
+    RUNTIME = "runtime"
 
 
 class RootSurface(BaseModel):

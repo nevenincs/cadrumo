@@ -612,12 +612,12 @@ def test_cross_window_concurrent_guard_cas_retries_then_refuses_over_cap(
         original_apply_batch = profile.repository.apply_batch
         injected = False
 
-        def _race_apply_batch(writes, deletions=()):
+        def _race_apply_batch(writes, deletions=(), *, assertions=()):
             nonlocal injected
             if not injected:
                 injected = True
                 second_service.apply(second_command)
-            return original_apply_batch(writes, deletions)
+            return original_apply_batch(writes, deletions, assertions=assertions)
 
         monkeypatch.setattr(profile.repository, "apply_batch", _race_apply_batch)
         with pytest.raises(WithholdingObservationMutationError, match="liability_base_exceeded"):

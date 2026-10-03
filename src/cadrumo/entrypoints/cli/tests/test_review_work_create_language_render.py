@@ -18,14 +18,11 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.review.operator import ReviewQueueReport
 from ....core.config import override_settings
 from .._review import _queue_lines
 from .clean_install_fixtures import clean_install
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_EMPTY_REPORT = ReviewQueueReport(rows=())
 
 
 def _rendered(language: str | None) -> str:
@@ -35,9 +32,9 @@ def _rendered(language: str | None) -> str:
     with no override applied.
     """
     if language is None:
-        return "\n".join(_queue_lines(_EMPTY_REPORT))
+        return "\n".join(_queue_lines(()))
     with override_settings(cadrumo_output_language=language):
-        return "\n".join(_queue_lines(_EMPTY_REPORT))
+        return "\n".join(_queue_lines(()))
 
 
 __all__ = ["clean_install"]

@@ -245,6 +245,28 @@ def record_auth_diagnostic_phone_state(
     Returns an :class:`AuthDiagnosticReportResult`, or ``None`` when the
     diagnostic is not found.
     """
+    prepared = prepare_auth_diagnostic_phone_state(diagnostic_id, phone_state, persistence=persistence)
+    if prepared is None:
+        return None
+    persist_auth_diagnostic_phone_state(prepared, persistence=persistence)
+    return prepared.result
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedAuthDiagnosticPhoneStateReport:
+    """Validated encrypted-record update awaiting its one guarded save."""
+
+    result: AuthDiagnosticReportResult
+    payload: bytes
+
+
+def prepare_auth_diagnostic_phone_state(
+    diagnostic_id: str,
+    phone_state: str,
+    *,
+    persistence: AuthDiagnosticPersistencePort,
+) -> PreparedAuthDiagnosticPhoneStateReport | None:
+    """Read and validate the canonical report update without persisting it."""
     try:
         AuthDiagnosticPhoneState(phone_state)
     except ValueError as exc:
@@ -265,15 +287,26 @@ def record_auth_diagnostic_phone_state(
             },
         },
     )
-    persistence.save_record(
-        diagnostic_id,
-        canonical_json_bytes(updated.model_dump(mode="json")),
-        written_at=reported_at,
+    return PreparedAuthDiagnosticPhoneStateReport(
+        result=AuthDiagnosticReportResult(
+            diagnostic_id=diagnostic_id,
+            phone_state=AuthDiagnosticPhoneState(phone_state),
+            reported_at=reported_at,
+        ),
+        payload=canonical_json_bytes(updated.model_dump(mode="json")),
     )
-    return AuthDiagnosticReportResult(
-        diagnostic_id=diagnostic_id,
-        phone_state=AuthDiagnosticPhoneState(phone_state),
-        reported_at=reported_at,
+
+
+def persist_auth_diagnostic_phone_state(
+    prepared: PreparedAuthDiagnosticPhoneStateReport,
+    *,
+    persistence: AuthDiagnosticPersistencePort,
+) -> None:
+    """Commit only the already validated encrypted diagnostic update."""
+    persistence.save_record(
+        prepared.result.diagnostic_id,
+        prepared.payload,
+        written_at=prepared.result.reported_at,
     )
 
 
@@ -522,7 +555,10 @@ __all__ = [
     "AuthDiagnosticPhoneStateSource",
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
+    "PreparedAuthDiagnosticPhoneStateReport",
     "list_auth_diagnostics",
     "load_auth_diagnostic",
+    "persist_auth_diagnostic_phone_state",
+    "prepare_auth_diagnostic_phone_state",
     "record_auth_diagnostic_phone_state",
 ]

@@ -15,7 +15,9 @@ from typing import Protocol
 from ...core.period import Period
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
+from .filed_data_ports import FiledEffectGuard
 from .filed_observation_ports import FiledFilingReconciliationPort
+from .session import SessionWriteReporter
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,6 +115,8 @@ class JustificanteLiveReadPort(Protocol):
         *,
         modelo: str,
         year: int,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]:
         """Read declarations and their matching procedure-tree entries."""
         ...

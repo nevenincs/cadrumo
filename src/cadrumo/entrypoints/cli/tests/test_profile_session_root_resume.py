@@ -24,6 +24,7 @@ resume defect.
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Iterator
 from datetime import timedelta
 from pathlib import Path
@@ -53,6 +54,7 @@ from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
 from ....tests.os_keychain_hook import require_os_credential_store
 from ..common import cli_policy_refusal_projection
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 
@@ -267,11 +269,13 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
 class TestFailClosedRefusals:
     """Absent and expired sessions refuse, naming the verb that fixes it."""
 
-    def test_unnamed_validate_is_gated_as_an_active_profile_read(self) -> None:
+    @pytest.mark.windows_only
+    @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile runtime")
+    def test_unnamed_validate_is_gated_as_an_active_profile_read(self, _isolated_root: Path) -> None:
         _create_profile()
         close_active_bucket_session()
 
-        with override_settings(cadrumo_secret_passphrase=None):
+        with override_settings(cadrumo_secret_passphrase=None), native_profile_view_server(_isolated_root):
             result = invoke_cached_cli(["--format", "json", "config", "profile", "validate"])
 
         assert result.exit_code != 0
@@ -279,13 +283,16 @@ class TestFailClosedRefusals:
         assert document["error"]["context"]["reason"] == "absent", document
         assert document["error"]["category"] == "REFUSED", document
 
-    def test_explicit_validate_is_not_preempted_by_the_active_profile_gate(self) -> None:
+    @pytest.mark.windows_only
+    @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile runtime")
+    def test_explicit_validate_is_not_preempted_by_the_active_profile_gate(self, _isolated_root: Path) -> None:
         _create_profile()
         close_active_bucket_session()
 
-        result = _invoke_with_root_profile_secret(
-            ["--format", "json", "config", "profile", "validate", _LABEL],
-        )
+        with native_profile_view_server(_isolated_root):
+            result = _invoke_with_root_profile_secret(
+                ["--format", "json", "config", "profile", "validate", _LABEL],
+            )
 
         document = json.loads(semantic_cli_output(result))
         assert document["command"] == "config.profile.validate", document

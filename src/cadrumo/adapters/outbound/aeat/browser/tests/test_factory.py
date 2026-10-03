@@ -13,7 +13,12 @@ from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...tests.process_support import wait_for_process_exit
 from ..errors import BrowserError, BrowserPreconditionCondition
-from ..factory import create_browser_session, opened_browser_page, shared_playwright_runtime
+from ..factory import (
+    BrowserRuntimeResourceScope,
+    create_browser_session,
+    opened_browser_page,
+    shared_playwright_runtime,
+)
 from ..profile import Profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -70,6 +75,32 @@ async def test_shared_playwright_runtime_reaps_its_real_driver() -> None:
         assert psutil.pid_exists(driver_pid)
 
     await wait_for_process_exit(driver_pid, after="session close")
+
+
+@pytest.mark.asyncio
+async def test_operation_resource_scope_reaps_unclosed_real_browser_driver() -> None:
+    """Supervisor cleanup owns a driver even if its provider never closes it."""
+    scope = BrowserRuntimeResourceScope()
+    with scope.activate():
+        session = await create_browser_session(Settings(), _profile("operation-resource"))
+        driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
+        assert psutil.pid_exists(driver_pid)
+
+    await scope.close()
+    await wait_for_process_exit(driver_pid, after="operation resource cleanup")
+    await scope.close()
+
+
+@pytest.mark.asyncio
+async def test_operation_resource_scope_owns_shared_register_driver() -> None:
+    """A register's shared Playwright driver joins the same cleanup owner."""
+    scope = BrowserRuntimeResourceScope()
+    with scope.activate():
+        async with shared_playwright_runtime() as playwright:
+            driver_pid = playwright._impl_obj._connection._transport._proc.pid
+            assert psutil.pid_exists(driver_pid)
+            await scope.close()
+            await wait_for_process_exit(driver_pid, after="operation register cleanup")
 
 
 @pytest.mark.asyncio

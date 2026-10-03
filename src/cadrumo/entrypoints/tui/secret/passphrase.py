@@ -1,17 +1,15 @@
 """Passphrase change: re-wrap one profile's key under a new password.
 
 This screen collects the current passphrase (proof), the replacement, and
-its confirmation, then hands all three to the injected rotation door. It
-decides nothing about whether a new password is acceptable or whether a
-confirmation mismatch refuses the change -- both are re-checked inside
-:func:`~cadrumo.application.user_profile.passphrase_rotation
-.rotate_profile_passphrase` regardless of what this screen already validated,
-per that door's own stated contract ("a caller reaching this function
-directly must not be able to skip the check").
+its confirmation, then hands all three to the injected rotation door. The
+installed account composition submits the registered rotation through
+:func:`~cadrumo.adapters.local_runtime.profile_password_rotation.run_profile_password_rotation`.
+Password acceptability and confirmation are re-checked by the canonical
+application service regardless of the screen's local validation.
 
 See Also:
     :func:`~cadrumo.application.user_profile.passphrase_rotation.rotate_profile_passphrase`
-        The application door this screen drives.
+        The application policy enforced by the registered rotation executor.
     :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationScreen`
         The sibling credential surface this one borrows its live strength
         feedback and attempt shape from.
@@ -19,6 +17,8 @@ See Also:
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
 from contextvars import copy_context
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
@@ -26,7 +26,9 @@ from typing import TYPE_CHECKING, override
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Footer, Input, Label, Static
+from textual.worker import Worker
 
+from ....core.async_cleanup import await_cancellation_complete
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import tr
 from ..components.status import PinnedStatusBar
@@ -43,13 +45,11 @@ if TYPE_CHECKING:
 
     from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
     from ....core.credentials import ProfilePasswordAssessment
-    from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 __all__ = [
     "PassphraseChangeAttempt",
     "PassphraseChangeRefusal",
     "PassphraseScreen",
-    "build_profile_passphrase_change_door",
 ]
 
 
@@ -114,10 +114,64 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
         super().__init__()
         self._assess_profile_password = assess
         self._rotate_passphrase = rotate
+        self._rotation_task: asyncio.Task[CredentialAttempt[ProfilePassphraseRotationOutcome]] | None = None
+        self._live = True
         """Applies the typed current/new/confirmation triple and returns the
         presentation-ready attempt. Injected rather than imported, exactly
         like registration's ``register`` door: the profile identity is
         already closed over by whatever composed this screen."""
+
+    @override
+    def start_attempt(self, work: Callable[[], CredentialAttempt[ProfilePassphraseRotationOutcome]]) -> None:
+        """Own the blocking mutation until it settles, including during unmount."""
+        if self.attempt_in_flight:
+            return
+        self.error = None
+        self.set_busy(busy=True)
+        for field in self.query(Input):
+            field.value = ""
+        task = asyncio.create_task(asyncio.to_thread(work), name=self.ATTEMPT_NAME)
+        self._rotation_task = task
+        self._attempt = self.run_worker(
+            await_cancellation_complete(task, task_name=self.ATTEMPT_NAME),
+            name=self.ATTEMPT_NAME,
+            group=self.ATTEMPT_NAME,
+            exit_on_error=False,
+            exclusive=True,
+        )
+
+    @override
+    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+        """Discard presentation after unmount while retaining execution ownership."""
+        if not self._live:
+            return
+        super().on_worker_state_changed(event)
+        if not self.attempt_in_flight:
+            self._rotation_task = None
+
+    async def settle_rotation(self) -> ProfilePassphraseRotationOutcome | None:
+        """Read the submitted attempt's result without restoring expired authority."""
+        task = self._rotation_task
+        if task is not None:
+            try:
+                attempt = await await_cancellation_complete(task, task_name="passphrase-result-settlement")
+            except (asyncio.CancelledError, Exception):
+                return None
+            return attempt.outcome
+        return self.outcome
+
+    async def on_unmount(self) -> None:
+        """Do not release the borrowed runtime client while rotation still uses it."""
+        self._live = False
+        for field in self.query(Input):
+            field.value = ""
+        if self._attempt is not None:
+            self._attempt.cancel()
+        task = self._rotation_task
+        if task is not None:
+            with suppress(asyncio.CancelledError, Exception):
+                await await_cancellation_complete(task, task_name="passphrase-unmount-settlement")
+        self._rotation_task = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -165,7 +219,7 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Re-render the advisory strength line as the new password is typed."""
-        if event.input.id == "field-new":
+        if self._live and event.input.id == "field-new":
             self._render_strength(event.value, assess=self._assess_profile_password)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -271,47 +325,3 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
             self.query_one(f"#{field_id}", Input).disabled = busy
         self.query_one("#btn-change", Button).disabled = busy
         self.query_one("#btn-cancel", Button).disabled = busy
-
-
-def build_profile_passphrase_change_door(
-    profile_id: str,
-    *,
-    profile_decode_context: ProfileDecodeContext,
-) -> Callable[[str, str, str], PassphraseChangeAttempt]:
-    """Bind the canonical rotation door to one already-authenticated profile.
-
-    The identity is closed over here so the screen never carries it, and the
-    returned door mutates nothing until the operator submits. Expected
-    refusals stay data: the application owns which failures are expected and
-    supplies their localized key, and no passphrase reaches the result.
-    """
-    from uuid import UUID
-
-    from ....application.user_profile.passphrase_rotation import (
-        ProfilePassphraseRotationError,
-        rotate_profile_passphrase,
-    )
-
-    parsed_profile_id = UUID(profile_id)
-
-    def rotate(current: str, replacement: str, confirmation: str) -> PassphraseChangeAttempt:
-        try:
-            outcome = rotate_profile_passphrase(
-                profile_id=parsed_profile_id,
-                current_passphrase=current,
-                new_passphrase=replacement,
-                new_passphrase_confirmation=confirmation,
-                profile_decode_context=profile_decode_context,
-            )
-        except ProfilePassphraseRotationError as refusal:
-            if refusal.translated_message is None:
-                raise
-            return PassphraseChangeAttempt(
-                expected_refusal=PassphraseChangeRefusal(
-                    message_key=refusal.translated_message,
-                    context=tuple((refusal.context or {}).items()),
-                )
-            )
-        return PassphraseChangeAttempt(outcome=outcome)
-
-    return rotate

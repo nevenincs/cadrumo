@@ -1,0 +1,6 @@
+@step Approve only the exact reviewed permissions.
+@static aeat config profile automation approve REQUEST_UUID --review-digest REVIEW_DIGEST
+@blocked interactive-tty Requires the actual inspected request and digest plus fresh profile-password entry through the hidden terminal prompt.
+@step Alternatively decline the exact reviewed request.
+@static aeat config profile automation decline REQUEST_UUID --review-digest REVIEW_DIGEST
+@blocked operator-artifact REQUEST_UUID and REVIEW_DIGEST must come from the reader's current request inspection; run only one decision command.

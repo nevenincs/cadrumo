@@ -14,29 +14,46 @@ data-prep walkthrough's operator contract from #260:
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Iterator
+from contextvars import ContextVar
 
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
-)
 from ....application.overview.data_prep import DataPrepStepId, DataPrepStepState
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .._overview_payloads import OverviewPrepareStepPayload
-from ._modelo_work_ux_support import _create_profile, _invoke
+from ._overview_native_support import invoke_native_overview
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
-__all__ = ["_isolated_cli_backend"]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+_PROFILE: ContextVar[NativeCliProfileFixture] = ContextVar("prepare_native_profile")
+
+
+@pytest.fixture(autouse=True)
+def _native_profile(native_overview_profile: NativeCliProfileFixture) -> Iterator[None]:
+    token = _PROFILE.set(native_overview_profile)
+    try:
+        yield
+    finally:
+        _PROFILE.reset(token)
+
+
+def _invoke(args: list[str]):
+    return invoke_native_overview(_PROFILE.get(), args)
 
 
 def test_prepare_shows_import_step_pending_on_fresh_profile() -> None:
     """A brand-new profile with no ledger data: the first checklist step is
     pending and names the exact ``ledger import`` command to run next."""
-
-    _create_profile()
 
     result = _invoke(
         ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", "2026", "--period", "1T"],
@@ -92,7 +109,6 @@ def test_prepare_advances_import_step_after_manual_ledger_entry() -> None:
     import step must flip from pending to done - the operator must not keep
     being told to import when the data already exists."""
 
-    _create_profile()
     added = _invoke(
         [
             "app", "ledger", "add",
@@ -123,8 +139,6 @@ def test_prepare_is_read_only_and_safe_to_run_repeatedly() -> None:
     """Running the walkthrough twice in a row must be a pure read: the second
     invocation reports identical state, proving no mutation occurred."""
 
-    _create_profile()
-
     first = _invoke(
         ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", "2026", "--period", "1T"],
     )
@@ -139,8 +153,6 @@ def test_prepare_is_read_only_and_safe_to_run_repeatedly() -> None:
 def test_prepare_rejects_unknown_modelo_with_registry_grounded_message() -> None:
     """An unknown/mistyped modelo code refuses loudly rather than silently
     defaulting to an empty checklist."""
-
-    _create_profile()
 
     result = _invoke(
         ["--format", "json", "app", "overview", "prepare", "--modelo", "999", "--year", "2026", "--period", "1T"],

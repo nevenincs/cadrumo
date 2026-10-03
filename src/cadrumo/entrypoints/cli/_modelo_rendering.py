@@ -18,6 +18,7 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
@@ -25,6 +26,7 @@ from ...application.modelo.calculation import (
     visible_calculation_casilla_values,
     visible_calculation_observations,
 )
+from ...application.modelo.lifecycle_advisories import Modelo184SocioHandoffV1
 from ...application.modelo.result_summary import calculation_result_summary
 from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.modelo.verification_preconditions import VerificationFindingPreconditionProjection
@@ -61,6 +63,7 @@ from ._modelo_revision_payload_parts import (
     SourceProvenancePayload,
 )
 from .common import resolve_cli_precondition_action
+from .modelo_revision_rendering import calculation_observation_payload_lines, calculation_revision_state_label
 
 if TYPE_CHECKING:
     # Annotation-only: `from __future__ import annotations` keeps this lazy so the
@@ -126,28 +129,58 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
             )
         handoff_code, target_casilla, legal_refs = handoff_declarations
         notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
+            _m184_socio_handoff_notice(
+                nif=row.nif,
+                nombre=row.nombre,
+                porcentaje=row.porcentaje,
+                importe=row.importe,
                 code=handoff_code,
-                message=tr(
-                    "cli.app.modelo.work.m184_socio_handoff_message",
-                    nif=row.nif,
-                    nombre=row.nombre,
-                    importe=row.importe,
-                    porcentaje=row.porcentaje,
-                    casilla=target_casilla,
-                ),
-                context={
-                    "nif": row.nif,
-                    "nombre": row.nombre,
-                    "porcentaje": str(row.porcentaje),
-                    "base_imponible_attributed": str(row.importe),
-                    "target_casilla": target_casilla,
-                    "legal_refs": legal_refs,
-                },
-            ),
+                target_casilla=target_casilla,
+                legal_refs=legal_refs,
+            )
         )
     return notices
+
+
+def m184_socio_handoff_advisory_notices(handoffs: Sequence[Modelo184SocioHandoffV1]) -> list[Notice]:
+    """Render the writer's exact grounded handoffs without reopening a revision."""
+    return [
+        _m184_socio_handoff_notice(
+            nif=handoff.nif,
+            nombre=handoff.nombre,
+            porcentaje=Decimal(handoff.porcentaje),
+            importe=Decimal(handoff.importe),
+            code=handoff.code,
+            target_casilla=handoff.target_casilla,
+            legal_refs=handoff.legal_refs,
+        )
+        for handoff in handoffs
+    ]
+
+
+def _m184_socio_handoff_notice(
+    *, nif: str, nombre: str, porcentaje: Decimal, importe: Decimal, code: str, target_casilla: str, legal_refs: str
+) -> Notice:
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=code,
+        message=tr(
+            "cli.app.modelo.work.m184_socio_handoff_message",
+            nif=nif,
+            nombre=nombre,
+            importe=importe,
+            porcentaje=porcentaje,
+            casilla=target_casilla,
+        ),
+        context={
+            "nif": nif,
+            "nombre": nombre,
+            "porcentaje": str(porcentaje),
+            "base_imponible_attributed": str(importe),
+            "target_casilla": target_casilla,
+            "legal_refs": legal_refs,
+        },
+    )
 
 
 def binding_encoded_option_payloads(
@@ -328,34 +361,6 @@ def _effective_work_unit_state(unit: WorkUnit) -> str:
     return state
 
 
-def calculation_revision_state_label(state: str) -> str:
-    if state == CalculationRevisionState.BORRADOR.value:
-        return tr(
-            "cli.app.modelo.work.state_label_borrador",
-        )
-    if state == CalculationRevisionState.VERIFICADO_COMPLETO.value:
-        return tr(
-            "cli.app.modelo.work.state_label_verificado_completo",
-        )
-    if state == CalculationRevisionState.PRESENTADO.value:
-        return tr(
-            "cli.app.modelo.work.state_label_presentado",
-        )
-    if state == CalculationRevisionState.PRESENTADO_SUPERSEDIDO.value:
-        return tr(
-            "cli.app.modelo.work.state_label_presentado_supersedido",
-        )
-    if state == CalculationRevisionState.DESCARTADO.value:
-        return tr(
-            "cli.app.modelo.work.state_label_descartado",
-        )
-    return state
-
-
-def _human_state_label(state: str) -> str:
-    return calculation_revision_state_label(state)
-
-
 def work_unit_payload(unit: WorkUnit) -> WorkUnitPayload:
     return WorkUnitPayload(
         work_unit_id=unit.work_unit_id,
@@ -390,7 +395,7 @@ def work_unit_lines(unit: WorkUnit, *, include_bucket_id: bool = True) -> list[s
         f"period\t{unit.period.registry_token}",
         f"revision_id\t{unit.revision_id}",
         f"name\t{unit.name}",
-        f"state\t{_human_state_label(_effective_work_unit_state(unit))}",
+        f"state\t{calculation_revision_state_label(_effective_work_unit_state(unit))}",
         f"current_calculation_revision_id\t{unit.current_calculation_revision_id or ''}",
         f"short_current_calculation_revision_id\t{_short_id_text(unit.current_calculation_revision_id)}",
         f"filed_calculation_revision_id\t{unit.filed_calculation_revision_id or ''}",
@@ -429,7 +434,7 @@ def work_unit_list_lines(units: Sequence[WorkUnit], *, include_discarded: bool) 
                 str(unit.filing_year),
                 unit.period.registry_token,
                 unit.revision_id,
-                _human_state_label(_effective_work_unit_state(unit)),
+                calculation_revision_state_label(_effective_work_unit_state(unit)),
                 short_id(unit.current_calculation_revision_id) or "",
                 short_id(unit.filed_calculation_revision_id) or "",
                 unit.name,
@@ -442,7 +447,11 @@ def work_unit_list_lines(units: Sequence[WorkUnit], *, include_discarded: bool) 
 
 def work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
     """Render deadline posture and unassessed preview lines for the work unit."""
-    posture = modelo_work_deadline_posture(unit)
+    return work_plazo_lines_from_posture(modelo_work_deadline_posture(unit))
+
+
+def work_plazo_lines_from_posture(posture: ModeloWorkDeadlinePosture | None) -> list[str]:
+    """Render a deadline posture already resolved by the canonical application."""
     if posture is None:
         return []
 
@@ -487,6 +496,8 @@ def work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
 
 def _work_unit_deadline_output_from_posture(
     posture: ModeloWorkDeadlinePosture | None,
+    *,
+    fallback_legal_ref: str | None = None,
 ) -> tuple[WorkDeadlinePosturePayload | None, list[Notice]]:
     """Project deadline posture onto a payload and unassessed-preview notice.
 
@@ -543,7 +554,7 @@ def _work_unit_deadline_output_from_posture(
         context["conditional_recargo_preview_reference_on"] = preview.rate_reference_on.isoformat()
     else:
         # The deadline posture remains known even when preview resolution fails.
-        context["legal_refs"] = _modelo_rendering_value("extemporaneous_recargo.legal_ref")
+        context["legal_refs"] = fallback_legal_ref or _modelo_rendering_value("extemporaneous_recargo.legal_ref")
     return deadline_payload, [
         Notice(
             severity=NoticeSeverity.WARNING,
@@ -562,6 +573,20 @@ def work_unit_deadline_output(unit: WorkUnit) -> tuple[WorkDeadlinePosturePayloa
     plus warning-severity :class:`~cadrumo.core.json_contract.Notice` rows.
     """
     return _work_unit_deadline_output_from_posture(modelo_work_deadline_posture(unit))
+
+
+def work_deadline_output_from_posture(
+    posture: ModeloWorkDeadlinePosture | None, *, fallback_legal_ref: str | None
+) -> tuple[WorkDeadlinePosturePayload | None, list[Notice]]:
+    """Render pinned deadline facts without rereading the registry or the clock."""
+    if (
+        posture is not None
+        and posture.days_overdue is not None
+        and posture.conditional_recargo_preview is None
+        and fallback_legal_ref is None
+    ):
+        raise ValueError("an overdue posture without preview requires its pinned legal reference")
+    return _work_unit_deadline_output_from_posture(posture, fallback_legal_ref=fallback_legal_ref)
 
 
 def detail_row_payloads(rev: CalculationRevision) -> tuple[DetailRowPayload, ...]:
@@ -892,7 +917,7 @@ def calculation_revision_lines(
     lines = [
         f"calculation_revision_id\t{rev.calculation_revision_id}",
         f"work_unit_id\t{rev.work_unit_id}",
-        f"state\t{_human_state_label(rev.state.value)}",
+        f"state\t{calculation_revision_state_label(rev.state.value)}",
         f"created_at\t{rev.created_at.isoformat()}",
         f"updated_at\t{rev.updated_at.isoformat()}",
     ]
@@ -920,30 +945,7 @@ def calculation_observation_lines(rev: CalculationRevision, *, operation: Pinned
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     payload = calculation_revision_payload(rev, operation=operation, include_result_summary=False)
-    observations = sorted(payload.observations, key=lambda obs: obs.casilla_id)
-    lines = [
-        f"calculation_revision_id\t{payload.calculation_revision_id}",
-        f"work_unit_id\t{payload.work_unit_id}",
-        f"state\t{_human_state_label(payload.state)}",
-        f"observation_count\t{len(observations)}",
-        "casilla_id\tvalue\tformula_id\tlegal_refs\tsource_refs\toperand_refs\toperand_casilla_refs\toperand_values",
-    ]
-    lines.extend(
-        "\t".join(
-            (
-                obs.casilla_id,
-                obs.value,
-                obs.formula_id or "",
-                ";".join(obs.legal_refs),
-                ";".join(obs.source_refs),
-                ";".join(obs.operand_refs),
-                ";".join(obs.operand_casilla_refs),
-                ";".join(obs.operand_values),
-            ),
-        )
-        for obs in observations
-    )
-    return lines
+    return calculation_observation_payload_lines(payload)
 
 
 def filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
@@ -987,7 +989,7 @@ def filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
     )
 
 
-def filing_record_lines(record: ModeloRecord) -> list[str]:
+def filing_record_lines(record: ModeloRecord | ModeloRecordPayload) -> list[str]:
     """Render a :class:`~ModeloRecord` as stable text lines.
 
     External evidence, when present, is printed as explicit

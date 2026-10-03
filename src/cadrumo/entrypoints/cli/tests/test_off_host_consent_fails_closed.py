@@ -1,22 +1,9 @@
-"""An unrecognised consent answer refuses the read rather than authorising it.
+"""CLI consent preflight accepts only the explicit classified flag pair.
 
-``_mint_extract_consent`` turns an operator's provider-and-acknowledgement pair
-into the token that lets one document's bytes leave this host for an off-host
-model. The classifier that decides what the pair asks for lives in the consent
-module; this command supplies the wording and the binding.
-
-It used to decide by elimination. The on-host default returned early, an
-outcome found in the refusal wording table raised, and ANYTHING ELSE fell
-through to minting. That is the wrong default for a consent gate: the
-condition for proceeding was "no refusal sentence was found for this", so an
-outcome added to the classifier without a sentence here would have authorised
-the transfer instead of refusing it. The transfer is of financial evidence, and
-the posture the whole flag pair exists to enforce is default-off.
-
-The proceeding outcome is named explicitly now. These tests hold both halves of
-that: the partition over the enum is total, so the new refusal is provably
-unreachable today, and the one consented pair still reaches the minting path so
-the fix cannot be mistaken for a gate that refuses everything.
+The worker owns profile eligibility, source binding and token minting. Local
+preflight validates the provider, acknowledgement and stored evidence reference
+before submission. These tests preserve its refusal partition, positive control
+and localized recovery text without constructing private persistence ports.
 """
 
 from __future__ import annotations
@@ -28,21 +15,14 @@ import typer
 import yaml
 
 from ....adapters.outbound.llm.consent import OffHostEvidenceReadOutcome, classify_off_host_evidence_read
-from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.config_support import LLMProvider
 from ....core.i18n.render import tr
-from ...adapter_composition import build_ledger_evidence_ports
-from .._ledger_evidence_cli import _OFF_HOST_REFUSAL_LOCALE_KEYS, _mint_extract_consent
+from .._ledger_evidence_cli import _OFF_HOST_REFUSAL_LOCALE_KEYS, _validate_extract_consent_options
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _LOCALES = ("en", "es", "ca", "hu")
 _LOCALES_ROOT = Path(__file__).resolve().parents[3] / "locales"
-_BUCKET = "0ff40570-0000-4000-8000-0ff405700000"
-
-# Evidence ports open the bucket's secure-object repository, so an isolated
-# runtime backs them; the store stays empty.
-_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET)
 
 #: The two outcomes this command answers with something other than a refusal.
 _NON_REFUSING = frozenset(
@@ -53,19 +33,12 @@ _NON_REFUSING = frozenset(
 )
 
 
-def _mint(*, provider: LLMProvider | None, acknowledged: bool, evidence_id: str | None = None) -> object:
-    """Drive the real minting entry point against an empty evidence store.
-
-    Every outcome except the consented one settles before any record is read,
-    and the consented one settles at the missing-evidence check just after, so
-    the consent decision is observable without any stored evidence.
-    """
-    return _mint_extract_consent(
-        bucket_id=_BUCKET,
+def _validate(*, provider: LLMProvider | None, acknowledged: bool, evidence_id: str | None = None) -> None:
+    """Validate real request flags without opening any private repository."""
+    _validate_extract_consent_options(
         evidence_id=evidence_id,
         off_host_provider=provider,
         acknowledged=acknowledged,
-        evidence_ports=build_ledger_evidence_ports(bucket_id=_BUCKET),
     )
 
 
@@ -92,9 +65,9 @@ def test_no_outcome_is_both_worded_as_a_refusal_and_allowed_to_proceed() -> None
     assert not frozenset(_OFF_HOST_REFUSAL_LOCALE_KEYS) & _NON_REFUSING
 
 
-def test_neither_flag_supplied_is_the_on_host_default_and_mints_nothing() -> None:
-    """The overwhelmingly common call: no token, no provider override."""
-    assert _mint(provider=None, acknowledged=False) is None
+def test_neither_flag_supplied_accepts_the_on_host_default() -> None:
+    """The default request needs no remote consent flags."""
+    assert _validate(provider=None, acknowledged=False) is None
 
 
 @pytest.mark.parametrize(
@@ -122,24 +95,23 @@ def test_an_incomplete_off_host_request_is_refused(provider: LLMProvider | None,
     outcome = classify_off_host_evidence_read(provider=provider, acknowledged=acknowledged)
 
     with pytest.raises(typer.BadParameter) as raised:
-        _mint(provider=provider, acknowledged=acknowledged)
+        _validate(provider=provider, acknowledged=acknowledged)
 
     assert str(raised.value) == tr(_OFF_HOST_REFUSAL_LOCALE_KEYS[outcome])
 
 
-def test_the_one_consented_pair_still_reaches_the_minting_path() -> None:
-    """The positive control, and the reason this is a fix rather than a lockout.
-
-    A gate that refused every off-host read would satisfy every refusal test
-    above while removing the capability. The consented pair must get PAST the
-    consent decision -- it stops at the next check, which is that a token binds
-    to bytes and none were named, and that refusal is a different one.
-    """
+def test_an_explicit_remote_request_requires_a_stored_evidence_reference() -> None:
+    """Acknowledgement alone cannot authorize unnamed evidence."""
     with pytest.raises(typer.BadParameter) as raised:
-        _mint(provider=LLMProvider.ANTHROPIC, acknowledged=True, evidence_id=None)
+        _validate(provider=LLMProvider.ANTHROPIC, acknowledged=True, evidence_id=None)
 
     message = str(raised.value)
     assert "--evidence-id" in message or "evidence" in message.lower()
+
+
+def test_the_explicit_remote_pair_and_reference_reach_worker_validation() -> None:
+    """A complete request is admitted for the worker's independent consent gate."""
+    assert _validate(provider=LLMProvider.ANTHROPIC, acknowledged=True, evidence_id="e" * 16) is None
 
 
 @pytest.mark.parametrize(

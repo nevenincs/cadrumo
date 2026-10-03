@@ -43,11 +43,10 @@ class ProfileFactWriteDoor(StrEnum):
     The taxonomy spans every surface that writes profile facts, not only the
     wizard: the command-line manager screens and the ``config profile`` verbs
     publish through this same writer, so their identities belong in the same
-    closed set rather than in a second one beside it.  ``CLI_DESCENDIENTE`` is
-    deliberately distinct from :attr:`DESCENDANTS` -- the interactive wizard's
-    repeating group and the non-interactive descendiente verbs are two surfaces
-    an operator can tell apart, and a history query asking which of them last
-    rewrote the set would be unable to answer if they shared one value.
+    closed set rather than in a second one beside it. Registered descendant
+    replacement uses :attr:`MANAGER_DESCENDANTS`; the wizard's direct
+    persistence uses :attr:`DESCENDANTS`. The registered operation records its
+    frontend separately from the fact writer's application policy.
     """
 
     ANSWERS = "wizard.answers"
@@ -56,8 +55,7 @@ class ProfileFactWriteDoor(StrEnum):
     MANAGER_FIELD = "manager.field"
     AUTH_CONFIGURE = "auth.configure"
     MANAGER_ROW = "manager.row"
-    CLI_CAPACIDAD = "cli.capacidad"
-    CLI_DESCENDIENTE = "cli.descendiente"
+    MANAGER_DESCENDANTS = "manager.descendants"
     CLI_PLANTILLA_MEDIA = "cli.plantilla_media"
     MANAGER_PLANTILLA_MEDIA = "manager.plantilla_media"
 

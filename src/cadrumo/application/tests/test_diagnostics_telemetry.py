@@ -35,6 +35,8 @@ from typing import Any, ClassVar, cast, override
 import pytest
 
 from ...core.config import Settings
+from ...core.telemetry.emit import TelemetrySink
+from ...core.telemetry.schema import TelemetryEventPayload
 from ...core.telemetry.tier import TelemetryTier
 from ...tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from ..diagnostics_run_health_ports import (
@@ -302,3 +304,100 @@ def test_flush_telemetry_requires_per_invocation_acknowledgement() -> None:
     assert preview.gate_permits is False
     with pytest.raises(Empty):
         events.get_nowait()
+
+
+class _CountingRunTelemetryPort(_FakeRunTelemetryPort):
+    """Observe payload capture without introducing another aggregation path."""
+
+    def __init__(self) -> None:
+        super().__init__(records=())
+        self.calls = 0
+
+    @override
+    def load_records(self, *, since: date | None, until: date | None) -> tuple[DiagnosticRunRecord, ...]:
+        self.calls += 1
+        return super().load_records(since=since, until=until)
+
+
+def _permitted_settings() -> Settings:
+    return Settings(
+        cadrumo_telemetry_opt_in=True,
+        cadrumo_telemetry_tier=TelemetryTier.FULL,
+        cadrumo_telemetry_endpoint="https://telemetry.invalid/initial",
+    )
+
+
+def test_dispatch_boundary_refreshes_settings_without_recapturing_payload() -> None:
+    """The canonical service emits its one captured payload using fresh settings."""
+    runs = _CountingRunTelemetryPort()
+    sent: list[TelemetryEventPayload] = []
+    refreshed = _permitted_settings().model_copy(
+        update={"cadrumo_telemetry_endpoint": "https://telemetry.invalid/current"}
+    )
+
+    def before_dispatch() -> Settings:
+        assert runs.calls == 1
+        return refreshed
+
+    def sink_factory(settings: Settings) -> TelemetrySink:
+        assert settings is refreshed
+
+        class Sink:
+            def send(self, payload: TelemetryEventPayload) -> None:
+                sent.append(payload)
+
+        return Sink()
+
+    preview = flush_telemetry(
+        settings=_permitted_settings(),
+        acknowledged=True,
+        run_telemetry_port=runs,
+        auth_probe_port=_FakeAuthProbePort(),
+        before_dispatch=before_dispatch,
+        sink_factory=sink_factory,
+    )
+    assert runs.calls == 1 and preview.would_send
+    assert len(sent) == 1 and sent[0] is preview.payload
+
+
+@pytest.mark.parametrize("missing", ["consent", "endpoint"])
+def test_current_dispatch_refusal_returns_full_preview_without_constructing_sink(missing: str) -> None:
+    """A latest consent or endpoint refusal is a canonical no-op with full preview."""
+    runs = _CountingRunTelemetryPort()
+    refreshed = (
+        Settings(cadrumo_telemetry_endpoint="https://telemetry.invalid/current")
+        if missing == "consent"
+        else Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
+    )
+
+    def unopened(_settings: Settings) -> TelemetrySink:
+        raise AssertionError("refused dispatch must not construct a sink")
+
+    preview = flush_telemetry(
+        settings=_permitted_settings(),
+        acknowledged=True,
+        run_telemetry_port=runs,
+        auth_probe_port=_FakeAuthProbePort(),
+        before_dispatch=lambda: refreshed,
+        sink_factory=unopened,
+    )
+    assert runs.calls == 1 and not preview.would_send
+    assert preview.gate_permits is (missing != "consent")
+    assert preview.endpoint_configured is (missing != "endpoint")
+    assert preview.payload.counters == {"runs": 0, "succeeded": 0, "failed": 0}
+
+
+def test_initial_noop_never_enters_authority_dispatch_boundary() -> None:
+    """Default-off consent builds the preview without requesting COMMIT authority."""
+
+    def unopened() -> Settings:
+        raise AssertionError("inert preview must not enter dispatch authority")
+
+    preview = flush_telemetry(
+        settings=Settings(),
+        acknowledged=True,
+        run_telemetry_port=_CountingRunTelemetryPort(),
+        auth_probe_port=_FakeAuthProbePort(),
+        before_dispatch=unopened,
+    )
+    assert not preview.would_send

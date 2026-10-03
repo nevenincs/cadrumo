@@ -15,13 +15,8 @@ model. None of the five verbs ever contacts AEAT or performs a network call;
 LLM run telemetry is read from encrypted local secure-object storage and the
 auth probe reads only the locally persisted session token's metadata.
 
-This module is the transport adapter over
-:func:`~application.diagnostics_run_health.build_run_health_report`,
-:func:`~application.diagnostics_run_health.list_recent_runs`,
-:func:`~application.diagnostics_run_health.build_latency_report`,
-:func:`~application.diagnostics_run_health.build_error_breakdown`, and
-:func:`~application.diagnostics_run_health.build_llm_usage_report`. It
-emits :class:`~entrypoints.cli._diagnostics_payloads.RunHealthResult`,
+This module presents reports returned by the exact-profile registered
+diagnostics operation. It emits :class:`~entrypoints.cli._diagnostics_payloads.RunHealthResult`,
 :class:`~entrypoints.cli._diagnostics_payloads.RunsListResult`,
 :class:`~entrypoints.cli._diagnostics_payloads.LatencyResult`,
 :class:`~entrypoints.cli._diagnostics_payloads.ErrorsBreakdownResult`,
@@ -114,33 +109,6 @@ def _parse_iso_date(value: str | None, option: str) -> _date | None:
     )
 
 
-def _compose_diagnostics_run_health_port():
-    """Compose the required diagnostic telemetry port at the CLI boundary."""
-    from ..diagnostics_run_health_composition import compose_diagnostics_run_health_port
-
-    return compose_diagnostics_run_health_port()
-
-
-def _compose_diagnostics_auth_probe_port(ctx: typer.Context):
-    """Compose the diagnostics auth probe from the root-owned state ports."""
-    from ..diagnostics_run_health_composition import compose_diagnostics_auth_probe_port
-    from .state_projection_support import (
-        authority_operation,
-        certificate_secret_backend_factory,
-        operator_probe_ports,
-        operator_scope_ports,
-        state_projection_read_ports,
-    )
-
-    return compose_diagnostics_auth_probe_port(
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_probe_ports=operator_probe_ports(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
-        read_ports=state_projection_read_ports(ctx),
-        operation=authority_operation(ctx),
-    )
-
-
 def _run_health_result(
     *,
     report: RunHealthReport,
@@ -217,21 +185,24 @@ def diagnostics_run_health(
     provider: str | None = None,
 ) -> None:
     """Report recent local LLM run timing and persisted AEAT session staleness."""
-    from ...application.diagnostics_run_health import build_run_health_report
+    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
     from ...core.json_contract import Notice, NoticeSeverity
+    from .runtime_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    run_telemetry_port = _compose_diagnostics_run_health_port()
-    auth_probe_port = _compose_diagnostics_auth_probe_port(ctx)
-    report = build_run_health_report(
+    projection = read_diagnostics(
+        ctx,
+        kind="run_health",
         since=since_date,
         until=until_date,
         provider=provider,
-        run_telemetry_port=run_telemetry_port,
-        auth_probe_port=auth_probe_port,
     )
+    snapshot = projection.run_health
+    if snapshot is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    report = snapshot.to_report()
 
     result = _run_health_result(report=report, since=since_date, until=until_date)
 
@@ -278,19 +249,23 @@ def diagnostics_runs(
     limit: int | None = None,
 ) -> None:
     """List recent local LLM run-timing records, most-recent-first."""
-    from ...application.diagnostics_run_health import list_recent_runs
+    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+    from .runtime_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    run_telemetry_port = _compose_diagnostics_run_health_port()
-    rows = list_recent_runs(
+    projection = read_diagnostics(
+        ctx,
+        kind="runs",
         since=since_date,
         until=until_date,
         provider=provider,
         limit=limit,
-        run_telemetry_port=run_telemetry_port,
     )
+    rows = projection.runs
+    if rows is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
     result = RunsListResult(
         since=since_date.isoformat() if since_date is not None else None,
@@ -343,18 +318,23 @@ def diagnostics_latency(
     provider: str | None = None,
 ) -> None:
     """Report P50/P95/P99 duration percentiles over recent local LLM runs."""
-    from ...application.diagnostics_run_health import build_latency_report
+    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+    from .runtime_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    run_telemetry_port = _compose_diagnostics_run_health_port()
-    report = build_latency_report(
+    projection = read_diagnostics(
+        ctx,
+        kind="latency",
         since=since_date,
         until=until_date,
         provider=provider,
-        run_telemetry_port=run_telemetry_port,
     )
+    snapshot = projection.latency
+    if snapshot is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    report = snapshot.to_report()
 
     result = LatencyResult(
         since=since_date.isoformat() if since_date is not None else None,
@@ -423,19 +403,24 @@ def diagnostics_errors(
     provider: str | None = None,
 ) -> None:
     """Break down recent failed local LLM runs by provider and error kind."""
-    from ...application.diagnostics_run_health import build_error_breakdown
+    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
     from ...core.json_contract import Notice, NoticeSeverity
+    from .runtime_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    run_telemetry_port = _compose_diagnostics_run_health_port()
-    report = build_error_breakdown(
+    projection = read_diagnostics(
+        ctx,
+        kind="errors",
         since=since_date,
         until=until_date,
         provider=provider,
-        run_telemetry_port=run_telemetry_port,
     )
+    snapshot = projection.errors
+    if snapshot is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    report = snapshot.to_report()
 
     result = ErrorsBreakdownResult(
         since=since_date.isoformat() if since_date is not None else None,
@@ -476,18 +461,23 @@ def diagnostics_llm_usage(
     provider: str | None = None,
 ) -> None:
     """Report LLM run-usage totals (counts, durations, success rate) by provider and model."""
-    from ...application.diagnostics_run_health import build_llm_usage_report
+    from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+    from .runtime_diagnostics import read_diagnostics
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    run_telemetry_port = _compose_diagnostics_run_health_port()
-    report = build_llm_usage_report(
+    projection = read_diagnostics(
+        ctx,
+        kind="llm_usage",
         since=since_date,
         until=until_date,
         provider=provider,
-        run_telemetry_port=run_telemetry_port,
     )
+    snapshot = projection.llm_usage
+    if snapshot is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    report = snapshot.to_report()
 
     result = LlmUsageResult(
         since=since_date.isoformat() if since_date is not None else None,

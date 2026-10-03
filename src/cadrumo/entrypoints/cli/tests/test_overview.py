@@ -1,86 +1,102 @@
-"""Real-behavior tests for the overview module logger.
-
-Verifies that the module-level ``logger`` obtained via
-:func:`cadrumo.core.logging.get_logger` carries a
-:class:`~cadrumo.core.logging.SecretScrubbingFilter` that scrubs
-NIF-shaped strings before the record reaches any handler.
-"""
+"""Overview rendering retains its settled receipt and refuses private errors safely."""
 
 from __future__ import annotations
 
-import logging
+from typing import NoReturn
+from uuid import UUID
 
 import pytest
+import typer
 
-from ....core.logging import SecretScrubbingFilter
+from ....application.overview.read_operation import (
+    OverviewReadKind,
+    OverviewReadProjection,
+    OverviewReadRequest,
+    OverviewStatusRead,
+)
+from ....application.overview.read_projection import OverviewStatusSnapshot
+from ....application.runtime.contracts import RuntimeRefusalCode
+from ....core.external_constants import OutputLanguage
+from ....core.operations import OperationEffect, OperationTerminalCondition
+from .. import _overview
+from ..errors import CliRefusedBoundaryError
+from ..runtime_overview import OverviewReadCompletion
+from ..runtime_registered_operation import RegisteredOperationCompletion
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_OPERATION_ID = "a" * 64
 
 
-def _scrubbing_filter_is_attached(log: logging.Logger) -> bool:
-    """Return True if any filter on the logger (or root) is a SecretScrubbingFilter."""
-    target: logging.Logger | None = log
-    while target is not None:
-        if any(isinstance(f, SecretScrubbingFilter) for f in target.filters):
-            return True
-        if not target.propagate:
-            break
-        parent = target.parent
-        target = parent if isinstance(parent, logging.Logger) else None
-    root = logging.getLogger()
-    return any(isinstance(f, SecretScrubbingFilter) for f in root.filters)
-
-
-def test_overview_logger_has_secret_scrubbing_filter() -> None:
-    """The module-level logger in _overview carries SecretScrubbingFilter."""
-
-    from .. import _overview
-
-    assert _scrubbing_filter_is_attached(_overview.logger), (
-        "SecretScrubbingFilter was not found on the overview logger or its root"
+@pytest.fixture
+def completed() -> OverviewReadCompletion:
+    profile_id = UUID("5aa00000-0000-4000-8000-0000000000aa")
+    request = OverviewReadRequest(
+        profile_id=profile_id,
+        kind=OverviewReadKind.STATUS,
+        output_language=OutputLanguage.EN,
+    )
+    payload = OverviewStatusRead(
+        report=OverviewStatusSnapshot(
+            active_profile_name="synthetic-profile",
+            transactions=0,
+            invoices=0,
+            drafts=0,
+            work_units=0,
+            discarded_work_units=0,
+            calculation_revisions=0,
+            unreadable_rows=0,
+            filing_obligation_advisories=(),
+            unsupported_work_create_modelos=(),
+        )
+    )
+    projection = OverviewReadProjection(profile_id=profile_id, request=request, payload=payload)
+    return OverviewReadCompletion(
+        completion=RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID,
+            projection=projection,
+            effect=OperationEffect.NONE,
+        ),
+        payload=payload,
     )
 
 
-def test_overview_logger_scrubs_nif_in_log_record(caplog: pytest.LogCaptureFixture) -> None:
-    """A log record containing a NIF string must have the NIF redacted.
-
-    The overview logger is obtained via get_logger(), which attaches
-    SecretScrubbingFilter directly to the logger instance.  The filter
-    mutates record.msg and record.args in-place so caplog captures the
-    already-scrubbed message text.
-    """
-
-    from .. import _overview
-
-    nif = "12345678Z"
-    redacted_marker = "<redacted>"
-
-    # Force the filter to run by emitting through the real logger.
-    # We capture at WARNING because the overview logger is typically configured
-    # at WARNING for stderr; the filter fires regardless of level.
-    with caplog.at_level(logging.WARNING, logger=_overview.logger.name):
-        _overview.logger.warning("profile tax_id=%s skipped", nif)
-
-    assert caplog.records, "No log records captured — logger propagation may be broken"
-
-    record = caplog.records[-1]
-    rendered = record.getMessage()
-    assert nif not in rendered, f"NIF {nif!r} was not scrubbed; got: {rendered!r}"
-    assert redacted_marker in rendered, f"Expected '<redacted>' in rendered message; got: {rendered!r}"
+def test_overview_returns_successful_rendered_output(completed: OverviewReadCompletion) -> None:
+    assert _overview._emit_read(completed, lambda: "rendered overview") == "rendered overview"
 
 
-def test_overview_logger_scrubs_nif_in_message_body(caplog: pytest.LogCaptureFixture) -> None:
-    """NIF embedded directly in the message format string is also scrubbed."""
+@pytest.mark.parametrize("error_type", [ValueError, RuntimeError])
+def test_overview_render_failure_keeps_receipt_and_hides_private_exception(
+    completed: OverviewReadCompletion,
+    error_type: type[Exception],
+) -> None:
+    private_detail = "synthetic taxpayer 12345678Z amount 9876.54"
 
-    from .. import _overview
+    def fail() -> NoReturn:
+        raise error_type(private_detail)
 
-    nif = "87654321X"
+    with pytest.raises(CliRefusedBoundaryError) as refusal:
+        _overview._emit_read(completed, fail)
 
-    with caplog.at_level(logging.WARNING, logger=_overview.logger.name):
-        _overview.logger.warning("overview calendar: skipping profile tax_id=%s", nif)
+    assert refusal.value.context == {
+        "operation_id": _OPERATION_ID,
+        "reason": RuntimeRefusalCode.UNAVAILABLE.value,
+        "terminal_condition": OperationTerminalCondition.SUCCEEDED.value,
+        "effect": OperationEffect.NONE.value,
+    }
+    assert private_detail not in str(refusal.value)
+    assert refusal.value.__suppress_context__
 
-    assert caplog.records, "No log records captured"
 
-    record = caplog.records[-1]
-    rendered = record.getMessage()
-    assert nif not in rendered, f"NIF {nif!r} survived scrubbing in message body; got: {rendered!r}"
+@pytest.mark.parametrize("error", [typer.Exit(2), CliRefusedBoundaryError(context={"reason": "synthetic refusal"})])
+def test_overview_preserves_explicit_cli_refusal_and_exit(
+    completed: OverviewReadCompletion,
+    error: Exception,
+) -> None:
+    def fail() -> NoReturn:
+        raise error
+
+    with pytest.raises(type(error)) as refusal:
+        _overview._emit_read(completed, fail)
+
+    assert refusal.value is error

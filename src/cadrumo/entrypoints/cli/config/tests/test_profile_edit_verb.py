@@ -1,9 +1,9 @@
 """Real-behaviour tests for non-interactive ``config profile edit``.
 
 Each case reproduces a defect an operator hit driving the shipped CLI, and
-asserts the invariant that defect broke. Evidence is read back through the
-operator's own verbs -- ``view`` for facts, ``history`` for the evidence chain
--- rather than from internals.
+asserts the invariant that defect broke. The encrypted record proves facts
+and the public history verb proves the evidence chain. Native CLI view has a
+separate runtime-backed acceptance test.
 """
 
 from __future__ import annotations
@@ -14,17 +14,23 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from .....application.user_profile.language_resolver import resolve_active_profile_output_language
+from .....application.user_profile.language_resolver import resolve_active_profile_output_language_hint
 from .isolated_storage_fixture import (
     COMPLETE_NATURAL_PERSON_FLAGS,
     profile_cli,
     profile_event_count,
-    profile_facts,
-    profile_view_document,
+    profile_persisted_facts,
+    profile_persisted_record,
 )
 from .isolated_storage_fixture import live_cli_profile as live_cli_profile
+from .isolated_storage_fixture import native_cli_profile_view as native_cli_profile_view
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("live_cli_profile")]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.usefixtures("native_cli_profile_view"),
+]
 
 _VALUES_UPDATED = "profile.values.updated"
 
@@ -51,14 +57,12 @@ def test_an_incomplete_profile_accepts_one_field_at_a_time() -> None:
     assert _status(_edit("--notes", "hola")) == "updated"
     assert _status(_edit("--tax-id", "12345678Z")) == "updated"
 
-    facts = profile_facts()
+    facts = profile_persisted_facts()
     assert "identity.notes" in facts
     assert "identity.tax_id" in facts
 
     assert profile_cli("complete-setup").exit_code != 0, "an incomplete record must still be refused promotion"
-    result = profile_view_document()["result"]
-    assert isinstance(result, dict)
-    assert result["setup_state"] == "incomplete"
+    assert profile_persisted_record().setup_state.value == "incomplete"
 
 
 def test_a_blank_optional_flag_clears_the_fact_and_records_one_change() -> None:
@@ -69,12 +73,12 @@ def test_a_blank_optional_flag_clears_the_fact_and_records_one_change() -> None:
     could set an optional fact but never unset one, and said otherwise.
     """
     assert _status(_edit("--notes", "borrame")) == "updated"
-    assert "identity.notes" in profile_facts()
+    assert "identity.notes" in profile_persisted_facts()
     before = profile_event_count(_VALUES_UPDATED)
 
     assert _status(_edit("--notes", "")) == "updated"
 
-    assert "identity.notes" not in profile_facts()
+    assert "identity.notes" not in profile_persisted_facts()
     assert profile_event_count(_VALUES_UPDATED) == before + 1
 
 
@@ -96,12 +100,12 @@ def test_an_edit_that_changes_nothing_writes_nothing() -> None:
 def test_an_edit_records_an_explicit_false_modelo_111_attestation() -> None:
     """The dedicated toggle writes false as a fact, not as a cleared answer."""
     assert _status(_edit("--no-colegio-concertado")) == "updated"
-    assert profile_facts()["withholding.colegio_concertado"] == "false"
+    assert profile_persisted_facts()["withholding.colegio_concertado"] == "false"
 
     # A positive correction is equally explicit and remains on the same
     # scalar patch path; no arbitrary fact-edit surface is opened.
     assert _status(_edit("--colegio-concertado")) == "updated"
-    assert profile_facts()["withholding.colegio_concertado"] == "true"
+    assert profile_persisted_facts()["withholding.colegio_concertado"] == "true"
 
 
 def test_a_complete_profile_still_refuses_to_lose_a_required_answer() -> None:
@@ -117,7 +121,7 @@ def test_a_complete_profile_still_refuses_to_lose_a_required_answer() -> None:
     refused = _edit("--tax-id", "")
 
     assert refused.exit_code != 0
-    assert "identity.tax_id" in profile_facts()
+    assert "identity.tax_id" in profile_persisted_facts()
 
 
 def test_a_blank_choice_flag_clears_the_language_preference_and_its_hint(tmp_path: Path) -> None:
@@ -135,11 +139,11 @@ def test_a_blank_choice_flag_clears_the_language_preference_and_its_hint(tmp_pat
 
     assert _status(_edit("--output-language", "")) == "updated"
 
-    assert "preferences.output_language" not in profile_facts()
+    assert "preferences.output_language" not in profile_persisted_facts()
     assert list(hints.glob("*/output-language.hint")) == []
     assert _resolved_language() is None
 
 
 def _resolved_language() -> str | None:
-    """The preference the renderer resolves for the live profile."""
-    return resolve_active_profile_output_language()
+    """Read the public hint written by the worker, independent of a process cache."""
+    return resolve_active_profile_output_language_hint()

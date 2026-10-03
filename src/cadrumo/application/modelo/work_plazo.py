@@ -23,6 +23,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -34,7 +35,7 @@ from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.deadlines.models import Recovery, TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
@@ -155,6 +156,7 @@ def modelo_work_deadline_posture(
     work_unit: WorkUnit,
     *,
     reference_on: date | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloWorkDeadlinePosture | None:
     """Return voluntary-deadline posture and rate-only preview, if known.
 
@@ -184,6 +186,8 @@ def modelo_work_deadline_posture(
             :func:`~cadrumo.core.time.clock.frozen_clock` scope pins it. It drives the
             deadline posture and conditional preview rate; it is not a
             presentation date.
+        operation: Optional caller-pinned registry operation. When supplied, both
+            the deadline window and recargo band use its governed-fact generation.
 
     Returns:
         A :class:`ModeloWorkDeadlinePosture`, or ``None`` when the registry has
@@ -201,6 +205,7 @@ def modelo_work_deadline_posture(
         str(work_unit.modelo),
         work_unit.filing_year,
         work_unit.period,
+        authority=operation,
     )
     if closes_on is None:
         return None
@@ -214,13 +219,13 @@ def modelo_work_deadline_posture(
 
     days_overdue = (resolved_reference_on - closes_on).days
     try:
-        with bundled_indexed_authority().operation() as operation:
+        with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as pinned:
             recovery = build_recovery_for_overdue(
                 closes_on=closes_on,
                 reference_today=resolved_reference_on,
                 modelo=str(work_unit.modelo),
                 period=work_unit.period,
-                operation=operation,
+                operation=pinned,
             )
     except DeadlineValidationError:
         _LOG.debug(
@@ -249,6 +254,7 @@ def calculated_m210_plazo_resolution(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> M210PlazoResolution | None:
     """Return the grounded post-calculation Modelo 210 plazo facts, if known.
 
@@ -257,6 +263,10 @@ def calculated_m210_plazo_resolution(
     Those facts do not exist at work-unit creation time, so this projection is
     deliberately separate from :func:`modelo_work_deadline_posture`, which
     remains the unqualified pre-calculation extemporaneidad surface.
+
+    ``operation`` keeps the result disposition on the caller's pinned registry
+    generation. Existing standalone callers may omit it and use the canonical
+    disposition resolver's authority lease.
 
     The function derives the result through the same application resolver used
     by filing/export and delegates window matching to the canonical deadline
@@ -284,6 +294,7 @@ def calculated_m210_plazo_resolution(
         revision=revision,
         workflow_profile=workflow_profile,
         period=work_unit.period,
+        operation=operation,
     )
     tipo_renta_code = revision.m210_official_tipo_renta_code
     window = resolve_filing_window(

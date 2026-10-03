@@ -27,11 +27,14 @@ from contextlib import ExitStack, contextmanager
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ....application.user_profile.automation_custody_port import AutomationSecretStore
     from ....application.user_profile.custody_ports import ProfileCustodyPort
 
 
 @contextmanager
-def composed_profile_persistence_ports() -> Generator[ProfileCustodyPort]:
+def composed_profile_persistence_ports(
+    *, automation_secrets_store: AutomationSecretStore | None = None
+) -> Generator[ProfileCustodyPort]:
     """Bind the profile-persistence ports for one host scope, and unbind after.
 
     The yielded custody port is the one that was bound, so a caller holding on
@@ -45,7 +48,7 @@ def composed_profile_persistence_ports() -> Generator[ProfileCustodyPort]:
     from .profile_custody import build_profile_custody_port
     from .profile_login_session import build_profile_login_session_port
 
-    profile_custody = build_profile_custody_port()
+    profile_custody = build_profile_custody_port(automation_secrets_store=automation_secrets_store)
     with ExitStack() as composition:
         composition.enter_context(bind_profile_custody_port(profile_custody))
         composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))

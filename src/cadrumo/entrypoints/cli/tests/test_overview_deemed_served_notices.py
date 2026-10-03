@@ -55,7 +55,7 @@ def test_deemed_served_notifications_emit_one_warning_notice_with_legal_provenan
         _notificacion(reference_id="2596230606503", estado=NotificacionEstadoServicio.EN_PLAZO),
     )
 
-    notices = overview_deemed_served_notification_notices(events)
+    notices = overview_deemed_served_notification_notices(events, legal_ref="ley-39-2015:art-43.2")
 
     assert len(notices) == 1
     notice = notices[0]
@@ -74,6 +74,7 @@ def test_deemed_served_legal_ref_resolves_against_the_registry_catalogue() -> No
     """The provenance the notice hands the operator is a real, corpus-backed entry."""
     notice = overview_deemed_served_notification_notices(
         (_notificacion(reference_id="2596230606502", estado=NotificacionEstadoServicio.RECHAZO_TACITO),),
+        legal_ref="ley-39-2015:art-43.2",
     )[0]
     legal_ref = str((notice.context or {})["legal_ref"])
     reference = published_legal_reference(legal_ref)
@@ -97,7 +98,7 @@ def test_plain_notificacion_is_invisible_to_the_kind_keyed_notice() -> None:
     assert len(pending) == 1
     assert (pending[0].context or {}) == {}
 
-    deemed = overview_deemed_served_notification_notices(events)
+    deemed = overview_deemed_served_notification_notices(events, legal_ref="ley-39-2015:art-43.2")
     assert (deemed[0].context or {})["certificado_ids"] == "2596230606502"
 
 

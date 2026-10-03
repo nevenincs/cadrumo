@@ -1,376 +1,192 @@
-"""Behavior for the guided Modelo work wizard command.
-
-An operator knows "gross income" and "deductible expenses" in plain language, not
-that Modelo 130 casilla ``06`` is "Retenciones e ingresos a cuenta". The
-wizard walks a work unit's *outstanding* manual-input surface —
-``input_kind = "manual"`` casillas plus any binding or relation the registry
-still needs (the same set the canonical bindings discovery action
-surfaces) — one question at a time, showing each item's official label, help
-text, and legal grounding before asking for a value. Every value the operator
-confirms then flows through the exact same
-:func:`~application.modelo.calculate_input.calculate_modelo_work_revision` composition
-path that the canonical calculation action uses (via
-:func:`~._modelo_cli_support.work_calculate_input_bundle_from_cli`); the
-wizard is a guided front end over that one calculation path, not a second one
-(``aeat-architecture-boundaries``).
-
-Ledger-bound and computed casillas are never prompted: the ledger
-auto-derivation (``aeat-calculation-aggregation``) and the
-registry formula engine already populate them, exactly as a bare
-``work calculate`` would. The wizard's job is only the residual manual
-surface a bare calculate call would otherwise reject with a bindings-missing
-refusal.
-
-A real interactive terminal is required: the prompting is the flow
-substrate's line-mode frontend
-(:class:`~cadrumo.application.flows.line_frontend.LineFlowFrontend`) over the one flow
-engine, so the non-TTY / Windows-no-console detection and the translated
-refusal are the substrate's single implementation rather than a
-re-derived copy of it, and the operator gets the engine's review surface
-(re-edit by number, restart, submit) before any value is committed.
-
-The prompt *copy* comes from the resolved registry snapshot — a casilla
-number and label, not a static translation-catalogue key — so each
-discovered question is projected into a :class:`FlowDefinition` page
-whose copy slots are schema-field references resolved by this module's
-registered copy source against the per-run registry-derived table. The
-definition carries references only; the registry stays the copy
-authority.
-"""
+"""Guided Modelo inputs over authenticated worker discovery and calculation."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 import typer
 from pydantic import ValidationError
 
+from ...application.flows.errors import FlowError
 from ...application.flows.line_frontend import LineFlowFrontend
-from ...application.modelo.action_errors import (
-    CalculationRegistryUnavailableError,
-    WorkUnitMutationRefusedError,
-    WorkUnitNotFoundError,
-    modelo_work_wizard_retry_exhausted_precondition,
+from ...application.modelo.action_errors import modelo_work_wizard_retry_exhausted_precondition
+from ...application.modelo.calculation_request_fields import ModeloCalculationInputFieldsV1, ModeloCalculationOverride
+from ...application.modelo.operation_definitions import (
+    ModeloWorkCalculateCallerContext,
+    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculateRequest,
 )
-from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
-from ...application.modelo.calculate_input import calculate_modelo_work_revision
-from ...application.modelo.calculation_action_ports import CalculationActionPorts
-from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ...application.modelo.printed_boxes import snapshot_printed_boxes
+from ...application.modelo.wizard_attempt_operation import (
+    ModeloWorkWizardAttemptCalculated,
+    ModeloWorkWizardAttemptRequest,
+)
 from ...application.modelo.work_wizard import (
     ModeloWorkWizardRun,
     ModeloWorkWizardStep,
-    modelo_work_wizard_follow_up_step,
-    open_modelo_work_wizard,
+    open_modelo_work_wizard_from_steps,
 )
+from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.external_constants import OutputLanguage
 from ...core.flows import FlowMode
+from ...core.i18n.render import output_language as current_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice
-from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
-from ._modelo_cli_support import (
-    bad_parameter_from_error,
-    resolve_actor_option,
-    work_calculate_input_bundle_from_cli,
-)
-from ._modelo_rendering import (
-    calculation_revision_lines,
-    calculation_revision_payload,
-    source_diagnostic_notice,
-    source_diagnostic_notice_text,
-)
+from ...core.operations import OperationTerminalCondition
+from ._modelo_cli_support import resolve_actor_option
+from ._modelo_rendering import source_diagnostic_notice, source_diagnostic_notice_text
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 from .common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
-from .errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
-
-if TYPE_CHECKING:
-    from ...application.modelo.calculate_input import ModeloWorkCalculationServiceResult
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.modelos.work_unit import WorkUnit
-
-
-@dataclass(frozen=True, slots=True)
-class _WizardDeps:
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
-    require_active_profile: Callable[[], None]
-    resolve_work_unit_for_cli: Callable[..., Any]
-    resolve_actor_option: Callable[[str | None], str]
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
-
-
-def _wizard_dependencies() -> _WizardDeps:
-    return _WizardDeps(
-        activate_output_language=activate_subcommand_output_language,
-        require_active_profile=require_active_profile,
-        resolve_work_unit_for_cli=resolve_work_unit_for_cli,
-        resolve_actor_option=resolve_actor_option,
-        bad_parameter_from_error=bad_parameter_from_error,
-    )
-
-
-def resolve_modelo_work_unit_for_wizard(
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    require_active_profile: Callable[[], None],
-    resolve_work_unit_for_cli: Callable[..., Any],
-    ctx: typer.Context,
-    work_unit_id: str | None,
-    modelo: str | None,
-    year: int | None,
-    period: str | None,
-    revision: str | None,
-    bucket_id: str | None,
-    output_language_opt: OutputLanguage | None,
-) -> Any:
-    """Set up a modelo work wizard and resolve its target work unit.
-
-    The input and amendment wizards deliberately share profile, localization,
-    and target-resolution semantics before their domain workflows diverge.
-    """
-    activate_output_language(ctx, output_language_opt)
-    require_active_profile()
-    return resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
-    )
-
-
-def run_modelo_work_wizard(
-    *,
-    deps: _WizardDeps,
-    ctx: typer.Context,
-    work_unit_id: str | None,
-    modelo: str | None,
-    year: int | None,
-    period: str | None,
-    revision: str | None,
-    bucket_id: str | None,
-    actor: str | None,
-    output_language_opt: OutputLanguage | None,
-) -> None:
-    unit = resolve_modelo_work_unit_for_wizard(
-        activate_output_language=deps.activate_output_language,
-        require_active_profile=deps.require_active_profile,
-        resolve_work_unit_for_cli=deps.resolve_work_unit_for_cli,
-        ctx=ctx,
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-        output_language_opt=output_language_opt,
-    )
-    try:
-        from .state_projection_support import authority_operation
-
-        with open_modelo_work_wizard(unit, operation=authority_operation(ctx)) as wizard:
-            _drive_wizard_calculation(deps=deps, ctx=ctx, wizard=wizard, actor=actor)
-    except RegistrySnapshotError as exc:
-        raise deps.bad_parameter_from_error(exc) from exc
-
-
-def _drive_wizard_calculation(
-    *,
-    deps: _WizardDeps,
-    ctx: typer.Context,
-    wizard: ModeloWorkWizardRun,
-    actor: str | None,
-) -> None:
-    resolved_actor = deps.resolve_actor_option(actor)
-    from .state_projection_support import authority_operation, calculation_action_ports_factory
-
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=wizard.unit.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    prompted = list(_run_wizard_steps(wizard, wizard.steps))
-    for _attempt in range(_MAX_MISSING_INPUT_RETRIES):
-        calculation_result = _run_wizard_calculation_attempt(
-            deps=deps,
-            wizard=wizard,
-            actor=resolved_actor,
-            prompted=prompted,
-            ports=calculation_ports,
-        )
-        if calculation_result is None:
-            continue
-        _emit_wizard_result(
-            ctx,
-            calculation_result,
-            tuple(prompted),
-            operation=calculation_ports.operation,
-        )
-        return
-    failure = modelo_work_wizard_retry_exhausted_precondition(
-        work_unit_id=wizard.unit.work_unit_id,
-        retry_limit=_MAX_MISSING_INPUT_RETRIES,
-    )
-    raise attach_cli_policy_verdict(
-        CliRefusedBoundaryError(
-            tr(
-                "cli.app.modelo.work.wizard_retry_exhausted",
-                limit=_MAX_MISSING_INPUT_RETRIES,
-            )
-        ),
-        verdict=failure.verdict,
-    )
-
-
-def _wizard_calculation_inputs(
-    unit: WorkUnit,
-    prompted: list[tuple[ModeloWorkWizardStep, str]],
-    *,
-    ports: CalculationActionPorts,
-) -> Any:
-    casilla_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "casilla"]
-    binding_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "binding"]
-    relation_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "relation"]
-    return work_calculate_input_bundle_from_cli(
-        work_unit_id=unit.work_unit_id,
-        ports=ports,
-        casilla=casilla_overrides or None,
-        binding=binding_overrides or None,
-        relation=relation_overrides or None,
-        row=None,
-        borrador_snapshot_id=None,
-        prestacion_inss_exenta=None,
-        rescate_plan_pensiones_capital=None,
-        rescate_plan_pensiones_aportaciones_pre_2007=None,
-        rescate_plan_pensiones_aportaciones_totales=None,
-        sal_beneficio_neto=None,
-        sal_reserva_dotada=None,
-        sal_capital_social=None,
-        autoconsumo_promotor_base=None,
-    )
-
-
-def _run_wizard_calculation_attempt(
-    *,
-    deps: _WizardDeps,
-    wizard: ModeloWorkWizardRun,
-    actor: str,
-    prompted: list[tuple[ModeloWorkWizardStep, str]],
-    ports: CalculationActionPorts,
-) -> ModeloWorkCalculationServiceResult | None:
-    calculation_inputs = _wizard_calculation_inputs(wizard.unit, prompted, ports=ports)
-    try:
-        return calculate_modelo_work_revision(
-            work_unit_id=wizard.unit.work_unit_id,
-            actor=actor,
-            inputs=calculation_inputs,
-            ports=ports,
-        )
-    except RegistryValidationError as exc:
-        follow_up = modelo_work_wizard_follow_up_step(exc, unit=wizard.unit, operation=ports.operation)
-        if follow_up is None:
-            raise deps.bad_parameter_from_error(exc) from exc
-        prompted.extend(_run_wizard_steps(wizard, (follow_up,)))
-        return None
-    except WorkUnitMutationRefusedError:
-        raise
-    except (
-        WorkUnitNotFoundError,
-        CalculationRegistryUnavailableError,
-        Modelo100BorradorBindingError,
-        ModeloIvaWalletReconciliationBlocked,
-    ) as exc:
-        raise deps.bad_parameter_from_error(exc) from exc
-    except ValidationError as exc:
-        raise CliOutboundPayloadBoundaryError(exc) from exc
-
+from .errors import CliRefusedBoundaryError
+from .runtime_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
+from .runtime_modelo_metadata import read_modelo_work_unit
+from .runtime_modelo_work_wizard import read_modelo_work_wizard_context, run_modelo_work_wizard_attempt
+from .runtime_registered_operation import submitted_operation_error
 
 _MAX_MISSING_INPUT_RETRIES = 12
 
 
 def _run_wizard_steps(
-    wizard: ModeloWorkWizardRun,
-    steps: tuple[ModeloWorkWizardStep, ...],
+    wizard: ModeloWorkWizardRun, steps: tuple[ModeloWorkWizardStep, ...]
 ) -> tuple[tuple[ModeloWorkWizardStep, str], ...]:
-    """Walk the outstanding steps through the interactive flow frontend.
-
-    A work unit with no outstanding manual input needs no
-    interactive console at all — nothing is constructed for an empty step
-    set, so a ``--format json`` scripted caller with nothing left to fill
-    in never hits the non-interactive refusal. Values are read back off the
-    engine state per page key; a page the operator left blank reads as the
-    empty string, exactly as the one-shot prompt did.
-    """
+    """Use the canonical flow; an empty prompt set needs no interactive terminal."""
     if not steps:
         return ()
-    definition = wizard.definition_for(steps)
-    state, _projection = LineFlowFrontend(definition).run(mode=FlowMode.CREATE)
+    state, _projection = LineFlowFrontend(wizard.definition_for(steps)).run(mode=FlowMode.CREATE)
     return wizard.answer_pairs(state, steps=steps)
+
+
+def _wizard_calculation_inputs(prompted: list[tuple[ModeloWorkWizardStep, str]]) -> ModeloCalculationInputFieldsV1:
+    """Carry operator text unchanged to the worker's canonical input validator."""
+    answers = {(step.channel, step.key): value for step, value in prompted}
+    return ModeloCalculationInputFieldsV1(
+        casilla_overrides=tuple(
+            ModeloCalculationOverride(key=key, value=value)
+            for (channel, key), value in answers.items()
+            if channel == "casilla"
+        ),
+        binding_overrides=tuple(
+            ModeloCalculationOverride(key=key, value=value)
+            for (channel, key), value in answers.items()
+            if channel == "binding"
+        ),
+        relation_overrides=tuple(
+            ModeloCalculationOverride(key=key, value=value)
+            for (channel, key), value in answers.items()
+            if channel == "relation"
+        ),
+    )
+
+
+def _drive_wizard_calculation(
+    *, ctx: typer.Context, wizard: ModeloWorkWizardRun, actor: str | None, language: OutputLanguage
+) -> None:
+    resolved_actor = resolve_actor_option(actor)
+    prompted = list(_run_wizard_steps(wizard, wizard.steps))
+    for attempt in range(_MAX_MISSING_INPUT_RETRIES):
+        completed = run_modelo_work_wizard_attempt(
+            ctx,
+            ModeloWorkWizardAttemptRequest(
+                profile_id=UUID(wizard.unit.bucket_id),
+                output_language=language,
+                calculation=ModeloWorkCalculateRequest(
+                    work_unit_id=wizard.unit.work_unit_id,
+                    actor=resolved_actor,
+                    caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
+                    inputs=_wizard_calculation_inputs(prompted),
+                ),
+            ),
+        )
+        outcome = completed.projection.outcome
+        if isinstance(outcome, ModeloWorkWizardAttemptCalculated):
+            try:
+                _emit_wizard_result(ctx, outcome.result, tuple(prompted), language=language)
+            except ValidationError as error:
+                raise submitted_operation_error(
+                    completed.operation_id,
+                    RuntimeRefusalCode.INVALID_FRAME.value,
+                    terminal_condition=OperationTerminalCondition.SUCCEEDED,
+                    effect=completed.effect,
+                ) from error
+            return
+        if attempt + 1 == _MAX_MISSING_INPUT_RETRIES:
+            failure = modelo_work_wizard_retry_exhausted_precondition(
+                work_unit_id=wizard.unit.work_unit_id, retry_limit=_MAX_MISSING_INPUT_RETRIES
+            )
+            raise attach_cli_policy_verdict(
+                CliRefusedBoundaryError(
+                    tr("cli.app.modelo.work.wizard_retry_exhausted", limit=_MAX_MISSING_INPUT_RETRIES),
+                    context={
+                        "operation_id": completed.operation_id,
+                        "effect": completed.effect.value,
+                        "terminal_condition": "succeeded",
+                    },
+                ),
+                verdict=failure.verdict,
+            )
+        # Only a completed typed prepublication outcome permits another answer.
+        # Transport uncertainty and later calculation errors propagate unchanged.
+        try:
+            prompted.extend(_run_wizard_steps(wizard, (outcome.step,)))
+        except FlowError as error:
+            error.context = {
+                **(error.context or {}),
+                "operation_id": completed.operation_id,
+                "effect": completed.effect.value,
+                "terminal_condition": OperationTerminalCondition.SUCCEEDED.value,
+            }
+            raise
 
 
 def _emit_wizard_result(
     ctx: typer.Context,
-    calculation_result: ModeloWorkCalculationServiceResult,
+    calculation_result: ModeloWorkCalculatePublicResultV2,
     prompted: tuple[tuple[ModeloWorkWizardStep, str], ...],
     *,
-    operation: PinnedAuthorityOperation,
+    language: OutputLanguage,
 ) -> None:
-    calculation_revision = calculation_result.revision
+    snapshot = calculation_result.calculation
     saved_confirmation = tr(
         "cli.app.modelo.work.wizard_saved",
-        revision_id=calculation_revision.calculation_revision_id,
-        state=calculation_revision.state.value,
+        revision_id=snapshot.calculation_revision_id,
+        state=snapshot.state.value,
     )
     prompted_payload = tuple(
-        (
-            WizardPromptedCasillaPayload(
-                casilla_id=step.casilla_id,
-                number=step.number,
-                label=step.label,
-                channel=step.channel,
-                key=step.key,
-                value=value,
-                legal_refs=step.legal_refs,
-                source_refs=step.source_refs,
-                help_text=step.help_text,
-            )
-            for step, value in prompted
+        WizardPromptedCasillaPayload(
+            casilla_id=step.casilla_id,
+            number=step.number,
+            label=step.label,
+            channel=step.channel,
+            key=step.key,
+            value=value,
+            legal_refs=step.legal_refs,
+            source_refs=step.source_refs,
+            help_text=step.help_text,
         )
+        for step, value in prompted
     )
     result = WorkWizardResult.model_validate(
         {
             "saved": True,
             "saved_confirmation": saved_confirmation,
-            **calculation_revision_payload(
-                calculation_revision,
-                operation=operation,
-                work_unit=calculation_result.work_unit,
-            ).model_dump(mode="python"),
+            **calculation_snapshot_payload(snapshot, language=language).model_dump(mode="python"),
             "prompted_casillas": prompted_payload,
         }
     )
     lines = [
         "operation\tmodelo.work.wizard",
-        *calculation_revision_lines(
-            calculation_revision,
-            operation=operation,
-            work_unit=calculation_result.work_unit,
-        ),
+        *calculation_snapshot_lines(snapshot, language=language),
         *(f"prompted\t{step.number}\t{step.channel}\t{value}" for step, value in prompted),
         saved_confirmation,
     ]
-    notices: list[Notice] = []
-    diagnostics = calculation_result.source_diagnostics
-    if diagnostics:
-        unit = calculation_result.work_unit
-        snapshot = operation.snapshot(str(unit.modelo), filing_year=unit.filing_year, period=unit.period.registry_token)
-        boxes = snapshot_printed_boxes(operation, snapshot)
-        notices.extend(
-            source_diagnostic_notice(diagnostic, code="modelo.work.wizard.source_advisory", boxes=boxes)
-            for diagnostic in diagnostics
+    advisories = calculation_result.advisories
+    notices: list[Notice] = [
+        source_diagnostic_notice(
+            diagnostic, code="modelo.work.wizard.source_advisory", boxes=advisories.to_printed_boxes()
         )
-        lines.extend(source_diagnostic_notice_text(notice) for notice in notices)
+        for diagnostic in advisories.to_diagnostics()
+    ]
+    lines.extend(source_diagnostic_notice_text(notice) for notice in notices)
     emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)
-
-
-__all__ = ["resolve_modelo_work_unit_for_wizard", "work_wizard"]
 
 
 def work_wizard(
@@ -384,25 +200,26 @@ def work_wizard(
     actor: str | None = None,
     output_language_opt: OutputLanguage | None = None,
 ) -> None:
-    """Walk the resolved work unit's outstanding manual inputs one at a time.
-
-    Resolves (or reuses) a work unit exactly as ``work create`` does,
-    lists its outstanding manual casillas and missing bindings/relations
-    through the same registry discovery surface as
-    ``bindings list --missing``, prompts for each one in turn (showing
-    its official label, help text, and legal grounding), then calls
-    :func:`calculate_modelo_work_revision` through the identical input
-    bundle ``work calculate`` builds.
-    """
-    run_modelo_work_wizard(
-        deps=_wizard_dependencies(),
-        ctx=ctx,
+    """Prompt for authenticated missing inputs and calculate in bound worker custody."""
+    activate_subcommand_output_language(ctx, output_language_opt)
+    selected = read_modelo_work_unit(
+        ctx,
         work_unit_id=work_unit_id,
         modelo=modelo,
         year=year,
         period=period,
         revision=revision,
         bucket_id=bucket_id,
-        actor=actor,
-        output_language_opt=output_language_opt,
     )
+    language = OutputLanguage(current_output_language())
+    discovered = read_modelo_work_wizard_context(
+        ctx,
+        profile_id=UUID(selected.bucket_id),
+        work_unit_id=selected.work_unit_id,
+        output_language=language,
+    )
+    with open_modelo_work_wizard_from_steps(discovered.unit.to_work_unit(), steps=discovered.steps) as wizard:
+        _drive_wizard_calculation(ctx=ctx, wizard=wizard, actor=actor, language=language)
+
+
+__all__ = ["work_wizard"]

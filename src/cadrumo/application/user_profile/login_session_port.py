@@ -251,6 +251,31 @@ class ProfileLoginSessionPort(Protocol):
         """Evaluate one receipt and return its owned wipeable DEK buffer."""
         ...
 
+    def borrow_acceleration_receipt_key(
+        self,
+        *,
+        storage_root: Path,
+        profile_id: UUID,
+        custody_generation: int,
+        dek_epoch: str,
+        now: datetime,
+    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
+        """Borrow the existing human wrap key for a trusted protected channel."""
+        ...
+
+    def resume_acceleration_receipt_with_key(
+        self,
+        *,
+        storage_root: Path,
+        profile_id: UUID,
+        custody_generation: int,
+        dek_epoch: str,
+        now: datetime,
+        receipt_key: bytearray,
+    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
+        """Verify a supplied human wrap key without consulting the OS store."""
+        ...
+
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         """Revoke one profile's split-knowledge acceleration receipt."""
         ...

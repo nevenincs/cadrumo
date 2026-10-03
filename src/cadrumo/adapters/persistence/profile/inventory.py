@@ -20,11 +20,13 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 from pydantic import ValidationError
 
 from ....application.inventory.errors import InventoryClosingAuthorityConflictError
+from ....application.inventory.ports import InventoryClosingAuthorityWrite
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....domain.contribuyente.inventory.records import (
@@ -51,6 +53,7 @@ def record_movement(
     movement: MovementRecord,
     *,
     year: int,
+    validate_candidate: Callable[[InventoryLedger], None],
 ) -> InventoryLedger:
     """Append ``movement`` to an existing activity-and-year inventory ledger.
 
@@ -58,6 +61,7 @@ def record_movement(
         actividad_id: Identifier of the actividad economica owning the ledger.
         movement: Movement record to append.
         year: Tax year of the target ledger.
+        validate_candidate: Application-owned validator run on each current candidate.
 
     Returns:
         The updated :class:`InventoryLedger`.
@@ -66,6 +70,7 @@ def record_movement(
         actividad_id,
         movement,
         year=year,
+        validate_candidate=validate_candidate,
     )
 
 
@@ -241,18 +246,26 @@ class InventoryLedgerRepository:
         self._storage.mutate(_drop)
         return removed[0]
 
-    def record_movement(self, actividad_id: str, movement: MovementRecord, *, year: int) -> InventoryLedger:
+    def record_movement(
+        self,
+        actividad_id: str,
+        movement: MovementRecord,
+        *,
+        year: int,
+        validate_candidate: Callable[[InventoryLedger], None],
+    ) -> InventoryLedger:
         """Atomically append ``movement`` to the target activity-and-year ledger.
 
         The domain valuation guard (rejecting movements that would produce an
-        invalid valuation) is owned by the application inventory service, which
-        runs it before invoking persistence; this adapter performs the storage
-        append only and runs no domain calculation.
+        invalid valuation) is owned by the application inventory service. The
+        revision-guarded mutation passes each latest candidate to that validator
+        before returning a document for persistence.
 
         Args:
             actividad_id: Identifier of the owning actividad economica.
             movement: Movement record to append.
             year: Tax year of the target ledger.
+            validate_candidate: Application-owned validator run on each latest candidate.
 
         Returns:
             The updated :class:`InventoryLedger`.
@@ -279,9 +292,11 @@ class InventoryLedgerRepository:
                             context={"movement_id": movement.movement_id},
                             translated_message="adapters.persistence.profile.inventory.errors.movement_already_exists",
                         )
-                    ledgers[index] = ledger.model_copy(
+                    updated = ledger.model_copy(
                         update={"period_movements": (*ledger.period_movements, movement)},
                     )
+                    validate_candidate(updated)
+                    ledgers[index] = updated
                     return InventoryLedgerDocument(ledgers=tuple(ledgers))
             raise InventoryLedgerError(
                 f"inventory ledger not found for {actividad_id!r} in {year}",
@@ -301,10 +316,14 @@ class InventoryLedgerRepository:
         authority_record: InventoryClosingAuthorityRecord,
         *,
         year: int,
-    ) -> InventoryLedger:
+        validate_candidate: Callable[[InventoryLedger], InventoryLedger],
+    ) -> InventoryClosingAuthorityWrite:
         """Atomically replace the target ledger's complete closing-authority record."""
+        changed = False
 
         def _replace(current: InventoryLedgerDocument) -> InventoryLedgerDocument:
+            nonlocal changed
+            changed = False
             ledgers = list(current.ledgers)
             for index, ledger in enumerate(ledgers):
                 if ledger.actividad_id == actividad_id and ledger.year == year:
@@ -318,7 +337,8 @@ class InventoryLedgerRepository:
                     updated = ledger.model_copy(update={"closing_authority_record": authority_record})
                     # Rehydrate instead of trusting ``model_copy`` so every nested
                     # fingerprint and canonical resolver invariant runs before write.
-                    ledgers[index] = InventoryLedger.model_validate(updated.model_dump())
+                    ledgers[index] = validate_candidate(updated)
+                    changed = True
                     return InventoryLedgerDocument(ledgers=tuple(ledgers))
             raise InventoryLedgerError(
                 f"inventory ledger not found for {actividad_id!r} in {year}",
@@ -327,7 +347,8 @@ class InventoryLedgerRepository:
             )
 
         document = self._storage.mutate(_replace)
-        return next(item for item in document.ledgers if item.actividad_id == actividad_id and item.year == year)
+        ledger = next(item for item in document.ledgers if item.actividad_id == actividad_id and item.year == year)
+        return InventoryClosingAuthorityWrite(ledger=ledger, changed=changed)
 
     def _save_unlocked(self, document: InventoryLedgerDocument) -> None:
         self._storage.save(document)

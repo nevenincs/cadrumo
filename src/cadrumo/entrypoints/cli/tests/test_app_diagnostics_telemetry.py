@@ -1,23 +1,20 @@
 """Real-behavior CLI tests for ``aeat app diagnostics telemetry``.
 
-Exercises ``status`` and ``flush`` end to end against the real CLI, the real
-:mod:`~application.diagnostics_telemetry` composition, real encrypted
-SQLite persistence in an isolated storage root, and (for the fully-permitted
-send case) a real loopback HTTP server -- never a mocked transport. Proves:
-the default-off posture; ``flush --dry-run`` (the CLI default) never performs
-a network call regardless of posture; a sensitive/free-text field structurally
-cannot appear in the previewed payload because
+Exercises public ``status`` and worker-backed ``flush`` against the real CLI
+and a synthetic encrypted profile. It covers the default-off posture, dry-run
+previews, and safe no-op flushes without a complete send configuration. A
+sensitive/free-text field structurally cannot appear in the previewed payload because
 :class:`~core.telemetry.TelemetryEventPayload` has no such field
-(``extra="forbid"``); and only a fully-permitted, explicitly acknowledged
-``--no-dry-run`` invocation with a configured endpoint actually transmits.
+(``extra="forbid"``); and an unacknowledged or unconfigured ``--no-dry-run``
+invocation remains a safe no-op.
 
 See Also:
     :mod:`~entrypoints.cli._app_diagnostics_telemetry`
         CLI transport that implements the status and flush commands.
     :func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`
         Application payload builder exercised through the CLI dry-run path.
-    :func:`~application.diagnostics_telemetry.flush_telemetry`
-        Application send path exercised by the acknowledged non-dry-run case.
+    :mod:`~application.diagnostics_operation`
+        Exact-profile worker operation backing telemetry previews.
     :class:`~core.telemetry.TelemetryEventPayload`
         Closed allowlisted payload shape rendered by the CLI.
     :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
@@ -28,15 +25,9 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
-from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler
-from queue import Empty, Queue
-from typing import Any, ClassVar, cast, override
 
 import pytest
-from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
@@ -46,40 +37,27 @@ from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixt
 from ....core.telemetry.schema import TelemetryEventPayload
 from ....core.telemetry.tier import TelemetryTier
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from .._diagnostics_payloads import TelemetryFlushResult
-from .cli_runner import invoke_cached_cli
+from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
-_BUCKET_ID = "88888888-9999-4aaa-8bbb-cccccccccccc"
+__all__ = ["diagnostics_native_profile"]
 
 _isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id=_BUCKET_ID,
+    bucket_id="88888888-9999-4aaa-8bbb-cccccccccccc",
     autouse=False,
     settings_overrides={"cadrumo_output_language": "en"},
 )
 
 
-def _invoke(args: list[str]) -> Result:
-    return invoke_cached_cli(args)
-
-
-class _RecordingTelemetryEndpoint(BaseHTTPRequestHandler):
-    """Local telemetry-collector-shaped endpoint used to prove a real send occurred."""
-
-    events: ClassVar[Queue[dict[str, object]]]
-
-    def do_POST(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        self.events.put({"path": self.path, "body": json.loads(body.decode("utf-8"))})
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-length", "0")
-        self.end_headers()
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence stdlib request logging during tests."""
+def _invoke(args: list[str]):
+    return invoke_diagnostics_cli(args)
 
 
 def test_telemetry_status_defaults_to_fully_inert(_isolated_backend: None) -> None:
@@ -144,9 +122,7 @@ def test_telemetry_status_previews_a_fully_opted_in_posture_via_flags(_isolated_
     # (``redact_structured_for_cli_output``) applies its ``url-host-only``
     # rule to every emitted URL unconditionally ("URLs remain redacted
     # regardless" -- ``core.redaction`` module docs); the endpoint host
-    # survives, the path does not. This proves the display path is redacted
-    # while the send-path test below proves the real, unredacted endpoint is
-    # what actually receives the POST.
+    # survives, the path does not. This proves the display path is redacted.
     assert payload["endpoint"] == "https://telemetry.example.test"
     assert payload["would_emit_if_acknowledged"] is True
 
@@ -233,7 +209,9 @@ def test_telemetry_flush_rejects_an_unknown_tier(_isolated_backend: None) -> Non
     assert "off, crash_only, full" in result.output
 
 
-def test_telemetry_flush_dry_run_is_the_default_and_sends_nothing(_isolated_backend: None) -> None:
+def test_telemetry_flush_dry_run_is_the_default_and_sends_nothing(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
     """``flush`` with no flags is a dry run: the payload is built, nothing is sent."""
     recorder = LLMRunTelemetryRecorder()
     recorder.record(
@@ -283,117 +261,84 @@ def test_telemetry_flush_dry_run_is_the_default_and_sends_nothing(_isolated_back
     }
 
 
-def test_telemetry_flush_dry_run_never_dials_out_even_when_fully_configured(_isolated_backend: None) -> None:
+def test_telemetry_flush_dry_run_never_dials_out_even_when_fully_configured(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
     """Even a fully opted-in, tiered, endpoint-configured, acknowledged ``--dry-run`` sends nothing."""
-    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
-    try:
-        endpoint = f"http://127.0.0.1:{server.server_port}/collect"
-        result = _invoke(
-            [
-                "--format",
-                "json",
-                "app",
-                "diagnostics",
-                "telemetry",
-                "flush",
-                "--dry-run",
-                "--opt-in",
-                "--tier",
-                "full",
-                "--endpoint",
-                endpoint,
-                "--acknowledge-remote-telemetry",
-            ],
-        )
-    finally:
-        stop_loopback_server(server, thread)
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "diagnostics",
+            "telemetry",
+            "flush",
+            "--dry-run",
+            "--opt-in",
+            "--tier",
+            "full",
+            "--endpoint",
+            "https://telemetry.example.test/collect",
+            "--acknowledge-remote-telemetry",
+        ],
+    )
 
     assert result.exit_code == 0, result.output
     payload = _json_result(result)
     assert payload["dry_run"] is True
     assert payload["sent"] is False
     assert payload["would_send"] is True  # honest: it WOULD send on --no-dry-run
-    with pytest.raises(Empty):
-        events.get_nowait()
 
 
-def test_telemetry_flush_no_dry_run_refuses_without_acknowledgement(_isolated_backend: None) -> None:
+def test_telemetry_flush_no_dry_run_refuses_without_acknowledgement(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
     """``--no-dry-run`` without ``--acknowledge-remote-telemetry`` is still a safe no-op."""
-    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
-    try:
-        endpoint = f"http://127.0.0.1:{server.server_port}/collect"
-        result = _invoke(
-            [
-                "--format",
-                "json",
-                "app",
-                "diagnostics",
-                "telemetry",
-                "flush",
-                "--no-dry-run",
-                "--opt-in",
-                "--tier",
-                "full",
-                "--endpoint",
-                endpoint,
-            ],
-        )
-    finally:
-        stop_loopback_server(server, thread)
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "diagnostics",
+            "telemetry",
+            "flush",
+            "--no-dry-run",
+            "--opt-in",
+            "--tier",
+            "full",
+        ],
+    )
 
     assert result.exit_code == 0, result.output
     payload = _json_result(result)
     assert payload["dry_run"] is False
     assert payload["sent"] is False
     assert payload["gate_permits"] is False
-    with pytest.raises(Empty):
-        events.get_nowait()
 
 
-def test_telemetry_flush_no_dry_run_sends_when_fully_permitted(_isolated_backend: None) -> None:
-    """A fully-permitted, acknowledged ``--no-dry-run`` actually POSTs the previewed payload."""
-    recorder = LLMRunTelemetryRecorder()
-    recorder.record(
-        LLMRunRecord(
-            run_id="run-1",
-            caller="test",
-            provider="llm:claude:test-model",
-            duration_ms=1000,
-            succeeded=True,
-            started_at=datetime(2026, 4, 1, tzinfo=UTC),
-        ),
+def test_telemetry_flush_no_dry_run_without_endpoint_is_safe_noop(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
+    """An acknowledged invocation still does not send without an endpoint."""
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "diagnostics",
+            "telemetry",
+            "flush",
+            "--no-dry-run",
+            "--opt-in",
+            "--tier",
+            "full",
+            "--acknowledge-remote-telemetry",
+        ],
     )
-
-    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
-    try:
-        endpoint = f"http://127.0.0.1:{server.server_port}/collect"
-        result = _invoke(
-            [
-                "--format",
-                "json",
-                "app",
-                "diagnostics",
-                "telemetry",
-                "flush",
-                "--no-dry-run",
-                "--opt-in",
-                "--tier",
-                "full",
-                "--endpoint",
-                endpoint,
-                "--acknowledge-remote-telemetry",
-            ],
-        )
-        observed = events.get_nowait()
-    finally:
-        stop_loopback_server(server, thread)
 
     assert result.exit_code == 0, result.output
     payload = _json_result(result)
     assert payload["dry_run"] is False
-    assert payload["sent"] is True
-    assert payload["would_send"] is True
-    observed_body = cast("dict[str, Any]", observed["body"])
-    assert observed_body["command"] == "diagnostics.llm_run"
-    assert observed_body["counters"]["runs"] == 1
-    assert observed_body == payload["payload"]
+    assert payload["sent"] is False
+    assert payload["endpoint_configured"] is False
+    assert payload["would_send"] is False

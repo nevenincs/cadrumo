@@ -31,7 +31,7 @@ a message naming that directory and the publication command; the refusal is
 not a conformance finding. `integrity` additionally refuses a publication that
 no longer records the identity of the registry and source evidence as they
 stand, so republish after changing either. See
-[CONTRIBUTING.md](CONTRIBUTING.md#publish-the-runtime-authority).
+[CONTRIBUTING.md](CONTRIBUTING.md#author-publish-and-verify-the-registry).
 
 ## Read what the tool measures, and what it does not
 

@@ -7,38 +7,50 @@ import json
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 @dataclass(frozen=True)
-class TestPluginCohort:
-    """The complete protocol the production plugin materialiser requires."""
+class PluginTestCohort:
+    """Synthetic artifact fields consumed by the plugin workspace tests."""
 
     directory: Path
-    source_commit: str
+    manifest: Path
+    source_digest: str
     version: str
-    harness_version: str
     root_wheel: Path
-    harness_wheel: Path
+    root_sdist: Path
+    source_archive: Path
     runtime_wheelhouse: Path
-    runtime_wheelhouse_manifest: dict[str, object]
+    runtime_wheelhouse_manifest: dict[str, Any]
     manuals_wheel: Path
+    manuals_sdist: Path
     official_wheel: Path
+    official_sdist: Path
     sha256: dict[str, str]
+    command_spec_attestation: dict[str, object] | None = None
+
+    @property
+    def product_wheels(self) -> tuple[Path, Path, Path]:
+        """Return the synthetic installable product wheels in stable order."""
+        return self.root_wheel, self.manuals_wheel, self.official_wheel
 
 
 def make_test_plugin_cohort(
     directory: Path,
     *,
     version: str = "1.2.3",
-    harness_version: str = "0.1.0",
-) -> TestPluginCohort:
-    """Write four distinct wheel-shaped byte fixtures and return their authority."""
+) -> PluginTestCohort:
+    """Return a local structural fixture over synthetic artifact bytes."""
     directory.mkdir(parents=True)
     artifacts = {
         "cadrumo": directory / f"cadrumo-{version}-py3-none-any.whl",
-        "cadrumo-harness": directory / f"cadrumo_harness-{harness_version}-py3-none-any.whl",
+        "cadrumo-sdist": directory / f"cadrumo-{version}.tar.gz",
+        "source-archive": directory / f"cadrumo-source-{'a' * 64}.zip",
         "cadrumo-data-manuals": directory / f"cadrumo_data_manuals-{version}-py3-none-any.whl",
+        "cadrumo-data-manuals-sdist": directory / f"cadrumo_data_manuals-{version}.tar.gz",
         "cadrumo-data-official": directory / f"cadrumo_data_official-{version}-py3-none-any.whl",
+        "cadrumo-data-official-sdist": directory / f"cadrumo_data_official-{version}.tar.gz",
     }
     for name, path in artifacts.items():
         path.write_bytes(f"sealed-test-wheel:{name}\n".encode())
@@ -87,16 +99,33 @@ def make_test_plugin_cohort(
             archive.writestr(f"wheels/{runtime}/{dependency_name}", dependency_bytes)
     sha256 = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in artifacts.items()}
     sha256["runtime-wheelhouse"] = hashlib.sha256(runtime_wheelhouse.read_bytes()).hexdigest()
-    return TestPluginCohort(
+    manifest = directory / "python-cohort.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "artifacts": {name: path.name for name, path in artifacts.items()}
+                | {"runtime-wheelhouse": runtime_wheelhouse.name},
+                "sha256": sha256,
+                "source_digest": "a" * 64,
+                "version": version,
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    return PluginTestCohort(
         directory=directory.resolve(strict=True),
-        source_commit="a" * 40,
+        manifest=manifest,
+        source_digest="a" * 64,
         version=version,
-        harness_version=harness_version,
         root_wheel=artifacts["cadrumo"],
-        harness_wheel=artifacts["cadrumo-harness"],
+        root_sdist=artifacts["cadrumo-sdist"],
+        source_archive=artifacts["source-archive"],
         runtime_wheelhouse=runtime_wheelhouse,
         runtime_wheelhouse_manifest=wheelhouse_manifest,
         manuals_wheel=artifacts["cadrumo-data-manuals"],
+        manuals_sdist=artifacts["cadrumo-data-manuals-sdist"],
         official_wheel=artifacts["cadrumo-data-official"],
+        official_sdist=artifacts["cadrumo-data-official-sdist"],
         sha256=sha256,
     )

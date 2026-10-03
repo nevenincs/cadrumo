@@ -186,6 +186,28 @@ class CadrumoError(Exception):
         self.translated_message: str | None = translated_message
 
 
+class RecordedRegisteredError(CadrumoError):
+    """Render a recorded registry reference without recreating its original exception."""
+
+    def __init__(
+        self,
+        registered_code: str,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+    ) -> None:
+        """Accept only a declared code and locally supplied presentation facts."""
+        from .error_codes import get_registered_error_code_by_code
+
+        self._recorded_code = get_registered_error_code_by_code(registered_code).code
+        super().__init__(context=context, translated_message=translated_message)
+
+    @property
+    def recorded_code(self) -> str:
+        """Return the validated code, without exception text or arguments."""
+        return self._recorded_code
+
+
 def pydantic_validation_boundary[**PydanticArgs, PydanticResultT](
     function: Callable[PydanticArgs, PydanticResultT],
 ) -> Callable[PydanticArgs, PydanticResultT]:

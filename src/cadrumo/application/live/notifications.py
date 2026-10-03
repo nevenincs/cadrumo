@@ -14,7 +14,7 @@ lifecycle is handled *locally* by tracking which snapshot rows the
 operator has reviewed.
 
 Verbs:
-  capture(snapshot)   persist a fresh snapshot, emit bucket event
+  capture(snapshot)   persist or deduplicate a snapshot; caller emits bucket event
   latest()            return the most recent stored snapshot
   list_snapshots()    return every snapshot in capture order
   show(snapshot_id)   return one snapshot by id
@@ -33,8 +33,9 @@ exception class names, secure-object storage layout, and per-call
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel, Field
 
@@ -47,17 +48,21 @@ from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from .errors import LiveApplicationInputError
+from .filed_data_ports import FiledEffectGuard
 from .notification_documents import NotificationDocumentService
 from .notification_ports import (
     NotificationsPorts,
     NotificationsSnapshot,
     RemoteNotification,
 )
-from .session import active_verified_session
+from .session import SessionWriteReporter, active_verified_session
 from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,
 )
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class NotificationsSnapshotNotFoundError(SnapshotNotFoundError):
@@ -81,6 +86,14 @@ class PersistedNotificationsSnapshot(BaseModel):
     authenticated_identity: str | None = Field(default=None, min_length=1, max_length=32)
     rows: tuple[RemoteNotification, ...]
     persisted_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class NotificationsCaptureOutcome:
+    """One encrypted snapshot capture and whether it added a stored row."""
+
+    snapshot: PersistedNotificationsSnapshot
+    newly_persisted: bool
 
 
 def _normalise_authenticated_identity(authenticated_identity: str | None) -> str | None:
@@ -135,8 +148,9 @@ class NotificationsService(
     The service is structurally read-only. There is no ``submit`` verb,
     no path that could trigger a write to AEAT, and no method that
     mutates AEAT-side state. The local persistence flow records what
-    was already observed; future fetches re-record state on each
-    capture and emit a fresh bucket event.
+    was already observed; the service stores each distinct
+    content-addressed snapshot once. The caller is responsible for
+    emitting the corresponding bucket event when needed.
 
     Each public verb accepts ``bucket_id`` per call; storage is one
     encrypted secure-object row per captured snapshot.
@@ -160,13 +174,28 @@ class NotificationsService(
         service does not couple to the event repository so the
         persistence can be tested in isolation.
         """
-        return self._capture_stateless(
+        return self.capture_with_status(
             bucket_id=bucket_id,
-            capture=_NotificationsCaptureRequest(
-                snapshot=snapshot,
-                authenticated_identity=authenticated_identity,
-            ),
+            snapshot=snapshot,
+            authenticated_identity=authenticated_identity,
+        ).snapshot
+
+    def capture_with_status(
+        self,
+        *,
+        bucket_id: str,
+        snapshot: NotificationsSnapshot,
+        authenticated_identity: str | None = None,
+    ) -> NotificationsCaptureOutcome:
+        """Persist a snapshot and report whether content-addressed custody changed."""
+        capture = _NotificationsCaptureRequest(
+            snapshot=snapshot,
+            authenticated_identity=authenticated_identity,
         )
+        snapshot_id = self._derive_snapshot_id(capture)
+        already_present = self._repository_for(bucket_id).exists(snapshot_id)
+        persisted = self._capture_stateless(bucket_id=bucket_id, capture=capture)
+        return NotificationsCaptureOutcome(snapshot=persisted, newly_persisted=not already_present)
 
     def show(
         self,
@@ -226,15 +255,57 @@ async def capture_notifications(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
+    operation: str = "live-filed-read",
 ) -> PersistedNotificationsSnapshot:
     """Capture the authenticated taxpayer's notifications as encrypted local evidence."""
-    session, settings = await active_verified_session(
+    outcome = await capture_notifications_with_outcome(
+        bucket_id=bucket_id,
+        ports=ports,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
+        authority_operation=authority_operation,
+        operation=operation,
+    )
+    return outcome.snapshot
+
+
+async def capture_notifications_with_outcome(
+    *,
+    bucket_id: str,
+    ports: NotificationsPorts,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
+    operation: str = "live-filed-read",
+) -> NotificationsCaptureOutcome:
+    """Fetch remotely, then persist under an optional fresh local-effect guard."""
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        operation=operation,
+        operator_scope_ports=operator_scope_ports,
+        authority_operation=authority_operation,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
     )
     snapshot = await ports.snapshot_query.fetch(session, settings=settings)
-    return NotificationsService(ports=ports).capture(
+    if effect_guard is not None:
+        async with effect_guard():
+            return NotificationsService(ports=ports).capture_with_status(
+                bucket_id=bucket_id,
+                snapshot=snapshot,
+                authenticated_identity=session.identity_nif,
+            )
+    return NotificationsService(ports=ports).capture_with_status(
         bucket_id=bucket_id,
         snapshot=snapshot,
         authenticated_identity=session.identity_nif,
@@ -273,6 +344,9 @@ async def pull_notification_document(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
+    effect_guard: FiledEffectGuard,
+    on_session_write: SessionWriteReporter | None = None,
+    authority_operation: PinnedAuthorityOperation,
 ):
     """Fetch encrypted custody for a notification that AEAT already records as read."""
     row = resolve_notification_row(
@@ -284,15 +358,21 @@ async def pull_notification_document(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
+        authority_operation=authority_operation,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
+        operation="live-notification-document-pull",
     )
-    return await service.pull_document(bucket_id=bucket_id, session=session, row=row)
+    return await service.pull_document(bucket_id=bucket_id, session=session, row=row, effect_guard=effect_guard)
 
 
 __all__ = [
+    "NotificationsCaptureOutcome",
     "NotificationsService",
     "NotificationsSnapshotNotFoundError",
     "PersistedNotificationsSnapshot",
     "capture_notifications",
+    "capture_notifications_with_outcome",
     "notifications_snapshot_object_key",
     "pull_notification_document",
     "resolve_notification_row",

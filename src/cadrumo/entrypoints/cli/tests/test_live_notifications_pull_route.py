@@ -2,11 +2,9 @@
 
 The local read verbs (`list`, `view`, `document`) are covered by the
 no-contact suite (`test_live_notifications_verbs.py`); the PULL route is the
-live-gated member. When the live lane runs, this proves the verb's full
-wiring: the auth preflight, the persisted snapshot envelope with its
-grounding fields, the bucket event, and the structural no-remote-write
-property (the verb's outcome is a persisted read snapshot — it mutates
-nothing remotely).
+live-gated member. When the live lane runs, this checks its auth preflight
+and persisted snapshot envelope with grounding fields. The verb captures
+remote state without mutating it.
 
 Deselects cleanly without live credentials via the `aeat_live` marker.
 """
@@ -35,7 +33,7 @@ def test_live_notifications_pull_persists_a_grounded_snapshot_and_no_remote_writ
     source grounding, persisted under the live-state namespace, with the
     operator-facing outcome naming what was pulled and where it lives. The
     verb performs no remote mutation by design — the only writes are the
-    local snapshot and its bucket event.
+    local encrypted snapshot.
     """
     requires_live_enabled()
 

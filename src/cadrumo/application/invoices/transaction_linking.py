@@ -5,7 +5,7 @@
 the :class:`TransactionCatalogue` via :class:`TransactionCatalogueRepository`,
 applies the bidirectional link, and commits both updated catalogues in one
 unit of work through
-:meth:`TransactionCatalogueRepository.save_with_secure_object_writes`.
+:meth:`TransactionCatalogueRepository.save_if_revision_with_secure_object_writes`.
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.invoices.service import link_transaction
 from ...domain.transactions.models import TransactionCatalogue
 from ...domain.transactions.service import link_invoice
+from ..ledger.actions_common import resolve_revision_guarded_transaction_repository
 from ..ledger.protocols import (
     InvoiceCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
@@ -37,6 +38,7 @@ class InvoiceTransactionLinkResult(BaseModel):
     invoice: Invoice
     invoices: InvoiceCatalogue
     transactions: TransactionCatalogue
+    bucket_event_ids: tuple[str, ...] = ()
 
 
 def link_invoice_transaction_catalogues(
@@ -132,21 +134,38 @@ def link_invoice_transaction_repositories(
             context={"bucket_id": bucket_id},
         )
     invoices_repo = invoice_repository
-    transactions_repo = transaction_repository
-    # The invoice catalogue is a SINGLETON row, so its write is revisioned: an
-    # unguarded one rewrites the whole catalogue over any invoice another caller
-    # added between this read and the batch. The transaction store writes a row
-    # per transaction, so its side carries no equivalent whole-collection risk.
+    transactions_repo = resolve_revision_guarded_transaction_repository(
+        bucket_id=bucket_id, repository=transaction_repository
+    )
+    # Both loaded catalogue witnesses guard the one atomic batch. A concurrent
+    # invoice or transaction change must refuse before either side is replaced.
     invoice_catalogue, invoice_revision_id = invoices_repo.load_revisioned()
+    invoice = invoice_catalogue.get(invoice_id)
+    if invoice is None:
+        raise InvoiceLinkError(
+            "invoice_id not found in the active profile invoice catalogue",
+            context={"invoice_id": invoice_id, "bucket_id": bucket_id},
+        )
+    if invoice.bucket_id not in (None, bucket_id):
+        raise InvoiceLinkError(
+            "invoice belongs to a different bucket than the active profile",
+            context={
+                "invoice_id": invoice_id,
+                "command_bucket_id": bucket_id,
+                "invoice_bucket_id": invoice.bucket_id or "",
+            },
+        )
+    transactions, transaction_revision_id = transactions_repo.load_revisioned()
     result = link_invoice_transaction_catalogues(
         invoice_catalogue,
-        transactions_repo.load(),
+        transactions,
         invoice_id=invoice_id,
         transaction_id=transaction_id,
     )
-    transactions_repo.save_with_secure_object_writes(
+    transactions_repo.save_if_revision_with_secure_object_writes(
         result.transactions,
-        (
+        expected_revision_id=transaction_revision_id,
+        extra_writes=(
             invoices_repo.to_secure_object_write(result.invoices, expected_revision_id=invoice_revision_id),
             *extra_writes,
         ),

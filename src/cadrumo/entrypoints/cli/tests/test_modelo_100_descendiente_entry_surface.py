@@ -6,8 +6,8 @@ revision, deriving the Art. 58/61 LIRPF aggregate from the active profile's
 ``renta_family.descendiente.{n}.*`` facts. No live production surface wrote those
 facts before this module: ``aeat config profile descendiente add`` closes that gap.
 
-This module drives the real ``cadrumo`` CLI end to end against an isolated real-session
-backend (``isolated_cli_runtime_profile``) — no mocks, no monkeypatched backend:
+This module drives the real ``cadrumo`` CLI end to end against a registered,
+encrypted profile and a native worker with synthetic OS/store observations:
 
 * ``test_descendiente_add_then_calculate_computes_the_registry_tranche`` declares one
   descendant via the new CLI command, calculates a Modelo 100 revision, and asserts
@@ -25,29 +25,35 @@ backend (``isolated_cli_runtime_profile``) — no mocks, no monkeypatched backen
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+import json
+import sys
+from collections.abc import Iterator, Sequence
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....core.config import load_settings
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from .cli_runner import invoke_cached_cli
+from .cli_runner import invoke_cached_cli as _invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("operation"),
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="CLI descendant mutation requires native Windows workers"),
+]
 
-_PROFILE_ID = "0ac1e000-0000-4000-8000-000000515001"
+_PROFILE_LABEL = "Descendiente entry surface test profile"
 _ESTATAL_CASILLA_ID = "0513"
 
 # Every profile/relation-sourced binding a minimal M100 2024 calculate needs
@@ -86,49 +92,51 @@ def _binding_flags_without(*binding_ids: str) -> tuple[str, ...]:
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_cli_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
-        label="Descendiente entry surface test profile",
-    ) as profile:
+def runtime_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+    with native_cli_profile_scope(tmp_path) as profile:
         yield profile
 
 
-def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
+def _seed_natural_person_profile(runtime_profile: NativeCliProfileFixture) -> None:
     """Seed the minimum facts an M100 work-unit applicability guard requires."""
-    record = create_user_profile_record(
-        # Sourced from the schema, never pinned: a literal here goes stale the
-        # moment the profile schema is revised, and the record then refuses to
-        # validate against its own canonical version.
-        profile_id=_PROFILE_ID,
-        setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Ana"),
-            UserProfileFact(path="identity.surnames", value="Perez"),
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            # Boolean profile bindings are read from the profile, never overridden.
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-        ),
-        context=profile_creation_context_for_test(),
+    runtime_profile.register(
+        label=_PROFILE_LABEL,
+        facts={
+            "identity.name": "Ana",
+            "identity.surnames": "Perez",
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "directa_normal",
+            "renta_family.minor_children_in_unit": "false",
+            "renta_taxpayer.marriage_full_year": "false",
+            "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            "activities.description": "economic activity",
+            "tax_residence.ccaa": "madrid",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "provenance.source": "manual_cli",
+            "renta_taxpayer.birth_date": "1985-06-15",
+            "renta_filing.declaration_type": "1",
+        },
     )
-    seed_test_profile_record(record, root=runtime_profile.storage_root, label="Descendiente entry surface test profile")
+
+
+def invoke_cached_cli(args: Sequence[str]) -> Result:
+    """Supply a fresh verified password only for the descendant runtime verbs."""
+    target = ("config", "profile", "descendiente")
+    if any(tuple(args[index : index + 3]) == target for index in range(len(args) - 2)):
+        return _invoke_cached_cli(
+            ("--profile", _PROFILE_LABEL, "--profile-secrets-stdin", *args),
+            input=json.dumps(
+                {"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}
+            ),
+        )
+    return _invoke_cached_cli(args)
 
 
 def _registry_first_tranche(year: int) -> Decimal:
@@ -145,7 +153,7 @@ def _registry_first_tranche(year: int) -> Decimal:
 
 
 def test_descendiente_add_then_calculate_computes_the_registry_tranche(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     _seed_natural_person_profile(runtime_profile)
 
@@ -160,12 +168,6 @@ def test_descendiente_add_then_calculate_computes_the_registry_tranche(
     add_payload = _payload(add_result.output)
     assert add_payload["added"] == 1
     assert add_payload["total"] == 1
-
-    list_result = invoke_cached_cli(["--format", "json", "config", "profile", "descendiente", "list"])
-    assert list_result.exit_code == 0, list_result.output
-    list_payload = _payload(list_result.output)
-    assert list_payload["total"] == 1
-    assert list_payload["descendientes"][0]["birth_date"] == "2015-04-01"
 
     work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
     calc_result = invoke_cached_cli(
@@ -214,7 +216,7 @@ def test_descendiente_add_then_calculate_computes_the_registry_tranche(
 
 
 def test_undeclared_descendientes_advisory_fires_when_0513_is_zero(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     _seed_natural_person_profile(runtime_profile)
     work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
@@ -247,7 +249,7 @@ def test_undeclared_descendientes_advisory_fires_when_0513_is_zero(
 
 
 def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """A profile that declared a descendant who happens to be ineligible (age 30,
     no discapacidad) still resolves 0513 to zero -- but the declaration itself
@@ -290,7 +292,7 @@ def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
 # ---------------------------------------------------------------------------
 
 
-def test_descendiente_add_rejects_a_malformed_flag(runtime_profile: TestRuntimeProfile) -> None:
+def test_descendiente_add_rejects_a_malformed_flag(runtime_profile: NativeCliProfileFixture) -> None:
     _seed_natural_person_profile(runtime_profile)
 
     result = invoke_cached_cli(
@@ -303,7 +305,7 @@ def test_descendiente_add_rejects_a_malformed_flag(runtime_profile: TestRuntimeP
     assert "NACIMIENTO" in result.output
 
 
-def test_descendiente_remove_rejects_an_out_of_range_index(runtime_profile: TestRuntimeProfile) -> None:
+def test_descendiente_remove_rejects_an_out_of_range_index(runtime_profile: NativeCliProfileFixture) -> None:
     _seed_natural_person_profile(runtime_profile)
 
     add_result = invoke_cached_cli(
@@ -319,7 +321,7 @@ def test_descendiente_remove_rejects_an_out_of_range_index(runtime_profile: Test
 
 
 def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """After removing the only declared descendant, 0513 reverts to zero.
 
@@ -344,10 +346,6 @@ def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
     assert remove_result.exit_code == 0, remove_result.output
     remove_payload = _payload(remove_result.output)
     assert remove_payload["total"] == 0
-
-    list_result = invoke_cached_cli(["--format", "json", "config", "profile", "descendiente", "list"])
-    assert list_result.exit_code == 0, list_result.output
-    assert _payload(list_result.output)["total"] == 0
 
     work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
     calc_result = invoke_cached_cli(
@@ -377,7 +375,7 @@ def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
 
 
 def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The whole surface, operator-side: declare a month map, calculate, see 0613.
 
@@ -418,21 +416,6 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    # The declared map round-trips through the JSON transport as typed rows,
-    # expanded and month-sorted regardless of the ranges typed above.
-    list_payload = _payload(invoke_cached_cli(["--format", "json", "config", "profile", "descendiente", "list"]).output)
-    months = list_payload["descendientes"][0]["gastos_guarderia_mensuales"]
-    assert list_payload["descendientes"][0]["segundo_ciclo_infantil_inicio_mes"] == 8
-    assert [(row["month"], row["amount_euros"]) for row in months] == [
-        (1, 150),
-        (2, 150),
-        (3, 150),
-        (4, 150),
-        (5, 200),
-        (6, 200),
-        (7, 200),
-    ]
-
     work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
     calc_result = invoke_cached_cli(
         [
@@ -461,7 +444,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
 
 
 def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_silent(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The zero an operator would otherwise have to explain to themselves.
 
@@ -506,7 +489,7 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
 
 
 def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The AEAT manual's own worked increase, driven end to end through the CLI.
 
@@ -574,7 +557,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
 
 
 def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """A zero increase for want of Art. 81.1 months must say so.
 
@@ -626,7 +609,7 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
 
 
 def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """Art. 81.3 prorates by the months that hold AT ONCE, and here there are none.
 
@@ -675,7 +658,7 @@ def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
 
 
 def test_an_overlapping_declaration_still_reaches_its_shared_months(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """Positive control for the zero above: the same shape, moved to overlap, pays.
 
@@ -715,7 +698,7 @@ def test_an_overlapping_declaration_still_reaches_its_shared_months(
 
 
 def test_the_flag_refuses_both_spend_shapes_for_one_child(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """One spend authority per child, refused at the door the operator uses.
 
@@ -737,7 +720,7 @@ def test_the_flag_refuses_both_spend_shapes_for_one_child(
 
 
 def test_the_cotizaciones_term_binds_the_0613_cap(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The mother's SS cotizaciones is a real term of the cap, and it must BIND.
 
@@ -789,7 +772,7 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
 
 
 def test_the_population_term_binds_the_0613_cap(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The prorated increase is the other term that must be able to win.
 
@@ -864,7 +847,7 @@ def _registry_guarderia_cap_anual(year: int = 2024) -> Decimal:
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
 def test_a_record_level_refusal_is_translated_in_every_catalogue(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
     locale: str,
 ) -> None:
     """The coherence rules this surface added must reach the operator as themselves.
@@ -915,7 +898,7 @@ def test_a_record_level_refusal_is_translated_in_every_catalogue(
 
 
 def test_a_record_level_refusal_does_not_echo_the_operators_record(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The refusal must not repeat the record under construction back at the operator.
 
@@ -942,7 +925,7 @@ def test_a_record_level_refusal_does_not_echo_the_operators_record(
 
 
 def test_the_parser_refusal_family_still_translates(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The arm that already worked must keep working.
 

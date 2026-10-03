@@ -29,11 +29,13 @@ this module carries the concrete runtime wiring.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Mapping
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator, Generator, Mapping
+from contextlib import asynccontextmanager, contextmanager
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Final
 
 from .....core.async_cleanup import (
+    AsyncCloseable,
     close_async_resources,
 )
 from .....core.logging import get_logger
@@ -93,6 +95,48 @@ class _SharedPlaywrightRuntimeOwner:
                     ),
                 ) from exc
             self._stopped = True
+
+
+_operation_browser_scope: ContextVar[BrowserRuntimeResourceScope | None] = ContextVar(
+    "cadrumo_operation_browser_scope", default=None
+)
+
+
+class BrowserRuntimeResourceScope:
+    """Retain browser subprocess owners until recorded-operation cleanup settles.
+
+    The worker's native process Job contains launch and abrupt-death races;
+    this scope gives the operation supervisor a declared cleanup owner for
+    ordinary completion and failure. Child tasks inherit the active context.
+    """
+
+    def __init__(self) -> None:
+        """Start an empty operation cleanup scope."""
+        self._owners: list[AsyncCloseable] = []
+        self._closed = False
+
+    @contextmanager
+    def activate(self) -> Generator[None]:
+        """Register Playwright owners created by this operation only."""
+        token = _operation_browser_scope.set(self)
+        try:
+            yield
+        finally:
+            _operation_browser_scope.reset(token)
+
+    def own(self, owner: AsyncCloseable) -> None:
+        """Retain a started runtime before the caller can use it."""
+        if self._closed:
+            raise RuntimeError("browser resource scope is closed")
+        self._owners.append(owner)
+
+    async def close(self) -> None:
+        """Finish all retained browser shutdowns before terminal settlement."""
+        if self._closed:
+            return
+        await close_async_resources(*reversed(self._owners), task_name="cadrumo-operation-browser-cleanup")
+        self._owners.clear()
+        self._closed = True
 
 
 class DefaultBrowserSession:
@@ -263,7 +307,11 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
             settings=settings,
             profile=profile,
         )
-        return DefaultBrowserSession(playwright=playwright, session=session)
+        browser_owner = DefaultBrowserSession(playwright=playwright, session=session)
+        scope = _operation_browser_scope.get()
+        if scope is not None:
+            scope.own(browser_owner)
+        return browser_owner
     except BaseException:
         # Playwright.start() spawned a subprocess and opened pipes; any
         # exception between here and the successful return leaks those
@@ -286,6 +334,13 @@ async def shared_playwright_runtime() -> AsyncGenerator[Playwright]:
     runtime; each page/context pair is still owned by the helper that opens it.
     """
     owner = _SharedPlaywrightRuntimeOwner(await _start_playwright())
+    scope = _operation_browser_scope.get()
+    if scope is not None:
+        try:
+            scope.own(owner)
+        except BaseException:
+            await close_async_resources(owner, task_name="cadrumo-shared-playwright-rejected")
+            raise
     try:
         yield owner.playwright
     finally:
@@ -370,6 +425,7 @@ async def _start_playwright() -> Playwright:
 
 
 __all__ = [
+    "BrowserRuntimeResourceScope",
     "DefaultBrowserSession",
     "create_browser_session",
     "default_browser_session_factory",

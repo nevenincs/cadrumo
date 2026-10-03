@@ -185,6 +185,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
     from cadrumo.application.operations.frontend_requests import (
         OperationCancellationRefusalCode,
+        OperationDetachRefusalCode,
         OperationResponseControlRefusalCode,
     )
     from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
@@ -193,8 +194,10 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
     from cadrumo.application.wizard.catalogue import build_setup_flow
     from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
+    from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
     from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+    from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -255,15 +258,24 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
         FStringKeyRegistration(
+            # The operations modal renders tr(terminal_copy_key), a key the
+            # projection selects per terminal condition, plus the partial-success
+            # key no condition selects alone (entrypoints/tui/operations/projection.py).
+            description="operation.modal.terminal.* (OperationTerminalCondition)",
+            key_factory=lambda v: f"operation.modal.terminal.{v}",
+            values=(*(condition.value for condition in OperationTerminalCondition), "succeeded_partial"),
+        ),
+        FStringKeyRegistration(
             # Bounded union: the operations modal derives its refusal copy key
-            # from the code's own value across BOTH refusal enums, so the enums
+            # from the code's own value across all three refusal enums, so the enums
             # decide which keys must exist (entrypoints/tui/operations/modal.py).
-            description="operation.modal.refusal.* (Operation{ResponseControl,Cancellation}RefusalCode)",
+            description="operation.modal.refusal.* (Operation{ResponseControl,Cancellation,Detach}RefusalCode)",
             key_factory=lambda v: f"operation.modal.refusal.{v}",
             values=tuple(
                 dict.fromkeys(
                     [code.value for code in OperationResponseControlRefusalCode]
                     + [code.value for code in OperationCancellationRefusalCode]
+                    + [code.value for code in OperationDetachRefusalCode]
                 )
             ),
         ),
@@ -287,6 +299,64 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="errors.prefix.* (ErrorCategory)",
             key_factory=lambda v: f"errors.prefix.{v}",
             values=tuple(c.value.lower() for c in ErrorCategory),
+        ),
+        FStringKeyRegistration(
+            # Closed detail-label arguments in entrypoints/tui/profile/automation_inventory.py.
+            description="tui.automation_inventory.* (automation inventory detail labels)",
+            key_factory=lambda v: f"tui.automation_inventory.{v}",
+            values=(
+                "id",
+                "client",
+                "destination",
+                "kind",
+                "state",
+                "expires",
+                "grant",
+                "last_used",
+                "operations",
+                "actions",
+                "disclosures",
+                "periods",
+                "delegation",
+                "period_independent",
+                "unattended",
+                "os_lock",
+                "grant_expires",
+                "key_expires",
+                "target_grant",
+                "target_key",
+                "profile",
+                "review_digest",
+            ),
+        ),
+        FStringKeyRegistration(
+            # The resume refusal derives its message key from the reason's own
+            # value in application/workflow/resume.py and the CLI resume command.
+            description="application.workflow.errors.resume_refused_* (WorkflowResumeRefusalReason)",
+            key_factory=lambda v: f"application.workflow.errors.resume_refused_{v}",
+            values=tuple(reason.value for reason in WorkflowResumeRefusalReason),
+        ),
+        FStringKeyRegistration(
+            # Pinned to the literal tuple _DYNAMIC_CODES expands in
+            # application/user_profile/google_configuration_operation_refusal.py.
+            description="cli.config.google.detail.* (Google client validation refusals)",
+            key_factory=lambda v: f"cli.config.google.detail.{v}",
+            values=(
+                "client_json_unreadable",
+                "client_json_invalid",
+                "client_json_not_desktop",
+                "client_json_schema_invalid",
+            ),
+        ),
+        FStringKeyRegistration(
+            # Pinned to the literal tuple _DYNAMIC_CODES expands in the same module.
+            description="cli.config.google.credential_source.detail.* (credential source refusals)",
+            key_factory=lambda v: f"cli.config.google.credential_source.detail.{v}",
+            values=(
+                "target_principal_required",
+                "impersonation_config_invalid",
+                "oauth_desktop_rejects_impersonation_options",
+            ),
         ),
         FStringKeyRegistration(
             description="wizard.setup.descendientes.relacion.choices.*.label (descendant relationship authority)",

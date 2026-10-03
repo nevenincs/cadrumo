@@ -57,7 +57,7 @@ from ...core.errors.error_codes import (
     render_error_json,
     render_error_text,
 )
-from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
+from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError, RecordedRegisteredError
 from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
 from ...domain.user_profile.errors import StoredProfileDriftError
@@ -520,6 +520,10 @@ class CliRefusedBoundaryError(CadrumoError):
     """
 
 
+class CliRecordedOperationError(CliRefusedBoundaryError, RecordedRegisteredError):
+    """Preserve a supervised operation's declared code at the shared CLI boundary."""
+
+
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     """Wrap ``callback`` so :class:`CadrumoError` emits the structured stderr form.
 
@@ -809,10 +813,13 @@ def render_error_payload(
     line without reconstructing a command or recovery sentence.
     """
     notice = sandbox_notice_for_error(error)
-    from ._payer_fact_migration_notice import drain_payer_fact_migration_notices
+    from ..payer_fact_migration_notices import drain_payer_fact_migration_notices
     from ._profile_authentication_notice import drain_profile_authentication_notices
+    from .common import resolve_notice_actions
 
-    authentication_notices = (*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices())
+    authentication_notices = resolve_notice_actions(
+        (*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices()),
+    )
     if as_json:
         return render_error_json(
             error,

@@ -216,6 +216,7 @@ def derive_modelo_202_modality(
     profile: TaxpayerProfile,
     *,
     effective_date: date,
+    authority: GovernedFactSource | None = None,
 ) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 pago-fraccionado modality and return a :class:`Modelo202ModalityVerdict`.
 
@@ -226,6 +227,7 @@ def derive_modelo_202_modality(
         entity_type=profile.entity_type,
         incn_prior_12_months=profile.incn_prior_12_months,
         effective_date=effective_date,
+        authority=authority,
     )
 
 

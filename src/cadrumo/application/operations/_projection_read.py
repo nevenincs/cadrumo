@@ -383,11 +383,11 @@ class _ResultContext:
 
 @dataclass(frozen=True, slots=True)
 class _ResultRegistration:
-    """One settled-result context bound to its projector and public contract."""
+    """One settled-result context bound to its public contract and optional projector."""
 
     context: _ResultContext
     registration: OperationPublicDefinitionRegistrationV1
-    projector: OperationResultProjector
+    projector: OperationResultProjector | None
 
 
 def _result_request_or_refusal(
@@ -434,9 +434,13 @@ async def _load_result_context(
             OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION,
             requested_version=1,
         )
-    # A settled result is resolvable whenever the receipt carries one, not only
-    # on SUCCEEDED: a FAILED settlement may still carry committed evidence.
-    result_ref = receipt.result_ref
+    # Refusal explanations use their own reference; they never become business
+    # results or change the receipt's independently authoritative effect.
+    result_ref = None
+    if receipt.condition is OperationTerminalCondition.SUCCEEDED:
+        result_ref = receipt.result_ref
+    elif receipt.condition is OperationTerminalCondition.REFUSED:
+        result_ref = receipt.refusal_detail_ref
     if result_ref is None:
         return _result_projection_refusal(
             OperationResultProjectionRefusalCode.OPERATION_NOT_SUCCESSFUL,
@@ -466,8 +470,14 @@ def _lookup_result_registration(
             OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH,
             requested_version=1,
         )
-    projector = registration.result_projector
-    if contract.result_schema is None or projector is None:
+    if contract.result_schema is None:
+        return _result_projection_refusal(
+            OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
+            requested_version=1,
+        )
+    if context.receipt.condition is OperationTerminalCondition.REFUSED and (
+        context.receipt.refusal_ref not in contract.refusal_detail_codes or registration.result_projector is None
+    ):
         return _result_projection_refusal(
             OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
             requested_version=1,
@@ -477,7 +487,7 @@ def _lookup_result_registration(
             OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH,
             requested_version=1,
         )
-    return _ResultRegistration(context=context, registration=registration, projector=projector)
+    return _ResultRegistration(context=context, registration=registration, projector=registration.result_projector)
 
 
 def _result_digest_or_refusal(
@@ -511,7 +521,15 @@ async def _resolve_result_projection[ResultProjectionT: BaseModel](
         if definition.result_type is None:
             raise TypeError("result-less operation definition cannot resolve a settled result")
         resolved = await operands.resolve(digest, definition.result_type)
-        projected = bound.projector(resolved, bound.context.receipt)
+        if bound.projector is None:
+            # The registry admits no projector only when the stored and public
+            # models are the exact same defining class. Keep that condition at
+            # the read boundary too, before releasing an encrypted operand.
+            if definition.result_type is not binding.model_type:
+                raise TypeError("identity result projection requires the registered result model")
+            projected = resolved
+        else:
+            projected = bound.projector(resolved, bound.context.receipt)
         del resolved
         if type(projected) is not binding.model_type:
             raise TypeError("result projector returned an unregistered model")

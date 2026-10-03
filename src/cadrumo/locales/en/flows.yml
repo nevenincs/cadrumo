@@ -56,6 +56,8 @@ flows:
       cancel: Cancel
       choose_one: Choose one of the options, or cancel to leave the value unchanged.
       clear: Clear
+      completed_refresh_unavailable: The operation completed, but its updated view
+        is unavailable. Return to Home to refresh it.
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
       no_change: No changes were needed.

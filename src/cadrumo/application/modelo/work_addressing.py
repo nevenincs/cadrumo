@@ -385,10 +385,14 @@ def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddres
     return target.to_work_address()
 
 
-def _modelo_work_period_from_core(year: int, period: Period, *, modelo: str | None = None) -> Period:
+def _modelo_work_period_from_core(
+    year: int, period: Period, *, modelo: str | None = None, operation: PinnedAuthorityOperation | None = None
+) -> Period:
     """Resolve a modelo work period through the core ``Period`` value object only."""
-    with bundled_indexed_authority().operation() as operation:
-        declared = declared_modelo_period_tokens(modelo, operation=operation)
+    if operation is None:
+        with bundled_indexed_authority().operation() as pinned:
+            return _modelo_work_period_from_core(year, period, modelo=modelo, operation=pinned)
+    declared = declared_modelo_period_tokens(modelo, operation=operation)
     if period.filing_year != year:
         raise ModeloWorkPeriodTokenError(
             year=year,
@@ -407,6 +411,7 @@ def modelo_work_address_from_operator_target(
     period: Period | None,
     registry_revision_id: RevisionId | None,
     bucket_id: str | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloWorkAddress:
     """Build a :class:`ModeloWorkAddress` from exact or visible operator input.
 
@@ -415,7 +420,7 @@ def modelo_work_address_from_operator_target(
     mismatches fail here before the selector sees the request.
     """
     if modelo is not None and year is not None and period is not None:
-        period = _modelo_work_period_from_core(year, period, modelo=modelo)
+        period = _modelo_work_period_from_core(year, period, modelo=modelo, operation=operation)
         year = period.filing_year
     elif work_unit_id is None:
         raise ModeloWorkAddressNotFoundError(
@@ -446,6 +451,7 @@ def resolve_modelo_work_unit_for_operator_target(
     bucket_id: str | None = None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> WorkUnit:
     """Resolve exact or visible operator input to one active :class:`~WorkUnit`.
 
@@ -460,6 +466,7 @@ def resolve_modelo_work_unit_for_operator_target(
             period=period,
             registry_revision_id=registry_revision_id,
             bucket_id=bucket_id,
+            operation=operation,
         ),
         catalogue=catalogue,
         bucket_id=resolved_bucket_id,
@@ -1205,7 +1212,7 @@ def ensure_modelo_work_unit_for_active_target(
         )
         name_applied: str | None = None
         if name is not None and name.strip() and name.strip() != unit.name:
-            unit = rename_work_unit(unit.work_unit_id, name, actor=actor, ports=ports)
+            unit = rename_work_unit(unit.work_unit_id, name, actor=actor, ports=ports, expected=unit)
             name_applied = unit.name
         return ModeloWorkEnsureResult(work_unit=unit, reused=True, name_applied=name_applied)
 

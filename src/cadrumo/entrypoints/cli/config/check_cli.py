@@ -1,43 +1,66 @@
-"""``aeat config check`` — the workstation doctor.
-
-For every external service, reports the active profile's capability posture and
-the typed dependency outcome. A rejected condition is resolved against the live
-action catalogue or carries an explicit closed outcome. The command exits
-non-zero when a capability the profile opted into has a missing dependency.
-Named ``check`` because the older ``doctor`` command path is retired.
-"""
+"""``aeat config check`` — the authenticated workstation report presenter."""
 
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
 
 import typer
 
-from ....application.auth.operator_probe_ports import OperatorProbePorts
-from ....core.bucket_pointer import resolve_active_bucket_id
-from ....core.capabilities import ServiceCapability
-
-if TYPE_CHECKING:
-    from ....application.provisioning import DependencyStatus, HardwareProfile
-    from ....application.provisioning_runtime import ContentionSnapshot
+from ....application.operator_actions.models import PreconditionVerdict
+from ....application.preflight import PreflightCheck
+from ....application.provisioning import DependencyStatus
+from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.workstation_check_operation import WorkstationCheckProjection
 from ....core.i18n.render import tr
+from ....core.json_contract import ResolvedPreconditionAction
 from ..common import emit_envelope, resolve_cli_precondition_action
-from .check_payloads import CheckDependencyPayload, CheckPreflightPayload, ConfigCheckResult
+from .check_payloads import (
+    CheckCapabilityPayload,
+    CheckDependencyPayload,
+    CheckPreflightPayload,
+    ConfigCheckResult,
+)
+from .runtime_workstation_check import read_workstation_check_for_cli
 from .status_rendering import precondition_action_lines
 
 
+def _restore_facts(values: Mapping[str, object]) -> dict[str, str | int | bool]:
+    """Restore only the legacy CLI's closed scalar facts, rejecting new kinds."""
+    facts: dict[str, str | int | bool] = {}
+    for key, value in values.items():
+        if not isinstance(value, (str, int, bool)):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        facts[key] = value
+    return facts
+
+
+def _precondition_action(
+    verdict: PreconditionVerdict | None,
+) -> ResolvedPreconditionAction | None:
+    if verdict is None:
+        return None
+    return resolve_cli_precondition_action(verdict)
+
+
 def _dependency_payload(status: DependencyStatus) -> CheckDependencyPayload:
-    """Project an application dependency outcome through the one CLI resolver."""
+    """Project one canonical dependency row through the existing CLI action resolver."""
     return CheckDependencyPayload(
         service=status.service,
         available=status.available,
-        facts=status.facts,
-        precondition_action=(
-            resolve_cli_precondition_action(status.precondition_verdict)
-            if status.precondition_verdict is not None
-            else None
-        ),
+        facts=_restore_facts(status.facts),
+        precondition_action=_precondition_action(status.precondition_verdict),
+    )
+
+
+def _preflight_payload(status: PreflightCheck) -> CheckPreflightPayload:
+    """Project one canonical preflight row without changing its health meaning."""
+    return CheckPreflightPayload(
+        check=status.check,
+        healthy=status.healthy,
+        severity=status.severity,
+        facts=_restore_facts(status.facts),
+        precondition_action=_precondition_action(status.precondition_verdict),
     )
 
 
@@ -53,206 +76,75 @@ def _dependency_text_lines(payload: CheckDependencyPayload) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def _assess_selected_model_load(profile: HardwareProfile) -> ContentionSnapshot | None:
-    """Return the contention verdict for the model this machine would load, or ``None``.
-
-    Answers the question the operator actually has -- "could I load the model
-    this machine would pick?" -- rather than asking about a model named here,
-    which would report on something the product would never load.
-
-    ``None`` when selection resolves to no candidate: there is then no load to
-    assess, and inventing a requirement to assess against would report a
-    shortfall against a model that does not exist.
-
-    Reads only. Selection, the hardware profile and the runtime's resident set
-    are all measurements; nothing on this path loads or pulls a model.
-    """
-    from ....application.provisioning import select_model_for_role
-    from ....application.provisioning_runtime import assess_model_load_contention
-    from ....core.model_catalogue import ModelRole
-
-    assessable = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=profile).assessable_load
-    if assessable is None:
-        return None
-    runtime_id, required_bytes = assessable
-    return assess_model_load_contention(runtime_id, required_bytes, profile=profile)
-
-
-def _capability_posture() -> tuple[list[dict[str, object]], dict[str, object]]:
-    from ....application.user_profile.capabilities import resolve_active_capability
-
-    capabilities: list[dict[str, object]] = []
-    for cap in ServiceCapability:
-        decision = resolve_active_capability(cap)
-        capabilities.append(
-            {"capability": cap.value, "enabled": decision.enabled, "source": decision.source.value},
-        )
-    return capabilities, {str(row["capability"]): row["enabled"] for row in capabilities}
-
-
-def _probe_dependency_statuses() -> tuple[
-    tuple[DependencyStatus, ...],
-    DependencyStatus,
-    tuple[DependencyStatus, ...],
-]:
-    from ....application.local_reader import EXTRACTION_READER_ROLES, probe_local_reader
-    from ....application.provisioning import (
-        probe_hardware_profile,
-        probe_local_inference_hardware,
-        probe_local_model_provisioning,
-        probe_model_runtime_hardware_floor,
-        probe_optional_extras,
-    )
-    from ....application.provisioning_browser import probe_playwright_browser
-    from ....application.provisioning_runtime import read_installed_models
-    from ....core.model_catalogue import ModelRole
-    from ._check_hardware_rows import contention_row
-
-    # The same per-role reader probe `config provision status` and the ingestion
-    # lanes consult, over ONE inventory read, so the doctor cannot report a
-    # reader ready that the status surface reports missing.
-    inventory = read_installed_models()
-    readers = tuple(probe_local_reader(role, installed=inventory) for role in EXTRACTION_READER_ROLES)
-    vision_reader = next(
-        status
-        for role, status in zip(EXTRACTION_READER_ROLES, readers, strict=True)
-        if role is ModelRole.VISION_TRANSCRIPTION
-    )
-    hardware_floor = probe_model_runtime_hardware_floor()
-    # Probed ONCE and threaded into both rows. Two probes would read the
-    # machine at two moments and could disagree, so the profile the
-    # contention verdict was computed against is the profile reported
-    # beside it.
-    profile = probe_hardware_profile()
-    hardware = probe_local_inference_hardware(profile)
-    contention = contention_row(_assess_selected_model_load(profile))
-    playwright = probe_playwright_browser()
-    provisioning = probe_local_model_provisioning()
-    extras = probe_optional_extras()
-    statuses = (*readers, hardware_floor, hardware, contention, provisioning, playwright, *extras)
-    return statuses, vision_reader, extras
-
-
-def _preflight_payloads(*, operator_probe_ports: OperatorProbePorts) -> list[CheckPreflightPayload]:
-    from ....adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
-    from ....application.preflight import run_preflight_checks
-
-    return [
-        CheckPreflightPayload(
-            check=row.check,
-            healthy=row.healthy,
-            severity=row.severity,
-            facts=row.facts,
-            precondition_action=(
-                resolve_cli_precondition_action(row.precondition_verdict)
-                if row.precondition_verdict is not None
-                else None
-            ),
-        )
-        for row in run_preflight_checks(
-            object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
-            operator_probe_ports=operator_probe_ports,
-        )
-    ]
-
-
-def _check_issues(
-    *,
-    capabilities: dict[str, object],
-    vision_reader: DependencyStatus,
-    extras: tuple[DependencyStatus, ...],
-) -> list[str]:
-    from ....core.config import load_settings
-
-    extra_available = {status.service: status.available for status in extras}
-    issues: list[str] = []
-    if capabilities[ServiceCapability.LLM_VISION.value] and not vision_reader.available:
-        issues.append(vision_reader.service)
-    if capabilities[ServiceCapability.GOOGLE_EXPORT.value] and not extra_available.get("extra:google", False):
-        issues.append("extra:google")
-    # The eligibility bar's own row. Reported in the SAME shape as the two
-    # above -- the capability is on, but the layer beneath it refuses -- so
-    # an operator who turned the bar on and expected off-host reading to
-    # work is told which of the two switches is still closed, rather than
-    # meeting a per-invocation refusal with no explanation. The capability's
-    # posture itself is rendered by the capability loop; this is the
-    # inconsistency between it and the deployment flag.
-    if capabilities[ServiceCapability.CLOUD_EVIDENCE_UPLOAD.value] and not (
-        load_settings().cadrumo_evidence_cloud_upload_permitted
-    ):
-        issues.append("cloud_evidence_upload:deployment_permission")
-    return issues
-
-
 def _check_text_lines(
     *,
-    profile_id: str | None,
-    capabilities: list[dict[str, object]],
+    profile_id: str,
+    capabilities: list[CheckCapabilityPayload],
     dependencies: tuple[CheckDependencyPayload, ...],
     preflight: list[CheckPreflightPayload],
     issues: list[str],
 ) -> tuple[str, ...]:
-    lines = [f"{tr('cli.config.check.profile_label')}\t{profile_id or '-'}"]
+    """Keep the established human-readable row ordering and labels."""
+    lines = [f"{tr('cli.config.check.profile_label')}\t{profile_id}"]
     capability_label = tr("cli.config.check.capability_label")
     preflight_label = tr("cli.config.check.preflight_label")
     for cap in capabilities:
         state = tr(
-            "cli.config.profile.capabilities.enabled" if cap["enabled"] else "cli.config.profile.capabilities.disabled"
+            "cli.config.profile.capabilities.enabled" if cap.enabled else "cli.config.profile.capabilities.disabled"
         )
-        lines.append(f"{capability_label}\t{cap['capability']}\t{state}\t{cap['source']}")
+        lines.append(f"{capability_label}\t{cap.capability}\t{state}\t{cap.source}")
     for dependency in dependencies:
         lines.extend(_dependency_text_lines(dependency))
     for row in preflight:
         lines.append(f"{preflight_label}\t{row.check}\t{row.severity}")
-        action = row.precondition_action
-        if action is not None:
-            lines.extend(f"{row.check}.{line}" for line in precondition_action_lines(action))
+        if row.precondition_action is not None:
+            lines.extend(f"{row.check}.{line}" for line in precondition_action_lines(row.precondition_action))
     for issue in issues:
         lines.append(f"{tr('cli.config.check.issue_label')}\t{issue}")
     return tuple(lines)
 
 
-def config_check(ctx: typer.Context) -> None:
-    """Report external-dependency availability + the active profile's capability posture."""
-    profile_id = resolve_active_bucket_id()
-    capabilities, cap_enabled = _capability_posture()
-    dependency_statuses, vision_reader, extras = _probe_dependency_statuses()
-    dependency_payloads = tuple(_dependency_payload(status) for status in dependency_statuses)
-    # Keep the nested strict DTO instances intact until the one final
-    # envelope serialization. A JSON dump here turns tuple/enum action
-    # fields into primitives before ConfigCheckResult validates them.
-    dependencies = list(dependency_payloads)
-    # Per-provider cert/clave health plus storage/corpus/environment and
-    # portal-catalogue preflight. Report-only: a red preflight row is
-    # surfaced for operator visibility but does not, on its own, flip the
-    # capability/dependency exit contract below.
-    # The worst-case object-path suffix is measured from the on-disk grammar the
-    # storage adapter owns, so it is supplied here at the composition root rather
-    # than reached for from the application layer.
-    from ..state_projection_support import operator_probe_ports
-
-    preflight = _preflight_payloads(operator_probe_ports=operator_probe_ports(ctx))
-    issues = _check_issues(capabilities=cap_enabled, vision_reader=vision_reader, extras=extras)
-    ok = not issues
+def _present_report(projection: WorkstationCheckProjection) -> tuple[ConfigCheckResult, tuple[str, ...]]:
+    report = projection.to_report()
+    if len({row.capability for row in report.capabilities}) != len(report.capabilities):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    capabilities = [
+        CheckCapabilityPayload(
+            capability=row.capability.value,
+            enabled=row.enabled,
+            source=row.source.value,
+        )
+        for row in report.capabilities
+    ]
+    dependencies = tuple(_dependency_payload(row) for row in report.dependencies)
+    preflight = [_preflight_payload(row) for row in report.preflight]
+    issues = list(report.issues)
     result = ConfigCheckResult.model_validate(
         {
-            "profile_id": profile_id,
-            "ok": ok,
+            "profile_id": str(report.profile_id),
+            "ok": not issues,
             "capabilities": capabilities,
-            "dependencies": dependencies,
+            "dependencies": list(dependencies),
             "preflight": preflight,
             "issues": issues,
         },
     )
     lines = _check_text_lines(
-        profile_id=profile_id,
+        profile_id=str(report.profile_id),
         capabilities=capabilities,
-        dependencies=dependency_payloads,
+        dependencies=dependencies,
         preflight=preflight,
         issues=issues,
     )
+    return result, lines
+
+
+def config_check(ctx: typer.Context) -> None:
+    """Report the authenticated profile's canonical workstation health facts."""
+    projection = read_workstation_check_for_cli(ctx)
+    result, lines = _present_report(projection)
     emit_envelope(ctx, command="config.check", result=result, lines=lines)
-    if not ok:
+    if not result.ok:
         raise typer.Exit(code=2)
 
 

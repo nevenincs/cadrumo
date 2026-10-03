@@ -27,6 +27,7 @@ from ...application.modelo.calculate_input import (
 )
 from ...application.modelo.calculation_action_ports import CalculationActionPorts
 from ...application.modelo.calculation_actions import get_calculation_revision
+from ...application.modelo.operation_definitions import ModeloDetailRowWireV1
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
@@ -44,6 +45,7 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
+from ...core.hashing import canonical_json_bytes
 from ...core.hex import HEX_PATTERN_64
 from ...core.i18n.render import tr
 from ...core.identity.hex_ids import CalculationRevisionId
@@ -401,7 +403,7 @@ def _validate_m349_row_nif(row_type: str, values: Mapping[str, str | Decimal]) -
         return
     raise typer.BadParameter(
         tr(
-            "cli.app.modelo.work.row_m349_invalid_nif",
+            "application.modelo.errors.calculate_m349_invalid_nif",
             nif=nif,
             pais=country_code,
         ),
@@ -426,6 +428,35 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                 error=str(exc),
             ),
         ) from exc
+
+
+def parse_calculation_wire_row_spec(spec: str) -> ModeloDetailRowWireV1:
+    """Parse CLI row syntax into the registered mirror without local registry custody."""
+    row_type, _row_model, fields = _parse_row_spec_tokens(spec)
+    adapter: TypeAdapter[ModeloDetailRowWireV1] = TypeAdapter(ModeloDetailRowWireV1)
+    try:
+        return adapter.validate_json(canonical_json_bytes({"row_type": row_type, **fields}))
+    except ValidationError as exc:
+        locations = tuple(".".join(str(part) for part in item["loc"]) for item in exc.errors(include_input=False))
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_validation_error",
+                row_type=row_type,
+                error=", ".join(locations),
+            )
+        ) from None
+
+
+def parse_work_calculate_wire_specs(
+    *, casilla: list[str] | None, binding: list[str] | None, relation: list[str] | None, row: list[str] | None
+) -> tuple[dict[str, str], dict[BindingId, str], dict[RelationId, str], tuple[ModeloDetailRowWireV1, ...]]:
+    """Retain last-wins CLI override tokens while preserving every declared row."""
+    return (
+        dict(parse_casilla_override(spec) for spec in (casilla or ())),
+        dict(parse_binding_override(spec) for spec in (binding or ())),
+        dict(parse_relation_override(spec) for spec in (relation or ())),
+        tuple(parse_calculation_wire_row_spec(spec) for spec in (row or ())),
+    )
 
 
 def optional_decimal_option(raw: str | None, *, translation_key: str, default: str) -> Decimal | None:

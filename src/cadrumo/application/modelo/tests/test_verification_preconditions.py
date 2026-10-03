@@ -152,6 +152,7 @@ def test_application_result_requires_exact_ordered_finding_projection() -> None:
 
     result = ModeloVerificationResult(
         report=_blocked_report((blocking, warning)),
+        published=True,
         finding_preconditions=projections,
     )
     assert result.finding_preconditions[0].precondition_failure is failure
@@ -160,6 +161,7 @@ def test_application_result_requires_exact_ordered_finding_projection() -> None:
     with pytest.raises(ValidationError, match="in order"):
         ModeloVerificationResult(
             report=_blocked_report((blocking, warning)),
+            published=True,
             finding_preconditions=tuple(reversed(projections)),
         )
 

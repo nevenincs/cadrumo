@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import hmac
 import json
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -212,6 +212,14 @@ class AttachmentStore(BaseModel):
 
     objects: SecureObjectRepository | None = Field(default=None, exclude=True, repr=False)
     bucket_id: BucketId | None = Field(default=None)
+    mutation_writer: Callable[[Callable[[], None]], None] | None = Field(default=None, exclude=True, repr=False)
+
+    def _write(self, write: Callable[[], None]) -> None:
+        """Admit only the prepared concrete mutation, preserving ordinary callers."""
+        if self.mutation_writer is None:
+            write()
+        else:
+            self.mutation_writer(write)
 
     def _bound_bucket_id(self) -> str | None:
         """Return the profile bucket this store serves, when one is resolvable.
@@ -279,14 +287,18 @@ class AttachmentStore(BaseModel):
         if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
             _LOGGER.debug("reusing existing attachment object for %s", digest)
             return digest
-        objects.save(
-            namespace=_ATTACHMENT_BLOB_NAMESPACE,
-            object_key=digest,
-            # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            classification=_ATTACHMENT_BLOB_SENSITIVITY,
-            schema_version=_ATTACHMENT_BLOB_VERSION,
-            written_at=now(),
-            payload=_wrap_blob_payload(data),
+        written_at = now()
+        payload = _wrap_blob_payload(data)
+        self._write(
+            lambda: objects.save(
+                namespace=_ATTACHMENT_BLOB_NAMESPACE,
+                object_key=digest,
+                # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
+                classification=_ATTACHMENT_BLOB_SENSITIVITY,
+                schema_version=_ATTACHMENT_BLOB_VERSION,
+                written_at=written_at,
+                payload=payload,
+            )
         )
         _LOGGER.debug("stored attachment object %s (%d bytes)", digest, len(data))
         return digest
@@ -424,14 +436,18 @@ class AttachmentStore(BaseModel):
         envelope_dict = json.loads(envelope.model_dump_json())
         del envelope_dict["payload"]["attachment_id"]
         payload_json = json.dumps(envelope_dict)
-        self._objects_repo().save(
-            namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
-            object_key=attachment.attachment_id,
-            # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
-            schema_version=_ATTACHMENT_MANIFEST_VERSION,
-            written_at=envelope.written_at,
-            payload=payload_json.encode(UTF_8_ENCODING),
+        payload = payload_json.encode(UTF_8_ENCODING)
+        objects = self._objects_repo()
+        self._write(
+            lambda: objects.save(
+                namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
+                object_key=attachment.attachment_id,
+                # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
+                classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
+                schema_version=_ATTACHMENT_MANIFEST_VERSION,
+                written_at=envelope.written_at,
+                payload=payload,
+            )
         )
         _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
 

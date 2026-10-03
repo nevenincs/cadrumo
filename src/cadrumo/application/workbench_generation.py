@@ -557,7 +557,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
         record = self.profile_repository.load(self.profile_id)
         work_units, work_units_revision = self.work_unit_repository.load_revisioned()
-        revisions, calculations_revision = self.calculation_repository.load_revisioned()
+        revisions, calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
         filings, filings_revision = self.filing_repository.load_revisioned()
         verification = self._load_verification_reports()
         bucket_events = None if self.bucket_event_repository is None else self.bucket_event_repository.load()
@@ -702,7 +702,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     ) -> bool:
         final_record = self.profile_repository.load(self.profile_id)
         _, final_work_units_revision = self.work_unit_repository.load_revisioned()
-        _, final_calculations_revision = self.calculation_repository.load_revisioned()
+        _, final_calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
         _, final_filings_revision = self.filing_repository.load_revisioned()
         return (
             final_record.content_digest == record.content_digest
@@ -1618,7 +1618,7 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
     declarations_calendar = _carry_projection(inputs.declarations_calendar)
     aeat_sync = _carry_projection(inputs.aeat_sync)
     modelo = _carry_projection(inputs.modelo)
-    search = _assemble_search(
+    search = assemble_workbench_generation_search(
         ledger=ledger,
         declarations=declarations,
         aeat_sync=aeat_sync,
@@ -1724,7 +1724,7 @@ def _search_availability(
     return WorkbenchGenerationAvailability.AVAILABLE
 
 
-def _assemble_search(
+def assemble_workbench_generation_search(
     *,
     ledger: WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1],
     declarations: WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1],
@@ -1799,4 +1799,5 @@ __all__ = [
     "WorkbenchGenerationV1",
     "assemble_workbench_generation",
     "assemble_workbench_generation_from",
+    "assemble_workbench_generation_search",
 ]

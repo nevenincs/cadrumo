@@ -51,7 +51,6 @@ if TYPE_CHECKING:
         RetencionObservationPortsFactory,
     )
     from ..application.aggregation.withholding_observation_service import WithholdingObservationService
-    from ..application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..application.auth.operator_probe_ports import OperatorProbePorts
     from ..application.auth.operator_scope_ports import OperatorScopePorts
@@ -71,7 +70,6 @@ if TYPE_CHECKING:
     from ..application.ledger.invoice_confirmation_ports import InvoiceConfirmationPortsFactory
     from ..application.live.borrador_100 import (
         Borrador100SnapshotRepository,
-        Borrador100SnapshotRepositoryFactory,
     )
     from ..application.live.censo_ports import CensalFetchPort
     from ..application.live.expedientes_ports import ExpedientesPorts, ExpedientesPortsFactory
@@ -87,10 +85,6 @@ if TYPE_CHECKING:
     from ..application.modelo.iva_wallet_seed_ports import (
         ModeloIvaWalletSeedPorts,
         ModeloIvaWalletSeedPortsFactory,
-    )
-    from ..application.modelo.m036_lifecycle_ports import M036LifecyclePortsFactory
-    from ..application.modelo.m145_communication_records_ports import (
-        M145CommunicationRecordsPortsFactory,
     )
     from ..application.modelo.participation_index_rebuild_ports import (
         ParticipationIndexRebuildPorts,
@@ -116,6 +110,7 @@ if TYPE_CHECKING:
     from ..application.state_projection_ports import StateProjectionReadPorts
     from ..application.storage.calc_sheets.parity_harness import CalcSheetsParityApplyPort
     from ..application.storage.calc_sheets.records import SheetExportPlan
+    from ..application.user_profile.automation_custody_port import AutomationSecretStore
     from ..application.user_profile.custody_ports import ProfileBucketStoragePort, ProfileCustodyPort
     from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
     from ..core.config import Settings
@@ -223,11 +218,6 @@ class ProfileAdapterComposition:
         """Resolve the percepcion observation ports factory on first read."""
         return build_percepcion_observation_ports
 
-    @property
-    def borrador_100_snapshot_repository_factory(self) -> Borrador100SnapshotRepositoryFactory:
-        """Resolve the borrador 100 snapshot repository factory on first read."""
-        return build_borrador_100_snapshot_repository
-
     @cached_property
     def censal_fetch_port(self) -> CensalFetchPort:
         """Resolve the censal fetch port on first read."""
@@ -322,22 +312,6 @@ class ProfileAdapterComposition:
         """Resolve the prorrata register repository factory on first read."""
         return build_prorrata_register_repository
 
-    @cached_property
-    def m145_communication_records_ports_factory(self) -> M145CommunicationRecordsPortsFactory:
-        """Resolve the Modelo 145 communication records ports factory on first read."""
-        from ..adapters.persistence.profile.m145_communication_records import (
-            build_m145_communication_records_ports,
-        )
-
-        return build_m145_communication_records_ports
-
-    @cached_property
-    def m036_lifecycle_ports_factory(self) -> M036LifecyclePortsFactory:
-        """Resolve the Modelo 036 lifecycle ports factory on first read."""
-        from ..adapters.persistence.profile.m036_lifecycle import build_m036_lifecycle_ports
-
-        return build_m036_lifecycle_ports
-
     @property
     def work_lifecycle_ports_factory(self) -> WorkLifecyclePortsFactory:
         """Resolve the work lifecycle ports factory on first read."""
@@ -360,13 +334,6 @@ class ProfileAdapterComposition:
         )
 
         return build_recipient_encryption_capability
-
-    @cached_property
-    def apoderado_config_repository_factory(self) -> ApoderadoConfigurationRepositoryFactory:
-        """Resolve the apoderado config repository factory on first read."""
-        from ..adapters.persistence.profile.apoderado import build_apoderado_config_repository
-
-        return build_apoderado_config_repository
 
 
 def build_operator_probe_ports() -> OperatorProbePorts:
@@ -454,6 +421,8 @@ def build_modelo_export_ports(
     *,
     bucket_id: str,
     m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
+    objects: SecureObjectRepository | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloExportPorts:
     """Compose every persisted authority required by one Modelo export."""
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
@@ -474,7 +443,7 @@ def build_modelo_export_ports(
     from ..domain.filing.software_identity import development_mock_software_identity
 
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     return ModeloExportPorts(
         calculation=CalculationRevisionCatalogueRepository(
             bucket_id=normalized_bucket_id,
@@ -510,8 +479,10 @@ def build_modelo_export_ports(
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),
-        draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
-        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        draft_review_ports=build_draft_review_ports(
+            bucket_id=normalized_bucket_id, operation=operation, objects=objects
+        ),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
         # No AEAT-registered developer identity exists yet; the mock is graded
         # on every export result so no surface presents its file as presentable.
         product_software_identity=development_mock_software_identity(),
@@ -524,21 +495,27 @@ def _profile_read_ports_for_bucket(bucket_id: str) -> ProfileReadPorts:
 
 def build_profile_read_ports(*, bucket_id: str) -> ProfileReadPorts:
     """Compose the authenticated profile projection for one calculation bucket."""
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        return build_pinned_profile_read_ports(bucket_id=bucket_id, operation=operation)
+
+
+def build_pinned_profile_read_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ProfileReadPorts:
+    """Compose profile decoding under the operation's retained authority pin."""
     from ..adapters.persistence.profile.profile_path_values import ProfilePathValuesPersistenceAdapter
     from ..application.user_profile.profile_read_ports import ProfileReadPorts
     from ..application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ..domain.calculations.registry.authority import bundled_indexed_authority
 
     normalized_bucket_id = bucket_id.strip()
-    with bundled_indexed_authority().operation() as operation:
-        return ProfileReadPorts(
-            path_values=ProfilePathValuesPersistenceAdapter(
-                repository=ProfileRecordRepository.for_current_session(
-                    normalized_bucket_id,
-                    profile_decode_context=operation.profile_decode_context(),
-                ),
+    return ProfileReadPorts(
+        path_values=ProfilePathValuesPersistenceAdapter(
+            repository=ProfileRecordRepository.for_current_session(
+                normalized_bucket_id,
+                profile_decode_context=operation.profile_decode_context(),
             ),
-        )
+        ),
+    )
 
 
 def build_bienes_inversion_repository(*, bucket_id: str) -> BienesInversionIvaRegisterRepositoryProtocol:
@@ -565,11 +542,12 @@ def build_prorrata_register_repository(*, bucket_id: str) -> ProrrataRegisterSer
     )
 
 
-def build_diagnostics_ports() -> DiagnosticsPorts:
-    """Compose the translated secure-object capabilities used by diagnostics."""
+def build_diagnostics_ports(*, bucket_id: str | None = None) -> DiagnosticsPorts:
+    """Compose diagnostics for an exact bucket or the current operator route."""
     from ..adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
     from ..adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_active_bucket_or_default_route,
+        secure_object_repository_for_bucket,
     )
     from ..application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
 
@@ -578,6 +556,8 @@ def build_diagnostics_ports() -> DiagnosticsPorts:
 
         @staticmethod
         def _repository() -> SecureObjectRepository:
+            if bucket_id is not None:
+                return secure_object_repository_for_bucket(bucket_id)
             return secure_object_repository_for_active_bucket_or_default_route()
 
         @staticmethod
@@ -617,8 +597,10 @@ def build_diagnostics_ports() -> DiagnosticsPorts:
     )
 
 
-def build_draft_review_ports(*, bucket_id: str) -> DraftReviewPorts:
-    """Compose the persisted authorities required by draft review."""
+def build_draft_review_ports(
+    *, bucket_id: str, operation: PinnedAuthorityOperation | None = None, objects: SecureObjectRepository | None = None
+) -> DraftReviewPorts:
+    """Compose draft review using the caller's authority pin when supplied."""
     from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -631,9 +613,12 @@ def build_draft_review_ports(*, bucket_id: str) -> DraftReviewPorts:
     from ..domain.user_profile.errors import ProfileNotFoundError
 
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
-    with bundled_indexed_authority().operation() as operation:
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
+    if operation is not None:
         profile_decode_context = operation.profile_decode_context()
+    else:
+        with bundled_indexed_authority().operation() as selected_operation:
+            profile_decode_context = selected_operation.profile_decode_context()
 
     class ProfileActivityReader:
         """Translate the session-bound profile record into an application map."""
@@ -666,7 +651,7 @@ def build_draft_review_ports(*, bucket_id: str) -> DraftReviewPorts:
     )
 
 
-def build_modelo_history_ports(*, bucket_id: str) -> ModeloHistoryPorts:
+def build_modelo_history_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloHistoryPorts:
     """Compose every persisted authority required by Modelo history reads."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -678,6 +663,7 @@ def build_modelo_history_ports(*, bucket_id: str) -> ModeloHistoryPorts:
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    taxpayer_tax_id = _export_taxpayer_tax_id(bucket_id=normalized_bucket_id, operation=operation)
     return ModeloHistoryPorts(
         work_unit_repository=WorkUnitCatalogueRepository(
             bucket_id=normalized_bucket_id,
@@ -686,6 +672,7 @@ def build_modelo_history_ports(*, bucket_id: str) -> ModeloHistoryPorts:
         calculation_repository=CalculationRevisionCatalogueRepository(
             bucket_id=normalized_bucket_id,
             objects=objects,
+            m303_rectificativa_taxpayer_tax_id=taxpayer_tax_id,
         ),
         filing_repository=ModeloRecordCatalogueRepository(
             bucket_id=normalized_bucket_id,
@@ -694,6 +681,7 @@ def build_modelo_history_ports(*, bucket_id: str) -> ModeloHistoryPorts:
         verification_repository=VerificationReportCatalogueRepository(
             bucket_id=normalized_bucket_id,
             objects=objects,
+            m303_rectificativa_taxpayer_tax_id=taxpayer_tax_id,
         ),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
     )
@@ -798,7 +786,9 @@ def build_inventory_service_ports(*, bucket_id: str) -> InventoryServicePorts:
     )
 
 
-def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100SnapshotRepository:
+def build_borrador_100_snapshot_repository(
+    *, bucket_id: str, objects: SecureObjectRepository | None = None
+) -> Borrador100SnapshotRepository:
     """Bind the encrypted borrador snapshot adapter to one profile bucket."""
     from pydantic import ValidationError
 
@@ -902,13 +892,15 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
         ),
         domain_label="borrador",
         input_error_cls=LiveApplicationInputError,
-        objects=secure_object_repository_for_bucket(normalized_bucket_id),
+        objects=objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id),
         classification_error_factory=translate_classification_refusal,
         version_error_factory=translate_version_refusal,
     )
 
 
-def build_retencion_observation_ports(*, bucket_id: str) -> RetencionObservationPorts:
+def build_retencion_observation_ports(
+    *, bucket_id: str, objects: SecureObjectRepository | None = None
+) -> RetencionObservationPorts:
     """Compose the encrypted retención observation capability for one bucket."""
     from ..adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -917,7 +909,7 @@ def build_retencion_observation_ports(*, bucket_id: str) -> RetencionObservation
     normalized_bucket_id = bucket_id.strip()
     return RetencionObservationPorts(
         repository=RetencionObservationRepositoryAdapter(
-            objects=secure_object_repository_for_bucket(normalized_bucket_id),
+            objects=objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id),
         ),
     )
 
@@ -938,18 +930,41 @@ def build_percepcion_observation_ports(*, bucket_id: str) -> PercepcionObservati
 
 def build_withholding_observation_service(*, bucket_id: str) -> WithholdingObservationService:
     """Compose the one atomic withholding-window mutation service for a bucket."""
+    from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.withholding_observation_workflow import WithholdingObservationWorkflowAdapter
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ..application.aggregation.withholding_observation_service import WithholdingObservationService
+    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectRevisionAssertion
+    from ..application.aggregation.withholding_observation_service import (
+        WithholdingObservationMutationError,
+        WithholdingObservationService,
+        WithholdingSourceCatalogueBaseline,
+    )
+    from ..application.ledger.persistence_ports import LedgerPersistenceConflictError
+    from ..core.aggregation import BindingSourceKind
 
     objects = secure_object_repository_for_bucket(bucket_id.strip())
+
+    def source_assertions(baseline: WithholdingSourceCatalogueBaseline) -> tuple[SecureObjectRevisionAssertion, ...]:
+        if baseline.source_kind is BindingSourceKind.PAYABLE_INVOICE:
+            return InvoiceCatalogueRepository(bucket_id=bucket_id, objects=objects).revision_assertions(
+                expected_revision_id=baseline.revision_id
+            )
+        try:
+            return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects).revision_assertions(
+                expected_revision_id=baseline.revision_id
+            )
+        except LedgerPersistenceConflictError as exc:
+            raise WithholdingObservationMutationError("source_revision_changed") from exc
+
     return WithholdingObservationService(
         WithholdingObservationWorkflowAdapter(
             objects=objects,
             retenciones=RetencionObservationRepositoryAdapter(objects=objects),
             percepciones=PercepcionObservationRepositoryAdapter(objects=objects),
+            source_catalogue_assertions=source_assertions,
         ),
     )
 
@@ -966,6 +981,9 @@ def build_attachment_store(bucket_id: str) -> AttachmentStoreProtocol:
 def build_state_projection_read_ports(
     *,
     diagnostics_ports: DiagnosticsPorts | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+    objects: SecureObjectRepository | None = None,
+    bucket_id: str | None = None,
 ) -> StateProjectionReadPorts:
     """Compose the state-projection read ports over the persistence adapters.
 
@@ -979,7 +997,10 @@ def build_state_projection_read_ports(
     from ..application.state_projection_ports import StateProjectionReadPorts
 
     projection_adapter = StateProjectionPersistenceAdapter(
-        diagnostics_ports=diagnostics_ports or build_diagnostics_ports()
+        diagnostics_ports=diagnostics_ports or build_diagnostics_ports(bucket_id=bucket_id),
+        operation=operation,
+        objects=objects,
+        bucket_id=bucket_id,
     )
     return StateProjectionReadPorts(
         workspace=projection_adapter,
@@ -993,6 +1014,7 @@ def build_calculation_action_ports(
     bucket_id: str,
     operation: PinnedAuthorityOperation,
     profile_record: object | None = None,
+    objects: SecureObjectRepository | None = None,
 ) -> CalculationActionPorts:
     """Compose every persisted authority required by one Modelo calculation."""
     from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
@@ -1024,7 +1046,7 @@ def build_calculation_action_ports(
     from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
 
     class RelationOverrideMigration:
         """Adapt the existing migration implementation to the application port."""
@@ -1077,9 +1099,11 @@ def build_calculation_action_ports(
             objects=objects,
         ),
         usage_ratio_profile_loader=load_usage_ratios,
-        profile_read_ports=build_profile_read_ports(bucket_id=normalized_bucket_id),
+        profile_read_ports=build_pinned_profile_read_ports(bucket_id=normalized_bucket_id, operation=operation),
         invoice_repository=invoice_repository,
-        invoice_catalogue_read_ports=build_invoice_catalogue_read_ports(bucket_id=normalized_bucket_id),
+        invoice_catalogue_read_ports=build_invoice_catalogue_read_ports(
+            bucket_id=normalized_bucket_id, objects=objects
+        ),
         invoice_source_ports=InvoiceSourceResolverPorts(
             catalogue_reader=InvoiceCatalogueSourceResolverAdapter(
                 repository=invoice_repository,
@@ -1101,8 +1125,10 @@ def build_calculation_action_ports(
         ),
         iva_compensation_history_repository=IvaCompensationHistoryRepository(objects=objects),
         iva_compensation_decision_repository=IvaWalletDecisionRepository(objects=objects),
-        borrador_snapshot_repository=build_borrador_100_snapshot_repository(bucket_id=normalized_bucket_id),
-        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        borrador_snapshot_repository=build_borrador_100_snapshot_repository(
+            bucket_id=normalized_bucket_id, objects=objects
+        ),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
         relation_override_migration=RelationOverrideMigration(),
     )
 
@@ -1294,7 +1320,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         ExpedientesPorts,
         ExpedientesRegisterProtocol,
     )
-    from ..domain.calculations.registry.authority import bundled_indexed_authority
+    from ..application.user_profile.access_errors import ProfileAccessRefusedError
 
     def snapshot_repository_factory(bucket: str) -> SecureSnapshotRepository[PersistedExpedientesSnapshot]:
         """Bind one encrypted snapshot repository to the requested bucket."""
@@ -1354,7 +1380,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
             try:
                 rows = await self._register.walk(modelo=modelo, ejercicio=ejercicio)
                 return tuple(translate_declaration(row) for row in rows)
-            except LiveApplicationError:
+            except (LiveApplicationError, ProfileAccessRefusedError):
                 raise
             except Exception as exc:
                 raise LiveApplicationError(
@@ -1367,20 +1393,21 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
 
         @asynccontextmanager
         @override
-        async def open_register(self, session: AeatSession, *, settings: Settings):
+        async def open_register(
+            self, session: AeatSession, *, settings: Settings, authority_operation: PinnedAuthorityOperation
+        ):
             try:
-                with bundled_indexed_authority().operation() as operation:
-                    async with (
-                        shared_playwright(session) as playwright,
-                        open_declarations_register(
-                            session,
-                            operation=operation,
-                            settings=settings,
-                            playwright=playwright,
-                        ) as register,
-                    ):
-                        yield SedeExpedientesRegister(register)
-            except LiveApplicationError:
+                async with (
+                    shared_playwright(session) as playwright,
+                    open_declarations_register(
+                        session,
+                        operation=authority_operation,
+                        settings=settings,
+                        playwright=playwright,
+                    ) as register,
+                ):
+                    yield SedeExpedientesRegister(register)
+            except (LiveApplicationError, ProfileAccessRefusedError):
                 raise
             except Exception as exc:
                 raise LiveApplicationError(
@@ -1395,7 +1422,10 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
 
 
 def build_ledger_membership_ports(
-    *, bucket_id: str, transaction_repository: TransactionCatalogueRepositoryProtocol
+    *,
+    bucket_id: str,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    objects: SecureObjectRepository | None = None,
 ) -> LedgerMembershipPorts:
     """Compose read-only source admission capabilities over the verification bucket."""
     from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
@@ -1407,7 +1437,7 @@ def build_ledger_membership_ports(
     from ..application.aggregation.ledger_membership import LedgerMembershipPorts
 
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     return LedgerMembershipPorts(
         transaction_repository=transaction_repository,
         invoice_catalogue_read_ports=build_invoice_catalogue_read_ports(bucket_id=normalized_bucket_id),
@@ -1422,8 +1452,10 @@ def build_ledger_membership_ports(
     )
 
 
-def build_verification_repository_bundle(bucket_id: str) -> VerificationRepositoryBundle:
-    """Compose every verification repository against one bucket store."""
+def build_verification_repository_bundle(
+    bucket_id: str, *, operation: PinnedAuthorityOperation, objects: SecureObjectRepository | None = None
+) -> VerificationRepositoryBundle:
+    """Bind one profile's repositories and rectificativa identity to the held authority."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.calculation_observations import (
         CalculationObservationRepository,
@@ -1443,14 +1475,23 @@ def build_verification_repository_bundle(bucket_id: str) -> VerificationReposito
     from ..application.workflow.persistence import WorkflowRunRepository
 
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
+    taxpayer_tax_id = _export_taxpayer_tax_id(bucket_id=normalized_bucket_id, operation=operation)
     transaction_repository = TransactionCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
     return VerificationRepositoryBundle(
-        calculation=CalculationRevisionCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
+        calculation=CalculationRevisionCatalogueRepository(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+            m303_rectificativa_taxpayer_tax_id=taxpayer_tax_id,
+        ),
         work_unit=WorkUnitCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
         filing=ModeloRecordCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
         transaction=transaction_repository,
-        verification=VerificationReportCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
+        verification=VerificationReportCatalogueRepository(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+            m303_rectificativa_taxpayer_tax_id=taxpayer_tax_id,
+        ),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
         iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
@@ -1458,11 +1499,13 @@ def build_verification_repository_bundle(bucket_id: str) -> VerificationReposito
         participation_index=TransactionParticipationIndexRepository(bucket_id=normalized_bucket_id, objects=objects),
         workflow_run=WorkflowRunRepository(objects=objects),
         justificante=JustificanteRepository(objects=objects),
-        draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
-        workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
-        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        draft_review_ports=build_draft_review_ports(
+            bucket_id=normalized_bucket_id, operation=operation, objects=objects
+        ),
+        workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id, objects=objects),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
         ledger_membership_ports=build_ledger_membership_ports(
-            bucket_id=normalized_bucket_id, transaction_repository=transaction_repository
+            bucket_id=normalized_bucket_id, transaction_repository=transaction_repository, objects=objects
         ),
     )
 
@@ -1489,6 +1532,7 @@ __all__ = [
     "build_modelo_iva_wallet_seed_ports",
     "build_participation_index_rebuild_ports",
     "build_percepcion_observation_ports",
+    "build_pinned_profile_read_ports",
     "build_prorrata_register_repository",
     "build_retencion_observation_ports",
     "build_state_projection_read_ports",
@@ -1627,7 +1671,9 @@ def profile_free_adapter_composition() -> Generator[None]:
 
 
 @contextmanager
-def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
+def profile_adapter_composition(
+    *, automation_secrets_store: AutomationSecretStore | None = None
+) -> Generator[ProfileAdapterComposition]:
     """Bind every adapter port a frontend session resolves, and unbind after.
 
     The imports are function-local because entering this scope is what pulls the
@@ -1665,7 +1711,9 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
 
     with ExitStack() as composition:
         composition.enter_context(bind_tax_identity_admission(RegistryTaxIdentityAdmission()))
-        profile_custody = composition.enter_context(composed_profile_persistence_ports())
+        profile_custody = composition.enter_context(
+            composed_profile_persistence_ports(automation_secrets_store=automation_secrets_store)
+        )
         composition.enter_context(bind_bucket_event_history_repository_factory(_bucket_event_history_repository))
         composition.enter_context(bind_confirmation_record_repository_factory(_confirmation_record_repository))
         composition.enter_context(bind_column_role_mapping_resolver(_resolve_column_roles))

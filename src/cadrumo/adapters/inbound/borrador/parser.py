@@ -16,10 +16,12 @@ projection explicitly.
 
 from __future__ import annotations
 
+from hashlib import sha256
 from pathlib import Path
 
 from ....core.logging import get_logger
-from ._detect import detect_artefact_kind
+from ..pdf.page_text_extraction import extract_pages_text_from_bytes
+from ._detect import detect_artefact_kind, detect_artefact_kind_from_pages
 from ._extractors.selection import get_extractor
 from .errors import BorradorParseError
 from .schema import (
@@ -83,4 +85,29 @@ def parse_borrador(
     return result
 
 
-__all__ = ["parse_borrador"]
+def parse_borrador_bytes(
+    pdf_bytes: bytes,
+    *,
+    artefact_kind_override: ArtefactKind | None = None,
+    año_override: int | None = None,
+    extraction_profile: BorradorExtractionProfile | None = None,
+    parse_mode: BorradorParseMode = BorradorParseMode.OBSERVED,
+) -> InboundBorradorObservation:
+    """Parse one in-memory PDF capture, sharing detection and extraction text."""
+    if parse_mode is BorradorParseMode.REGISTRY_PROFILE and extraction_profile is None:
+        raise BorradorParseError("registry-profile parsing requires a registry extraction profile")
+    año = año_override if año_override is not None else 2025
+    extractor = get_extractor(año)
+    pages = extract_pages_text_from_bytes(
+        pdf_bytes, error_class=BorradorParseError, pdf_label="PDF", source_label="<input-pdf>"
+    )
+    artefact_kind = artefact_kind_override or detect_artefact_kind_from_pages(pages)
+    return extractor.extract_pages(
+        pages,
+        artefact_kind,
+        source_pdf_sha256=sha256(pdf_bytes).hexdigest(),
+        extraction_profile=extraction_profile,
+    )
+
+
+__all__ = ["parse_borrador", "parse_borrador_bytes"]

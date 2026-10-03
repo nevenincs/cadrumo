@@ -9,12 +9,12 @@ coherent bundle for each profile bucket.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -75,7 +75,12 @@ class VerificationRepositoryBundle:
     ledger_membership_ports: LedgerMembershipPorts
 
 
-VerificationRepositoryBundleFactory = Callable[[str], VerificationRepositoryBundle]
+class VerificationRepositoryBundleFactory(Protocol):
+    """Compose one bucket's repositories under the caller's pinned authority."""
+
+    def __call__(self, bucket_id: str, /, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+        """Return the complete repository set for the named profile bucket."""
+        ...
 
 
 __all__ = [

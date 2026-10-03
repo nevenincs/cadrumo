@@ -4,18 +4,23 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 import pytest
 from textual.widgets import Button, DataTable, Input, Select, Static
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from .....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from .....application.ledger.models import ManualLedgerTransactionResult
+from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.config import override_settings
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.classification import InvoiceKind
 from .....domain.transactions.models import BucketTransactionRef
+from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
+from ...navigation import TuiScreenContextV1
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
 from ..invoice_entry import LedgerInvoiceEntryScreen
@@ -32,6 +37,7 @@ from ..models import (
     LedgerReaderReadinessV1,
 )
 from ..review import LedgerReviewScreen
+from ..routes import ledger_screen_factory
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
 from .test_ledger_flows import _ClassificationDoor, _classify_action
 from .workspace_fixtures import ledger_context, ledger_evidence_action, ledger_projection, ledger_review_action
@@ -173,7 +179,9 @@ async def test_invoice_entry_preserves_explicit_iva_treatment_for_linked_income(
             await pilot.pause()
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
     assert len(door.entries) == 1
-    assert door.entries[0].iva_category.value == "domestic_general"
+    category = door.entries[0].iva_category
+    assert category is not None
+    assert category.value == "domestic_general"
 
 
 @pytest.mark.asyncio
@@ -195,8 +203,10 @@ async def test_invoice_writer_refusal_is_shown_as_the_application_says_it() -> N
 
 
 class _EvidenceDoor:
-    def __init__(self, *, ready: bool) -> None:
+    def __init__(self, *, ready: bool, expire_on_confirm: bool = False) -> None:
         self.ready = ready
+        self.expire_on_confirm = expire_on_confirm
+        self.full_projection: InvoiceDraftProjectionV1 | None = None
         self.records: list[LedgerEvidenceRecordRowV1] = []
         self.added: list[str] = []
         self.extracted: list[str] = []
@@ -244,10 +254,13 @@ class _EvidenceDoor:
             currency="EUR",
             suggested_kind=InvoiceKind.RECEIVED,
             discrepancies=0,
+            full_projection=self.full_projection,
         )
 
     async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
         self.confirmed.append(confirmation)
+        if self.expire_on_confirm:
+            raise AccountSessionExpiredError()
         return LedgerEvidenceConfirmedV1(
             invoice_id="c" * 64,
             invoice_number="A-0003",
@@ -285,7 +298,7 @@ _ROW_REFRESH_PAUSES = 200
 
 
 @pytest.mark.asyncio
-async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> None:
+async def test_evidence_is_added_listed_and_reader_readiness_is_informational() -> None:
     door = _EvidenceDoor(ready=False)
     refreshes: list[int] = []
     screen = _evidence_screen(door, refreshes)
@@ -316,12 +329,8 @@ async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> 
             records.focus()
             records.move_cursor(row=0)
             await pilot.press("enter")
-            screen.query_one("#ledger-evidence-extract", Button).press()
             await pilot.pause()
-            refusal = str(screen.query_one("#ledger-refusal", Static).render())
-            assert "aeat config provision" in refusal
-            assert not door.extracted
-            door.ready = True
+            assert screen.query_one("#ledger-evidence-confirm", Button).disabled
             screen.query_one("#ledger-evidence-extract", Button).press()
             await pilot.app.workers.wait_for_complete()
             await pilot.pause()
@@ -343,6 +352,124 @@ async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> 
                 )
             ]
             assert refreshes == [1, 1]
+
+
+@pytest.mark.asyncio
+async def test_confirm_eligibility_is_limited_to_the_currently_reviewed_record() -> None:
+    door = _EvidenceDoor(ready=True)
+    first = LedgerEvidenceRecordRowV1(
+        evidence_id="8747cbf318cf0adb",
+        media_kind="pdf",
+        file_name="invoice_A-0003.pdf",
+        supplier=None,
+        invoice_number=None,
+        created_at="2026-09-16",
+        status=LedgerEvidenceRecordStatus.UNMEASURED,
+    )
+    door.records.extend(
+        (
+            first,
+            first.model_copy(update={"evidence_id": "a747cbf318cf0adc", "file_name": "invoice_B-0004.pdf"}),
+        )
+    )
+    screen = _evidence_screen(door, [])
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
+            await pilot.pause()
+            records = screen.query_one("#ledger-evidence-records", DataTable)
+            for _ in range(_ROW_REFRESH_PAUSES):
+                if len(records.ordered_rows) == 2:
+                    break
+                await pilot.pause(0.05)
+            assert len(records.ordered_rows) == 2
+            records.focus()
+            records.move_cursor(row=0)
+            await pilot.press("enter")
+            await pilot.pause()
+            confirm = screen.query_one("#ledger-evidence-confirm", Button)
+            assert confirm.disabled
+
+            screen.query_one("#ledger-evidence-extract", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert not confirm.disabled
+            assert screen.draft is not None and screen.draft.evidence_id == first.evidence_id
+
+            records.move_cursor(row=1)
+            await pilot.press("enter")
+            await pilot.pause()
+            assert confirm.disabled
+            assert screen.draft is None
+            confirm.press()
+            await pilot.pause()
+            assert not door.confirmed
+
+
+@pytest.mark.asyncio
+async def test_session_expiry_clears_full_draft_and_record_rows() -> None:
+    door = _EvidenceDoor(ready=True, expire_on_confirm=True)
+    door.full_projection = InvoiceDraftProjectionV1(supplier_name="private full evidence draft")
+    door.records.append(
+        LedgerEvidenceRecordRowV1(
+            evidence_id="8747cbf318cf0adb",
+            media_kind="pdf",
+            file_name="invoice_A-0003.pdf",
+            supplier=None,
+            invoice_number=None,
+            created_at="2026-09-16",
+            status=LedgerEvidenceRecordStatus.UNMEASURED,
+        )
+    )
+    screen = _evidence_screen(door, [])
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
+            await pilot.pause()
+            records = screen.query_one("#ledger-evidence-records", DataTable)
+            for _ in range(_ROW_REFRESH_PAUSES):
+                if records.ordered_rows:
+                    break
+                await pilot.pause(0.05)
+            records.focus()
+            records.move_cursor(row=0)
+            await pilot.press("enter")
+            await pilot.pause()
+
+            screen.query_one("#ledger-evidence-extract", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert screen.draft is not None and screen.draft.full_projection is not None
+            assert "private full evidence draft" in str(screen.query_one("#ledger-evidence-draft", Static).render())
+
+            screen.query_one("#ledger-evidence-confirm", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert screen.draft is None
+            assert str(screen.query_one("#ledger-evidence-draft", Static).render()) == ""
+            assert not records.ordered_rows
+            assert screen.selected_record_id is None
+
+
+@pytest.mark.asyncio
+async def test_runtime_evidence_route_needs_no_attachment_review_inventory() -> None:
+    projection = ledger_projection()
+    door = _EvidenceDoor(ready=True)
+    action = ledger_evidence_action()
+    factory = ledger_screen_factory(
+        projection,
+        review_action=ledger_review_action(),
+        evidence_action=action,
+        evidence_door=door,
+    )
+    context = TuiScreenContextV1(destination="workbench.ledger", action_candidate_id=action.action_id)
+    screen = cast(LedgerEvidenceScreen, factory(context))
+
+    assert screen.controller.evidence_items is None
+    assert screen.controller.refusal_for(LedgerWorkspaceArea.EVIDENCE) is None
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
+            await pilot.pause()
+            assert isinstance(screen.query_one("#ledger-evidence-records", DataTable), DataTable)
+            assert not tuple(screen.query("#ledger-evidence"))
 
 
 class _ExclusionDoor:

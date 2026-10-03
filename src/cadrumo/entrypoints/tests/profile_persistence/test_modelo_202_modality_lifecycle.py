@@ -40,6 +40,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from ....adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -109,6 +110,7 @@ def _work_ports(work_repo: WorkUnitCatalogueRepository) -> WorkLifecyclePorts:
 
 def _verification_ports(
     *,
+    operation: PinnedAuthorityOperation,
     work_repo: WorkUnitCatalogueRepository,
     calc_repo: CalculationRevisionCatalogueRepository,
     filing_repo: ModeloRecordCatalogueRepository,
@@ -116,7 +118,7 @@ def _verification_ports(
 ) -> VerificationRepositoryBundle:
     """Compose the complete verification bundle over the isolated repositories."""
     return replace(
-        build_verification_repository_bundle(_BUCKET_ID),
+        build_verification_repository_bundle(_BUCKET_ID, operation=operation),
         work_unit=work_repo,
         calculation=calc_repo,
         filing=filing_repo,
@@ -432,6 +434,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
                 draft.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_ports(
+                    operation=operation,
                     work_repo=work_repo,
                     calc_repo=calc_repo,
                     filing_repo=filing_repo,
@@ -460,12 +463,14 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
             calculation_repository=calc_repo,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
         )
+        report_id = seed_filing_gate_report(verified, verification_repo)
         with (
             pytest.raises(ModeloRequiredBindingsMissingError) as file_error,
             bundled_indexed_authority().operation() as operation,
         ):
             file_modelo_revision(
                 verified.calculation_revision_id,
+                approved_verification_report_id=report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 actor="operator-test",
                 workflow_profile=profile,
@@ -538,6 +543,8 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(
         ):
             file_modelo_revision(
                 revision.calculation_revision_id,
+                # Draft state refuses before approval validation.
+                approved_verification_report_id="0" * 64,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 actor="operator-test",
                 workflow_profile=workflow_profile(Decimal("500000")),
@@ -618,6 +625,7 @@ def test_m202_declared_incn_below_or_above_threshold_can_verify(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_ports(
+                    operation=operation,
                     work_repo=work_repo,
                     calc_repo=calc_repo,
                     filing_repo=filing_repo,

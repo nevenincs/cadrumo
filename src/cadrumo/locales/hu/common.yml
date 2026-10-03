@@ -718,61 +718,6 @@ llm:
         kifejezett hozzájárulás nélkül.'
       mint_refused: 'Elutasítva: az adózó bizonylatainak gépen kívüli olvasása ehhez
         a híváshoz nem engedélyezett.'
-mcp:
-  call:
-    timeout: A(z) '{command}' túllépte a {tier} szint időkorlátját ({seconds} s),
-      ezért megszakadt. Próbáld újra, vagy hosszú művelet esetén futtasd a megfelelő
-      Cadrumo parancsot közvetlenül a terminálban.
-    timeout_may_complete: A(z) '{command}' túllépte az időkorlátját; a művelet a háttérben
-      még befejeződhet. Futtasd újra ugyanazzal az idempotencia-kulccsal az ellenőrzéshez
-      - az idempotencia-védelem biztonságossá teszi az újrapróbálást, és soha nem
-      ír kétszer.
-  elicitation:
-    confirm:
-      consequence_handoff: Ez létrehozza a benyújtásra kész állományt, amelyet az
-        adózó maga ad be az AEAT-nak. A jóváhagyás semmit nem küld el sehová.
-      consequence_local: Ez az aktív adózói profil helyi adatait módosítja.
-      declined: A felhasználó nem hagyta jóvá a(z) '{command}' műveletet ({outcome});
-        semmi nem futott le.
-      field_description: Futtatod most a(z) '{command}' műveletet?
-      message: Hagyd jóvá a(z) '{command}' futtatását. {consequence} Válaszolj igennel
-        a folytatáshoz vagy nemmel a leállításhoz.
-    refusal:
-      blocked: 'A(z) ''{command}'' véglegesen tiltott: az AEAT-hoz való élő benyújtás
-        tervezetten nem engedélyezett. Exportálj helyben; az adózó maga adja be.'
-      no_channel: A(z) '{command}' emberi jóváhagyást igényel, és ez a kliens nem
-        támogatja az interaktív kérdéseket. Futtasd olyan kliensből, amely kérdezni
-        tud, vagy futtasd a megfelelő Cadrumo CLI-parancsot közvetlenül a terminálban.
-  faithfulness:
-    advisory: 'HITELESSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeget idéznek
-      [{values}], amelyet ebben a munkamenetben egyetlen eszközeredmény sem állított
-      elő. Ellenőrizd az értéket egy számítás- vagy revízióolvasással, mielőtt támaszkodsz
-      rá.'
-  harness:
-    off_host_consent: 'Adatvédelmi tájékoztató - olvasd el a folytatás előtt. Ezt
-      a konzolt egy AI-asszisztens működteti az általad választott LLM-szolgáltatón.
-      A szavaid és az asszisztens által használt számadatok (összegek, rovat-értékek,
-      kötelezettségek) elküldésre kerülnek ehhez a szolgáltatóhoz a konzol működtetéséhez.
-      A FORRÁSDOKUMENTUMAID - számlák, bankkivonatok és bármilyen bizonyítékbájt -
-      SOHA nem hagyják el a gépedet: titkosított helyi tárolóban maradnak, és soha
-      nem kerülnek átvitelre. Ha harmadik fél (könyvelő vagy szakember) nevében jársz
-      el, a folytatás előtt győződj meg róla, hogy ez elfogadható.'
-  identity_gate:
-    elicitation_echo: 'A következő adózói profilként jársz el: %{label}.'
-    first_mutation_refused: 'Elutasítva: a munkamenet első módosítása előtt igazold
-      vissza az aktív adózót. Benyújtás vagy szerkesztés soha nem futhat téves identitással.
-      Hívd meg a whoami-t (vagy a ''config profile status'' / ''overview status''
-      parancsot), hogy lásd, melyik adózó aktív, majd próbáld újra - egyetlen identitásolvasás
-      feloldja ezt a munkamenetre, amíg nem váltasz profilt.'
-  persona:
-    handoff_denied: A(z) '{command}' a visszafordíthatatlan benyújtási átadási határ,
-      amely a(z) '{owner}' szerepkörhöz tartozik; a(z) '{persona}' szerepkör szerkezetileg
-      el van tiltva tőle. Add át az ellenőrzött munkaegységet az ellenőrző munkamenetnek
-      az export vagy a rekordjelölő előállításához.
-  serving:
-    warm_degraded: A(z) '{command}' az alfolyamat-átvitelen keresztül lett kiszolgálva,
-      mert a meleg, folyamaton belüli futtatókörnyezet {reason} volt; az eredmény
-      azonos, csak lassabb. A meleg kiszolgálás folytatódik, amint a lassú hívás befejeződik.
 operation:
   modal:
     action:
@@ -792,6 +737,7 @@ operation:
     refusal:
       cancellation_unavailable: A megszakítás most nem érhető el. Próbáld újra hamarosan.
       cancellation_unsupported: Ez a művelet az elindítása után nem szakítható meg.
+      detach_not_allowed: Ez a művelet nem választható le.
       operation_terminal: A művelet már befejeződött, nincs mit megszakítani.
       response_authority_unavailable: A választ most nem sikerült rögzíteni. Próbáld
         újra hamarosan.
@@ -801,13 +747,22 @@ operation:
       unknown_operation: A háttérrendszer már nem ismeri ezt a műveletet.
       unsupported_cancellation_version: Ez a verzió nem tudja megszakítani azt a műveletet.
         Frissítsd a Cadrumót.
+      unsupported_detach_version: Ez a verzió nem tudja leválasztani azt a műveletet.
+        Frissítsd az alkalmazást.
       unsupported_response_control_version: Ez a verzió nem tud válaszolni arra a
         műveletre. Frissítsd a Cadrumót.
     status:
+      access_unavailable: A művelethez való hozzáférés nem érhető el. Zárd be ezt
+        a nézetet, és szükség esetén jelentkezz be újra.
       running: Folyamatban
     terminal:
+      cancelled: Megszakítva
       failed: Sikertelen
+      interrupted: Félbeszakadt
+      refused: Elutasítva
+      succeeded: Sikeres
       succeeded_partial: Részben sikeres
+      timed_out: Időtúllépés
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
@@ -1269,6 +1224,102 @@ tui:
       notifications: Értesítések
       overview: Áttekintés
       reconciliation: Egyeztetés
+  automation_decision:
+    access_lost: A profilhoz való hozzáférés megszűnt. A művelet ellenőrzéséhez jelentkezz
+      be újra.
+    busy: Döntés rögzítése…
+    cancel: Mégse
+    completed: A döntés rögzítve.
+    confirm_approve: A megjelenített kérelem jóváhagyása
+    confirm_decline: A megjelenített kérelem elutasítása
+    consent: Kért hozzáférés
+    effect: Megfigyelt hatás
+    missing_selection: Válassz ki egy kérelmet az áttekintéshez.
+    operation_id: Művelet
+    password: A profil jelenlegi jelszava
+    terminal_condition: Végállapot
+    title: Automatizálási kérelem áttekintése
+    unavailable: A döntést nem sikerült megerősíteni. Újrapróbálkozás előtt ellenőrizd
+      a műveletet.
+    unknown_effect: Ismeretlen; újrapróbálkozás előtt ellenőrizd a műveletet.
+  automation_inventory:
+    access_lost: Ez a profil-munkamenet már nem érhető el.
+    actions: Engedélyezett lépések
+    all_periods: Minden bevallási időszak
+    approve: Kérelem jóváhagyása
+    client: Kliens
+    close: Bezárás
+    decline: Kérelem elutasítása
+    delegation: Továbbadási jog
+    destination: Cél
+    details: Részletek
+    disclosures: Hozzáférhető adatok
+    empty: Nincs elem
+    expires: Lejárat
+    grant: Jogosultság
+    grant_expires: A jogosultság javasolt lejárata
+    grants: Jogosultságok
+    id: Azonosító
+    key_expires: A kulcs javasolt lejárata
+    keys: Kulcsok
+    kind: Típus
+    last_used: Utolsó használat
+    no_periods: Nincs bevallási időszak
+    not_applicable: Nem alkalmazható
+    operations: Műveletek
+    os_lock: Zárolt rendszeren engedélyezett
+    period_independent: Időszaktól független
+    periods: Időszakok
+    profile: Profil
+    refresh: Frissítés
+    requests: Kérelmek
+    review_digest: Felülvizsgálati kivonat
+    state: Állapot
+    target_grant: Céljogosultság
+    target_key: Célkulcs
+    title: Automatizált hozzáférés
+    unattended: Felügyelet nélküli
+    unattended_notice: Érvényes felügyelet nélküli jogosultság esetén ez a telepítés
+      a felhasználó kijelentkezése után is feloldhatja a profilt. A zárolási és visszavonási
+      szabályok továbbra is érvényesek.
+    unavailable: Az automatizálási jogosultságok listája nem érhető el. Az újrapróbálkozáshoz
+      frissítsd.
+  automation_request:
+    actions: Tevékenységek
+    capability_note: A felsorolt műveletek képességeket írnak le, nem az aktuális
+      rendelkezésre állást.
+    change_scope: Hatókör módosítása
+    complete: Jóváhagyva és befejezve
+    credential_reference: Meglévő védett hitelesítőadat-hivatkozás UUID-ja
+    declined: Elutasítva
+    delegation: Átruházás engedélyezése
+    disclosures: Kiadott adatok
+    enroll: Hozzáférés létrehozása
+    grant_expiry: Jogosultság lejárata (ISO dátum és idő)
+    invalid: Érvénytelen vagy nem elérhető kérelem
+    key_expiry: Kulcs lejárata (ISO dátum és idő)
+    kind: Kérelem típusa
+    operations: Műveletek
+    os_lock: Használat engedélyezése zárolt operációs rendszer mellett
+    period_add: Időszak hozzáadása
+    period_code: Időszakkód
+    period_independent: Időszaktól független műveletek engedélyezése
+    period_mode: Időszakok hatóköre
+    period_selected: Kiválasztott időszakok
+    period_year: Év
+    reference: Védett hitelesítőadat-hivatkozás
+    renew: Jogosultság megújítása
+    request_id: Kérelemazonosító
+    requested: Külön emberi felülvizsgálatra vár
+    review_digest: Felülvizsgálati ellenőrzőösszeg
+    rotate: Kulcs cseréje
+    submit: Beküldés felülvizsgálatra
+    target_grant: Meglévő jogosultság UUID-ja
+    target_key: Meglévő kulcs UUID-ja (csak kulcscsere)
+    title: API-hozzáférés kérése
+    unattended: Felügyelet nélküli használat engedélyezése
+    uncertain: Ismeretlen eredmény; őrizd meg a kérelem azonosítóját
+    waiting: Kérelem beküldése folyamatban
   declarations:
     availability:
       available: Elérhető
@@ -1468,7 +1519,7 @@ tui:
         exists: Ez a bevallás már létezik. Megnyitja?
         period_selection_hint: Az Enterrel válassz időszakot, majd hozd létre és nyisd
           meg a bevallást.
-        show_all: Az összes nyomtatvány megjelenítése, nem csak a rád vonatkozók
+        show_all: Minden nyomtatvány, nem csak a rád vonatkozók
         start_confirm: 'Elkezdi a(z) {modelo} bevallást erre az időszakra: {period}?'
       next:
         check_aeat: Ellenőrizd az AEAT-benyújtást
@@ -1729,8 +1780,23 @@ tui:
       confirming: A számla rögzítése a dokumentum alapján…
       detail: 'Méret: {size} bájt · hozzáadva: {captured}'
       draft:
+        adjustments: 'Áfapótlék: {recargo} · forrásadó kulcsa: {retention_rate} ·
+          forrásadó-levonás: {retention} · ügyfél nevében kifizetett költségek: {suplidos}'
         amounts: Alap {base} · IVA {rate}% = {iva} · összesen {total} {currency}
+        breakdown: '{index}. adókulcs: {rate} · adóalap: {base} · áfa: {iva} · áfapótlék
+          kulcsa: {recargo_rate} · áfapótlék: {recargo}'
+        breakdown_empty: Nincs adókulcsonkénti bontás
+        breakdown_heading: Adókulcsonkénti bontás
+        candidate: 'Lehetséges adat: {field} = {value} · forráshely: {anchor} · megjegyzés:
+          {note}'
+        customer_role: Vevő
         discrepancies: 'A dokumentummal nem egyező ellenőrzések: {count}'
+        document: 'Bizonylat {number} · sorozat: {series} · kelte: {date} · helyesbítő
+          bizonylat: {rectifies} · teljesítés jellege: {supply_nature} · áfakategória:
+          {iva_category} · javasolt számlatípus: {suggested_kind}'
+        finding: '{kind}: {field} · {detail} · elvárt: {expected} · észlelt: {observed}'
+        findings_empty: Nincsenek megállapítások
+        findings_heading: Ellenőrzési megállapítások
         identity: '{number} számla, kelte {date}'
         label_reading:
           busy_refused: 'Az automatikus olvasó nem futott le, mert egy másik olvasás
@@ -1744,8 +1810,28 @@ tui:
           reader_unavailable: 'Az automatikus olvasó nem indult el. A címkék által
             nem lefedett {count} mező még nem lett beolvasva, ezért üres marad: {fields}.
             Olvasd be újra a dokumentumot később.'
+        line: '{index}. {description} · mennyiség: {quantity} · egységár: {unit_price}
+          · adóalap: {base} · adókulcs: {rate} · áfa: {iva} · áfapótlék kulcsa: {recargo_rate}
+          · áfapótlék: {recargo}'
+        lines_empty: Nincsenek tételek
+        lines_heading: Tételek
+        'no': Nem
+        party: '{role}: {name} · adóazonosító: {tax_id} · irányítószám: {postal_code}
+          · ország: {country} · országkód: {country_code} · megadott országkód: {stated_country_code}'
+        provenance: 'Mező: {field} · eredet: {origin} · alátámasztás: {grounding}
+          · forráshely: {anchor} · elutasított forráshely: {refused_anchor} · saját
+          közlés: {self_reported} · ebből származik: {derived_from} · szerepet igazoló
+          adat: {role_evidence} · nem ellenőrzött: {unverified} · megjegyzés: {note}'
+        provenance_empty: Nincsenek származási adatok
+        provenance_heading: Származási adatok
+        regime: 'Adózási rendszer: {value}'
+        source_metadata: 'A forrás adatai · átirat SHA-256 lenyomata: {transcription_sha256}
+          · nyers szöveg hossza: {raw_text_length}'
+        structured_class: 'Dokumentumbesorolás: {kind} · forráskód: {source_code}'
         supplier: 'Szállító: {name} · NIF {nif}'
+        supplier_role: Szállító
         unread: nem olvasható
+        'yes': Igen
       empty: Nincs ellenőrzésre váró bizonylat.
       extract: Dokumentum beolvasása
       loading: A dokumentumok beolvasása…
@@ -1760,10 +1846,6 @@ tui:
         ezzel: `aeat config provision status`.'
       reader_ready: A dokumentumolvasó készen áll ezen a gépen.
       reading: A dokumentum beolvasása ezen a gépen…
-      reading_refused:
-        reader: 'Ezen a gépen még nem olvashatók dokumentumok ({condition}). Indítsd
-          el vagy telepítsd az olvasót ezzel: `aeat config provision`, majd próbáld
-          újra.'
       record_detail: '{kind} · szállító: {supplier} · hozzáadva: {added} · {status}'
       record_status:
         awaiting: Megerősítésre vár
@@ -1773,7 +1855,8 @@ tui:
       records_empty: Még nincs rögzített számladokumentum.
       records_heading: Számladokumentumok ezen a gépen
       reviewed: Ellenőrizve
-      safe_metadata: Csak biztonságos metaadatok; a dokumentum tartalma védett marad.
+      safe_metadata: A forrásdokumentum továbbra is védett és titkosított; a belőle
+        kinyert mezők ellenőrzésre jelennek meg.
       title: Bizonylatok ellenőrzése
     flow:
       in_flight_refusal: A képernyő elhagyása előtt várja meg a jelenlegi művelet
@@ -1995,91 +2078,11 @@ tui:
     unavailable:
       title: A Nyilvántartás nem érhető el
   local_reader:
-    answer:
-      'no': nem
-      unmeasured: nincs mérve
-      'yes': igen
     card:
       action: Dokumentumolvasó megnyitása
       description: Nézd meg, beolvashatók-e a számladokumentumok ezen a gépen, és
         állítsd be az olvasót, a futtatókörnyezetét és a modelljeit.
       title: Dokumentumolvasó
-    checklist:
-      models_loaded: Modellek betöltve
-      service_installed: Futtatókörnyezet telepítve
-      service_running: Futtatókörnyezet fut
-      text_model_pulled: Szövegmodell letöltve
-      verified: Olvasó ellenőrizve
-      vision_model_pulled: Szkennelési modell letöltve
-    choose_role: Válassz egy feladatot a táblázatban a modell letöltéséhez, betöltéséhez,
-      ellenőrzéséhez vagy eltávolításához.
-    column:
-      fitness: Modellpróba
-      installed: Telepítve
-      loaded: Betöltve
-      model: Modell
-      ready: Kész
-      role: Feladat
-      state: Állapot
-      step: Lépés
-    confirm:
-      cancel: Mégse
-      install_accept: Telepítés
-      install_message: A telepítés a(z) {installer} programot futtatja, hogy letöltse
-        és telepítse a helyi modell-futtatókörnyezetet erre a gépre. Folytatod?
-      install_title: Telepíti a helyi futtatókörnyezetet?
-      remove_accept: Eltávolítás
-      remove_message: Eltávolítja a(z) {model} modellt erről a gépről? Használat előtt
-        újra le kell tölteni.
-      remove_title: Eltávolítja ezt a modellt?
-    extraction_not_ready: A számladokumentumok még nem olvashatók be ezen a gépen.
-    extraction_ready: A számladokumentumok beolvashatók ezen a gépen.
-    fitness:
-      fit: megfelelő
-      not_verified: nincs ellenőrizve
-      timed_out: időtúllépés
-      unfit: nem megfelelő
-    host: 'Futtatókörnyezet: {endpoint} · telepítve: {installed} · válaszol: {reachable}
-      · verzió: {version}'
-    install: Futtatókörnyezet telepítése
-    install_cancelled: A telepítés megszakítva; semmi sem változott.
-    intro: A helyi olvasó ezen a gépen olvassa be a számladokumentumokat. Semmi sem
-      kerül máshová.
-    last_pull: 'Utolsó letöltés ebben a munkamenetben: {model} · befejezve: {outcome}
-      · {size} bájt'
-    load: Modell betöltése
-    measuring: Az olvasó ellenőrzése…
-    no_installer: Ezen a rendszeren nincs elérhető telepítő. Telepítsd saját magad
-      a modell-futtatókörnyezetet, majd ellenőrizd újra.
-    no_model: nincs kiválasztva
-    pull: Modell letöltése
-    refresh: Újraellenőrzés
-    refused: A műveletet nem sikerült elindítani.
-    remove: Modell eltávolítása
-    remove_cancelled: Az eltávolítás megszakítva; semmi sem változott.
-    role:
-      column_role_mapping: Táblázatoszlopok
-      supply_nature_proposal: Termék vagy szolgáltatás javaslata
-      text_extraction: Szöveges dokumentumok
-      vision_transcription: Szkennelt dokumentumok
-    selected_role: 'Kiválasztva: {role}'
-    setup: Olvasó beállítása
-    setup_done: Az olvasó be van állítva.
-    setup_step:
-      install: telepítés
-      load: betöltés
-      pull: letöltés
-      start: indítás
-      verify: ellenőrzés
-    setup_stopped: 'A beállítás leállt ennél a lépésnél: {step} ({condition}).'
-    start: Futtatókörnyezet indítása
-    state:
-      done: kész
-      missing: teendő
-    submitting: Indítás…
-    title: Dokumentumolvasó
-    unreadable: Az olvasó állapotát nem sikerült lekérdezni.
-    verify: Modell ellenőrzése
   modelo:
     export:
       artefact:
@@ -2811,8 +2814,26 @@ tui:
       value:
         not_applicable: nem alk.
       was: 'korábban: {value}'
+  restricted:
+    actions: 'Engedélyezett tevékenységek: {values}'
+    all_periods: Minden időszak
+    availability: 'Elérhetőség - tároló: {storage}; jogosultság: {authority}; szolgáltató:
+      {provider}'
+    change_user: Felhasználóváltás
+    close: Bezárás
+    grant: 'Engedély érvényes: {valid}; lejár: {expires_at}'
+    lock: Munkamenet zárolása
+    'no': Nem
+    none: Nincs
+    operations: 'Engedélyezett műveletek: {values}'
+    periods: 'Időszakok: {values}; időszaktól független munka: {independent}'
+    profile: 'Profil: {label} ({profile_id})'
+    session_expiry: 'A munkamenet lejár: {expires_at}'
+    title: Korlátozott API-munkamenet
+    'yes': Igen
   root:
     account:
+      access: Hozzáférés
       appearance: Megjelenés
       change_user: Felhasználóváltás
       default_profile: Fiók
@@ -2825,6 +2846,7 @@ tui:
       line: '{label} · {status}'
       line_with_expiry: '{label} · {status} · lejár: {expires_at}'
     account_help:
+      access: Munkamenetek és automatizálási hozzáférés kezelése
       appearance: Váltás a világos és a sötét megjelenés között
       change_user: Bejelentkezés egy másik profilba ezen a számítógépen
       language: Válaszd ki, milyen nyelven jelenjenek meg a profil oldalai
@@ -2832,6 +2854,7 @@ tui:
       profile: A profil adatainak áttekintése és szerkesztése
       sign_out: A profil munkamenetének lezárása és adatainak zárolása
     account_key:
+      access: Hozzáférés
       appearance: Téma
       change_user: Felhasználó
       language: Nyelv
@@ -2850,6 +2873,102 @@ tui:
         marad
     title: Cadrumo terminálmunkamenet
     updating: Frissítés…
+  runtime_access:
+    access_lost: A profilhoz való hozzáférés nem érhető el. Jelentkezz be újra.
+    busy: Feldolgozás…
+    close: Bezárás
+    completed: Befejezve.
+    denial_acknowledgement: 'Hozzáférés megtagadva: {access_denied} · A hitelesítő
+      adatok eltávolítása függőben: {cleanup_pending}'
+    deny_all: Minden automatizált hozzáférés visszavonása
+    deny_grant: Jogosultság visszavonása
+    deny_key: Kulcs visszavonása
+    deny_target: Cél UUID
+    invalid_grants: Adj meg érvényes jogosultság-UUID-kat.
+    invalid_target: Adj meg érvényes cél UUID-t.
+    lock_current: Munkamenet zárolása
+    lock_profile: Profil zárolása mindenhol
+    refresh: Frissítés
+    refused: A hozzáférést elutasították.
+    resume: Profil feloldása
+    resume_grants: Újraaktiválandó jogosultságok UUID-jai
+    resume_password: Profiljelszó
+    revoke_session: Munkamenet visszavonása
+    session_details: 'Munkamenet: {session_id} | Ügyfél: {client_id} | Szülőmunkamenet:
+      {parent_session_id} | Jogosultság: {grant_id} | Kulcs: {key_id} | Típus: {kind}
+      | Állapot: {state} | Lejárat: {expires_at}'
+    sessions: Munkamenetek
+    sessions_empty: Nincsenek aktuális munkamenetek.
+    sessions_locked: 'Zárolt munkamenetek: {session_ids}'
+    title: Profilhozzáférés
+    view_automation: Automatizált hozzáférés megtekintése
+  runtime_login:
+    cancel: Mégse
+    credential_hint_api_key: Add meg a kiválasztott profil kulcsát.
+    credential_hint_api_reference: A pontos kulcs beolvasása a védett helyi hitelesítőadat-tárolóból,
+      majd hitelesítés a helyi szolgáltatáshoz.
+    credential_hint_receipt: A profil védett bizonylatát használja; nem kell jelszót
+      vagy API-kulcsot megadni.
+    credential_label_api_key: API-kulcs
+    credential_label_api_reference: Hitelesítőadat-hivatkozás (UUID)
+    credential_label_password: Jelszó
+    credential_required: Adj meg egy hitelesítő adatot.
+    method_api_key: API-kulcs
+    method_api_reference: Tárolt API-kulcs
+    method_label: Bejelentkezési mód
+    method_password: Jelszó
+    method_receipt: Folytatás védett bizonylattal
+    profile_label: Profil
+    progress: Bejelentkezés…
+    reference_invalid: Adj meg érvényes hitelesítőadat-hivatkozási UUID-t.
+    refused: A bejelentkezés elutasítva.
+    submit: Bejelentkezés
+    title: Bejelentkezés egy profilba
+  runtime_management:
+    availability:
+      available: Elérhető
+      refused: Elutasítva
+      unavailable: Nem érhető el
+      unknown: Ismeretlen
+      unsupported: Nem támogatott
+    busy: A helyi futtatókörnyezet állapotának ellenőrzése…
+    disable: Kézi indítás
+    enable: Indítás bejelentkezéskor
+    kind:
+      linux_user_service: Linux felhasználói szolgáltatás
+      macos_agent: macOS indítóügynök
+      windows_task: Windows ütemezett feladat
+    labels:
+      binding_matches: Ehhez a telepítéshez tartozik
+      listener: Figyelő végpont
+      login_autostart: Bejelentkezéskor indul
+      manager_availability: Kezelő elérhetősége
+      manager_kind: Kezelő típusa
+      process_state: Folyamat állapota
+      provisioned: Kiépítve
+    listener:
+      draining: Leállás alatt
+      ready: Kész
+      refused: Elutasítva
+      unavailable: Nem érhető el
+      unknown: Ismeretlen
+    not_reported: Nincs adat
+    open: Futtatókörnyezet kezelése
+    open_help: A helyi futtatókörnyezet megtekintése, indítása és beállítása.
+    process:
+      running: Fut
+      starting: Indítás alatt
+      stopped: Leállítva
+      unknown: Ismeretlen
+    refused: A futtatókörnyezet állapotát nem sikerült megerősíteni.
+    start: Indítás
+    stop: Leállítás
+    stop_accepted: A leállítás elfogadva; a futtatókörnyezet leállóban van.
+    stop_cancel: Maradjon futásban
+    stop_confirm: Minden profil és feladat leállítása
+    stop_scope: Leállítja a megosztott futtatókörnyezetet minden profil és feladat
+      számára?
+    title: Helyi futtatókörnyezet kezelése
   search:
     action:
       classify_ledger: Nyilvántartás osztályozása

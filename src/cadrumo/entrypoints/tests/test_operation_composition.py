@@ -254,7 +254,41 @@ def test_submission_issues_actor_bound_opaque_response_capability(tmp_path: Path
         result = asyncio.run(submit())
 
         assert result.receipt.operation_id == "a" * 64
+        assert result.response_capability is not None
         assert callable(result.response_capability.close)
+
+
+def test_idempotent_replay_keeps_the_receipt_without_reissuing_response_authority(tmp_path: Path) -> None:
+    """Same-owner, other-actor and replacement-host retries preserve one invocation."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        services = compose_operation_dependencies(authority_operation=unread_authority_operation())
+        definition = services.observation.registry.lookup("auth.session.logout")
+        request = OperationRequest(
+            definition_id=definition.definition_id,
+            subject_ref="profile:active",
+            payload=definition.request_type(),
+            idempotency_key="same-scoped-request",
+        )
+
+        async def exercise() -> None:
+            try:
+                first = await services.submission.submit(request, actor_ref="operator:first")
+                assert first.response_capability is not None
+                for actor in ("operator:first", "operator:second"):
+                    replay = await services.submission.submit(request, actor_ref=actor)
+                    assert replay.receipt == first.receipt
+                    assert replay.response_capability is None
+            finally:
+                await services.shutdown()
+            replacement = compose_operation_dependencies(authority_operation=unread_authority_operation())
+            try:
+                replay = await replacement.submission.submit(request, actor_ref="operator:replacement")
+                assert replay.receipt == first.receipt
+                assert replay.response_capability is None
+            finally:
+                await replacement.shutdown()
+
+        asyncio.run(exercise())
 
 
 def test_production_composition_exposes_only_public_services() -> None:
@@ -298,6 +332,7 @@ def test_production_composition_imports_only_public_operation_defining_modules()
     assert operation_imports
     assert all(node.level == 2 for node in operation_imports)
     assert {node.module for node in operation_imports} == {
+        "application.operations.authorization",
         "application.operations.composition",
         "application.operations.registry",
     }

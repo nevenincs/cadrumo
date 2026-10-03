@@ -21,6 +21,7 @@ from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelectorStateError,
 )
 from ...application.modelo.work_addressing import (
+    ModeloWorkAddress,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
     ModeloWorkRevisionConflictError,
@@ -73,7 +74,7 @@ def work_address_for_cli(
     period: str | None,
     revision: str | None,
     bucket_id: str | None = None,
-) -> object:
+) -> ModeloWorkAddress:
     exact_id = validate_work_unit_selector(work_unit_id) if work_unit_id is not None else None
     typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     try:

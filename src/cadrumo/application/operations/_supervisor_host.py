@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     )
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ._execution_context import DefinitionBoundContext
+    from .authorization import OperationExecutionAuthority
     from .financial_operand import (
         OperationTransientFinancialOperandDelivery,
         OperationTransientFinancialOperandRequirement,
@@ -44,7 +45,6 @@ if TYPE_CHECKING:
     from .models import (
         OperationId,
         OperationIdentity,
-        OperationReference,
         OperationRequest,
         OperationTerminalReceipt,
     )
@@ -58,6 +58,8 @@ if TYPE_CHECKING:
     )
     from .persistence.leases import OperationOwnerLease
     from .projection_services import OperationResponseAuthorityIssuer
+    from .provenance import OperationAdmissionProvenance
+    from .refusal_evidence import OperationExecutorResult
     from .registry import OperationDefinition, OperationRegistry
     from .secret_submission import EphemeralSecretBroker, OperationSecretRequirement
 
@@ -67,6 +69,7 @@ class SupervisorHost:
 
     if TYPE_CHECKING:
         registry: OperationRegistry
+        _execution_authority: OperationExecutionAuthority | None
         _authority_operation: PinnedAuthorityOperation
         _journal: OperationJournal
         _leases: OperationLeaseRepository
@@ -78,7 +81,7 @@ class SupervisorHost:
         _response_token_factory: Callable[[], str]
         _leases_by_operation: dict[OperationId, OperationOwnerLease]
         _contexts: dict[OperationId, DefinitionBoundContext]
-        _executor_tasks: dict[OperationId, asyncio.Task[OperationReference | None]]
+        _executor_tasks: dict[OperationId, asyncio.Task[OperationExecutorResult]]
         _continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
         _settlement_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
         _durable_change_events: dict[OperationId, asyncio.Event]
@@ -154,7 +157,7 @@ class SupervisorHost:
 
         @staticmethod
         async def _wait_for_executor_or_deadline(
-            executor_task: asyncio.Task[OperationReference | None], deadline: datetime, now: datetime
+            executor_task: asyncio.Task[OperationExecutorResult], deadline: datetime, now: datetime
         ) -> None: ...
 
         @staticmethod
@@ -182,7 +185,7 @@ class SupervisorHost:
             *,
             operation_id: OperationId,
             context: DefinitionBoundContext,
-            executor: Coroutine[None, None, OperationReference | None],
+            executor: Coroutine[None, None, OperationExecutorResult],
         ) -> OperationPersistedSnapshot: ...
 
         async def settled(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
@@ -192,6 +195,7 @@ class SupervisorHost:
             request: OperationRequest[RequestPayloadT],
             *,
             operation_id: OperationId | None = None,
+            provenance: OperationAdmissionProvenance | None = None,
         ) -> OperationId: ...
 
         def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition: ...
@@ -261,13 +265,13 @@ class SupervisorHost:
             *,
             identity: OperationIdentity,
             context: DefinitionBoundContext,
-            executor: Coroutine[None, None, OperationReference | None],
-        ) -> OperationReference | None: ...
+            executor: Coroutine[None, None, OperationExecutorResult],
+        ) -> OperationExecutorResult: ...
 
         async def _settle_returned_result(
             self,
             snapshot: OperationPersistedSnapshot,
-            result_ref: OperationReference | None,
+            result_ref: OperationExecutorResult,
         ) -> OperationPersistedSnapshot: ...
 
         async def await_terminal(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...

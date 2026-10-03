@@ -1,40 +1,23 @@
-"""CLI command for ``aeat app quickfile`` — the one-command modelo filing chain.
-
-Drives the full local filing lifecycle for one ``(modelo, year, period)`` target
-in a single verb: it resolves readiness, resumes or creates the work unit,
-calculates a draft revision, verifies it, and exports the verified revision to a
-local fichero-BOE file — surfacing each stage's typed outcome and stopping
-instructively at the first stage that refuses. It re-implements no stage; it is a
-thin transport over :func:`application.modelo.quickfile.run_modelo_quickfile`, which
-composes the existing single-stage application services.
-
-The command is a child of ``app`` (the CLI root surface is pinned to ``config``
-and ``app``; this adds no third root). It is BUILD + EXPORT only: it never
-performs a live AEAT submission and never contacts AEAT. The terminal step is the
-local export the human files themselves through the AEAT sede
-(``sensitive-financial-data-secure-storage-only``).
-"""
+"""Human CLI for the exact-profile registered Quickfile filing chain."""
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from uuid import UUID
 
 import typer
-from pydantic import ValidationError
 
-from ...application.modelo.action_errors import M303FilingEvidenceError
-from ...application.modelo.m303_ordinary_filing_evidence_authoring import author_ordinary_m303_evidence_for_work
-from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
-from ...application.modelo.quickfile import (
-    QuickfileCommand,
-    QuickfileResult,
-    QuickfileStageOutcome,
-    run_modelo_quickfile,
+from ...application.modelo.calculation_request_fields import ModeloCalculationOverride
+from ...application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
+from ...application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
+from ...application.modelo.quickfile_operation_contracts import (
+    QuickfileCalculationInputs,
+    QuickfileProjection,
+    QuickfileRequest,
+    QuickfileStageSnapshot,
 )
-from ...application.workflow.persistence import workflow_state_repository
-from ...core.errors.error_codes import get_registered_error_code, resolve_error_message
-from ...core.errors.hierarchy import InternalInvariantError
+from ...application.operations.public_period import PublicPeriod
+from ...core.errors.error_codes import get_registered_error_code_by_code
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
@@ -42,43 +25,12 @@ from ...core.payment_election import PaymentElection
 from ...core.period import Period, PeriodError
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
-from ._app_quickfile_payloads import QuickfileResultPayload
-from ._modelo_cli_support import unsupported_local_work_period_refusal, work_calculate_input_bundle_from_cli
+from ._app_quickfile_payloads import QuickfileResultPayload, quickfile_stage_message
+from ._modelo_cli_support import parse_work_calculate_wire_specs, unsupported_local_work_period_refusal
 from ._modelo_rendering import verification_report_notices
-from .common import (
-    activate_subcommand_output_language,
-    emit_envelope,
-    filing_taxpayer_or_refuse,
-    no_active_profile_refusal,
-    resolve_cli_precondition_action,
-)
-from .state_projection_support import (
-    attachment_store,
-    authority_operation,
-    calculation_action_ports_factory,
-    certificate_secret_backend_factory,
-    modelo_export_ports_factory,
-    operator_probe_ports,
-    operator_scope_ports,
-    state_projection_read_ports,
-    verification_repository_bundle_factory,
-)
-
-if TYPE_CHECKING:
-    from ...application.modelo.work_profile import ModeloWorkProfile
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-    from ...domain.modelos.work_unit import WorkUnit
-
-
-def _require_active_profile() -> str:
-    """Return the active bucket id, refusing cold-start with clean guidance."""
-    from ...core.bucket_pointer import resolve_active_bucket_id
-
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        raise no_active_profile_refusal()
-    return bucket_id
+from .common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
+from .runtime_profile_binding import bound_profile_client
+from .runtime_quickfile import run_quickfile
 
 
 def _resolve_period(*, modelo: str, year: int, period: str) -> Period:
@@ -88,6 +40,76 @@ def _resolve_period(*, modelo: str, year: int, period: str) -> Period:
         if refusal := unsupported_local_work_period_refusal(modelo=modelo, token=period):
             raise refusal from exc
         raise typer.BadParameter(str(exc)) from exc
+
+
+def _optional_profile_id(raw: str | None) -> UUID | None:
+    if raw is None:
+        return None
+    try:
+        return UUID(raw)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc), param_hint="--bucket-id") from exc
+
+
+def _quickfile_request(
+    *,
+    profile_id: UUID,
+    modelo: str,
+    period: Period,
+    output: Path,
+    revision: str | None,
+    bucket_id: str | None,
+    casilla: list[str] | None,
+    binding: list[str] | None,
+    relation: list[str] | None,
+    row: list[str] | None,
+    actor: str | None,
+    refund_election: RefundElection,
+    payment_election: PaymentElection,
+    prior_domiciliation_election: PriorDomiciliationElection,
+    joint_return_elected: bool | None,
+    m303_exonerado_390_attachment_id: str | None,
+    m303_exonerado_390_sha256: str | None,
+) -> QuickfileRequest:
+    """Translate the existing command operands into the closed worker request."""
+    casilla_pairs, binding_pairs, relation_pairs, detail_rows = parse_work_calculate_wire_specs(
+        casilla=casilla,
+        binding=binding,
+        relation=relation,
+        row=row,
+    )
+    ordinary_m303_evidence = None
+    if modelo == "303" and joint_return_elected is not None:
+        ordinary_m303_evidence = ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+            joint_return_elected=joint_return_elected,
+            m303_exonerado_390_attachment_id=m303_exonerado_390_attachment_id,
+            m303_exonerado_390_sha256=m303_exonerado_390_sha256,
+        )
+    return QuickfileRequest(
+        profile_id=profile_id,
+        bucket_id=_optional_profile_id(bucket_id),
+        modelo=modelo,
+        period=PublicPeriod.from_period(period),
+        revision_id=revision,
+        output_path=str(output.absolute()),
+        actor=actor or "operator",
+        refund_election=refund_election,
+        payment_election=payment_election,
+        prior_domiciliation_election=prior_domiciliation_election,
+        ordinary_m303_filing_evidence=ordinary_m303_evidence,
+        inputs=QuickfileCalculationInputs(
+            casilla_overrides=tuple(
+                ModeloCalculationOverride(key=str(key), value=value) for key, value in casilla_pairs.items()
+            ),
+            binding_overrides=tuple(
+                ModeloCalculationOverride(key=str(key), value=value) for key, value in binding_pairs.items()
+            ),
+            relation_overrides=tuple(
+                ModeloCalculationOverride(key=str(key), value=value) for key, value in relation_pairs.items()
+            ),
+        ),
+        detail_rows=detail_rows,
+    )
 
 
 def quickfile(
@@ -111,222 +133,117 @@ def quickfile(
     m303_exonerado_390_sha256: str | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """Run readiness -> create -> calculate -> verify -> export for one modelo target."""
+    """Submit readiness, work creation, calculation, verification and export as one operation."""
     if ctx.invoked_subcommand is not None:
         return
     activate_subcommand_output_language(ctx, output_language)
-    # The graph-generated wrapper applies the same parsed profile-session gate
-    # to this executable group as it does to ordinary leaves.
     if output is None or not str(output).strip() or str(output).strip() == ".":
         raise typer.BadParameter(tr("cli.app.modelo.export.errors.output_required"))
 
-    resolved_bucket = _require_active_profile() if bucket_id is None else bucket_id
     resolved_period = _resolve_period(modelo=modelo, year=year, period=period)
-    resolved_year = resolved_period.filing_year
-    resolved_actor = actor or "operator"
-    workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
-    operation = authority_operation(ctx)
-    profile = load_modelo_work_profile(
-        bucket_id=resolved_bucket,
-        profile_decode_context=operation.profile_decode_context(),
+    client = bound_profile_client(ctx)
+    request = _quickfile_request(
+        profile_id=client.profile_id,
+        modelo=modelo,
+        period=resolved_period,
+        output=output,
+        revision=revision,
+        bucket_id=bucket_id,
+        casilla=casilla,
+        binding=binding,
+        relation=relation,
+        row=row,
+        actor=actor,
+        refund_election=refund_election,
+        payment_election=payment_election,
+        prior_domiciliation_election=prior_domiciliation_election,
+        joint_return_elected=joint_return_elected,
+        m303_exonerado_390_attachment_id=m303_exonerado_390_attachment_id,
+        m303_exonerado_390_sha256=m303_exonerado_390_sha256,
     )
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=resolved_bucket,
-        operation=operation,
-        profile_record=profile.record if profile is not None else None,
-    )
-
-    def _build_inputs(work_unit_id: str):
-        work_unit = calculation_ports.work_unit_repository.load().get(work_unit_id)
-        if work_unit is None:
-            raise InternalInvariantError("quickfile created work unit is unavailable")
-        filing_instance_evidence = _m303_filing_instance_evidence(
-            modelo=modelo,
-            work_unit=work_unit,
-            joint_return_elected=joint_return_elected,
-            attachment_id=m303_exonerado_390_attachment_id,
-            sha256=m303_exonerado_390_sha256,
-            operation=operation,
-            profile=profile,
-            ctx=ctx,
-        )
-        return work_calculate_input_bundle_from_cli(
-            work_unit_id=work_unit_id,
-            ports=calculation_ports,
-            casilla=casilla,
-            binding=binding,
-            relation=relation,
-            row=row,
-            borrador_snapshot_id=None,
-            filing_instance_evidence=filing_instance_evidence,
-            prestacion_inss_exenta=None,
-            rescate_plan_pensiones_capital=None,
-            rescate_plan_pensiones_aportaciones_pre_2007=None,
-            rescate_plan_pensiones_aportaciones_totales=None,
-            sal_beneficio_neto=None,
-            sal_reserva_dotada=None,
-            sal_capital_social=None,
-            autoconsumo_promotor_base=None,
-            profile=profile,
-        )
-
-    result = run_modelo_quickfile(
-        QuickfileCommand(
-            bucket_id=resolved_bucket,
-            modelo=modelo,
-            filing_year=resolved_year,
-            period=resolved_period,
-            registry_revision_id=revision,
-            output_path=output,
-            actor=resolved_actor,
-            refund_election=refund_election,
-            payment_election=payment_election,
-            prior_domiciliation_election=prior_domiciliation_election,
-        ),
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_probe_ports=operator_probe_ports(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
-        operation=operation,
-        verification_repositories=verification_repository_bundle_factory(ctx)(resolved_bucket),
-        calculation_action_ports=calculation_ports,
-        modelo_export_ports=modelo_export_ports_factory(ctx)(
-            bucket_id=resolved_bucket,
-            m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-        ),
-        read_ports=state_projection_read_ports(ctx),
-        workflow_profile=workflow_profile,
-        build_calculation_inputs=_build_inputs,
-        profile=profile,
-    )
-    payload = QuickfileResultPayload.from_result(result)
+    result = run_quickfile(ctx, request)
+    payload = QuickfileResultPayload.from_projection(result, output_path_display=str(output))
     emit_envelope(
         ctx,
         command="quickfile",
         result=payload,
-        lines=_quickfile_lines(result),
+        lines=_quickfile_lines(result, output_path_display=str(output)),
         notices=_quickfile_notices(result),
     )
     if not result.completed:
         raise typer.Exit(code=1)
 
 
-def _m303_filing_instance_evidence(
-    *,
-    modelo: str,
-    work_unit: WorkUnit,
-    joint_return_elected: bool | None,
-    attachment_id: str | None,
-    sha256: str | None,
-    operation: PinnedAuthorityOperation,
-    profile: ModeloWorkProfile | None,
-    ctx: typer.Context,
-) -> FilingInstanceEvidence | None:
-    """Build ordinary M303 evidence from explicit elections and secure custody only."""
-    if modelo != "303":
-        return None
-    if joint_return_elected is None:
-        raise M303FilingEvidenceError(
-            "Modelo 303 requires --joint-return-elected or --no-joint-return-elected; the Modelo 390 "
-            "attestation flags are required in the last period of the year (12 or 4T) and refused in any other"
-        )
-    return author_ordinary_m303_evidence_for_work(
-        work_unit=work_unit,
-        joint_return_elected=joint_return_elected,
-        exonerado_390_attachment_id=attachment_id,
-        exonerado_390_sha256=sha256,
-        operation=operation,
-        open_attachment_store=lambda: attachment_store(ctx, bucket_id=work_unit.bucket_id),
-        profile=profile,
-    )
-
-
-def _quickfile_lines(result: QuickfileResult) -> list[str]:
-    """Render the per-stage progress block for text mode."""
+def _quickfile_lines(result: QuickfileProjection, *, output_path_display: str) -> list[str]:
+    """Render the existing per-stage progress block from the worker projection."""
     lines = [
         "operation\tquickfile",
         f"modelo\t{result.modelo}",
         f"filing_year\t{result.filing_year}",
-        f"period\t{result.period.registry_token}",
+        f"period\t{result.period.to_period().registry_token}",
         f"registry_revision_id\t{result.registry_revision_id}",
     ]
-    for outcome in result.stages:
-        detail = f"\t{outcome.message}" if outcome.message else ""
-        lines.append(f"stage\t{outcome.stage.value}\t{outcome.status.value}{detail}")
+    for stage in result.stages:
+        message = quickfile_stage_message(stage)
+        detail = f"\t{message}" if message else ""
+        lines.append(f"stage\t{stage.stage.value}\t{stage.status.value}{detail}")
     lines.append(f"completed\t{str(result.completed).lower()}")
     if result.stopped_at_stage is not None:
         lines.append(f"stopped_at_stage\t{result.stopped_at_stage.value}")
-    if result.work_unit is not None:
-        lines.append(f"work_unit_id\t{result.work_unit.work_unit_id}")
-    if result.calculation_revision is not None:
-        lines.append(f"calculation_revision_id\t{result.calculation_revision.calculation_revision_id}")
-    if result.export_result is not None:
-        lines.append(f"output_path\t{result.export_result.output_path}")
-        lines.append(f"file_sha256\t{result.export_result.file_sha256}")
+    if result.work_unit_id is not None:
+        lines.append(f"work_unit_id\t{result.work_unit_id}")
+    if result.calculation_revision_id is not None:
+        lines.append(f"calculation_revision_id\t{result.calculation_revision_id}")
+    if result.export is not None:
+        lines.append(f"output_path\t{output_path_display}")
+        lines.append(f"file_sha256\t{result.export.file_sha256}")
     return lines
 
 
-def _quickfile_notices(result: QuickfileResult) -> list[Notice]:
-    """Surface each non-OK stage as a warning notice on the shared channel.
-
-    A refused verify additionally re-uses the verification report's own findings
-    notices so the operator sees the exact blocking findings and their next
-    actions, identical to what ``aeat app modelo work verify`` would surface.
-    """
-    from ...application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
-
+def _quickfile_notices(result: QuickfileProjection) -> list[Notice]:
+    """Render safe stage notices and canonical verification finding notices."""
     notices = [
-        _stage_notice(outcome)
-        for outcome in result.stages
-        if outcome.status not in (QuickfileStageStatus.OK, QuickfileStageStatus.SKIPPED)
+        _stage_notice(stage)
+        for stage in result.stages
+        if stage.status not in (QuickfileStageStatus.OK, QuickfileStageStatus.SKIPPED)
     ]
     if result.stopped_at_stage is QuickfileStage.VERIFY and result.verification_report is not None:
-        notices.extend(verification_report_notices(result.verification_report))
+        notices.extend(verification_report_notices(result.verification_report.to_report()))
     return notices
 
 
-def _stage_notice(outcome: QuickfileStageOutcome) -> Notice:
-    """Project one non-OK stage onto a notice the notices contract always admits.
-
-    The recovery action travels only on the typed ``action`` field, resolved
-    from the refusal's own precondition verdict. The refusal's reason is the
-    preferred message, but it is prose owned by whichever service refused, and
-    the notices contract - not this transport - decides whether prose may ride
-    the channel: a reason that names an executable command, or context that
-    uses a reserved action key, is refused there. When it is, the stage is
-    still reported, as a stage-and-error-code sentence authored for this
-    channel, so a refusal can never be lost to a crash or to silence.
-    """
-    stage, status = outcome.stage.value, outcome.status.value
-    code = f"quickfile.stage.{stage}"
+def _stage_notice(stage: QuickfileStageSnapshot) -> Notice:
+    """Project a closed stage result without transporting exception prose/context."""
+    stage_name, status = stage.stage.value, stage.status.value
+    code = f"quickfile.stage.{stage_name}"
     action = (
-        resolve_cli_precondition_action(outcome.precondition_verdict)
-        if outcome.precondition_verdict is not None
+        resolve_cli_precondition_action(stage.precondition_verdict.to_verdict())
+        if stage.precondition_verdict is not None
         else None
     )
-    refusal = outcome.refusal
-    reasoned = _admitted_notice(
-        code=code,
-        message=resolve_error_message(refusal) if refusal is not None else outcome.message,
-        action=action,
-        context={"stage": stage, "status": status, **dict(outcome.context)},
-    )
+    facts = {"stage": stage_name, "status": status, **stage.facts.to_context()}
+    error_code = stage.error.code if stage.error is not None else None
+    if error_code is not None:
+        facts["error_code"] = error_code
+    message = quickfile_stage_message(stage)
+    reasoned = _admitted_notice(code=code, message=message, action=action, context=facts)
     if reasoned is not None:
         return reasoned
-    if refusal is None:
+    if error_code is None:
         return Notice(
             severity=NoticeSeverity.WARNING,
             code=code,
-            message=tr("application.modelo.quickfile.stage_incomplete", stage=stage, status=status),
+            message=tr("application.modelo.quickfile.stage_incomplete", stage=stage_name, status=status),
             action=action,
-            context={"stage": stage, "status": status},
+            context={"stage": stage_name, "status": status},
         )
-    error_code = get_registered_error_code(refusal).code
+    registered_code = get_registered_error_code_by_code(error_code).code
     return Notice(
         severity=NoticeSeverity.WARNING,
         code=code,
-        message=tr("application.modelo.quickfile.stage_refused", stage=stage, error_code=error_code),
+        message=tr("application.modelo.quickfile.stage_refused", stage=stage_name, error_code=registered_code),
         action=action,
-        context={"stage": stage, "status": status, "error_code": error_code},
+        context={"stage": stage_name, "status": status, "error_code": registered_code},
     )
 
 
@@ -337,7 +254,9 @@ def _admitted_notice(
     action: ResolvedPreconditionAction | None,
     context: dict[str, str],
 ) -> Notice | None:
-    """Return the warning notice, or ``None`` when the notices contract refuses its prose."""
+    """Return a validated notice or let the safe stage/code fallback handle it."""
+    from pydantic import ValidationError
+
     try:
         return Notice(severity=NoticeSeverity.WARNING, code=code, message=message, action=action, context=context)
     except ValidationError:

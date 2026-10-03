@@ -17,11 +17,12 @@ def auth_diagnostics_list(
 ) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
-    from ....application.auth.diagnostics import list_auth_diagnostics
     from ..config_payloads import AuthDiagnosticsListResult
+    from .runtime_auth_read import cli_auth_read
 
-    report = list_auth_diagnostics(persistence=build_auth_diagnostic_persistence())
+    report = cli_auth_read(ctx, kind="diagnostics_list", output_language=output_language).diagnostics_list
+    if report is None:
+        raise _CliRefusedBoundaryError(context={"reason": "invalid_frame"})
     lines = [f"row_count\t{report.row_count}"]
     for row in report.rows:
         lines.append(
@@ -52,10 +53,10 @@ def auth_diagnostics_view(
 ) -> None:
     """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
-    from ....application.auth.diagnostics import load_auth_diagnostic
+    from .runtime_auth_read import cli_auth_read
 
-    detail = load_auth_diagnostic(diagnostic_id, persistence=build_auth_diagnostic_persistence())
+    result = cli_auth_read(ctx, kind="diagnostics_view", diagnostic_id=diagnostic_id, output_language=output_language)
+    detail = result.diagnostics_view
     if detail is None:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.diagnostics.not_found",
@@ -121,28 +122,13 @@ def auth_diagnostics_report(
 ) -> None:
     """Record the human-observed Cl@ve app state for a captured diagnostic."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
-    from ....application.auth.diagnostics import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
+    from .runtime_auth_diagnostic_report import report_auth_diagnostic_phone_state
 
-    try:
-        result = record_auth_diagnostic_phone_state(
-            diagnostic_id,
-            phone_state,
-            persistence=build_auth_diagnostic_persistence(),
-        )
-    except ValueError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.diagnostics.invalid_phone_state",
-            context={
-                "phone_state": phone_state,
-                "choices": ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
-            },
-        ) from exc
-    if result is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.diagnostics.not_found",
-            context={"diagnostic_id": diagnostic_id},
-        )
+    result = report_auth_diagnostic_phone_state(
+        ctx,
+        diagnostic_id=diagnostic_id,
+        phone_state=phone_state,
+    )
     from ..config_payloads import AuthDiagnosticsReportResult
 
     report_result = AuthDiagnosticsReportResult(

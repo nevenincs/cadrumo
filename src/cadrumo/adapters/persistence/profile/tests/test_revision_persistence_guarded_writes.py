@@ -27,6 +27,7 @@ from cadrumo.application.modelo.edit_contract import ModeloEditMutationFamily, M
 from cadrumo.application.modelo.revision_persistence import persist_calculation_revision
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
@@ -83,6 +84,7 @@ def _persist(
     calculation_repository: CalculationRevisionCatalogueRepository,
     work_unit_repository: WorkUnitCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
+    operation: PinnedAuthorityOperation,
     now: datetime,
     input_value: str,
     additional_secure_object_writes_for_revision: (
@@ -120,11 +122,14 @@ def _persist(
         calculation_repository=calculation_repository,
         work_unit_repository=work_unit_repository,
         bucket_event_repository=bucket_event_repository,
+        operation=operation,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
 
 
-def test_new_revision_co_commits_additional_writes_atomically(tmp_path: Path) -> None:
+def test_new_revision_co_commits_additional_writes_atomically(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """A caller-supplied receipt write lands in the same transaction as the new revision."""
     work_unit = _work_unit()
 
@@ -145,6 +150,7 @@ def test_new_revision_co_commits_additional_writes_atomically(tmp_path: Path) ->
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
+            operation=operation,
             now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
             additional_secure_object_writes_for_revision=lambda revision_id, bucket_event_id: (
@@ -162,13 +168,17 @@ def test_new_revision_co_commits_additional_writes_atomically(tmp_path: Path) ->
         loaded_work_units = work_unit_repository.load()
 
     assert loaded_receipt is not None
-    assert loaded_receipt.calculation_revision_id == revision.calculation_revision_id
+    assert revision.published
+    assert loaded_receipt.calculation_revision_id == revision.revision.calculation_revision_id
     reloaded_work_unit = loaded_work_units.get(work_unit.work_unit_id)
     assert reloaded_work_unit is not None
-    assert reloaded_work_unit.current_calculation_revision_id == revision.calculation_revision_id
+    assert reloaded_work_unit.current_calculation_revision_id == revision.revision.calculation_revision_id
+    assert revision.work_unit == reloaded_work_unit
 
 
-def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(tmp_path: Path) -> None:
+def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """Recalculating the same inputs still guards the pointer save and co-commits."""
     work_unit = _work_unit()
 
@@ -187,6 +197,7 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(tmp_path: 
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
+            operation=operation,
             now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
         )
@@ -201,6 +212,7 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(tmp_path: 
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
+            operation=operation,
             now=datetime(2026, 1, 10, 3, 0, tzinfo=UTC),
             input_value="100.00",
             additional_secure_object_writes_for_revision=lambda revision_id, bucket_event_id: (
@@ -216,11 +228,14 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(tmp_path: 
 
         loaded_second_receipt = receipt_repository.load("2" * 64)
 
-    assert second.calculation_revision_id == first.calculation_revision_id
+    assert first.published and second.published
+    assert second.revision.calculation_revision_id == first.revision.calculation_revision_id
     assert loaded_second_receipt is not None
 
 
-def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(tmp_path: Path) -> None:
+def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """A genuine second writer racing the work-unit catalogue is rejected, not overwritten.
 
     This drives an ACTUAL conflicting write between the stale read and the
@@ -244,6 +259,7 @@ def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(tmp_path: Pat
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
+            operation=operation,
             now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
         )
@@ -269,6 +285,71 @@ def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(tmp_path: Pat
                 calculation_repository=calculation_repository,
                 work_unit_repository=work_unit_repository,
                 bucket_event_repository=bucket_event_repository,
+                operation=operation,
                 now=datetime(2026, 1, 10, 4, 0, tzinfo=UTC),
                 input_value="100.00",
             )
+
+
+@pytest.mark.parametrize("duplicate_kind", ["unchanged", "pointer", "side_write"])
+def test_duplicate_publication_reports_actual_transaction(
+    tmp_path: Path, duplicate_kind: str, operation: PinnedAuthorityOperation
+) -> None:
+    """A reused revision may still publish a parent or receipt; only a true no-op says false."""
+    unit = _work_unit()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        event_repository = BucketEventHistoryRepository(objects=profile.repository)
+        receipt_repository = ModeloEditReceiptRepository(objects=profile.repository)
+        work_repository.save(build_work_unit_catalogue((unit,)))
+
+        def publish(value: str, *, side_write: bool = False):
+            catalogue, revision_id = work_repository.load_revisioned()
+            current = catalogue.get(unit.work_unit_id)
+            assert current is not None
+            return _persist(
+                work_unit=current,
+                work_units=catalogue,
+                work_units_revision_id=revision_id,
+                calculation_repository=calculation_repository,
+                work_unit_repository=work_repository,
+                bucket_event_repository=event_repository,
+                operation=operation,
+                now=datetime(2026, 1, 10, 4, 0, tzinfo=UTC),
+                input_value=value,
+                additional_secure_object_writes_for_revision=(
+                    lambda calculation_id, event_id: (
+                        receipt_repository.to_secure_object_write(
+                            _receipt(
+                                receipt_id="3" * 64,
+                                calculation_revision_id=calculation_id,
+                                bucket_event_id=event_id,
+                            )
+                        ),
+                    )
+                )
+                if side_write
+                else None,
+            )
+
+        first = publish("100.00")
+        assert first.published
+        if duplicate_kind == "pointer":
+            second = publish("200.00")
+            assert second.published
+            assert second.revision.calculation_revision_id != first.revision.calculation_revision_id
+        before = work_repository.load_revisioned()
+        retry = publish("100.00", side_write=duplicate_kind == "side_write")
+        after = work_repository.load_revisioned()
+        assert retry.revision == first.revision
+        assert retry.work_unit == after[0].get(unit.work_unit_id)
+        assert retry.published is (duplicate_kind != "unchanged")
+        if duplicate_kind == "unchanged":
+            assert before == after
+        elif duplicate_kind == "pointer":
+            assert retry.work_unit.current_calculation_revision_id == first.revision.calculation_revision_id
+            assert before[1] != after[1]
+        else:
+            receipt = receipt_repository.load("3" * 64)
+            assert receipt is not None and receipt.bucket_event_id is None

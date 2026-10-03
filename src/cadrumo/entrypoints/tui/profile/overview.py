@@ -29,7 +29,9 @@ from typing import TYPE_CHECKING, ClassVar, cast, override
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.dom import DOMNode
 from textual.events import DescendantFocus
+from textual.message import Message
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, Checkbox, DataTable, Footer, Input, Label, OptionList, ProgressBar, Static
 from textual.worker import Worker, WorkerState
@@ -70,6 +72,7 @@ from .plantilla_media import (
     PlantillaMediaScreen,
     PlantillaMediaSetRequest,
 )
+from .runtime_errors import ProfileManagerCompletedViewUnavailableError
 from .setup_journey import SETUP_STAGES, ProfileSetupStage
 
 if TYPE_CHECKING:
@@ -1542,20 +1545,26 @@ class ProfileManagerScreen(AccountChromeScreen):
 
     # ── editing ─────────────────────────────────────────────────────────
 
-    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+    def _section_table(self, widget: DOMNode | None) -> DataTable[str] | None:
+        """Resolve a table event to the typed section table this screen owns."""
+        return next((table for table in self._table_by_section.values() if table is widget), None)
+
+    def on_data_table_row_highlighted(self, event: Message) -> None:
         """Explain the field under the cursor of the table the operator is in.
 
         Every table reports a highlight as it is built, so only the focused
         one may speak; otherwise the last section built would explain itself
         whatever row the operator is on.
         """
-        if event.data_table.has_focus:
-            self._explain_cursor_row(event.data_table)
+        table: DataTable[str] | None = self._section_table(event.control)
+        if table is not None and table.has_focus:
+            self._explain_cursor_row(table)
 
     def on_descendant_focus(self, event: DescendantFocus) -> None:
         """Explain the cursor row of a section table the moment it takes focus."""
-        if isinstance(event.widget, DataTable):
-            self._explain_cursor_row(cast("DataTable[str]", event.widget))
+        table: DataTable[str] | None = self._section_table(event.widget)
+        if table is not None:
+            self._explain_cursor_row(table)
 
     def _explain_cursor_row(self, table: DataTable[str]) -> None:
         panel = self.query_one("#manager-field-help", Static)
@@ -2051,6 +2060,9 @@ class ProfileManagerScreen(AccountChromeScreen):
         rather than on the exception's type, because no type owns that
         emptiness — a door that raises bare renders just as blank.
         """
+        if isinstance(error, ProfileManagerCompletedViewUnavailableError):
+            self._refuse(tr("flows.manager.edit.completed_refresh_unavailable"))
+            return
         if error is None:
             rendered = ""
         else:

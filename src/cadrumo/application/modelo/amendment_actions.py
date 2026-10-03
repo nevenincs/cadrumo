@@ -40,6 +40,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -127,6 +128,15 @@ from .revision_persistence import build_modelo_bucket_event as _build_bucket_eve
 from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 
 
+@dataclass(frozen=True, slots=True)
+class _AmendmentCatalogueRevisions:
+    """The three catalogue versions from which one amendment was prepared."""
+
+    filing: str
+    calculation: str
+    work_units: str
+
+
 def _load_amendment_baseline[CasillaKey](
     *,
     from_filing_record_id: str,
@@ -142,7 +152,7 @@ def _load_amendment_baseline[CasillaKey](
     accepted one; a pending in-force entry was never presented, so it is
     discarded rather than amended.
     """
-    filing_catalogue = ports.filing_repository.load()
+    filing_catalogue, filing_revision = ports.filing_repository.load_revisioned()
     in_force = filing_catalogue.get(from_filing_record_id)
     if in_force is None:
         raise ModeloRecordNotFoundError(
@@ -173,7 +183,7 @@ def _load_amendment_baseline[CasillaKey](
             },
         )
 
-    work_units = ports.work_unit_repository.load()
+    work_units, work_units_revision = ports.work_unit_repository.load_revisioned()
     work_unit = work_units.get(in_force.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
@@ -189,7 +199,7 @@ def _load_amendment_baseline[CasillaKey](
         operation=operation,
     )
     taxpayer_tax_id = export_identity[0].tax_id if export_identity is not None else None
-    revisions = ports.calculation_repository.load()
+    revisions, calculation_revision = ports.calculation_repository.load_revisioned(operation=operation)
     baseline_revision = _require_revision(revisions, baseline.calculation_revision_id, operation=operation)
     source_revision = _require_revision(revisions, in_force.calculation_revision_id, operation=operation)
     # Both revisions contribute stored inputs to the correction, so neither may
@@ -223,6 +233,7 @@ def _load_amendment_baseline[CasillaKey](
         source_revision,
         canonical_overrides,
         taxpayer_tax_id,
+        _AmendmentCatalogueRevisions(filing_revision, calculation_revision, work_units_revision),
     )
 
 
@@ -304,6 +315,7 @@ def _m303_rectificativa_motive_is_applicable(
     return m303_rectificativa_motive_is_applicable(
         registry_revision_id=work_unit.revision_id,
         record_design=record_design,
+        operation=operation,
     )
 
 
@@ -407,6 +419,7 @@ def amend_modelo_revision[CasillaKey](
         source_revision,
         canonical_overrides,
         taxpayer_tax_id,
+        catalogue_revisions,
     ) = _load_amendment_baseline(
         from_filing_record_id=from_filing_record_id,
         overrides=overrides,
@@ -558,6 +571,7 @@ def amend_modelo_revision[CasillaKey](
         filing_year=baseline.filing_year,
         period=baseline.period,
         casilla_values=corrected_values,
+        operation=operation,
     )
 
     # Transition draft → verified-complete (operator opts in by calling amend).
@@ -606,6 +620,7 @@ def amend_modelo_revision[CasillaKey](
 
     _persist_amendment_side_effects(
         ports=ports,
+        catalogue_revisions=catalogue_revisions,
         revisions=revisions,
         filing_catalogue=updated_filing_catalogue,
         work_units=work_units,
@@ -915,6 +930,7 @@ def _build_amendment_filing_record(
 def _persist_amendment_side_effects(
     *,
     ports: AmendmentActionPorts,
+    catalogue_revisions: _AmendmentCatalogueRevisions,
     revisions: CalculationRevisionCatalogue,
     filing_catalogue: ModeloRecordCatalogue,
     work_units: WorkUnitCatalogue,
@@ -970,9 +986,14 @@ def _persist_amendment_side_effects(
     ports.filing_repository.save_with_secure_object_writes(
         filing_catalogue,
         (
-            ports.calculation_repository.to_secure_object_write(revisions),
-            ports.work_unit_repository.to_secure_object_write(advanced_work_units),
+            ports.calculation_repository.to_secure_object_write(
+                revisions, expected_revision_id=catalogue_revisions.calculation
+            ),
+            ports.work_unit_repository.to_secure_object_write(
+                advanced_work_units, expected_revision_id=catalogue_revisions.work_units
+            ),
             _bucket_event_write(ports.bucket_event_repository, (amended_event,)),
             *observation_writes,
         ),
+        expected_revision_id=catalogue_revisions.filing,
     )

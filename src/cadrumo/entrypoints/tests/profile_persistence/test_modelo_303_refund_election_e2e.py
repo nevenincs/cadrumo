@@ -178,7 +178,7 @@ def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
             ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
             operation=operation,
             **kwargs,
-        )
+        ).record
 
 
 def _reconcile_modelo_303_iva_compensation(snapshot: Any, **kwargs: Any) -> Any:
@@ -408,9 +408,16 @@ def _file_period(
     assert revision is not None
     work_unit = work_repo.load().get(revision.work_unit_id)
     assert work_unit is not None
+    granting = tuple(
+        report
+        for report in build_filing_action_ports(bucket_id=_BUCKET_ID).verification_repository.load().reports.values()
+        if report.calculation_revision_id == calculation_revision_id and report.granted_verificado_completo
+    )
+    assert len(granting) == 1
 
     _file_modelo_revision(
         calculation_revision_id,
+        approved_verification_report_id=granting[0].verification_report_id,
         actor="operator",
         workflow_profile=workflow_profile(
             redeme_enrolled=redeme_enrolled,

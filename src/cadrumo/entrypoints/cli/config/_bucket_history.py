@@ -1,13 +1,10 @@
-"""Profile event-history behavior handler for ``aeat config profile history``.
-
-The history command reads :class:`BucketEventHistoryRepository` and filters the
-active profile bucket's append-only events.
-"""
+"""Profile event-history behavior handler for ``aeat config profile history``."""
 
 from __future__ import annotations
 
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 import typer
 
@@ -18,10 +15,11 @@ from ....core.time.utc import coerce_utc_aware
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
+from ..runtime_profile_binding import bound_profile_client, require_profile_client
+from ..runtime_profile_history import read_profile_history_for_cli
 
 if TYPE_CHECKING:
-    from ....domain.buckets.event import BucketEventHistoryCatalogue
-    from .._config_bucket_history_payloads import BucketHistoryEventPayload, BucketHistoryResult
+    from .._config_bucket_history_payloads import BucketHistoryEventPayload
 
 
 def _resolve_bucket_history_filters(
@@ -45,55 +43,6 @@ def _resolve_bucket_history_filters(
     if since_dt is not None and until_dt is not None and since_dt > until_dt:
         raise typer.BadParameter(tr("cli.config.profile.history.since_after_until"))
     return selected, since_dt, until_dt, object_id.strip() if object_id else None, actor.strip() if actor else None
-
-
-def _matching_bucket_history_events(
-    *,
-    catalogue: BucketEventHistoryCatalogue,
-    bucket_id: str,
-    selected: tuple[BucketEventType, ...] | None,
-    since_dt: datetime | None,
-    until_dt: datetime | None,
-    object_id_token: str | None,
-    actor_token: str | None,
-) -> tuple[BucketEvent, ...]:
-    """Return catalogue events that pass the complete read-side filter."""
-    return tuple(
-        event
-        for event in catalogue.for_bucket(bucket_id, event_types=selected)
-        if _bucket_history_event_matches(
-            event,
-            since_dt=since_dt,
-            until_dt=until_dt,
-            object_id_token=object_id_token,
-            actor_token=actor_token,
-        )
-    )
-
-
-def _bucket_history_result(
-    *,
-    bucket_id: str,
-    selected: tuple[BucketEventType, ...] | None,
-    since_dt: datetime | None,
-    until_dt: datetime | None,
-    object_id_token: str | None,
-    actor_token: str | None,
-    events: tuple[BucketEvent, ...],
-) -> BucketHistoryResult:
-    """Project filtered domain events into the canonical CLI result model."""
-    from .._config_bucket_history_payloads import BucketHistoryResult
-
-    return BucketHistoryResult(
-        operation="config.bucket.history",
-        bucket_id=bucket_id,
-        event_types=list(selected) if selected else None,
-        since=since_dt,
-        until=until_dt,
-        object_id=object_id_token,
-        actor=actor_token,
-        events=[_bucket_history_event_payload(event) for event in events],
-    )
 
 
 def _bucket_history_lines(*, profile_label: str, events: tuple[BucketEvent, ...]) -> list[str]:
@@ -120,12 +69,10 @@ def profile_history(
     actor: str | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """Browse the active profile's append-only event history."""
+    """Browse the authenticated profile's append-only event history."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
-    profile_label, bucket_id = _resolve_profile_history_target(profile, ctx=ctx)
+    profile_label, profile_id = _resolve_profile_history_target(profile, ctx=ctx)
     selected, since_dt, until_dt, object_id_token, actor_token = _resolve_bucket_history_filters(
         event_type=event_type,
         since=since,
@@ -133,62 +80,51 @@ def profile_history(
         object_id=object_id,
         actor=actor,
     )
+    from ....application.user_profile.history_operation import ProfileHistoryRequest
 
-    catalogue = BucketEventHistoryRepository(
-        objects=secure_object_repository_for_bucket(bucket_id),
-    ).load()
-    events = _matching_bucket_history_events(
-        catalogue=catalogue,
-        bucket_id=bucket_id,
-        selected=selected,
-        since_dt=since_dt,
-        until_dt=until_dt,
-        object_id_token=object_id_token,
-        actor_token=actor_token,
+    projection = read_profile_history_for_cli(
+        ctx,
+        request=ProfileHistoryRequest(
+            profile_id=profile_id,
+            event_types=selected,
+            since=since_dt,
+            until=until_dt,
+            object_id=object_id_token,
+            actor=actor_token,
+        ),
     )
+    from .._config_bucket_history_payloads import BucketHistoryResult
 
-    bucket_result = _bucket_history_result(
-        bucket_id=bucket_id,
-        selected=selected,
-        since_dt=since_dt,
-        until_dt=until_dt,
-        object_id_token=object_id_token,
-        actor_token=actor_token,
-        events=events,
+    events = tuple(event.to_event() for event in projection.events)
+    bucket_result = BucketHistoryResult(
+        operation="config.bucket.history",
+        bucket_id=str(projection.profile_id),
+        event_types=list(projection.event_types) if projection.event_types is not None else None,
+        since=projection.since,
+        until=projection.until,
+        object_id=projection.object_id,
+        actor=projection.actor,
+        events=[_bucket_history_event_payload(event) for event in events],
     )
     lines = _bucket_history_lines(profile_label=profile_label, events=events)
     emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
 
 
-def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context | None = None) -> tuple[str, str]:
-    """Resolve an explicit profile token or the active profile for history reads."""
-    from ....application.workflow.errors import ProfileLabelAmbiguousError
-    from ....application.workflow.profile_bucket_scan import resolve_profile_bucket
-    from ....core.bucket_pointer import resolve_active_bucket_id
-    from ..common import no_active_profile_refusal
+def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context) -> tuple[str, UUID]:
+    """Bind history to the parsed profile target or the authenticated client."""
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+    from .._profile_authentication_gate import resolved_command_profile_target
 
-    if profile is not None:
-        if ctx is None:
-            raise InternalInvariantError("explicit profile history target requires parsed dispatch context")
-        from .._profile_authentication_gate import resolved_command_profile_target
-
-        pointer = resolved_command_profile_target(ctx)
-        if pointer is None:
-            raise InternalInvariantError("explicit profile history target was not resolved by parsed dispatch")
-        return pointer.label, pointer.bucket_id
-    selected = resolve_active_bucket_id()
-    if selected is None:
-        raise no_active_profile_refusal()
-    token = selected.strip()
-    try:
-        pointer = resolve_profile_bucket(token)
-    except ProfileLabelAmbiguousError as exc:
-        raise typer.BadParameter(tr("errors.refused.refused_profile_label_ambiguous")) from exc
-    except ValueError as exc:
-        raise typer.BadParameter(tr("cli.config.profile.unknown_profile", name=token)) from exc
+    client = bound_profile_client(ctx)
+    pointer = resolved_command_profile_target(ctx)
     if pointer is None:
-        raise typer.BadParameter(tr("cli.config.profile.unknown_profile", name=token))
-    return pointer.label, pointer.bucket_id
+        if profile is not None:
+            raise InternalInvariantError("explicit profile history target was not resolved by parsed dispatch")
+        pointer = read_profile_bucket_by_id(str(client.profile_id))
+        if pointer is None or pointer.bucket_id != str(client.profile_id):
+            raise InternalInvariantError("authenticated profile history target has no matching profile projection")
+    client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
+    return pointer.label, client.profile_id
 
 
 def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEventType, ...] | None:
@@ -229,24 +165,6 @@ def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | N
     return coerce_utc_aware(parsed)
 
 
-def _bucket_history_event_matches(
-    event: BucketEvent,
-    *,
-    since_dt: datetime | None,
-    until_dt: datetime | None,
-    object_id_token: str | None,
-    actor_token: str | None,
-) -> bool:
-    """Return True when ``event`` passes every active history filter."""
-    if since_dt is not None and event.occurred_at < since_dt:
-        return False
-    if until_dt is not None and event.occurred_at > until_dt:
-        return False
-    if object_id_token is not None and event.object_id != object_id_token:
-        return False
-    return not (actor_token is not None and event.actor != actor_token)
-
-
 def _bucket_history_event_payload(event: BucketEvent) -> BucketHistoryEventPayload:
     """Project one bucket event onto its typed JSON payload row."""
     from .._config_bucket_history_payloads import BucketHistoryEventPayload
@@ -263,4 +181,4 @@ def _bucket_history_event_payload(event: BucketEvent) -> BucketHistoryEventPaylo
     )
 
 
-__all__ = ["_parse_bucket_event_types", "profile_history"]
+__all__ = ["_parse_bucket_event_types", "_parse_bucket_history_instant", "profile_history"]

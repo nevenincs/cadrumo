@@ -1,7 +1,7 @@
 """The derived live-tree operation-exposure census.
 
 This is a census, not a sample. Its denominator is the live source tree under
-``src/cadrumo``, walked from disk without consulting version-control state, so
+``src/cadrumo`` and the installed MCP adapter under ``src/cadrumo_harness/mcp``, walked from disk without consulting version-control state, so
 a peer's new source file enters the census immediately.
 
 Every join below is derived from two independent readings that must agree:
@@ -19,6 +19,7 @@ constant.
 from __future__ import annotations
 
 import ast
+from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import cache
@@ -34,13 +35,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _PACKAGE_PREFIX = "src/cadrumo/"
-_DEFINITION_ID_SUFFIX = "_OPERATION_DEFINITION_ID"
+_MCP_PACKAGE_PREFIX = "src/cadrumo_harness/mcp/"
+_DEFINITION_ID_SUFFIX = "_DEFINITION_ID"
 
 _ENTRYPOINT_TIER = "src/cadrumo/entrypoints/"
 
 _FRONTEND_PACKAGES: Mapping[OperationFrontendProjection, str] = {
     OperationFrontendProjection.CLI: "src/cadrumo/entrypoints/cli/",
-    OperationFrontendProjection.MCP: "src/cadrumo/entrypoints/mcp/",
+    OperationFrontendProjection.MCP: _MCP_PACKAGE_PREFIX,
     OperationFrontendProjection.TUI: "src/cadrumo/entrypoints/tui/",
 }
 """Where a claimed projection's own surface lives.
@@ -63,34 +65,62 @@ class _DeclaredExclusion:
     """
 
     path: str
+    owner: str
     construct: str
     reason: str
 
 
 _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/launcher.py",
+        path="src/cadrumo/entrypoints/tui/installed_session.py",
+        owner="_run_runtime_session.requester_for_api.fresh_credential_client",
         construct="asyncio.run",
-        reason=(
-            "the launcher is the composition root, not a projection; owning the "
-            "event loop for one session is the job it exists to do"
-        ),
+        reason="the requester calls this credential-client opener on its owned worker thread",
     ),
     _DeclaredExclusion(
         path="src/cadrumo/entrypoints/tui/installed_session.py",
+        owner="run_installed_workbench_session",
         construct="asyncio.run",
         reason=(
             "the installed session is the launcher's production composition root; "
             "it owns one event loop per admitted profile session"
         ),
     ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/runtime_account.py",
+        owner="compose_runtime_account_factories.password.rotate",
+        construct="asyncio.run",
+        reason="PassphraseScreen.start_attempt invokes rotation on an owned worker thread",
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/runtime_management.py",
+        owner="_read_off_loop",
+        construct="asyncio.run",
+        reason="the runtime-status screen calls this inspector through asyncio.to_thread",
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py",
+        owner="compose_runtime_modelo_lifecycle_door.admit",
+        construct="asyncio.run",
+        reason="the lifecycle door invokes attestation admission through asyncio.to_thread",
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/modelo/runtime_work_create.py",
+        owner="compose_runtime_work_create_handoff.create",
+        construct="asyncio.run",
+        reason="declarations overview and calendar invoke the create handoff through asyncio.to_thread",
+    ),
 )
 
 
 @cache
 def _source_files() -> tuple[str, ...]:
-    """Every Python file under the package, as repo-relative paths."""
-    paths = tuple(path.relative_to(_REPO_ROOT).as_posix() for path in package_python_files(include_data=True))
+    """Every Python file under the product and installed MCP packages."""
+    mcp_root = _REPO_ROOT / "src" / "cadrumo_harness" / "mcp"
+    paths = tuple(
+        path.relative_to(_REPO_ROOT).as_posix()
+        for path in (*package_python_files(include_data=True), *mcp_root.rglob("*.py"))
+    )
     if not paths:
         message = "the repository contains no visible package sources; the census denominator is empty"
         raise AssertionError(message)
@@ -110,8 +140,8 @@ def _parsed(path: str) -> ast.Module:
 
 @cache
 def _declared_definition_ids() -> Mapping[str, str]:
-    """Every module-level ``*_OPERATION_DEFINITION_ID`` literal, id to path."""
-    declared: dict[str, str] = {}
+    """Every module-level ``*_DEFINITION_ID`` literal or enum-derived ID, id to path."""
+    declared: dict[str, str] = dict(_dynamic_definition_ids())
     for path in _production_sources():
         for node in _parsed(path).body:
             if not isinstance(node, ast.Assign):
@@ -122,6 +152,21 @@ def _declared_definition_ids() -> Mapping[str, str]:
                 if isinstance(target, ast.Name) and target.id.endswith(_DEFINITION_ID_SUFFIX):
                     declared[node.value.value] = path
     return declared
+
+
+@cache
+def _dynamic_definition_ids() -> Mapping[str, str]:
+    """Read the one enum-derived declaration family from its source module."""
+    from ...application.overview.read_operation import OVERVIEW_READ_DEFINITION_IDS
+
+    path = "src/cadrumo/application/overview/read_operation.py"
+    return {definition_id: path for definition_id in OVERVIEW_READ_DEFINITION_IDS.values()}
+
+
+@cache
+def _definition_id_collections() -> Mapping[str, frozenset[str]]:
+    """Preserve the IDs carried by the overview's enum-derived declaration."""
+    return {"OVERVIEW_READ_DEFINITION_IDS": frozenset(_dynamic_definition_ids())}
 
 
 @cache
@@ -145,6 +190,7 @@ def _references_by_package() -> Mapping[str, frozenset[str]]:
     """
     ids = set(_declared_definition_ids())
     constant_to_id = _definition_id_constants()
+    collections = _definition_id_collections()
     builders = _request_builders()
 
     collected: dict[str, frozenset[str]] = {}
@@ -156,11 +202,15 @@ def _references_by_package() -> Mapping[str, frozenset[str]]:
             elif isinstance(node, ast.Name):
                 if node.id in constant_to_id:
                     found.add(constant_to_id[node.id])
+                elif node.id in collections:
+                    found |= collections[node.id]
                 elif node.id in builders:
                     found |= builders[node.id]
             elif isinstance(node, ast.alias):
                 if node.name in constant_to_id:
                     found.add(constant_to_id[node.name])
+                elif node.name in collections:
+                    found |= collections[node.name]
                 elif node.name in builders:
                     found |= builders[node.name]
         if found:
@@ -179,6 +229,7 @@ def _request_builders() -> Mapping[str, frozenset[str]]:
     """
     literal_ids = set(_declared_definition_ids())
     constants = _definition_id_constants()
+    collections = _definition_id_collections()
 
     def named_by(node: ast.AST, carriers: Mapping[str, frozenset[str]]) -> set[str]:
         named: set[str] = set()
@@ -187,6 +238,8 @@ def _request_builders() -> Mapping[str, frozenset[str]]:
                 named.add(inner.value)
             elif isinstance(inner, ast.Name) and inner.id in constants:
                 named.add(constants[inner.id])
+            elif isinstance(inner, ast.Name) and inner.id in collections:
+                named |= collections[inner.id]
             elif isinstance(inner, ast.Name) and inner.id in carriers:
                 named |= carriers[inner.id]
         return named
@@ -236,13 +289,15 @@ def _paths_under(prefix: str) -> Iterable[str]:
 def test_the_census_denominator_is_the_repository_visible_tree() -> None:
     """The census reads the repository-visible tree and covers the package."""
     sources = _source_files()
-    assert all(path.startswith(_PACKAGE_PREFIX) for path in sources)
+    assert all(path.startswith((_PACKAGE_PREFIX, _MCP_PACKAGE_PREFIX)) for path in sources)
     # The denominator must reach the operation platform and every frontend
     # package the projection map names, or a join below could pass by
     # scanning nothing at all.
     assert any(path.startswith("src/cadrumo/application/operations/") for path in sources)
     assert any(path.startswith("src/cadrumo/entrypoints/tui/") for path in sources)
     assert any(path.startswith("src/cadrumo/entrypoints/cli/") for path in sources)
+    assert any(path.startswith(_MCP_PACKAGE_PREFIX) for path in sources)
+    assert any(path == "src/cadrumo_harness/mcp/server.py" for path in sources)
 
 
 def test_every_declared_operation_id_joins_exactly_one_registered_definition() -> None:
@@ -332,41 +387,59 @@ def test_every_surface_reference_joins_a_definition_that_claims_it() -> None:
     assert not unclaimed, f"a surface exposes an operation its definition does not permit there: {unclaimed}"
 
 
-def _asyncio_run_sites(prefix: str) -> tuple[str, ...]:
-    """Production files under ``prefix`` that own an event loop."""
-    found: list[str] = []
-    for path in _paths_under(prefix):
-        for node in ast.walk(_parsed(path)):
-            if (
-                isinstance(node, ast.Attribute)
-                and node.attr == "run"
-                and isinstance(node.value, ast.Name)
-                and node.value.id == "asyncio"
-            ):
-                found.append(path)
-                break
-    return tuple(sorted(found))
+def _asyncio_run_sites_in_tree(path: str, tree: ast.AST) -> tuple[tuple[str, str], ...]:
+    """Name every exact call site, retaining duplicates within one owner."""
+    found: list[tuple[str, str]] = []
+
+    def visit(node: ast.AST, owners: tuple[str, ...]) -> None:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            owners = (*owners, node.name)
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "run"
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "asyncio"
+        ):
+            found.append((path, ".".join(owners)))
+        for child in ast.iter_child_nodes(node):
+            visit(child, owners)
+
+    visit(tree, ())
+    return tuple(found)
+
+
+def _asyncio_run_sites(prefix: str) -> tuple[tuple[str, str], ...]:
+    """Enumerate exact event-loop owners under one production frontend."""
+    return tuple(
+        sorted(site for path in _paths_under(prefix) for site in _asyncio_run_sites_in_tree(path, _parsed(path)))
+    )
 
 
 def test_no_undeclared_full_screen_surface_owns_the_event_loop() -> None:
-    """Only the declared composition and diagnostic seams call ``asyncio.run``."""
-    declared = {exclusion.path for exclusion in _ASYNCIO_RUN_EXCLUSIONS}
-    live = set(_asyncio_run_sites(_FRONTEND_PACKAGES[OperationFrontendProjection.TUI]))
-    undeclared = sorted(live - declared)
+    """Each off-loop bridge has exactly one declared call site."""
+    declared = Counter((item.path, item.owner) for item in _ASYNCIO_RUN_EXCLUSIONS)
+    live = Counter(_asyncio_run_sites(_FRONTEND_PACKAGES[OperationFrontendProjection.TUI]))
+    undeclared = sorted((live - declared).elements())
     assert not undeclared, f"a full-screen surface owns its own event loop: {undeclared}"
 
 
 def test_every_declared_exclusion_still_answers_a_live_site() -> None:
     """A stale exclusion fails rather than silently widening the census."""
-    live = set(_asyncio_run_sites(_FRONTEND_PACKAGES[OperationFrontendProjection.TUI]))
-    stale = [
-        exclusion.path
-        for exclusion in _ASYNCIO_RUN_EXCLUSIONS
-        if exclusion.construct == "asyncio.run" and exclusion.path not in live
-    ]
+    live = Counter(_asyncio_run_sites(_FRONTEND_PACKAGES[OperationFrontendProjection.TUI]))
+    declared = Counter((item.path, item.owner) for item in _ASYNCIO_RUN_EXCLUSIONS if item.construct == "asyncio.run")
+    stale = sorted((declared - live).elements())
     assert not stale, f"a declared exclusion no longer answers a live site and must be removed: {stale}"
-    missing_reason = [exclusion.path for exclusion in _ASYNCIO_RUN_EXCLUSIONS if not exclusion.reason.strip()]
+    missing_reason = [(item.path, item.owner) for item in _ASYNCIO_RUN_EXCLUSIONS if not item.reason.strip()]
     assert not missing_reason, f"a declared exclusion states no reason: {missing_reason}"
+
+
+def test_event_loop_census_detects_an_extra_call_in_the_same_owner() -> None:
+    """A path or function-name allowlist must not hide a second call."""
+    tree = ast.parse("def bridge():\n    asyncio.run(first())\n    asyncio.run(second())\n")
+    sites = _asyncio_run_sites_in_tree("bridge.py", tree)
+    assert sites == (("bridge.py", "bridge"), ("bridge.py", "bridge"))
+    assert Counter(sites) - Counter({("bridge.py", "bridge"): 1}) == Counter({("bridge.py", "bridge"): 1})
 
 
 def test_no_full_screen_surface_reaches_an_outbound_adapter_directly() -> None:

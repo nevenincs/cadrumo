@@ -40,9 +40,17 @@
             },
             "message": "Some declared box sources do not belong to a modelo.requires data-inventory bucket. They are reported without a suggested repair because where their values come from needs review.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
+          "authority_generation": "33b9c4cf5ace0549979bd7f64a71a1071b2071c30ceaf2e0578414f8c5e3b13d",
           "detail_row_fields": [],
           "filing_year": 2025,
           "ledger_derivable": [

@@ -28,6 +28,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_ephemeral_secure_sql,
     isolated_runtime_profile,
 )
+from cadrumo.application.operations.authorization import OperationExecutionAuthority
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -1005,6 +1006,7 @@ def _supervisor(
     lease_duration: timedelta = timedelta(minutes=10),
     execution_timeout: timedelta | None = None,
     cleanup_timeout: timedelta | None = timedelta(minutes=1),
+    execution_authority: OperationExecutionAuthority | None = None,
 ) -> OperationSupervisor:
     return OperationSupervisor(
         authority_operation=unread_authority_operation(),
@@ -1020,6 +1022,7 @@ def _supervisor(
         execution_timeout=execution_timeout,
         cleanup_timeout=cleanup_timeout,
         response_token_factory=lambda: _RESPONSE_TOKEN,
+        execution_authority=execution_authority,
     )
 
 

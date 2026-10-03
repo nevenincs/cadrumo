@@ -47,6 +47,7 @@ from .custody_ports import (
     create_profile_custody_registration_material,
     load_profile_custody_password_material,
     map_profile_authentication_proof_failure,
+    profile_custody_port,
     profile_custody_recovery_envelope_path,
     replace_profile_custody_password_envelope,
     unlock_profile_custody_password,
@@ -255,6 +256,9 @@ def rewrap_profile_passphrase_under_lock(
     # recovery that knows the operator's NEW password, and after the swap
     # the old password no longer opens anything. So the step that needs
     # the old credential goes first.
+    # Denial must survive an unavailable optional native store and a crash in
+    # the subsequent envelope transition. Password custody remains independent.
+    profile_custody_port().retire_automation(profile_id=profile_id, root=storage_root)
     occurred_at = _now()
     old_session = ProfileRecordSession.from_envelope(
         envelope=current,

@@ -34,8 +34,6 @@ cli:
         list_help: Lista todos los bienes de inversión registrados en el perfil activo.
         prorrata_inicial_help: Porcentaje de deducción definitivo del año de adquisición
           (0-100).
-        unknown_disposal_regime: 'Régimen de transmisión desconocido {regime!r}; aceptados:
-          {accepted}'
       counterparty:
         actor_help: Tu identificador, que se registra como autor de la afirmación.
         confirm_help: Confirma dónde está establecida una contraparte y qué Estado
@@ -117,6 +115,10 @@ cli:
           extracción todavía; normalmente obligatorio).
         confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraído.
         confirm_currency_help: Código de moneda ISO-4217.
+        confirm_expected_draft_review_sha256_help: Huella de revisión del borrador
+          exacto que has revisado, devuelta por extract.
+        confirm_expected_source_sha256_help: SHA-256 del justificante devuelto por
+          extract; verifica que los bytes no han cambiado.
         confirm_help: Vuelve a extraer el justificante en el equipo local y confírmalo
           como una factura real del catálogo.
         confirm_invoice_class_help: Indica la clase de factura cuando el documento
@@ -125,10 +127,15 @@ cli:
           los documentos que no lo hacen.
         confirm_invoice_date_help: Sobrescribe la fecha de factura extraída (AAAA-MM-DD).
         confirm_invoice_number_help: Sobrescribe el número de factura extraído.
+        confirm_iva_amount_help: Sobrescribe el importe de IVA extraído; omite la
+          opción para conservarlo.
+        confirm_iva_category_help: Identificador de la categoría de IVA que se registrará
+          para esta factura.
         confirm_iva_rate_help: Sobrescribe el tipo de IVA extraído (omitir para conservar
           el valor extraído).
         confirm_link_hint_message: La factura se registró sin una transacción coincidente
           en tus registros.
+        confirm_operation_date_help: Fecha de la operación gravada (ISO AAAA-MM-DD).
         confirm_operation_type_help: 'Clave del modelo 349 para una entrega intracomunitaria.
           Obligatoria cuando el documento declara una entrega intracomunitaria: la
           categoría no permite saber si siguió a una importación exenta.'
@@ -137,12 +144,15 @@ cli:
           imponible y del tipo de IVA, por lo que una diferencia significa que el
           documento incluye un importe que este registro no recoge, como un recargo
           de equivalencia, o que se ha leído mal alguna cifra. Revisa el documento.
+        confirm_recargo_amount_help: Importe del recargo de equivalencia de la factura.
         confirm_rectifies_help: Número de la factura que rectifica esta rectificativa.
           El RD 1619/2012 art. 6.1.a.2 lo exige junto con su propia serie, y se lee
           del documento cuando este lo indica.
         confirm_resolve_help: 'Responde a una incidencia bloqueante: <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
           Para choose, indica la lectura por su valor o por el resumen que mostró
           review. Repite una vez por incidencia; no hay opción masiva.'
+        confirm_retention_amount_help: Importe de retención de IRPF de la factura.
+        confirm_retention_rate_help: Porcentaje de retención de IRPF de la factura.
         confirm_review_contradicted_regime_message: Este documento se contradice a
           sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba
           con qué.
@@ -179,9 +189,6 @@ cli:
           del que extraer los datos.
         extract_help: Lee los campos de una factura en PDF en el propio equipo y genera
           un borrador para revisar.
-        extract_off_host_needs_content_address: Este justificante no tiene huella
-          de contenido, por lo que una lectura fuera del equipo no puede registrarse
-          sobre los bytes que enviaría.
         extract_off_host_needs_evidence_id: 'Una lectura fuera del equipo debe indicar
           --evidence-id: el consentimiento se registra sobre la huella de contenido
           del documento, que un identificador de adjunto no aporta.'
@@ -313,7 +320,6 @@ cli:
           resolve_action: Acción de resolución desconocida.
           resolve_shape: Cada --resolve es <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
             Un choose indica la lectura por su valor o por el resumen que mostró review.
-          unknown_reference: No hay ningún borrador pendiente para esa referencia.
           view_help: Muestra todos los campos revisables de un borrador pendiente,
             junto con sus incidencias bloqueantes.
         source_path_help: Ruta al PDF o imagen de la factura
@@ -489,6 +495,8 @@ cli:
           definitivo liquidado para {prior_ejercicio}, por lo que no se puede arrastrar
           al ejercicio {ejercicio}. El definitivo anterior falta, no es cero: liquida
           antes {prior_ejercicio} para este sector.'
+        seed_sector_requires_route: No se puede pasar un sector al arrastre de toda
+          la actividad; usa seed-sector para un sector diferenciado.
         seed_source_absent: 'Ninguna observación sellada de la liquidación del Modelo
           303 de {prior_ejercicio} contiene un porcentaje de prorrata definitivo,
           por lo que no se puede arrastrar al ejercicio {ejercicio}. El definitivo
@@ -716,7 +724,6 @@ cli:
         nif_iva_arg_help: Valor NIF-IVA (p. ej. ESB12345678)
         nif_iva_help: Comprueba un NIF-IVA intracomunitario en AEAT IXVI y guarda
           la observación
-        no_observation_for_nif: No se devolvió ninguna observación para el NIF {nif}.
         observation_id_help: Id de observación (o prefijo no ambiguo)
         surface_help: 'Filtra por superficie: nif_iva o tgvi'
         tgvi_arg_help: NIF/NIE español que quieres comprobar
@@ -749,8 +756,6 @@ cli:
           (la solicitud JSON que describe un pago): una asignación de nómina (Modelo
           111) o de rendimientos del capital mobiliario (Modelo 123) pagada por un
           movimiento de tus registros.'
-        ledger_payment_withholding_period_mismatch: El tipo de renta y el periodo
-          de reconocimiento del pago no coinciden con el modelo y el periodo solicitados.
         ledger_payment_withholding_single_allocation: Indica una sola asignación de
           pago de tus registros por comando.
         ledger_payment_withholding_wrong_modelo: --ledger-payment-withholding solo
@@ -870,6 +875,15 @@ cli:
           no tiene revisiones VERIFICADO_COMPLETO ni BORRADOR disponibles para comparar.
         no_work_units: No se encontraron declaraciones del Modelo %{modelo} para el
           ejercicio %{filing_year}. Crea y calcula primero una declaración.
+        recover_no_revisions: Comprueba las revisiones de cálculo del Modelo %{modelo}
+          en los dos ejercicios solicitados (%{year_a} y %{year_b}); ejecuta `aeat
+          app modelo work calculate` en el ejercicio que carezca de revisión.
+        recover_no_usable_revisions: Comprueba las revisiones BORRADOR o VERIFICADO_COMPLETO
+          del Modelo %{modelo} en los dos ejercicios solicitados (%{year_a} y %{year_b});
+          calcula una unidad de trabajo válida en el ejercicio que lo necesite.
+        recover_no_work_units: Comprueba las unidades de trabajo del Modelo %{modelo}
+          en los dos ejercicios solicitados (%{year_a} y %{year_b}); crea y calcula
+          una unidad en el ejercicio donde falte.
         year_help: Ejercicio fiscal a incluir en la comparación. Especifica exactamente
           dos veces (--year 2024 --year 2025).
       compare_help: Compara las revisiones de cálculo de dos ejercicios para el mismo
@@ -979,6 +993,9 @@ cli:
             indica un tipo de declaración distinto del de la presentación local pendiente.'
           declaration_kind_undetermined: 'Modelo {modelo} {period} {filing_year}:
             la AEAT registra una presentación posterior sin indicar si es una corrección.'
+          filing_instance_evidence_unavailable: 'Modelo {modelo} {period} {filing_year}:
+            la entrada de la AEAT carece de la evidencia de presentación necesaria
+            para registrar su contenido.'
           receipt_totals_mismatch: 'Modelo {modelo} {period} {filing_year}: el importe
             del justificante difiere de la presentación local pendiente, pero sin
             valores de casillas no se pudo registrar el contenido de la AEAT.'
@@ -1064,8 +1081,6 @@ cli:
         seed_confirm_help: Confirma la operación de importe inicial.
         seed_confirm_required: Proporciona el modificador --confirm para confirmar
           la operación de importe inicial.
-        seed_conflict: Ya existe un estado de compensación IVA para %{filing_year}/%{period};
-          no se puede sembrar otro.
         seed_filing_year_help: Ejercicio fiscal del importe inicial.
         seed_help: "Declara un saldo inicial del monedero de compensación de IVA para\
           \ un periodo anterior al historial local. Se rechaza si ya existe un registro\
@@ -1312,10 +1327,6 @@ cli:
         calculate_help: Recupera las celdas que editaste en el libro de calc-sheets,
           ejecuta el motor Decimal local sobre ellas y emite los valores calculados
           de las casillas (no guarda nada)
-        compute:
-          refused_stale: se rechaza calcular con un libro cuyas marcas de metadatos
-            no coinciden con el snapshot indicado (metadata_match={metadata_match});
-            vuelve a exportar y, después, a recuperar
         export:
           output_help: Ruta en la que escribir el libro .xlsx; un fichero existente
             se rechaza salvo que se indique --replace
@@ -1345,8 +1356,6 @@ cli:
             `aeat config google folder set <id>` primero
           snapshot_failure: No se puede construir la instantánea de las definiciones
             de los modelos para el modelo {modelo} ({period} {year}).
-          unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles son
-            {available}
         push_help: Exporta el cálculo de un modelo y periodo, tal como lo fijan las
           definiciones de los modelos, a una hoja de Google Sheets dentro de tu `cadrumo-vault/`
         spreadsheet_id_help: Identificador del fichero de Drive del libro del que
@@ -1516,6 +1525,10 @@ cli:
           pdf).'
         document_only_help: Comprueba solo el documento, sin abrir el almacén del
           perfil activo; sin --trusted-key, un resultado válido queda sin clave anclada.
+        file:
+          verification_report_ambiguous: Hay más de un informe de verificación favorable
+            para esta revisión. Resuelve el conflicto de verificación antes de registrar
+            la presentación.
         file_help: Registrar como presentado un cálculo guardado y comprobado. NO
           envía nada a la AEAT
         file_idempotent_noop: 'Nada que hacer: el cálculo guardado %{calculation_revision_id}
@@ -1790,9 +1803,6 @@ cli:
         row_kv_format_error: 'El campo --row {token} debe escribirse como CLAVE=VALOR.
           Es una entrada clave-valor: pon el nombre del campo de la fila a la izquierda
           de un único signo igual y su valor a la derecha.'
-        row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincide con
-          el formato NIF-IVA esperado para el país {pais} (Directiva 2006/112/CE Anexo
-          XI)'
         row_unknown_type: 'Tipo de fila --row {row_type!r} no reconocido; tipos soportados:
           {supported}.'
         row_validation_error: 'Validación fallida para fila --row tipo {row_type!r}:
@@ -1873,6 +1883,20 @@ cli:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> comprobar -> exportar. Solo construye
         y exporta; nunca presenta ante la AEAT'
+    runtime:
+      disable:
+        help: Desactiva el inicio al abrir sesión y conserva el inicio bajo demanda.
+      enable:
+        help: Activa el inicio del servicio al abrir sesión este usuario.
+      help: Consulta y administra el servicio local de esta instalación.
+      start:
+        help: Inicia el servicio instalado y verifica su punto de escucha.
+      status:
+        help: Muestra la disponibilidad del servicio local y el estado de su gestor.
+      stop:
+        acknowledge_help: Confirma que la detención afecta a todos los perfiles y
+          trabajos.
+        help: Detiene el servicio compartido tras confirmar su alcance completo.
   common:
     errors:
       filing_requires_declared_tax_id: 'El perfil activo no declara una identidad
@@ -1954,8 +1978,6 @@ cli:
       diagnostics:
         help: Inspecciona los diagnósticos de autenticación cifrados.
         id_help: Identificador del diagnóstico.
-        invalid_phone_state: 'Estado de teléfono no válido ''%{phone_state}''. Se
-          esperaba uno de: %{choices}.'
         list_help: Lista los diagnósticos de autenticación Cl@ve cifrados.
         not_found: 'Diagnóstico de autenticación no encontrado: %{diagnostic_id}.'
         phone_state_help: 'Uno de: app_prompted_and_accepted, app_prompted_not_accepted,
@@ -2013,9 +2035,6 @@ cli:
       recipient:
         add_help: Registra la clave pública X25519 de un destinatario de confianza
           por su huella digital.
-        errors:
-          invalid_public_key: --public-key debe tener exactamente 64 caracteres hexadecimales
-            en minúscula (una clave pública X25519 en bruto de 32 bytes).
         help: Registra, lista y elimina destinatarios de confianza para paquetes de
           revisión.
         label_help: Nombre de visualización opcional en texto libre para el destinatario.
@@ -2028,6 +2047,14 @@ cli:
     custody:
       current_passphrase_prompt: 'Contraseña actual del perfil: '
       errors:
+        automation_change_credential_ref_required: Usa --profile-auth-method api-key
+          junto con --profile-credential-ref UUID para cambiar una autorización.
+        automation_change_kind_mismatch: El tipo de propuesta protegida debe coincidir
+          con el cambio de autorización solicitado.
+        automation_change_proposal_required: Proporciona la propuesta de cambio mediante
+          --secrets-stdin o --secrets-fd.
+        automation_create_proposal_required: Proporciona la propuesta de autorización
+          mediante --secrets-stdin o --secrets-fd.
         echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
           por lo que el secreto quedaría visible en pantalla; usa --secrets-stdin
           o --secrets-fd.
@@ -2037,6 +2064,16 @@ cli:
           una sesión interactiva.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
           interactiva; usa --secrets-stdin o --secrets-fd.
+        profile_credential_ref_conflict: Elige --profile-credential-ref o un canal
+          de secretos de perfil de la raíz.
+        profile_credential_ref_inapplicable: --profile-credential-ref solo está disponible
+          para órdenes privadas de perfil alojadas en el servicio local.
+        profile_credential_ref_requires_api_key: --profile-credential-ref requiere
+          --profile-auth-method api-key.
+        profile_secrets_api_key_inapplicable: La autenticación con clave API solo
+          está disponible para los comandos atendidos por el entorno local.
+        profile_secrets_api_key_requires_channel: La autenticación con clave API requiere
+          --profile-secrets-stdin o --profile-secrets-fd.
         profile_secrets_channel_conflict: 'Elige exactamente un canal de autenticación
           del perfil: --profile-secrets-stdin o --profile-secrets-fd.'
         profile_secrets_fd_collision: La autenticación del perfil y el secreto del
@@ -2054,6 +2091,8 @@ cli:
           heredado para autenticar el perfil.
         profile_secrets_inapplicable: La entrada de autenticación del perfil no se
           aplica a este comando y no se leyó.
+        profile_secrets_method_mismatch: El contenido del canal protegido no coincide
+          con --profile-auth-method.
         profile_secrets_missing_target: La autenticación del perfil requiere un destino
           exacto seleccionado mediante --profile o el comando.
         profile_secrets_stdin_collision: La entrada estándar no puede contener a la
@@ -2086,6 +2125,11 @@ cli:
           claves: {expected_fields}.'
         secrets_stdin_too_large: El contenido de secretos de máquina supera el tamaño
           máximo permitido.
+      profile_auth_method_help: 'Método de autenticación del canal protegido de secretos
+        del perfil: password o api-key.'
+      profile_credential_ref_help: Autentica un perfil del servicio local mediante
+        un UUID de credencial del almacenamiento nativo protegido (requiere --profile-auth-method
+        api-key).
       profile_secrets_fd_help: Lee la contraseña del perfil de destino exacto desde
         un objeto JSON acotado en un descriptor legible heredado después de que falle
         la reanudación de la sesión.
@@ -2224,10 +2268,13 @@ cli:
         este verbo en un terminal o usa --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '
     logout:
-      help: Cierra la sesión del perfil y borra su puntero local
+      help: Borrar el perfil seleccionado en este contexto de la CLI.
       notices:
         already_logged_out: Ningún perfil tenía la sesión iniciada; no hay nada que
           cerrar.
+        remaining_access: Se ha borrado la selección de la CLI. Las demás sesiones,
+          la reanudación humana limitada y las claves API inscritas conservan su propia
+          autorización. Usa los controles de sesión o perfil para revocar el acceso.
     passphrase:
       change_help: Cambia la contraseña sin volver a cifrar los registros ni invalidar
         un código de recuperación.
@@ -2300,6 +2347,39 @@ cli:
           export_target_exists: Ya existe un archivo en la ruta de destino y no se
             sobrescribe una copia de seguridad. Elige otro --output o mueve primero
             el archivo existente; no se ha leído ningún perfil.
+      automation:
+        approve:
+          digest_help: Huella exacta de revisión mostrada por inspect.
+          help: Aprobar la solicitud exacta revisada introduciendo de nuevo la contraseña
+            del perfil.
+          request_help: UUID de la solicitud revisada.
+        change:
+          help: Solicita la rotación, renovación o cambio de permisos de una autorización
+            API existente.
+          kind_help: 'Cambio de autorización: rotate, renew o change_scope.'
+        create:
+          help: Solicita una autorización API y recibe su credencial en almacenamiento
+            protegido tras la aprobación humana por separado.
+        decline:
+          digest_help: Huella exacta de revisión mostrada por inspect.
+          help: Rechazar la solicitud exacta revisada.
+          request_help: UUID de la solicitud revisada.
+        deny:
+          help: Revoca una clave, una concesión o todo el acceso automatizado.
+          kind_help: 'Tipo de revocación: key, grant o all.'
+          target_help: UUID de la clave o concesión que se va a revocar.
+          target_mismatch: La revocación de una clave o concesión requiere su UUID;
+            all no admite destino.
+        help: Gestiona el acceso automatizado de este perfil.
+        inspect:
+          help: Mostrar la solicitud exacta de automatización revisada.
+          request_help: UUID de la solicitud revisada.
+        list:
+          help: Lista las concesiones, claves y solicitudes pendientes de automatización
+            de este perfil.
+        review_digest_mismatch: La huella de revisión actual no coincide con la proporcionada.
+          Consulta de nuevo la solicitud.
+        review_not_found: La solicitud revisada no está disponible para este perfil.
       bundle_flow:
         export_section_title: Exportar el paquete de perfil
         import_section_title: Importar el paquete de perfil
@@ -2453,9 +2533,19 @@ cli:
         incoherent_observation_advisory: 'No se pudo obtener un listado fiable de
           perfiles (estado: {outcome}). Vuelve a ejecutar el comando; si persiste,
           revisa el almacenamiento de perfiles.'
+      lock:
+        all_help: Bloquea el perfil en todas partes y suspende todas las concesiones
+          automatizadas.
+        help: Bloquea esta sesión o, con --all, todo el perfil.
+        selector_conflict: Elige --session o --all, pero no ambos.
+        session_help: UUID de la sesión que se revocará sin bloquear el perfil.
       manager_closed_created: Perfil '{profile}' creado. Declara que la configuración
         está completa con `aeat config profile complete-setup` antes de trabajar con
         modelos. Vuelve a abrirlo cuando quieras con 'aeat config profile edit'.
+      mutation:
+        committed_view_unavailable: El cambio del perfil se ha guardado, pero la vista
+          actualizada no está disponible. Vuelve a consultar el perfil antes de hacer
+          otro cambio.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
       notices:
@@ -2521,6 +2611,10 @@ cli:
           lo tienes: '
       remove_row:
         help: Elimina una fila identificada de una sección repetible del perfil.
+      resume:
+        grant_help: UUID de la concesión que se reactivará; repite la opción para
+          elegir varias.
+        help: Desbloquea el perfil con su contraseña y reactiva las concesiones seleccionadas.
       row:
         invalid_row: '''%{row}'' no es una clave de fila válida; usa un entero no
           negativo o base.'
@@ -2531,6 +2625,8 @@ cli:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
           perfil real; todos los comandos se ejecutan contra este bucket aislado y
           descartable.
+      sessions:
+        help: Enumera las sesiones actuales de este perfil en el entorno local.
       show:
         summary_invalid: 'El registro del perfil no es válido: %{count} incidencia(s)
           bloqueante(s).'
@@ -3100,9 +3196,6 @@ cli:
         la taxonomía no se infiere.
       derive_non_derivable: '{category} no tiene un tipo español simple que derivar:
         {note} Indica --taxable-base, --iva-rate e --iva-amount a mano para esta categoría.'
-      derive_substrate_incomplete: '{category} se declaró derivable pero no produjo
-        ninguna base de IVA. Indica --taxable-base, --iva-rate e --iva-amount a mano
-        para esta categoría.'
       file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
       file_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -3759,7 +3852,6 @@ cli:
         Solo lectura; seguro de ejecutar repetidamente; nunca contacta con la AEAT.'
       modelo_help: Identificador de modelo AEAT para el que preparar los datos (p.
         ej. 130, 303, 100).
-      modelo_period_error: '{message}'
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2026).

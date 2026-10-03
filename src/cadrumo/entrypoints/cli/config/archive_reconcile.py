@@ -14,17 +14,14 @@ credential-free journals under the local storage root, and for an export that
 did durably publish it writes the owed ``PROFILE_EXPORTED`` audit event into
 encrypted local secure-object storage.
 
-This module is the transport adapter over
-:func:`~application.user_profile.bundle_export.reconcile_prepared_exports`. It emits
+This module presents the exact-profile result of the registered archive
+reconciliation operation. It emits
 :class:`~entrypoints.cli.config._archive_reconcile_payloads.ProfileBundleReconcileResult`
 through :func:`emit_envelope`, and reports both halves of the outcome through
-the typed :class:`Notice` channel per
-``aeat-cli-contract``.
+the typed :class:`Notice` channel per ``aeat-cli-contract``.
 """
 
 from __future__ import annotations
-
-from typing import TYPE_CHECKING
 
 import typer
 
@@ -40,32 +37,33 @@ from ._archive_reconcile_payloads import (
     UnreconciledProfileExportPayload,
 )
 
-if TYPE_CHECKING:
-    from ....application.user_profile.bundle_export import ProfileBundleExportReconciliation
-
 
 def profile_archive_reconcile(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Resolve crash-interrupted portable profile-bundle publications."""
-    from ....application.user_profile.bundle_export import reconcile_prepared_exports
-    from ....domain.calculations.registry.authority import bundled_indexed_authority
+    from ....application.user_profile.archive_operation import ProfileArchiveReconcileRequest
+    from ..runtime_profile_archive import run_profile_archive_reconcile
+    from ..runtime_profile_binding import bound_profile_client
 
     _activate_subcommand_output_language(ctx, output_language)
-    with bundled_indexed_authority().operation() as operation:
-        outcome = reconcile_prepared_exports(profile_decode_context=operation.profile_decode_context())
+    client = bound_profile_client(ctx)
+    projection = run_profile_archive_reconcile(
+        ctx,
+        ProfileArchiveReconcileRequest(profile_id=client.profile_id),
+    )
 
     result = ProfileBundleReconcileResult(
-        reconciled_count=len(outcome.reconciled),
-        failed_count=len(outcome.failures),
+        reconciled_count=len(projection.reconciled),
+        failed_count=len(projection.failed),
         reconciled=[
             ReconciledProfileExportPayload(
                 operation_id=operation.operation_id,
                 destination=operation.destination,
                 purpose=operation.purpose,
             )
-            for operation in outcome.reconciled
+            for operation in projection.reconciled
         ],
         failed=[
             UnreconciledProfileExportPayload(
@@ -73,10 +71,10 @@ def profile_archive_reconcile(
                 destination=failure.destination,
                 reason=failure.reason,
             )
-            for failure in outcome.failures
+            for failure in projection.failed
         ],
     )
-    notices = _reconcile_notices(outcome)
+    notices = _reconcile_notices(result)
     emit_envelope(
         ctx,
         command="config.profile.archive.reconcile",
@@ -92,7 +90,7 @@ def profile_archive_reconcile(
     )
 
 
-def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Notice, ...]:
+def _reconcile_notices(outcome: ProfileBundleReconcileResult) -> tuple[Notice, ...]:
     """Build the typed notices describing one reconciliation sweep.
 
     A clean sweep that found nothing still says so: silence would leave the
@@ -103,7 +101,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
     still describe cleartext bundle bytes on disk.
     """
     notices: list[Notice] = []
-    if not outcome.reconciled and not outcome.failures:
+    if not outcome.reconciled and not outcome.failed:
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
@@ -123,19 +121,19 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
                 context={"reconciled_count": str(len(outcome.reconciled))},
             ),
         )
-    if outcome.failures:
+    if outcome.failed:
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="config.profile.archive.reconcile.failures",
                 message=tr(
                     "cli.config.profile.archive.reconcile_failures_warning",
-                    count=str(len(outcome.failures)),
+                    count=str(len(outcome.failed)),
                 ),
                 action=resolve_notice_action(action=ActionReference(action_id="operator.profile.archive.reconcile")),
                 context={
-                    "failed_count": str(len(outcome.failures)),
-                    "journal_ids": ",".join(failure.journal_id for failure in outcome.failures),
+                    "failed_count": str(len(outcome.failed)),
+                    "journal_ids": ",".join(failure.journal_id for failure in outcome.failed),
                 },
             ),
         )

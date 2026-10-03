@@ -20,8 +20,16 @@ from typing import override
 import pytest
 
 from ....core.secure_object_write import SecureObjectWrite
-from ....domain.buckets.event import BucketEventHistoryCatalogue
+from ....domain.buckets.event import (
+    BucketEvent,
+    BucketEventHistoryCatalogue,
+    BucketEventObjectType,
+    BucketEventType,
+    bucket_event_order_key,
+    derive_bucket_event_id,
+)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.lineage_models import TransactionEditLineageEntry
 from ....domain.transactions.models import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
@@ -49,8 +57,11 @@ _SIBLING = "e" * 64
 class _EmptyBucketEventHistory:
     """Inward read fake for history tests that do not seed events."""
 
+    def __init__(self, catalogue: BucketEventHistoryCatalogue | None = None) -> None:
+        self._catalogue = catalogue or BucketEventHistoryCatalogue()
+
     def load(self) -> BucketEventHistoryCatalogue:
-        return BucketEventHistoryCatalogue()
+        return self._catalogue
 
     def exists(self) -> bool:
         return False
@@ -193,6 +204,34 @@ def _transaction(*, provider_id: str, edit_lineage: tuple[object, ...] = ()) -> 
     return Transaction.model_validate(payload)
 
 
+def _transaction_event(object_id: str) -> BucketEvent:
+    """Build a canonical same-instant event for one lineage anchor."""
+    payload = {"change": "updated", "transaction_id": object_id}
+    occurred_at = datetime(2026, 7, 31, 12, 30, tzinfo=UTC)
+    event_type = BucketEventType.LEDGER_TRANSACTION_UPDATED
+    object_type = BucketEventObjectType.LEDGER_TRANSACTION
+    event_id = derive_bucket_event_id(
+        bucket_id=_BUCKET,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor="operator",
+        object_type=object_type,
+        object_id=object_id,
+        payload=payload,
+    )
+    return BucketEvent(
+        event_id=event_id,
+        bucket_id=_BUCKET,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor="operator",
+        object_type=object_type,
+        object_id=object_id,
+        payload_version=1,
+        payload=payload,
+    )
+
+
 @contextmanager
 def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueCoCommitWriterProtocol]:
     """Build a deterministic catalogue through the application read protocol."""
@@ -275,6 +314,49 @@ def test_the_assembled_chain_is_ordered_by_occurrence() -> None:
 
     occurred = [event.occurred_at for event in history.events]
     assert occurred == sorted(occurred)
+
+
+def test_merged_history_uses_event_id_to_order_same_instant_lineage_events() -> None:
+    """Anchor collection order cannot decide ties between lineage identities."""
+    transaction = _transaction(provider_id="a")
+    current_event = _transaction_event(transaction.transaction_id)
+    previous_id = "1" * 64
+    previous_event = _transaction_event(previous_id)
+    for candidate in range(2, 100):
+        previous_id = f"{candidate:064x}"
+        previous_event = _transaction_event(previous_id)
+        if current_event.event_id > previous_event.event_id:
+            break
+    else:
+        raise AssertionError("fixture did not find a previous anchor with a lower event id")
+
+    transaction = _transaction(
+        provider_id="a",
+        edit_lineage=(
+            TransactionEditLineageEntry(
+                previous_transaction_id=previous_id,
+                actor="operator",
+                source_command="ledger.edit",
+                edited_at=datetime(2026, 7, 31, 12, 30, tzinfo=UTC),
+            ),
+        ),
+    )
+    events = (current_event, previous_event)
+    event_repository = _EmptyBucketEventHistory(
+        BucketEventHistoryCatalogue(events={event.event_id: event for event in events}),
+    )
+    with _stored(transaction) as transaction_repository:
+        history = read_ledger_history(
+            LedgerHistoryQuery(transaction_id=transaction.transaction_id),
+            bucket_id=_BUCKET,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        )
+
+    assert history.object_ids == (transaction.transaction_id, previous_id)
+    assert current_event.event_id > previous_event.event_id
+    assert history.events == tuple(sorted(events, key=bucket_event_order_key))
+    assert history.events == (previous_event, current_event)
 
 
 def test_history_is_a_curated_subset_of_bucket_event_types() -> None:

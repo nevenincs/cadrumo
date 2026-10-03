@@ -11,8 +11,11 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from ....core.config import load_settings
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
+from ._profile_cli_support import invoke_protected_profile
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -67,7 +70,8 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
         ).revision.id,
     )
 
-    validate = invoke_cached_cli(["config", "profile", "validate", profile_name])
+    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+        validate = invoke_protected_profile(profile_name, "validate", profile_name)
     assert validate.exit_code == 2, validate.output
     assert "readiness\tblocked" in validate.output
     assert "modelo_work_profile_baseline_missing\tactivities.description" in validate.output
@@ -144,20 +148,21 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
         log_in=False,
     )
 
-    validate = invoke_cached_cli(["config", "profile", "validate", "pere-landlord"])
-    assert validate.exit_code == 0, validate.output
-    assert "readiness\tready" in validate.output
+    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+        validate = invoke_protected_profile("pere-landlord", "validate", "pere-landlord")
+        assert validate.exit_code == 0, validate.output
+        assert "readiness\tready" in validate.output
 
-    status = invoke_cached_cli(["--format", "json", "config", "profile", "status"])
-    assert status.exit_code == 0, status.output
-    status_payload = _payload(status.output)
-    assert status_payload["configured"] is True
-    assert status_payload["activity_present"] is False
+        status = invoke_protected_profile("pere-landlord", "status", json_output=True)
+        assert status.exit_code == 0, status.output
+        status_payload = _payload(status.output)
+        assert status_payload["configured"] is True
+        assert status_payload["activity_present"] is False
 
-    shown = invoke_cached_cli(["config", "profile", "view"])
-    assert shown.exit_code == 0, shown.output
-    assert "capital_inmobiliario,pension" in shown.output
-    assert "activities.description" not in shown.output
+        shown = invoke_protected_profile("pere-landlord", "view")
+        assert shown.exit_code == 0, shown.output
+        assert "capital_inmobiliario,pension" in shown.output
+        assert "activities.description" not in shown.output
 
     calendar = invoke_cached_cli(
         [
@@ -233,7 +238,8 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
         log_in=False,
     )
 
-    status = invoke_cached_cli(["--format", "json", "config", "profile", "status"])
+    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+        status = invoke_protected_profile("comunidad-sin-actividad", "status", json_output=True)
     assert status.exit_code == 0, status.output
     status_payload = _payload(status.output)
     assert status_payload["configured"] is False

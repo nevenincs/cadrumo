@@ -128,40 +128,6 @@ def _authority_generation(authority_root: Path) -> str:
     return generation
 
 
-async def _login_existing_profile_through_tui(*, passphrase: str) -> None:
-    """Use the installed Login screen to unlock the CLI-created profile."""
-    from textual.widgets import Input
-
-    from cadrumo.application.user_profile.login_interaction import (
-        ProfileLoginInventoryState,
-        attempt_profile_login,
-        observe_profile_login_inventory,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
-
-    inventory = observe_profile_login_inventory()
-    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
-        raise InstalledTuiChildError("installed TUI login did not recognize the CLI-created profile")
-    with bundled_indexed_authority().operation() as operation:
-        screen = LoginScreen(
-            choices=inventory.choices,
-            authenticate=lambda profile_id, secret: attempt_profile_login(
-                profile_id, secret, profile_decode_context=operation.profile_decode_context()
-            ),
-            preselected=inventory.preselected_profile_id,
-        )
-        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-            await wait_for_public_selector(pilot, "#field-passphrase")
-            query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
-            await pilot.click("#btn-unlock")
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
-    if screen.outcome is None:
-        raise InstalledTuiChildError("installed TUI Login screen did not admit the CLI-created profile")
-
-
 def _oracle_fingerprint(year: int) -> str:
     """Fingerprint the independent scenario oracle, never a frontend readback."""
     scenario = build_scenario(year)
@@ -430,12 +396,6 @@ def run_tui_continuation_child(
 
         with live_exchange_rate_composition(), profile_adapter_composition():
             asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
-    else:
-        from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-        from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
-
-        with live_exchange_rate_composition(), profile_adapter_composition():
-            asyncio.run(_login_existing_profile_through_tui(passphrase=passphrase))
 
     async def drive(pilot: Any) -> None:
         nonlocal handoff, completion, validation, readback_error
@@ -524,7 +484,8 @@ def run_tui_continuation_child(
         nonlocal callback_entered, readback_error
         callback_entered = True
         try:
-            await admit_installed_session(pilot=pilot, passphrase=passphrase)
+            if not await admit_installed_session(pilot=pilot, passphrase=passphrase):
+                return
             await drive(pilot)
         except InstalledTuiChildError as error:
             readback_error = str(error)

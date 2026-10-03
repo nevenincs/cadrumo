@@ -14,7 +14,7 @@ models.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Literal, assert_never
 
 from pydantic import BaseModel
@@ -31,7 +31,7 @@ from ....application.operations.frontend_requests import (
     OperationReviewProjectionSuccessV1,
 )
 from ....application.operations.interactions import OperationResponseIntentValue
-from .controller import OperationBoundResponseControl, OperationController
+from .controller_port import OperationControllerPort, OperationResponseControlPort
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,7 +52,7 @@ class OperationModalReviewInteractionV1[ReviewProjectionT: BaseModel]:
 
     interaction: OperationReviewAvailableInteractionV1
     projection: ReviewProjectionT
-    control: OperationBoundResponseControl
+    control: OperationResponseControlPort
     apply_enabled: bool
     reject_enabled: bool
     disposition: Literal["review_available"] = field(default="review_available", init=False)
@@ -88,7 +88,7 @@ type OperationModalInteractionStateV1[ReviewProjectionT: BaseModel] = (
 
 
 async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
-    controller: OperationController,
+    controller: OperationControllerPort,
     projection: OperationPublicProjectionV1,
     projection_type: type[ReviewProjectionT],
     *,
@@ -96,13 +96,11 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
 ) -> OperationModalInteractionStateV1[ReviewProjectionT]:
     """Resolve the exact modal interaction state for the current projection.
 
-    ``current`` is the state a repeating caller already holds. When the same
-    REVIEW is still pending at the same revision it is returned unchanged,
-    because the response capability behind it is single-use: binding a second
-    control for an interaction already bound consumes the authority and every
-    later availability check refuses, which switches the operator's APPLY and
-    REJECT controls off while the operation is still waiting for exactly that
-    answer. A caller that polls therefore MUST pass what it holds.
+    ``current`` retains the original control binding for the same pending
+    REVIEW. Reuse that binding and inspect its current permissions on each
+    poll; polling must never consume or reconstruct the response bearer.
+    Callers pass their current state so that only a new interaction binds a
+    new control.
     """
     # Dispatch over the closed pending-interaction union rather than re-testing
     # the member the two arms above already excluded: `assert_never` makes a new
@@ -121,7 +119,15 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
         and current.interaction.interaction_id == pending.interaction_id
         and current.interaction.revision == pending.revision
     ):
-        return current
+        # Keep the original bearer binding, but never cache its permission.
+        # Inspection is non-consuming and rechecks expiry/current authority.
+        availability = await current.control.inspect()
+        permitted = (
+            availability.permitted_intents
+            if isinstance(availability, OperationResponseControlSuccessV1)
+            else frozenset[OperationResponseIntentValue]()
+        )
+        return replace(current, apply_enabled="apply" in permitted, reject_enabled="reject" in permitted)
     resolved: OperationReviewProjectionResultV1[ReviewProjectionT] = await controller.resolve_review(
         pending.review_reference,
         projection_type,

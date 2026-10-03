@@ -1,0 +1,41 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "runtime",
+        "status"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "app.runtime.status",
+        "notices": [],
+        "result": {
+          "listener": "ready",
+          "manager": {
+            "available": true,
+            "binding_matches": false,
+            "kind": "windows_task",
+            "login_autostart": false,
+            "process_state": "unknown",
+            "provisioned": false
+          },
+          "manager_availability": "available"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "connect-an-agent-runtime-status"
+}

@@ -23,11 +23,13 @@ from .....adapters.persistence.profile.review_package_signing import (
 )
 from .....application.modelo.calculation_report_export import ModeloCalculationReportResult
 from .....application.modelo.export import ModeloExportResult
-from .....application.modelo.operation_definitions import (
-    MODELO_EXPORT_OPERATION_DEFINITION_ID,
+from .....application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
-    ModeloExportPublicResultV2,
+    ModeloExportPublicResultV3,
+)
+from .....application.modelo.operation_definitions import (
+    MODELO_EXPORT_OPERATION_DEFINITION_ID,
     ModeloExportSettledResult,
     build_modelo_export_definition,
     build_modelo_export_registration,
@@ -59,7 +61,7 @@ _REVISION_ID = "a" * 64
 _FILE_SHA256 = "c" * 64
 
 
-def _publicly_projected(settled: ModeloExportSettledResult) -> ModeloExportPublicResultV2:
+def _publicly_projected(settled: ModeloExportSettledResult) -> ModeloExportPublicResultV3:
     """Project a settled receipt through the projector the export registration declares."""
     registration = build_modelo_export_registration(
         build_modelo_export_definition(
@@ -81,7 +83,7 @@ def _publicly_projected(settled: ModeloExportSettledResult) -> ModeloExportPubli
         result_ref="f" * 64,
     )
     projected = projector(settled, terminal)
-    assert isinstance(projected, ModeloExportPublicResultV2)
+    assert isinstance(projected, ModeloExportPublicResultV3)
     return projected
 
 
@@ -352,8 +354,17 @@ def test_every_stated_fact_has_a_label(members: set[Enum | None], keys: dict[obj
 
 
 def test_every_public_result_fact_has_a_row() -> None:
-    """Each public fact has an ordinary or technical row; only version and handoff flag are excluded."""
-    stated = set(ModeloExportPublicResultV2.model_fields) - {"result_version", "handoff_required"}
+    """Each field the result states about the file is a row.
+
+    The version and handoff flag are not facts about the file, and the carried
+    artefact receipts are the complete records the rows above summarise.
+    """
+    stated = set(ModeloExportPublicResultV3.model_fields) - {
+        "result_version",
+        "handoff_required",
+        "fichero_boe",
+        "calculation_report",
+    }
 
     ordinary = set(EXPORT_RESULT_ROW_LOCALE_KEYS)
     technical = set(EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS)

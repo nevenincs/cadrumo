@@ -1,0 +1,4 @@
+@step Inspect listener and manager state without profile admission.
+@result aeat --format json app runtime status
+@expect result.listener == "ready"
+@expect exit_code == 0

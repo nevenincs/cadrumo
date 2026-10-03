@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .. import work_addressing
 from ..work_addressing import ModeloWorkPeriodTokenError, modelo_work_address_from_operator_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -40,3 +42,26 @@ def test_operator_target_rejects_period_year_mismatch() -> None:
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["year"] == 2025
+
+
+def test_worker_period_mismatch_uses_supplied_authority_pin_without_opening_another_lease(
+    monkeypatch: pytest.MonkeyPatch, *, authority_operation: PinnedAuthorityOperation
+) -> None:
+    def unexpected_lease() -> object:
+        pytest.fail("worker natural-address validation must use its existing authority pin")
+
+    monkeypatch.setattr(work_addressing, "bundled_indexed_authority", unexpected_lease)
+
+    with pytest.raises(ModeloWorkPeriodTokenError) as exc_info:
+        modelo_work_address_from_operator_target(
+            work_unit_id=None,
+            modelo="303",
+            year=2025,
+            period=Period.from_year_and_code(2026, "1T"),
+            registry_revision_id=None,
+            operation=authority_operation,
+        )
+
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["year"] == 2025
+    assert "1T" in str(exc_info.value.context["tokens"])

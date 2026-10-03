@@ -1,0 +1,14 @@
+@step Start the configured runtime and verify readiness.
+aeat --format json app runtime start
+@expect result.listener == "ready"
+@expect exit_code == 0
+@step Enable startup at OS login.
+@static aeat app runtime enable
+@blocked unconverted Provisions real per-user native manager configuration; execution and reproducibility require an owned native manager facility, which this page's fixture does not provide.
+@step Disable login startup and retain on-demand configuration.
+@static aeat app runtime disable
+@blocked unconverted Changes real per-user native manager configuration; execution and reproducibility require an owned native manager facility, which this page's fixture does not provide.
+@step Request stopping the owner shared by all profiles and work.
+@result aeat --format json app runtime stop --acknowledge-all-profiles-and-work
+@expect error.context.reason == "runtime_unavailable"
+@expect exit_code == 2

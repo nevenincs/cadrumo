@@ -29,6 +29,7 @@ from pydantic import BaseModel, NonNegativeInt
 
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import (
     SEALED_REVISION_STATES,
     CalculationRevision,
@@ -41,7 +42,7 @@ from ...domain.modelos.participation_index import (
     upsert_transaction_participation,
 )
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from .participation_index_rebuild_ports import ParticipationIndexRebuildPorts
+from .participation_index_rebuild_ports import ParticipationIndexRebuildPorts, ParticipationRebuildSourceRevisions
 
 
 class ParticipationRebuildStats(BaseModel):
@@ -133,6 +134,7 @@ def _fold_participation(
 def rebuild_participation_index(
     *,
     ports: ParticipationIndexRebuildPorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ParticipationRebuildStats:
     """Regenerate the participation index from the finalized-revision catalogue.
 
@@ -149,9 +151,14 @@ def rebuild_participation_index(
     visible through the derived cache while the authoritative catalogue no longer
     records it. Returns a :class:`ParticipationRebuildStats` summary.
     """
-    revisions = ports.calculation_repository.load()
-    work_units = ports.work_unit_repository.load()
-    filings = ports.filing_repository.load()
+    revisions, calculation_revision = ports.calculation_repository.load_revisioned(operation=operation)
+    work_units, work_unit_revision = ports.work_unit_repository.load_revisioned()
+    filings, filing_revision = ports.filing_repository.load_revisioned()
+    source_revisions = ParticipationRebuildSourceRevisions(
+        calculation=calculation_revision,
+        work_units=work_unit_revision,
+        filings=filing_revision,
+    )
 
     rebuilt: dict[str, TransactionRevisionParticipationIndex] = {}
     participation_count = 0
@@ -165,7 +172,10 @@ def rebuild_participation_index(
         revision_count += 1
         participation_count += _fold_participation(rebuilt, participation, transaction_ids)
 
-    stale_removed_count = ports.participation_index_repository.replace_all(rebuilt.values())
+    stale_removed_count = ports.participation_index_repository.replace_all(
+        rebuilt.values(),
+        source_revisions=source_revisions,
+    )
 
     return ParticipationRebuildStats(
         transaction_count=len(rebuilt),

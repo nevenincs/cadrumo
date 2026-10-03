@@ -14,117 +14,31 @@ schemas before handing them to
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from collections.abc import Sequence
 
 import typer
 
-from ...application.modelo.action_errors import CalculationRevisionNotFoundError
-from ...application.modelo.calculate_input import modelo_202_modality_for_work_unit
-from ...application.modelo.calculation_action_ports import CalculationActionPorts
-from ...application.modelo.calculation_actions import list_calculation_revisions
+from ...application.modelo.revision_inventory_operation import ModeloRevisionInventoryRow
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import OutputLanguage
-from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.work_unit import WorkUnit
-from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli, resolve_work_unit_for_cli
-from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
+from ...core.i18n.render import output_language as current_output_language
+from ._modelo_cli_support import parse_revision_selector
 from ._modelo_payloads import (
     CalculationRevisionSummaryPayload,
     WorkRevisionsResult,
 )
 from ._modelo_rendering import (
-    calculation_observation_lines,
-    calculation_revision_lines,
-    calculation_revision_payload,
     short_id,
 )
 from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from .common import activate_subcommand_output_language, emit_envelope
-from .state_projection_support import authority_operation, calculation_action_ports_factory
-
-
-@dataclass(frozen=True)
-class _WorkRevisionCommandDeps:
-    """Injected application and rendering dependencies for revision read handlers."""
-
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
-    require_active_profile: Callable[[], None]
-    resolve_work_unit_for_cli: Callable[..., WorkUnit]
-    resolve_revision_for_cli: Callable[..., CalculationRevision]
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
-    selector_bad_parameter: Callable[[BaseException], typer.BadParameter]
-
-
-def _revision_dependencies() -> _WorkRevisionCommandDeps:
-    return _WorkRevisionCommandDeps(
-        activate_output_language=activate_subcommand_output_language,
-        require_active_profile=require_active_profile,
-        resolve_work_unit_for_cli=resolve_work_unit_for_cli,
-        resolve_revision_for_cli=resolve_revision_for_cli,
-        bad_parameter_from_error=bad_parameter_from_error,
-        selector_bad_parameter=selector_bad_parameter,
-    )
-
-
-def _resolve_selected_revision(
-    deps: _WorkRevisionCommandDeps,
-    *,
-    calculation_revision_id: str | None,
-    work_unit_id: str | None,
-    modelo: str | None,
-    year: int | None,
-    period: str | None,
-    registry_revision: str | None,
-    bucket_id: str | None,
-    selector: str,
-    calculation_ports: CalculationActionPorts,
-) -> CalculationRevision:
-    """Resolve the selected :class:`CalculationRevision` for read-only commands."""
-    try:
-        return deps.resolve_revision_for_cli(
-            calculation_revision_id=calculation_revision_id,
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            registry_revision=registry_revision,
-            bucket_id=bucket_id,
-            selector=selector,
-            calculation_ports=calculation_ports,
-        )
-    except CalculationRevisionNotFoundError as exc:
-        if calculation_revision_id is not None:
-            raise deps.bad_parameter_from_error(exc) from exc
-        raise deps.selector_bad_parameter(exc) from exc
-
-
-def _resolve_revisions_work_unit_id(
-    *,
-    work_unit_id: str | None,
-    modelo: str | None,
-    year: int | None,
-    period: str | None,
-    revision: str | None,
-    bucket_id: str | None,
-) -> str | None:
-    """Resolve the optional visible work target used by the revisions list."""
-    if work_unit_id is None and modelo is None and year is None and period is None:
-        return work_unit_id
-    unit = resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-    )
-    return unit.work_unit_id
+from .modelo_revision_rendering import calculation_observation_payload_lines
+from .runtime_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
+from .runtime_modelo_revision import read_modelo_revision_inventory_for_cli, read_modelo_revision_snapshot_for_cli
 
 
 def _revision_summary_payloads(
-    revisions: Sequence[CalculationRevision],
+    revisions: Sequence[ModeloRevisionInventoryRow],
 ) -> list[CalculationRevisionSummaryPayload]:
     """Project persisted revisions into compact discovery rows."""
     return [
@@ -142,7 +56,7 @@ def _revision_summary_payloads(
 
 def _work_revisions_result(
     resolved_work_unit_id: str | None,
-    revisions: Sequence[CalculationRevision],
+    revisions: Sequence[ModeloRevisionInventoryRow],
 ) -> WorkRevisionsResult:
     """Build the typed listing payload without recomputing revision facts."""
     return WorkRevisionsResult.model_validate(
@@ -155,7 +69,7 @@ def _work_revisions_result(
 
 
 def _work_revision_listing_lines(
-    revisions: Sequence[CalculationRevision],
+    revisions: Sequence[ModeloRevisionInventoryRow],
 ) -> list[str]:
     """Render revision discovery rows in the application-provided order."""
     return [
@@ -175,7 +89,7 @@ def _work_revision_listing_lines(
 
 def _work_revisions_lines(
     resolved_work_unit_id: str | None,
-    revisions: Sequence[CalculationRevision],
+    revisions: Sequence[ModeloRevisionInventoryRow],
 ) -> list[str]:
     """Render the stable text envelope for the revision listing."""
     lines = [
@@ -203,8 +117,8 @@ def work_revisions(
 ) -> None:
     """List persisted :class:`CalculationRevision` rows for an optional :class:`WorkUnit`."""
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
-    resolved_work_unit_id = _resolve_revisions_work_unit_id(
+    inventory = read_modelo_revision_inventory_for_cli(
+        ctx,
         work_unit_id=work_unit_id,
         modelo=modelo,
         year=year,
@@ -212,15 +126,8 @@ def work_revisions(
         revision=revision,
         bucket_id=bucket_id,
     )
-    revisions = list_calculation_revisions(
-        work_unit_id=resolved_work_unit_id,
-        ports=calculation_action_ports_factory(ctx)(
-            bucket_id=bucket_id or require_active_bucket_id(),
-            operation=authority_operation(ctx),
-        ),
-    )
-    result = _work_revisions_result(resolved_work_unit_id, revisions)
-    lines = _work_revisions_lines(resolved_work_unit_id, revisions)
+    result = _work_revisions_result(inventory.work_unit_id_filter, inventory.revisions)
+    lines = _work_revisions_lines(inventory.work_unit_id_filter, inventory.revisions)
     emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
 
 
@@ -246,48 +153,33 @@ def work_revision(
     the full operand lineage line beneath each computed row.
     """
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=bucket_id or require_active_bucket_id(),
-        operation=authority_operation(ctx),
-    )
-    selected_revision = _resolve_selected_revision(
-        _revision_dependencies(),
+    snapshot = read_modelo_revision_snapshot_for_cli(
+        ctx,
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         modelo=modelo,
         year=year,
         period=period,
-        registry_revision=registry_revision,
+        revision=registry_revision,
         bucket_id=bucket_id,
-        selector=select,
-        calculation_ports=calculation_ports,
+        selector=parse_revision_selector(select),
     )
+    language = OutputLanguage(current_output_language())
     modality_payload: dict[str, object] = {}
     modality_lines: list[str] = []
-    unit_for_modality = resolve_work_unit_for_cli(work_unit_id=selected_revision.work_unit_id)
-    modality_summary = modelo_202_modality_for_work_unit(unit_for_modality)
+    modality_summary = snapshot.modality
     if modality_summary is not None:
         modality_payload = {"modality": modality_summary.modality, "modality_reason": modality_summary.reason}
         modality_lines = [f"modality\t{modality_summary.modality}"]
     result = WorkRevisionResult.model_validate(
         {
-            **calculation_revision_payload(
-                selected_revision,
-                operation=calculation_ports.operation,
-                work_unit=unit_for_modality,
-            ).model_dump(mode="python"),
+            **calculation_snapshot_payload(snapshot.calculation, language=language).model_dump(mode="python"),
             **modality_payload,
         }
     )
     lines = [
         "operation\tmodelo.work.revision",
-        *calculation_revision_lines(
-            selected_revision,
-            operation=calculation_ports.operation,
-            work_unit=unit_for_modality,
-            verbose=verbose,
-        ),
+        *calculation_snapshot_lines(snapshot.calculation, language=language, verbose=verbose),
         *modality_lines,
     ]
     emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)
@@ -312,28 +204,19 @@ def work_observations(
     rows through the observations result schema.
     """
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=bucket_id or require_active_bucket_id(),
-        operation=authority_operation(ctx),
-    )
-    selected_revision = _resolve_selected_revision(
-        _revision_dependencies(),
+    snapshot = read_modelo_revision_snapshot_for_cli(
+        ctx,
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         modelo=modelo,
         year=year,
         period=period,
-        registry_revision=registry_revision,
+        revision=registry_revision,
         bucket_id=bucket_id,
-        selector=select,
-        calculation_ports=calculation_ports,
+        selector=parse_revision_selector(select),
     )
-    revision_payload = calculation_revision_payload(
-        selected_revision,
-        operation=calculation_ports.operation,
-        include_result_summary=False,
-    )
+    language = OutputLanguage(current_output_language())
+    revision_payload = calculation_snapshot_payload(snapshot.calculation, language=language)
     result = WorkObservationsResult.model_validate(
         {
             "calculation_revision_id": revision_payload.calculation_revision_id,
@@ -345,6 +228,6 @@ def work_observations(
     )
     lines = [
         "operation\tmodelo.work.observations",
-        *calculation_observation_lines(selected_revision, operation=calculation_ports.operation),
+        *calculation_observation_payload_lines(revision_payload),
     ]
     emit_envelope(ctx, command="modelo.work.observations", result=result, lines=lines)

@@ -47,6 +47,18 @@ class TranslatedBucketEventHistoryRepository(BucketEventHistoryRepositoryProtoco
         """Load event history together with its optimistic-concurrency revision."""
         return self._translate("bucket_event_history_load_revisioned", self._repository.load_revisioned)
 
+    def append_guarded(
+        self,
+        appender: Callable[[BucketEventHistoryCatalogue], BucketEventHistoryCatalogue],
+        *,
+        attempts: int = 4,
+    ) -> BucketEventHistoryCatalogue:
+        """Preserve the concrete repository's revision-guarded append."""
+        return self._translate(
+            "bucket_event_history_append_guarded",
+            lambda: self._repository.append_guarded(appender, attempts=attempts),
+        )
+
     @override
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         """Persist event history while translating storage failures."""

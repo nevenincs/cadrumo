@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_session import logout_active_profile
 from ....core.config import load_settings
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -84,9 +85,12 @@ def harness_storage(*, fresh: bool = False, namespace: str = "profile") -> Gener
         raise ValueError("devtool storage namespace must not be blank")
     root = workspace() / ("fresh" if fresh else namespace)
     root.mkdir(parents=True, exist_ok=True)
-    from ..launcher import profile_storage_scope
+    # The visual harness still drives registration, login, and Profile manager
+    # components against real encrypted test storage. Those application doors
+    # need their profile persistence bindings while the pilot is active.
+    from ...adapter_composition import profile_adapter_composition
 
-    with profile_storage_scope(root) as storage_root:
+    with isolated_profile_storage_root(tmp_path=root) as storage_root, profile_adapter_composition():
         yield storage_root
 
 

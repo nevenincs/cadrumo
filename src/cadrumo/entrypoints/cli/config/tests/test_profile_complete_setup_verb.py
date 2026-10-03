@@ -10,6 +10,8 @@ cover the door that opened that path.
 from __future__ import annotations
 
 import json
+import sys
+from pathlib import Path
 
 import pytest
 from pydantic import TypeAdapter
@@ -20,11 +22,18 @@ from .....application.user_profile.profile_record_repository import (
     ProfileRecordRepository,
     active_profile_record_session,
 )
+from .....core.config import load_settings
 from .....domain.user_profile.values import ProfileSetupState
 from ...tests.cli_runner import invoke_cached_cli
 from .isolated_storage_fixture import config_check_backend as config_check_backend
+from .isolated_storage_fixture import native_profile_view_server
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
 
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
@@ -51,7 +60,15 @@ def _stored_state(profile_id: str) -> tuple[ProfileSetupState, int]:
     return record.setup_state, record.record_revision
 
 
-def test_complete_setup_promotes_an_incomplete_profile(config_check_backend: None) -> None:
+def _native_complete_setup(label: str):
+    """Prove the selected no-receipt profile over the native secret channel."""
+    return invoke_cached_cli(
+        ("--format", "json", "--profile", label, "--profile-secrets-stdin", "config", "profile", "complete-setup"),
+        input=json.dumps({"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}),
+    )
+
+
+def test_complete_setup_promotes_an_incomplete_profile(config_check_backend: None, tmp_path: Path) -> None:
     """The promotion happens, and the precondition is asserted rather than assumed.
 
     ``complete=False`` leaves a profile whose required facts ARE satisfiable but
@@ -63,7 +80,8 @@ def test_complete_setup_promotes_an_incomplete_profile(config_check_backend: Non
     before_state, before_revision = _stored_state(profile_id)
     assert before_state is ProfileSetupState.INCOMPLETE, "precondition: the profile must start incomplete"
 
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "complete-setup"])
+    with native_profile_view_server(tmp_path / "cadrumo-storage"):
+        result = _native_complete_setup("promote-me")
 
     assert result.exit_code == 0, result.stdout + result.stderr
     payload = _envelope(result)["result"]
@@ -77,7 +95,7 @@ def test_complete_setup_promotes_an_incomplete_profile(config_check_backend: Non
     assert after_revision > before_revision, "a real promotion must advance the record revision"
 
 
-def test_a_second_complete_setup_writes_nothing(config_check_backend: None) -> None:
+def test_a_second_complete_setup_writes_nothing(config_check_backend: None, tmp_path: Path) -> None:
     """The retry is an idempotent no-op, not a second promotion.
 
     An autonomous operator retries, and a verb that re-stamped the record on every
@@ -85,11 +103,12 @@ def test_a_second_complete_setup_writes_nothing(config_check_backend: None) -> N
     not just the reported flag.
     """
     profile_id = register_cli_profile(label="promote-once", complete=False, log_in=False)
-    first = invoke_cached_cli(["--format", "json", "config", "profile", "complete-setup"])
-    assert first.exit_code == 0, first.stdout + first.stderr
-    _state, revision_after_first = _stored_state(profile_id)
+    with native_profile_view_server(tmp_path / "cadrumo-storage"):
+        first = _native_complete_setup("promote-once")
+        assert first.exit_code == 0, first.stdout + first.stderr
+        _state, revision_after_first = _stored_state(profile_id)
 
-    second = invoke_cached_cli(["--format", "json", "config", "profile", "complete-setup"])
+        second = _native_complete_setup("promote-once")
 
     assert second.exit_code == 0, second.stdout + second.stderr
     payload = _envelope(second)["result"]

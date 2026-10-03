@@ -409,7 +409,7 @@ def test_parsers_require_cohort_and_evidence_dirs(
 
 
 def test_scoop_script_declares_public_acquisition_contract() -> None:
-    """The Scoop lane exposes a public bucket source, container mode, and oracles."""
+    """The Scoop lane exposes a public bucket source, container mode, and the CLI oracle."""
     script = (Path(__file__).resolve().parents[1] / "acquire_scoop.ps1").read_text(encoding="utf-8")
     assert "$BucketSource" in script
     assert '[string]$Mode = "Container"' in script

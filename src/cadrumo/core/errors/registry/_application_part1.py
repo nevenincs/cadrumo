@@ -198,6 +198,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.auth.diagnostic_report_operation.AuthDiagnosticNotFoundError",
+        ErrorCode(
+            code="REFUSED_AUTH_DIAGNOSTIC_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="cli.config.auth.diagnostics.not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.config_reset.ConfigResetError",
         ErrorCode(
             code="ERROR_CONFIG_RESET",
@@ -383,6 +393,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_REVIEW_SOURCE_LOAD",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_review_source_load",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.review.errors.UnknownReviewKindError",
+        ErrorCode(
+            code="REFUSED_REVIEW_UNKNOWN_KIND",
+            category=ErrorCategory.REFUSED,
+            message_key="review.operator.errors.unknown_kind",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.review.errors.ReviewItemNotFoundError",
+        ErrorCode(
+            code="REFUSED_REVIEW_ITEM_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="review.operator.errors.item_not_found",
             retryable=False,
             runbook_id=None,
         ),

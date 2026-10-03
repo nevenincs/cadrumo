@@ -36,6 +36,7 @@ from .....application.user_profile.custody_ports import (
     load_profile_custody_password_material,
     profile_custody_recovery_envelope_path,
 )
+from .....application.user_profile.recovery_custody import profile_recovery_status
 from .....core.bucket_pointer import require_active_bucket_id
 from .....core.i18n.render import tr
 from ... import command_specs as _command_specs
@@ -74,11 +75,8 @@ def _logout() -> None:
 
 
 def _status() -> dict[str, Any]:
-    result = invoke_cached_cli(("--format", "json", "config", "profile", "recovery", "status"))
-    assert result.exit_code == 0, result.output
-    document = json.loads(result.stdout)
-    assert document["command"] == "config.profile.recovery.status"
-    return document["result"]
+    """Verify custody mutations against the canonical committed wrapper state."""
+    return profile_recovery_status(profile_id=UUID(require_active_bucket_id())).model_dump(mode="json")
 
 
 def _enable(handoff: int, verification: int, *, credential: str = _CREDENTIAL_INPUT) -> Result:
@@ -208,7 +206,7 @@ def test_create_never_asks_a_machine_caller_about_recovery(tmp_path: Path) -> No
         assert _status()["enrolled"] is False
 
 
-def test_status_reports_enrolment_before_and_after_a_headless_enable(tmp_path: Path) -> None:
+def test_headless_enable_persists_enrolment_after_verified_handoff(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
         assert _status()["enrolled"] is False
@@ -554,7 +552,7 @@ def test_recovery_verbs_refuse_without_an_active_profile(tmp_path: Path) -> None
     with isolated_profile_storage_root(tmp_path=tmp_path):
         status = invoke_cached_cli(("--format", "json", "config", "profile", "recovery", "status"))
         assert status.exit_code != 0
-        assert json.loads(status.stderr)["error"]["message"] == tr("cli.config.profile.recovery.no_active_profile")
+        assert json.loads(status.stderr)["error"]["message"] == tr("cli.config.errors.no_active_profile")
 
 
 # --- command-graph declaration of the handoff protocol --------------------

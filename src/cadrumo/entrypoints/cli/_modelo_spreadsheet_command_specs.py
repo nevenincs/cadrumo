@@ -7,9 +7,9 @@ operator reads as a typo. The subject is also transport-neutral, so an offline
 workbook transport lands here as ``export``/``import`` without new vocabulary.
 
 ``push`` and ``pull`` are the remote counterparty pair. ``calculate`` and
-``verify`` are computation verbs that happen to read the remote workbook as a
-means; the verb names what the operator asked for, and the transport it performs
-on the way is declared on its parameters rather than in its name.
+``verify`` are computation verbs. Verification creates and writes a remote
+workbook before comparing its results; its policy therefore requires profile
+mutation admission. Export publishes a local workbook under that same authority.
 """
 
 from __future__ import annotations
@@ -40,12 +40,6 @@ from .command_spec import (
 )
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
-_GOOGLE_CALCULATION_READ = ExecutionPolicySpec(
-    frozenset({"calculation", "encrypted-facts", "google"}),
-    frozenset({"google"}),
-    "external-io",
-    CommandWriteRoute.NONE,
-)
 _GOOGLE_CALCULATION_WRITE = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts", "google", "profile-custody"}),
     frozenset({"google", "local-state"}),
@@ -61,10 +55,10 @@ _GOOGLE_CALCULATION_HANDOFF = ExecutionPolicySpec(
 )
 
 _OFFLINE_WORKBOOK_EXPORT = ExecutionPolicySpec(
-    frozenset({"calculation", "encrypted-facts"}),
+    frozenset({"calculation", "encrypted-facts", "profile-custody"}),
     frozenset({"local-state"}),
     "local-io",
-    CommandWriteRoute.NONE,
+    CommandWriteRoute.PROFILE_BOUND,
 )
 
 _MODULE = ".modelo_spreadsheet_cli"
@@ -262,7 +256,7 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cli.app.modelo.spreadsheet.verify_help",
         "modelo_spreadsheet_verify",
         "ModeloSpreadsheetVerifyResult",
-        _GOOGLE_CALCULATION_READ,
+        _GOOGLE_CALCULATION_WRITE,
         "modelo.spreadsheet.verify",
         (
             _MODELO,

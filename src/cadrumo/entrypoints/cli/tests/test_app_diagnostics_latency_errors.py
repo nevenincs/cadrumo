@@ -19,18 +19,20 @@ from click.testing import Result
 
 from ....adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ._strict_cli_fixture_support import diagnostics_isolated_backend
-from .cli_runner import invoke_cached_cli
+from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
-__all__ = ["diagnostics_isolated_backend"]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_BUCKET_ID = "22222222-3333-4444-8555-666666666666"
+__all__ = ["diagnostics_native_profile"]
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_cached_cli(args)
+    return invoke_diagnostics_cli(args)
 
 
 def _seed_latency_runs() -> None:
@@ -74,7 +76,7 @@ def _seed_error_runs() -> None:
         )
 
 
-def test_latency_reports_nearest_rank_percentiles(_isolated_backend: None) -> None:
+def test_latency_reports_nearest_rank_percentiles(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """The verb reports P50/P95/P99 computed by the documented nearest-rank method."""
     _seed_latency_runs()
 
@@ -96,7 +98,7 @@ def test_latency_reports_nearest_rank_percentiles(_isolated_backend: None) -> No
     assert providers["llm:claude:test-model"]["percentiles"]["p50_duration_ms"] == 500
 
 
-def test_latency_empty_is_instructive(_isolated_backend: None) -> None:
+def test_latency_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """With no LLM run telemetry the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "diagnostics", "latency"])
     assert result.exit_code == 0, result.output
@@ -112,7 +114,9 @@ def test_latency_empty_is_instructive(_isolated_backend: None) -> None:
     assert "diagnostics.latency.no_run_data" in codes
 
 
-def test_latency_provider_filter_omits_by_provider_breakdown(_isolated_backend: None) -> None:
+def test_latency_provider_filter_omits_by_provider_breakdown(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
     """``--provider`` scopes ``overall`` and leaves ``by_provider`` empty."""
     _seed_latency_runs()
 
@@ -126,7 +130,7 @@ def test_latency_provider_filter_omits_by_provider_breakdown(_isolated_backend: 
     assert payload["by_provider"] == []
 
 
-def test_latency_since_until_scopes_by_date(_isolated_backend: None) -> None:
+def test_latency_since_until_scopes_by_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--since``/``--until`` narrow the percentile computation by date."""
     _seed_latency_runs()
 
@@ -150,14 +154,14 @@ def test_latency_since_until_scopes_by_date(_isolated_backend: None) -> None:
     assert payload["overall"]["p50_duration_ms"] == 100
 
 
-def test_latency_rejects_malformed_date(_isolated_backend: None) -> None:
+def test_latency_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
     result = _invoke(["--format", "json", "app", "diagnostics", "latency", "--since", "01/04/2026"])
     assert result.exit_code != 0
     assert "ISO date" in result.output
 
 
-def test_errors_reports_breakdown_by_provider_and_kind(_isolated_backend: None) -> None:
+def test_errors_reports_breakdown_by_provider_and_kind(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """The verb breaks failures down by provider and error kind, most-frequent-first."""
     _seed_error_runs()
 
@@ -175,7 +179,7 @@ def test_errors_reports_breakdown_by_provider_and_kind(_isolated_backend: None) 
     ]
 
 
-def test_errors_empty_is_instructive(_isolated_backend: None) -> None:
+def test_errors_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """With no failed runs the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "diagnostics", "errors"])
     assert result.exit_code == 0, result.output
@@ -191,7 +195,7 @@ def test_errors_empty_is_instructive(_isolated_backend: None) -> None:
     assert "diagnostics.errors.no_failures" in codes
 
 
-def test_errors_succeeded_only_reports_no_failures(_isolated_backend: None) -> None:
+def test_errors_succeeded_only_reports_no_failures(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A store with only succeeded runs reports zero failures against real recorded runs."""
     _seed_latency_runs()
 
@@ -204,7 +208,7 @@ def test_errors_succeeded_only_reports_no_failures(_isolated_backend: None) -> N
     assert payload["has_failures"] is False
 
 
-def test_errors_provider_filter_scopes_the_breakdown(_isolated_backend: None) -> None:
+def test_errors_provider_filter_scopes_the_breakdown(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--provider`` restricts the breakdown to one provider's failures."""
     _seed_error_runs()
 
@@ -220,7 +224,7 @@ def test_errors_provider_filter_scopes_the_breakdown(_isolated_backend: None) ->
     assert payload["by_error_kind"][0]["provider"] == "llm:codex:test-model"
 
 
-def test_errors_rejects_malformed_date(_isolated_backend: None) -> None:
+def test_errors_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--until`` value is refused instructively with a non-zero exit."""
     result = _invoke(["--format", "json", "app", "diagnostics", "errors", "--until", "not-a-date"])
     assert result.exit_code != 0

@@ -44,7 +44,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -346,8 +346,12 @@ def _write_prepared_export(
     prepared: _PreparedExportDraft,
     payload: bytes,
     casilla_provenance: tuple[ModeloCasillaProvenance, ...],
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> _DeclaracionExportResult:
-    atomic_write_bytes(output_path, payload)
+    if mutation_writer is None:
+        atomic_write_bytes(output_path, payload)
+    else:
+        mutation_writer(lambda: atomic_write_bytes(output_path, payload))
     if not prepared.renders_filing_envelope:
         _verify_written_export(
             draft,
@@ -413,6 +417,7 @@ def export_draft(
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> _DeclaracionExportResult: ...
 @overload
 def export_draft(
@@ -425,6 +430,7 @@ def export_draft(
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> _FilingExportConsumedResult: ...
 def export_draft(
     draft: ModeloDraft,
@@ -436,6 +442,7 @@ def export_draft(
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> _DeclaracionExportResult | _FilingExportConsumedResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
@@ -464,6 +471,7 @@ def export_draft(
             Required for Modelo 303's DP30300 carrier and refused for every
             other modelo.
         schema_provider: Optional registry schema provider override.
+        mutation_writer: Admit the actual atomic file write after rendering and validation.
 
     Returns:
         A :class:`DeclaracionExportResult` with the output path, digest,
@@ -505,6 +513,7 @@ def export_draft(
             prepared=prepared,
             payload=payload,
             casilla_provenance=casilla_provenance,
+            mutation_writer=mutation_writer,
         )
     if payload_consumer is None:
         raise FilingExportValidationError("export payload consumer is unavailable")

@@ -8,6 +8,66 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.adapters.local_runtime.automation_requester.AutomationRequesterUncertainError",
+        ErrorCode(
+            code="ERROR_AUTOMATION_REQUESTER_UNCERTAIN",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_automation_requester_uncertain",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.local_runtime.automation_decision.AutomationDecisionRunError",
+        ErrorCode(
+            code="ERROR_AUTOMATION_DECISION_RUN",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_automation_decision_run",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.local_runtime.automation_inventory.AutomationInventoryReadError",
+        ErrorCode(
+            code="ERROR_AUTOMATION_INVENTORY_READ",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_automation_inventory_read",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.local_runtime.frontend_client.RuntimeFrontendRefusedError",
+        ErrorCode(
+            code="REFUSED_RUNTIME_FRONTEND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_runtime_frontend",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.local_runtime.modelo_metadata.ModeloMetadataRunError",
+        ErrorCode(
+            code="ERROR_MODELO_METADATA_RUN",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_metadata_run",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.local_runtime.profile_mutations.ProfileMutationRunError",
+        ErrorCode(
+            code="ERROR_PROFILE_MUTATION_RUN",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_profile_mutation_run",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.profile.actividad_asset.ActividadAssetHistoryPersistenceError",
         ErrorCode(
             code="INTEGRITY_ACTIVIDAD_ASSET_HISTORY_PERSISTENCE",

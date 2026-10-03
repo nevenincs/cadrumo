@@ -980,6 +980,7 @@ class ProfileCustodyTransactionService:
         )
 
     def _revoke_process_secrets(self, journal: ProfileCustodyTransactionJournal, instant: datetime) -> None:
+        self._adapters.retire_automation(profile_id=journal.profile_id, root=self._root)
         self._record_owner_effect(
             journal,
             instant,

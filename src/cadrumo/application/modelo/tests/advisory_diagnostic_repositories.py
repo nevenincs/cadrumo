@@ -8,9 +8,10 @@ repository-specific application tests.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
+from decimal import Decimal
 
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
@@ -18,6 +19,7 @@ from ....core.secure_object_write import SecureObjectWrite
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import RevisionId
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
     ProrrataActivityRow,
     ProrrataRegister,
@@ -37,7 +39,7 @@ from ...calculations.observations_repository import (
     PriorDomiciliationElectionProjection,
     ResultDispositionProjection,
 )
-from ...prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
+from ...prorrata_register.ports import ProrrataPriorSettlementSourceSnapshot, ProrrataRegisterServiceRepositoryProtocol
 
 __all__ = ["AdvisoryDiagnosticRepositories", "advisory_diagnostic_repositories"]
 
@@ -231,6 +233,33 @@ class InMemoryProrrataRegisterRepository:
             activity_rows=(*retained, row),
         )
         return self._register
+
+    def seed_sector_carried(
+        self, ejercicio: int, sector_id: str, *, validate_entry: Callable[[ProrrataRegisterEntry], None]
+    ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
+        raise AssertionError("advisory diagnostics do not seed sector registers")
+
+    def settle_sector(
+        self,
+        ejercicio: int,
+        sector_id: str,
+        *,
+        con_derecho_volume: Decimal,
+        sin_derecho_volume: Decimal,
+        producing_snapshot_ref: RegistrySnapshotRef,
+        validate_entry: Callable[[ProrrataRegisterEntry], None],
+    ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
+        raise AssertionError("advisory diagnostics do not settle sector registers")
+
+    def commit_whole_carried_seed(
+        self,
+        register: ProrrataRegister,
+        *,
+        ejercicio: int,
+        expected_revision_id: str,
+        source_snapshot: ProrrataPriorSettlementSourceSnapshot,
+    ) -> None:
+        raise AssertionError("advisory diagnostics do not commit source-fenced carry")
 
 
 class InMemoryBienesInversionRepository:

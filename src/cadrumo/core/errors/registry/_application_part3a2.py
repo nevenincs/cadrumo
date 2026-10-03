@@ -28,6 +28,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.invoice_confirmation.InvoiceEvidenceReviewChangedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_invoice_evidence_review_changed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.invoice_confirmation_ports.InvoiceConfirmationPersistenceError",
         ErrorCode(
             code="FAIL_INVOICE_CONFIRMATION_PERSISTENCE",

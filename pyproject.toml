@@ -67,6 +67,9 @@ dependencies = [
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
   "keyring>=25.6.0,<26",
+  # Native Secret Service protocol calls and encrypted session codec.
+  "jeepney>=0.9,<0.10; sys_platform == 'linux'",
+  "secretstorage>=3.5,<3.6; sys_platform == 'linux'",
   # The Windows ACL hardening path imports pywin32 directly. Keep it in the
   # base runtime on Windows rather than relying on mcp's transitive supply.
   "pywin32>=311 ; sys_platform == 'win32'",
@@ -133,6 +136,7 @@ dependencies = [
 [project.scripts]
 aeat = "cadrumo.entrypoints.cli.bootstrap:main"
 cadrumo-mcp = "cadrumo_harness.mcp.main:main"
+cadrumo-runtime = "cadrumo.entrypoints.runtime.bootstrap:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -411,6 +415,7 @@ exclude = [
 include = [
   "src/cadrumo/py.typed",
   "src/cadrumo/core/external_constants.toml",
+  "src/cadrumo/_data/local_runtime/**",
   "src/cadrumo_harness/py.typed",
   "src/cadrumo_harness/_data/**",
 ]
@@ -742,15 +747,6 @@ convention = "google"
 # repository-owned paths is not an injection surface.
 # Developer quality/docs/audit runners invoke fixed tool argv or explicit
 # wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
-# `just bootstrap` runs every bootstrap step through a fixed argv declared as
-# data in `dev/init/plan.py` and resolved through `shutil.which`. Nothing
-# reaches it from a user, an environment variable, or a file: the argv is
-# literal in the plan, and the resolution exists only so Windows `.cmd`
-# shims spawn without a shell. There is no injection surface to check for.
-"dev/init/process.py" = ["S603"]
-"dev/init/venv.py" = ["S603"]
-"dev/init/hooks.py" = ["S603"]
-"dev/init/probe.py" = ["S603"]
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
@@ -853,8 +849,6 @@ convention = "google"
 "dev/quality/types.py" = ["S603", "S607"]
 # The environment provisioning drivers: every argv is a literal vector built in
 # the module, never from user input, and none uses a shell.
-"dev/env/_install.py" = ["S603"]
-"dev/env/_venv.py" = ["S603", "S607"]
 "dev/env/_workstation.py" = ["S603", "S607"]
 "dev/test_runs/lanes.py" = ["S603", "S607"]
 "dev/release/preview.py" = ["S603", "S607"]
@@ -934,7 +928,6 @@ convention = "google"
 # trusted `uv` build driver (resolved from PATH by design), mirroring the
 # src/cadrumo wheel-build gates. Corpus membership is enumerated in-process.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
-"src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 # Cross-process custody-root exclusion is only provable against real spawned
 # processes killed abruptly; every argv is a fixed `sys.executable -c <script>`

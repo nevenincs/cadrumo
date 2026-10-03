@@ -27,7 +27,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests.inventory import FIXTURES_DIR
-from .._overview_evidence import local_calendar_filing_evidence
+from ...overview_evidence_composition import local_calendar_filing_evidence
 from ._overview_calendar_support import (
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,

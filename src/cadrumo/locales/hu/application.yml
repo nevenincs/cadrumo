@@ -1204,6 +1204,8 @@ application:
         %{fetch_gated}.'
       calculate_m347_threshold_not_met: A Modelo 347 %{nif} partnere összesen %{total},
         ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR küszöböt.
+      calculate_m349_invalid_nif: A(z) {nif} közösségi adószám formátuma nem felel
+        meg a(z) {pais} országban előírtnak.
       calculate_pension_inputs_incomplete: A nyugdíjterv kiváltási adatait együtt
         kell megadni.
       calculate_relation_unknown: '--relation %{key} egyik relation azonosítónak sem

@@ -1236,6 +1236,10 @@ class ProfileCustodyPort(Protocol):
         """Authenticate one committed password envelope and sentinel."""
         ...
 
+    def retire_automation(self, *, profile_id: UUID, root: Path) -> bool:
+        """Durably deny delegated custody; return whether optional cleanup finished."""
+        ...
+
     def replace_password_envelope(
         self,
         *,

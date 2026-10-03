@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, NoReturn
 from uuid import UUID
 
 from ....application.user_profile.authentication import ProfilePasswordProofOperation
+from ....application.user_profile.automation_custody_port import AutomationSecretStore
 from ....application.user_profile.custody_ports import (
     ProfileBucketStoragePathsPort,
     ProfileBucketStoragePort,
@@ -79,6 +80,7 @@ from .bucket.output_language_hint import (
 from .bucket.sealed_archive_reader import read_sealed_archive
 from .bucket.sealed_archive_writer import write_sealed_archive
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
+from .custody.automation_store import retire_profile_automation
 from .custody.capsule import (
     ProfileCustodyRecoveryMaterial,
     install_committed_profile_custody_recovery_envelope,
@@ -467,6 +469,9 @@ class _PersistenceProfileRecordCrypto:
 
 class _PersistenceProfileCustody:
     """Compose canonical persistence authorities behind the custody port."""
+
+    def __init__(self, automation_secrets_store: AutomationSecretStore | None = None) -> None:
+        self.automation_secrets_store = automation_secrets_store
 
     def local_record_store(self) -> ProfileCustodyLocalRecordStore:
         return _PersistenceProfileCustodyLocalRecordStore()
@@ -938,6 +943,9 @@ class _PersistenceProfileCustody:
             sentinel=_substrate_handle(material.sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
         )
 
+    def retire_automation(self, *, profile_id: UUID, root: Path) -> bool:
+        return retire_profile_automation(root=root, profile_id=profile_id, secrets_store=self.automation_secrets_store)
+
     def replace_password_envelope(
         self,
         *,
@@ -1047,9 +1055,9 @@ class _PersistenceProfileCustody:
         return BucketEventHistoryRepository(objects=resolved)
 
 
-def build_profile_custody_port() -> ProfileCustodyPort:
-    """Build a stateless adapter over the canonical custody authorities."""
-    return _PersistenceProfileCustody()
+def build_profile_custody_port(*, automation_secrets_store: AutomationSecretStore | None = None) -> ProfileCustodyPort:
+    """Compose canonical custody with an explicitly selected optional native store."""
+    return _PersistenceProfileCustody(automation_secrets_store)
 
 
 __all__ = ["build_profile_custody_port"]

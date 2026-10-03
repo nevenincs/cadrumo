@@ -84,12 +84,6 @@ def run_profile_tui_operation(
     product = installed_product_evidence(workspace_root=workspace_root)
     if operation == "create-add":
         _register_profile_through_visible_tui(profile_label=profile_label, passphrase=passphrase)
-    else:
-        from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-        from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
-
-        with live_exchange_rate_composition(), profile_adapter_composition():
-            asyncio.run(_admit_existing_profile_session(passphrase=passphrase))
 
     observed_row: list[str | None] = [row_key]
     clear_absent: list[bool] = [False]
@@ -199,45 +193,6 @@ def _register_profile_through_visible_tui(*, profile_label: str, passphrase: str
 
     with live_exchange_rate_composition(), profile_adapter_composition():
         asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
-
-
-async def _admit_existing_profile_session(*, passphrase: str) -> None:
-    """Unlock an existing profile through the shipped visible Login screen."""
-    from textual.widgets import Input
-
-    from cadrumo.application.user_profile.login_interaction import (
-        ProfileLoginInventoryState,
-        attempt_profile_login,
-        observe_profile_login_inventory,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
-
-    inventory = observe_profile_login_inventory()
-    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
-        raise ProfileTuiChildAcceptanceError("existing_profile_not_recognized")
-    with bundled_indexed_authority().operation() as operation:
-        screen = LoginScreen(
-            choices=inventory.choices,
-            authenticate=lambda candidate_profile_id, candidate_passphrase: attempt_profile_login(
-                candidate_profile_id,
-                candidate_passphrase,
-                profile_decode_context=operation.profile_decode_context(),
-            ),
-            preselected=inventory.preselected_profile_id,
-        )
-        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-            await wait_for_public_selector(pilot, "#field-passphrase")
-            field = query_public_selector(pilot, "#field-passphrase", Input)
-            if not isinstance(field, Input):
-                raise ProfileTuiChildAcceptanceError("login_passphrase_control_invalid")
-            field.value = passphrase
-            await pilot.click("#btn-unlock")
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
-    if screen.outcome is None:
-        raise ProfileTuiChildAcceptanceError("login_not_admitted")
 
 
 async def _add_activity_row(*, pilot: Any, scenario: ProfileRowLifecycleScenario) -> str:

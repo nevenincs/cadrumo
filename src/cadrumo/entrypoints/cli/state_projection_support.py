@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from ...application.aggregation.percepciones_observations_repository import PercepcionObservationPortsFactory
     from ...application.aggregation.retencion_observations_repository import RetencionObservationPortsFactory
     from ...application.aggregation.withholding_observation_service import WithholdingObservationService
-    from ...application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ...application.auth.operator_probe_ports import OperatorProbePorts
     from ...application.auth.operator_scope_ports import OperatorScopePorts
@@ -26,7 +25,6 @@ if TYPE_CHECKING:
     from ...application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
     from ...application.ledger.evidence_ports import LedgerEvidencePortsFactory
     from ...application.ledger.invoice_confirmation_ports import InvoiceConfirmationPortsFactory
-    from ...application.live.borrador_100 import Borrador100SnapshotRepositoryFactory
     from ...application.live.censo_ports import CensalFetchPort
     from ...application.live.expedientes_ports import ExpedientesPortsFactory
     from ...application.modelo.amendment_action_ports import AmendmentActionPortsFactory
@@ -36,8 +34,6 @@ if TYPE_CHECKING:
     from ...application.modelo.filing_action_ports import FilingActionPortsFactory
     from ...application.modelo.history_ports import ModeloHistoryPortsFactory
     from ...application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPortsFactory
-    from ...application.modelo.m036_lifecycle_ports import M036LifecyclePortsFactory
-    from ...application.modelo.m145_communication_records_ports import M145CommunicationRecordsPortsFactory
     from ...application.modelo.participation_index_rebuild_ports import ParticipationIndexRebuildPortsFactory
     from ...application.modelo.recipient_encryption import RecipientEncryptionCapabilityFactory
     from ...application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPortsFactory
@@ -147,11 +143,6 @@ def expedientes_ports_factory(ctx: typer.Context) -> ExpedientesPortsFactory:
     return _adapter_composition(ctx).expedientes_ports_factory
 
 
-def borrador_100_snapshot_repository_factory(ctx: typer.Context) -> Borrador100SnapshotRepositoryFactory:
-    """Return the required borrador snapshot repository factory from the CLI root."""
-    return _adapter_composition(ctx).borrador_100_snapshot_repository_factory
-
-
 def censal_fetch_port(ctx: typer.Context) -> CensalFetchPort:
     """Return the translated censo fetch capability from the CLI root."""
     return _adapter_composition(ctx).censal_fetch_port
@@ -239,16 +230,6 @@ def modelo_iva_wallet_seed_ports_factory(ctx: typer.Context) -> ModeloIvaWalletS
     return _adapter_composition(ctx).modelo_iva_wallet_seed_ports_factory
 
 
-def m145_communication_records_ports_factory(ctx: typer.Context) -> M145CommunicationRecordsPortsFactory:
-    """Return the Modelo 145 communication-record capabilities from the CLI root."""
-    return _adapter_composition(ctx).m145_communication_records_ports_factory
-
-
-def m036_lifecycle_ports_factory(ctx: typer.Context) -> M036LifecyclePortsFactory:
-    """Return the Modelo 036 lifecycle capabilities from the CLI root."""
-    return _adapter_composition(ctx).m036_lifecycle_ports_factory
-
-
 def work_lifecycle_ports_factory(ctx: typer.Context) -> WorkLifecyclePortsFactory:
     """Return the required work-lifecycle bundle factory from the CLI root."""
     return _adapter_composition(ctx).work_lifecycle_ports_factory
@@ -271,17 +252,10 @@ def review_package_signing_keypair_capability_factory(
     return _adapter_composition(ctx).review_package_signing_keypair_capability_factory
 
 
-def apoderado_config_repository_factory(ctx: typer.Context) -> ApoderadoConfigurationRepositoryFactory:
-    """Return the apoderado configuration store factory from the CLI root."""
-    return _adapter_composition(ctx).apoderado_config_repository_factory
-
-
 __all__ = [
     "amendment_action_ports_factory",
-    "apoderado_config_repository_factory",
     "attachment_store",
     "bienes_inversion_repository_factory",
-    "borrador_100_snapshot_repository_factory",
     "bucket_storage",
     "calculation_action_ports_factory",
     "catalogue_creation_ports_factory",
@@ -296,8 +270,6 @@ __all__ = [
     "inventory_service_ports_factory",
     "invoice_confirmation_ports_factory",
     "ledger_evidence_ports_factory",
-    "m036_lifecycle_ports_factory",
-    "m145_communication_records_ports_factory",
     "modelo_edit_receipt_repository_factory",
     "modelo_export_ports_factory",
     "modelo_history_ports_factory",

@@ -14,9 +14,15 @@ import pytest
 from pydantic import ValidationError
 
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from ...live.notification_ports import NotificationsPorts
+from ...live.notifications_read_operation import (
+    build_notifications_list_definition,
+    build_notifications_list_registration,
+)
 from ...live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+from ...operator_actions.models import ActionReference
 from ...user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
@@ -25,11 +31,13 @@ from ...user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from ..workspace import (
     AeatSyncCensusCategory,
     AeatSyncCensusStatus,
+    AeatSyncDiscrepancyKind,
     AeatSyncOverviewArea,
     AeatSyncSourceState,
     AeatSyncWorkspaceAvailability,
     AeatSyncWorkspaceCensusRowV1,
     AeatSyncWorkspaceFactV1,
+    AeatSyncWorkspaceOverviewRowV1,
     AeatSyncWorkspaceProjectionError,
     AeatSyncWorkspaceSource,
     AeatSyncWorkspaceZoneObservationV1,
@@ -67,6 +75,17 @@ def _unrelated_contracts() -> OperationPublicContractSetV1:
             ).contract,
         )
     )
+
+
+def _contracts_with_notifications_list() -> OperationPublicContractSetV1:
+    """Add the canonical registered list contract to an unrelated contract."""
+
+    def unopened_ports() -> NotificationsPorts:
+        raise AssertionError("contract discovery does not open notification ports")
+
+    definition = build_notifications_list_definition(unopened_ports)
+    notification_contract = build_notifications_list_registration(definition).contract
+    return OperationPublicContractSetV1.build((*_unrelated_contracts().definitions, notification_contract))
 
 
 def _projection(
@@ -179,6 +198,42 @@ def test_no_pull_action_is_offered_without_its_registered_operation() -> None:
 
     assert "operator.live.filed.pull_all" not in offered
     assert "live.filed-history.pull" not in operations
+    assert "operator.live.notifications.list" not in offered
+    assert "live.notifications.list" not in operations
+
+
+def test_notifications_list_action_joins_its_exact_tui_contract() -> None:
+    """The notifications action appears only when its registered read is composed."""
+    projection = _projection(contracts=_contracts_with_notifications_list(), custody_count=0)
+    row = _overview_row(projection, AeatSyncOverviewArea.NOTIFICATIONS)
+
+    assert tuple(str(action.action_id) for action in row.supported_actions) == ("operator.live.notifications.list",)
+    assert tuple(str(operation) for operation in row.supported_operations) == ("live.notifications.list",)
+
+
+def test_notification_list_action_without_its_operation_pair_is_rejected() -> None:
+    """The projector detects a declared list action with no exact operation join."""
+    fact = AeatSyncWorkspaceFactV1(
+        bucket_id=_BUCKET,
+        subject_key=_SUBJECT,
+        row=AeatSyncWorkspaceOverviewRowV1(
+            area=AeatSyncOverviewArea.NOTIFICATIONS,
+            local_state=AeatSyncSourceState.NOT_OBSERVED,
+            aeat_state=AeatSyncSourceState.NOT_OBSERVED,
+            discrepancy_kind=AeatSyncDiscrepancyKind.UNOBSERVED,
+            supported_actions=(ActionReference(action_id="operator.live.notifications.list"),),
+        ),
+    )
+
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="exact public operation join"):
+        project_aeat_sync_workspace(
+            bucket_id=_BUCKET,
+            subject_key=_SUBJECT,
+            zone_observations=_pre_pull_zone_observations(),
+            action_catalogue=OPERATOR_ACTION_CATALOGUE,
+            operation_contracts=_contracts_with_notifications_list(),
+            overview=(fact,),
+        )
 
 
 def test_the_census_zone_carries_a_row_for_every_comparable_field() -> None:

@@ -1,0 +1,6 @@
+@step List requests, grants and keys for the human-authorized profile, including an empty inventory.
+@static aeat config profile automation list
+@blocked credential-store Automation inventory requires an available protected credential store as well as human authorization; restore access to that store before retrying.
+@step Inspect the exact returned request before deciding.
+@static aeat config profile automation inspect REQUEST_UUID
+@blocked operator-artifact REQUEST_UUID must come from a pending request returned by the intended profile's current inventory.

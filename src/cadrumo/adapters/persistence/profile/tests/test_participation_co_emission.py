@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -54,6 +55,8 @@ from cadrumo.domain.modelos.participation_index import (
 )
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+
+from .filing_report_support import seed_filing_gate_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -244,10 +247,15 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
             assert verified_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
             filed_at = verified_at + timedelta(hours=1)
+            verification_repo = VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID)
+            report_id = seed_filing_gate_report(verified_revision, verification_repo)
+            _, filing_baseline_revision_id = fr_repo.load_revisioned()
             calculation_observation_repository, iva_compensation_history_repository = _iva_wallet_repositories()
             prorrata_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID)
             filing_record = persist_filed_revision(
                 target=verified_revision,
+                approved_verification_report_id=report_id,
+                filing_baseline_revision_id=filing_baseline_revision_id,
                 work_unit=work_unit,
                 work_units=wu_repo.load(),
                 notes=None,
@@ -255,6 +263,7 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
                 now=filed_at,
                 calculation_repository=cr_repo,
                 filing_repository=fr_repo,
+                verification_repository=verification_repo,
                 work_unit_repository=wu_repo,
                 bucket_event_repository=bv_repo,
                 calculation_observation_repository=calculation_observation_repository,

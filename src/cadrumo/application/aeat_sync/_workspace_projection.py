@@ -86,12 +86,12 @@ _ALLOWED: Final = {
 _ALLOWED_OPERATIONS: Final[dict[str, frozenset[str]]] = {
     "overview:census": frozenset({"user-profile.censo-review"}),
     "overview:filed_declarations": frozenset({"live.filed-history.pull"}),
-    "overview:notifications": frozenset(),
+    "overview:notifications": frozenset({"live.notifications.list"}),
     "overview:evidence_comparison": frozenset({"live.filed-history.pull"}),
     "overview:reconciliation": frozenset(),
     "census": frozenset({"user-profile.censo-review"}),
     "filed_declarations": frozenset({"live.filed-history.pull"}),
-    "notifications": frozenset(),
+    "notifications": frozenset({"live.notifications.list"}),
     "evidence_comparison": frozenset({"live.filed-history.pull"}),
     "reconciliation": frozenset(),
 }
@@ -296,8 +296,9 @@ def _validate_action_operation_joins(
         if not joined and str(action.action_id) in {
             "operator.live.filed.pull",
             "operator.live.filed.pull_all",
+            "operator.live.notifications.list",
         }:
-            raise AeatSyncWorkspaceProjectionError("pull action lacks its exact public operation join")
+            raise AeatSyncWorkspaceProjectionError("operation action lacks its exact public operation join")
 
 
 def _actions(

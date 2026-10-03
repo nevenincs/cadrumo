@@ -8,6 +8,76 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.modelo.mcp_query_operation.ModeloBindingValueContractUnsupportedError",
+        ErrorCode(
+            code="REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_binding_value_contract_unsupported",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.mcp_query_operation.ModeloBindingValueInvalidError",
+        ErrorCode(
+            code="REFUSED_MODELO_BINDING_VALUE_INVALID",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_binding_value_invalid",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.lifecycle_mutation_operation.LedgerLifecycleValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_LIFECYCLE_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_transaction_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.attachment_mutation_operation.LedgerAttachmentValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_ATTACHMENT_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_validation_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_add_operation.InvoiceAddValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_ADD_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_validation_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_selection.InvoiceLookupRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_LOOKUP",
+            category=ErrorCategory.REFUSED,
+            message_key="application.invoices.lifecycle.errors.invoice_not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.work_create_policy.ModeloWorkCreateApplicabilityRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_WORK_CREATE_APPLICABILITY",
+            category=ErrorCategory.REFUSED,
+            message_key="cli.app.modelo.work.create_not_applicable_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.declarations_calendar.DeclarationsCalendarProjectionError",
         ErrorCode(
             code="INTEGRITY_DECLARATIONS_CALENDAR_PROJECTION",
@@ -78,6 +148,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.m145_communication_operation.M145CommunicationOperationRecordNotFoundError",
+        ErrorCode(
+            code="REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.m145_communication_record_not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.settlement_casilla.AmbiguousDeclarationResultError",
         ErrorCode(
             code="REFUSED_AMBIGUOUS_DECLARATION_RESULT",
@@ -93,6 +173,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_TAXATION_COMPARISON_PERSISTENCE",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.canonical_taxation_comparison_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.work_missing_input.ModeloWorkMissingInputError",
+        ErrorCode(
+            code="ERROR_MODELO_WORK_INPUT_REQUIRED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_validation",
             retryable=False,
             runbook_id=None,
         ),

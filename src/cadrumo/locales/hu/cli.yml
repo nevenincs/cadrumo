@@ -34,8 +34,6 @@ cli:
         list_help: Az aktív profil nyilvántartásában szereplő összes beruházási jószág
           listázása.
         prorrata_inicial_help: A beszerzés évének végleges levonási százaléka (0-100).
-        unknown_disposal_regime: 'Ismeretlen átruházási rezsim {regime!r}; elfogadott:
-          {accepted}'
       counterparty:
         actor_help: Az azonosítód, amelyet a kijelentés szerzőjeként rögzítünk.
         confirm_help: Erősítsd meg, hol telepedett le az ügyfél, és melyik tagállam
@@ -113,6 +111,10 @@ cli:
           segítő heurisztika; általában kötelező).
         confirm_counterparty_nif_help: Írd felül a kinyert szállítói adóazonosítót.
         confirm_currency_help: ISO-4217 pénznemkód.
+        confirm_expected_draft_review_sha256_help: Az áttekintett pontos tervezet
+          ellenőrzési lenyomata, amelyet a kinyerés adott vissza.
+        confirm_expected_source_sha256_help: A bizonylatkinyerés során visszaadott
+          SHA-256 lenyomat; ellenőrzi, hogy a bájtok változatlanok.
         confirm_help: Újra kinyeri a bizonylatot helyben, és megerősíti valódi katalógus-számlaként.
         confirm_invoice_class_help: Add meg a számla osztályát, ha a dokumentum nem
           jelöli. A helyesbítő számlát a dokumentumból olvassuk ki, ha megnevezi a
@@ -120,10 +122,14 @@ cli:
           nem teszik.
         confirm_invoice_date_help: Írd felül a kinyert számla dátumát (ÉÉÉÉ-HH-NN).
         confirm_invoice_number_help: Írd felül a kinyert számlaszámot.
+        confirm_iva_amount_help: Felülírja a kinyert áfaösszeget; elhagyásával megőrzi
+          azt.
+        confirm_iva_category_help: A számlához rögzítendő áfakategória azonosítója.
         confirm_iva_rate_help: Írd felül a kinyert ÁFA-kulcsot (hagyd ki a kinyert
           érték megtartásához).
         confirm_link_hint_message: A számla a nyilvántartásodban megfelelő tranzakció
           nélkül került rögzítésre.
+        confirm_operation_date_help: Az adóköteles ügylet dátuma (ISO ÉÉÉÉ-HH-NN).
         confirm_operation_type_help: 'A Modelo 349 kulcsa kozossegen belüli termekertekesiteshez.
           Kötelező, ha a dokumentum kozossegen belüli ertekesitest jelöl: a kategória
           nem mondja meg, hogy adómentes behozatalt követett-e.'
@@ -133,12 +139,15 @@ cli:
           olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi
           felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra
           került. Ellenőrizd a dokumentumot.
+        confirm_recargo_amount_help: A számlán szereplő egyenértékűségi pótdíj összege.
         confirm_rectifies_help: Annak a számlának a száma, amelyet ez a helyesbítő
           számla javít. Az RD 1619/2012 6.1.a.2 cikke a saját sorozattal együtt megköveteli,
           és a dokumentumból olvassuk ki, ha megadja.
         confirm_resolve_help: 'Válaszolj egy blokkoló problémára: <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
           A choose esetén az olvasatot az értékével vagy a review által mutatott kivonattal
           nevezd meg. Problémánként egyszer ismételd; nincs tömeges kapcsoló.'
+        confirm_retention_amount_help: A számlán szereplő jövedelemadó-levonás összege.
+        confirm_retention_rate_help: A számlán szereplő jövedelemadó-levonás százaléka.
         confirm_review_contradicted_regime_message: Ez a dokumentum ellentmond önmagának
           abban, hogyan adózik. Az alábbi részlet megnevezi, mi mivel volt ellentmondásban.
         confirm_review_undetermined_establishment_message: A dokumentum a beolvasott
@@ -172,11 +181,7 @@ cli:
           adatokat ki kell nyerni (a --evidence-id alternatívája).
         extract_evidence_id_help: A beszerzési számla bizonylat azonosítója, amelyből
           az adatokat ki kell nyerni.
-        extract_help: A számla PDF mezőinek helyi (on-host) beolvasása áttekinthető
-          piszkozatba.
-        extract_off_host_needs_content_address: Ennek a bizonylatnak nincs tartalmi
-          lenyomata, ezért a gépen kívüli beolvasás nem rögzíthető az elküldendő bájtokhoz
-          kötve.
+        extract_help: A számla PDF-mezőinek helyi kinyerése áttekinthető piszkozatba.
         extract_off_host_needs_evidence_id: 'A gépen kívüli beolvasáshoz meg kell
           adni az --evidence-id értéket: a hozzájárulás a dokumentum tartalmi lenyomatához
           kötődik, amelyet a melléklet azonosítója nem hordoz.'
@@ -311,7 +316,6 @@ cli:
           resolve_shape: Minden --resolve alakja <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
             A choose az olvasatot az értékével vagy a review által mutatott kivonattal
             nevezi meg.
-          unknown_reference: Nincs függő piszkozat ehhez az azonosítóhoz.
           view_help: Megjeleníti egy függőben lévő piszkozat minden ellenőrizhető
             mezőjét, a blokkoló problémákkal együtt.
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
@@ -486,6 +490,8 @@ cli:
           végleges százaléka a(z) {prior_ejercicio} évre, ezért a(z) {ejercicio} adóév
           nem vezethető át. Az előző végleges érték hiányzik, nem nulla: előbb számold
           el a(z) {prior_ejercicio} évet erre az ágazatra.'
+        seed_sector_requires_route: Ágazat nem adható meg a teljes tevékenység átvezetéséhez;
+          elkülönített ágazathoz használd a seed-sector parancsot.
         seed_source_absent: 'A(z) {prior_ejercicio} évre egyetlen lepecsételt Modelo
           303 elszámolási megfigyelés sem tartalmaz végleges arányosítási százalékot,
           ezért a(z) {ejercicio} adóév nem vezethető át. Az előző végleges érték hiányzik,
@@ -704,7 +710,6 @@ cli:
         nif_iva_arg_help: NIF-IVA érték (pl. ESB12345678).
         nif_iva_help: Intraközösségi NIF-IVA ellenőrzése az AEAT IXVI rendszerében
           és a megfigyelés mentése.
-        no_observation_for_nif: Nem érkezett megfigyelés a(z) {nif} NIF-hez.
         observation_id_help: Megfigyelés azonosítója (vagy egyértelmű előtag).
         surface_help: 'Szűrés felület szerint: nif_iva vagy tgvi.'
         tgvi_arg_help: Ellenőrizendő spanyol NIF/NIE.
@@ -736,8 +741,6 @@ cli:
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest
           (egy kifizetést leíró JSON-kérés): a nyilvántartásodban szereplő tranzakcióval
           kifizetett bér- (Modelo 111) vagy ingó tőkejövedelem-felosztás (Modelo 123).'
-        ledger_payment_withholding_period_mismatch: A kifizetés jövedelemtípusa és
-          elszámolási időszaka nem egyezik a kért nyomtatvánnyal és időszakkal.
         ledger_payment_withholding_single_allocation: Parancsonként egy kifizetési
           felosztást adj meg a nyilvántartásodból.
         ledger_payment_withholding_wrong_modelo: A --ledger-payment-withholding csak
@@ -853,6 +856,15 @@ cli:
           nincs elérhető VERIFICADO_COMPLETO vagy BORRADOR revíziója az összehasonlításhoz.
         no_work_units: Nem található Modelo %{modelo} bevallás a(z) %{filing_year}.
           adóévre. Előbb hozzon létre és számítson ki egy bevallást.
+        recover_no_revisions: Ellenőrizd a(z) %{modelo} modell számítási revízióit
+          mindkét kért évben (%{year_a} és %{year_b}); amelyik évben hiányzik revízió,
+          futtasd az `aeat app modelo work calculate` parancsot.
+        recover_no_usable_revisions: Ellenőrizd a(z) %{modelo} modell BORRADOR vagy
+          VERIFICADO_COMPLETO revízióit mindkét kért évben (%{year_a} és %{year_b});
+          amelyik évben szükséges, számíts ki egy megfelelő munkaegységet.
+        recover_no_work_units: Ellenőrizd a(z) %{modelo} modell munkaegységeit mindkét
+          kért évben (%{year_a} és %{year_b}); amelyik évben hiányzik munkaegység,
+          hozz létre és számíts ki egyet.
         year_help: Az összehasonlításba bevonandó pénzügyi év. Pontosan kétszer add
           meg (--year 2024 --year 2025).
       compare_help: Összehasonlítja ugyanazon nyomtatvány két adóévének mentett számításait.
@@ -957,6 +969,9 @@ cli:
             AEAT más bevallásfajtát jelöl, mint a függő helyi benyújtás.'
           declaration_kind_undetermined: 'Modelo {modelo}, {period} {filing_year}:
             az AEAT egy későbbi benyújtást rögzít anélkül, hogy jelezné, helyesbítés-e.'
+          filing_instance_evidence_unavailable: '{modelo} modell, {period} {filing_year}:
+            az AEAT-bejegyzésből hiányzik a tartalom rögzítéséhez szükséges benyújtási
+            bizonyíték.'
           receipt_totals_mismatch: 'Modelo {modelo}, {period} {filing_year}: az igazolás
             végösszege eltér a függő helyi benyújtástól, de mezőértékek nélkül az
             AEAT tartalma nem rögzíthető.'
@@ -1036,8 +1051,6 @@ cli:
         seed_confirm_help: Erősítsd meg a vetőösszeg műveletet.
         seed_confirm_required: Add meg a --confirm kapcsolót a vetőösszeg-művelet
           megerősítéséhez.
-        seed_conflict: Már létezik IVA-kompenzációs állapot a(z) %{filing_year}/%{period}
-          időszakhoz; újabb kezdőérték nem hozható létre.
         seed_filing_year_help: A vetőösszeg benyújtási éve.
         seed_help: "A Modelo 303 áthozott kompenzációs nyitóegyenlegének deklarálása\
           \ egy olyan időszakra, amely megelőzi a helyi előzményeket. Megtagadja,\
@@ -1291,10 +1304,6 @@ cli:
         calculate_help: Töltsd vissza a calc-sheets munkafüzet általad szerkesztett
           celláit, futtasd le rajtuk a helyi Decimal futtatókörnyezetet, és add ki
           a számított rovatértékeket (nem ment semmit)
-        compute:
-          refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen, amelynek
-            metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match});
-            exportáld újra, majd töltsd vissza újra.'
         export:
           output_help: Az .xlsx munkafüzet célútvonala; a meglévő fájlt elutasítja,
             hacsak nincs megadva a --replace
@@ -1323,8 +1332,6 @@ cli:
             `aeat config google folder set <azonosító>`.'
           snapshot_failure: A Modelo {modelo} nyomtatvány ({period}, {year}) nyomtatványdefiníciós
             pillanatképe nem készíthető el.
-          unknown_modelo: 'Ismeretlen nyomtatvány: {modelo!r}; elérhető nyomtatványok:
-            {available}'
         push_help: Egy nyomtatvány és időszak számításának exportálása a nyomtatványdefiníciók
           szerint egy Google Sheets munkafüzetbe a `cadrumo-vault/` mappádban.
         spreadsheet_id_help: A szerkesztéseidet tartalmazó munkafüzet Drive-fájlazonosítója
@@ -1493,6 +1500,10 @@ cli:
         document_only_help: Csak a dokumentum ellenőrzése, az aktív profil tárolójának
           megnyitása nélkül; --trusted-key nélkül az érvényes eredmény kulcshoz nem
           rögzített marad.
+        file:
+          verification_report_ambiguous: Ehhez a változathoz több jóváhagyó ellenőrzési
+            jelentés tartozik. A bevallás rögzítése előtt oldd fel az ellenőrzési
+            ütközést.
         file_help: Ellenőrzött mentett számítás rögzítése benyújtottként. NEM nyújt
           be semmit az AEAT-hoz.
         file_idempotent_noop: 'Nincs teendő: a(z) %{calculation_revision_id} mentett
@@ -1774,8 +1785,6 @@ cli:
         row_kv_format_error: 'A --row {token} mezőt KULCS=ÉRTÉK alakban kell megadni.
           Ez egy kulcs-érték bejegyzés: a sor mezőneve a bal oldalon áll, utána egyetlen
           egyenlőségjel következik, az érték pedig a jobb oldalon.'
-        row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
-          {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
           {supported}.'
         row_validation_error: 'A --row {row_type!r} sor validálása sikertelen: {error}'
@@ -1854,6 +1863,20 @@ cli:
       app_help: 'Futtasd a teljes helyi nyomtatvány-benyújtási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
         és exportál; soha nem nyújt be az AEAT-hoz'
+    runtime:
+      disable:
+        help: A bejelentkezéskori indítás kikapcsolása; a kézi indítás megmarad.
+      enable:
+        help: A futtatókörnyezet indítása a felhasználó bejelentkezésekor.
+      help: A telepített helyi futtatókörnyezet állapotának megtekintése és kezelése.
+      start:
+        help: A telepített futtatókörnyezet indítása és a kapcsolat ellenőrzése.
+      status:
+        help: A helyi szolgáltatás elérhetőségének és kezelője állapotának megjelenítése.
+      stop:
+        acknowledge_help: 'Megerősítés: a leállítás minden profilt és feladatot érint.'
+        help: A megosztott futtatókörnyezet leállítása a teljes hatókör jóváhagyása
+          után.
   common:
     errors:
       filing_requires_declared_tax_id: 'Az aktív profil nem ad meg adóazonosítót,
@@ -1936,8 +1959,6 @@ cli:
       diagnostics:
         help: Titkosított hitelesítési diagnosztika vizsgálata.
         id_help: Diagnosztikai azonosító.
-        invalid_phone_state: 'Érvénytelen telefon-állapot: %{phone_state}. Várható
-          értékek: %{choices}.'
         list_help: Titkosított Cl@ve hitelesítési diagnosztikák listázása.
         not_found: 'Hitelesítési diagnosztika nem található: %{diagnostic_id}.'
         phone_state_help: 'Egyik a következők közül: app_prompted_and_accepted, app_prompted_not_accepted,
@@ -1991,9 +2012,6 @@ cli:
       recipient:
         add_help: Egy bizalmi címzett X25519 nyilvános kulcsának rögzítése ujjlenyomat
           alapján.
-        errors:
-          invalid_public_key: A --public-key értéknek pontosan 64 kisbetűs hexadecimális
-            karakterből kell állnia (egy nyers 32 bájtos X25519 nyilvános kulcs).
         help: Bizalmi ellenőrzőcsomag-címzettek rögzítése, listázása és törlése.
         label_help: Opcionális, szabad szöveges megjelenített név a címzetthez.
         list_help: Az aktív profilon regisztrált összes bizalmi címzett listázása.
@@ -2004,6 +2022,14 @@ cli:
     custody:
       current_passphrase_prompt: 'A profil jelenlegi jelszava: '
       errors:
+        automation_change_credential_ref_required: Jogosultság módosításához add meg
+          a --profile-auth-method api-key és --profile-credential-ref UUID beállításokat.
+        automation_change_kind_mismatch: A védett kérelem típusának meg kell egyeznie
+          a kért jogosultságmódosítással.
+        automation_change_proposal_required: A jogosultságmódosítási kérelmet a --secrets-stdin
+          vagy --secrets-fd csatornán add meg.
+        automation_create_proposal_required: A jogosultsági kérelmet a --secrets-stdin
+          vagy --secrets-fd csatornán add meg.
         echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
           így a titok láthatóvá válna a képernyőn; használd a --secrets-stdin vagy
           --secrets-fd kapcsolót.
@@ -2013,6 +2039,16 @@ cli:
           munkamenetből.
         non_interactive_secret_required: Titok szükséges, de nincs interaktív terminál;
           használd a --secrets-stdin vagy --secrets-fd kapcsolót.
+        profile_credential_ref_conflict: Válaszd a --profile-credential-ref kapcsolót
+          vagy a gyökérszintű profil titkos adatcsatornáját.
+        profile_credential_ref_inapplicable: A --profile-credential-ref csak a helyi
+          szolgáltatás által futtatott privát profilparancsokhoz használható.
+        profile_credential_ref_requires_api_key: A --profile-credential-ref használatához
+          --profile-auth-method api-key szükséges.
+        profile_secrets_api_key_inapplicable: Az API-kulcsos hitelesítés csak a helyi
+          futtatókörnyezet által kiszolgált parancsokhoz használható.
+        profile_secrets_api_key_requires_channel: Az API-kulcsos hitelesítéshez --profile-secrets-stdin
+          vagy --profile-secrets-fd szükséges.
         profile_secrets_channel_conflict: 'Pontosan egy profilhitelesítési csatornát
           válassz: --profile-secrets-stdin vagy --profile-secrets-fd.'
         profile_secrets_fd_collision: A profilhitelesítési és a parancstitok-adatoknak
@@ -2029,6 +2065,8 @@ cli:
           profilhitelesítési csatorna.
         profile_secrets_inapplicable: A profilhitelesítési bemenet nem alkalmazható
           erre a parancsra, ezért nem történt beolvasás.
+        profile_secrets_method_mismatch: A védett profilszekrétum-csatorna tartalma
+          nem egyezik a --profile-auth-method beállítással.
         profile_secrets_missing_target: A profilhitelesítéshez pontos célprofil szükséges,
           amelyet a --profile vagy a parancs választ ki.
         profile_secrets_stdin_collision: A szabványos bemenet nem hordozhatja egyszerre
@@ -2059,6 +2097,11 @@ cli:
           vagy váratlan mezőket tartalmaz. Pontosan ezeket a kulcsokat küldd: {expected_fields}.'
         secrets_stdin_too_large: A gépi titok tartalma meghaladja a megengedett maximális
           méretet.
+      profile_auth_method_help: 'A védett profilszekrétum-csatorna hitelesítési módja:
+        password vagy api-key.'
+      profile_credential_ref_help: Hitelesítés a helyi szolgáltatás profiljához a
+        védett natív tárolóban lévő hitelesítő adat UUID-jával (--profile-auth-method
+        api-key szükséges).
       profile_secrets_fd_help: A pontos célprofil jelmondatának beolvasása egy korlátozott
         JSON-objektumból egy örökölt, olvasható fájlleíróból, miután a munkamenet
         folytatása sikertelen.
@@ -2195,9 +2238,13 @@ cli:
         terminálban, vagy használd a --secrets-stdin vagy --secrets-fd kapcsolót.
       passphrase_prompt: 'Profil jelszava: '
     logout:
-      help: A profil munkamenetének lezárása és helyi mutatójának törlése
+      help: A CLI-környezetben kiválasztott profil törlése.
       notices:
         already_logged_out: Egyetlen profil sem volt bejelentkezve; nincs mit lezárni.
+        remaining_access: A CLI profilkiválasztása törölve. A többi munkamenet, az
+          időkorlátos emberi bejelentkezés folytatása és a regisztrált API-kulcsok
+          megőrzik saját jogosultságukat. A hozzáférés visszavonásához használd a
+          munkamenet vagy a profil vezérlőit.
     passphrase:
       change_help: Megváltoztatja a jelszót a rekordok újratitkosítása és a helyreállítási
         kód érvénytelenítése nélkül.
@@ -2270,6 +2317,39 @@ cli:
           export_target_exists: A célútvonalon már van fájl, és a biztonsági mentés
             sosem kerül felülírásra. Válassz másik --output értéket, vagy előbb helyezd
             át a meglévő fájlt; egyetlen profil sem került beolvasásra.
+      automation:
+        approve:
+          digest_help: Az inspect által megjelenített pontos felülvizsgálati kivonat.
+          help: A felülvizsgált kérelem jóváhagyása a profil jelszavának újbóli megadásával.
+          request_help: A felülvizsgált kérelem UUID-azonosítója.
+        change:
+          help: Meglévő API-jogosultság kulcscseréjének, megújításának vagy hatókör-módosításának
+            kérelmezése.
+          kind_help: 'A módosítás típusa: rotate, renew vagy change_scope.'
+        create:
+          help: API-jogosultság kérelmezése és a hitelesítő adat átvétele védett tárolóba,
+            külön felhasználói jóváhagyás után.
+        decline:
+          digest_help: Az inspect által megjelenített pontos felülvizsgálati kivonat.
+          help: A felülvizsgált kérelem elutasítása.
+          request_help: A felülvizsgált kérelem UUID-azonosítója.
+        deny:
+          help: Automatizálási kulcs, jogosultság vagy az összes automatizált hozzáférés
+            visszavonása.
+          kind_help: 'A visszavonás típusa: key, grant vagy all.'
+          target_help: A visszavonandó kulcs vagy jogosultság UUID-azonosítója.
+          target_mismatch: Kulcs vagy jogosultság visszavonásához szükséges a cél
+            UUID-ja; az all típus nem fogad el célt.
+        help: A profil automatizált hozzáférésének kezelése.
+        inspect:
+          help: A felülvizsgált automatizálási kérelem pontos megjelenítése.
+          request_help: A felülvizsgált kérelem UUID-azonosítója.
+        list:
+          help: A profil automatizálási jogosultságainak, kulcsainak és függőben lévő
+            kérelmeinek listázása.
+        review_digest_mismatch: Az aktuális felülvizsgálati kivonat nem egyezik a
+          megadottal. Ellenőrizd újra a kérelmet.
+        review_not_found: A felülvizsgált kérelem nem érhető el ehhez a profilhoz.
       bundle_flow:
         export_section_title: Profilcsomag exportálása
         import_section_title: Profilcsomag importálása
@@ -2424,9 +2504,18 @@ cli:
         incoherent_observation_advisory: 'A profillista nem volt megbízhatóan beolvasható
           (állapot: {outcome}). Futtasd újra a parancsot; ha továbbra is fennáll,
           ellenőrizd a profiltárolót.'
+      lock:
+        all_help: A profil mindenhol zárolása és az összes automatizálási jogosultság
+          felfüggesztése.
+        help: A munkamenet zárolása, vagy a teljes profil zárolása a --all kapcsolóval.
+        selector_conflict: Válaszd a --session vagy a --all kapcsolót, de ne mindkettőt.
+        session_help: A profil zárolása nélkül visszavonandó munkamenet UUID-ja.
       manager_closed_created: A(z) '{profile}' profil létrejött. A bevallásokkal végzett
         munka előtt jelentsd be a beállítás befejezését az `aeat config profile complete-setup`
         paranccsal. Bármikor újranyithatod az 'aeat config profile edit' paranccsal.
+      mutation:
+        committed_view_unavailable: A profil módosítása mentésre került, de a frissített
+          nézet nem érhető el. Újabb módosítás előtt olvasd be újra a profilt.
       no_active_profile: 'Nincs aktív profil. Futtasd: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       notices:
@@ -2492,6 +2581,10 @@ cli:
           hogy megvan: '
       remove_row:
         help: Az ismételhető profilszakasz azonosított sorának eltávolítása.
+      resume:
+        grant_help: Az újraaktiválandó jogosultság UUID-ja; több jogosultsághoz ismételd
+          meg.
+        help: A profil feloldása jelszóval és a kiválasztott jogosultságok újraaktiválása.
       row:
         invalid_row: A(z) '%{row}' nem érvényes sorkulcs; használj nemnegatív egész
           számot vagy base értéket.
@@ -2501,6 +2594,8 @@ cli:
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
           profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.
+      sessions:
+        help: A profil aktuális helyi futtatókörnyezeti munkameneteinek listázása.
       show:
         summary_invalid: 'A profil rekordja érvénytelen: %{count} blokkoló probléma.'
         summary_valid: A profil rekordja érvényes.
@@ -3052,9 +3147,6 @@ cli:
       derive_non_derivable: 'A(z) {category} kategóriához nincs egyszerű spanyol kulcs,
         amelyet le lehetne vezetni: {note} Add meg kézzel a --taxable-base, --iva-rate
         és --iva-amount értékeket ehhez a kategóriához.'
-      derive_substrate_incomplete: A(z) {category} kategóriát levezethetőként jelentették,
-        de nem keletkezett áfaalap. Add meg kézzel a --taxable-base, --iva-rate és
-        --iva-amount értékeket ehhez a kategóriához.
       file_exclusive: --file nem kombinálható tranzakció-azonosítóval vagy --classification
         értékkel.
       file_help: 'Egy CSV-fájl útvonala, amelynek oszlopai: transaction_id, classification[,
@@ -3703,7 +3795,6 @@ cli:
         ismételten biztonságosan futtatható; soha nem lép kapcsolatba az AEAT-tal.'
       modelo_help: Az AEAT nyomtatványazonosítója, amelyhez az adatokat elő kell készíteni
         (pl. Modelo 130, Modelo 303, Modelo 100).
-      modelo_period_error: '{message}'
       period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
         01-12 (hónapok). Kombináld a --year kapcsolóval az év kiválasztásához.'
       year_help: Bevallási év (pl. 2026).

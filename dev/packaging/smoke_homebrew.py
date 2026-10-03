@@ -200,9 +200,9 @@ def _assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
 
     The formula installs the ``cadrumo`` distribution, which declares both the
     ``aeat`` and ``cadrumo-mcp`` console scripts, so ``pip_install_and_link``
-    lands both in the keg. This lane asserts the CLI leg only; the MCP oracle is
-    exercised on the pipx, MCPB-bundle and Claude-plugin acquisition paths, each
-    against its own install.
+    lands both in the keg. This lane asserts the CLI surface only. Separate
+    installed-server checks cover the MCP stdio startup handshake and tool
+    discovery.
     """
     if tax_document.get("target_value") != "23000.00":
         raise SystemExit(f"installed CLI oracle returned unexpected evidence: {tax_document!r}")

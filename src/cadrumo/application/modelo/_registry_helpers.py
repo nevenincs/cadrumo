@@ -190,6 +190,7 @@ def reject_incomplete_amendment_casillas(
     filing_year: int,
     period: Period,
     casilla_values: Mapping[CasillaId, Decimal],
+    operation: PinnedAuthorityOperation | None = None,
 ) -> None:
     """Mirror the verify-modelo-revision required-manual gate on amend.
 
@@ -199,7 +200,9 @@ def reject_incomplete_amendment_casillas(
     :class:`~cadrumo.application.modelo.action_errors.AmendmentVerificationRefusedError` before
     an amendment can be accepted as complete.
     """
-    required_optional = required_input_casilla_ids_for_revision(modelo=modelo, filing_year=filing_year, period=period)
+    required_optional = required_input_casilla_ids_for_revision(
+        modelo=modelo, filing_year=filing_year, period=period, operation=operation
+    )
     if required_optional is None:
         raise AmendmentVerificationRefusedError(
             translated_message="application.modelo.errors.amendment_verification_refused_no_snapshot",
@@ -572,6 +575,7 @@ def required_input_casilla_ids_for_revision(
     modelo: str,
     filing_year: int,
     period: Period,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]] | None:
     """Resolve required manual and replayable input casilla ids for a revision.
 
@@ -587,7 +591,9 @@ def required_input_casilla_ids_for_revision(
     amendment/import paths may need to carry through replay.
     """
     try:
-        snapshot = _resolve_registry_snapshot(modelo=modelo, filing_year=filing_year, period=period)
+        snapshot = _resolve_registry_snapshot(
+            modelo=modelo, filing_year=filing_year, period=period, operation=operation
+        )
     except (FileNotFoundError, RegistrySnapshotError):
         return None
 

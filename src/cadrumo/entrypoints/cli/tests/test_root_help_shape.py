@@ -145,8 +145,11 @@ def test_root_help_projects_both_graph_owned_profile_secret_options_once(languag
     # option exactly once into the options table.
     assert _option_row_count(result.output, "--profile-secrets-stdin") == 1
     assert _option_row_count(result.output, "--profile-secrets-fd") == 1
+    assert _option_row_count(result.output, "--profile-auth-method") == 1
+    assert _option_row_count(result.output, "--profile-credential-ref") == 1
     assert tr("cli.config.custody.profile_secrets_stdin_help", locale=language) in result.output
     assert tr("cli.config.custody.profile_secrets_fd_help", locale=language) in result.output
+    assert tr("cli.config.custody.profile_credential_ref_help", locale=language) in result.output
 
 
 def test_root_help_does_not_consume_or_close_a_selected_profile_secret_descriptor() -> None:
@@ -602,7 +605,9 @@ class TestBareInvocationWithActiveProfile:
         landing = _invoke([])
 
         assert logged_out.exit_code == 0, logged_out.output
-        assert "logged_out_profile\toperator" in logged_out.output
+        # This synthetic registration has no readable bucket manifest after
+        # the command boundary; logout truthfully falls back to a redacted ID.
+        assert f"logged_out_profile\t{CLI_PROFILE_ID_PLACEHOLDER}" in logged_out.output
         assert landing.exit_code == 0, landing.output
         assert "aeat config login NAME" in landing.output
         assert "aeat config profile create NAME" not in landing.output

@@ -17,7 +17,6 @@ equal a sealed wheel; only a genuine install of those exact bytes can.
 from __future__ import annotations
 
 import functools
-import hashlib
 import os
 import shutil
 import sys
@@ -42,7 +41,6 @@ from ..evidence import (
     EvidenceStatus,
 )
 from ..hashing import sha256_path
-from ..installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
 from ..installed_tax_oracle import (
     EXPECTED_FORMULA,
     EXPECTED_LEGAL_REF,
@@ -149,62 +147,6 @@ def _tax_evidence(
     )
 
 
-def _mcp_evidence(cohort: LoadedReleaseCohort) -> InstalledMcpEvidence:
-    """Build installed-MCP oracle evidence from the real installed cadrumo-mcp.
-
-    Both the server and the CLI it invokes come from one install of the cohort's
-    own wheel, which is what the binding guard requires: the harness ships inside
-    the ``cadrumo`` distribution, so ``cadrumo-mcp`` and ``aeat`` are siblings
-    attesting the same sealed payload.
-    """
-    server = _installed_launcher("cadrumo-mcp")
-    cli = server.with_name("aeat.exe" if server.suffix.lower() == ".exe" else "aeat")
-    invoked_cli_sha256 = hashlib.sha256(str(cli).encode("utf-8")).hexdigest()
-    records = {record.name: record for record in cohort.manifest.artifacts}
-    return InstalledMcpEvidence(
-        requested_executable=str(server),
-        resolved_executable=str(server),
-        server_name="cadrumo",
-        storage_root="mcp-state",
-        work_unit_id="f" * 64,
-        calculation_revision_id=_REVISION,
-        observations_resource=f"cadrumo://observations/{_REVISION}",
-        target_casilla=_TARGET_CASILLA,
-        target_value=_TARGET_VALUE,
-        formula_id=_FORMULA,
-        legal_refs=_LEGAL_REFS,
-        source_refs=_SOURCE_REFS,
-        notice_codes=_NOTICE,
-        advertised_tools=("cadrumo_modelo_work_calculate", "execute"),
-        calls=(
-            McpCallEvidence(
-                tool_name="cadrumo_modelo_work_calculate",
-                command_key="modelo.work.calculate",
-                duration_seconds=0.01,
-                is_error=False,
-                status="warning",
-            ),
-        ),
-        invoked_cli_sha256=invoked_cli_sha256,
-        invoked_cli_sha256_by_command={
-            "modelo.work.create": invoked_cli_sha256,
-            "modelo.work.calculate": invoked_cli_sha256,
-            "modelo.work.observations": invoked_cli_sha256,
-        },
-        cohort_source_digest=cohort.manifest.source.source_digest,
-        cohort_manifest_sha256=records["python-cohort-manifest"].sha256,
-        cohort_root_wheel_sha256=records["cadrumo-wheel"].sha256,
-        cohort_harness_wheel_sha256=records["cadrumo-wheel"].sha256,
-        server_executable_sha256=sha256_path(server),
-        runtime_server_executable=str(server),
-        runtime_project_root=None,
-        installed_cli_payload_sha256=_installed_payload_sha256(cli, "cadrumo"),
-        installed_harness_payload_sha256=_installed_payload_sha256(server, "cadrumo"),
-        checkout_imports_removed=True,
-        ambient_product_executables_removed=True,
-    )
-
-
 def _acquisition() -> AcquisitionIdentity:
     return AcquisitionIdentity(mechanism="pip", source="https://pypi.org/simple")
 
@@ -288,17 +230,15 @@ def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
         )
 
 
-def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
-    """The record binds the exact cohort and carries CLI transcripts + MCP proof."""
+def test_build_binds_cohort_and_retains_cli_lifecycle_evidence(tmp_path: Path) -> None:
+    """The record binds the exact cohort and carries the installed CLI proof."""
     cohort = _release_cohort(tmp_path / "cohort")
     tax = _tax_evidence(tmp_path, cohort)
-    mcp = _mcp_evidence(cohort)
 
     evidence = build_installed_oracle_evidence(
         row_id="python-windows-x86-64",
         cohort=cohort,
         tax_evidence=tax,
-        mcp_evidence=mcp,
         acquisition=_acquisition(),
         destination=_destination(cohort),
     )
@@ -310,43 +250,15 @@ def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
     assert len(evidence.commands) == len(tax.commands)
     assert all(transcript.exit_status == 0 for transcript in evidence.commands)
     exe_names = {exe.name for exe in evidence.isolation.installed_executables}
-    assert exe_names == {"aeat", "cadrumo-mcp"}
+    assert exe_names == {"aeat"}
     assert all(len(exe.sha256) == 64 for exe in evidence.isolation.installed_executables)
-    mcp_oracle = evidence.result.observations["mcp_oracle"]
     cli_oracle = evidence.result.observations["cli_oracle"]
-    assert isinstance(mcp_oracle, dict)
     assert isinstance(cli_oracle, dict)
-    assert mcp_oracle["target_value"] == _TARGET_VALUE
     assert cli_oracle["target_value"] == _TARGET_VALUE
 
 
-def test_mcp_capture_with_swapped_harness_cohort_digest_is_refused(tmp_path: Path) -> None:
-    """Truthful root fields cannot carry a forged harness-wheel digest past minting.
-
-    The harness ships inside the root wheel, so the harness binding resolves to
-    the same ``cadrumo-wheel`` record. It is still checked independently: a
-    capture that reports a harness digest the cohort does not contain is not a
-    capture of this cohort, however correct its other fields look.
-    """
-    from dataclasses import replace
-
-    from ..distribution_evidence_emit import EvidenceCohortBindingError
-
-    cohort = _release_cohort(tmp_path / "cohort")
-    forged = replace(_mcp_evidence(cohort), cohort_harness_wheel_sha256="0" * 64)
-    with pytest.raises(EvidenceCohortBindingError, match="provenance mismatch"):
-        build_installed_oracle_evidence(
-            row_id="python-linux-x86-64",
-            cohort=cohort,
-            tax_evidence=_tax_evidence(tmp_path, cohort),
-            mcp_evidence=forged,
-            acquisition=_acquisition(),
-            destination=_destination(cohort),
-        )
-
-
-def test_cli_only_lane_records_an_absent_mcp_leg(tmp_path: Path) -> None:
-    """A lane that ships no MCP leg mints with the absent marker, not a fabricated proof."""
+def test_distribution_evidence_records_only_the_cli_lifecycle_scope(tmp_path: Path) -> None:
+    """The CLI lifecycle record carries only facts captured by its CLI oracle."""
     cohort = _release_cohort(tmp_path / "cohort")
     tax = _tax_evidence(tmp_path, cohort)
 
@@ -359,15 +271,13 @@ def test_cli_only_lane_records_an_absent_mcp_leg(tmp_path: Path) -> None:
     )
 
     assert evidence.result.status is EvidenceStatus.PASSED
-    # Only the real aeat executable is attested; no cadrumo-mcp identity exists.
+    # Only the real aeat executable is attested by the installed CLI capture.
     assert {exe.name for exe in evidence.isolation.installed_executables} == {"aeat"}
     assert all(len(exe.sha256) == 64 for exe in evidence.isolation.installed_executables)
     # The isolation facts come from the tax oracle's real captured environment.
     assert evidence.isolation.checkout_imports_removed is True
     assert evidence.isolation.ambient_product_executables_removed is True
-    # The absent leg is recorded honestly, and an assertion names it.
-    assert evidence.result.observations["mcp_oracle"] is None
-    assert any("ships no MCP leg" in assertion for assertion in evidence.result.assertions)
+    assert set(evidence.result.observations) == {"cli_oracle"}
 
 
 def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
@@ -380,7 +290,6 @@ def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
         row_id="python-linux-x86-64",
         cohort=cohort,
         tax_evidence=_tax_evidence(tmp_path, cohort),
-        mcp_evidence=_mcp_evidence(cohort),
         acquisition=_acquisition(),
         destination=_destination(cohort),
     )
@@ -397,11 +306,11 @@ def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
 
 
 def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> None:
-    """The CLI reconstructs oracle evidence from JSON and emits the flat record.
+    """The CLI reconstructs installed-CLI evidence from JSON and emits the flat record.
 
-    Mirrors the PowerShell Scoop path: the CLI-only lane writes tax-evidence.json
-    (the tax oracle's to_jsonable output), then the thin CLI binds the cohort
-    and emits without re-running the oracle, recording the MCP leg absent.
+    Mirrors the PowerShell Scoop path: the lane writes tax-evidence.json (the
+    installed tax oracle's JSON output), then the thin CLI binds the cohort and
+    emits without re-running the oracle.
     """
     import json
 
@@ -439,8 +348,7 @@ def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> N
     assert reloaded.row_id == "scoop-windows-x86-64"
     assert reloaded.result.status is EvidenceStatus.PASSED
     assert reloaded.acquisition.mechanism == "scoop"
-    # The CLI-only lane's record marks the MCP leg absent and attests one exe.
-    assert reloaded.result.observations["mcp_oracle"] is None
+    assert set(reloaded.result.observations) == {"cli_oracle"}
     assert {exe.name for exe in reloaded.isolation.installed_executables} == {"aeat"}
 
 
@@ -459,7 +367,6 @@ def test_version_mismatched_capture_against_cohort_is_refused(tmp_path: Path) ->
             row_id="python-macos-arm64",
             cohort=cohort,
             tax_evidence=_tax_evidence(tmp_path, cohort, version="0.1.0"),
-            mcp_evidence=_mcp_evidence(cohort),
             acquisition=_acquisition(),
             destination=_destination(cohort),
         )
@@ -484,7 +391,6 @@ def test_copied_cohort_fields_cannot_launder_a_foreign_same_version_install(tmp_
             row_id="python-windows-x86-64",
             cohort=cohort,
             tax_evidence=forged,
-            mcp_evidence=_mcp_evidence(cohort),
             acquisition=_acquisition(),
             destination=_destination(cohort),
         )
@@ -506,7 +412,6 @@ def test_version_binding_matches_on_a_token_boundary_not_a_substring(tmp_path: P
                 row_id="python-macos-arm64",
                 cohort=cohort,
                 tax_evidence=_tax_evidence(tmp_path, cohort, version=foreign),
-                mcp_evidence=_mcp_evidence(cohort),
                 acquisition=_acquisition(),
                 destination=_destination(cohort),
             )
@@ -518,7 +423,6 @@ def test_isolation_fields_missing_from_capture_is_an_instructive_refusal(tmp_pat
 
     from ..distribution_evidence_emit import (
         EvidenceCohortBindingError,
-        _mcp_evidence_from_mapping,
         _tax_evidence_from_mapping,
     )
 
@@ -533,11 +437,6 @@ def test_isolation_fields_missing_from_capture_is_an_instructive_refusal(tmp_pat
     with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
         _tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
 
-    mcp_mapping = _mcp_evidence(cohort).to_jsonable()
-    del mcp_mapping["ambient_product_executables_removed"]
-    with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
-        _mcp_evidence_from_mapping(json.loads(json.dumps(mcp_mapping)))
-
 
 def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: Path) -> None:
     """The reconstitution CLI refuses a foreign capture, closing the mint-against-any-cohort hole."""
@@ -546,9 +445,7 @@ def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: P
     cohort_dir = tmp_path / "cohort"
     cohort = _release_cohort(cohort_dir)
     tax_json = tmp_path / "tax-evidence.json"
-    mcp_json = tmp_path / "mcp-evidence.json"
     tax_json.write_text(json.dumps(_tax_evidence(tmp_path, cohort, version="0.1.0").to_jsonable()), encoding="utf-8")
-    mcp_json.write_text(json.dumps(_mcp_evidence(cohort).to_jsonable()), encoding="utf-8")
     evidence_dir = tmp_path / "distribution-install-readiness"
 
     from ..distribution_evidence_emit import EvidenceCohortBindingError
@@ -562,8 +459,6 @@ def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: P
                 str(cohort_dir),
                 "--tax-evidence",
                 str(tax_json),
-                "--mcp-evidence",
-                str(mcp_json),
                 "--acquisition-mechanism",
                 "scoop",
                 "--acquisition-source",
@@ -587,7 +482,6 @@ def test_destination_version_mismatch_is_refused(tmp_path: Path) -> None:
             row_id="python-macos-arm64",
             cohort=cohort,
             tax_evidence=_tax_evidence(tmp_path, cohort),
-            mcp_evidence=_mcp_evidence(cohort),
             acquisition=_acquisition(),
             destination=DestinationIdentity(kind="pypi-index-install", locator="venv", version="9.9.9"),
         )

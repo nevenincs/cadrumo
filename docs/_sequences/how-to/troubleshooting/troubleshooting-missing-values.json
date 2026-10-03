@@ -21,8 +21,17 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.bindings.list",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
+          "authority_generation": "33b9c4cf5ace0549979bd7f64a71a1071b2071c30ceaf2e0578414f8c5e3b13d",
           "binding_count": 51,
           "bindings": [
             {"binding_id":"modelo-303-iva-repercutido-general-cuota","borrador_capable":false,"encoded_options":[],"filing_year":2026,"input_channel":"decimal","legal_refs":["ley-37-1992:art-88","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"modelo":"303","period":"1T","readiness":"data from your records","relation_inputs":[],"revision":"2026-y-siguientes","source":"ledger_iva_aggregation","source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"typed_enum":null},
@@ -84,7 +93,7 @@
           "year_filter": 2026
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

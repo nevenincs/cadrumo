@@ -97,12 +97,18 @@ _OVERVIEW_ACTIONS: Final[dict[AeatSyncOverviewArea, tuple[str, ...]]] = {
 _OVERVIEW_OPERATIONS: Final[dict[AeatSyncOverviewArea, tuple[str, ...]]] = {
     AeatSyncOverviewArea.CENSUS: ("user-profile.censo-review",),
     AeatSyncOverviewArea.FILED_DECLARATIONS: ("live.filed-history.pull",),
-    AeatSyncOverviewArea.NOTIFICATIONS: (),
+    AeatSyncOverviewArea.NOTIFICATIONS: ("live.notifications.list",),
     AeatSyncOverviewArea.EVIDENCE_COMPARISON: ("live.filed-history.pull",),
     AeatSyncOverviewArea.RECONCILIATION: (),
 }
 
-_PULL_ACTION_IDS: Final[frozenset[str]] = frozenset({"operator.live.filed.pull", "operator.live.filed.pull_all"})
+_OPERATION_ACTION_IDS: Final[frozenset[str]] = frozenset(
+    {
+        "operator.live.filed.pull",
+        "operator.live.filed.pull_all",
+        "operator.live.notifications.list",
+    }
+)
 
 
 _LOCAL_REFUSALS: Final[dict[AeatSyncWorkspaceSource, str]] = {
@@ -214,8 +220,10 @@ def _area_actions(
 
 
 def _action_is_admitted(action_id: str, joined_actions: tuple[ActionReference, ...]) -> bool:
-    """Return whether an overview action has its corresponding operation."""
-    return action_id not in _PULL_ACTION_IDS or any(str(joined.action_id) == action_id for joined in joined_actions)
+    """Return whether an operation-backed action has its exact operation."""
+    return action_id not in _OPERATION_ACTION_IDS or any(
+        str(joined.action_id) == action_id for joined in joined_actions
+    )
 
 
 _LOCALLY_READ_AREAS: Final[frozenset[AeatSyncOverviewArea]] = frozenset(

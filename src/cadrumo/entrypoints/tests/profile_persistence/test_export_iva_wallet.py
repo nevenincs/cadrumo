@@ -19,7 +19,9 @@ __all__ = ["isolated_backend"]
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
     export_m303_filing_evidence as _general_m303_filing_evidence,
@@ -283,6 +285,10 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-file.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
+    revision_for_approval = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
+    assert revision_for_approval is not None
+    verification_repo = VerificationReportCatalogueRepository(bucket_id=bucket_id)
+    report_id = seed_filing_gate_report(revision_for_approval, verification_repo)
 
     try:
         with (
@@ -291,6 +297,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
         ):
             file_modelo_revision(
                 calc_rev_id,
+                approved_verification_report_id=report_id,
                 actor="operator",
                 workflow_profile=_profile(),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -299,6 +306,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
                     work_unit_repository=WorkUnitCatalogueRepository(),
                     calculation_repository=CalculationRevisionCatalogueRepository(),
                     filing_repository=ModeloRecordCatalogueRepository(),
+                    verification_repository=verification_repo,
                     iva_compensation_decision_repository=decision_repo,
                 ),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,

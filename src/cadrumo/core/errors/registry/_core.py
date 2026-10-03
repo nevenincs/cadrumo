@@ -9,14 +9,13 @@ from ._core_part2 import DECLARED_ERROR_CODES as _CORE_PART2_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.core.errors.hierarchy.PublicErrorProjectionError",
+        "cadrumo.core.errors.hierarchy.RecordedRegisteredError",
         ErrorCode(
-            code="INTERNAL_PUBLIC_ERROR_PROJECTION",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.canonical_internal_invariant",
+            code="ERROR_RECORDED_REGISTERED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_cadrumo_core",
             retryable=False,
             runbook_id=None,
-            public_message_from_registry=True,
         ),
     ),
     (

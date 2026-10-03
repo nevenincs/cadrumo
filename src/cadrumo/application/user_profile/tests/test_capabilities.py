@@ -21,7 +21,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..capabilities import CapabilitySource, _parse_bool_fact, resolve_capability
+from ..capabilities import CapabilitySource, _parse_bool_fact, resolve_capability, resolve_capability_from_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -65,6 +65,26 @@ def test_profile_fact_overrides_the_default() -> None:
         # profile fact is the deciding layer.
         assert resolved.enabled is expected_enabled
         assert resolved.source is CapabilitySource.PROFILE
+
+
+def test_authorized_fact_projection_uses_the_same_safety_floor_and_opt_out() -> None:
+    settings = load_settings()
+    values = {"capabilities.llm_vision": "false", "capabilities.cloud_evidence_upload": "true"}
+    vision = resolve_capability_from_values(ServiceCapability.LLM_VISION, profile_values=values, settings=settings)
+    assert vision.enabled is False
+    assert vision.source is CapabilitySource.PROFILE
+    assert vision == resolve_capability(
+        ServiceCapability.LLM_VISION,
+        profile_record=_record(UserProfileFact(path="capabilities.llm_vision", value=False)),
+        settings=settings,
+    )
+    barred = resolve_capability_from_values(
+        ServiceCapability.CLOUD_EVIDENCE_UPLOAD,
+        profile_values=values,
+        settings=settings.model_copy(update={"cadrumo_evidence_gestor_mode": True}),
+    )
+    assert barred.enabled is False
+    assert barred.source is CapabilitySource.SAFETY_FLOOR
 
 
 @pytest.mark.parametrize("token", ["no", "n", "false", "falso", "0"])

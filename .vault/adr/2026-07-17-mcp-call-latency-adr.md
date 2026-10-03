@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#mcp-call-latency'
 date: '2026-07-17'
-modified: '2026-07-19'
-body_hash: 'sha256:bd6e3638e21990a0e77d20d2ab119ffee5f6c89303bfec20762b7138ff256728'
+modified: '2026-09-26'
+body_hash: 'sha256:fd13d0d77859fa9412e87714ae3588e56abb13ca6c58cdef458cd63c7bc7bbb7'
 related:
   - "[[2026-07-17-mcp-call-latency-research]]"
+  - '[[2026-09-26-mcp-purpose-authentication-adr]]'
 ---
 
 # `mcp-call-latency` adr: `Serving-path latency architecture` | (**status:** `accepted`)
@@ -130,3 +131,11 @@ stamped fingerprint would go undetected at runtime, which is accepted because
 package-manager digest verification and the distribution evidence chain
 already own byte integrity. Projected end-state per the research: warm
 calculate ~1.5 s in server mode, all reads and simple writes sub-second.
+
+## Amendment 2026-09-26: runtime hosting and current authority ownership
+
+Accepted under the operator's instruction to continue the presented mcp-purpose-authentication plan. 2026-09-26-mcp-purpose-authentication-adr replaces D4's MCP-owned warm runtime, human-CLI exception and their dependent dispatch/custody clauses. Client-owned stdio adapters and CLI/TUI connect to one per-user local application runtime with isolated profile execution and separately governed sessions.
+
+Result-contract parity, measured latency and bounded concurrency remain requirements. A transport timeout is not proof that an operation stopped; the application supervisor owns settlement. Warm serving never extends a human session or substitutes a previous identity read for API authorization.
+
+D1-D3 are historical authority/cache prescriptions wherever displaced by 2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr. Its published artifact, integrity and pinning contract governs current runtime authority; this amendment does not restore source compilation or the retired caches. Distribution and installation follow their current owning decisions rather than an inferred mandatory MCPB vehicle.

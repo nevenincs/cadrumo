@@ -95,6 +95,7 @@ class ModeloWorkCreateResultV1:
 
     reused: bool
     declaration: DeclarationsWorkspaceDeclarationRefV1 | None = None
+    advisory_keys: tuple[str, ...] = ()
 
 
 class ModeloWorkCreateHandoffV1(Protocol):

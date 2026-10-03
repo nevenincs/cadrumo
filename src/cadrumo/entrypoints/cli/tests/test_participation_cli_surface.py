@@ -10,14 +10,17 @@ against a real participation index built from a real revision lifecycle.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.ledger.participation_read import get_transaction_participation
+from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.participation_index import (
@@ -28,8 +31,9 @@ from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipation
 from ..command_spec import ArgumentSpec, OptionSpec
 from ..command_specs import COMMAND_GRAPH
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 def test_participation_verb_declares_subject_argument() -> None:
@@ -64,13 +68,36 @@ def test_participation_rebuild_subcommand_is_registered() -> None:
     assert "rebuild" in children
 
 
-def _invoke_participation(*args: str) -> Result:
-    return invoke_cached_cli(["--language", "en", "app", "ledger", "participation", *args])
+def _invoke_participation(profile: NativeCliProfileFixture, *args: str) -> Result:
+    assert profile.label is not None
+    close_active_bucket_session()
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
+        result = invoke_cached_cli(
+            [
+                "--language",
+                "en",
+                "--profile",
+                profile.label,
+                "--profile-secrets-stdin",
+                "app",
+                "ledger",
+                "participation",
+                *args,
+            ],
+            input=json.dumps({"profile_passphrase": profile.passphrase}),
+        )
+    assert profile.passphrase not in result.output
+    return result
 
 
-def _seed_transaction_id() -> str:
+def _seed_transaction_id(profile: NativeCliProfileFixture) -> str:
+    assert profile.label is not None
+    close_active_bucket_session()
     result = invoke_cached_cli(
         [
+            "--profile",
+            profile.label,
+            "--profile-secrets-stdin",
             "--format",
             "json",
             "app",
@@ -89,14 +116,18 @@ def _seed_transaction_id() -> str:
             "--idempotency-key",
             "participation-lookup-seed",
         ],
+        input=json.dumps({"profile_passphrase": profile.passphrase}),
     )
     assert result.exit_code == 0, result.output
+    assert profile.passphrase not in result.output
     envelope = json.loads(result.output)
     transaction_id = envelope["result"]["transaction_id"]
     assert isinstance(transaction_id, str)
     return transaction_id
 
 
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_participation_rebuild_dispatches_not_swallowed_as_id(tmp_path: Path) -> None:
     """``participation rebuild`` dispatches the subcommand, not the lookup.
 
@@ -107,16 +138,32 @@ def test_participation_rebuild_dispatches_not_swallowed_as_id(tmp_path: Path) ->
     subcommand name to its command. Asserts the rebuild action runs to a
     success exit (the typed rebuild counts), never the hex-validation failure.
     """
-    bucket_id = "44440001-0000-4000-8000-000000000001"
-    bucket_label = "participation rebuild"
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id, label=bucket_label):
-        result = _invoke_participation("rebuild")
+    facts = {
+        "taxpayer_type.entity_type": "natural_person",
+        "identity.name": "Participation",
+        "identity.surnames": "Rebuilder",
+        "activities.description": "design",
+        "censo.activity_start_date": "2025-01-01",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.regime": "GENERAL",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    }
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-participation-rebuild", facts=facts)
+        close_active_bucket_session()
+        result = _invoke_participation(profile, "rebuild")
 
     assert result.exit_code == 0, result.output
     assert "no hexadecimales" not in result.output
     assert "revision_count" in result.output
 
 
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_participation_lookup_still_works_for_transaction_id(tmp_path: Path) -> None:
     """``participation <transaction-id>`` keeps its documented lookup UX.
 
@@ -125,11 +172,25 @@ def test_participation_lookup_still_works_for_transaction_id(tmp_path: Path) -> 
     untracked transaction), proving the reserved-name guard does not divert
     genuine lookup ids.
     """
-    bucket_id = "44440002-0000-4000-8000-000000000002"
-    bucket_label = "participation lookup"
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id, label=bucket_label):
-        transaction_id = _seed_transaction_id()
-        result = _invoke_participation(transaction_id)
+    facts = {
+        "taxpayer_type.entity_type": "natural_person",
+        "identity.name": "Participation",
+        "identity.surnames": "Lookup",
+        "activities.description": "design",
+        "censo.activity_start_date": "2025-01-01",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.regime": "GENERAL",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    }
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-participation-lookup", facts=facts)
+        close_active_bucket_session()
+        transaction_id = _seed_transaction_id(profile)
+        result = _invoke_participation(profile, transaction_id)
 
     assert result.exit_code == 0, result.output
     assert transaction_id in result.output
