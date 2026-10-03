@@ -13,13 +13,16 @@ from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import OperationReplayPolicy
+from cadrumo.application.operations.composition import OperationSubmissionService
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operations.projection_services import OperationResponseAuthorityBroker
 from cadrumo.application.operations.registry import OperationReconciliationPolicy
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import (
     OperationDurability,
+    OperationEffect,
     OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,
@@ -129,6 +132,41 @@ def test_refusal_prevents_the_corresponding_supervisor_boundary(tmp_path: Path, 
                 assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
                 assert executor.effects == ["effect body"]
                 assert authority.calls.count("guard_enter") == authority.calls.count("guard_leave") == 1
+            await supervisor.shutdown()
+
+        asyncio.run(exercise())
+
+
+def test_a_refused_frontend_start_settles_and_frees_its_subject(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "operations", profile_objects=profile.repository
+        )
+        executor, authority = Executor(), Authorization()
+        supervisor = _supervisor(
+            registry=_registry(executor_type=Executor, build=lambda: executor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            execution_authority=authority,
+        )
+        service = OperationSubmissionService(supervisor, OperationResponseAuthorityBroker())
+
+        async def exercise() -> None:
+            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            authority.denied = AccessAction.START
+            with pytest.raises(ProfileAccessRefusedError):
+                await service.start(operation_id)
+            refused = await journal.load(operation_id)
+            assert refused.lifecycle is OperationLifecycle.TERMINAL
+            assert refused.terminal_condition is OperationTerminalCondition.REFUSED
+            assert refused.effect is OperationEffect.NONE
+            assert not executor.entered.is_set()
+            authority.denied = None
+            # Left CREATED, the refused start would hold the subject and refuse this submission.
+            assert await supervisor.submit(_request(), operation_id="4" * 64) == "4" * 64
             await supervisor.shutdown()
 
         asyncio.run(exercise())

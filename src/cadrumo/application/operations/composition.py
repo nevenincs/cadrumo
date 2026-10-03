@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, TypeAdapter
 
+from ..user_profile.access_errors import ProfileAccessRefusedError
 from .authorization import OperationExecutionAuthority
 from .drain import OperationDrainResult
 from .frontend_requests import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
@@ -118,7 +119,11 @@ class OperationSubmissionService:
         Progress and the outcome are read through the observation service, or
         awaited with :meth:`settled`.
         """
-        snapshot = await self.supervisor.start(operation_id)
+        try:
+            snapshot = await self.supervisor.start(operation_id)
+        except ProfileAccessRefusedError as refusal:
+            await self.supervisor.settle_refused_start(operation_id, refusal)
+            raise
         return snapshot.identity.operation_id
 
     async def settled(self, operation_id: OperationId) -> OperationId:

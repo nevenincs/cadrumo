@@ -23,6 +23,7 @@ from ...core.operations import (
     OperationTerminalCondition,
 )
 from ..user_profile.access_contracts import AccessAction
+from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import _supervisor_snapshot
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
@@ -339,6 +340,20 @@ class SupervisorExecutionMixin(SupervisorHost):
                 settled_at=self._clock(),
             ),
         )
+
+    async def settle_refused_start(
+        self: SupervisorHost, operation_id: OperationId, refusal: ProfileAccessRefusedError
+    ) -> OperationPersistedSnapshot:
+        """Settle a frontend start refused before executor entry, releasing its subject.
+
+        Continuation keeps a refused start CREATED so a later authorized continuation can
+        run it; a frontend start has no such follow-up, and a CREATED record would hold the
+        subject's lease and refuse every later submission for it.
+        """
+        snapshot = await self.inspect(operation_id)
+        if snapshot.lifecycle is not OperationLifecycle.CREATED or snapshot.executor_entered_at is not None:
+            raise ValueError("only an unstarted operation settles a refused start")
+        return await self._settle_executor_failure(snapshot, refusal)
 
     @override
     async def _settle_executor_failure(
