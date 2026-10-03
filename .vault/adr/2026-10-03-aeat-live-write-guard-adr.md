@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d5f5d5e2af34a169d37d06650469f1f737d3e74f53e08fc84e840671391b151'
+body_hash: 'sha256:69db912294fd4c6bd88808b1187361e01f61bc8ea6120c3b035cdca310a5159f'
 related:
   - "[[2026-08-02-adjacent-domain-deduplication-write-verb-substring-matching-adr]]"
   - "[[2026-07-10-clave-permanente-idp-guard-host-adr]]"
@@ -16,7 +16,7 @@ related:
   - '[[2026-07-10-clave-permanente-idp-guard-host-research]]'
 ---
 
-# `aeat-live-write-guard` adr: `Browser-context request guard semantics` | (**status:** `proposed`)
+# `aeat-live-write-guard` adr: `Browser-context request guard semantics` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -83,7 +83,7 @@ Grounding (ruling 5):
 - Refusal logs carry only policy ids, method, host and path. They never include the query string, body, headers, cookies or identifiers.
 - Implementation hypotheses that may change within these constraints: the field name (for example `declared_read_requests`), the module name (for example `src/cadrumo/adapters/outbound/aeat/browser/request_guard.py`), and whether `allowed_read_post_paths` is folded into the new field. Under `no-legacy-compatibility` it must be folded in, not kept beside it, if the meanings coincide.
 
-Proposed reconciliation of accepted wording (apply only once authorised):
+Accepted 2026-10-03 by the operator, including ruling 3 as amended before acceptance. Reconciliation of accepted wording, applied on acceptance:
 
 - In `2026-07-10-clave-permanente-idp-guard-host-adr`, Ruling 3, append: "This ruling governs the token sets and the `browser_action` evaluation path. An exact, policy-declared HTTP read request under `2026-10-03-aeat-live-write-guard-adr` is the surface-scoped allow-list entry directed by `2026-08-02-adjacent-domain-deduplication-write-verb-substring-matching-adr`. It is policy data, not a bypass parameter."
 - In `2026-08-02-adjacent-domain-deduplication-write-verb-substring-matching-adr`, Implementation, append: "The typed form of a surface-scoped allow-list entry on the remote-state guard is the declared read request ruled in `2026-10-03-aeat-live-write-guard-adr`. It does not alter any landing-refusal tuple."

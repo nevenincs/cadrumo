@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#clave-permanente-idp-guard-host'
 date: '2026-07-10'
-modified: '2026-08-15'
-body_hash: 'sha256:ba47c4a6d7e5d8b08104722106de10f4c9c962f54faf993e03a846819ab0e34b'
+modified: '2026-10-03'
+body_hash: 'sha256:fb41c91a6e04a50f339ba5dfc42791918c5d445653632a003c09d68766ea6c9e'
 related:
   - '[[2026-07-10-clave-permanente-idp-guard-host-research]]'
 ---
@@ -259,6 +259,12 @@ genuine write verb (e.g. containing `presentar`, `submit`, or `enviar`) is STILL
 by the Permanente policy even though the policy allow-list exists — mirroring the shape
 of the current `test_policy_submit_action_is_write_token_blocked`, which that test
 replaces.
+
+This ruling governs the token sets and the `browser_action` evaluation path. An exact,
+policy-declared HTTP read request under `2026-10-03-aeat-live-write-guard-adr` is the
+surface-scoped allow-list entry directed by
+`2026-08-02-adjacent-domain-deduplication-write-verb-substring-matching-adr`. It is
+policy data, not a bypass parameter.
 
 **Code-surface footprint (one atomic change).** `clave-permanente-submit` has exactly
 three references in the tree; the policy is currently unconsumed and

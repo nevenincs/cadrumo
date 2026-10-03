@@ -4,9 +4,11 @@ tags:
   - '#aeat-live-write-guard'
 date: '2026-09-24'
 tier: L1
-modified: '2026-09-25'
+related:
+  - '[[2026-10-03-aeat-live-write-guard-adr]]'
+modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:2b0159a4bcb04286b35a6bf64325a49ee5a1fd75b270867563899ed407d7d421'
+body_hash: 'sha256:3e45e41239e1e76ff228132175568a62cee6893d92edcee85960735b091cae62'
 ---
 
 # `aeat-live-write-guard` plan
@@ -23,8 +25,8 @@ Decision coverage: this enforces an existing project rule (sensitive financial d
 
 ## Steps
 
-- [ ] `S01` - delete the unread live_submission_enabled flag, its validator, its locale-contract test and its guard exemption, make CLI dispatch refuse every live_write command through AeatAccessGate.require_live_write, and turn the accepting command-policy test into a refusal plus a planted CLI command test; `src/cadrumo/application/operator_surface/models.py, src/cadrumo/entrypoints/cli command runtime and policy validation`.
-- [ ] `S02` - route every request and page action through the browser factory into evaluate_remote_operation, so an AEAT reader that forgets the guard is still refused, proven by a test with such a reader; `src/cadrumo/adapters/outbound/aeat browser factory`.
+- [x] `S01` - delete the unread live_submission_enabled flag, its validator, its locale-contract test and its guard exemption, make CLI dispatch refuse every live_write command through AeatAccessGate.require_live_write, and turn the accepting command-policy test into a refusal plus a planted CLI command test; `src/cadrumo/application/operator_surface/models.py, src/cadrumo/entrypoints/cli command runtime and policy validation`.
+- [ ] `S02` - route every browser-context request through the union of the context's declared remote-state guard policies, aborting refused requests with redacted logging and no bypass, after declared read requests are grounded by the live capture, so an AEAT reader that forgets its guard is still refused, proven by a test with such a reader; `src/cadrumo/adapters/outbound/aeat/browser/session.py, a new public module in src/cadrumo/adapters/outbound/aeat/browser, src/cadrumo/domain/calculations/registry/remote_state_guard.py`.
 
 ## Parallelization
 
