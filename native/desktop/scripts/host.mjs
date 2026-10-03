@@ -13,9 +13,15 @@ const identity = JSON.parse(
 const cli = resolve(desktop, "frontend/node_modules/@tauri-apps/cli/tauri.js");
 const icons = resolve(binaryDir, "desktop/icons");
 const snapshot = resolve(binaryDir, "desktop/host");
+const contract = process.env.CADRUMO_NATIVE_CONTRACT;
+if (!contract || !isAbsolute(contract))
+  throw new Error(
+    "Set CADRUMO_NATIVE_CONTRACT to the generated native contract.json.",
+  );
 const environment = {
   ...process.env,
   CARGO_TARGET_DIR: resolve(binaryDir, "cargo/desktop"),
+  CADRUMO_NATIVE_CONTRACT: contract,
 };
 if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
   const pathKey =
@@ -26,6 +32,13 @@ if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
     delimiter +
     (environment[pathKey] ?? "");
 }
+cpSync(
+  resolve(desktop, "../application"),
+  resolve(snapshot, "../application"),
+  {
+    recursive: true,
+  },
+);
 function run(args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
     cwd: snapshot,
@@ -62,12 +75,47 @@ const config = {
   build: { frontendDist: resolve(binaryDir, "desktop/frontend") },
   bundle: { icon: [resolve(icons, "icon.ico"), resolve(icons, "icon.png")] },
 };
-run([
-  "build",
-  "--no-bundle",
-  "--debug",
-  "--config",
-  JSON.stringify(config),
-  "--",
-  "--locked",
-]);
+const action = process.argv[2] ?? "build";
+if (action === "build") {
+  run([
+    "build",
+    "--no-bundle",
+    "--debug",
+    "--config",
+    JSON.stringify(config),
+    "--",
+    "--locked",
+  ]);
+} else if (action === "test" || action === "clippy") {
+  const args =
+    action === "test"
+      ? [
+          "test",
+          "--locked",
+          "--features",
+          "live-package-tests",
+          "--",
+          "--nocapture",
+          "--test-threads=1",
+        ]
+      : [
+          "clippy",
+          "--locked",
+          "--all-targets",
+          "--features",
+          "live-package-tests",
+          "--",
+          "-D",
+          "warnings",
+        ];
+  const result = spawnSync("cargo", args, {
+    cwd: resolve(snapshot, "src-tauri"),
+    env: { ...environment, TAURI_CONFIG: JSON.stringify(config) },
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  if (result.error) throw result.error;
+  process.exit(result.status ?? 1);
+} else {
+  throw new Error(`Unknown host action: ${action}`);
+}
