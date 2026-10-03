@@ -246,6 +246,8 @@ def _assert_exact_mcp_access[RequestPayloadT: BaseModel](
     assert admitted.request.period_independent
     assert admitted.request.periods == frozenset()
     assert admitted.policy.requires_all_periods
+    # Reusing a saved provider session re-publishes it, a local write behind the COMMIT door.
+    assert AccessAction.COMMIT in admitted.policy.actions
 
     foreign_profile_id = uuid4()
     assert foreign_profile_id != profile_id
