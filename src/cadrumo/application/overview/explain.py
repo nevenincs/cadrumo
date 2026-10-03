@@ -39,6 +39,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
+    LedgerPayerFactDerivation,
     ModeloApplicabilityRule,
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
@@ -56,9 +57,12 @@ from ...domain.user_profile.quarter_sets import format_quarter_set
 from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from ...domain.calculations.registry.temporal import RevisionSelectionMetadata
+    from .applicability_evidence import FilingYearApplicabilityEvidence
 
 _ProfileFactValue = str | bool | int
 """Closed value type for the explain payload's ``profile_facts`` map.
@@ -343,6 +347,17 @@ def _modelo_is_registered(modelo: str, *, operation: PinnedAuthorityOperation) -
     return modelo in operation.modelo_ids()
 
 
+def _applicability_inputs_for_year(
+    profile: TaxpayerProfile,
+    year: int,
+    evidence: FilingYearApplicabilityEvidence | None,
+) -> tuple[TaxpayerProfile, Mapping[str, LedgerPayerFactDerivation]]:
+    """Return the profile and ledger derivations the calendar decides ``year``'s row on."""
+    if evidence is None:
+        return profile, dict[str, LedgerPayerFactDerivation]()
+    return evidence.profile_for_year(year), evidence.ledger_payer_facts_for_year(year)
+
+
 def build_overview_explain(
     profile: TaxpayerProfile,
     *,
@@ -351,6 +366,7 @@ def build_overview_explain(
     engine: DeadlineExplanationEngine | None = None,
     today: date | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> OverviewExplain:
     """Decompose a modelo's applicability against the operator's profile.
 
@@ -381,6 +397,11 @@ def build_overview_explain(
             the real current date.
         operation: Optional caller-held pinned authority operation. When
             omitted, this builder opens the bundled indexed operation.
+        applicability_evidence: Optional per-filing-year evidence bound by
+            the composition root. When supplied, the verdict and the listed
+            profile facts are decided on the profile as of ``year`` and on the
+            ledger's derivations for ``year``, exactly as the calendar decides
+            that year's row.
 
     Returns:
         An :class:`OverviewExplain` carrying the applicability verdict,
@@ -400,6 +421,7 @@ def build_overview_explain(
                 engine=engine,
                 today=today,
                 operation=indexed_operation,
+                applicability_evidence=applicability_evidence,
             )
     modelo_id = modelo.strip()
     if not modelo_id:
@@ -438,7 +460,13 @@ def build_overview_explain(
             },
         )
 
-    applicability = derive_modelo_applicability(profile, modelo_id, operation=operation)
+    year_profile, ledger_payer_facts = _applicability_inputs_for_year(profile, resolved_year, applicability_evidence)
+    applicability = derive_modelo_applicability(
+        year_profile,
+        modelo_id,
+        operation=operation,
+        ledger_payer_facts=ledger_payer_facts,
+    )
     rule = next(
         (rule for rule in iter_modelo_applicability_rules(operation=operation) if rule.modelo == modelo_id),
         None,
@@ -469,7 +497,7 @@ def build_overview_explain(
         legal_refs=applicability.legal_refs,
         scheduling_rationale=scheduling_rationale,
         out_of_plazo_warning=out_of_plazo_warning,
-        profile_facts=_extract_profile_facts(profile, rule),
+        profile_facts=_extract_profile_facts(year_profile, rule),
         generated_at=now(),
     )
 

@@ -8,11 +8,12 @@ inputs vary by year:
   read through :func:`~cadrumo.application.user_profile.projections.projection_for_taxpayer`
   as of the last day of the year, the "año natural correspondiente" RGAT
   arts. 32.c and 33.1 judge the Modelo 347 threshold over;
-* what the taxpayer's own records show about a payer fact. A modelo whose
-  obligation turns on having anything to declare answers its own required payer
-  fact from the declared-record count its filing resolver computes, so the
-  signal is built from the same invoice observations and the same threshold
-  function the declaration itself is built from, never from a second reader.
+* what the taxpayer's own records show about a payer fact. The payer-fact
+  catalogue in force for the year declares, per fact, the modelo filing whose
+  declared-record count answers it; that filing's own resolver computes the
+  count, so the signal is built from the same invoice observations and the
+  same threshold function the declaration itself is built from, never from a
+  second reader.
 
 The composition root binds both to its stores once per read; the builders only
 ask for the years they evaluate, and each year is derived at most once.
@@ -23,15 +24,11 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
-from ...core.modelo import Modelo
 from ...core.period import Period
-from ...domain.calculations.registry.applicability import (
-    LedgerPayerFactDerivation,
-    resolve_applicability_rule_from_operation,
-)
-from ...domain.calculations.registry.applicability_payer_facts import PayerFactProjection
+from ...domain.calculations.registry.applicability import LedgerPayerFactDerivation
+from ...domain.calculations.registry.applicability_payer_facts import resolve_payer_fact_catalogue
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import BindingId
@@ -50,29 +47,6 @@ if TYPE_CHECKING:
     from ...domain.invoices.models import InvoiceCatalogue
     from ...domain.user_profile.schema import ProfileSchemaDefinition
     from ...domain.user_profile.values import UserProfileRecord
-
-
-@dataclass(frozen=True, slots=True)
-class _DeclaredRecordCountSource:
-    """A modelo whose required payer fact holds exactly when its filing declares a record."""
-
-    modelo: Modelo
-    period: str
-    record_count_binding: BindingId
-
-
-_DECLARED_RECORD_COUNT_SOURCES: Final[tuple[_DeclaredRecordCountSource, ...]] = (
-    # RGAT art. 33.1 relates every person whose operations "hayan superado la
-    # cifra de 3.005,06 euros durante el año natural correspondiente", and the
-    # type 1 count is the number of declarado records the resolver builds with
-    # that floor applied per counterparty and per bucket (clave C's 300,51
-    # included), so a count above zero is the threshold fact itself.
-    _DeclaredRecordCountSource(
-        modelo=Modelo("347"),
-        period="0A",
-        record_count_binding="modelo-347-declarante-numero-personas-entidades",
-    ),
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -180,10 +154,12 @@ def derive_ledger_payer_facts(
 ) -> dict[str, LedgerPayerFactDerivation]:
     """Derive what the invoice ledger shows about payer facts for one filing year.
 
-    Each declared-record-count modelo is resolved exactly as its calculation
-    resolves it, through :class:`InvoiceCatalogueSourceResolver`, and the
-    record count it reports answers the modelo's required payer fact. A year
-    outside the modelo's supported filing years yields no derivation.
+    Every payer fact whose catalogue entry for the year declares a
+    :class:`~cadrumo.domain.calculations.registry.applicability_payer_facts.PayerFactLedgerSource`
+    is answered from its source modelo, resolved exactly as that modelo's
+    calculation resolves it, through :class:`InvoiceCatalogueSourceResolver`.
+    A year outside the registry's or the source modelo's supported filing
+    years yields no derivation.
 
     Args:
         filing_year: The filing year whose operations are read.
@@ -196,21 +172,26 @@ def derive_ledger_payer_facts(
         The derivation per payer fact token.
 
     Raises:
-        RegistryValidationError: A declared-record-count modelo's applicability
-            rule does not require a registry payer fact.
+        RegistryValidationError: The source modelo's revision for the year does
+            not declare the source's record-count binding.
     """
     resolver = InvoiceCatalogueSourceResolver(ports=invoice_source_ports)
     derived: dict[str, LedgerPayerFactDerivation] = {}
+    if not operation.supported_filing_years().admits_filing_year(filing_year):
+        return derived
     with validating_governed_facts(operation):
-        for source in _DECLARED_RECORD_COUNT_SOURCES:
+        for fact in resolve_payer_fact_catalogue(effective_date=date(filing_year, 12, 31)):
+            source = fact.ledger_source
+            if source is None:
+                continue
             support = operation.modelo_directory(source.modelo).supported_filing_years
             if support is not None and not support.admits_filing_year(filing_year):
                 continue
-            fact = resolve_applicability_rule_from_operation(operation, source.modelo).required_payer_fact
-            if not isinstance(fact, PayerFactProjection):
+            revision = operation.revision_for_context(source.modelo, filing_year=filing_year, period=source.period)
+            if all(binding.id != source.record_count_binding for binding in revision.bindings):
                 raise RegistryValidationError(
-                    f"modelo {source.modelo.value!r} derives its payer fact from its declared records, but its "
-                    "applicability rule requires no registry payer fact",
+                    f"payer fact {fact.token!r} ledger source names binding {source.record_count_binding!r}, which "
+                    f"modelo {source.modelo.value!r} revision {revision.id!r} does not declare",
                 )
             resolution = resolver.resolve(
                 CalculationSourceContext(
@@ -218,11 +199,7 @@ def derive_ledger_payer_facts(
                     modelo=source.modelo.value,
                     filing_year=filing_year,
                     period=Period.from_year_and_code(filing_year, source.period),
-                    revision=operation.revision_for_context(
-                        source.modelo,
-                        filing_year=filing_year,
-                        period=source.period,
-                    ),
+                    revision=revision,
                     operation=operation,
                 ),
             )

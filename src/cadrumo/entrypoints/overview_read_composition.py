@@ -190,7 +190,7 @@ class _OverviewReadPorts:
                     request, operation=operation, taxpayer=taxpayer, raw_values=raw_values, evidence=evidence
                 )
             if request.kind is OverviewReadKind.EXPLAIN:
-                return self._explain(request, operation=operation, record=record, taxpayer=taxpayer)
+                return self._explain(request, operation=operation, record=record, taxpayer=taxpayer, evidence=evidence)
             return self._prepare(request, operation=operation)
 
     def _status(
@@ -416,6 +416,7 @@ class _OverviewReadPorts:
         operation: PinnedAuthorityOperation,
         record: UserProfileRecord,
         taxpayer: TaxpayerProfile,
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewExplainRead:
         from ..application.overview.explain import build_overview_explain
         from ..domain.calculations.registry.applicability import ApplicabilityVerdict
@@ -423,7 +424,13 @@ class _OverviewReadPorts:
 
         if request.modelo is None:
             raise ValueError("explanation query requires modelo")
-        report = build_overview_explain(taxpayer, modelo=request.modelo, year=request.year, operation=operation)
+        report = build_overview_explain(
+            taxpayer,
+            modelo=request.modelo,
+            year=request.year,
+            operation=operation,
+            applicability_evidence=evidence,
+        )
         notices = (
             tuple(
                 OverviewNoticeSnapshot.from_notice(notice)

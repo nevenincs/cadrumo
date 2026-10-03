@@ -13,6 +13,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -20,6 +21,7 @@ from cadrumo.domain.calculations.registry.applicability import (
 )
 from cadrumo.domain.calculations.registry.applicability_payer_facts import (
     PayerFactDeclaration,
+    PayerFactLedgerSource,
     PayerFactProjection,
     payer_fact_declaration,
     resolve_payer_fact,
@@ -40,6 +42,7 @@ from cadrumo.domain.calculations.registry.schema_references import TemporalSuppo
 from cadrumo.domain.contribuyente.entity_type import require_entity_type
 from cadrumo.domain.deadlines.models import ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.validate_applicability_section import validate_applicability_section
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -307,3 +310,75 @@ def test_the_sii_fact_reads_any_yes_unanswered_without_the_block_and_no_only_whe
     assert payer_fact_declaration(all_no, fact) is PayerFactDeclaration.DECLARED_NO
     assert payer_fact_declaration(voluntary, fact) is PayerFactDeclaration.DECLARED_YES
     assert payer_fact_declaration(large_company_without_block, fact) is PayerFactDeclaration.DECLARED_YES
+
+
+_THRESHOLD_FACT = "exceeds_third_party_threshold"
+_M347_RECORD_COUNT = "modelo-347-declarante-numero-personas-entidades"
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_the_threshold_fact_is_answered_from_the_modelo_347_declared_record_count() -> None:
+    fact = resolve_payer_fact(_THRESHOLD_FACT, effective_date=_TODAY)
+
+    assert isinstance(fact, PayerFactProjection)
+    assert fact.ledger_source == PayerFactLedgerSource(
+        modelo=Modelo("347"),
+        period="0A",
+        record_count_binding=_M347_RECORD_COUNT,
+    )
+
+
+def _m347_ledger_source_failures() -> list[str]:
+    """Run the applicability section validator over every compiled 347 revision; keep the ledger findings."""
+    authority = compiled_bundled_authority()
+    failures: list[str] = []
+    for revision_id, revision in authority.modelo("347").revisions.items():
+        failures.extend(
+            validate_applicability_section(prefix=f"347 {revision_id}", modelo="347", revision=revision, legal_refs={}),
+        )
+    return [failure for failure in failures if "ledger source" in failure]
+
+
+def test_the_declared_ledger_source_validates_against_the_modelo_347_revisions() -> None:
+    with validating_governed_facts(compiled_bundled_authority()):
+        assert _m347_ledger_source_failures() == []
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "message"),
+    (
+        pytest.param("ledger_record_count_binding", "modelo-347-no-such-binding", "unknown binding", id="unknown"),
+        pytest.param(
+            "ledger_record_count_binding",
+            "modelo-347-declarante-importe-total-anual-operaciones",
+            "not a distinct count",
+            id="amount-not-count",
+        ),
+        pytest.param("ledger_modelo", "349", "not the rule's own modelo", id="foreign-modelo"),
+    ),
+)
+def test_a_ledger_source_naming_a_binding_the_revision_cannot_count_fails_validation(
+    key: str,
+    value: str,
+    message: str,
+) -> None:
+    with validating_governed_facts(_OverriddenPayerFacts(f"payer_fact.{_THRESHOLD_FACT}.{key}", value)):
+        failures = _m347_ledger_source_failures()
+
+    assert failures
+    assert all(message in failure for failure in failures)
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "message"),
+    (
+        pytest.param("ledger_period", "13T", "not a filing period", id="period"),
+        pytest.param("ledger_modelo", "not-a-modelo", "invalid modelo", id="modelo"),
+    ),
+)
+def test_a_malformed_ledger_source_is_refused_at_hydration(key: str, value: str, message: str) -> None:
+    with (
+        validating_governed_facts(_OverriddenPayerFacts(f"payer_fact.{_THRESHOLD_FACT}.{key}", value)),
+        pytest.raises(RegistryValidationError, match=message),
+    ):
+        resolve_payer_fact_catalogue(effective_date=_TODAY)

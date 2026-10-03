@@ -35,6 +35,9 @@ entries = [
   { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
   { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|rd-1065-2007:art-33|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_modelo", value = "347" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_period", value = "0A" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_record_count_binding", value = "modelo-347-declarante-numero-personas-entidades" },
   { key = "payer_fact.pays_capital_income_with_retencion.value", value = "pays_capital_income_with_retencion" },
   { key = "payer_fact.pays_capital_income_with_retencion.profile_key", value = "pays_capital_income_with_retencion" },
   { key = "payer_fact.pays_capital_income_with_retencion.label", value = "paga rendimientos del capital mobiliario sujetos a retención" },
@@ -100,6 +103,9 @@ entries = [
   { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
   { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|rd-1065-2007:art-33|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_modelo", value = "347" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_period", value = "0A" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_record_count_binding", value = "modelo-347-declarante-numero-personas-entidades" },
   { key = "payer_fact.bienes_extranjero_above_threshold.value", value = "bienes_extranjero_above_threshold" },
   { key = "payer_fact.bienes_extranjero_above_threshold.profile_key", value = "bienes_extranjero_above_threshold" },
   { key = "payer_fact.bienes_extranjero_above_threshold.label", value = "posee bienes o derechos en el extranjero por encima del umbral" },
@@ -204,6 +210,9 @@ entries = [
   { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
   { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|rd-1065-2007:art-33|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_modelo", value = "347" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_period", value = "0A" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_record_count_binding", value = "modelo-347-declarante-numero-personas-entidades" },
   { key = "payer_fact.bienes_extranjero_above_threshold.value", value = "bienes_extranjero_above_threshold" },
   { key = "payer_fact.bienes_extranjero_above_threshold.profile_key", value = "bienes_extranjero_above_threshold" },
   { key = "payer_fact.bienes_extranjero_above_threshold.label", value = "posee bienes o derechos en el extranjero por encima del umbral" },
@@ -292,3 +301,15 @@ required_text = [
 # tax deposits), which the profile does not state, and the year the enrolment covers -- the
 # profile states it undated, so an enrolment for part of a year is the taxpayer's to qualify.
 # Art. 62.6 applies from 2017-01-01 (RD 596/2016); this fact is authored on this variant only.
+
+# exceeds_third_party_threshold declares a ledger source. RGAT art. 33.1 relates every person
+# or entity with whom the operations "en su conjunto para cada una de dichas personas o
+# entidades hayan superado la cifra de 3.005,06 euros durante el año natural correspondiente",
+# computing "de forma separada las entregas y las adquisiciones de bienes y servicios". The
+# Modelo 347 type 1 count binding counts the declarado records the invoice resolver builds with
+# that floor applied per counterparty and per threshold bucket (clave C at its own 300,51 floor,
+# arts. 32.c and 33.4), so a count above zero for a filing year is this fact for that year. The
+# same source is declared on every variant because the article has carried the floor since
+# 2008. What is NOT claimed: that a zero count proves the fact false -- operations the ledger
+# does not hold can still exceed the floor, so the consumer treats an empty or incomplete
+# ledger as unknown and a complete zero only as corroborating a declared no.

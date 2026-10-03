@@ -11,6 +11,9 @@ from typing import TYPE_CHECKING, Final, get_args
 
 from pydantic import BaseModel
 
+from ....core.errors.hierarchy import CoreValidationError
+from ....core.modelo import Modelo
+from ....core.period import is_filing_period_token
 from ...deadlines.models import TaxpayerProfile
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
@@ -29,6 +32,7 @@ if TYPE_CHECKING:
 __all__ = [
     "PayerFact",
     "PayerFactDeclaration",
+    "PayerFactLedgerSource",
     "PayerFactPeriodCompanion",
     "PayerFactProjection",
     "PayerFactValue",
@@ -74,6 +78,20 @@ class PayerFactPeriodCompanion:
 
 
 @dataclass(frozen=True, slots=True)
+class PayerFactLedgerSource:
+    """The filing whose own declared-record count answers a payer fact from the taxpayer's ledger.
+
+    The fact holds for a filing year exactly when that modelo's filing for the
+    year would declare at least one record: ``record_count_binding`` is the
+    binding counting those records on the modelo's revision for ``period``.
+    """
+
+    modelo: Modelo
+    period: str
+    record_count_binding: str
+
+
+@dataclass(frozen=True, slots=True)
 class PayerFactProjection:
     """One dated, registry-owned payer-applicability declaration.
 
@@ -86,6 +104,9 @@ class PayerFactProjection:
     so a stored ``False`` everywhere is a declared no. A plain boolean field
     keeps the two-state reading: ``False`` cannot be told apart from an
     unanswered question and stays undeclared.
+
+    ``ledger_source`` is set when the registry declares that the taxpayer's own
+    records can answer the fact, through a :class:`PayerFactLedgerSource`.
     """
 
     token: str
@@ -94,6 +115,7 @@ class PayerFactProjection:
     legal_refs: tuple[str, ...]
     three_state: bool = False
     period_companion: PayerFactPeriodCompanion | None = None
+    ledger_source: PayerFactLedgerSource | None = None
 
 
 type PayerFactValue = PayerFact | PayerFactProjection
@@ -244,6 +266,46 @@ def _period_companion(
     )
 
 
+_LEDGER_SOURCE_FIELDS: Final = ("ledger_modelo", "ledger_period", "ledger_record_count_binding")
+
+
+def _ledger_source(
+    entries: Mapping[str, str],
+    prefix: str,
+    *,
+    token: str,
+    period_companion: PayerFactPeriodCompanion | None,
+) -> PayerFactLedgerSource | None:
+    """Hydrate the declared ledger source: all three fields or none."""
+    present = [field for field in _LEDGER_SOURCE_FIELDS if f"{prefix}{field}" in entries]
+    if not present:
+        return None
+    if len(present) != len(_LEDGER_SOURCE_FIELDS):
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} declares an incomplete ledger source: it needs "
+            f"{', '.join(_LEDGER_SOURCE_FIELDS)}",
+        )
+    if period_companion is not None:
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} derives from the ledger and a period set; a ledger derivation "
+            "states no periods",
+        )
+    raw_modelo, period, binding = (
+        required_mapping_entry(entries, f"{prefix}{field}", subject=_ENTRY_SUBJECT) for field in _LEDGER_SOURCE_FIELDS
+    )
+    try:
+        modelo = Modelo(raw_modelo)
+    except CoreValidationError as exc:
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} ledger source names an invalid modelo {raw_modelo!r}",
+        ) from exc
+    if not is_filing_period_token(period):
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} ledger source names {period!r}, which is not a filing period",
+        )
+    return PayerFactLedgerSource(modelo=modelo, period=period, record_count_binding=binding)
+
+
 def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
     definitions: list[PayerFactProjection] = []
     for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
@@ -254,6 +316,7 @@ def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
         profile_keys = _declaration_profile_keys(entries, prefix, token=raw_token)
         # Every key is validated; a short-circuiting any() would leave later keys unchecked.
         key_three_states = [_declaration_profile_key(key, token=raw_token) for key in profile_keys]
+        period_companion = _period_companion(entries, prefix, token=raw_token)
         definitions.append(
             PayerFactProjection(
                 token=raw_token,
@@ -261,7 +324,8 @@ def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
                 label=required_mapping_entry(entries, f"{prefix}label", subject=_ENTRY_SUBJECT),
                 legal_refs=legal_refs,
                 three_state=any(key_three_states),
-                period_companion=_period_companion(entries, prefix, token=raw_token),
+                period_companion=period_companion,
+                ledger_source=_ledger_source(entries, prefix, token=raw_token, period_companion=period_companion),
             ),
         )
     if len({item.token for item in definitions}) != len(definitions):

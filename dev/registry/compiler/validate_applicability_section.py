@@ -3,9 +3,10 @@
 Validates the ``applicability`` schema family declared on a
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision`: its legal refs
 and those of its exclusions resolve to grounded legal authority, at most one
-rule is declared per revision, and the rule hydrates into the runtime
+rule is declared per revision, the rule hydrates into the runtime
 :class:`~cadrumo.domain.calculations.registry.applicability.ModeloApplicabilityRule`
-without error.
+without error, and a ledger source declared on the rule's payer fact names
+this modelo and a declared-record count binding of this revision.
 
 See Also:
     :func:`cadrumo.domain.calculations.registry.validate_revision_sections.validate_revision_definition`
@@ -21,8 +22,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from cadrumo.core.aggregation import BindingAggregationOp
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.applicability import hydrate_applicability_rule
+from cadrumo.domain.calculations.registry.applicability_payer_facts import PayerFactLedgerSource, PayerFactProjection
+from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
@@ -70,7 +74,42 @@ def validate_applicability_section(
                 missing_refs(prefix, f"{owner} exclusion {exclusion.id}", exclusion.legal_refs, legal_refs, "legal"),
             )
         try:
-            hydrate_applicability_rule(Modelo(modelo), rule)
+            hydrated = hydrate_applicability_rule(Modelo(modelo), rule)
         except RegistryValidationError as exc:
             failures.append(f"{prefix}: {owner}: {exc}")
+            continue
+        fact = hydrated.required_payer_fact
+        if isinstance(fact, PayerFactProjection) and fact.ledger_source is not None:
+            failures.extend(
+                _ledger_source_failures(
+                    f"{prefix}: {owner} payer fact {fact.token}",
+                    modelo=modelo,
+                    revision=revision,
+                    source=fact.ledger_source,
+                ),
+            )
     return failures
+
+
+def _ledger_source_failures(
+    owner: str,
+    *,
+    modelo: str,
+    revision: ModeloRevision,
+    source: PayerFactLedgerSource,
+) -> list[str]:
+    """Check a ledger source against the revision whose rule requires the fact.
+
+    The source answers the fact from the modelo's own filing, so it must name
+    this modelo, and its binding must be a distinct count this revision
+    declares; an unknown or non-count binding would make the runtime signal
+    read nothing, or read an amount as a record count.
+    """
+    if source.modelo != Modelo(modelo):
+        return [f"{owner}: ledger source names modelo {source.modelo.value!r}, not the rule's own modelo {modelo!r}"]
+    binding = next((item for item in revision.bindings if item.id == source.record_count_binding), None)
+    if binding is None:
+        return [f"{owner}: ledger source names unknown binding {source.record_count_binding!r}"]
+    if binding_aggregation_op(binding) is not BindingAggregationOp.COUNT_DISTINCT:
+        return [f"{owner}: ledger source binding {binding.id!r} is not a distinct count"]
+    return []

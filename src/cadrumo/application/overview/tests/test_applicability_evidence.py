@@ -53,6 +53,7 @@ from ..applicability_evidence import (
 )
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarEntry, OverviewCalendarRange
+from ..explain import build_overview_explain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -411,6 +412,47 @@ def test_calendar_and_agenda_decide_the_same_ledger_derived_obligation(operation
 
     assert _FILING_YEAR in _m347_years(calendar.entries)
     assert _FILING_YEAR in _m347_years(agenda_rows)
+
+
+@pytest.mark.parametrize("threshold", [False, None], ids=["profile-no", "profile-unanswered"])
+def test_explain_and_the_calendar_decide_a_ledger_yes_alike(
+    operation: PinnedAuthorityOperation,
+    threshold: bool | None,
+) -> None:
+    """Both surfaces read the same per-year evidence, so they reach the same verdict for that year."""
+    profile = _autonomo(threshold=threshold)
+    evidence = _fixed_evidence(profile, LedgerPayerFactDerivation.DERIVED_YES)
+
+    calendar = build_overview_calendar(
+        profile,
+        _RANGE_2026,
+        operation=operation,
+        today=_AFTER_YEAR_END,
+        applicability_evidence=evidence,
+    )
+    explained = build_overview_explain(
+        profile,
+        modelo="347",
+        year=_FILING_YEAR,
+        today=_AFTER_YEAR_END,
+        operation=operation,
+        applicability_evidence=evidence,
+    )
+    profile_only = build_overview_explain(
+        profile,
+        modelo="347",
+        year=_FILING_YEAR,
+        today=_AFTER_YEAR_END,
+        operation=operation,
+    )
+
+    assert _FILING_YEAR in _m347_years(calendar.entries)
+    assert explained.verdict is ApplicabilityVerdict.APPLICABLE
+    assert profile_only.verdict is not ApplicabilityVerdict.APPLICABLE
+    derived = _verdict(operation, profile, LedgerPayerFactDerivation.DERIVED_YES)
+    assert explained.rationale == derived.reason
+    has_disagreement = any(warning.code == _DISAGREEMENT_WARNING for warning in calendar.warnings)
+    assert has_disagreement is (threshold is False)
 
 
 _AUTONOMO_FACTS: tuple[UserProfileFact, ...] = (
