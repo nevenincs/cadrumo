@@ -5,8 +5,14 @@
 #include <wchar.h>
 #include "cadrumo_platform.h"
 #include "contract.h"
+#include "build_metadata.h"
+#ifndef CADRUMO_DEVELOPMENT
+#define CADRUMO_DEVELOPMENT 0
+#endif
+#define WIDE_LITERAL_(value) L##value
+#define WIDE_LITERAL(value) WIDE_LITERAL_(value)
 
-typedef int (__cdecl *bridge_main)(int, wchar_t **, const wchar_t **);
+typedef int (__cdecl *bridge_main)(int, wchar_t **, const wchar_t **, int);
 
 static wchar_t *path(cadrumo_context *ctx, uint32_t key) {
     cadrumo_buffer value = {0};
@@ -21,6 +27,12 @@ static wchar_t *path(cadrumo_context *ctx, uint32_t key) {
 }
 
 int wmain(int argc, wchar_t **argv) {
+    if (argc == 2 && (!wcscmp(argv[1], L"--version") || !wcscmp(argv[1], L"-V"))) {
+        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
+            CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
+            CADRUMO_DEVELOPMENT ? "development" : "production");
+        return 0;
+    }
     cadrumo_context *ctx = NULL;
     cadrumo_buffer error = {0};
     wchar_t *paths[10] = {0};
@@ -34,19 +46,24 @@ int wmain(int argc, wchar_t **argv) {
     }
     if (!SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_USER_DIRS) ||
         !AddDllDirectory(paths[5])) goto failure;
-    if (swprintf_s(library, 32768, L"%ls\\python313.dll", paths[5]) < 0) goto failure;
+    if (swprintf_s(library, 32768, L"%ls\\%ls", paths[5], WIDE_LITERAL(CADRUMO_RUNTIME)) < 0) goto failure;
     if (!LoadLibraryExW(library, NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32)) {
-        fprintf(stderr, "CADRUMO: missing or incompatible bin/python/python313.dll (Windows error %lu)\n", GetLastError());
+        fprintf(stderr, "CADRUMO: missing or incompatible bundled CPython DLL (Windows error %lu)\n", GetLastError());
         goto done;
     }
-    if (swprintf_s(library, 32768, L"%ls\\cadrumo_python.dll", paths[5]) < 0) goto failure;
+    if (swprintf_s(library, 32768, L"%ls\\%ls", paths[5], WIDE_LITERAL(CADRUMO_BRIDGE)) < 0) goto failure;
     HMODULE bridge = LoadLibraryExW(library, NULL,
         LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
     if (!bridge) goto failure;
     bridge_main run = (bridge_main)(void *)GetProcAddress(bridge, "cadrumo_python_main");
     if (!run) goto failure;
     if (cadrumo_platform_prepare(ctx, &error)) goto failure;
-    result = run(argc, argv, (const wchar_t **)paths);
+    if (argc == 2 && !wcscmp(argv[1], L"--check-package")) {
+        wchar_t *check[] = {argv[0], L"-c", L"import _cadrumo_bootstrap; _cadrumo_bootstrap.verify(full=True); print('CADRUMO package verified')"};
+        result = run(3, check, (const wchar_t **)paths, CADRUMO_DEVELOPMENT);
+    } else {
+        result = run(argc, argv, (const wchar_t **)paths, CADRUMO_DEVELOPMENT);
+    }
     goto done;
 failure:
     if (error.data) fprintf(stderr, "CADRUMO: %.*s\n", (int)error.len, error.data);

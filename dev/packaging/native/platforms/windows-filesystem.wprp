@@ -3,9 +3,9 @@
   <Profiles>
     <EventCollector Id="CadrumoFiles" Name="CADRUMO interpreter filesystem">
       <BufferSize Value="256" />
-      <Buffers Value="256" />
+      <Buffers Value="1024" />
     </EventCollector>
-    <EventProvider Id="KernelFile" Name="EDD08927-9CC4-4E65-B970-C2560FB5C289" Level="4" NonPagedMemory="true">
+    <EventProvider Id="KernelFile" Name="EDD08927-9CC4-4E65-B970-C2560FB5C289" Level="4" NonPagedMemory="true" ProcessExeFilter="python.exe">
       <Keywords><Keyword Value="0x1ef0" /></Keywords>
       <EventFilters FilterIn="true">
         <EventId Value="10" /><EventId Value="11" /><EventId Value="12" />

@@ -16,7 +16,7 @@ from dev.source_tree import repository_files, snapshot
 from ..authority_staging import stage_published_authority
 from ..command_execution import run_command
 from ..wheel_metadata import read_wheel_metadata
-from .assemble import digest
+from .hashing import digest
 
 
 def build_product(output: Path, python: Path, dependencies: Path) -> None:
@@ -30,7 +30,17 @@ def build_product(output: Path, python: Path, dependencies: Path) -> None:
     if uv is None:
         raise FileNotFoundError("uv is required")
     source = output / "source"
-    snapshot(REPO_ROOT, repository_files(REPO_ROOT), source)
+    files = tuple(
+        name
+        for name in repository_files(REPO_ROOT)
+        if not any(
+            part.startswith(
+                (".aeat-generated-export-transaction-", ".generated-export-backup-", ".generated-export-stage-")
+            )
+            for part in Path(name).parts
+        )
+    )
+    snapshot(REPO_ROOT, files, source)
     stage_published_authority(REPO_ROOT, source)
     environment = dict(os.environ)
     environment[AUTHORITY_ROOT_ENV] = str(source / ".authority")

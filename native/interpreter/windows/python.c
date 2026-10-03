@@ -2,9 +2,11 @@
 #include <Python.h>
 #include <stdio.h>
 #include <string.h>
+#include <io.h>
 #include "contract.h"
+#include "build_metadata.h"
 
-__declspec(dllexport) int __cdecl cadrumo_python_main(int argc, wchar_t **argv, const wchar_t **paths) {
+__declspec(dllexport) int __cdecl cadrumo_python_main(int argc, wchar_t **argv, const wchar_t **paths, int development) {
     if (strncmp(Py_GetVersion(), CADRUMO_PYTHON_VERSION " ", sizeof(CADRUMO_PYTHON_VERSION)) != 0) {
         fprintf(stderr, "CADRUMO: incompatible bundled CPython; expected %s, got %s\n",
             CADRUMO_PYTHON_VERSION, Py_GetVersion());
@@ -28,6 +30,9 @@ __declspec(dllexport) int __cdecl cadrumo_python_main(int argc, wchar_t **argv, 
 #define CHECK(expr) do { status = (expr); if (PyStatus_Exception(status)) goto fail; } while (0)
     CHECK(PyConfig_SetArgv(&config, argc, argv));
     CHECK(PyConfig_Read(&config));
+    int banner = !config.quiet && !config.run_command && !config.run_module && !config.run_filename
+        && _isatty(_fileno(stdin));
+    if (banner) config.quiet = 1;
     /* Reassert reserved policy after parsing Python invocation options. */
     config.isolated = 1;
     config.use_environment = 0;
@@ -49,10 +54,22 @@ __declspec(dllexport) int __cdecl cadrumo_python_main(int argc, wchar_t **argv, 
     CHECK(PyWideStringList_Append(&config.module_search_paths, paths[5]));
     CHECK(Py_InitializeFromConfig(&config));
     PyConfig_Clear(&config);
+    PyObject *build = Py_BuildValue("{s:s,s:s,s:s,s:i}", "version", CADRUMO_VERSION,
+        "build_number", CADRUMO_BUILD_NUMBER, "build_date", CADRUMO_BUILD_DATE, "development", development);
+    if (!build || PySys_SetObject("cadrumo_build", build) < 0) {
+        Py_XDECREF(build);
+        PyErr_Print();
+        Py_FinalizeEx();
+        return 124;
+    }
+    Py_DECREF(build);
     if (PyRun_SimpleString("import _cadrumo_bootstrap\n_cadrumo_bootstrap.install()\ndel _cadrumo_bootstrap\n") != 0) {
         Py_FinalizeEx();
         return 122;
     }
+    if (banner) fprintf(stderr, "CADRUMO %s build %s (%s), Python %s [%s]\n",
+        CADRUMO_VERSION, CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
+        development ? "development" : "production");
     return Py_RunMain();
 fail:
     PyConfig_Clear(&config);

@@ -1,25 +1,54 @@
-cmake_minimum_required(VERSION 3.30)
-project(cadrumo_native LANGUAGES C)
-if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-  message(FATAL_ERROR "Only Windows x64 is implemented")
-endif()
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
-foreach(input CPYTHON_ROOT CONTRACT_DIR PLATFORM_LIB PLATFORM_DLL_LIB)
-  if(NOT DEFINED ${input})
-    message(FATAL_ERROR "Missing ${input}")
-  endif()
-endforeach()
-include_directories("${CONTRACT_DIR}" platform/include)
-add_executable(cadrumo_python interpreter/host.c)
-set_target_properties(cadrumo_python PROPERTIES OUTPUT_NAME python)
-target_link_libraries(cadrumo_python PRIVATE "${PLATFORM_LIB}" userenv ws2_32 ntdll bcrypt shell32 ole32 advapi32)
-add_library(cadrumo_python_bridge SHARED interpreter/python.c)
-set_target_properties(cadrumo_python_bridge PROPERTIES OUTPUT_NAME cadrumo_python)
-target_include_directories(cadrumo_python_bridge PRIVATE "${CPYTHON_ROOT}/include")
-target_link_libraries(cadrumo_python_bridge PRIVATE "${CPYTHON_ROOT}/libs/python313.lib")
-add_executable(platform_static_consumer platform/tests/consumer.c)
-target_compile_options(platform_static_consumer PRIVATE /UNDEBUG)
-target_link_libraries(platform_static_consumer PRIVATE "${PLATFORM_LIB}" userenv ws2_32 ntdll bcrypt shell32 ole32 advapi32)
-add_executable(platform_dll_consumer platform/tests/consumer.c)
-target_compile_options(platform_dll_consumer PRIVATE /UNDEBUG)
-target_link_libraries(platform_dll_consumer PRIVATE "${PLATFORM_DLL_LIB}")
+set(CONTRACT_DIR "${PROJECT_BINARY_DIR}/generated")
+string(JSON sdk_root_relative GET "${package_layout}" sdk root)
+set(CPYTHON_ROOT "${PROJECT_BINARY_DIR}/_deps/runtime/${sdk_root_relative}")
+set(CADRUMO_BUILD_HELPER "${PROJECT_SOURCE_DIR}/dev/packaging/native/cmake_build.py")
+set(CADRUMO_HELPER "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build)
+file(GLOB_RECURSE native_helper_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/dev/packaging/native/*.py")
+file(GLOB platform_contract_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/native/platforms/*.json")
+set(contract_inputs "${PROJECT_SOURCE_DIR}/native/package-layout.json" ${platform_contract_inputs}
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/layout.py")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${contract_inputs})
+set(shared_inputs "${CADRUMO_BUILD_HELPER}" "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_cache.py")
+set(provision_inputs ${shared_inputs} ${contract_inputs}
+  "${PROJECT_SOURCE_DIR}/uv.lock" "${PROJECT_SOURCE_DIR}/pyproject.toml"
+  "${CMAKE_CURRENT_SOURCE_DIR}/toolchain.json" "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/provision.py" "${PROJECT_SOURCE_DIR}/dev/packaging/uv_constraints.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/${CADRUMO_BACKEND}.py")
+list(JOIN provision_inputs "\n" input_lines)
+file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-provision.txt" CONTENT "${input_lines}\n")
+set(tool_inputs ${shared_inputs} "${CMAKE_CURRENT_SOURCE_DIR}/toolchain.json")
+list(JOIN tool_inputs "\n" input_lines)
+file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-tools.txt" CONTENT "${input_lines}\n")
+string(JSON production_executable GET "${package_layout}" paths executable)
+string(JSON development_executable GET "${package_layout}" files development_executable)
+string(JSON bridge_library GET "${package_layout}" files bridge)
+cmake_path(GET production_executable STEM production_name)
+cmake_path(GET development_executable STEM development_name)
+cmake_path(GET bridge_library STEM bridge_name)
+set(CADRUMO_PACKAGE_EXECUTABLE "${production_executable}" PARENT_SCOPE)
+string(JSON package_manifest GET "${package_layout}" files package_manifest)
+set(CADRUMO_PACKAGE_MANIFEST "${package_manifest}" PARENT_SCOPE)
+file(GLOB settings_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/cadrumo/core/config*.py"
+  "${PROJECT_SOURCE_DIR}/src/cadrumo/core/storage*.py" "${PROJECT_SOURCE_DIR}/src/cadrumo/core/product_identity.py")
+add_custom_command(OUTPUT "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h"
+  COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.generate "${CONTRACT_DIR}"
+  DEPENDS ${settings_inputs} ${contract_inputs} "${PROJECT_SOURCE_DIR}/dev/packaging/native/generate.py"
+    "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version" "${PROJECT_SOURCE_DIR}/.python-version"
+    "${CADRUMO_BUILD_HELPER}"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_custom_target(native_contract DEPENDS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h")
+add_custom_command(OUTPUT "${PROJECT_BINARY_DIR}/_deps/runtime/ready"
+  COMMAND ${CADRUMO_HELPER} provision --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-provision.txt"
+  DEPENDS ${provision_inputs} "${PROJECT_BINARY_DIR}/inputs-provision.txt"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_custom_target(python_dependencies DEPENDS "${PROJECT_BINARY_DIR}/_deps/runtime/ready")
+add_custom_command(OUTPUT "${PROJECT_BINARY_DIR}/_deps/build-tools/ready"
+  COMMAND ${CADRUMO_HELPER} tools --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-tools.txt"
+  DEPENDS ${tool_inputs} "${PROJECT_BINARY_DIR}/inputs-tools.txt"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_custom_target(native_build_tools DEPENDS "${PROJECT_BINARY_DIR}/_deps/build-tools/ready")
+set(native_helper_inputs "${native_helper_inputs}" PARENT_SCOPE)
+set(contract_inputs "${contract_inputs}" PARENT_SCOPE)
+set(CADRUMO_HELPER "${CADRUMO_HELPER}" PARENT_SCOPE)
+set(CADRUMO_BUILD_HELPER "${CADRUMO_BUILD_HELPER}" PARENT_SCOPE)
+include("${PROJECT_SOURCE_DIR}/native/cmake/platforms/${CMAKE_SYSTEM_NAME}.cmake")

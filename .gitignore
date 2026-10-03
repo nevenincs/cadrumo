@@ -542,6 +542,8 @@ cache/
 # and never durable; promote a specific snapshot into .vault/ evidence
 # deliberately instead of tracking the whole scratch tree.
 /.artifacts/
+!/CMakeLists.txt
+!/native/interpreter/windows/host.manifest
 
 # Private VaultSpec environment (never commit)
 /.vaultspec/.env

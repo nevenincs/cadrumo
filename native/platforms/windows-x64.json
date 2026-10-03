@@ -1,0 +1,41 @@
+{
+  "platform": "windows-x64",
+  "backend": "windows",
+  "package_exclusions": [
+    {
+      "pattern": "PIL/_imagingtk*.pyd",
+      "reason": "Optional Pillow Tk adapter; Tk is excluded from the CADRUMO runtime"
+    },
+    {
+      "pattern": "PIL/ImageTk.py",
+      "reason": "Optional Pillow Tk adapter; Tk is excluded from the CADRUMO runtime"
+    }
+  ],
+  "paths": {
+    "executable": "python.exe"
+  },
+  "files": {
+    "development_executable": "python_d.exe",
+    "bridge": "cadrumo_python.dll",
+    "runtime": "python313.dll"
+  },
+  "sdk": {
+    "root": "cpython-nuget/tools",
+    "executable": "python.exe",
+    "stdlib": "Lib",
+    "license": "LICENSE.txt"
+  },
+  "smoke_modules": {
+    "pywin32": [
+      "win32api",
+      "pythoncom",
+      "win32com.shell.shell"
+    ]
+  },
+  "native_smoke_prerequisites": {
+    "dde": ["win32ui"]
+  },
+  "bootstrap": "interpreter/windows/bootstrap.py",
+  "smoke_test": "windows_smoke.py",
+  "package_root_from_executable": "."
+}

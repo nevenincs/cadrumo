@@ -3,8 +3,7 @@ compile_error!("Only the Windows foundation has been implemented");
 
 use std::os::windows::fs::MetadataExt;
 use std::{
-    env,
-    fs,
+    env, fs,
     path::{Path, PathBuf},
     ptr,
 };
@@ -29,9 +28,11 @@ fn buffer(s: String) -> Buffer {
 }
 fn project_root(package: &Path) -> PathBuf {
     let working = env::current_dir().unwrap_or_else(|_| package.to_path_buf());
-    for ancestor in working.ancestors() {
-        if ancestor.join("pyproject.toml").is_file() {
-            return ancestor.to_path_buf();
+    for base in [package, working.as_path()] {
+        for ancestor in base.ancestors() {
+            if ancestor.join("pyproject.toml").is_file() {
+                return ancestor.to_path_buf();
+            }
         }
     }
     working
@@ -56,7 +57,7 @@ fn context_storage_root(root: &Path) -> PathBuf {
     nonempty_environment_path(STORAGE_ENV)
         .or_else(|| nonempty_environment_path(STORAGE_ROOT_ENV))
         .map(|path| rooted(path, root))
-        .unwrap_or_else(|| root.join("var/storage"))
+        .unwrap_or_else(|| root.join(STORAGE_DEFAULT))
 }
 fn refined_storage_path(name: &str, root: &Path, default: &Path) -> PathBuf {
     nonempty_environment_path(name)
@@ -72,11 +73,11 @@ fn context() -> Result<Context, String> {
     let root = project_root(&package);
     let user = context_storage_root(&root);
     let temporary = refined_storage_path(TEMPORARY_ENV, &user, &user.join(TEMPORARY_DEFAULT));
-    let cache = refined_storage_path(TOOL_CACHE_ENV, &user, &user.join(CACHE));
+    let cache = refined_storage_path(TOOL_CACHE_ENV, &user, &user.join(TOOL_CACHE_DEFAULT));
     let paths = vec![
         package.clone(),
         user.clone(),
-        package.join(EXECUTABLE),
+        exe,
         package.join(STDLIB),
         package.join(PACKAGES),
         package.join(NATIVE),
@@ -113,7 +114,8 @@ fn prepare(ctx: &Context) -> Result<(), String> {
     let names: Vec<_> = env::vars_os().map(|(key, _)| key).collect();
     for name in names {
         let upper = name.to_string_lossy().to_ascii_uppercase();
-        let allowed_storage_override = STORAGE_ENV_ALLOWLIST.contains(&upper.as_str());
+        let allowed_storage_override = STORAGE_ENV_ALLOWLIST.contains(&upper.as_str())
+            || PACKAGE_ENV_ALLOWLIST.contains(&upper.as_str());
         if upper.starts_with("PYTHON")
             || (upper.starts_with("CADRUMO_") && !allowed_storage_override)
             || (RESERVED_ENV.contains(&upper.as_str()) && !allowed_storage_override)
@@ -138,12 +140,20 @@ fn prepare(ctx: &Context) -> Result<(), String> {
         }
         env::set_var("XDG_CACHE_HOME", &ctx.paths[9]);
         let system = env::var_os("SystemRoot").ok_or("SystemRoot is missing")?;
-        let path = env::join_paths([
-            ctx.paths[0].clone(),
-            ctx.paths[0].join("bin"),
-            PathBuf::from(system).join("System32"),
-        ])
-        .map_err(|e| e.to_string())?;
+        let mut search = vec![ctx.paths[0].clone()];
+        if let Some(overrides) = env::var_os("CADRUMO_EXTERNAL_BIN_DIRS") {
+            for directory in env::split_paths(&overrides) {
+                if !directory.is_absolute() || !directory.is_dir() {
+                    return Err(
+                        "CADRUMO_EXTERNAL_BIN_DIRS requires existing absolute directories".into(),
+                    );
+                }
+                search.push(directory);
+            }
+        }
+        search.push(ctx.paths[5].clone());
+        search.push(PathBuf::from(system).join("System32"));
+        let path = env::join_paths(search).map_err(|e| e.to_string())?;
         env::set_var("PATH", path);
     }
     Ok(())
