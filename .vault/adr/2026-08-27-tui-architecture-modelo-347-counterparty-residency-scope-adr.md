@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9262c55d26bd6c6cd0fed67820711e77eaebdcfeb51d96d5c87131830a40c2d'
+body_hash: 'sha256:f914571dac4d2cf3269bbe1e909a9ea4cfb2ca72ad0ba9a4cd618ed20dd55cb3'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-27-calculation-correctness-campaign-modelo-347-nonresident-counterparty-silent-exclusion-audit]]"
+  - '[[2026-10-03-modelo-347-fileability-adr]]'
 ---
 
 # `tui-architecture` adr: `modelo 347 counterparty residency scope` | (**status:** `accepted`)
@@ -221,3 +222,8 @@ in scope has a real source).
   defect shape is a recognised category elsewhere in this codebase; the
   decision here is made and grounded independently on `_source_resolver.py`
   and M347's own governing articles.
+
+**Amendment (2026-10-03).** The non-residency ruling above stands. Its reading of art. 33.2.g is narrowed:
+that letter also excludes "Las importaciones y exportaciones de mercancías" regardless of the counterparty's
+residency, so goods imports and exports are not declared while services with non-residents remain
+declarable. The decision and its implementation live in `2026-10-03-modelo-347-fileability-adr`.
