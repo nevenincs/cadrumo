@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9cdd5c32711654de37aa6d1f3a6428a0227e29ec0b3458e665b0834822cfcf91'
+body_hash: 'sha256:1c1ef604e89df709d4f091409888052c473429efc8340fc63cd9420749803853'
 related:
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
   - "[[2026-06-28-product-packaging-adr]]"
@@ -60,11 +60,11 @@ The first step is selecting and activating compatible Windows SDK/MSVC, a workin
 
 `native/toolchain.json` pins the official CPython 3.13.11 NuGet SDK by SHA256, MSVC 14.44.35207, Windows SDK 10.0.26100.0 and Rust 1.96.0 for x86_64-pc-windows-msvc. The exact interpreter version comes from `dev/packaging/release-python-version`. The build invokes installed tools explicitly, avoiding the broken ambient Rust shim. C static and DLL consumers and the Rust consumer passed. The host import table contains Windows system libraries only; CPython is loaded after restricted loader setup. This compiles the custom host against upstream binaries, not CPython source, and requires no CPython patch.
 
-The locked Windows base closure supplies 77 third-party distributions. `dev/packaging/native/product.py` composes existing snapshot, authority and wheel owners for the three exact-version product distributions. The assembled CADRUMO 0.5.1 product runs outside the checkout. `dev/packaging/native/verify.py` proves Unicode/spaces, unrelated cwd, pure/native imports, child identity, hostile Python settings, ignored executable .pth, missing or invalid bundled libraries, hostile/missing qpdf and unchanged package hashes. Evidence is `.artifacts/native/verification.json` for `.artifacts/native/cadrumo-reviewed`.
+The locked Windows base closure supplies 77 third-party distributions. `dev/packaging/native/product.py` composes existing snapshot, authority and wheel owners for the three exact-version product distributions. The assembled CADRUMO 0.5.1 product runs outside the checkout. `dev/packaging/native/verify.py` proves Unicode/spaces, unrelated cwd, pure/native imports, child identity, hostile Python settings, ignored executable .pth, missing or invalid bundled libraries, hostile/missing qpdf and unchanged package hashes. The fresh documented three-wheel build and assembly also passed; current evidence is `.artifacts/native/verification.json` for `.artifacts/native/repeatable/package`.
 
 Relocation exposed PDFium's explicit ctypes path and pywin32's registry-derived extension/cache paths. `dev/packaging/native/assemble.py` applies two checked package adaptations, records before/after hashes, and maps public win32com extension identities. The corrected artifact imports `win32com.shell.shell` and selects the declared COM cache. These are package patches, not upstream CPython changes.
 
-Python audit writes pass within the declared root. Initial Process Monitor captures were incomplete; an initial WPR capture dropped events and is not acceptance evidence. Whole-process filesystem tracing remains separately required. The existing all-platform wheelhouse also lacks the pinned pikepdf macOS wheel; that is a later platform obligation, not evidence of Windows incompatibility.
+Python audit writes pass within the declared root. Initial Process Monitor captures were incomplete; an initial WPR capture dropped events and is not acceptance evidence. A subsequent nonpaged WPR profile and scoped parser completed without event loss: the repeatable trace command observed 2013 parent/child events and four writes, all file mutations under the declared root. Its source is dev/packaging/native/trace.ps1; evidence is C:/Users/hello/cadrumo-native-proof/repeatable-trace/summary.json. This covers the exercised import/tempfile/COM-cache probe, not all product workflows. The existing all-platform wheelhouse also lacks the pinned pikepdf macOS wheel; that is a later platform obligation, not evidence of Windows incompatibility.
 
 ## Sources
 

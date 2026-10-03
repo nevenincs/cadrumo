@@ -5,40 +5,14 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:32e5e98152b339bd7bda639e461c69c4fe96a17cd9f877f1db01d1bdc3de811b'
+body_hash: 'sha256:bb4538e94fdce5dcb4723dac0b621c0a8a1710a9e54b3c9fb688a9b01efd2c9c'
 related:
   - "[[2026-10-03-application-packaging-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `application-packaging` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `A` `native/CONTRACT.md`
 - `S01` `A` `native/package-layout.json`
@@ -67,3 +41,18 @@ related:
 - `S03` `A` `dev/packaging/native/product.py`
 - `S03` `verify:` `fresh product wheel build and package assembly` -> `pass`
 - `S03` `verify:` `ruff check format and ty native Python tooling` -> `pass`
+- `S04` `A` `dev/packaging/native/verify.py`
+- `S04` `A` `dev/packaging/native/trace.ps1`
+- `S04` `A` `dev/packaging/native/trace_analysis.py`
+- `S04` `A` `dev/packaging/native/filesystem.wprp`
+- `S04` `M` `native/CONTRACT.md`
+- `S04` `A` `.vault/audit/2026-10-03-application-packaging-audit.md`
+- `S04` `M` `.vault/research/2026-10-03-application-packaging-research.md`
+- `S04` `M` `.vault/adr/2026-10-03-application-packaging-interpreter-foundation-adr.md`
+- `S04` `verify:` `fresh relocated product verifier hostile inputs package hashes` -> `pass`
+- `S04` `verify:` `trace.ps1 repeatable-trace 2013 events 4 writes zero events lost` -> `pass`
+- `S04` `verify:` `integrated corrective native review` -> `pass`
+
+## Notes
+
+- `S04` Verified artifact and scoped ETW proof pass for preserved native snapshot. Concurrent native policy edits invalidate current-source approval; S02 and S03 reopened and S04 remains open pending policy reconciliation and rebuild.

@@ -1,6 +1,9 @@
 # Native distribution contract
 
-Status: Windows host and ABI compiled; artifact verification in progress. Linux and macOS are mappings to
+Status: The assembled Windows artifact passed verification. Concurrent source edits
+subsequently changed native storage defaults and overrides; those edits are not
+represented by the verified binary and require reconciliation and rebuilding.
+Linux and macOS are mappings to
 prove, not supported native builds. The existing Python product owns application
 behavior. Native code owns bootstrap before Python exists.
 
@@ -42,8 +45,8 @@ the build machine. Mutable state does not belong in any build or installed tree.
 Linux deb/rpm, relocatable archive and AppImage are unresolved alternatives.
 No build target or placeholder implementation claims those formats work.
 macOS needs a native toolchain, architecture selection, codesigning and dyld proof.
-Windows relocation is final only after real package-qualified extensions and
-their transitive DLLs pass the artifact tests.
+Windows relocation passed real package-qualified extensions and transitive-DLL
+artifact tests, including public pywin32 COM imports and pikepdf/qpdf.
 
 ## Bootstrap and ABI
 
@@ -103,6 +106,8 @@ build, with matching headers and import library. No CPython source patch is appl
 .venv/Scripts/python.exe -m dev.packaging.native.product --output .artifacts/native/fresh/product --python .artifacts/native/fresh/cpython-nuget/tools/python.exe --dependencies .artifacts/native/fresh/dependencies
 .venv/Scripts/python.exe -m dev.packaging.native.assemble --python .artifacts/native/fresh/cpython-nuget/tools --dependencies .artifacts/native/fresh/dependencies --build .artifacts/native/fresh/build/Release --destination .artifacts/native/fresh/package
 .venv/Scripts/python.exe -m dev.packaging.native.verify --package .artifacts/native/fresh/package --destination 'C:/cadrumo-proof/CADRUMO espacio á 漢字' --product
+# Run the OS trace from an elevated development shell, using a fresh local directory.
+& dev/packaging/native/trace.ps1 -Package 'C:/cadrumo-proof/CADRUMO espacio á 漢字' -Output 'C:/cadrumo-proof/file-trace'
 ```
 
 The product step takes a stable snapshot through existing source-tree helpers,
@@ -126,3 +131,38 @@ refuses unreviewed `.pth` files and conflicting DLL basenames. Installed wheel
 RECORD locations describe original wheel contents; the package manifest owns the
 assembled file inventory and hashes. This foundation does not support pip mutation
 of the installed package.
+
+## Verified Windows foundation, 2026-10-03
+
+Evidence below belongs to the compiled Known Folder bootstrap. Its native source
+is preserved in `.artifacts/native/repeatable/product/source/native/`, with its
+generator in that snapshot's `dev/packaging/native/`. Later concurrent edits to
+the working-tree platform provider select repository/cwd defaults and preserve
+storage overrides. The commands above must be revalidated against that policy
+before the current source can claim the same results. No concurrent edits were
+reverted to manufacture a matching tree.
+
+The fresh provision/product/assemble flow produced
+`.artifacts/native/repeatable/package/python.exe`, with 77 locked third-party
+distributions and CADRUMO's three matching 0.5.1 product wheels. Verification ran
+from `C:/Users/hello/cadrumo-native-proof/CADRUMO fresh á 漢字`, outside the checkout.
+`.artifacts/native/verification.json` records native/pure imports, PDF operations,
+product metadata and authority, CLI startup, child identity, hostile Python settings
+and DLLs, missing/invalid dependencies, ignored `.pth`, and unchanged package hashes.
+
+The repeatable WPR trace captured 2,013 parent/child filesystem events with four
+actual file writes and zero lost events. All observed file mutations were under
+the declared user root. Scoped evidence is
+`C:/Users/hello/cadrumo-native-proof/repeatable-trace/summary.json` and
+`application-events.jsonl` in that directory. The helper requires nonpaged trace
+buffers, checks final event loss, refuses unresolved write paths, and removes the
+machine-wide capture after extracting target-process events. Its profile covers
+file creation, writes, set-information, deletion, rename/link, security and extended
+attribute changes. This measures the import/tempfile/COM-cache probe and its child;
+it does not claim containment of every future application workflow.
+
+Linux needs its format, libc floor and transitive ELF loader proof. macOS needs
+native compilation, architecture and signing decisions, dyld proof and compatible
+wheels (the current all-platform exporter cannot obtain the pinned pikepdf wheel).
+Neither platform has an implementation here. Rebuilding CPython itself from source,
+release signing and sealed cross-platform cohort promotion are also later work.

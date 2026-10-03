@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d9a49a79fdcc2a37401bf82fd3d20ae5082ad7fd7a47310b38ed12306f09da9e'
+body_hash: 'sha256:3f534cceaad6027b0777624ec6114713849e5e3b95131f08088c2904f06d1a80'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -48,4 +48,6 @@ The explicit user scope supports a bounded accepted foundation without promoting
 
 ## Consequences
 
-A Windows interpreter and assembled base product now execute outside the checkout. DLL/static C consumers, real native imports, child startup, hostile Python environments, Unicode paths, missing dependencies and package immutability have measured evidence. OS-level tracing and any remaining review findings must close before the plan is called complete. Linux loaders, distribution format and native macOS implementation remain unproven obligations.
+A Windows interpreter and assembled base product now execute outside the checkout. DLL/static C consumers, real native imports, child startup, hostile Python environments, Unicode paths, missing dependencies and package immutability have measured evidence. The fresh documented build and scoped OS-level file trace now pass, and both initial high review findings are resolved. Trace evidence covers the exercised parent/child import and temporary/cache probe; later workflows require their own verification. Linux loaders, distribution format and native macOS implementation remain unproven obligations.
+
+Later concurrent working-tree edits changed storage defaults and accepted overrides after the verified build. They have not been reconciled with this foundation contract. Artifact evidence remains tied to the preserved native source snapshot; current-source approval and plan completion are open. The user must not infer approval of that changed policy from the prior binary proof.
