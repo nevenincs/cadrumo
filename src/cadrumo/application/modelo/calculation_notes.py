@@ -92,6 +92,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "orphaned_override": _C,
         "devengo_date_proxy_attribution": _C,
         "m349_clave_inferred_from_category": _C,
+        "unsettled_legal_reading": _C,
         "inferred_retencion_rate_unmatched": _C,
         "inferred_retencion_sectoral_rate_unconfirmed": _C,
         "invoice_category_counterparty_mismatch": _C,

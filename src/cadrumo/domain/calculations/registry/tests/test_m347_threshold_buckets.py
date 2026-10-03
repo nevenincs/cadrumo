@@ -3,8 +3,8 @@
 RD 1065/2007 art. 33.1 relates every person whose operations exceed 3.005,06
 EUR in the año natural and computes "de forma separada las entregas y las
 adquisiciones de bienes y servicios"; arts. 32.c and 33.4 give clave C a
-separate 300,51 EUR floor; art. 33.3 and the 2025 record design relate clave E
-"cualquiera que sea su importe". The dated ``m347-clave-threshold-buckets``
+separate 300,51 EUR floor; art. 33.3 relates clave E "cualquiera que sea su
+importe" from 2014, as the 2025 record design does. The dated ``m347-clave-threshold-buckets``
 fact carries that grouping. Every scenario here runs through the real row
 resolver (the declarado row family) and the real scalar resolver (the type 1
 declarante summary), both of which delegate to the one declarable-set
@@ -31,6 +31,7 @@ from ..facts.payloads import MappingFactEntry, MappingFactPayload
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from ..invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values, resolve_invoice_binding_values
 from ..m347_threshold import (
+    M347ThresholdBuckets,
     m347_declarable_party_buckets,
     m347_threshold_decimal,
     resolve_m347_clave_c_declaration_threshold,
@@ -191,16 +192,21 @@ def test_clave_e_below_the_general_floor_is_declared_from_2025() -> None:
     assert declared.count == Decimal("1")
 
 
-def test_clave_e_below_the_general_floor_is_not_declared_for_2024() -> None:
-    """The 2011 design keeps clave E under the general floor."""
+def test_clave_e_below_the_general_floor_is_declared_for_2024_on_the_consolidated_reading() -> None:
+    """From 2014 the consolidated art. 33.3 relates subvenciones whatever their amount.
+
+    The 2011 design still in use for 2024 states a floor; the bucket follows the
+    regulation and carries that conflict as an unsettled reading.
+    """
     declared = _declare(
         (_observation("E", "1000.00", transaction_date=date(2024, 3, 10)),),
         revision_id=_REVISION_2024,
         effective_date=_FILING_2024,
     )
 
-    assert declared.rows == frozenset()
-    assert declared.count == Decimal("0")
+    assert declared.rows == frozenset({(_PARTY, "E")})
+    assert declared.count == Decimal("1")
+    assert resolve_m347_threshold_buckets(effective_date=_FILING_2024).bucket_of("E").reading_unsettled
 
 
 def test_the_floor_must_be_exceeded_not_reached() -> None:
@@ -225,6 +231,8 @@ def test_the_published_buckets_partition_every_clave() -> None:
     assert by_clave["A"] is by_clave["G"]
     assert len({by_clave[clave].token for clave in ("A", "B", "C", "D", "E")}) == 5
     assert by_clave["E"].floor is None
+    assert not by_clave["E"].reading_unsettled
+    assert by_clave["D"].reading_unsettled
     assert by_clave["C"].floor_fact is not None
     assert by_clave["C"].floor_fact.fact_id == "m347-clave-c-beneficiary-declaration-threshold"
 
@@ -277,7 +285,7 @@ _WELL_FORMED: tuple[tuple[str, str], ...] = (
 )
 
 
-def _resolve_with(entries: tuple[tuple[str, str], ...]):
+def _resolve_with(entries: tuple[tuple[str, str], ...]) -> M347ThresholdBuckets:
     with bundled_indexed_authority().operation() as operation:
         return resolve_m347_threshold_buckets(
             effective_date=_FILING_2025,
@@ -291,6 +299,38 @@ def test_the_override_source_resolves_a_well_formed_mapping() -> None:
 
     assert [bucket.token for bucket in buckets.buckets] == ["entregas", "adquisiciones", "resto"]
     assert buckets.bucket_of("E").floor is None
+    assert not any(bucket.reading_unsettled for bucket in buckets.buckets)
+
+
+def test_a_bucket_flagged_unsettled_carries_the_flag() -> None:
+    buckets = _resolve_with((*_WELL_FORMED, ("bucket.adquisiciones.reading_unsettled", "true")))
+
+    assert buckets.bucket_of("A").reading_unsettled
+    assert not buckets.bucket_of("B").reading_unsettled
+
+
+def test_a_no_floor_bucket_records_the_parties_it_admits_on_a_nonpositive_total() -> None:
+    """A bucket related whatever its amount admits nil and negative totals, and says which they are."""
+    with bundled_indexed_authority().operation() as operation:
+        declarable = m347_declarable_party_buckets(
+            {
+                ("B11111112", "E"): Decimal("-50.00"),
+                ("C22222229", "E"): Decimal("0.00"),
+                ("D33333335", "E"): Decimal("10.00"),
+                ("E44444441", "B"): Decimal("-50.00"),
+            },
+            effective_date=_FILING_2025,
+            authority=_BucketMappingSource(base=operation, entries=_WELL_FORMED),
+        )
+
+    assert declarable.admits("B11111112", "E")
+    assert declarable.admits("C22222229", "E")
+    assert declarable.admits("D33333335", "E")
+    assert declarable.admits_unconditional_nonpositive("B11111112", "E")
+    assert declarable.admits_unconditional_nonpositive("C22222229", "E")
+    assert not declarable.admits_unconditional_nonpositive("D33333335", "E")
+    assert not declarable.admits("E44444441", "B")
+    assert not declarable.admits_unconditional_nonpositive("E44444441", "B")
 
 
 def _replace(key: str, value: str | None) -> tuple[tuple[str, str], ...]:
@@ -318,6 +358,9 @@ def _replace(key: str, value: str | None) -> tuple[tuple[str, str], ...]:
             id="regardless-false-without-floor",
         ),
         pytest.param((*_WELL_FORMED, ("bucket.resto.umbral", "1")), "unknown entry", id="unknown-field"),
+        pytest.param(
+            (*_WELL_FORMED, ("bucket.resto.reading_unsettled", "yes")), "reading_unsettled", id="unsettled-not-boolean"
+        ),
         pytest.param((*_WELL_FORMED, ("bucket.otro.claves", "A")), "unknown entry", id="undeclared-bucket"),
     ],
 )

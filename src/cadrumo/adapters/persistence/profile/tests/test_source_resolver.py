@@ -1495,6 +1495,146 @@ def test_m347_clave_d_requires_the_filer_role_the_fact_alone_is_not_enough(
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
 
 
+def _unsettled_reading_refs(resolution) -> list[str | None]:
+    return sorted(
+        (item.source_ref for item in resolution.diagnostics if item.reason == "unsettled_legal_reading"),
+        key=str,
+    )
+
+
+def _seed_profile(bucket_id: str, facts: tuple[UserProfileFact, ...]) -> None:
+    seed_test_profile_record(
+        _create_profile_record_for_test(
+            context=_profile_creation_context_for_test(),
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=bucket_id,
+            facts=facts,
+        ),
+    )
+
+
+def _m347_context(bucket_id: str, *, filing_year: int) -> CalculationSourceContext:
+    return CalculationSourceContext(
+        bucket_id=bucket_id,
+        modelo="347",
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes" if filing_year >= 2025 else "2011-2024"),
+    )
+
+
+def test_m347_clave_d_kept_apart_from_adquisiciones_is_declared_and_disclosed_as_unsettled(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Art. 33.3 neither joins clave D to the ordinary adquisiciones nor separates it.
+
+    The registry keeps D in its own bucket and flags that reading, so a D
+    acquisition is declared on it and the calculation says the reading is
+    open. An ordinary acquisition of the same filer carries no such advisory.
+    """
+    _seed_profile(secure_profile.bucket_id, _statutory_information_duty_profile_facts())
+    context = _m347_context(secure_profile.bucket_id, filing_year=2026)
+    outside_activity_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-D-UNSETTLED-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Proveedor Al Margen SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory("domestic_general"),
+    ).model_copy(update={"outside_economic_activity": True})
+    within_activity_purchase = outside_activity_purchase.model_copy(
+        update={"outside_economic_activity": False, "invoice_number": "M347-A-SETTLED-2026-001"},
+    )
+
+    disclosed = _public_resolution((outside_activity_purchase,), context=context)
+    ordinary = _public_resolution((within_activity_purchase,), context=context)
+
+    assert disclosed.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert _unsettled_reading_refs(disclosed) == ["m347-threshold-bucket:adquisiciones_al_margen_de_la_actividad"]
+    advisory = next(item for item in disclosed.diagnostics if item.reason == "unsettled_legal_reading")
+    assert "M347-D-UNSETTLED-2026-001" in advisory.message
+    assert advisory.asserted_legal_refs == ("rd-1065-2007:art-33",)
+    assert advisory.remedy
+    assert ordinary.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert _unsettled_reading_refs(ordinary) == []
+
+
+def test_m347_clave_e_below_the_floor_is_declared_from_2014_and_disclosed_until_the_2025_design(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A 1,000 EUR subvención: declared in 2024 and in 2025, but disclosed only in 2024.
+
+    The consolidated art. 33.3 relates subvenciones "cualquiera que sea su
+    importe"; the 2011 design still used for 2024 says "superiores a 3.005,06
+    euros", so 2024 carries the advisory and 2025, whose design agrees with
+    the regulation, does not.
+    """
+    _seed_profile(secure_profile.bucket_id, _public_administration_profile_facts())
+    resolutions = {}
+    for filing_year in (2024, 2025):
+        subvencion = _invoice(
+            bucket_id=None,
+            kind=InvoiceKind.ISSUED,
+            invoice_number=f"M347-E-{filing_year}-001",
+            issued_at=date(filing_year, 5, 1),
+            counterparty_tax_id="C3333333G",
+            counterparty_name="Beneficiario Subvencion SL",
+            counterparty_country="ES",
+            base_total=Decimal("1000.00"),
+            iva_category=IvaCategory("domestic_general"),
+        ).model_copy(update={"is_subvencion_ayuda": True})
+        resolutions[filing_year] = _public_resolution(
+            (subvencion,), context=_m347_context(secure_profile.bucket_id, filing_year=filing_year)
+        )
+
+    for resolution in resolutions.values():
+        assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+        assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("1000.00")
+    assert _unsettled_reading_refs(resolutions[2024]) == ["m347-threshold-bucket:subvenciones_satisfechas"]
+    assert _unsettled_reading_refs(resolutions[2025]) == []
+
+
+def test_m347_nil_total_in_a_bucket_without_floor_is_declared_and_disclosed(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A bucket related whatever its amount admits a nil total; whether it belongs is not settled."""
+    _seed_profile(secure_profile.bucket_id, _public_administration_profile_facts())
+    context = _m347_context(secure_profile.bucket_id, filing_year=2026)
+    nil_subvencion = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-E-NIL-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Beneficiario Subvencion SL",
+        counterparty_country="ES",
+        base_total=Decimal("0.00"),
+        iva_category=IvaCategory("domestic_general"),
+    ).model_copy(update={"is_subvencion_ayuda": True})
+    positive_subvencion = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-E-POSITIVE-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="B12345674",
+        counterparty_name="Otro Beneficiario SL",
+        counterparty_country="ES",
+        base_total=Decimal("10.00"),
+        iva_category=IvaCategory("domestic_general"),
+    ).model_copy(update={"is_subvencion_ayuda": True})
+
+    resolution = _public_resolution((nil_subvencion, positive_subvencion), context=context)
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("2")
+    assert _unsettled_reading_refs(resolution) == ["m347-threshold-bucket:nonpositive-total"]
+    advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
+    assert "M347-E-NIL-2026-001" in advisory.message
+    assert "M347-E-POSITIVE-2026-001" not in advisory.message
+
+
 @pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])
 def test_the_invoice_stores_contribute_nothing_to_m303_or_m390(modelo_id: str, period: str) -> None:
     """Scope guard, and the honest form of the M303/M390 criterion.

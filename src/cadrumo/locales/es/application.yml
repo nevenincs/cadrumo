@@ -1079,6 +1079,11 @@ application:
         what: Un importe de tus registros no se ha colocado en ninguna casilla de
           esta declaración.
         what_to_do: Revisa cómo está clasificado ese registro y vuelve a calcular.
+      unsettled_legal_reading:
+        what: Una cifra declarada sigue una lectura de una norma que no está resuelta
+          para este ejercicio, y la AEAT podría leerla de otra forma.
+        what_to_do: Revisa esas operaciones con los criterios actuales de la AEAT
+          antes de presentar.
       unusable_sales_invoice_evidence:
         what: Un registro de ingresos está vinculado a una factura emitida que no
           es fiable, así que se declara el importe del banco y se pierde su retención.

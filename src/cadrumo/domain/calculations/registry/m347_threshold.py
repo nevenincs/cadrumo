@@ -10,6 +10,12 @@ operación are summed together and which scalar fact holds that bucket's floor
 observation's amount stays with the caller; the bucket grouping and the
 regulatory comparison live here.
 
+Where the registry marks a bucket's grouping as an unsettled reading of the
+law, the bucket says so (``reading_unsettled``) and the declarable set records
+which unconditional buckets admitted a nil or negative total, so a caller can
+surface both as advisories instead of presenting a contested reading as
+settled.
+
 This is a leaf module on purpose: the invoice binding family imports it, and
 it imports nothing from any binding family, so no caller can grow a second
 copy of the comparison to avoid a circular import.
@@ -61,7 +67,7 @@ _M347_THRESHOLD_BUCKETS_FACT: Final = StringMappingFact(
 )
 _BUCKET_ORDER_KEY: Final = "bucket.order"
 _BUCKET_PREFIX: Final = "bucket."
-_BUCKET_FIELDS: Final = frozenset({"claves", "floor_fact", "declared_regardless_of_amount"})
+_BUCKET_FIELDS: Final = frozenset({"claves", "floor_fact", "declared_regardless_of_amount", "reading_unsettled"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,13 +76,16 @@ class M347ThresholdBucket:
 
     ``floor`` is ``None`` only when the registry declares the bucket's
     operations related whatever their amount; a bucket with a floor always
-    carries the resolved scalar fact that holds it.
+    carries the resolved scalar fact that holds it. ``reading_unsettled`` is
+    the registry's statement that this grouping, or its floor, follows one
+    reading of a text the corpus does not settle for the filing period.
     """
 
     token: str
     claves: frozenset[str]
     floor: Decimal | None
     floor_fact: ResolvedScalarFact | None
+    reading_unsettled: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,14 +108,26 @@ class M347ThresholdBuckets:
 
 @dataclass(frozen=True, slots=True)
 class M347DeclarableSet:
-    """The (counterparty, bucket) pairs whose summed total must be declared."""
+    """The (counterparty, bucket) pairs whose summed total must be declared.
+
+    ``unconditional_nonpositive`` holds the declarable pairs admitted by a
+    bucket with no floor whose summed total is zero or negative: the bucket
+    relates them whatever their amount, but a nil or negative annual total is
+    the case the declaration's own sign field exists for and is not settled by
+    the floor rule.
+    """
 
     buckets: M347ThresholdBuckets
     declarable: frozenset[tuple[str, str]]
+    unconditional_nonpositive: frozenset[tuple[str, str]] = frozenset()
 
     def admits(self, party_tax_id: str, clave: str) -> bool:
         """Whether an operation with ``party_tax_id`` under ``clave`` is declared."""
         return (party_tax_id, self.buckets.bucket_of(clave).token) in self.declarable
+
+    def admits_unconditional_nonpositive(self, party_tax_id: str, clave: str) -> bool:
+        """Whether that operation is declared by a no-floor bucket on a zero or negative total."""
+        return (party_tax_id, self.buckets.bucket_of(clave).token) in self.unconditional_nonpositive
 
 
 def _resolve_m347_floor_fact(
@@ -175,7 +196,8 @@ def resolve_m347_threshold_buckets(
     The fact must partition the whole M347 clave vocabulary: every clave in
     exactly one bucket, and every bucket naming either one floor fact or an
     explicit ``declared_regardless_of_amount = true``, never both and never
-    neither.
+    neither. A bucket may add ``reading_unsettled = true``; absent, the
+    grouping is settled.
 
     Raises:
         RegistryValidationError: When the fact is malformed, leaves a clave
@@ -232,8 +254,21 @@ def _bucket(
             f"{_M347_THRESHOLD_BUCKETS_SUBJECT} bucket {token!r} must declare exactly one of a floor_fact "
             "or declared_regardless_of_amount = true",
         )
+    unsettled_key = f"{prefix}reading_unsettled"
+    reading_unsettled = unsettled_key in entries and required_mapping_boolean(
+        entries,
+        unsettled_key,
+        subject=_M347_THRESHOLD_BUCKETS_SUBJECT,
+        case=BooleanTokenCase.EXACT,
+    )
     if regardless:
-        return M347ThresholdBucket(token=token, claves=claves, floor=None, floor_fact=None)
+        return M347ThresholdBucket(
+            token=token,
+            claves=claves,
+            floor=None,
+            floor_fact=None,
+            reading_unsettled=reading_unsettled,
+        )
     floor_fact = _resolve_m347_floor_fact(
         required_mapping_entry(entries, f"{prefix}floor_fact", subject=_M347_THRESHOLD_BUCKETS_SUBJECT),
         effective_date=effective_date,
@@ -244,6 +279,7 @@ def _bucket(
         claves=claves,
         floor=m347_threshold_decimal(floor_fact),
         floor_fact=floor_fact,
+        reading_unsettled=reading_unsettled,
     )
 
 
@@ -275,7 +311,8 @@ def m347_declarable_party_buckets(
             1065/2007 art. 33.1 computes entregas and adquisiciones
             separately, and arts. 32.c and 33.4 give clave C its own lower
             floor. A bucket the registry declares related whatever its
-            amount admits every party that has an operation in it.
+            amount admits every party that has an operation in it, and
+            records the admitted parties whose total is zero or negative.
         effective_date: Explicit filing-period date selecting the governed facts.
         authority: Optional validated authority whose resolution retains provenance.
 
@@ -289,8 +326,19 @@ def m347_declarable_party_buckets(
         totals = bucket_totals[buckets.bucket_of(clave).token]
         totals[party_tax_id] = totals.get(party_tax_id, Decimal("0")) + amount
     declarable: set[tuple[str, str]] = set()
+    unconditional_nonpositive: set[tuple[str, str]] = set()
     for bucket in buckets.buckets:
         totals = bucket_totals[bucket.token]
-        parties = frozenset(totals) if bucket.floor is None else _declarable_party_ids(totals, floor=bucket.floor)
+        if bucket.floor is None:
+            parties = frozenset(totals)
+            unconditional_nonpositive.update(
+                (party_tax_id, bucket.token) for party_tax_id, total in totals.items() if total <= 0
+            )
+        else:
+            parties = _declarable_party_ids(totals, floor=bucket.floor)
         declarable.update((party_tax_id, bucket.token) for party_tax_id in parties)
-    return M347DeclarableSet(buckets=buckets, declarable=frozenset(declarable))
+    return M347DeclarableSet(
+        buckets=buckets,
+        declarable=frozenset(declarable),
+        unconditional_nonpositive=frozenset(unconditional_nonpositive),
+    )

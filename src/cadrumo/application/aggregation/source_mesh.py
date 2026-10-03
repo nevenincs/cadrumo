@@ -284,6 +284,16 @@ CalculationSourceDiagnosticReason = Literal[
     # cover) nor a silent ``True`` (over-declares) is acceptable, so an
     # undeclared fact surfaces here instead of picking a side.
     "unclassified_declarant_role_fact",
+    # A declared figure that rests on a reading of the law the registry marks
+    # as unsettled for the filing period: a grouping or floor the bundled
+    # corpus does not decide, a category whose exclusion is arguable, or a
+    # total whose sign the rule does not settle. The figure follows the
+    # registry's reading and is declared, never dropped; this reason exists so
+    # the reading is disclosed rather than presented as settled. Distinct from
+    # "unclassified_declarant_role_fact", where the filer's record leaves a
+    # fact undeclared: here the record is complete and the law is the open
+    # question, so the remedy is a check against AEAT guidance, not an edit.
+    "unsettled_legal_reading",
     # An invoice whose declared IVA treatment and whose counterparty contradict
     # each other: an intra-community supply to a third country, or an export to
     # a member state. Routing on the category alone would declare volume the

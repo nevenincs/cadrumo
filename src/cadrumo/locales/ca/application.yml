@@ -1076,6 +1076,11 @@ application:
         what: Un import dels teus registres no s'ha col·locat a cap casella d'aquesta
           declaració.
         what_to_do: Revisa com està classificat aquest registre i torna a calcular.
+      unsettled_legal_reading:
+        what: Una xifra declarada segueix una lectura d'una norma que no està resolta
+          per a aquest exercici, i l'AEAT podria llegir-la d'una altra manera.
+        what_to_do: Revisa aquestes operacions amb els criteris actuals de l'AEAT
+          abans de presentar.
       unusable_sales_invoice_evidence:
         what: Un registre d'ingressos està vinculat a una factura emesa que no és
           fiable, així que es declara l'import del banc i es perd la retenció.

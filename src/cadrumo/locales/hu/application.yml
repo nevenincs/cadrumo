@@ -1039,6 +1039,11 @@ application:
           egyik rovatába sem.
         what_to_do: Nézd meg, hogyan van besorolva az a tétel a nyilvántartásodban,
           majd számolj újra.
+      unsettled_legal_reading:
+        what: Egy bevallott összeg egy olyan szabály egyik értelmezését követi, amely
+          erre az évre nem tisztázott, és az AEAT másként is értelmezheti.
+        what_to_do: Beadás előtt ellenőrizd ezeket az ügyleteket az AEAT aktuális
+          iránymutatása alapján.
       unusable_sales_invoice_evidence:
         what: Egy bevételi tétel olyan kiállított számlához kapcsolódik, amely nem
           megbízható, ezért a banki összeg kerül bevallásra, a levonás pedig elvész.

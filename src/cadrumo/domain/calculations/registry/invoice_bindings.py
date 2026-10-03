@@ -35,7 +35,7 @@ from .binding_selector_utils import (
 )
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .m347_threshold import m347_declarable_party_buckets
+from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets
 from .schema_base import coerce_enum_member
 from .schema_exports import ExportFieldDataType
 
@@ -87,6 +87,7 @@ _InvoiceRowField = Literal[
 # taxonomy from its defining core module.
 __all__ = [
     "InvoiceObservation",
+    "m347_declarable_set",
     "m347_operation_clave",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
@@ -861,19 +862,41 @@ def _m347_row_family_threshold_filter(
     An observation without an operation_clave is not an M347 operation: it
     adds to no bucket and is dropped, exactly as the row builder skips it.
     """
-    clave_totals: dict[tuple[str, str], Decimal] = {}
-    for observation in observations:
-        if observation.operation_clave is None:
-            continue
-        key = (observation.party_tax_id, observation.operation_clave)
-        clave_totals[key] = clave_totals.get(key, Decimal("0")) + _invoice_total_amount(observation)
-    declarable = m347_declarable_party_buckets(clave_totals, effective_date=effective_date)
+    declarable = m347_declarable_set(observations, effective_date=effective_date)
     return tuple(
         observation
         for observation in observations
         if observation.operation_clave is not None
         and declarable.admits(observation.party_tax_id, observation.operation_clave)
     )
+
+
+def m347_declarable_set(
+    observations: tuple[InvoiceObservation, ...],
+    *,
+    effective_date: date,
+) -> M347DeclarableSet:
+    """Sum each counterparty's gross M347 amount per clave and judge it by bucket.
+
+    The one place the row family, the declarante summary and the source
+    resolver's advisories obtain the declarable set from, so every consumer
+    reads the same per-(party, clave) totals the floor was compared against.
+
+    Args:
+        observations: Invoice observations; those without an operation_clave
+            are not M347 operations and add to no total.
+        effective_date: Filing-period date selecting the bucket and floor facts.
+
+    Returns:
+        The declarable set for these observations.
+    """
+    clave_totals: dict[tuple[str, str], Decimal] = {}
+    for observation in observations:
+        if observation.operation_clave is None:
+            continue
+        key = (observation.party_tax_id, observation.operation_clave)
+        clave_totals[key] = clave_totals.get(key, Decimal("0")) + _invoice_total_amount(observation)
+    return m347_declarable_party_buckets(clave_totals, effective_date=effective_date)
 
 
 def _require_m347_effective_date(effective_date: date | None) -> date:

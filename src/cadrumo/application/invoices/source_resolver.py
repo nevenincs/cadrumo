@@ -41,11 +41,13 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.invoice_bindings import (
     InvoiceObservation,
+    m347_declarable_set,
     m347_operation_clave,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category, resolve_iva_category_catalogue
+from ...domain.calculations.registry.m347_threshold import M347DeclarableSet, M347ThresholdBucket
 from ...domain.calculations.registry.third_party_declaration_roles import (
     resolve_third_party_declaration_role_catalogue,
 )
@@ -239,6 +241,7 @@ def _invoice_resolution_from_observations(
             resolver_id=resolver_id,
         )
     diagnostics += _m347_role_fact_advisories(source_invoices, context=context, resolver_id=resolver_id)
+    diagnostics += _m347_threshold_reading_advisories(observed_items, context=context, resolver_id=resolver_id)
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
@@ -634,6 +637,165 @@ def _m347_role_fact_advisories(
                     remedy="Declare is_subvencion_ayuda on this invoice, then recalculate",
                 ),
             )
+    return tuple(diagnostics)
+
+
+#: The provision every Modelo 347 declaration-floor reading is a claim about.
+_M347_THRESHOLD_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-33",)
+
+
+def _m347_observed_items(observed_items: Sequence[_ObservedInvoice]) -> tuple[_ObservedInvoice, ...]:
+    return tuple(
+        (invoice, observation) for invoice, observation in observed_items if observation.operation_clave is not None
+    )
+
+
+def _m347_threshold_bucket_numbers(
+    bucket: M347ThresholdBucket,
+    m347_items: Sequence[_ObservedInvoice],
+) -> list[str]:
+    return sorted(
+        invoice.invoice_number for invoice, observation in m347_items if observation.operation_clave in bucket.claves
+    )
+
+
+def _m347_threshold_bucket_advisory(
+    bucket: M347ThresholdBucket,
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic | None:
+    if not bucket.reading_unsettled:
+        return None
+    numbers = _m347_threshold_bucket_numbers(bucket, m347_items)
+    if not numbers:
+        return None
+    rule = "whatever their amount" if bucket.floor is None else f"against a {bucket.floor} EUR floor"
+    return CalculationSourceDiagnostic(
+        reason="unsettled_legal_reading",
+        source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+        resolver_id=resolver_id,
+        source_ref=f"m347-threshold-bucket:{bucket.token}",
+        message=(
+            f"Modelo 347 clave {', '.join(sorted(bucket.claves))} operations ({', '.join(numbers)}) are "
+            f"judged in their own declaration bucket {bucket.token!r} {rule} for ejercicio "
+            f"{context.filing_year}. The registry marks that reading of RD 1065/2007 art. 33 as "
+            "unsettled, so the declarado records follow it and AEAT may read the provision differently."
+        ),
+        remedy=(
+            "Check these operations against current AEAT guidance for this ejercicio before filing; "
+            "the declarado records shown follow the registry's reading."
+        ),
+        asserted_legal_refs=_M347_THRESHOLD_LEGAL_REFS,
+    )
+
+
+def _m347_unsettled_bucket_advisories(
+    declarable: M347DeclarableSet,
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for bucket in declarable.buckets.buckets:
+        advisory = _m347_threshold_bucket_advisory(
+            bucket,
+            m347_items,
+            context=context,
+            resolver_id=resolver_id,
+        )
+        if advisory is not None:
+            diagnostics.append(advisory)
+    return tuple(diagnostics)
+
+
+def _m347_nonpositive_total_advisory(
+    declarable: M347DeclarableSet,
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic | None:
+    nonpositive = sorted(
+        invoice.invoice_number
+        for invoice, observation in m347_items
+        if observation.operation_clave is not None
+        and declarable.admits_unconditional_nonpositive(observation.party_tax_id, observation.operation_clave)
+    )
+    if not nonpositive:
+        return None
+    return CalculationSourceDiagnostic(
+        reason="unsettled_legal_reading",
+        source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+        resolver_id=resolver_id,
+        source_ref="m347-threshold-bucket:nonpositive-total",
+        message=(
+            f"Modelo 347 operations ({', '.join(nonpositive)}) net to zero or less for their "
+            "counterparty in a bucket related whatever its amount, so they are declared at that total "
+            f"for ejercicio {context.filing_year}. Whether a nil or negative annual total belongs on "
+            "the declaration is not settled."
+        ),
+        remedy=(
+            "Check the rectifications and returns behind these totals; keep the record only if the "
+            "operations still have to be related for this ejercicio."
+        ),
+        asserted_legal_refs=(*_M347_THRESHOLD_LEGAL_REFS, "rd-1065-2007:art-34"),
+    )
+
+
+def _m347_threshold_reading_advisories(
+    observed_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Disclose the Modelo 347 declaration-floor readings the registry leaves unsettled.
+
+    The declarable set is the one the row family and the declarante summary
+    use (:func:`~cadrumo.domain.calculations.registry.invoice_bindings.m347_declarable_set`),
+    read at the same filing-period date, so what is disclosed is exactly what
+    was declared. Two cases, each one advisory per calculation rather than one
+    per invoice:
+
+    - a threshold bucket the registry flags ``reading_unsettled`` holds
+      operations: the clave D bucket kept apart from the ordinary
+      adquisiciones (art. 33.3 neither joins nor separates them), or clave E
+      related whatever its amount while the record design still in use states
+      a floor;
+    - a bucket with no floor admits a counterparty whose net total is zero or
+      negative, which the bucket declares but whose place on the declaration
+      no rule settles.
+
+    The operations stay declared on the registry's reading; the advisory says
+    which ones rest on it.
+    """
+    if context.modelo != Modelo("347").value:
+        return ()
+    m347_items = _m347_observed_items(observed_items)
+    if not m347_items:
+        return ()
+    declarable = m347_declarable_set(
+        tuple(observation for _, observation in m347_items),
+        effective_date=date(context.filing_year, 12, 31),
+    )
+    diagnostics = list(
+        _m347_unsettled_bucket_advisories(
+            declarable,
+            m347_items,
+            context=context,
+            resolver_id=resolver_id,
+        ),
+    )
+    nonpositive_advisory = _m347_nonpositive_total_advisory(
+        declarable,
+        m347_items,
+        context=context,
+        resolver_id=resolver_id,
+    )
+    if nonpositive_advisory is not None:
+        diagnostics.append(nonpositive_advisory)
     return tuple(diagnostics)
 
 

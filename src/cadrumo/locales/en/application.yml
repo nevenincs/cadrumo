@@ -1005,6 +1005,11 @@ application:
         what: An amount from your records is not placed in any box of this declaration.
         what_to_do: Check how that record is classified in your records, then calculate
           again.
+      unsettled_legal_reading:
+        what: A declared figure follows one reading of a rule that is not settled
+          for this year, and AEAT may read it differently.
+        what_to_do: Check those operations against current AEAT guidance before you
+          file.
       unusable_sales_invoice_evidence:
         what: An income entry is linked to an issued invoice that cannot be trusted,
           so the bank amount is declared and its withholding is lost.
