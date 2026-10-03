@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb5cc77c7562d45369abe9262c530c1da7be756fcc924e4fcf88b50539b10d9d'
+body_hash: 'sha256:9e788b6fc25954e21cb9fda8ac890acd14429bf7a97f26090af5a79069a4ba8d'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -95,6 +95,27 @@ related:
 - `S12` `M` `src/cadrumo/locales/hu/wizard.yml`
 - `S12` `verify:` `pytest explain and applicability suites` -> `pass`
 - `S12` `verify:` `dev.locales status --check` -> `pass`
+- `S11` `M` `src/cadrumo/application/overview/agenda.py`
+- `S11` `A` `src/cadrumo/application/overview/applicability_evidence.py`
+- `S11` `M` `src/cadrumo/application/overview/backlog.py`
+- `S11` `M` `src/cadrumo/application/overview/calendar.py`
+- `S11` `M` `src/cadrumo/application/overview/calendar_warnings.py`
+- `S11` `A` `src/cadrumo/application/overview/tests/test_applicability_evidence.py`
+- `S11` `M` `src/cadrumo/application/user_profile/projections.py`
+- `S11` `M` `src/cadrumo/application/user_profile/tests/test_projections.py`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S11` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S11` `M` `src/cadrumo/entrypoints/overview_read_composition.py`
+- `S11` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/en/cli.yml`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/cli.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `verify:` `pytest overview applicability projections suites` -> `pass`
+- `S11` `verify:` `ruff check` -> `pass`
 
 ## Notes
 
@@ -103,3 +124,4 @@ related:
 - `S10` `applicability_payer_facts.py` includes another writer's helper split of the new code; published-authority tests await Phase publication
 - `S03` two known failures: one awaits publication of fact 0080, one is the pre-existing dead 349 summary loop (operator 349 rows do not reach type 1 totals), recorded as follow-up
 - `S12` census adoption not implemented: no census source Cadrumo reads carries SII, IVA regime, criterio de caja or estimation regime; needs a certificate or 036 read-back reader (new scope)
+- `S11` Step stays open: TUI reader wiring waits for another writer's uncommitted workbench calendar split, and overview explain must receive the per-year evidence; `_DECLARED_RECORD_COUNT_SOURCES` is a one-entry Python table that should move to registry data
