@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e788b6fc25954e21cb9fda8ac890acd14429bf7a97f26090af5a79069a4ba8d'
+body_hash: 'sha256:b0781aabe19a84ad7bacfff7be2bb75e7bc26be994a2e07026e913d9a5e1b9d0'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -116,6 +116,45 @@ related:
 - `S11` `M` `src/cadrumo/locales/hu/common.yml`
 - `S11` `verify:` `pytest overview applicability projections suites` -> `pass`
 - `S11` `verify:` `ruff check` -> `pass`
+- `S02` `M` `dev/registry/tests/test_m347_threshold_buckets_authored.py`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/facts/0148-m347-clave-threshold-buckets.toml`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S02` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S02` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S02` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py`
+- `S02` `M` `src/cadrumo/locales/ca/application.yml`
+- `S02` `M` `src/cadrumo/locales/en/application.yml`
+- `S02` `M` `src/cadrumo/locales/es/application.yml`
+- `S02` `M` `src/cadrumo/locales/hu/application.yml`
+- `S02` `verify:` `pytest 347 resolver suites in HEAD export with scratch authority` -> `pass`
+- `S02` `verify:` `ruff check` -> `pass`
+- `S02` `verify:` `ty check` -> `pass`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml`
+- `S08` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S08` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`
+- `S08` `A` `src/cadrumo/domain/calculations/registry/tests/test_iva_category_exclusions.py`
+- `S08` `verify:` `pytest 347 resolver suites in HEAD export with scratch authority` -> `pass`
+- `S08` `verify:` `ruff check` -> `pass`
+- `S08` `verify:` `ty check` -> `pass`
+- `S09` `M` `dev/quality/metadata/import_load_targets.json`
+- `S09` `A` `dev/registry/tests/test_m347_estimacion_objetiva_scope_authored.py`
+- `S09` `A` `src/cadrumo/_data/registry/aeat/facts/0149-m347-estimacion-objetiva-operation-scope.toml`
+- `S09` `M` `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S09` `M` `src/cadrumo/application/aggregation/_modelo_bindings_support.py`
+- `S09` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S09` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S09` `M` `src/cadrumo/application/aggregation/oss_ioss.py`
+- `S09` `M` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S09` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/m347_operation_scope.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/tests/test_m347_operation_scope.py`
+- `S09` `verify:` `pytest 347 resolver suites in HEAD export with scratch authority` -> `pass`
+- `S09` `verify:` `ruff check` -> `pass`
+- `S09` `verify:` `ty check` -> `pass`
 
 ## Notes
 
@@ -125,3 +164,6 @@ related:
 - `S03` two known failures: one awaits publication of fact 0080, one is the pre-existing dead 349 summary loop (operator 349 rows do not reach type 1 totals), recorded as follow-up
 - `S12` census adoption not implemented: no census source Cadrumo reads carries SII, IVA regime, criterio de caja or estimation regime; needs a certificate or 036 read-back reader (new scope)
 - `S11` Step stays open: TUI reader wiring waits for another writer's uncommitted workbench calendar split, and overview explain must receive the per-year evidence; `_DECLARED_RECORD_COUNT_SOURCES` is a one-entry Python table that should move to registry data
+- `S02` commit 73cee8a07f; published-authority tests await the publication from c5546a23a5
+- `S08` commit bf204de53a; published-authority tests await the publication from c5546a23a5
+- `S09` commit c5546a23a5; published-authority tests await the publication from c5546a23a5

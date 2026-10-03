@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:b1a5d21ef9af38e8414d1000096c05f4702742ecb37bed9cd380f8e1cbc05d24'
+body_hash: 'sha256:62b89dd9312e27bdc3bbce53f43f64e7eae121f36152c2bae0e1cb45a666371c'
 ---
 
 # `modelo-347-fileability` plan
@@ -34,7 +34,7 @@ ambiguous law stays advisory.
 Ground the 347 obligation in the BOE texts and compute the 3.005,06 floor per counterparty and direction bucket through the one existing threshold leaf.
 
 - [x] `P01.S01` - Point rd-1065-2007:art-31 at the BOE consolidated article, add rd-1065-2007:art-32 and rd-1624-1992:art-62 legal entities with verbatim required text, cite art. 33 for the threshold fact users, and retire the stand-in split article; `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml, src/cadrumo/_data/registry/aeat/legal/iva-flow.toml, src/cadrumo/domain/calculations/registry/m347_threshold.py`.
-- [ ] `P01.S02` - Compute the 347 floor per counterparty and direction bucket from a dated registry fact mapping claves to buckets, through one declarable-set function in m347_threshold.py delegating to _declarable_party_ids, used by both the row family and the declarante summary; `src/cadrumo/_data/registry/aeat/facts/, src/cadrumo/domain/calculations/registry/m347_threshold.py, src/cadrumo/domain/calculations/registry/invoice_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
+- [x] `P01.S02` - Compute the 347 floor per counterparty and direction bucket from a dated registry fact mapping claves to buckets, through one declarable-set function in m347_threshold.py delegating to _declarable_party_ids, used by both the row family and the declarante summary; `src/cadrumo/_data/registry/aeat/facts/, src/cadrumo/domain/calculations/registry/m347_threshold.py, src/cadrumo/domain/calculations/registry/invoice_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
 
 ### Phase `P02` - Live declarado rows and export
 
@@ -52,8 +52,8 @@ Produce the type 2 rows on the live path through the existing row builder and re
 
 Apply art. 32.b operation scoping and the art. 33.2 exclusions at the single existing exclusion point via the category catalogue.
 
-- [ ] `P03.S08` - Exclude art. 33.2 operations at the single exclusion point through IVA category catalogue exclusion keys: goods imports and exports, withheld received invoices, and the categorisable letters; `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml, src/cadrumo/domain/calculations/registry/iva_category_catalogue.py, src/cadrumo/application/invoices/source_resolver.py`.
-- [ ] `P03.S09` - Scope 347 operations for estimacion objetiva filers per art. 32.b and resolve filer roles and regimes once per calculation context as of the filing period; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/application/user_profile/projections.py`.
+- [x] `P03.S08` - Exclude art. 33.2 operations at the single exclusion point through IVA category catalogue exclusion keys: goods imports and exports, withheld received invoices, and the categorisable letters; `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml, src/cadrumo/domain/calculations/registry/iva_category_catalogue.py, src/cadrumo/application/invoices/source_resolver.py`.
+- [x] `P03.S09` - Scope 347 operations for estimacion objetiva filers per art. 32.b and resolve filer roles and regimes once per calculation context as of the filing period; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/application/user_profile/projections.py`.
 
 ### Phase `P04` - Obligation, applicability and profile
 
