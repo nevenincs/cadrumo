@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:04a3ecd3ee7de6846c3df48220b750d2b373387a6937eaab51dac6047ee24e0e'
+body_hash: 'sha256:26154e01d752fe8037534beb9d7908efc21b974560abf27fb043df912883d4f8'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -202,6 +202,15 @@ related:
 - `S07` `verify:` `inspect_authoring_candidate` -> `pass`
 - `S07` `verify:` `form_layout generate --check` -> `pass`
 - `S07` `verify:` `pytest 347 export suites` -> `pass`
+- `S11` `M` `dev/registry/compiler/validate_applicability_section.py`
+- `S11` `M` `dev/registry/tests/test_payer_fact_declarations.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml`
+- `S11` `M` `src/cadrumo/application/overview/applicability_evidence.py`
+- `S11` `M` `src/cadrumo/application/overview/explain.py`
+- `S11` `M` `src/cadrumo/application/overview/tests/test_applicability_evidence.py`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`
+- `S11` `verify:` `pytest overview and payer-fact suites in HEAD export` -> `pass`
+- `S11` `verify:` `inspect_authoring_candidate` -> `pass`
 
 ## Notes
 
@@ -217,3 +226,4 @@ related:
 - `S04` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
 - `S05` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
 - `S07` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
+- `S11` explain wiring and registry-declared ledger source; TUI reader wiring still pending another writer's workbench calendar split
