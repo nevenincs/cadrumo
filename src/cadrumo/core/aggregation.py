@@ -321,24 +321,18 @@ class BindingSourceKind(StrEnum):
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"
     # Modelo 347 "operaciones con terceras personas" combined-direction source.
-    # RD 1065/2007 art. 33.1 defines the declared population as one
-    # undifferentiated concept before any direction split: "tendran la
-    # consideracion de operaciones tanto las entregas de bienes y
-    # prestaciones de servicios como las adquisiciones de los mismos" -- a
-    # sale and a purchase are the SAME "operacion" concept the annual
-    # declaration reports, not two. A binding that declares one direction
-    # (payable or collectible) while its resolver reads both is untruthful
-    # about what it consumes; this member names the combined population the
-    # law itself already treats as singular, for bindings whose selector
-    # spans both invoice directions (the M347 declarante-summary totals and
-    # the per-counterparty contraparte_clave row family). It is invoice-
-    # shaped (a member of INVOICE_BINDING_SOURCE_KINDS) and resolved by the
-    # same InvoiceCatalogueSourceResolver as PAYABLE_INVOICE/COLLECTIBLE_INVOICE;
-    # each underlying InvoiceObservation still carries its own true
-    # PAYABLE_INVOICE/COLLECTIBLE_INVOICE direction as its own source_kind, so
-    # per-invoice direction (art. 33.1's quarterly separate accounting of
-    # entregas y adquisiciones) is never lost, only the BINDING's declared
-    # source is honest about spanning both.
+    # RD 1065/2007 art. 33.1 counts both directions as operations ("tendran la
+    # consideracion de operaciones tanto las entregas de bienes y prestaciones
+    # de servicios como las adquisiciones de los mismos") and reports them in
+    # one type 2 record stream, so a binding that declared one direction
+    # while its resolver read both would be untruthful about what it
+    # consumes. Sharing one stream does NOT merge the directions for the
+    # floor: art. 33.1 also says "se computaran de forma separada las entregas
+    # y las adquisiciones", which the clave threshold buckets apply. It is
+    # invoice-shaped (a member of INVOICE_BINDING_SOURCE_KINDS) and resolved
+    # by the same InvoiceCatalogueSourceResolver as
+    # PAYABLE_INVOICE/COLLECTIBLE_INVOICE; each underlying InvoiceObservation
+    # keeps its own direction as its source_kind.
     M347_THIRD_PARTY_OPERATION = "m347_third_party_operation"
     # The Modelo 349 operador and rectificacion records are likewise ONE
     # population across both invoice directions: record design type 2 pos. 133
