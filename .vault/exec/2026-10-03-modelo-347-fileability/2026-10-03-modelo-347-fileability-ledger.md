@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd920172e27819a2fa4bf4e59ded76f64cce02d372c2439d19005d0ac01f18c4'
+body_hash: 'sha256:ceea0075392b7a112e746299597c1deb3fec610096cb48a5159c7550cb680b25'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -62,7 +62,6 @@ related:
 - `S03` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
 - `S03` `M` `src/cadrumo/domain/modelos/row_models.py`
 - `S03` `M` `src/cadrumo/domain/modelos/tests/test_calculation_revision_observations.py`
-- `S03` `D` `src/cadrumo/domain/modelos/tests/test_row_models_m347_revision.py`
 - `S03` `A` `src/cadrumo/domain/modelos/tests/test_row_models_revision_ids.py`
 - `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_cli_support.py`
 - `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_amend_detail_row_argv.py`
@@ -236,11 +235,7 @@ related:
 - `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
 - `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
 - `S15` `M` `src/cadrumo/application/filing/record_renderer.py`
-- `S15` `A` `src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py`
-- `S15` `A` `src/cadrumo/application/filing/tests/test_optional_record_omission.py`
-- `S15` `A` `src/cadrumo/application/modelo/_m347_inmueble_advisory.py`
 - `S15` `M` `src/cadrumo/application/modelo/calculation_diagnostics.py`
-- `S15` `A` `src/cadrumo/application/modelo/tests/test_m347_inmueble_advisory.py`
 - `S15` `verify:` `inspect_authoring_candidate` -> `pass`
 - `S13` `M` `dev/registry/tests/test_modelo_347_registry.py`
 - `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/revision.toml`
@@ -271,7 +266,6 @@ related:
 - `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
 - `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
 - `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
-- `S06` `A` `src/cadrumo/application/filing/tests/test_modelo_347_fichero_export.py`
 - `S06` `M` `src/cadrumo/domain/calculations/registry/export_value_policy.py`
 - `S06` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
 - `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py`
@@ -284,6 +278,79 @@ related:
 - `S11` `A` `src/cadrumo/entrypoints/tests/test_m347_ledger_verdict_parity.py`
 - `S11` `verify:` `pytest workbench and overview suites in HEAD export` -> `pass`
 - `S11` `verify:` `pytest CLI/TUI 347 verdict parity` -> `pass`
+- `S16` `M` `dev/registry/mappings/modelo_347/2011/0001-records.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2011/0002-declarante.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2011/0003-declarado.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2011/0004-inmueble.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2025/0002-declarante.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2025/0003-declarado.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2025/0004-inmueble.toml`
+- `S16` `A` `dev/registry/render_profiles/modelo_347/2011/0003-telematic-transport.toml`
+- `S16` `A` `dev/registry/render_profiles/modelo_347/2025/0003-telematic-transport.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/bindings/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/constructs/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0001-record-m347-declarante.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0003-record-m347-inmueble.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/verification_expectations/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0001-record-m347-declarante.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0003-record-m347-inmueble.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/revision.toml`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S16` `M` `src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py`
+- `S16` `M` `src/cadrumo/application/filing/tests/test_modelo_347_fichero_export.py`
+- `S16` `M` `src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py`
+- `S16` `M` `src/cadrumo/application/filing/tests/test_optional_record_omission.py`
+- `S16` `M` `src/cadrumo/application/invoices/catalogue_add_contracts.py`
+- `S16` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
+- `S16` `M` `src/cadrumo/application/invoices/catalogue_creation.py`
+- `S16` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S16` `M` `src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py`
+- `S16` `M` `src/cadrumo/application/invoices/tests/test_source_resolver.py`
+- `S16` `D` `src/cadrumo/application/modelo/_m347_inmueble_advisory.py`
+- `S16` `A` `src/cadrumo/application/modelo/_m347_uninvoiced_expense_advisory.py`
+- `S16` `M` `src/cadrumo/application/modelo/calculation_diagnostics.py`
+- `S16` `D` `src/cadrumo/application/modelo/tests/test_m347_inmueble_advisory.py`
+- `S16` `A` `src/cadrumo/application/modelo/tests/test_m347_uninvoiced_expense_advisory.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S16` `M` `src/cadrumo/domain/invoices/_payload_normalisation.py`
+- `S16` `M` `src/cadrumo/domain/invoices/models.py`
+- `S16` `A` `src/cadrumo/domain/invoices/tests/test_business_premises_lease.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_app_ledger_invoice_intake_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/app_ledger_invoice_common_command_parameters.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_invoice_lifecycle_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_lifecycle.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/invoice_entry.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/runtime_invoice_add.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_invoice_entry_lines.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_invoice_add.py`
+- `S16` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/ca/modelo/schema/347.yml`
+- `S16` `M` `src/cadrumo/locales/en/cli.yml`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/en/modelo/schema/347.yml`
+- `S16` `M` `src/cadrumo/locales/es/cli.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/modelo/schema/347.yml`
+- `S16` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/modelo/schema/347.yml`
+- `S16` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S16` `verify:` `form_layout generate --check` -> `pass`
+- `S16` `verify:` `pytest S16 focused suite in HEAD export` -> `pass`
+- `S13` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S13` `verify:` `pytest S13b focused suite in HEAD export` -> `pass`
 
 ## Notes
 
@@ -307,3 +374,5 @@ related:
 - `S13` part A in cd923576a0; part B (expense-without-invoice advisory, received-invoice dating, tipo de soporte) pending; follow-ups: capture the 2014-2024 347 diseño to restore filing grade for amendments, and a structured authority-grade limitation field (schema decision)
 - `S06` commit f2f8ca00a9; first half landed in snapshot f4729489f9 and repair 3d235bacde; seguro, arrendamiento, transmisiones, BDNS and representante remain single-valued casillas; criterio de caja amount, Spanish provincia and metalico have no source data and are advisories
 - `S11` TUI wiring in 939c990a5e closes S11
+- `S16` commit c2257ee05d carries S13 part B and S16 together; open: lease facts not shown in invoice view/list, no direccion or representante capture, tenant-side pos. 100, invoice wizard/update lease options
+- `S13` part B in c2257ee05d: uninvoiced expense advisory, received-invoice dating advisory, tipo de soporte rule
