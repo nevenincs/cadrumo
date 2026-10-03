@@ -43,7 +43,7 @@ from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_suppor
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
-# Chain 3 — M349 invoices (collectible_invoice): PROVEN LIVE
+# Chain 3 — M349 invoices (m349_intracommunity_operation): PROVEN LIVE
 # ---------------------------------------------------------------------------
 
 _M349_BUCKET = "34900000-0000-4000-8000-000000000013"
@@ -97,7 +97,9 @@ def m349_calculated(
     revision = _revision("349", _M349_REVISION)
     importe_casilla = next(c for c in revision.casillas if c.id == _M349_IMPORTE_CASILLA)
     assert importe_casilla.binding == _M349_IMPORTE_BINDING
-    assert any(str(b.source) == "collectible_invoice" and b.id == _M349_IMPORTE_BINDING for b in revision.bindings)
+    assert any(
+        str(b.source) == "m349_intracommunity_operation" and b.id == _M349_IMPORTE_BINDING for b in revision.bindings
+    )
     assert len({base for *_, base in M349_INVOICES}) == 3
 
     work_unit = create_work_unit(
@@ -131,7 +133,8 @@ def m349_calculated(
     )
     # The invoice source is CLAIMED (resolver enrolled): no unhandled advisory.
     assert not any(
-        diag.source_kind in {"collectible_invoice", "payable_invoice"} and diag.reason == "unhandled_binding_source"
+        diag.source_kind in {"collectible_invoice", "payable_invoice", "m349_intracommunity_operation"}
+        and diag.reason == "unhandled_binding_source"
         for diag in result.source_diagnostics
     )
     return work_unit, result.revision
