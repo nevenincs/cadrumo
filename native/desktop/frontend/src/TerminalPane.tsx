@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { identity } from "virtual:desktop-content";
 import "@xterm/xterm/css/xterm.css";
 
-export function TerminalPane({ mode }: { mode: "python" | "tui" }) {
+export function TerminalPane() {
   const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!container.current) return;
@@ -25,16 +24,6 @@ export function TerminalPane({ mode }: { mode: "python" | "tui" }) {
     const fit = new FitAddon();
     terminal.loadAddon(fit);
     terminal.open(container.current);
-    terminal.writeln(
-      `\x1b[1;32m${identity.display_name}\x1b[0m  ${mode === "python" ? "Python console" : "Textual workbench"}`,
-    );
-    terminal.writeln("");
-    terminal.writeln(
-      "Not connected. The bundled environment is not available in this preview.",
-    );
-    terminal.writeln(
-      "Your workspace and local documentation remain available.",
-    );
     let frame = 0;
     const observer = new ResizeObserver(() => {
       cancelAnimationFrame(frame);
@@ -49,12 +38,12 @@ export function TerminalPane({ mode }: { mode: "python" | "tui" }) {
       cancelAnimationFrame(frame);
       terminal.dispose();
     };
-  }, [mode]);
+  }, []);
   return (
     <div
       className="terminal-surface"
       ref={container}
-      aria-label={`${mode === "python" ? "Python console" : "Textual workbench"} output`}
+      aria-label="TUI terminal"
     />
   );
 }

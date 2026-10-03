@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
@@ -70,37 +70,6 @@ export default defineConfig(({ mode }) => {
               { encoding: "utf8" },
             ),
           );
-          const directory = resolve(root, "docs/explanation");
-          const chapters = readdirSync(directory)
-            .filter((name) =>
-              [
-                "from-records-to-figures.md",
-                "editing-and-verifying.md",
-                "reviewing-and-exporting.md",
-                "recording-a-filing-and-the-boundary.md",
-                "building-on-earlier-filings.md",
-              ].includes(name),
-            )
-            .map((name) => {
-              const path = resolve(directory, name);
-              this.addWatchFile(path);
-              const source = readFileSync(path, "utf8");
-              if (/```\{/.test(source))
-                throw new Error(
-                  `Sphinx directive requires the full documentation build: ${path}`,
-                );
-              const markdown = source
-                .replace(/^\([^\n]+\)=\r?\n/gm, "")
-                .replace(/\{(?:term|ref|doc)\}`([^`]+)`/g, (_, label: string) =>
-                  label.replace(/\s*<[^>]+>$/, ""),
-                );
-              return {
-                id: name.slice(0, -3),
-                title: source.match(/^# (.+)/m)?.[1]?.trim() ?? name,
-                source: `docs/explanation/${name}`,
-                markdown,
-              };
-            });
           const markPath = resolve(root, "docs/_static/cadrumo-favicon.svg");
           this.addWatchFile(markPath);
           const mark = `data:image/svg+xml;base64,${readFileSync(markPath).toString("base64")}`;
@@ -109,7 +78,7 @@ export default defineConfig(({ mode }) => {
             fileName: "identity.json",
             source: JSON.stringify(identity),
           });
-          return `export const identity = ${JSON.stringify(identity)}; export const chapters = ${JSON.stringify(chapters)}; export const mark = ${JSON.stringify(mark)};`;
+          return `export const identity = ${JSON.stringify(identity)}; export const mark = ${JSON.stringify(mark)};`;
         },
       },
     ],

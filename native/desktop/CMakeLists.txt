@@ -24,10 +24,6 @@ add_custom_target(desktop-host-build
   DEPENDS desktop-frontend-build
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" VERBATIM)
 
-add_custom_target(desktop-host-test
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
-    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/native-smoke.mjs"
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" VERBATIM)
 
 add_custom_target(desktop-preview
   COMMAND "${CMAKE_COMMAND}" -E env

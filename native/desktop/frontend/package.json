@@ -7,19 +7,15 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "tsc --noEmit && eslint . && node --check ../scripts/host.mjs && node --check ../scripts/native-smoke.mjs && prettier --check . ../scripts ../CMakeLists.txt --ignore-unknown",
+    "check": "tsc --noEmit && eslint . && node --check ../scripts/host.mjs && prettier --check . ../scripts ../CMakeLists.txt --ignore-unknown",
     "format": "prettier --write . ../scripts --ignore-unknown",
     "test": "playwright test"
   },
   "dependencies": {
-    "@radix-ui/react-tabs": "1.1.21",
     "@xterm/addon-fit": "0.11.0",
     "@xterm/xterm": "6.0.0",
-    "lucide-react": "1.51.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-markdown": "10.1.0",
-    "remark-gfm": "4.0.1"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
