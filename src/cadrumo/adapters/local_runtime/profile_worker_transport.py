@@ -23,6 +23,7 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerSettlementRequest,
     ProfileWorkerStatus,
 )
+from ...application.runtime.worker_authorization import AUTHORITY_SECTION_MAXIMUM_SECONDS
 from ...application.user_profile.access_contracts import AccessDenialCode, AccessSession
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
@@ -34,6 +35,14 @@ from .worker_admission_budget import WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS
 from .worker_lease_transfer import write_worker_lease
 from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resources
 from .worker_transport import WorkerChannel
+
+#: A worker answers a registered-operation request only after it holds a fresh
+#: runtime authority lease: it may spend 5 s connecting for one and
+#: ``AUTHORITY_SECTION_MAXIMUM_SECONDS + 5`` acquiring it, then writes within
+#: 5 s. A missed reply contains the whole worker, so a shorter wait would stop
+#: every operation it runs while the worker is still inside its own bounded wait.
+_OPERATION_EXCHANGE_SECONDS = AUTHORITY_SECTION_MAXIMUM_SECONDS + 15
+_CONTROL_EXCHANGE_SECONDS = 10
 
 
 class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
@@ -55,7 +64,8 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             acquired = True
             try:
                 channel = self._exchange_channel(operation)
-                wire_deadline = time.monotonic() + 10 if deadline is None else deadline
+                default_seconds = _OPERATION_EXCHANGE_SECONDS if operation else _CONTROL_EXCHANGE_SECONDS
+                wire_deadline = time.monotonic() + default_seconds if deadline is None else deadline
                 return self._read_exchange_reply(channel, request, response, secret, wire_deadline)
             finally:
                 lock.release()
