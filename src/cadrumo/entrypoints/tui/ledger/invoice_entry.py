@@ -15,7 +15,7 @@ from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date_unless_blank
-from ....domain.invoices.models import InvoiceLine
+from ....domain.invoices.models import InvoiceLine, SituacionInmueble, require_situacion_inmueble
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ..account import AccountSessionExpiredError
@@ -42,6 +42,7 @@ _TEXT_FIELDS: Final[tuple[tuple[str, bool], ...]] = (
     ("recargo_amount", False),
     ("series", False),
     ("rectifies_invoice_number", False),
+    ("referencia_catastral", False),
     ("notes", False),
 )
 _DEFAULTS: Final[dict[str, str]] = {"country_code": "ES", "currency": "EUR"}
@@ -80,6 +81,9 @@ _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "invoice_class": "tui.ledger.invoice.field.invoice_class",
     "series": "tui.ledger.invoice.field.series",
     "rectifies_invoice_number": "tui.ledger.invoice.field.rectifies_invoice_number",
+    "arrendamiento_local_negocio": "tui.ledger.invoice.field.arrendamiento_local_negocio",
+    "situacion_inmueble": "tui.ledger.invoice.field.situacion_inmueble",
+    "referencia_catastral": "tui.ledger.invoice.field.referencia_catastral",
     "notes": "tui.ledger.invoice.field.notes",
 }
 _LINE_FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
@@ -95,6 +99,18 @@ _LINE_FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
 _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
     InvoiceKind.RECEIVED: "tui.ledger.invoice.kind.received",
     InvoiceKind.ISSUED: "tui.ledger.invoice.kind.issued",
+}
+#: The business-premises lease choice, whose "yes" states the lessor's fact of RD 1065/2007 art. 34.1.d.
+_LEASE_CHOICES: Final[tuple[tuple[str, bool], ...]] = (
+    ("tui.ledger.invoice.lease.no", False),
+    ("tui.ledger.invoice.lease.yes", True),
+)
+#: The record design's SITUACIÓN DEL INMUEBLE codes, each offered with its meaning.
+_SITUACION_LOCALE_KEYS: Final[dict[SituacionInmueble, str]] = {
+    "1": "tui.ledger.invoice.situacion.1",
+    "2": "tui.ledger.invoice.situacion.2",
+    "3": "tui.ledger.invoice.situacion.3",
+    "4": "tui.ledger.invoice.situacion.4",
 }
 _CLASS_LOCALE_KEYS: Final[dict[LedgerInvoiceClassChoice, str]] = {
     LedgerInvoiceClassChoice.ORDINARIA: "tui.ledger.invoice.class.ordinaria",
@@ -207,6 +223,10 @@ def _entry_amounts(values: dict[str, str]) -> tuple[dict[str, Decimal | None], l
     return parsed, problems
 
 
+def _situacion_choice(value: object) -> SituacionInmueble | None:
+    return require_situacion_inmueble(value) if isinstance(value, str) else None
+
+
 def _build_invoice_entry(
     values: dict[str, str],
     lines: list[LedgerInvoiceLineEntryV1],
@@ -216,6 +236,8 @@ def _build_invoice_entry(
     kind: InvoiceKind,
     invoice_class: LedgerInvoiceClassChoice,
     operation_type_value: object,
+    lease: bool,
+    situacion_value: object,
 ) -> LedgerInvoiceEntryV1:
     return LedgerInvoiceEntryV1(
         kind=kind,
@@ -237,6 +259,9 @@ def _build_invoice_entry(
         retention_amount=amounts["retention_amount"],
         invoice_class=invoice_class,
         series=values["series"] or None,
+        arrendamiento_local_negocio=lease,
+        situacion_inmueble=_situacion_choice(situacion_value),
+        referencia_catastral=values["referencia_catastral"] or None,
         notes=values["notes"],
     )
 
@@ -291,6 +316,16 @@ def _retention_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
     return None
 
 
+def _lease_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
+    if entry.arrendamiento_local_negocio:
+        return tr(
+            "tui.ledger.invoice.summary.lease",
+            situacion=entry.situacion_inmueble or "-",
+            referencia=entry.referencia_catastral or "-",
+        )
+    return None
+
+
 def _supplemental_summary_lines(entry: LedgerInvoiceEntryV1) -> list[str]:
     lines: list[str] = []
     for render_line in (
@@ -298,6 +333,7 @@ def _supplemental_summary_lines(entry: LedgerInvoiceEntryV1) -> list[str]:
         _recargo_summary_line,
         _rectifies_summary_line,
         _retention_summary_line,
+        _lease_summary_line,
     ):
         line = render_line(entry)
         if line is not None:
@@ -353,6 +389,20 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 value=LedgerInvoiceClassChoice.ORDINARIA.value,
                 allow_blank=False,
                 id="ledger-invoice-class",
+            )
+            yield Static(_field_label("arrendamiento_local_negocio"), markup=False)
+            yield Select[str](
+                tuple((tr(key), str(choice)) for key, choice in _LEASE_CHOICES),
+                value=str(False),
+                allow_blank=False,
+                id="ledger-invoice-lease",
+            )
+            yield Static(tr("tui.ledger.invoice.optional", label=_field_label("situacion_inmueble")), markup=False)
+            yield Select[str](
+                tuple((tr(key), code) for code, key in _SITUACION_LOCALE_KEYS.items()),
+                prompt=tr("tui.ledger.invoice.situacion_none"),
+                allow_blank=True,
+                id="ledger-invoice-situacion-inmueble",
             )
             yield Static(tr("tui.ledger.invoice.line.heading"), markup=False)
             for name, required in _LINE_FIELDS:
@@ -413,6 +463,8 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
             str(cast("Select[str]", self.query_one("#ledger-invoice-class", Select)).value)
         )
         operation_type_value = cast("Select[str]", self.query_one("#ledger-invoice-operation-type", Select)).value
+        lease = str(cast("Select[str]", self.query_one("#ledger-invoice-lease", Select)).value) == str(True)
+        situacion_value = cast("Select[str]", self.query_one("#ledger-invoice-situacion-inmueble", Select)).value
         try:
             entry = _build_invoice_entry(
                 values,
@@ -423,6 +475,8 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 kind,
                 invoice_class,
                 operation_type_value,
+                lease,
+                situacion_value,
             )
         except (CadrumoError, ValidationError) as error:
             return None, (door_refusal_text(error),)

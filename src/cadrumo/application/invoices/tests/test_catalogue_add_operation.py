@@ -483,3 +483,65 @@ def test_invalid_invoice_is_a_typed_refusal_with_no_effect_or_write(monkeypatch)
         refusal_detail_ref=refusal.detail_ref,
     )
     assert project_invoice_add_result(context.operands.value, receipt) == result
+
+
+def _execute_add(
+    payload: InvoiceAddRequest, monkeypatch: pytest.MonkeyPatch
+) -> tuple[_Context, CatalogueCreationPorts]:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    ports = in_memory_catalogue_creation_ports()
+
+    def factory(*, bucket_id: str) -> CatalogueCreationPorts:
+        assert bucket_id == str(_PROFILE)
+        return ports
+
+    with private_authority_lease() as authority_operation:
+        context = _Context(authority_operation)
+        asyncio.run(
+            InvoiceAddExecutor(factory).execute(
+                OperationRequest[InvoiceAddRequest](
+                    definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+                    subject_ref=profile_operation_subject(str(_PROFILE)),
+                    payload=payload,
+                ),
+                context,
+            )
+        )
+    return context, ports
+
+
+def test_an_issued_business_premises_lease_reaches_the_stored_invoice(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The one add operation every frontend submits carries the lessor's lease facts into the aggregate."""
+    context, ports = _execute_add(
+        _request(
+            kind=InvoiceKind.ISSUED,
+            arrendamiento_local_negocio=True,
+            situacion_inmueble="1",
+            referencia_catastral="9872023VH5797S0001WX",
+        ),
+        monkeypatch,
+    )
+
+    assert context.operands.value is not None
+    assert context.operands.value.result.outcome == "created"
+    (stored,) = ports.invoice_repository.load().values()
+    assert stored.arrendamiento_local_negocio is True
+    assert stored.situacion_inmueble == "1"
+    assert stored.referencia_catastral == "9872023VH5797S0001WX"
+
+
+def test_a_lease_on_a_received_invoice_is_an_invalid_invoice_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
+    context, ports = _execute_add(
+        _request(kind=InvoiceKind.RECEIVED, arrendamiento_local_negocio=True, situacion_inmueble="3"),
+        monkeypatch,
+    )
+
+    assert context.operands.value is not None
+    assert context.operands.value.result.validation_code == "invalid_invoice"
+    assert len(ports.invoice_repository.load()) == 0
+
+
+def test_the_request_refuses_a_situacion_outside_the_record_design() -> None:
+    with pytest.raises(ValidationError):
+        _request(kind=InvoiceKind.ISSUED, arrendamiento_local_negocio=True, situacion_inmueble="5")

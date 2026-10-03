@@ -11,6 +11,7 @@ from .._app_ledger_invoice_lifecycle_command_specs import (
 )
 from .._command_parameter_contracts import ArgumentSpec, OptionSpec
 from ..app_ledger_invoice_common_command_parameters import (
+    BUSINESS_PREMISES_LEASE_OPTIONS,
     INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
     INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
@@ -191,6 +192,16 @@ _EXPECTED_PARAMETERS = {
         _option(
             "iva_category", "cadrumo.domain.iva.schema:IvaCategory", None, "cli.app.ledger.invoice.iva_category_help"
         ),
+        _option(
+            "arrendamiento_local_negocio",
+            "builtins:bool",
+            False,
+            "cli.app.ledger.invoice.arrendamiento_local_negocio_help",
+            is_flag=True,
+            flag_value=True,
+        ),
+        _option("situacion_inmueble", "builtins:str", None, "cli.app.ledger.invoice.situacion_inmueble_help"),
+        _option("referencia_catastral", "builtins:str", None, "cli.app.ledger.invoice.referencia_catastral_help"),
         _option("line", "builtins:str", (), "cli.app.ledger.invoice.line_help", multiple=True),
         _option("notes", "builtins:str", "", None),
     ),
@@ -342,7 +353,8 @@ def test_shared_immutable_parameters_preserve_distinct_command_facts() -> None:
         for actual, expected in zip(add.parameters[14:16], INVOICE_LIFECYCLE_METADATA_OPTIONS[5:], strict=True)
     )
     assert add.parameters[16] is wizard.parameters[16] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[0]
-    assert add.parameters[19] is wizard.parameters[18] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1]
+    assert add.parameters[18:21] == BUSINESS_PREMISES_LEASE_OPTIONS
+    assert add.parameters[22] is wizard.parameters[18] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1]
 
     update_notes = update.parameters[3]
     wizard_notes = wizard.parameters[-1]

@@ -21,6 +21,7 @@ from ._command_shared_contracts import (
     ValueContract,
 )
 from .app_ledger_invoice_common_command_parameters import (
+    BUSINESS_PREMISES_LEASE_OPTIONS,
     INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
     INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
@@ -62,6 +63,7 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             *INVOICE_LIFECYCLE_METADATA_OPTIONS[5:],
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[0],
             OPTIONAL_IVA_CATEGORY_OPTION,
+            *BUSINESS_PREMISES_LEASE_OPTIONS,
             OptionSpec(
                 name="line",
                 declarations=("--line",),

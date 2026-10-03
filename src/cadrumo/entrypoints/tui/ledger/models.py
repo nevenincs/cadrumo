@@ -33,7 +33,7 @@ from ....core.country_code import CountryCodeAlpha2
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....domain.invoices.models import Invoice
+from ....domain.invoices.models import Invoice, SituacionInmueble
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.models import Transaction
@@ -333,6 +333,9 @@ class LedgerInvoiceEntryV1(BaseModel):
     retention_amount: Decimal | None = None
     invoice_class: LedgerInvoiceClassChoice = LedgerInvoiceClassChoice.ORDINARIA
     series: str | None = None
+    arrendamiento_local_negocio: bool = False
+    situacion_inmueble: SituacionInmueble | None = None
+    referencia_catastral: str | None = None
     notes: str = ""
 
 

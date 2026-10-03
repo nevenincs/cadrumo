@@ -56,7 +56,7 @@ from ...domain.invoices.enums import (
     require_invoice_class,
 )
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine, require_situacion_inmueble
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory, IvaRateKind
 from ._date_parsing import _parse_iso_date
@@ -380,6 +380,9 @@ def invoice_add(
     rectifies_invoice_number: str | None = None,
     recargo: str | None = None,
     iva_category: IvaCategory | None = None,
+    arrendamiento_local_negocio: bool = False,
+    situacion_inmueble: str | None = None,
+    referencia_catastral: str | None = None,
     line: tuple[str, ...] = (),
     notes: str = "",
 ) -> None:
@@ -393,7 +396,10 @@ def invoice_add(
     calculation can read it. Supplying ``--retention-amount`` (optionally with
     ``--retention-rate``) records a RIRPF art. 95 withholding, which
     ``modelo aggregate --received-invoice-retencion`` routes to Modelo 111 for
-    a received invoice.
+    a received invoice. ``--arrendamiento-local-negocio`` marks an issued
+    invoice as the lease of a local de negocio, with ``--situacion-inmueble``
+    and ``--referencia-catastral`` locating the premises, which Modelo 347
+    relates in its declarado and inmueble records (RD 1065/2007 art. 34.1.d).
     """
     bucket_id = _business_invoice_bucket_id()
     # An explicitly stated treatment WINS over the one derived from the M349
@@ -424,6 +430,9 @@ def invoice_add(
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
             recargo=recargo,
+            arrendamiento_local_negocio=arrendamiento_local_negocio,
+            situacion_inmueble=situacion_inmueble,
+            referencia_catastral=referencia_catastral,
             line=line,
             notes=notes,
         )
@@ -899,6 +908,9 @@ def _invoice_add_request(
     series: str | None,
     rectifies_invoice_number: str | None,
     recargo: str | None,
+    arrendamiento_local_negocio: bool,
+    situacion_inmueble: str | None,
+    referencia_catastral: str | None,
     line: tuple[str, ...],
     notes: str,
 ) -> InvoiceAddRequest:
@@ -931,6 +943,9 @@ def _invoice_add_request(
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
         recargo_amount=public_amount(recargo, label="recargo"),
+        arrendamiento_local_negocio=arrendamiento_local_negocio,
+        situacion_inmueble=None if situacion_inmueble is None else require_situacion_inmueble(situacion_inmueble),
+        referencia_catastral=referencia_catastral,
         lines=tuple(InvoiceAddLine.from_invoice_line(item) for item in structured_lines),
     )
     return request

@@ -59,7 +59,7 @@ from cadrumo.entrypoints.tui.ledger.models import (
     LedgerInvoiceEntryV1,
     LedgerInvoiceLineEntryV1,
 )
-from cadrumo.entrypoints.tui.ledger.runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1
+from cadrumo.entrypoints.tui.ledger.runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, _request_from_entry
 from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
     ledger_context,
     ledger_projection,
@@ -527,3 +527,22 @@ async def test_invoice_entry_clears_private_form_when_the_add_door_reports_expir
         assert all(not field.value for field in screen.query(Input))
         assert str(screen.query_one("#ledger-invoice-summary", Static).render()).strip() == ""
         assert "PRIVATE-007" not in str(screen.query_one("#ledger-flow-status", Static).render())
+
+
+@pytest.mark.unit
+def test_the_tui_request_carries_the_business_premises_lease_facts() -> None:
+    """The TUI submits the lease facts on the same add request the CLI builds."""
+    entry = _entry().model_copy(
+        update={
+            "kind": InvoiceKind.ISSUED,
+            "arrendamiento_local_negocio": True,
+            "situacion_inmueble": "1",
+            "referencia_catastral": "9872023VH5797S0001WX",
+        },
+    )
+
+    request = _request_from_entry(_PROFILE_ID, entry)
+
+    assert request.arrendamiento_local_negocio is True
+    assert request.situacion_inmueble == "1"
+    assert request.referencia_catastral == "9872023VH5797S0001WX"

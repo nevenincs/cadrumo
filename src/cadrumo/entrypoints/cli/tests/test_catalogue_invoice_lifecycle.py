@@ -370,3 +370,58 @@ def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_s
 
     assert result.exit_code != 0
     assert "RECTIFICATIVA" in result.output
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_records_a_business_premises_lease(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    """``invoice add`` stores the lessor's lease facts Modelo 347 relates (RD 1065/2007 art. 34.1.d)."""
+    with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
+        result = session.invoke_password(
+            "app", "ledger", "invoice", "add",
+            "--kind", "issued",
+            "--counterparty-nif", "B87654323",
+            "--counterparty-name", "Inquilino Local SL",
+            "--invoice-number", "2026-ALQ-001",
+            "--invoice-date", "2026-03-01",
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--arrendamiento-local-negocio",
+            "--situacion-inmueble", "1",
+            "--referencia-catastral", "9872023VH5797S0001WX",
+            output_format="text",
+        )  # fmt: skip
+        assert result.exit_code == 0, result.output
+        invoice_id = _line_value(result.output, "invoice_id")
+        stored = catalogue_after_password_login(session.profile_id, authority_operation).invoices.get(invoice_id)
+        assert stored is not None
+        assert stored.arrendamiento_local_negocio is True
+        assert stored.situacion_inmueble == "1"
+        assert stored.referencia_catastral == "9872023VH5797S0001WX"
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_refuses_a_situacion_outside_the_record_design(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    """A situación code the 347 design does not define is refused before anything is written."""
+    with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
+        before = catalogue_after_password_login(session.profile_id, authority_operation)
+        result = session.invoke_password(
+            "app", "ledger", "invoice", "add",
+            "--kind", "issued",
+            "--counterparty-nif", "B87654323",
+            "--counterparty-name", "Inquilino Local SL",
+            "--invoice-number", "2026-ALQ-002",
+            "--invoice-date", "2026-03-01",
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--arrendamiento-local-negocio",
+            "--situacion-inmueble", "7",
+        )  # fmt: skip
+        assert result.exit_code == 2, result.output
+        after = catalogue_after_password_login(session.profile_id, authority_operation)
+        assert len(after.invoices) == len(before.invoices)

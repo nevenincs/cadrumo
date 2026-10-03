@@ -3,13 +3,24 @@
 The normal path end to end: synthetic invoices through the real 347 resolver,
 its binding and row values into ``build_draft``, and ``export_draft`` writing
 the file and reading it back. The 2025 design (aeat-dr-347-2025) fixes the
-bytes asserted here: the type 1 EJERCICIO at positions 5-8, the type 2 kind
+bytes asserted here: the type 1 EJERCICIO at positions 5-8, the TIPO DE SOPORTE
+at 58 ("'T': Transmisión telemática", the only way Cadrumo files), the type 2 kind
 ``D`` at 76, the signed annual amount at 83-98 ("N" when negative, otherwise a
 space, then 13 integer and 2 decimal digits), and the declarado EJERCICIO at
 132-135, which carries "las cuatro cifras del ejercicio en el que se hubieran
 declarado las operaciones que dan origen al cobro en metálico por importe
 superior a 6.000 euros" and so has no content without such a collection
 ("Los campos numéricos que no tengan contenido se rellenarán a ceros").
+
+A landlord of business premises (RD 1065/2007 art. 34.1.d: "se harán constar
+separadamente de otras operaciones ... los arrendamientos de locales de negocios
+... el arrendador consignará ... las referencias catastrales") files the lease
+apart in its own declarado record, marked at position 100 ("Se pondrá en este
+campo una "X" para operaciones de arrendamiento de locales de negocio"), and one
+inmueble record per leased premises: kind ``I`` at 76, the tenant's NIF at
+18-26, the signed IMPORTE DE LA OPERACION at 99-114, the SITUACIÓN DEL INMUEBLE
+at 115 and the REFERENCIA CATASTRAL at 116-140. The type 1 record counts those
+records at 161-169 and sums their amounts at 170-185.
 """
 
 from __future__ import annotations
@@ -48,8 +59,17 @@ _YEAR = 2025
 _BUCKET_ID = "24242424-2424-4242-8242-242424242424"
 
 
-def _domestic(number: str, kind: InvoiceKind, tax_id: str, name: str, base: str) -> Invoice:
+def _domestic(
+    number: str,
+    kind: InvoiceKind,
+    tax_id: str,
+    name: str,
+    base: str,
+    *,
+    referencia_catastral: str | None = None,
+) -> Invoice:
     base_total = Decimal(base)
+    lease = referencia_catastral is not None
     iva_total = (base_total * Decimal("0.21")).quantize(Decimal("0.01"))
     return Invoice(
         invoice_id=derive_invoice_id(
@@ -81,6 +101,9 @@ def _domestic(number: str, kind: InvoiceKind, tax_id: str, name: str, base: str)
             ),
         ),
         payment_status=PaymentStatus.PAID,
+        arrendamiento_local_negocio=lease,
+        situacion_inmueble="1" if lease else None,
+        referencia_catastral=referencia_catastral,
     )
 
 
@@ -111,13 +134,20 @@ def _profile(operation: PinnedAuthorityOperation) -> ModeloWorkProfile:
     return ModeloWorkProfile(record=record, profile_decode_context=operation.profile_decode_context())
 
 
-def _resolved_inputs(operation: PinnedAuthorityOperation) -> dict[str, ModeloInputValue]:
-    provider = _schema_provider(filing_year=_YEAR, period="0A", modelos=("347",))
-    invoices = (
+def _ordinary_invoices() -> tuple[Invoice, ...]:
+    return (
         _domestic("V-1", InvoiceKind.ISSUED, "B12345674", "CLIENTE NACIONAL SL", "8000.00"),
         _domestic("C-1", InvoiceKind.RECEIVED, "A58818501", "PROVEEDOR NACIONAL SA", "5000.00"),
         _domestic("V-2", InvoiceKind.ISSUED, "C3333333G", "CLIENTE PEQUENO SL", "1000.00"),
     )
+
+
+def _resolved_inputs(
+    operation: PinnedAuthorityOperation,
+    invoices: tuple[Invoice, ...] | None = None,
+) -> dict[str, ModeloInputValue]:
+    invoices = _ordinary_invoices() if invoices is None else invoices
+    provider = _schema_provider(filing_year=_YEAR, period="0A", modelos=("347",))
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="347",
@@ -170,6 +200,7 @@ def test_a_347_filer_without_leases_exports_a_fichero_that_reads_back(
     # statement and has its own test, so the declarado ("D") records are read here.
     declarados = [line for line in type_2 if line[75] == "D"]
     assert declarante[:8] == "13472025"
+    assert declarante[57] == "T"
     assert declarante[135:144] == "000000002"
     assert declarante[144:160] == " 000000001573000"
     amounts = {line[35:75].rstrip(): line[82:98] for line in declarados}
@@ -179,3 +210,73 @@ def test_a_347_filer_without_leases_exports_a_fichero_that_reads_back(
     }
     assert len(declarados) == 2
     assert {line[131:135] for line in declarados} == {"0000"}
+    assert [line for line in type_2 if line[75] == "I"] == []
+    assert declarante[160:169] == "000000000"
+    assert declarante[169:185] == " 000000000000000"
+
+
+def _exported_lines(operation: PinnedAuthorityOperation, tmp_path: Path, invoices: tuple[Invoice, ...]) -> list[str]:
+    provider = _schema_provider(filing_year=_YEAR, period="0A", modelos=("347",))
+    draft = build_draft(
+        modelo="347",
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="DECLARANTE PRUEBA"),
+        inputs=_resolved_inputs(operation, invoices),
+        schema_provider=provider,
+    ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+    output_path = tmp_path / "modelo-347-2025.txt"
+    export_draft(
+        draft,
+        output_path=output_path,
+        producer_snapshot=m151_producer_snapshot().model_copy(update={"modelo": Modelo("347")}),
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        product_software_identity=None,
+        schema_provider=provider,
+    )
+    return output_path.read_bytes().decode("iso-8859-1").splitlines()
+
+
+def test_a_landlord_files_one_inmueble_record_per_leased_premises_and_the_leases_apart(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+) -> None:
+    """Two premises let to one tenant each: two inmueble records, two marked declarado records."""
+    invoices = (
+        _domestic(
+            "A-1",
+            InvoiceKind.ISSUED,
+            "B12345674",
+            "INQUILINO UNO SL",
+            "10000.00",
+            referencia_catastral="9872023VH5797S0001WX",
+        ),
+        _domestic(
+            "A-2",
+            InvoiceKind.ISSUED,
+            "B87654323",
+            "INQUILINO DOS SL",
+            "6000.00",
+            referencia_catastral="1234567DF3813S0002QK",
+        ),
+        _domestic("V-1", InvoiceKind.ISSUED, "B12345674", "INQUILINO UNO SL", "5000.00"),
+    )
+
+    declarante, *type_2 = _exported_lines(operation, tmp_path, invoices)
+
+    declarados = {(line[17:26], line[99]): line[82:98] for line in type_2 if line[75] == "D"}
+    assert declarados == {
+        ("B12345674", "X"): " 000000001210000",
+        ("B12345674", " "): " 000000000605000",
+        ("B87654323", "X"): " 000000000726000",
+    }
+    inmuebles = [line for line in type_2 if line[75] == "I"]
+    assert [
+        (line[17:26], line[35:75].rstrip(), line[98:114], line[114], line[115:140].rstrip()) for line in inmuebles
+    ] == [
+        ("B12345674", "INQUILINO UNO SL", " 000000001210000", "1", "9872023VH5797S0001WX"),
+        ("B87654323", "INQUILINO DOS SL", " 000000000726000", "1", "1234567DF3813S0002QK"),
+    ]
+    assert declarante[135:144] == "000000003"
+    assert declarante[144:160] == " 000000002541000"
+    assert declarante[160:169] == "000000002"
+    assert declarante[169:185] == " 000000001936000"

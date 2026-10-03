@@ -297,8 +297,8 @@ source_refs = ['aeat-dr-347-2025']
 id = 'm347-2025.declarado.f014'
 offset = 100
 length = 1
-kind = 'casilla'
-casilla_id = 'contraparte.arrendamiento-local-negocio'
+kind = 'binding'
+binding = 'modelo-347-contraparte-row-arrendamiento-local-negocio'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -707,6 +707,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2025']
 
 [revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]
+business_premises_lease_mark = 'contraparte.arrendamiento-local-negocio'
 cash_accounting_mark = 'contraparte.criterio-caja'
 clave = 'contraparte.clave-operacion'
 community_vat_number = 'contraparte.nif-operador-comunitario'

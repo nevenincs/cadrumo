@@ -4,7 +4,9 @@ Both record designs mark a type 2 record's kind at position 76: ``D`` for a
 declarado, ``I`` for an inmueble. The inmueble record is the lessor's statement
 of a business-premises lease (RD 1065/2007 art. 34.1.d), so a filer without
 lease data files the type 1 record and one ``D`` record per declarado, and no
-``I`` record at all. Lease data entered for the record files exactly one.
+``I`` record at all. A lease recorded on an issued invoice files exactly one.
+The 2011-2024 edition holds calculation grade only, so a filing-grade export of
+it refuses before any record is rendered.
 
 The fichero bytes come from the canonical layout renderer the export writes
 with, fed the rows the real 347 resolver produced for synthetic counterparties.
@@ -24,6 +26,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.invoice_bindings import (
     InvoiceObservation,
     resolve_invoice_binding_row_values,
@@ -49,10 +52,20 @@ class _Edition:
     year: int
 
 
-_EDITIONS = (_Edition("2025-y-siguientes", 2025), _Edition("2011-2024", 2024))
+_FILING_EDITION = _Edition("2025-y-siguientes", 2025)
+_CALCULATION_GRADE_EDITION = _Edition("2011-2024", 2024)
 
 
-def _observation(invoice_id: str, party_tax_id: str, name: str, year: int, clave: str) -> InvoiceObservation:
+def _observation(
+    invoice_id: str,
+    party_tax_id: str,
+    name: str,
+    year: int,
+    clave: str,
+    *,
+    referencia_catastral: str | None = None,
+) -> InvoiceObservation:
+    lease = referencia_catastral is not None
     return InvoiceObservation(
         invoice_id=invoice_id,
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE if clave == "B" else BindingSourceKind.PAYABLE_INVOICE,
@@ -63,14 +76,18 @@ def _observation(invoice_id: str, party_tax_id: str, name: str, year: int, clave
         invoice_total_amount=Decimal("8000.00"),
         operation_clave=clave,
         party_legal_name=name,
+        arrendamiento_local_negocio=lease,
+        situacion_inmueble="1" if lease else None,
+        referencia_catastral=referencia_catastral,
     )
 
 
-def _resolved_inputs(edition: _Edition) -> dict[str, ModeloInputValue]:
+def _resolved_inputs(edition: _Edition, *leases: InvoiceObservation) -> dict[str, ModeloInputValue]:
     revision = published_revision("347", edition.revision)
     observations = (
         _observation("inv-cliente", "B12345674", "CLIENTE NACIONAL SL", edition.year, "B"),
         _observation("inv-proveedor", "A58818501", "PROVEEDOR NACIONAL SA", edition.year, "A"),
+        *leases,
     )
     effective_date = date(edition.year, 12, 31)
     inputs: dict[str, ModeloInputValue] = {
@@ -100,16 +117,6 @@ def _fichero_lines(edition: _Edition, inputs: dict[str, ModeloInputValue]) -> li
         inputs=inputs,
         schema_provider=provider,
     )
-    # The draft carries the year casilla as a Decimal, which the four-digit-year
-    # field refuses; the renderer receives the integer year the input contract names.
-    draft = draft.model_copy(
-        update={
-            "values": tuple(
-                value.model_copy(update={"value": edition.year}) if value.casilla_id == _EJERCICIO else value
-                for value in draft.values
-            ),
-        },
-    )
     producer_snapshot = m151_producer_snapshot().model_copy(update={"modelo": Modelo("347")})
     payload = render_filing_layout(
         provider.get_subview("347").export_layouts[0],
@@ -127,27 +134,32 @@ def _type_2_kinds(lines: list[str]) -> list[str]:
     return [line[_KIND_POSITION - 1] for line in lines if line.startswith("2347")]
 
 
-@pytest.mark.parametrize("edition", _EDITIONS, ids=lambda item: item.revision)
-def test_a_filer_without_leases_files_no_inmueble_record(edition: _Edition) -> None:
-    lines = _fichero_lines(edition, _resolved_inputs(edition))
+def test_a_filer_without_leases_files_no_inmueble_record() -> None:
+    lines = _fichero_lines(_FILING_EDITION, _resolved_inputs(_FILING_EDITION))
 
     assert len(lines) == 3
     assert lines[0].startswith("1347")
     assert _type_2_kinds(lines) == ["D", "D"]
 
 
-@pytest.mark.parametrize("edition", _EDITIONS, ids=lambda item: item.revision)
-def test_lease_data_files_one_inmueble_record(edition: _Edition) -> None:
-    inputs: dict[str, ModeloInputValue] = {
-        **_resolved_inputs(edition),
-        "inmueble.arrendatario-nif": "B87654323",
-        "inmueble.arrendatario-nombre": "ARRENDATARIO LOCAL SL",
-        "inmueble.importe-operacion": Decimal("12000.00"),
-        "inmueble.situacion": "1",
-        "inmueble.referencia-catastral": "9872023VH5797S0001WX",
-    }
+def test_a_recorded_lease_files_one_inmueble_record() -> None:
+    lease = _observation(
+        "inv-arrendamiento",
+        "B87654323",
+        "ARRENDATARIO LOCAL SL",
+        _FILING_EDITION.year,
+        "B",
+        referencia_catastral="9872023VH5797S0001WX",
+    )
 
-    lines = _fichero_lines(edition, inputs)
+    lines = _fichero_lines(_FILING_EDITION, _resolved_inputs(_FILING_EDITION, lease))
 
-    assert len(lines) == 4
-    assert sorted(_type_2_kinds(lines)) == ["D", "D", "I"]
+    assert len(lines) == 5
+    assert sorted(_type_2_kinds(lines)) == ["D", "D", "D", "I"]
+
+
+def test_the_calculation_grade_edition_refuses_a_filing_export() -> None:
+    edition = _CALCULATION_GRADE_EDITION
+
+    with pytest.raises(RegistryValidationError, match=r"'calculation' authority grade.*'filing' snapshot authority"):
+        _fichero_lines(edition, _resolved_inputs(edition))

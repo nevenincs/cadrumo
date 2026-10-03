@@ -1017,8 +1017,9 @@ def test_m347_declares_an_issued_invoice_withheld_by_the_customer_and_discloses_
     """The withheld party has no withholding summary of its own, so its side stays declared and disclosed.
 
     The advisory must not tell a landlord of business premises that the lease may
-    drop out: art. 34.1.d has the landlord relate it. The invoice records no lease
-    fact, so the advisory names that case and says it cannot tell it apart.
+    drop out: art. 34.1.d has the landlord relate it. This invoice records no
+    lease, so the advisory names it and points at the lease fact that would
+    take it out of the unsettled set.
     """
     withheld = _withheld_invoice(
         secure_profile.bucket_id, kind=InvoiceKind.ISSUED, invoice_number="M347-RETENIDA-EMI-2026-001"
@@ -1034,10 +1035,9 @@ def test_m347_declares_an_issued_invoice_withheld_by_the_customer_and_discloses_
         "rd-1065-2007:art-34.1.d",
         "rd-439-2007:art-108",
     )
-    assert "business premises" in advisory.message
-    assert "cannot tell" in advisory.message
+    assert "None of them records a business-premises lease" in advisory.message
     assert advisory.remedy is not None
-    assert "Keep the business-premises leases declared" in advisory.remedy
+    assert "lease of a local de negocio" in advisory.remedy
 
 
 def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not(
@@ -2572,11 +2572,19 @@ _DECLARABLE_FACTS: frozenset[str] = frozenset(
 )
 
 #: The Modelo 347 record-key facts the slim store never carried: the operations
-#: RD 1065/2007 art. 34.1.j and k relate separately, and the annual basis of art.
-#: 33.1. Their canonical reachability is proven through the real resolver by the
-#: declarado record tests over the compiled registry, not by the slim-store contract.
+#: RD 1065/2007 art. 34.1.d, j and k relate separately, the leased premises of
+#: art. 34.1.d, and the annual basis of art. 33.1. Their canonical reachability is
+#: proven through the real resolver by the declarado and inmueble record tests over
+#: the compiled registry, not by the slim-store contract.
 _M347_RECORD_KEY_FACTS: frozenset[str] = frozenset(
-    {"cash_accounting_operation", "reverse_charge_recipient", "annual_computation_basis"},
+    {
+        "cash_accounting_operation",
+        "reverse_charge_recipient",
+        "annual_computation_basis",
+        "arrendamiento_local_negocio",
+        "situacion_inmueble",
+        "referencia_catastral",
+    },
 )
 
 
