@@ -325,6 +325,8 @@ errors:
       perfil no és vàlida.
     error_profile_bienes_inversion_record: Un registre de regularització d'IVA per
       béns d'inversió no és estructuralment vàlid.
+    error_profile_foreign_asset_register_record: Un registre de béns a l'estranger
+      del model 720 no és estructuralment vàlid.
     error_profile_inventory_ledger: Una operació del llibre d'inventari del perfil
       no és vàlida.
     error_profile_mutation_run: L'operació de canvi del perfil ha acabat sense un
@@ -1297,6 +1299,8 @@ errors:
       el perfil nou.
     refused_profile_foral_regime: El règim foral seleccionat no està modelat per aquest
       perfil. Selecciona un règim admès.
+    refused_profile_foreign_asset_register_validation: Una entrada del registre de
+      béns a l'estranger del model 720 no ha superat la validació.
     refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat
       la validació.
     refused_profile_label_ambiguous: 'Refusat: l''etiqueta del perfil és ambigua.'

@@ -350,6 +350,17 @@ PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinitio
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+PROFILE_FOREIGN_ASSET_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_foreign_asset_register",
+    namespace="cadrumo.persistence.profile.foreign_assets",
+    owner="cadrumo.adapters.persistence.profile.foreign_assets",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 PROFILE_ACTIVIDAD_ASSET_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_actividad_asset_history",
     namespace="cadrumo.persistence.profile.actividad_asset",

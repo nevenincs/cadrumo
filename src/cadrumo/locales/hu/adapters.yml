@@ -32,6 +32,8 @@ adapters:
           előtt hívja meg a close() metódust.
         approval_timeout: A Cl@ve Móvil böngészős hitelesítés nem fejeződött be a
           beállított időkorláton belül.
+        desktop_unavailable: 'Nem érhető el interaktív asztal. A QR-kódos böngésző
+          nem indult el. Nyisd meg ezt a hivatkozást a böngésződben: %{authentication_url}'
         dni_nie_not_set: A CADRUMO_CLAVE_MOVIL_DNI_NIE nincs beállítva; hitelesítés
           előtt add meg a DNI- vagy NIE-számodat.
         initial_navigation_timeout: A Cl@ve Móvil kezdeti navigációja nem fejeződött
@@ -234,6 +236,10 @@ adapters:
             áfa-korrekciós nyilvántartását.
           record_already_exists: Ez a beruházási jószág már létezik a titkosított
             korrekciós nyilvántartásban.
+      foreign_assets:
+        errors:
+          load_register_failed: Nem tölthető be a titkosított 720-as modell szerinti
+            külföldi vagyonelem-nyilvántartás.
       inventory:
         errors:
           inventory_ledger_absent: Ez a készletnyilvántartás nem létezik.

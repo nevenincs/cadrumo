@@ -298,6 +298,8 @@ errors:
       not valid.
     error_profile_bienes_inversion_record: A capital-goods IVA regularisation record
       is structurally invalid.
+    error_profile_foreign_asset_register_record: A Modelo 720 foreign-asset register
+      record is structurally invalid.
     error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
     error_profile_mutation_run: The profile change finished without a usable result.
       Inspect the operation before retrying.
@@ -1196,6 +1198,8 @@ errors:
       stored session could not be revoked, so the new profile was not created.
     refused_profile_foral_regime: The foral regime selected is not modelled by this
       profile. Select a supported regime.
+    refused_profile_foreign_asset_register_validation: A Modelo 720 foreign-asset
+      register entry failed validation.
     refused_profile_inventory_validation: A profile inventory ledger failed validation.
     refused_profile_label_ambiguous: The profile label matches more than one active
       profile. Use the profile UUID to disambiguate.

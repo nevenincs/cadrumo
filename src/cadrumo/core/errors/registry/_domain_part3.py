@@ -129,6 +129,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.foreign_assets.register.ForeignAssetRegisterError",
+        ErrorCode(
+            code="ERROR_PROFILE_FOREIGN_ASSET_REGISTER_RECORD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_profile_foreign_asset_register_record",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.foreign_assets.register.ForeignAssetRegisterValidationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_FOREIGN_ASSET_REGISTER_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_foreign_asset_register_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva.prorrata_especial_parameters.ProrrataEspecialMandatoryParameterError",
         ErrorCode(
             code="REFUSED_IVA_PRORRATA_ESPECIAL_MARGIN_UNGROUNDED",

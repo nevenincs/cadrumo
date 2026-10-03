@@ -32,6 +32,8 @@ adapters:
           tornar a autenticar-te.
         approval_timeout: L'autenticació per navegador de Cl@ve Móvil no s'ha completat
           dins del temps configurat.
+        desktop_unavailable: 'No hi ha cap escriptori interactiu disponible. El navegador
+          QR no pot iniciar-se. Obre aquest enllaç al teu navegador: %{authentication_url}'
         dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE no està configurat; configura
           el teu DNI o NIE abans d'autenticar-te.
         initial_navigation_timeout: La navegació inicial a Cl@ve Móvil no s'ha completat
@@ -251,6 +253,10 @@ adapters:
             d'IVA per béns d'inversió.
           record_already_exists: Aquest bé d'inversió ja existeix en el registre xifrat
             de regularització.
+      foreign_assets:
+        errors:
+          load_register_failed: No es pot carregar el registre xifrat de béns a l'estranger
+            del model 720.
       inventory:
         errors:
           inventory_ledger_absent: Aquest registre d'inventari no existeix.

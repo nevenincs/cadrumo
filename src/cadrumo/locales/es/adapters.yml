@@ -32,6 +32,8 @@ adapters:
           de autenticarte de nuevo.
         approval_timeout: La autenticación por navegador Cl@ve Móvil no se completó
           en el tiempo configurado.
+        desktop_unavailable: 'No hay un escritorio interactivo disponible. No se ha
+          abierto el navegador QR. Abre este enlace en tu navegador: %{authentication_url}'
         dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE no está configurado; configura
           tu DNI o NIE antes de autenticarte.
         initial_navigation_timeout: La navegación inicial a Cl@ve Móvil no se completó
@@ -253,6 +255,10 @@ adapters:
             de IVA por bienes de inversión.
           record_already_exists: Ese bien de inversión ya existe en el registro cifrado
             de regularización.
+      foreign_assets:
+        errors:
+          load_register_failed: No se puede cargar el registro cifrado de bienes en
+            el extranjero del modelo 720.
       inventory:
         errors:
           inventory_ledger_absent: Ese registro de inventario no existe.

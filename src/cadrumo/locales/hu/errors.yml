@@ -305,6 +305,8 @@ errors:
     error_profile_amortization_ledger: Egy profil amortizációs főkönyvi művelete érvénytelen.
     error_profile_bienes_inversion_record: Egy beruházási javak áfa-korrekciós nyilvántartása
       szerkezetileg érvénytelen.
+    error_profile_foreign_asset_register_record: Egy 720-as modell szerinti külföldi
+      vagyonelem-nyilvántartási rekord szerkezetileg érvénytelen.
     error_profile_inventory_ledger: Egy profil készlet-főkönyvi művelete érvénytelen.
     error_profile_mutation_run: A profilmódosítás használható eredmény nélkül zárult.
       Újrapróbálkozás előtt ellenőrizd a műveletet.
@@ -1217,6 +1219,8 @@ errors:
       munkamenetét nem sikerült visszavonni, ezért az új profil nem jött létre.
     refused_profile_foral_regime: A kiválasztott foral adózási rend nem modellezett
       ebben a profilban. Válassz egy támogatott adózási rendet.
+    refused_profile_foreign_asset_register_validation: Egy 720-as modell szerinti
+      külföldi vagyonelem-nyilvántartási bejegyzés nem ment át az ellenőrzésen.
     refused_profile_inventory_validation: Egy profil készlet-főkönyve nem ment át
       az érvényesítésen.
     refused_profile_label_ambiguous: A profilcímke egynél több aktív profilra illeszkedik.

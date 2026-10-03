@@ -83,6 +83,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "profile_actividad_asset_history",
     "profile_inventory_ledger",
     "profile_bienes_inversion_iva_register",
+    "profile_foreign_asset_register",
     "profile_prorrata_register",
     "application_filing_history",
     "auth_apoderado_configuration",

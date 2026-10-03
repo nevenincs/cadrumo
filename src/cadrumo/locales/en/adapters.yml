@@ -29,6 +29,8 @@ adapters:
           authenticating again.
         approval_timeout: Cl@ve Móvil browser authentication did not complete within
           the configured timeout.
+        desktop_unavailable: 'No interactive desktop is available. QR browser launch
+          was refused. Open this link in your browser: %{authentication_url}'
         dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI
           or NIE before authenticating.
         initial_navigation_timeout: Initial navigation to Cl@ve Movil did not complete
@@ -221,6 +223,10 @@ adapters:
             register.
           record_already_exists: That capital good already exists in the encrypted
             regularisation register.
+      foreign_assets:
+        errors:
+          load_register_failed: Unable to load the encrypted Modelo 720 foreign-asset
+            register.
       inventory:
         errors:
           inventory_ledger_absent: That inventory record book does not exist.
