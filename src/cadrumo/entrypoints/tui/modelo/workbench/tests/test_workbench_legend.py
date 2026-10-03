@@ -108,7 +108,7 @@ async def test_the_first_question_mark_names_exactly_the_symbols_on_screen() -> 
         ),
         (
             DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
-            "holiday calendar unavailable; the original deadline has not been checked",
+            "holiday calendar unavailable; weekends applied, holidays not checked",
         ),
     ),
 )

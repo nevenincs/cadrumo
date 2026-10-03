@@ -2,7 +2,17 @@
 binding_source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 casilla_source_refs = ["aeat-dr-347-2011"]
 live_cross_reference_source_refs = ["aeat-modelo-347-procedure"]
-authority_grade = "filing"
+# Calculation grade, not filing: from 2014-01-01 RD 828/2013 art. 3.9 gives
+# RGAT art. 34.1 its letters j, k and l, which require criterio de caja,
+# inversión del sujeto pasivo and depósito distinto del aduanero operations to
+# be stated separately ("Se harán constar separadamente de otras operaciones").
+# This edition carries only the diseño de registros for ejercicio 2011
+# (aeat-dr-347-2011), whose declarado record leaves positions 264-500 blank; the
+# diseño AEAT published for the 2014-2024 ejercicios, which assigns those
+# fields, is not in the corpus. Filing therefore refuses for every ejercicio
+# this edition serves -- within the support envelope, 2022 to 2024 -- until that
+# diseño is captured; 2025 onwards is filed from aeat-dr-347-2025.
+authority_grade = "calculation"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of
 # period_selector.year_from), not the orden's own effective date -- that fact
 # already has its home on orden-eha-3012-2008:art-1's legal.effective_from.

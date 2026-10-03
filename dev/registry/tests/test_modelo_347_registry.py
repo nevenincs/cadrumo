@@ -6,8 +6,13 @@ from datetime import date
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from cadrumo.domain.calculations.registry.errors import (
+    FilingYearOutsideSupportEnvelopeError,
+    RegistryFailureCondition,
+    RegistryValidationError,
+)
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
@@ -61,6 +66,7 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
         source_root=bundled_path(),
         filing_year=filing_year,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
     # The split at the 2024/2025 boundary means the year decides the half, and
     # that is the fact worth pinning: the two carry different byte layouts, so a
@@ -75,6 +81,70 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
         if filing_year >= 2025
         else ("orden-eha-3012-2008:art-1",)
     )
+
+
+# RGAT art. 34.1 letters j, k and l (RD 828/2013 art. 3.9, in force from
+# 2014-01-01) require fields the 2011 diseño leaves blank, and the diseño for
+# ejercicios 2014-2024 is not in the corpus, so those years compute but never
+# file. The year set is the support envelope's part of that span.
+_UNGROUNDED_DESIGN_YEARS = tuple(year for year in range(2014, 2025) if _SUPPORT.floor <= year <= _SUPPORT.horizon)
+_FILING_YEARS = tuple(year for year in range(2025, _SUPPORT.horizon + 1) if year >= _SUPPORT.floor)
+
+
+@pytest.mark.parametrize("filing_year", _UNGROUNDED_DESIGN_YEARS)
+def test_an_ejercicio_without_its_own_design_refuses_filing_but_still_computes(filing_year: int) -> None:
+    modelo, catalogues = _load_modelo_347()
+
+    computed = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
+    assert computed.revision.id == "2011-2024"
+
+    with pytest.raises(RegistryValidationError) as caught:
+        build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year,
+            period="0A",
+        )
+    failure = caught.value.registry_failure
+    assert failure is not None
+    assert failure.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
+    assert failure.facts == {
+        "modelo": "347",
+        "revision_id": "2011-2024",
+        "requested_authority_grade": "filing",
+        "declared_authority_grade": "calculation",
+        "authority_grade_declared": True,
+    }
+
+
+@pytest.mark.parametrize("filing_year", _FILING_YEARS)
+def test_an_ejercicio_with_its_own_design_files(filing_year: int) -> None:
+    modelo, catalogues = _load_modelo_347()
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period="0A",
+    )
+
+    assert snapshot.revision.id == "2025-y-siguientes"
+    assert "aeat-dr-347-2025" in snapshot.revision.source_refs
+
+
+def test_the_ungrounded_span_is_inside_the_support_envelope() -> None:
+    """Without an admissible year the refusal above would pass vacuously."""
+    assert _UNGROUNDED_DESIGN_YEARS, "the support envelope admits no 2014-2024 year of Modelo 347"
+    assert _FILING_YEARS, "the support envelope admits no year from 2025"
 
 
 # The first ejercicio of the oldest Modelo 347 revision the registry authors, whose

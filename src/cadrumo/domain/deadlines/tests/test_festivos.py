@@ -599,19 +599,103 @@ def test_a_year_end_shift_is_judged_against_the_next_years_calendar() -> None:
     assert result.coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
 
 
-def test_a_year_end_shift_into_an_unpublished_year_is_refused() -> None:
-    """Without the next year's calendar the moved date cannot be verified, so it is never guessed."""
-    with (
-        bundled_indexed_authority().operation() as operation,
-        pytest.raises(DeadlineValidationError, match="2023"),
-    ):
-        shift_deadline(
+def test_a_year_end_shift_into_an_unpublished_year_moves_past_its_weekend_only() -> None:
+    """Without the next year's calendar the walk still skips its Sunday, and says its holidays went unchecked."""
+    with bundled_indexed_authority().operation() as operation:
+        with pytest.raises(DeadlineValidationError, match="no governed publication"):
+            load_holiday_calendar(_FIRST_MONDAY.year, operation=operation)
+        result = shift_deadline(
             _SATURDAY_YEAR_END,
             modelo="303",
             ccaa_code=None,
             calendars=(_year_end_calendar(),),
             operation=operation,
         )
+    assert result.adjusted_close_date == _FIRST_MONDAY
+    assert result.shift_reason == "sabado + calendar_unavailable"
+    assert result.coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+
+
+# ---------------------------------------------------------------------------
+# A year with no published holiday calendar.
+# ---------------------------------------------------------------------------
+
+# Ley 39/2015 art. 30.2 excludes "los sábados, los domingos y los declarados
+# festivos" from días hábiles and art. 30.5 moves an inhábil last day "al primer
+# día hábil siguiente", so weekends move a deadline with or without a holiday
+# calendar. No publication is authored for 2027: 2027-02-28 is the Sunday the
+# Modelo 347 plazo for 2026 nominally closes on, and 2027-10-16 a Saturday.
+_UNPUBLISHED_YEAR = 2027
+_UNPUBLISHED_WEEKEND_CASES = (
+    ("sunday", date(2027, 2, 28), 6, "domingo", date(2027, 3, 1)),
+    ("saturday", date(2027, 10, 16), 5, "sabado", date(2027, 10, 18)),
+)
+
+
+def _require_unpublished_year(operation: PinnedAuthorityOperation) -> None:
+    with pytest.raises(DeadlineValidationError, match="no governed publication"):
+        load_holiday_calendar(_UNPUBLISHED_YEAR, operation=operation)
+
+
+@pytest.mark.parametrize(
+    ("case_id", "nominal", "weekday", "weekend_token", "monday"),
+    _UNPUBLISHED_WEEKEND_CASES,
+    ids=[case[0] for case in _UNPUBLISHED_WEEKEND_CASES],
+)
+def test_a_weekend_close_moves_to_monday_without_a_holiday_calendar(
+    case_id: str,
+    nominal: date,
+    weekday: int,
+    weekend_token: str,
+    monday: date,
+) -> None:
+    assert nominal.weekday() == weekday, case_id
+    assert monday.weekday() == 0, case_id
+    with bundled_indexed_authority().operation() as operation:
+        _require_unpublished_year(operation)
+        result = shift_deadline(nominal, modelo="347", ccaa_code=None, operation=operation)
+    assert result.shifted is True
+    assert result.adjusted_close_date == monday
+    assert result.shift_reason == f"{weekend_token} + calendar_unavailable"
+    assert result.coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    assert result.holiday_refs == ()
+    assert result.jurisdictions == ()
+
+
+def test_a_territory_does_not_hide_that_the_holidays_went_unchecked() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        _require_unpublished_year(operation)
+        result = shift_deadline(
+            date(2027, 2, 28),
+            modelo="347",
+            ccaa_code=_calendar_ccaa(operation, "ES-MD"),
+            operation=operation,
+        )
+    assert result.adjusted_close_date == date(2027, 3, 1)
+    assert result.coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+
+
+def test_a_weekday_close_without_a_holiday_calendar_stays_with_its_holidays_unchecked() -> None:
+    monday = date(2027, 2, 1)
+    assert monday.weekday() == 0
+    with bundled_indexed_authority().operation() as operation:
+        _require_unpublished_year(operation)
+        result = shift_deadline(monday, modelo="303", ccaa_code=None, operation=operation)
+    assert result.shifted is False
+    assert result.adjusted_close_date == monday
+    assert result.shift_reason == "calendar_unavailable"
+    assert result.coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+
+
+def test_a_published_year_weekend_close_is_checked_against_its_holidays() -> None:
+    """A year with a governed publication keeps its full check; nothing reports holidays as unchecked."""
+    saturday = date(2025, 3, 1)
+    with bundled_indexed_authority().operation() as operation:
+        assert load_holiday_calendar(saturday.year, operation=operation).year == saturday.year
+        result = shift_deadline(saturday, modelo="303", ccaa_code=None, operation=operation)
+    assert result.adjusted_close_date == date(2025, 3, 3)
+    assert result.shift_reason == "sabado"
+    assert result.coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
 
 
 def test_a_year_end_shift_reports_a_territory_the_next_year_does_not_verify() -> None:

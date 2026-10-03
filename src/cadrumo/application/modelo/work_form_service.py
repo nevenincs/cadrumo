@@ -156,9 +156,9 @@ def modelo_form_deadline(
     The window comes from the canonical resolver the calendar and the
     extemporaneity notice use; it stores the nominal statutory date, which the
     business-day shift moves past weekends and holidays at read time. Without
-    the filer's territory only national holidays are checked, and a holiday
-    calendar that cannot be read leaves the nominal date standing; the
-    coverage says which, so neither is shown as a final date.
+    the filer's territory only national holidays are checked, and a year with
+    no published holiday calendar moves past weekends only; the coverage says
+    which, so neither is shown as a final date.
 
     Raises:
         RegistryError: The registry could not be read, so the deadline is
