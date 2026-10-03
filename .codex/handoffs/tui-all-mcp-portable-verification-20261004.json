@@ -1,5 +1,5 @@
 {
-  "head": "0992a5d689d2a06fa832b0df0c2139d32525d45b",
+  "head": "4d3455f47dfc87a24e9b88a3cb4338789a539de8",
   "source_cohort": ".codex/handoffs/tui-all-mcp-baseline-broad-cohort.json",
   "module_count": 213,
   "cohort": [
@@ -257,7 +257,11 @@
   "browser_environment": {
     "CADRUMO_PLAYWRIGHT_BROWSERS_DIR": "Y:\\code\\cadrumo-worktrees\\tui-all-mcp\\var\\storage\\components\\playwright"
   },
-  "authority": "pending root fresh publication",
+  "authority": {
+    "root": "Y:\\code\\cadrumo-worktrees\\tui-all-mcp\\.authority",
+    "logical_identity": "c057cec11d240befcd95e3567a800e0c0581f132bd76b88f1c1e43dc2191c12c",
+    "database": "authority-3c74db2faa378d68e28a30692838ca5d8eb521b5fe4c261020924d08a1fd5482.sqlite3"
+  },
   "verification": "fresh collection and all behavioral execution required; interrupted prior passes not final evidence",
   "collection": {
     "exit": 0,
@@ -315,7 +319,45 @@
         "src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py",
         "src/cadrumo/entrypoints/tui/operations/tests/test_modal_operation_notices.py"
       ],
-      "node_count": 294
+      "node_count": 294,
+      "execution": {
+        "state": "running",
+        "launcher_pid": 81664,
+        "stdout_log": ".logs/tui-all-mcp-focused-behavior-20261004.txt",
+        "command": [
+          "uv",
+          "run",
+          "--no-sync",
+          "pytest",
+          "-n2",
+          "-v",
+          "-m",
+          "(unit or integration) and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not aeat_live",
+          "src/cadrumo/adapters/inbound/declaracion/tests/test_parser_synthetic_fixtures_m347.py",
+          "src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_movil.py",
+          "src/cadrumo/adapters/outbound/aeat/auth/tests/test_representation_alert_race.py",
+          "src/cadrumo/adapters/outbound/aeat/browser/tests/test_factory.py",
+          "src/cadrumo/adapters/outbound/aeat/sede/tests/test_filed_data_capture_port_errors.py",
+          "src/cadrumo/adapters/persistence/profile/tests/test_modelo_347_informativa_fidelity.py",
+          "src/cadrumo/application/aeat_sync/tests/test_workspace_reader.py",
+          "src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py",
+          "src/cadrumo/application/filing/tests/test_modelo_347_fichero_export.py",
+          "src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py",
+          "src/cadrumo/application/filing/tests/test_optional_record_omission.py",
+          "src/cadrumo/application/modelo/tests/test_m347_uninvoiced_expense_advisory.py",
+          "src/cadrumo/application/tests/test_workbench_generation.py",
+          "src/cadrumo/domain/calculations/registry/tests/test_authority_descriptor_resolution.py",
+          "src/cadrumo/domain/calculations/registry/tests/test_m347_operation_clave.py",
+          "src/cadrumo/domain/calculations/registry/tests/test_m347_operation_scope.py",
+          "src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py",
+          "src/cadrumo/domain/invoices/tests/test_business_premises_lease.py",
+          "src/cadrumo/entrypoints/cli/tests/test_app_ledger_invoice_lifecycle_command_specs.py",
+          "src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_347_declarado_rows.py",
+          "src/cadrumo/entrypoints/tests/test_m347_ledger_verdict_parity.py",
+          "src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py",
+          "src/cadrumo/entrypoints/tui/operations/tests/test_modal_operation_notices.py"
+        ]
+      }
     },
     {
       "name": "registered_and_runtime",
@@ -565,5 +607,9 @@
   },
   "selected_node_count": 2955,
   "selected_module_count": 199,
-  "exact_nodes": ".codex/handoffs/tui-all-mcp-portable-collected-nodes-current-20261004.txt"
+  "exact_nodes": ".codex/handoffs/tui-all-mcp-portable-collected-nodes-current-20261004.txt",
+  "matrix_selected_node_count": 272,
+  "completeness_selected": true,
+  "duplicate_scenario_selected": true,
+  "execution_state": "focused behavioral batch running"
 }
