@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from .....application.workflow.active_profile import active_transaction_catalogue_repository
+from .....application.workflow.active_profile import require_active_profile_bucket_id
+from .....core.errors.hierarchy import NoActiveProfileError
 from .....domain.transactions.enums import TransactionDirection
-from .....domain.transactions.errors import LedgerNoActiveBucketError
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -58,7 +58,7 @@ def _transaction(provider_id: str) -> Transaction:
     )
 
 
-def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket(
+def test_transaction_catalogue_repository_routes_by_selected_profile_bucket(
     tmp_path: Path,
 ) -> None:
     """The ACTIVE PROFILE decides which bucket the catalogue resolves to.
@@ -87,20 +87,18 @@ def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket
             )
             return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
 
-        active_transaction_catalogue_repository(repository_factory=factory).save(
+        factory(require_active_profile_bucket_id()).save(
             TransactionCatalogue.from_transactions((first_transaction,)),
         )
-        first_catalogue = active_transaction_catalogue_repository(repository_factory=factory).load()
+        first_catalogue = factory(require_active_profile_bucket_id()).load()
         with runtime.switch_to_secondary():
-            second_catalogue = active_transaction_catalogue_repository(repository_factory=factory).load()
+            second_catalogue = factory(require_active_profile_bucket_id()).load()
 
     assert tuple(first_catalogue.transactions) == (first_transaction.transaction_id,)
     assert second_catalogue.transactions == {}
 
 
-def test_active_transaction_catalogue_repository_rejects_missing_active_bucket() -> None:
-    with pytest.raises(LedgerNoActiveBucketError) as raised:
-        active_transaction_catalogue_repository(
-            repository_factory=lambda bucket_id: TransactionCatalogueRepository(bucket_id=bucket_id),
-        )
+def test_transaction_catalogue_resolution_rejects_missing_active_bucket() -> None:
+    with pytest.raises(NoActiveProfileError) as raised:
+        TransactionCatalogueRepository(bucket_id=require_active_profile_bucket_id())
     assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"

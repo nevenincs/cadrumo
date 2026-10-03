@@ -5,7 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import UUID
 
-from ..adapters.inbound.borrador.parser import parse_borrador_bytes
+from ..adapters.inbound.borrador.parser import parse_borrador
 from ..adapters.inbound.borrador.schema import BorradorParseMode
 from ..application.live.borrador_100_operation_ports import (
     Borrador100ImportObservation,
@@ -30,7 +30,7 @@ class _CanonicalBorradorParser:
         filing_year: int,
         extraction_profile: ExtractionProfileDefinition,
     ) -> Borrador100ImportObservation:
-        observation = parse_borrador_bytes(
+        observation = parse_borrador(
             pdf_bytes,
             año_override=filing_year,
             extraction_profile=extraction_profile,

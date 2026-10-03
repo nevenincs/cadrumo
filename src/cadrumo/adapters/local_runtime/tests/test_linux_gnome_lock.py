@@ -53,6 +53,7 @@ class _ProtocolBus:
         self.change_owner_after_state = False
         self.uid = 1000
         self.pid = 42
+        self.reply_live = False
 
     @contextmanager
     def call(
@@ -76,24 +77,28 @@ class _ProtocolBus:
             self.values = deque([self.pid])
         else:
             raise AssertionError(method)
-        yield ctypes.c_void_p(1)
+        self.reply_live = True
+        try:
+            yield ctypes.c_void_p(1)
+        finally:
+            self.reply_live = False
 
     def read_string(self, reply: ctypes.c_void_p, kind: bytes, *, maximum: int = 128) -> bytes:
-        assert reply.value == 1 and kind in (b"s", b"o")
+        assert self.reply_live and reply.value == 1 and kind in (b"s", b"o")
         value = self.values.popleft()
         if not isinstance(value, bytes) or len(value) > maximum:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         return value
 
     def read_integer(self, reply: ctypes.c_void_p, kind: bytes) -> int:
-        assert reply.value == 1 and kind in (b"u", b"b")
+        assert self.reply_live and reply.value == 1 and kind in (b"u", b"b")
         value = self.values.popleft()
         if not isinstance(value, int):
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         return value
 
     def require_end(self, reply: ctypes.c_void_p) -> None:
-        assert reply.value == 1
+        assert self.reply_live and reply.value == 1
         if self.values:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
 
@@ -104,6 +109,20 @@ def test_supported_response_reads_live_closed_state_without_session_labels() -> 
     assert state == GnomeLockState(_EPOCH, 1, False, False, "user")
     assert not state.safely_locked and state.eligibility is LoginEligibility.ELIGIBLE
     assert [call[3] for call in bus.calls] == [b"GetState"]
+
+
+@pytest.mark.parametrize("trailing_value", [False, True])
+def test_decoding_and_trailing_value_refusal_finish_before_native_reply_release(trailing_value: bool) -> None:
+    """A reply is invalid after its owning context closes, including refusal."""
+    bus = _ProtocolBus((*_STATE, b"unreviewed") if trailing_value else _STATE)
+    if trailing_value:
+        with pytest.raises(RuntimeRefusalError):
+            read_gnome_lock_state(bus, _OWNER)
+    else:
+        assert read_gnome_lock_state(bus, _OWNER) == GnomeLockState(_EPOCH, 1, False, False, "user")
+    assert not bus.reply_live
+    with pytest.raises(AssertionError):
+        bus.require_end(ctypes.c_void_p(1))
 
 
 @pytest.mark.parametrize(

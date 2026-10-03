@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a1d6d5500c8271ee08d0e5f692265d6e9ff135a2125ca1c98a7fec41969459ff'
+body_hash: 'sha256:97af9c24c9514d4c167bbed74aaf27363100ec8b4e400e0bb8deb943cb25d7bd'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -2430,6 +2430,67 @@ related:
 - `S05` `verify:` `299 focused current domain/application tests` -> `pass`
 - `S05` `verify:` `Ruff lint/format and scoped ty17 declared paths` -> `pass`
 - `S05` `verify:` `retired convenience symbol references src/dev: zero` -> `pass`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-gnome-linux-verification-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-gnome-setup-disposition-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-source-quality-current-paths-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-source-quality-repairs-20261004.json`
+- `S05` `A` `dev/packaging/linux_gnome_installation.py`
+- `S05` `A` `dev/packaging/tests/test_gnome_login_observer.py`
+- `S05` `A` `dev/packaging/tests/test_linux_gnome_installation.py`
+- `S05` `M` `dev/quality/metadata/application_entrypoint_modules.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.docs.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.json`
+- `S05` `A` `dev/registry/checker_oracle_flow.py`
+- `S05` `M` `dev/registry/parity/renta_web_open_oracle.py`
+- `S05` `M` `dev/registry/tests/checker_oracle.py`
+- `S05` `M` `dev/registry/tests/checker_replay_driver.py`
+- `S05` `M` `dev/registry/tests/test_groi_oracle.py`
+- `S05` `M` `src/cadrumo/adapters/inbound/borrador/parser.py`
+- `S05` `M` `src/cadrumo/adapters/inbound/borrador/tests/test_borrador_bytes.py`
+- `S05` `D` `src/cadrumo/adapters/local_runtime/linux_gnome_installation.py`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/linux_gnome_lock.py`
+- `S05` `D` `src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_installation.py`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_lock.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/profile/tests/test_transaction_catalogue_resolution.py`
+- `S05` `M` `src/cadrumo/application/foreign_assets/ports.py`
+- `S05` `M` `src/cadrumo/application/live/filed_history_events.py`
+- `S05` `M` `src/cadrumo/application/modelo/local_observation_operation.py`
+- `S05` `M` `src/cadrumo/application/modelo/mcp_query_operation.py`
+- `S05` `M` `src/cadrumo/application/modelo/verification_predicates.py`
+- `S05` `M` `src/cadrumo/application/modelo/work_addressing.py`
+- `S05` `M` `src/cadrumo/application/modelo/work_plazo.py`
+- `S05` `M` `src/cadrumo/application/profile_preconditions.py`
+- `S05` `M` `src/cadrumo/application/tests/test_profile_preconditions.py`
+- `S05` `M` `src/cadrumo/application/user_profile/tests/test_cleared_path_adoption_policy.py`
+- `S05` `D` `src/cadrumo/application/wizard/_checkpoint_store.py`
+- `S05` `M` `src/cadrumo/application/workbench_generation.py`
+- `S05` `M` `src/cadrumo/application/workbench_generation_calendar.py`
+- `S05` `M` `src/cadrumo/application/workbench_generation_contracts.py`
+- `S05` `M` `src/cadrumo/application/workflow/active_profile.py`
+- `S05` `M` `src/cadrumo/core/async_cleanup.py`
+- `S05` `M` `src/cadrumo/core/config_state_root.py`
+- `S05` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S05` `M` `src/cadrumo/core/tests/test_async_cleanup_attachment.py`
+- `S05` `D` `src/cadrumo/domain/calculations/registry/checker_oracle_flow.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_modelo_rendering.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/secure_input.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_calculate_recargo_notice.py`
+- `S05` `M` `src/cadrumo/entrypoints/live_borrador_operation_composition.py`
+- `S05` `D` `src/cadrumo/entrypoints/runtime/gnome_login_observer.py`
+- `S05` `D` `src/cadrumo/entrypoints/runtime/tests/test_gnome_login_observer.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_extended_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_selectors.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_work_addressing.py`
+- `S05` `verify:` `current configured aggregate:11 of12gates passed; remaining dead guard separately corrected` -> `pass`
+- `S05` `verify:` `focused state-root/parser/cleanup/precondition checks46+33+13+3` -> `pass`
+- `S05` `verify:` `GNOME current-source Linux filesystem/protocol/PIDFD47cases no skips` -> `pass`
+- `S05` `verify:` `isolated dev setup script and taxonomy25portable cases with17native host skips` -> `pass`
 
 ## Notes
 
@@ -2441,3 +2502,4 @@ related:
 - `S05` Resumed verification authorization: establish the reconciled baseline first, verify end to end, land on feature/tui only after green, then run end-to-end verification from the destination worktree. Prior broad-check deferral is revoked for final completion. Live TUI advances during capture; reconcile immutable committed cuts in isolation and preserve dirty active-writer files/index. No routine implementation or conflict-resolution approval is required.
 - `S05` Latest immutable TUI cut a8a7fb7d reconciled in isolation; preserved MCP native custody, public typed APIs and independent tests alongside incoming packaging/runtime/filing prompts. Final combined and installed E2E proof remains pending; active live writer files and index remain untouched.
 - `S05` Reconcile six test-only convenience exports with current typed production owners; preserve independent values, provenance, refusal and support-window assertions. Exact per-symbol dispositions/hashes and commands in source report. Encrypted persistence replay, configured aggregate, current installed E2E and safe live landing remain pending; no native or whole-suite claim.
+- `S05` Restore recovered helper intent under current canonical production owners; preserve exact retry custody, parser bytes and typed revision selection. Move test-only registry oracle and non-activating GNOME resource setup to dev with all consumers and current filesystem inventories. Independent review finds no current caller regression or authority bypass; verify/file/export typed recovery is not a registered-command closure claim. Source/proof hashes and native limits retained. Aggregate overall failed one unused guard (now removed) and recorded one native test-fixture source drift; final aggregate/E2E and live destination reconciliation remain pending. Ongoing M145 ordinary-page validation defect and Google effect-fixture diagnosis are excluded from this checkpoint.

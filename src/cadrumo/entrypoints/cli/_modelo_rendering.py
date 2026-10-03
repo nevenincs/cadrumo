@@ -18,7 +18,6 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
@@ -892,8 +891,3 @@ def verification_report_lines(
 def _render_verification_finding_message(finding: ModeloVerificationFinding) -> str:
     """Render one persisted locale key and its typed facts at the CLI boundary."""
     return tr(finding.message_locale_key, **finding.message_facts)
-
-
-def _optional_revision_timestamp(value: datetime | None) -> str | None:
-    """Keep the established ISO spelling of a present revision timestamp."""
-    return value.isoformat() if value else None

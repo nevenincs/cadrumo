@@ -18,7 +18,7 @@ See Also:
         Nominal and business-day close dates of the plazo voluntario.
     :func:`cadrumo.domain.deadlines.recargo.build_recovery_for_overdue`:
         Resolves the Art. 27 LGT recargo band for overdue filing.
-    :func:`cadrumo.entrypoints.cli._modelo_rendering.work_unit_deadline_output`:
+    :func:`cadrumo.entrypoints.cli._modelo_rendering.work_deadline_output_from_posture`:
         Projects this summary onto JSON payloads and warning notices.
 """
 

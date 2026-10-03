@@ -165,7 +165,14 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
                 assert Decimal(result.taxable_base or "-1") == Decimal("100")
                 assert Decimal(result.iva_amount or "-1") == Decimal("21")
                 assert actual_row.taxable_base == Decimal("100") and actual_row.iva_amount == Decimal("21")
-                assert actual_row.raw == seeded.transaction.raw
+                assert actual_row.raw.model_dump(exclude={"provenance", "raw_fields"}) == (
+                    seeded.transaction.raw.model_dump(exclude={"provenance", "raw_fields"})
+                )
+                assert actual_row.business_classification is BusinessClassification.BUSINESS
+                assert actual_row.raw.provenance.source_format == seeded.transaction.raw.provenance.source_format
+                assert Decimal(actual_row.raw.raw_fields["taxable_base"]) == Decimal("100")
+                assert Decimal(actual_row.raw.raw_fields["iva_rate"]) == Decimal("0.21")
+                assert Decimal(actual_row.raw.raw_fields["iva_amount"]) == Decimal("21")
             elif definition_id == "ledger.link":
                 result = outcome.resolve_result(LedgerLinkOperationResult)
                 assert result.outcome == "linked" and result.projection is not None

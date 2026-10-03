@@ -1,16 +1,38 @@
-"""Native setup command projections; real installation belongs to its adapter."""
+"""Development setup projections; real publication belongs to the same utility."""
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 
-from .. import gnome_login_observer
+from .. import linux_gnome_installation as gnome_login_observer
+from ..command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def test_development_script_refuses_nonisolated_interpreter_before_setup(tmp_path: Path) -> None:
+    script = Path(gnome_login_observer.__file__).resolve()
+    result = run_command([sys.executable, str(script), "install"], cwd=tmp_path, timeout_seconds=30)
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert result.stderr == RuntimeRefusalCode.UNAVAILABLE.value + "\n"
+    assert not tuple(tmp_path.iterdir())
+
+
+@pytest.mark.skipif(sys.platform == "linux", reason="Real Linux resource publication has its own native tests")
+def test_isolated_development_script_uses_installed_product_and_refuses_unsupported_host(tmp_path: Path) -> None:
+    script = Path(gnome_login_observer.__file__).resolve()
+    result = run_command([sys.executable, "-I", str(script), "inspect"], cwd=tmp_path, timeout_seconds=30)
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert result.stderr == RuntimeRefusalCode.UNAVAILABLE.value + "\n"
+    assert not tuple(tmp_path.iterdir())
 
 
 @pytest.mark.parametrize(

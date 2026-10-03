@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import date
-from typing import TYPE_CHECKING, Final, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
 from ..core.errors.hierarchy import InternalInvariantError
 from ..core.time.utc import UtcInstant
@@ -64,12 +64,6 @@ from .overview.home import (
 )
 from .user_profile.projections import projection_for_taxpayer
 from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCalendarWork, WorkbenchCaptureMemory
-
-WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
-
-_AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
-_AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
-
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation

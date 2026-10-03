@@ -14,10 +14,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.identity.tax_id import tax_id_identity_token
-from ....core.models import STRICT_FROZEN_CONFIG
-from .errors import RegistryValidationError
+from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
+from cadrumo.core.identity.tax_id import tax_id_identity_token
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 
 class CheckerDriverMode(StrEnum):

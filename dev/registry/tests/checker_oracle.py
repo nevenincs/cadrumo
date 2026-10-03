@@ -10,14 +10,14 @@ from pydantic import AnyUrl, BaseModel
 
 from cadrumo.core.identity.tax_id import tax_id_identity_token
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.domain.calculations.registry.checker_oracle_flow import (
-    CheckerDriverModeValue,
-    CheckerObservation,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import OracleId
 from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
+from ..checker_oracle_flow import (
+    CheckerDriverModeValue,
+    CheckerObservation,
+)
 from ..parity.live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,

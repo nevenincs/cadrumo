@@ -107,7 +107,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.GNOME_EXTENSIONS,
         "integrations/gnome/extensions",
-        consumer_module="adapters/local_runtime/linux_gnome_installation.py",
+        consumer_module="adapters/local_runtime/linux_gnome_lock.py",
         settings_field="cadrumo_gnome_extensions_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,

@@ -11,13 +11,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.local_runtime.linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
+from cadrumo.adapters.local_runtime.posix import posix_owner_uid
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.config import override_settings
 
 from .. import linux_gnome_installation
 from ..linux_gnome_installation import inspect_gnome_login_producer, install_gnome_login_producer
-from ..linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
-from ..posix import posix_owner_uid
 
 pytestmark = [
     pytest.mark.unit,
@@ -119,6 +119,7 @@ def test_symlinked_component_refuses_without_touching_foreign_directory(isolated
     target = _target(isolated_home)
     parts = ("integrations", "gnome", "extensions", GNOME_LOGIN_EXTENSION_UUID)
     parent = isolated_home / "storage"
+    parent.mkdir(mode=0o700)
     for part in parts:
         if part == component:
             break

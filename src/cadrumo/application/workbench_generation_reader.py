@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Final
 from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
@@ -113,8 +113,6 @@ from .workbench_generation_contracts import (
     WorkbenchGenerationInputsV1,
 )
 from .workbench_generation_home import build_workbench_generation_inputs
-
-WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
 
 _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"

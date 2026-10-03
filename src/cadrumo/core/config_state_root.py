@@ -105,4 +105,4 @@ def resolve_state_root(inputs: StateRootInputs) -> StateRootResolution:
 
 def default_storage_root() -> Path:
     """Return the canonical environment-controlled storage default for Settings."""
-    return configured_storage_root()
+    return resolve_state_root(live_state_root_inputs()).storage_root

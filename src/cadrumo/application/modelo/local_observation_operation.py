@@ -49,8 +49,6 @@ from .local_observation_projection import (
     project_recorded_observation,
 )
 
-_PHASES = (MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,)
-
 
 def _local_observation_ports(
     factory: CalculationActionPortsFactory,

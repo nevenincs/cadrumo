@@ -1,4 +1,4 @@
-"""Explicit, non-activating per-user GNOME login producer installation.
+"""Development-only, non-activating GNOME login producer resource publication.
 
 Only the current packaged cohort is accepted. Both files are prepared privately
 and published together with native no-replace directory rename. A native failure
@@ -8,6 +8,7 @@ implied. Abandoned staging directories require explicit operator reconciliation.
 
 from __future__ import annotations
 
+import argparse
 import ctypes
 import errno
 import os
@@ -19,10 +20,10 @@ from importlib.resources import files
 from typing import cast
 from uuid import uuid4
 
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...core.storage_taxonomy import StorageCategory
-from ...core.storage_taxonomy_locations import storage_path
-from .linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
+from cadrumo.adapters.local_runtime.linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
+from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 
 _FILES = ("extension.js", "metadata.json")
 _STAGING_PREFIX = "." + GNOME_LOGIN_EXTENSION_UUID + ".stage-"
@@ -312,3 +313,32 @@ def install_gnome_login_producer() -> bool:
             return True
     except (OSError, AttributeError, ValueError):
         raise _refusal() from None
+
+
+def run(arguments: list[str] | None = None) -> int:
+    """Inspect or install exact resources without starting a runtime or a dialog."""
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    parser.add_argument("action", choices=("inspect", "install"))
+    selected = parser.parse_args(arguments)
+    try:
+        if sys.platform != "linux":
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        if selected.action == "inspect":
+            result = "published" if inspect_gnome_login_producer() else "absent"
+        else:
+            result = "published" if install_gnome_login_producer() else "already_published"
+        sys.stdout.write(result + "\n")
+        return 0
+    except RuntimeRefusalError as refusal:
+        sys.stderr.write(refusal.reason.value + "\n")
+        return 2
+    except OSError:
+        sys.stderr.write(RuntimeRefusalCode.UNAVAILABLE.value + "\n")
+        return 2
+
+
+if __name__ == "__main__":
+    if not sys.flags.isolated:
+        sys.stderr.write(RuntimeRefusalCode.UNAVAILABLE.value + "\n")
+        raise SystemExit(2)
+    raise SystemExit(run())

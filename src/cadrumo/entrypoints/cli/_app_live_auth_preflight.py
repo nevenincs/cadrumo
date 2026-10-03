@@ -2,30 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 import typer
 
 from ...application.auth.operator import build_live_auth_preflight_report
 from ...application.auth.operator_results import LiveAuthPreflightReport
-from ...core.errors.hierarchy import InternalInvariantError
 from ...core.redaction.rules import redact_for_cli_output
 
 
 def metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
-
-
-def resolve_active_bucket(active_bucket_id: Callable[[], str] | None, *, family: str) -> str:
-    """Resolve a live command family's registered active-bucket id, or refuse if unregistered.
-
-    Single canonical guard shared by the live command-family modules
-    (expedientes, justificante, notifications, verify), which previously each
-    declared an identical guard differing only in the family name.
-    """
-    if active_bucket_id is None:
-        raise InternalInvariantError(f"live {family} commands were not registered")
-    return active_bucket_id()
 
 
 def emit_live_auth_preflight(
