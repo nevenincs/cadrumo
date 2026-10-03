@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2617185b1551650103ccb69f8640f00e66d86d2cf9eea82d641435f902b4cdaf'
+body_hash: 'sha256:3613884036722b611171fce21a03d5005de0d605244bbd05fbcb4db7379ac664'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -2096,6 +2096,36 @@ related:
 - `S04` `D` `technical/topics/runtime-tui-and-agent-harness.md`
 - `S04` `D` `technical/topics/tax-calculation-domain.md`
 - `S04` `by:` `root`
+- `S03` `M` `CMakePresets.json`
+- `S03` `M` `native/CMakeLists.txt`
+- `S03` `M` `native/CONTRACT.md`
+- `S03` `M` `native/cmake/CPackProject.cmake.in`
+- `S03` `M` `native/cmake/Packaging.cmake`
+- `S03` `M` `native/interpreter/bootstrap.py`
+- `S03` `D` `native/interpreter/host.c`
+- `S03` `D` `native/interpreter/python.c`
+- `S03` `M` `native/package-layout.json`
+- `S03` `M` `native/platform/src/lib.rs`
+- `S03` `M` `native/tests/package_smoke.py`
+- `S03` `A` `CMakeLists.txt`
+- `S03` `A` `native/application/Cargo.lock`
+- `S03` `A` `native/application/Cargo.toml`
+- `S03` `A` `native/application/src/capability.rs`
+- `S03` `A` `native/application/src/child.rs`
+- `S03` `A` `native/application/src/component.rs`
+- `S03` `A` `native/application/src/error.rs`
+- `S03` `A` `native/application/src/filesystem.rs`
+- `S03` `A` `native/application/src/lib.rs`
+- `S03` `A` `native/application/src/package.rs`
+- `S03` `A` `native/application/src/value.rs`
+- `S03` `A` `native/application/tests/application.rs`
+- `S03` `A` `native/cmake/WindowsToolchain.cmake`
+- `S03` `A` `native/cmake/platforms/Windows.cmake`
+- `S03` `A` `native/interpreter/windows/bootstrap.py`
+- `S03` `A` `native/interpreter/windows/host.c`
+- `S03` `A` `native/interpreter/windows/python.c`
+- `S03` `A` `native/platforms/windows-x64.json`
+- `S03` `A` `native/tests/windows_smoke.py`
 
 ## Notes
 

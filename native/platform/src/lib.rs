@@ -3,8 +3,7 @@ compile_error!("Only the Windows foundation has been implemented");
 
 use std::os::windows::fs::MetadataExt;
 use std::{
-    env,
-    fs,
+    env, fs,
     path::{Path, PathBuf},
     ptr,
 };
@@ -58,7 +57,7 @@ fn context_storage_root(root: &Path) -> PathBuf {
     nonempty_environment_path(STORAGE_ENV)
         .or_else(|| nonempty_environment_path(STORAGE_ROOT_ENV))
         .map(|path| rooted(path, root))
-        .unwrap_or_else(|| root.join("var/storage"))
+        .unwrap_or_else(|| root.join(STORAGE_DEFAULT))
 }
 fn refined_storage_path(name: &str, root: &Path, default: &Path) -> PathBuf {
     nonempty_environment_path(name)
@@ -74,11 +73,7 @@ fn context() -> Result<Context, String> {
     let root = project_root(&package);
     let user = context_storage_root(&root);
     let temporary = refined_storage_path(TEMPORARY_ENV, &user, &user.join(TEMPORARY_DEFAULT));
-    let cache = refined_storage_path(
-        TOOL_CACHE_ENV,
-        &user,
-        &user.join(TOOL_CACHE_DEFAULT),
-    );
+    let cache = refined_storage_path(TOOL_CACHE_ENV, &user, &user.join(TOOL_CACHE_DEFAULT));
     let paths = vec![
         package.clone(),
         user.clone(),
@@ -149,15 +144,16 @@ fn prepare(ctx: &Context) -> Result<(), String> {
         if let Some(overrides) = env::var_os("CADRUMO_EXTERNAL_BIN_DIRS") {
             for directory in env::split_paths(&overrides) {
                 if !directory.is_absolute() || !directory.is_dir() {
-                    return Err("CADRUMO_EXTERNAL_BIN_DIRS requires existing absolute directories".into());
+                    return Err(
+                        "CADRUMO_EXTERNAL_BIN_DIRS requires existing absolute directories".into(),
+                    );
                 }
                 search.push(directory);
             }
         }
         search.push(ctx.paths[5].clone());
         search.push(PathBuf::from(system).join("System32"));
-        let path = env::join_paths(search)
-        .map_err(|e| e.to_string())?;
+        let path = env::join_paths(search).map_err(|e| e.to_string())?;
         env::set_var("PATH", path);
     }
     Ok(())

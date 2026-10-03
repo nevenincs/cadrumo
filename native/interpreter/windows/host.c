@@ -9,6 +9,8 @@
 #ifndef CADRUMO_DEVELOPMENT
 #define CADRUMO_DEVELOPMENT 0
 #endif
+#define WIDE_LITERAL_(value) L##value
+#define WIDE_LITERAL(value) WIDE_LITERAL_(value)
 
 typedef int (__cdecl *bridge_main)(int, wchar_t **, const wchar_t **, int);
 
@@ -44,12 +46,12 @@ int wmain(int argc, wchar_t **argv) {
     }
     if (!SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_USER_DIRS) ||
         !AddDllDirectory(paths[5])) goto failure;
-    if (swprintf_s(library, 32768, L"%ls\\python313.dll", paths[5]) < 0) goto failure;
+    if (swprintf_s(library, 32768, L"%ls\\%ls", paths[5], WIDE_LITERAL(CADRUMO_RUNTIME)) < 0) goto failure;
     if (!LoadLibraryExW(library, NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32)) {
         fprintf(stderr, "CADRUMO: missing or incompatible bundled CPython DLL (Windows error %lu)\n", GetLastError());
         goto done;
     }
-    if (swprintf_s(library, 32768, L"%ls\\cadrumo_python.dll", paths[5]) < 0) goto failure;
+    if (swprintf_s(library, 32768, L"%ls\\%ls", paths[5], WIDE_LITERAL(CADRUMO_BRIDGE)) < 0) goto failure;
     HMODULE bridge = LoadLibraryExW(library, NULL,
         LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
     if (!bridge) goto failure;

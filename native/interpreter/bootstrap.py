@@ -1,15 +1,17 @@
 """Install the assembler's native-module map without site or .pth execution."""
 
 import hashlib
+import importlib
 import importlib.abc
 import importlib.machinery
 import importlib.util
 import json
-import os
 import sys
 from pathlib import Path
+from typing import override
 
-_DLL_HANDLES = []
+_cadrumo_native = importlib.import_module("_cadrumo_native")
+
 LAYOUT = {}
 
 
@@ -22,12 +24,12 @@ def _inside(root, relative):
 
 def verify(full=False):
     """Refuse mixed builds and missing/damaged runtime inputs; optionally hash every file."""
-    root = Path(sys.executable).parent.resolve()
+    root = (Path(sys.executable).parent / LAYOUT["package_root_from_executable"]).resolve()
     files = LAYOUT["files"]
     manifest = json.loads(_inside(root, files["package_manifest"]).read_text(encoding="utf-8"))
     identity = manifest["build"]
     for key in ("version", "build_number", "build_date"):
-        if str(identity[key]) != str(sys.cadrumo_build[key]):
+        if str(identity[key]) != str(vars(sys)["cadrumo_build"][key]):
             raise ImportError(f"Incompatible CADRUMO package build: {key}")
     if identity["python"] != ".".join(map(str, sys.version_info[:3])):
         raise ImportError("Incompatible CADRUMO CPython version")
@@ -58,6 +60,7 @@ class NativeModules(importlib.abc.MetaPathFinder):
         self.root = root
         self.modules = modules
 
+    @override
     def find_spec(self, fullname, path=None, target=None):
         """Return a qualified extension spec or defer unrelated imports."""
         relative = self.modules.get(fullname)
@@ -72,14 +75,10 @@ class NativeModules(importlib.abc.MetaPathFinder):
 
 def install():
     """Apply explicit wheel paths and retain native search handles until exit."""
-    root = Path(sys.executable).parent.resolve()
+    root = (Path(sys.executable).parent / LAYOUT["package_root_from_executable"]).resolve()
     verify()
     manifest = json.loads(_inside(root, LAYOUT["files"]["native_manifest"]).read_text(encoding="utf-8"))
-    for relative in manifest["dll_directories"]:
-        directory = _inside(root, relative)
-        if not directory.is_dir():
-            raise ImportError(f"Missing bundled native directory: {directory}")
-        _DLL_HANDLES.append(os.add_dll_directory(str(directory)))
+    _cadrumo_native.prepare(root, manifest)
     path_file = _inside(root, LAYOUT["files"]["path_file"])
     actual_paths = []
     for line in path_file.read_text(encoding="utf-8").splitlines():

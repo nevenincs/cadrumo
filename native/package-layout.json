@@ -1,26 +1,33 @@
 {
   "abi": 1,
   "paths": {
-    "executable": "python.exe",
     "stdlib": "python.zip",
     "packages": "cadrumo/site-packages",
     "native": "bin",
     "authority": "data/authority",
-    "docs": "docs",
-    "secure": "data",
-    "temporary": "tmp",
-    "cache": "cache"
+    "docs": "docs"
   },
   "files": {
-    "development_executable": "python_d.exe",
-    "bridge": "cadrumo_python.dll",
-    "runtime": "python313.dll",
     "path_file": "cadrumo/python.pth",
     "build_metadata": "data/build.json",
     "native_manifest": "data/native-modules.json",
     "package_manifest": "data/package-manifest.json",
     "python_license": "docs/licenses/CPython.txt"
   },
-  "stdlib_exclude": ["site-packages", "__pycache__", "test", "tests", "idlelib", "tkinter", "turtledemo", "ensurepip"],
-  "overrides": ["CADRUMO_EXTERNAL_BIN_DIRS"]
+  "stdlib_exclude": [
+    "site-packages",
+    "__pycache__",
+    "test",
+    "tests",
+    "idlelib",
+    "tkinter",
+    "turtledemo",
+    "ensurepip"
+  ],
+  "overrides": [
+    "CADRUMO_EXTERNAL_BIN_DIRS"
+  ],
+  "platforms": {
+    "windows-x64": "platforms/windows-x64.json"
+  }
 }

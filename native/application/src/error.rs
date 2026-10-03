@@ -1,0 +1,49 @@
+use std::{fmt, io};
+
+#[derive(Debug)]
+pub enum Error {
+    Io(io::Error),
+    Json(serde_json::Error),
+    Archive(zip::result::ZipError),
+    Invalid(String),
+    Incompatible(String),
+    Integrity(String),
+    Busy,
+    Cancelled,
+    LimitExceeded,
+    Download,
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Io(e) => write!(f, "filesystem operation failed: {e}"),
+            Self::Json(e) => write!(f, "invalid metadata: {e}"),
+            Self::Archive(e) => write!(f, "invalid component archive: {e}"),
+            Self::Invalid(s) => write!(f, "invalid input: {s}"),
+            Self::Incompatible(s) => write!(f, "incompatible component: {s}"),
+            Self::Integrity(s) => write!(f, "integrity check failed: {s}"),
+            Self::Busy => f.write_str("another component writer is active"),
+            Self::Cancelled => f.write_str("provisioning cancelled"),
+            Self::LimitExceeded => f.write_str("component resource limit exceeded"),
+            Self::Download => f.write_str("component download failed"),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
+impl From<io::Error> for Error {
+    fn from(value: io::Error) -> Self {
+        Self::Io(value)
+    }
+}
+impl From<serde_json::Error> for Error {
+    fn from(value: serde_json::Error) -> Self {
+        Self::Json(value)
+    }
+}
+impl From<zip::result::ZipError> for Error {
+    fn from(value: zip::result::ZipError) -> Self {
+        Self::Archive(value)
+    }
+}
