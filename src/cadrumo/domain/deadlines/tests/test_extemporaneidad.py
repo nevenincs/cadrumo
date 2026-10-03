@@ -27,7 +27,7 @@ from ...calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
 )
-from ..plazo import resolve_filing_closes_on, resolve_filing_window
+from ..plazo import resolve_filing_window
 from ..recargo import (
     build_recovery_for_overdue,
     completed_months_late,
@@ -112,27 +112,28 @@ def test_ten_completed_months_no_interest(operation: PinnedAuthorityOperation) -
 
 
 # ---------------------------------------------------------------------------
-# resolve_filing_closes_on — registry integration
+# resolve_filing_window — registry integration
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)
-def test_resolve_filing_closes_on_returns_the_m130_first_quarter_date(year: int) -> None:
+def test_resolve_filing_window_returns_the_m130_first_quarter_date(year: int) -> None:
     """M130 Q1 closes_on is registered and resolvable for every supported year.
 
     M130 (pagos fraccionados IRPF estimación directa) has deadline
     windows registered in the canonical TOML.  The resolver
     must return a non-None date for the Q1 window.
     """
-    closes_on = resolve_filing_closes_on("130", year, Period.from_year_and_code(year, "1T"))
-    assert closes_on is not None
+    window = resolve_filing_window("130", year, Period.from_year_and_code(year, "1T"))
+    assert window is not None
+    closes_on = window.closes_on
     assert isinstance(closes_on, date)
     # M130 Q1 typically closes on 20 April (AEAT plazo trimestral).
     assert closes_on.year == year
     assert closes_on.month in (4, 5)  # April/May for Q1 plazo
 
 
-def test_resolve_filing_closes_on_refuses_an_unknown_modelo() -> None:
+def test_resolve_filing_window_refuses_an_unknown_modelo() -> None:
     """An id that is not a modelo REFUSES; it is not "deadline data unavailable".
 
     ``None`` is reserved for the two causes the contract names -- no window for
@@ -144,19 +145,20 @@ def test_resolve_filing_closes_on_refuses_an_unknown_modelo() -> None:
     the recargo silently.
     """
     with pytest.raises(RegistrySnapshotError, match=r"modelo '999' is not present in the calculation registry"):
-        resolve_filing_closes_on("999", 2026, Period.from_year_and_code(2026, "1T"))
+        resolve_filing_window("999", 2026, Period.from_year_and_code(2026, "1T"))
 
 
-def test_resolve_filing_closes_on_wrong_period_returns_none() -> None:
+def test_resolve_filing_window_wrong_period_returns_none() -> None:
     """A period not registered for this modelo+year returns None."""
-    result = resolve_filing_closes_on("130", 2026, Period.from_year_and_code(2026, "1P"))
+    result = resolve_filing_window("130", 2026, Period.from_year_and_code(2026, "1P"))
     assert result is None
 
 
-def test_resolve_filing_closes_on_annual_period() -> None:
+def test_resolve_filing_window_annual_period() -> None:
     """M100 annual period '0A' resolves to a date in the correct year."""
-    closes_on = resolve_filing_closes_on("100", 2024, Period.from_year_and_code(2024, "0A"))
-    assert closes_on is not None
+    window = resolve_filing_window("100", 2024, Period.from_year_and_code(2024, "0A"))
+    assert window is not None
+    closes_on = window.closes_on
     # M100 2024 anual plazo: AEAT opens April, closes June 30 2025.
     assert closes_on.year == 2025
     assert closes_on.month == 6
@@ -166,7 +168,7 @@ def test_resolve_filing_closes_on_annual_period() -> None:
     ("modelo", "filing_year"),
     (("180", 2023),),
 )
-def test_resolve_filing_closes_on_annual_period_does_not_borrow_a_future_window(
+def test_resolve_filing_window_annual_period_does_not_borrow_a_future_window(
     modelo: str,
     filing_year: int,
 ) -> None:
@@ -180,13 +182,13 @@ def test_resolve_filing_closes_on_annual_period_does_not_borrow_a_future_window(
     period = Period.from_year_and_code(filing_year, "0A")
     successor = Period.from_year_and_code(filing_year + 1, "0A")
     with withdrawn_deadline_window_operation(modelo_id=modelo, filing_year=filing_year) as withdrawn:
-        assert resolve_filing_closes_on(modelo, filing_year + 1, successor, authority=withdrawn) is not None, (
+        assert resolve_filing_window(modelo, filing_year + 1, successor, authority=withdrawn) is not None, (
             "the successor declares no window, so there is nothing to borrow and this proves nothing"
         )
-        assert resolve_filing_closes_on(modelo, filing_year, period, authority=withdrawn) is None
+        assert resolve_filing_window(modelo, filing_year, period, authority=withdrawn) is None
 
 
-def test_resolve_filing_closes_on_annual_period_below_the_supported_floor_is_refused() -> None:
+def test_resolve_filing_window_annual_period_below_the_supported_floor_is_refused() -> None:
     """A tax year below the supported floor is refused, never answered with a later window.
 
     Modelo 100 annual windows begin before the floor, so the preceding-year case
@@ -197,7 +199,7 @@ def test_resolve_filing_closes_on_annual_period_below_the_supported_floor_is_ref
     assert supported_years is not None
     filing_year = supported_years.floor - 1
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        resolve_filing_closes_on("100", filing_year, Period.from_year_and_code(filing_year, "0A"))
+        resolve_filing_window("100", filing_year, Period.from_year_and_code(filing_year, "0A"))
 
 
 # ---------------------------------------------------------------------------
@@ -208,9 +210,9 @@ def test_resolve_filing_closes_on_annual_period_below_the_supported_floor_is_ref
 
 
 @pytest.mark.parametrize("quarter", ("1T", "2T", "3T", "4T"))
-def test_resolve_filing_closes_on_m210_declares_no_quarter_window(quarter: str) -> None:
+def test_resolve_filing_window_m210_declares_no_quarter_window(quarter: str) -> None:
     """M210 quarter tokens have no window: none is fabricated from the old trimestral plazo."""
-    assert resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, quarter)) is None
+    assert resolve_filing_window("210", 2025, Period.from_year_and_code(2025, quarter)) is None
 
 
 def test_resolve_filing_window_m210_arrendamiento_a_ingresar_closes_on_20_january() -> None:
@@ -230,11 +232,11 @@ def test_resolve_filing_window_m210_arrendamiento_a_ingresar_closes_on_20_januar
     assert (window.opens_on, window.closes_on) == (date(2026, 1, 1), date(2026, 1, 20))
 
 
-def test_resolve_filing_closes_on_m210_annual_0a_without_resultado_returns_none() -> None:
+def test_resolve_filing_window_m210_annual_0a_without_resultado_returns_none() -> None:
     """M210 annual '0A' plazos depend on resultado and tipo de renta.
 
     Without that context no single window applies, so the unqualified resolver
     returns None rather than silently picking one of the scoped windows.
     """
-    result = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "0A"))
+    result = resolve_filing_window("210", 2025, Period.from_year_and_code(2025, "0A"))
     assert result is None

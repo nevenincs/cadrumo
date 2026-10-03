@@ -6,8 +6,8 @@ asset, per declarant condition (position 76) and per incorporation date
 estate (B) carries only an address, insurance (S) only the insurer, and a
 security without an ISIN is coded ``ZXX`` by issuer country (positions 132-143).
 The row-carrier decision therefore joins ledger-sourced observations and the
-operator's declaration on an explicit asset identity minted once here and
-never reused, with the official identifier kept as a cross-check.
+operator's declaration on an explicit persisted asset identity, with the
+official identifier kept as a cross-check.
 
 This module holds the register document and its invariants only. It reads no
 store, converts no currency and resolves no binding; the persistence adapter
@@ -16,18 +16,14 @@ stores the document and the 720 resolver joins on :class:`M720AssetRef`.
 See Also:
     :mod:`adapters.persistence.profile.foreign_assets`
         FINANCIAL secure-object repository for this document.
-    :mod:`application.foreign_assets`
-        Registered operations that register, list and declare assets.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Final
-from uuid import uuid4
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
@@ -42,8 +38,6 @@ from ...core.percentage import Percentage
 FOREIGN_ASSET_REGISTER_SCHEMA_VERSION: Final = "1"
 """Schema version stamped on the register document and every entry."""
 
-_ASSET_REF_PREFIX: Final = "m720a_"
-
 
 class ForeignAssetRegisterError(CadrumoError):
     """Raised when the foreign-asset register refuses an operation."""
@@ -57,16 +51,7 @@ M720AssetRef = Annotated[
     str,
     StringConstraints(pattern=r"^m720a_[0-9a-f]{32}$"),
 ]
-"""Opaque asset identity: minted once by :func:`mint_asset_ref`, never reused."""
-
-
-def mint_asset_ref(token: Callable[[], str] = lambda: uuid4().hex) -> str:
-    """Mint a new :data:`M720AssetRef`.
-
-    Args:
-        token: Source of the 32-hex-digit body; injectable so a test can fix it.
-    """
-    return f"{_ASSET_REF_PREFIX}{token()}"
+"""Opaque persisted asset identity; different assets carry different references."""
 
 
 class M720IdentifierScheme(StrEnum):
@@ -339,5 +324,4 @@ __all__ = [
     "M720AssetRef",
     "M720DeclarantCondition",
     "M720IdentifierScheme",
-    "mint_asset_ref",
 ]

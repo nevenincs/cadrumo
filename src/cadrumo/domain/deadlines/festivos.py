@@ -512,28 +512,6 @@ def is_business_day(
     return not _holidays_on(candidate, calendar=calendar, ccaa_code=ccaa_code)
 
 
-def next_business_day(
-    start: date,
-    *,
-    calendar: HolidayCalendar,
-    ccaa_code: CalendarCCAA | None,
-) -> date:
-    """Return the first date on or after ``start`` that is a business day.
-
-    The walk is bounded by 14 days (a fortnight) to keep the function
-    safe against pathological inputs; in practice the AEAT calendar
-    never strings more than four non-business days together (e.g.
-    Semana Santa weekend + Jueves Santo + Viernes Santo + Lunes de
-    Pascua = 4 days). A walk that leaves ``calendar.year`` is refused;
-    :func:`shift_deadline` walks across years with each year's calendar.
-    """
-    return _first_business_day(
-        start,
-        ccaa_code=ccaa_code,
-        business_day=lambda candidate: is_business_day(candidate, calendar=calendar, ccaa_code=ccaa_code),
-    )
-
-
 def _first_business_day(
     start: date,
     *,
@@ -754,6 +732,5 @@ __all__ = (
     "holiday_calendar_from_authority",
     "is_business_day",
     "load_holiday_calendar",
-    "next_business_day",
     "shift_deadline",
 )

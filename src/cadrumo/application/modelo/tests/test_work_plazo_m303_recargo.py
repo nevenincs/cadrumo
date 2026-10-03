@@ -6,7 +6,7 @@ IVA / Modelo 303) deadline cluster. The deadline-generic advisory
 :func:`cadrumo.domain.deadlines.recargo.build_recovery_for_overdue`), and the
 Modelo 303 registry carries quarterly deadline windows (``1T``/``2T``/``3T``/
 ``4T``) exactly like Modelo 130. Because the summary resolves its close date
-through the generic :func:`resolve_filing_closes_on`, no M303-specific wiring is
+through the generic :func:`resolve_filing_window`, no M303-specific wiring is
 needed: a late M303 quarter already surfaces the unassessed rate preview.
 
 This test proves that invariant so the R9 cluster cannot silently regress. It is
@@ -17,7 +17,7 @@ quarterly resolver and the BOE-grounded recargo band schedule) and to
 the CLI Notice for M130).
 
 Real-behaviour, non-tautology: the close date is read from the live registry
-authority via :func:`resolve_filing_closes_on`; the reference dates are derived
+authority via :func:`resolve_filing_window`; the reference dates are derived
 *relative to that resolved close date* (never a frozen calendar literal), so the
 test tracks the registry rather than a hardcoded plazo. The recargo band is not
 hand-asserted — it is compared against the domain
@@ -38,7 +38,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.deadlines.plazo import resolve_filing_closes_on
+from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.deadlines.recargo import build_recovery_for_overdue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -97,8 +97,9 @@ def test_late_m303_quarter_surfaces_unassessed_rate_preview() -> None:
         for quarter, filing_year in _quarter_year_cases():
             case_id = f"M303 {filing_year} {quarter}"
             period = Period.from_year_and_code(filing_year, quarter)
-            closes_on = resolve_filing_closes_on("303", filing_year, period)
-            assert closes_on is not None, f"registry must carry an {case_id} window"
+            window = resolve_filing_window("303", filing_year, period)
+            assert window is not None, f"registry must carry an {case_id} window"
+            closes_on = window.closes_on
 
             reference_today = closes_on + timedelta(days=40)
             work_unit = _work_unit_for(quarter, filing_year)
@@ -140,8 +141,9 @@ def test_in_time_m303_quarter_is_silent() -> None:
     for quarter, filing_year in _quarter_year_cases():
         case_id = f"M303 {filing_year} {quarter}"
         period = Period.from_year_and_code(filing_year, quarter)
-        closes_on = resolve_filing_closes_on("303", filing_year, period)
-        assert closes_on is not None, case_id
+        window = resolve_filing_window("303", filing_year, period)
+        assert window is not None, case_id
+        closes_on = window.closes_on
 
         reference_today = closes_on - timedelta(days=5)
         work_unit = _work_unit_for(quarter, filing_year)
@@ -159,7 +161,7 @@ def test_m303_quarterly_resolver_returns_dates_for_full_cluster() -> None:
     """Every registered M303 quarter in the cluster resolves a close date.
 
     This is the resolver-level guard: the deadline-generic advisory can only
-    fire for M303 quarters if :func:`resolve_filing_closes_on` returns a date
+    fire for M303 quarters if :func:`resolve_filing_window` returns a date
     for each ``(303, filing_year, NT)`` axis. A registry drift that dropped an
     M303 quarterly window would silence the recargo advisory for that
     quarter; this test fails loudly if that happens.
@@ -167,6 +169,7 @@ def test_m303_quarterly_resolver_returns_dates_for_full_cluster() -> None:
     for filing_year in _FILING_YEARS:
         for quarter in _QUARTERS:
             period = Period.from_year_and_code(filing_year, quarter)
-            closes_on = resolve_filing_closes_on("303", filing_year, period)
-            assert closes_on is not None, f"M303 {filing_year} {quarter} window missing"
+            window = resolve_filing_window("303", filing_year, period)
+            assert window is not None, f"M303 {filing_year} {quarter} window missing"
+            closes_on = window.closes_on
             assert isinstance(closes_on, date)

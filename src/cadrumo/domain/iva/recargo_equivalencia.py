@@ -16,7 +16,6 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.facts.payloads import MappingFactPayload
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.facts.variants import FactSelector
 from ..calculations.registry.schema_base import DateAxis
@@ -69,64 +68,6 @@ class RecargoRateRecord(BaseModel):
         if on_date < self.effective_from:
             return False
         return self.effective_until is None or on_date <= self.effective_until
-
-
-def load_recargo_rate_table(
-    *,
-    operation: PinnedAuthorityOperation,
-) -> tuple[RecargoRateRecord, ...]:
-    """Return published recargo pairings from the authority artifact.
-
-    Runtime callers must provide the operation that owns the published
-    authority generation; an unsigned authoring tree is never a fallback.
-    """
-    fact = operation.governed_fact(IVA_RECARGO_FACT_ID)
-    records: list[RecargoRateRecord] = []
-    for variant in fact.variants:
-        if not isinstance(variant.payload, MappingFactPayload):
-            raise IvaCatalogueError("IVA recargo fact contains a non-mapping variant")
-        selectors = {selector.name: selector.value for selector in variant.selectors}
-        payload = {str(entry.key): entry.value for entry in variant.payload.entries}
-        if variant.valid_from is None:
-            raise IvaCatalogueError("IVA recargo variant has no effective start date")
-        records.append(
-            RecargoRateRecord(
-                iva_rate=Decimal(str(selectors["applied_rate"])),
-                recargo_rate=Decimal(str(payload["recargo_rate"])),
-                effective_from=variant.valid_from,
-                effective_until=variant.valid_to,
-                legal_refs=variant.legal_refs,
-                notes=str(payload["notes"]),
-            )
-        )
-    return tuple(records)
-
-
-def recargo_rate_for_applied_rate(
-    applied_rate: Decimal,
-    on_date: date,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> Decimal | None:
-    """Return the recargo rate paired with ``applied_rate`` on ``on_date``.
-
-    Date-scoped lookup is keyed by the applied rate rather than a broader
-    category, so overlapping dated pairings remain distinguishable without
-    reproducing the authority's classifications here.
-
-    Args:
-        applied_rate: The IVA rate the line actually carried, as a fraction.
-        on_date: The operation date, which selects among windowed pairings.
-        operation: The pinned authority operation supplying dated recargo pairings.
-
-    Returns:
-        The paired recargo rate, which may legitimately be zero. ``None`` when
-        the authority publishes no pairing for that rate on that date -- an unmodelled
-        combination, which callers must not read as "no recargo applies".
-
-    """
-    record = recargo_rate_record_for_applied_rate(applied_rate, on_date, operation=operation)
-    return None if record is None else record.recargo_rate
 
 
 def recargo_rate_record_for_applied_rate(
@@ -208,8 +149,6 @@ def recargo_rate_record_from_fact(resolved: ResolvedMappingFact) -> RecargoRateR
 __all__ = [
     "IVA_RECARGO_FACT_ID",
     "RecargoRateRecord",
-    "load_recargo_rate_table",
-    "recargo_rate_for_applied_rate",
     "recargo_rate_record_for_applied_rate",
     "recargo_rate_record_from_fact",
     "resolve_recargo_rate_for_applied_rate",

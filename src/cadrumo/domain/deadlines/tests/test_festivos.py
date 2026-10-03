@@ -40,7 +40,6 @@ from ..festivos import (
     HolidayJurisdiction,
     is_business_day,
     load_holiday_calendar,
-    next_business_day,
     shift_deadline,
 )
 
@@ -207,15 +206,16 @@ def test_business_day_predicate_cases() -> None:
 
 
 # ---------------------------------------------------------------------------
-# next_business_day walk.
+# Deadline business-day walk.
 # ---------------------------------------------------------------------------
 
 
-def test_next_business_day_cases() -> None:
+def test_shift_deadline_walk_cases() -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = load_holiday_calendar(2025, operation=operation)
         for case_id, probe, expected in _NEXT_BUSINESS_DAY_CASES:
-            assert next_business_day(probe, calendar=calendar, ccaa_code=None) == expected, case_id
+            shifted = shift_deadline(probe, modelo="303", ccaa_code=None, calendars=(calendar,), operation=operation)
+            assert shifted.adjusted_close_date == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -492,7 +492,6 @@ def test_no_parallel_festivos_implementation_exists() -> None:
     canonical_symbols = (
         "load_holiday_calendar",
         "is_business_day",
-        "next_business_day",
         "shift_deadline",
     )
 
@@ -632,8 +631,6 @@ def test_a_single_year_calendar_refuses_to_classify_another_year() -> None:
     calendar = _year_end_calendar()
     with pytest.raises(DeadlineValidationError, match="2023-01-02"):
         is_business_day(_FIRST_MONDAY, calendar=calendar, ccaa_code=None)
-    with pytest.raises(DeadlineValidationError, match="2023"):
-        next_business_day(_SATURDAY_YEAR_END, calendar=calendar, ccaa_code=None)
 
 
 def test_supplying_two_calendars_for_one_year_is_refused() -> None:

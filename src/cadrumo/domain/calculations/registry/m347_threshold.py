@@ -48,14 +48,12 @@ __all__ = [
     "M347ThresholdBuckets",
     "m347_declarable_party_buckets",
     "m347_threshold_decimal",
-    "resolve_m347_clave_c_declaration_threshold",
     "resolve_m347_counterparty_annual_threshold",
     "resolve_m347_threshold_buckets",
 ]
 
 
 _M347_COUNTERPARTY_THRESHOLD_FACT_ID: Final = "m347-counterparty-declaration-threshold"
-_M347_CLAVE_C_THRESHOLD_FACT_ID: Final = "m347-clave-c-beneficiary-declaration-threshold"
 _M347_THRESHOLD_BUCKETS_SUBJECT: Final = "M347 clave threshold buckets"
 _M347_THRESHOLD_BUCKETS_FACT: Final = StringMappingFact(
     fact_id="m347-clave-threshold-buckets",
@@ -166,20 +164,6 @@ def resolve_m347_counterparty_annual_threshold(
     selected = require_governed_fact_authority(authority, subject="M347 counterparty threshold")
     return _resolve_m347_floor_fact(
         _M347_COUNTERPARTY_THRESHOLD_FACT_ID,
-        effective_date=effective_date,
-        authority=selected,
-    )
-
-
-def resolve_m347_clave_c_declaration_threshold(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource | None = None,
-) -> ResolvedScalarFact:
-    """Resolve the distinct clave-C threshold with its statutory provenance."""
-    selected = require_governed_fact_authority(authority, subject="M347 clave-C threshold")
-    return _resolve_m347_floor_fact(
-        _M347_CLAVE_C_THRESHOLD_FACT_ID,
         effective_date=effective_date,
         authority=selected,
     )

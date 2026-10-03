@@ -61,7 +61,7 @@
     {
       "path": "dev/packaging/native/artifact_verify.py",
       "selection": "incoming",
-      "semantic_rationale": "Adopt exact archive/manifest identity refusal before resetting prior evidence and archive stability after probes.",
+      "semantic_rationale": "Verify archive SHA before resetting prior evidence; verify manifest SHA after extraction; retain archive stability after probes.",
       "before_sha256": "563fc83f166187625e7418b5da382d6d9b7158e4e61da283993b0cf89fe7d8f6",
       "after_sha256": "b00685ed02497eb3ec82338b3d7d69e62c55eb7c1e3e3645f1dc4ed6c9eeb82a",
       "stage_sha256": {

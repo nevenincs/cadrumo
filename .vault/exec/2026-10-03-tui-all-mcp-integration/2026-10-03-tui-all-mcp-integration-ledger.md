@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d66c96f69fbd2f6c49909fa37bbde287a1b662bad1c2c6be76ba8ede7265799'
+body_hash: 'sha256:a1d6d5500c8271ee08d0e5f692265d6e9ff135a2125ca1c98a7fec41969459ff'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -2408,6 +2408,28 @@ related:
 - `S05` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_operation_notices.py`
 - `S05` `verify:` `six-source alternate-index observation: zero later deltas and unchanged original indexes` -> `pass`
 - `S05` `verify:` `reconciled-cut git diff --check` -> `pass`
+- `S05` `M` `src/cadrumo/adapters/persistence/profile/tests/test_foreign_asset_register_roundtrip.py`
+- `S05` `M` `src/cadrumo/application/aggregation/tests/test_recargo_rate_advisory.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_modelo_calculate_recargo_notice.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_work_plazo_m303_recargo.py`
+- `S05` `M` `src/cadrumo/application/overview/tests/test_calendar_deadline_domain_delegation.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/m347_threshold.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py`
+- `S05` `M` `src/cadrumo/domain/deadlines/festivos.py`
+- `S05` `M` `src/cadrumo/domain/deadlines/plazo.py`
+- `S05` `M` `src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py`
+- `S05` `M` `src/cadrumo/domain/deadlines/tests/test_festivos.py`
+- `S05` `M` `src/cadrumo/domain/foreign_assets/register.py`
+- `S05` `M` `src/cadrumo/domain/foreign_assets/tests/test_register.py`
+- `S05` `M` `src/cadrumo/domain/iva/recargo_equivalencia.py`
+- `S05` `M` `src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-quality-domain-repairs.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-later-native-packaging-reconciliation.json`
+- `S05` `verify:` `299 focused current domain/application tests` -> `pass`
+- `S05` `verify:` `Ruff lint/format and scoped ty17 declared paths` -> `pass`
+- `S05` `verify:` `retired convenience symbol references src/dev: zero` -> `pass`
 
 ## Notes
 
@@ -2418,3 +2440,4 @@ related:
 - `S05` Continue native Mac work after agent briefing: retain actual terminal/receipt widgets across modal dismissal and wait genuine public Home refresh after Back. Full installed journey remains unproven and final verification deferred. Retire marker-containing saved previews to external preservation evidence; normalize incoming test CRLF only. No live source worktree/index or admission policy changed.
 - `S05` Resumed verification authorization: establish the reconciled baseline first, verify end to end, land on feature/tui only after green, then run end-to-end verification from the destination worktree. Prior broad-check deferral is revoked for final completion. Live TUI advances during capture; reconcile immutable committed cuts in isolation and preserve dirty active-writer files/index. No routine implementation or conflict-resolution approval is required.
 - `S05` Latest immutable TUI cut a8a7fb7d reconciled in isolation; preserved MCP native custody, public typed APIs and independent tests alongside incoming packaging/runtime/filing prompts. Final combined and installed E2E proof remains pending; active live writer files and index remain untouched.
+- `S05` Reconcile six test-only convenience exports with current typed production owners; preserve independent values, provenance, refusal and support-window assertions. Exact per-symbol dispositions/hashes and commands in source report. Encrypted persistence replay, configured aggregate, current installed E2E and safe live landing remain pending; no native or whole-suite claim.
