@@ -18,6 +18,7 @@ from .._app_live_command_spec_support import (
     _LEAF_INVOCATION,
     _METADATA_GROUP_INVOCATION,
     _METADATA_POLICY,
+    _NETWORK_READ_POLICY,
     _OPTIONAL_MODELOS_OPTION,
     _OPTIONAL_TAXPAYER_NIF_OPTION,
     _OPTIONAL_YEAR_FROM_OPTION,
@@ -176,6 +177,18 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
             live_write=False,
         )
         == _ENCRYPTED_LOCAL_READ_POLICY
+    )
+    assert (
+        ExecutionPolicySpec(
+            capabilities=frozenset(["aeat", "encrypted-facts", "network"]),
+            side_effects=frozenset(["network"]),
+            performance="external-io",
+            write_route=CommandWriteRoute.NONE,
+            destructive=False,
+            handoff=False,
+            live_write=False,
+        )
+        == _NETWORK_READ_POLICY
     )
     assert (
         ExecutionPolicySpec(
@@ -353,8 +366,8 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     ):
         assert spec.invocation is _LEAF_INVOCATION
 
-    for key in ("app_live_filed_list",):
-        assert foundation[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in ("app_live_filed_list", "app_live_filed_discover"):
+        assert foundation[key].policy is _NETWORK_READ_POLICY
     for key in (
         "app_live_borrador_100_list",
         "app_live_borrador_100_view",
