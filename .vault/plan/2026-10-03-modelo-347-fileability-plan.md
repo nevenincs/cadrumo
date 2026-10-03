@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:abd18559df4aee50c5fffe7e59a3241eaba0bf17015a9d6bf706c0baa89aa90f'
+body_hash: 'sha256:4380cf6f91a9c9ced00111ec2e35edc1fa1b6c2b53620fa4e9a22a8635ada55d'
 ---
 
 # `modelo-347-fileability` plan
@@ -33,8 +33,8 @@ ambiguous law stays advisory.
 
 Ground the 347 obligation in the BOE texts and compute the 3.005,06 floor per counterparty and direction bucket through the one existing threshold leaf.
 
-- [ ] `P01.S01` - Point rd-1065-2007:art-31 at the BOE consolidated article, add rd-1065-2007:art-32 and rd-1624-1992:art-62 legal entities with verbatim required text, cite art. 33 for the threshold fact users, and retire the stand-in split article; `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml, src/cadrumo/_data/registry/aeat/legal/iva-flow.toml, src/cadrumo/domain/calculations/registry/m347_threshold.py`.
-- [ ] `P01.S02` - Compute the 347 floor per counterparty and direction bucket from a dated registry fact mapping claves to buckets, through one declarable-set function in m347_threshold.py delegating to _declarable_party_ids, used by both the row family and the declarante summary; `src/cadrumo/_data/registry/aeat/facts/, src/cadrumo/domain/calculations/registry/m347_threshold.py, src/cadrumo/domain/calculations/registry/invoice_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
+- [x] `P01.S01` - Point rd-1065-2007:art-31 at the BOE consolidated article, add rd-1065-2007:art-32 and rd-1624-1992:art-62 legal entities with verbatim required text, cite art. 33 for the threshold fact users, and retire the stand-in split article; `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml, src/cadrumo/_data/registry/aeat/legal/iva-flow.toml, src/cadrumo/domain/calculations/registry/m347_threshold.py`.
+- [x] `P01.S02` - Compute the 347 floor per counterparty and direction bucket from a dated registry fact mapping claves to buckets, through one declarable-set function in m347_threshold.py delegating to _declarable_party_ids, used by both the row family and the declarante summary; `src/cadrumo/_data/registry/aeat/facts/, src/cadrumo/domain/calculations/registry/m347_threshold.py, src/cadrumo/domain/calculations/registry/invoice_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
 
 ### Phase `P02` - Live declarado rows and export
 
