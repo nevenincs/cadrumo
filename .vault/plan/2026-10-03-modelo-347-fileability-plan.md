@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:b866053e09923ef711f4ff88b29db8d766a159ef31edcb2e613ab81a84fe70c0'
+body_hash: 'sha256:d176c23d9ad1771a8ae43c78090ba893e065b2e332191d2d8d5e50c81d348d31'
 ---
 
 # `modelo-347-fileability` plan
@@ -54,8 +54,8 @@ Apply art. 32.b operation scoping and the art. 33.2 exclusions at the single exi
 
 - [x] `P03.S08` - Exclude art. 33.2 operations at the single exclusion point through IVA category catalogue exclusion keys: goods imports and exports, withheld received invoices, and the categorisable letters; `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml, src/cadrumo/domain/calculations/registry/iva_category_catalogue.py, src/cadrumo/application/invoices/source_resolver.py`.
 - [x] `P03.S09` - Scope 347 operations for estimacion objetiva filers per art. 32.b and resolve filer roles and regimes once per calculation context as of the filing period; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/application/user_profile/projections.py`.
-- [ ] `P03.S17` - Apply the P03 review corrections: resolve the filer profile through load_modelo_work_profile instead of a second reader, read the category exclusion catalogue as of the filing period, validate the exclusion modelo token against the canonical Modelo, and tidy the advisory legal refs and filing-date computation; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`.
-- [ ] `P03.S18` - Net corrective invoices against the operations they rectify in the 347 counterparty totals per RGAT art. 34.4 so negative annual amounts render with the N sign; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
+- [x] `P03.S17` - Apply the P03 review corrections: resolve the filer profile through load_modelo_work_profile instead of a second reader, read the category exclusion catalogue as of the filing period, validate the exclusion modelo token against the canonical Modelo, and tidy the advisory legal refs and filing-date computation; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`.
+- [x] `P03.S18` - Net corrective invoices against the operations they rectify in the 347 counterparty totals per RGAT art. 34.4 so negative annual amounts render with the N sign; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
 
 ### Phase `P04` - Obligation, applicability and profile
 

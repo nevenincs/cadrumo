@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:26154e01d752fe8037534beb9d7908efc21b974560abf27fb043df912883d4f8'
+body_hash: 'sha256:1c829ef6bf0bfe4e1824044adc9e9c24ba0e99b9c777b5974277cbcef1c8bad4'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -211,6 +211,14 @@ related:
 - `S11` `M` `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`
 - `S11` `verify:` `pytest overview and payer-fact suites in HEAD export` -> `pass`
 - `S11` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S18` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`
+- `S18` `verify:` `pytest 347 resolver suites in HEAD export` -> `pass`
+- `S17` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`
+- `S17` `verify:` `pytest 347 resolver suites in HEAD export` -> `pass`
 
 ## Notes
 
@@ -227,3 +235,5 @@ related:
 - `S05` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
 - `S07` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
 - `S11` explain wiring and registry-declared ledger source; TUI reader wiring still pending another writer's workbench calendar split
+- `S18` landed inside another writer's whole-tree snapshot commit f4729489f9; completeness confirmed by the implementer and repaired in f4729489f9
+- `S17` landed inside another writer's whole-tree snapshot commit f4729489f9; completeness confirmed by the implementer and repaired in f4729489f9
